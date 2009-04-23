@@ -33,6 +33,9 @@ namespace PCS.PhasorProtocols.Ieee1344
     {
         #region [ Members ]
 
+        // Constants
+        private const int FixedFooterLength = 2;
+
         // Fields
         private CommonFrameHeader m_frameHeader;
         private ulong m_idCode;
@@ -259,7 +262,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return 2;
+                return FixedFooterLength;
             }
         }
 
@@ -369,7 +372,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             // of ChannelFrameBase, performing the following succeeds since parsing the footer
             // follows parsing the body :)
             Period = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
-            return 2;
+            return FixedFooterLength;
         }
 
         /// <summary>

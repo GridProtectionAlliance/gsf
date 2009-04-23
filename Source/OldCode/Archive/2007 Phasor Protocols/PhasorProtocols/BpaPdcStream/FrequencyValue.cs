@@ -180,7 +180,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         internal static int CalculateBinaryLength(IFrequencyDefinition definition)
         {
             // The frequency definition will determine the binary length based on data format
-            return (new FrequencyValue(null as DataCell, definition, 0.0D, 0.0D)).BinaryLength;
+            return (new FrequencyValue(null, definition)).BinaryLength;
         }
 
         // Delegate handler to create a new IEEE C37.118 frequency value

@@ -44,10 +44,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         public DataCellParsingState(IConfigurationCell configurationCell, CreateNewValueFunction<IPhasorDefinition, IPhasorValue> createNewPhasorValue, CreateNewValueFunction<IFrequencyDefinition, IFrequencyValue> createNewFrequencyValue, CreateNewValueFunction<IAnalogDefinition, IAnalogValue> createNewAnalogValue, CreateNewValueFunction<IDigitalDefinition, IDigitalValue> createNewDigitalValue, int index)
             : base(configurationCell, createNewPhasorValue, createNewFrequencyValue, createNewAnalogValue, createNewDigitalValue)
         {
-
-
             m_index = index;
-
         }
 
         /// <summary>

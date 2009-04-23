@@ -17,6 +17,9 @@
 
 namespace PCS.PhasorProtocols.BpaPdcStream
 {
+    /// <summary>
+    /// Represents the BPA PDCstream implementation of the parsing state used by a <see cref="ConfigurationFrame"/>.
+    /// </summary>
     public class ConfigurationFrameParsingState : PhasorProtocols.ConfigurationFrameParsingState
     {
         #region [ Members ]

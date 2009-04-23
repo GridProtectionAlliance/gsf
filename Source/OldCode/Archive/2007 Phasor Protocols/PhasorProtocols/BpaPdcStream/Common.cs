@@ -106,43 +106,43 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Reserved bit 7.
         /// </summary>
-        Reserved0 = (byte)Bits.Bit7,
+        Reserved0 = (byte)Bits.Bit07,
         /// <summary>
         /// Reserved bit 6.
         /// </summary>
-        Reserved1 = (byte)Bits.Bit6,
+        Reserved1 = (byte)Bits.Bit06,
         /// <summary>
         /// Analog words mask.
         /// </summary>
-        AnalogWordsMask = (byte)(Bits.Bit0 | Bits.Bit1 | Bits.Bit2 | Bits.Bit3 | Bits.Bit4 | Bits.Bit5)
+        AnalogWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03 | Bits.Bit04 | Bits.Bit05)
     }
 
     /// <summary>
-    /// IEEE format flags enumeration.
+    /// Format flags enumeration.
     /// </summary>
     [Flags(), Serializable()]
-    public enum IEEEFormatFlags : byte
+    public enum FormatFlags : byte
     {
         /// <summary>
         /// Frequency data format: Set = float, Clear = integer.
         /// </summary>
-        Frequency = (byte)Bits.Bit7,
+        Frequency = (byte)Bits.Bit07,
         /// <summary>
         /// Analog data format: Set = float, Clear = integer.
         /// </summary>
-        Analog = (byte)Bits.Bit6,
+        Analog = (byte)Bits.Bit06,
         /// <summary>
         /// Phasor data format: Set = float, Clear = integer.
         /// </summary>
-        Phasors = (byte)Bits.Bit5,
+        Phasors = (byte)Bits.Bit05,
         /// <summary>
         /// Phasor coordinate format: Set = polar, Clear = rectangular.
         /// </summary>
-        Coordinates = (byte)Bits.Bit4,
+        Coordinates = (byte)Bits.Bit04,
         /// <summary>
         /// Digital words mask.
         /// </summary>
-        DigitalWordsMask = (byte)(Bits.Bit0 | Bits.Bit1 | Bits.Bit2 | Bits.Bit3)
+        DigitalWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03)
     }
 
     /// <summary>
@@ -170,11 +170,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Synchonization is invalid.
         /// </summary>
-        SyncInvalid = (byte)Bits.Bit0,
+        SyncInvalid = (byte)Bits.Bit00,
         /// <summary>
         /// Data is invalid.
         /// </summary>
-        DataInvalid = (byte)Bits.Bit1
+        DataInvalid = (byte)Bits.Bit01
     }
 
     #endregion
@@ -202,7 +202,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Absolute maximum number of possible digital values that could fit into a data frame.
         /// </summary>
-        public const ushort MaximumDigitalValues = (ushort)IEEEFormatFlags.DigitalWordsMask;
+        public const ushort MaximumDigitalValues = (ushort)FormatFlags.DigitalWordsMask;
 
         /// <summary>
         /// Absolute maximum data length (in bytes) that could fit into any frame.

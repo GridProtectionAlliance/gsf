@@ -17,6 +17,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols.BpaPdcStream
 {
@@ -155,7 +156,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="FrequencyDefinition"/>.
+        /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="FrequencyDefinition"/>.
         /// </summary>
         public override int MaximumLabelLength
         {
@@ -188,6 +189,21 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             {
                 return null;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
         }
 
         #endregion

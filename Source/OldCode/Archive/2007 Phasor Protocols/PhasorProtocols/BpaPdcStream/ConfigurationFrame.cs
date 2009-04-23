@@ -39,7 +39,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         #region [ Members ]
 
         // Constants
-        private const ushort FixedHeaderLength = CommonFrameHeader.FixedLength + 12;
+        private const int FixedHeaderLength = CommonFrameHeader.FixedLength + 12;
 
         /// <summary>
         /// Default voltage phasor INI based configuration entry.
@@ -96,7 +96,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Creates a new <see cref="ConfigurationFrame"/> from specified parameters.
         /// </summary>
-        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame1"/>.</param>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame"/>.</param>
         /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         /// <param name="packetsPerSample">Number of packets per sample.</param>
         /// <remarks>
@@ -388,7 +388,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Gets the length of the <see cref="HeaderImage"/>.
         /// </summary>
-        protected override ushort HeaderLength
+        protected override int HeaderLength
         {
             get
             {
@@ -397,7 +397,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets the binary header image of the <see cref="ConfigurationFrame1"/> object.
+        /// Gets the binary header image of the <see cref="ConfigurationFrame"/> object.
         /// </summary>
         protected override byte[] HeaderImage
         {

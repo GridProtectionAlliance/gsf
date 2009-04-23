@@ -80,7 +80,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets the maximum length of the <see cref="Label"/> of this <see cref="AnalogDefinition"/>.
+        /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="AnalogDefinition"/>.
         /// </summary>
         public override int MaximumLabelLength
         {

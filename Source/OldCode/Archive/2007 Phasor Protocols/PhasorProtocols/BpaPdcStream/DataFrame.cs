@@ -334,6 +334,13 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
             if (state.CellCount > configurationFrame.Cells.Count)
                 throw new InvalidOperationException("Stream/Config File Mismatch: PMU count (" + state.CellCount + ") in stream does not match defined count in configuration file (" + configurationFrame.Cells.Count + ")");
+            
+            // TODO: Evaluate case of "new PMU added to stream" for which we do not have defined number of phasors...
+            // Perhaps some kind of warning would be better than throwing an exception (raise a OnParseWarning event?)
+            // This just happened with NYPA:
+            // [P1]: WARNING: NYPA data stream exception: Stream/Config File Mismatch: Phasor
+            // value count in stream (6) does not match defined count in configuration file (0)
+            // for EGC
 
             // We'll at least retrieve legacy labels if defined (might be useful for debugging dynamic changes in data-stream)
             if (configurationFrame.StreamType == StreamType.Legacy)

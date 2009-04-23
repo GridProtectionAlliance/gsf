@@ -216,7 +216,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the <see cref="PhasorDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public PhasorDefinitionCollection PhasorDefinitions
+        public virtual PhasorDefinitionCollection PhasorDefinitions
         {
             get
             {
@@ -237,7 +237,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets the <see cref="IFrequencyDefinition"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public IFrequencyDefinition FrequencyDefinition
+        public virtual IFrequencyDefinition FrequencyDefinition
         {
             get
             {
@@ -272,7 +272,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the <see cref="AnalogDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public AnalogDefinitionCollection AnalogDefinitions
+        public virtual AnalogDefinitionCollection AnalogDefinitions
         {
             get
             {
@@ -288,7 +288,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets a reference to the <see cref="DigitalDefinitionCollection"/> of this <see cref="ConfigurationCellBase"/>.
         /// </summary>
-        public DigitalDefinitionCollection DigitalDefinitions
+        public virtual DigitalDefinitionCollection DigitalDefinitions
         {
             get
             {

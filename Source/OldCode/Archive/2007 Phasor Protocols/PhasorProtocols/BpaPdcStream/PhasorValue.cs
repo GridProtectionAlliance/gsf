@@ -147,7 +147,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         internal static int CalculateBinaryLength(IPhasorDefinition definition)
         {
             // The phasor definition will determine the binary length based on data format
-            return (new PhasorValue(null as DataCell, definition, 0.0D, 0.0D)).BinaryLength;
+            return (new PhasorValue(null, definition)).BinaryLength;
         }
 
         // Delegate handler to create a new BPA PDCstream phasor value

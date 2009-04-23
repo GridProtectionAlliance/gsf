@@ -34,7 +34,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         #region [ Members ]
 
         // Constants
-        private const ushort FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
+        private const int FixedHeaderLength = CommonFrameHeader.FixedLength + 6;
 
         // Fields
         private CommonFrameHeader m_frameHeader;

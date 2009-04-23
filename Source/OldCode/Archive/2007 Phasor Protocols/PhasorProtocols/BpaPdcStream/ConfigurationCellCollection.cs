@@ -75,7 +75,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         #region [ Methods ]
 
         /// <summary>
-        /// Attempts to retrieve a <see cref="ConfigurationCell"/> from this <see cref="ConmfigurationCellCollection"/> with the specified <paramref name="sectionEntry"/>.
+        /// Attempts to retrieve a <see cref="ConfigurationCell"/> from this <see cref="ConfigurationCellCollection"/> with the specified <paramref name="sectionEntry"/>.
         /// </summary>
         /// <param name="sectionEntry"><see cref="ConfigurationCell.SectionEntry"/> value to try to find.</param>
         /// <param name="configurationCell"><see cref="ConfigurationCell"/> with the specified <paramref name="sectionEntry"/> if found; otherwise <c>null</c>.</param>
