@@ -63,16 +63,24 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// Creates a new <see cref="CommonFrameHeader"/> from given <paramref name="binaryImage"/>.
         /// </summary>
         /// <param name="configurationFrame">BPA PDCstream <see cref="ConfigurationFrame1"/> if already parsed.</param>
+        /// <param name="parseWordCountFromByte">Defines flag that interprets word count in packet header from a byte instead of a word.</param>
         /// <param name="binaryImage">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
-        public CommonFrameHeader(ConfigurationFrame configurationFrame, byte[] binaryImage, int startIndex)
+        public CommonFrameHeader(ConfigurationFrame configurationFrame, bool parseWordCountFromByte, byte[] binaryImage, int startIndex)
         {
             if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in BPA PDCstream frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
 
-            // Get packet number and word count
+            // Get packet number
             m_packetNumber = binaryImage[startIndex + 1];
-            m_wordCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 2);
+
+            // Some older streams have a bad word count (e.g., some data streams have a 0x01 as the third byte
+            // in the stream - this should be a 0x00 to make the word count come out correctly).  The following
+            // compensates for this erratic behavior
+            if (parseWordCountFromByte)
+                m_wordCount = binaryImage[startIndex + 3];
+            else
+                m_wordCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 2);
         }
 
         /// <summary>
@@ -152,21 +160,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             set
             {
                 m_wordCount = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the BPA PDcstream packet flag.
-        /// </summary>
-        public byte PacketFlag
-        {
-            get
-            {
-                return m_packetNumber;
-            }
-            set
-            {
-                m_packetNumber = value;
             }
         }
 

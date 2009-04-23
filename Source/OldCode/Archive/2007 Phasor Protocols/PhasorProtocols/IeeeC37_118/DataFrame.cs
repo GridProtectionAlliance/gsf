@@ -93,7 +93,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets or sets <see cref="ConfigurationFrame"/> associated with this <see cref="DataFrame"/>.
+        /// Gets or sets <see cref="ConfigurationFrame1"/> associated with this <see cref="DataFrame"/>.
         /// </summary>
         public new ConfigurationFrame1 ConfigurationFrame
         {

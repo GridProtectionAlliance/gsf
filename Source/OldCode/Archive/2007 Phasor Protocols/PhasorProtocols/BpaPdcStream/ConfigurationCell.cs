@@ -219,7 +219,7 @@ namespace PCS.PhasorProtocols
                         }
                         else
                         {
-                            return (m_sectionEntry.Length > base.IDLabelLength);
+                            return (m_sectionEntry.Length > IDLabelLength);
                         }
                     }
                     else

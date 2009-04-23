@@ -89,26 +89,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         public ConfigurationFrame()
             : base(0, new ConfigurationCellCollection(), 0, 0)
         {
+            // We just assume current timestamp for configuration frames since they don't provide one
+            Timestamp = DateTime.UtcNow.Ticks;
         }
 
         /// <summary>
         /// Creates a new <see cref="ConfigurationFrame"/> from specified parameters.
         /// </summary>
-        /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
-        /// <remarks>
-        /// This constructor is used by a consumer to generate a BPA PDCstream configuration frame.
-        /// </remarks>
-        public ConfigurationFrame(string configurationFileName)
-            : base(0, new ConfigurationCellCollection(), 0, 30)
-        {
-            m_iniFile = new IniFile(configurationFileName);
-            m_packetsPerSample = 1;
-            Refresh(false);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="ConfigurationFrame"/> from specified parameters.
-        /// </summary>
+        /// <param name="timestamp">The exact timestamp, in <see cref="Ticks"/>, of the data represented by this <see cref="ConfigurationFrame1"/>.</param>
         /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         /// <param name="packetsPerSample">Number of packets per sample.</param>
         /// <remarks>
@@ -116,14 +104,17 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// This constructor is used by a consumer to generate a BPA PDCstream configuration frame.
         /// </para>
         /// <para>
-        /// If you are going to create multiple data packets you can use this constructor. This will only start becoming
-        /// necessary if you start hitting data size limits imposed by the nature of the transport protocol.
+        /// If you are going to create multiple data packets set <paramref name="packetsPerSample"/> to a number
+        /// greater than one. This will only start becoming necessary if you start hitting data size limits imposed
+        /// by the nature of the transport protocol.
         /// </para>
         /// </remarks>
-        public ConfigurationFrame(string configurationFileName, ushort packetsPerSample)
-            : this(configurationFileName)
+        public ConfigurationFrame(Ticks timestamp, string configurationFileName, ushort packetsPerSample)
+            : base(0, new ConfigurationCellCollection(), timestamp, 30)
         {
+            m_iniFile = new IniFile(configurationFileName);
             m_packetsPerSample = packetsPerSample;
+            Refresh(false);
         }
 
         /// <summary>

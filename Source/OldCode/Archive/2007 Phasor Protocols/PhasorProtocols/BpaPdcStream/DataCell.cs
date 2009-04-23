@@ -76,7 +76,7 @@ namespace PCS.PhasorProtocols
                 m_sampleNumber = sampleNumber;
 
                 // Initialize phasor values and frequency value with an empty value
-                for (x = 0; x <= ConfigurationCell.PhasorDefinitions.Count - 1; x++)
+                for (x = 0; x < ConfigurationCell.PhasorDefinitions.Count; x++)
                 {
                     PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x], float.NaN, float.NaN));
                 }
@@ -85,13 +85,13 @@ namespace PCS.PhasorProtocols
                 FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition, float.NaN, float.NaN);
 
                 // Initialize analog values
-                for (x = 0; x <= ConfigurationCell.AnalogDefinitions.Count - 1; x++)
+                for (x = 0; x < ConfigurationCell.AnalogDefinitions.Count; x++)
                 {
                     AnalogValues.Add(new AnalogValue(this, ConfigurationCell.AnalogDefinitions[x], float.NaN));
                 }
 
                 // Initialize any digital values
-                for (x = 0; x <= ConfigurationCell.DigitalDefinitions.Count - 1; x++)
+                for (x = 0; x < ConfigurationCell.DigitalDefinitions.Count; x++)
                 {
                     DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x], -1));
                 }
@@ -603,7 +603,7 @@ namespace PCS.PhasorProtocols
                         m_pdcBlockLength = 4;
                         startIndex += 4;
 
-                        for (int x = 0; x <= m_pdcBlockPmuCount - 1; x++)
+                        for (int x = 0; x < m_pdcBlockPmuCount; x++)
                         {
                             if (index + x < parentFrame.ConfigurationFrame.Cells.Count)
                             {
@@ -666,7 +666,7 @@ namespace PCS.PhasorProtocols
                 // Dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
                 if (analogs > ConfigurationCell.AnalogDefinitions.Count)
                 {
-                    for (int x = ConfigurationCell.AnalogDefinitions.Count; x <= analogs - 1; x++)
+                    for (int x = ConfigurationCell.AnalogDefinitions.Count; x < analogs; x++)
                     {
                         ConfigurationCell.AnalogDefinitions.Add(new BpaPdcStream.AnalogDefinition(ConfigurationCell, x, "Analog " + (x + 1)));
                     }
@@ -675,7 +675,7 @@ namespace PCS.PhasorProtocols
                 // Dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
                 if (digitals > ConfigurationCell.DigitalDefinitions.Count)
                 {
-                    for (int x = ConfigurationCell.DigitalDefinitions.Count; x <= digitals - 1; x++)
+                    for (int x = ConfigurationCell.DigitalDefinitions.Count; x < digitals; x++)
                     {
                         ConfigurationCell.DigitalDefinitions.Add(new BpaPdcStream.DigitalDefinition(ConfigurationCell, x, "Digital Word " + (x + 1)));
                     }
@@ -752,6 +752,16 @@ namespace PCS.PhasorProtocols
 
                     return baseAttributes;
                 }
+            }
+
+            // Delegate handler to create a new IEEE C37.118 data cell
+            internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
+            {
+                DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);
+
+                parsedLength = dataCell.Initialize(binaryImage, startIndex, 0);
+
+                return dataCell;
             }
 
         }

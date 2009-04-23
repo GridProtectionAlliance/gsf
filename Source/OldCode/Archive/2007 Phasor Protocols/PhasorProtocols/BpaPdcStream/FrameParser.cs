@@ -310,7 +310,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             if (length >= CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, buffer, offset);
+                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_configurationFrame, m_parseWordCountFromByte, buffer, offset);
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
