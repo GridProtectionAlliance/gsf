@@ -249,7 +249,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 {
                     baseAttributes.Add("Bit Label Count", LabelCount.ToString());
 
-                    for (int x = 0; x <= LabelCount - 1; x++)
+                    for (int x = 0; x < LabelCount; x++)
                     {
                         baseAttributes.Add("     Bit " + x + " Label", GetLabel(x));
                     }

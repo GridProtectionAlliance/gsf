@@ -26,7 +26,7 @@ using System.Threading;
 namespace PCS.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
-    /// Represents a frame parser for an BPA PDCstream binary data stream and returns parsed data via events.
+    /// Represents a frame parser for a BPA PDCstream binary data stream and returns parsed data via events.
     /// </summary>
     /// <remarks>
     /// Frame parser is implemented as a write-only stream - this way data can come from any source.
@@ -38,7 +38,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         // Events
 
         /// <summary>
-        /// Occurs when an BPA PDCstream <see cref="ConfigurationFrame"/> has been received.
+        /// Occurs when a BPA PDCstream <see cref="ConfigurationFrame"/> has been received.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="ConfigurationFrame"/> that was received.
@@ -46,7 +46,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         public event EventHandler<EventArgs<ConfigurationFrame>> ReceivedConfigurationFrame;
 
         /// <summary>
-        /// Occurs when an BPA PDCstream <see cref="DataFrame"/> has been received.
+        /// Occurs when a BPA PDCstream <see cref="DataFrame"/> has been received.
         /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T}.Argument"/> is the <see cref="DataFrame"/> that was received.
@@ -68,7 +68,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
-        /// <param name="configurationFileName"></param>
+        /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         public FrameParser(string configurationFileName)
         {
             // Initialize protocol synchronization bytes for this frame parser
@@ -328,7 +328,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                             break;
                         case FrameType.ConfigurationFrame:
                             // Assign configuration frame parsing state
-                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, ConfigurationCell.CreateNewCell);
+                            parsedFrameHeader.State = new ConfigurationFrameParsingState(parsedFrameHeader.FrameLength, m_configurationFileName, ConfigurationCell.CreateNewCell);
                             break;
                     }
 
@@ -439,11 +439,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
         // Static Methods
 
-        // Attempts to cast given frame into an BPA PDCstream configuration frame - theoretically this will
+        // Attempts to cast given frame into a BPA PDCstream configuration frame - theoretically this will
         // allow the same configuration frame to be used for any protocol implementation
         internal static ConfigurationFrame CastToDerivedConfigurationFrame(IConfigurationFrame sourceFrame, string configurationFileName)
         {
-            // See if frame is already an BPA PDCstream configuration frame (if so, we don't need to do any work)
+            // See if frame is already a BPA PDCstream configuration frame (if so, we don't need to do any work)
             ConfigurationFrame derivedFrame = sourceFrame as ConfigurationFrame;
 
             if (derivedFrame == null)

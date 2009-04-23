@@ -90,6 +90,7 @@
     <Compile Include="BpaPdcStream\ConfigurationCell.cs" />
     <Compile Include="BpaPdcStream\ConfigurationCellCollection.cs" />
     <Compile Include="BpaPdcStream\ConfigurationFrame.cs" />
+    <Compile Include="BpaPdcStream\ConfigurationFrameParsingState.cs" />
     <Compile Include="BpaPdcStream\ConnectionParameters.cs" />
     <Compile Include="BpaPdcStream\DataCell.cs" />
     <Compile Include="BpaPdcStream\DataCellCollection.cs" />

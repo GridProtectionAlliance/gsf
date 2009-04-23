@@ -262,10 +262,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             get
             {
                 // Make sure to provide proper frame length for use in the common header image
-                unchecked
-                {
-                    CommonHeader.FrameLength = (ushort)BinaryLength;
-                }
+                CommonHeader.FrameLength = (ushort)BinaryLength;
 
                 byte[] buffer = new byte[FixedHeaderLength];
                 int index = 0;
@@ -305,7 +302,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataFrame"/> object.
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrame1"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
         {

@@ -209,6 +209,25 @@ namespace PCS.PhasorProtocols
         #region [ Methods ]
 
         /// <summary>
+        /// Adds the elements of the specified collection to the end of the <see cref="ChannelCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="collection">
+        /// The collection whose elements should be added to the end of the <see cref="ChannelCollectionBase{T}"/>.
+        /// The collection itself cannot be null, but it can contain elements that are null, if type T is a reference type.
+        /// </param>
+        /// <exception cref="ArgumentNullException"><paramref name="collection"/> is null.</exception>
+        public virtual void AddRange(IEnumerable<T> collection)
+        {
+            if (collection == null)
+                throw new ArgumentNullException("collection", "collection is null");
+
+            foreach (T item in collection)
+            {
+                Add(item);
+            }
+        }
+
+        /// <summary>
         /// Inserts an element into the <see cref="ChannelCollectionBase{T}"/> at the specified index.
         /// </summary>
         /// <param name="index">The zero-based index at which item should be inserted.</param>

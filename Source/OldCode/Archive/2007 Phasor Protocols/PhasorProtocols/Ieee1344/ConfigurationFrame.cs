@@ -246,10 +246,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             get
             {
                 // Make sure to provide proper frame length for use in the common header image
-                unchecked
-                {
-                    CommonHeader.FrameLength = (ushort)BinaryLength;
-                }
+                CommonHeader.FrameLength = (ushort)BinaryLength;
 
                 return CommonHeader.BinaryImage;
             }
