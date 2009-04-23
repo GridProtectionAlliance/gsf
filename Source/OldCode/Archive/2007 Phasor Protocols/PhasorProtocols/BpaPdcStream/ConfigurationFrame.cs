@@ -75,12 +75,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         private StreamType m_streamType;
         private RevisionNumber m_revisionNumber;
 
-        // Note that it is expected that the end user will typically create only one instance of this class per INI file for use by any
-        // number of different threads and a request can be made at anytime to "reload" the config file, so we make sure all publicly
-        // accessible methods in the class make proper use of the internal reader-writer lock.  This also allows end user to place a
-        // file-watcher on the INI file so class can "reload" config file when it's updated...
-        private ReaderWriterLock m_readWriteLock;
-
         #endregion
 
         #region [ Constructors ]
@@ -108,7 +102,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             : base(0, new ConfigurationCellCollection(), 0, 30)
         {
             m_iniFile = new IniFile(configurationFileName);
-            m_readWriteLock = new ReaderWriterLock();
             m_packetsPerSample = 1;
             Refresh(false);
         }
@@ -147,7 +140,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             m_streamType = (StreamType)info.GetValue("streamType", typeof(StreamType));
             m_revisionNumber = (RevisionNumber)info.GetValue("revisionNumber", typeof(RevisionNumber));
             m_iniFile = new IniFile(info.GetString("configurationFileName"));
-            m_readWriteLock = new ReaderWriterLock();
             Refresh(false);
         }
 
@@ -284,16 +276,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                m_readWriteLock.AcquireReaderLock(-1);
-
-                try
-                {
-                    return m_iniFile.FileName;
-                }
-                finally
-                {
-                    m_readWriteLock.ReleaseReaderLock();
-                }
+                return m_iniFile.FileName;
             }
         }
 
@@ -337,86 +320,77 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                m_readWriteLock.AcquireReaderLock(-1);
+                StringBuilder fileImage = new StringBuilder();
 
-                try
+                fileImage.Append("; File - " + m_iniFile.FileName + Environment.NewLine);
+                fileImage.Append("; Auto-generated on " + DateTime.Now + Environment.NewLine);
+                fileImage.Append(";    Assembly: " + AssemblyInfo.ExecutingAssembly.Name + Environment.NewLine);
+                fileImage.Append(";    Compiled: " + File.GetLastWriteTime(System.Reflection.Assembly.GetExecutingAssembly().Location) + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append("; Format:" + Environment.NewLine);
+                fileImage.Append(";   Each Column in data file is given a bracketed identifier, numbered in the order it" + Environment.NewLine);
+                fileImage.Append(";   appears in the data file, and identified by data type ( PMU, PDC, or other)" + Environment.NewLine);
+                fileImage.Append(";     PMU designates column data format from a single PMU" + Environment.NewLine);
+                fileImage.Append(";     PDC designates column data format from another PDC which is somewhat different from a single PMU" + Environment.NewLine);
+                fileImage.Append(";   Default gives default values for a processing algorithm in case quantities are omitted" + Environment.NewLine);
+                fileImage.Append(";   Name= gives the overall station name for print labels" + Environment.NewLine);
+                fileImage.Append(";   NumberPhasors= :  for PMU data, gives the number of phasors contained in column" + Environment.NewLine);
+                fileImage.Append(";                     for PDC data, gives the number of PMUs data included in the column" + Environment.NewLine);
+                fileImage.Append(";                     Note - for PDC data, there will be 2 phasors & 1 freq per PMU" + Environment.NewLine);
+                fileImage.Append(";   Quantities within the column are listed by PhasorI=, Frequency=, etc" + Environment.NewLine);
+                fileImage.Append(";   Each quantity has 7 comma separated fields followed by an optional comment" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append(";   Phasor entry format:  Type, Ratio, Cal Factor, Offset, Shunt, VoltageRef/Class, Label  ;Comments" + Environment.NewLine);
+                fileImage.Append(";    Type:       Type of measurement, V=voltage, I=current, N=don\'t care, single ASCII character" + Environment.NewLine);
+                fileImage.Append(";    Ratio:      PT/CT ratio N:1 where N is a floating point number" + Environment.NewLine);
+                fileImage.Append(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point" + Environment.NewLine);
+                fileImage.Append(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point" + Environment.NewLine);
+                fileImage.Append(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point" + Environment.NewLine);
+                fileImage.Append(";                Voltage- empty, not used" + Environment.NewLine);
+                fileImage.Append(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer" + Environment.NewLine);
+                fileImage.Append(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer" + Environment.NewLine);
+                fileImage.Append(";    Label:      Phasor quantity label for print label, text" + Environment.NewLine);
+                fileImage.Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor * PTR (line-neutral)" + Environment.NewLine);
+                fileImage.Append(";   Current Magnitude = MAG(Real,Imaginary) * CalFactor * CTR / Shunt (phase current)" + Environment.NewLine);
+                fileImage.Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset (usually degrees)" + Environment.NewLine);
+                fileImage.Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" + Environment.NewLine);
+                fileImage.Append(";           from different systems or through transformer banks" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append(";   Frequency entry format:  scale, offset, dF/dt scale, dF/dt offset, dummy, label  ;Comments" + Environment.NewLine);
+                fileImage.Append(";   Frequency = Number / scale + offset" + Environment.NewLine);
+                fileImage.Append(";   dF/dt = Number / (dF/dt scale) + (dF/dt offset)" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+                fileImage.Append(";" + Environment.NewLine);
+
+                fileImage.Append("[DEFAULT]" + Environment.NewLine);
+                fileImage.Append("PhasorV=" + PhasorDefinition.ConfigFileFormat(DefaultPhasorV) + Environment.NewLine);
+                fileImage.Append("PhasorI=" + PhasorDefinition.ConfigFileFormat(DefaultPhasorI) + Environment.NewLine);
+                fileImage.Append("Frequency=" + FrequencyDefinition.ConfigFileFormat(DefaultFrequency) + Environment.NewLine);
+                fileImage.AppendLine();
+
+                fileImage.Append("[CONFIG]" + Environment.NewLine);
+                fileImage.Append("SampleRate=" + FrameRate + Environment.NewLine);
+                fileImage.Append("NumberOfPMUs=" + Cells.Count + Environment.NewLine);
+                fileImage.AppendLine();
+
+                for (int x = 0; x < Cells.Count; x++)
                 {
-                    StringBuilder fileImage = new StringBuilder();
-
-                    fileImage.Append("; File - " + m_iniFile.FileName + Environment.NewLine);
-                    fileImage.Append("; Auto-generated on " + DateTime.Now + Environment.NewLine);
-                    fileImage.Append(";    Assembly: " + AssemblyInfo.ExecutingAssembly.Name + Environment.NewLine);
-                    fileImage.Append(";    Compiled: " + File.GetLastWriteTime(System.Reflection.Assembly.GetExecutingAssembly().Location) + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append("; Format:" + Environment.NewLine);
-                    fileImage.Append(";   Each Column in data file is given a bracketed identifier, numbered in the order it" + Environment.NewLine);
-                    fileImage.Append(";   appears in the data file, and identified by data type ( PMU, PDC, or other)" + Environment.NewLine);
-                    fileImage.Append(";     PMU designates column data format from a single PMU" + Environment.NewLine);
-                    fileImage.Append(";     PDC designates column data format from another PDC which is somewhat different from a single PMU" + Environment.NewLine);
-                    fileImage.Append(";   Default gives default values for a processing algorithm in case quantities are omitted" + Environment.NewLine);
-                    fileImage.Append(";   Name= gives the overall station name for print labels" + Environment.NewLine);
-                    fileImage.Append(";   NumberPhasors= :  for PMU data, gives the number of phasors contained in column" + Environment.NewLine);
-                    fileImage.Append(";                     for PDC data, gives the number of PMUs data included in the column" + Environment.NewLine);
-                    fileImage.Append(";                     Note - for PDC data, there will be 2 phasors & 1 freq per PMU" + Environment.NewLine);
-                    fileImage.Append(";   Quantities within the column are listed by PhasorI=, Frequency=, etc" + Environment.NewLine);
-                    fileImage.Append(";   Each quantity has 7 comma separated fields followed by an optional comment" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append(";   Phasor entry format:  Type, Ratio, Cal Factor, Offset, Shunt, VoltageRef/Class, Label  ;Comments" + Environment.NewLine);
-                    fileImage.Append(";    Type:       Type of measurement, V=voltage, I=current, N=don\'t care, single ASCII character" + Environment.NewLine);
-                    fileImage.Append(";    Ratio:      PT/CT ratio N:1 where N is a floating point number" + Environment.NewLine);
-                    fileImage.Append(";    Cal Factor: Conversion factor between integer in file and secondary volts, floating point" + Environment.NewLine);
-                    fileImage.Append(";    Offset:     Phase Offset to correct for phase angle measurement errors or differences, floating point" + Environment.NewLine);
-                    fileImage.Append(";    Shunt:      Current- shunt resistence in ohms, or the equivalent ratio for aux CTs, floating point" + Environment.NewLine);
-                    fileImage.Append(";                Voltage- empty, not used" + Environment.NewLine);
-                    fileImage.Append(";    VoltageRef: Current- phasor number (1-10) of voltage phasor to use for power calculation, integer" + Environment.NewLine);
-                    fileImage.Append(";                Voltage- voltage class, standard l-l voltages, 500, 230, 115, etc, integer" + Environment.NewLine);
-                    fileImage.Append(";    Label:      Phasor quantity label for print label, text" + Environment.NewLine);
-                    fileImage.Append(";    Comments:   All text after the semicolon on a line are optional comments not for processing" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append(";   Voltage Magnitude = MAG(Real,Imaginary) * CalFactor * PTR (line-neutral)" + Environment.NewLine);
-                    fileImage.Append(";   Current Magnitude = MAG(Real,Imaginary) * CalFactor * CTR / Shunt (phase current)" + Environment.NewLine);
-                    fileImage.Append(";   Phase Angle = ATAN(Imaginary/Real) + Phase Offset (usually degrees)" + Environment.NewLine);
-                    fileImage.Append(";     Note: Usually phase Offset is 0, but is sometimes required for comparing measurements" + Environment.NewLine);
-                    fileImage.Append(";           from different systems or through transformer banks" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append(";   Frequency entry format:  scale, offset, dF/dt scale, dF/dt offset, dummy, label  ;Comments" + Environment.NewLine);
-                    fileImage.Append(";   Frequency = Number / scale + offset" + Environment.NewLine);
-                    fileImage.Append(";   dF/dt = Number / (dF/dt scale) + (dF/dt offset)" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-                    fileImage.Append(";" + Environment.NewLine);
-
-                    fileImage.Append("[DEFAULT]" + Environment.NewLine);
-                    fileImage.Append("PhasorV=" + PhasorDefinition.ConfigFileFormat(DefaultPhasorV) + Environment.NewLine);
-                    fileImage.Append("PhasorI=" + PhasorDefinition.ConfigFileFormat(DefaultPhasorI) + Environment.NewLine);
-                    fileImage.Append("Frequency=" + FrequencyDefinition.ConfigFileFormat(DefaultFrequency) + Environment.NewLine);
-                    fileImage.AppendLine();
-
-                    fileImage.Append("[CONFIG]" + Environment.NewLine);
-                    fileImage.Append("SampleRate=" + FrameRate + Environment.NewLine);
-                    fileImage.Append("NumberOfPMUs=" + Cells.Count + Environment.NewLine);
-                    fileImage.AppendLine();
-
-                    for (int x = 0; x < Cells.Count; x++)
+                    fileImage.Append("[" + Cells[x].IDLabel + "]" + Environment.NewLine);
+                    fileImage.Append("Name=" + Cells[x].StationName + Environment.NewLine);
+                    fileImage.Append("PMU=" + x + Environment.NewLine);
+                    fileImage.Append("NumberPhasors=" + Cells[x].PhasorDefinitions.Count + Environment.NewLine);
+                    for (int y = 0; y < Cells[x].PhasorDefinitions.Count; y++)
                     {
-                        fileImage.Append("[" + Cells[x].IDLabel + "]" + Environment.NewLine);
-                        fileImage.Append("Name=" + Cells[x].StationName + Environment.NewLine);
-                        fileImage.Append("PMU=" + x + Environment.NewLine);
-                        fileImage.Append("NumberPhasors=" + Cells[x].PhasorDefinitions.Count + Environment.NewLine);
-                        for (int y = 0; y < Cells[x].PhasorDefinitions.Count; y++)
-                        {
-                            fileImage.Append("Phasor" + (y + 1) + "=" + PhasorDefinition.ConfigFileFormat(Cells[x].PhasorDefinitions[y]) + Environment.NewLine);
-                        }
-                        fileImage.Append("Frequency=" + FrequencyDefinition.ConfigFileFormat(Cells[x].FrequencyDefinition) + Environment.NewLine);
-                        fileImage.AppendLine();
+                        fileImage.Append("Phasor" + (y + 1) + "=" + PhasorDefinition.ConfigFileFormat(Cells[x].PhasorDefinitions[y]) + Environment.NewLine);
                     }
+                    fileImage.Append("Frequency=" + FrequencyDefinition.ConfigFileFormat(Cells[x].FrequencyDefinition) + Environment.NewLine);
+                    fileImage.AppendLine();
+                }
 
-                    return fileImage.ToString();
-                }
-                finally
-                {
-                    m_readWriteLock.ReleaseReaderLock();
-                }
+                return fileImage.ToString();
             }
         }
 
@@ -520,10 +494,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
         private void Refresh(bool refreshCausedByFrameParse)
         {
-            // The only time we need a write lock is when we reload the config file...
-            m_readWriteLock.AcquireWriterLock(-1);
-
-            try
+            // The only time we need an access lock is when we reload the config file...
+            lock (m_iniFile)
             {
                 if (File.Exists(m_iniFile.FileName))
                 {
@@ -649,10 +621,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 }
                 else
                     throw new InvalidOperationException("PDC config file \"" + m_iniFile.FileName + "\" does not exist.");
-            }
-            finally
-            {
-                m_readWriteLock.ReleaseWriterLock();
             }
 
             // In case other classes want to know, we send out a notification that the config file has been reloaded (make sure
