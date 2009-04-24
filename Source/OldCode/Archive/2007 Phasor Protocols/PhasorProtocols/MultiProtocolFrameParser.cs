@@ -76,7 +76,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Virgina Tech F-NET protocol.
         /// </summary>
-        FNet
+        FNet,
+        /// <summary>
+        /// SEL Fast Message protocol.
+        /// </summary>
+        SelFastMessage
     }
 
     #endregion
@@ -84,6 +88,13 @@ namespace PCS.PhasorProtocols
     /// <summary>
     /// Protocol independent frame parser.
     /// </summary>
+    /// <remarks>
+    /// This class takes all protocol frame parsing implementations and reduces them to a single simple-to-use class exposing all
+    /// data through abstract interfaces (e.g., IConfigurationFrame, IDataFrame, etc.) - this way new protocol implementations can
+    /// be added without adversely affecting consuming code. Additionally, this class implements a variety of transport options
+    /// (e.g., TCP, UDP, Serial, etc.) and hides the complexities of this connectivity and internally pushes all data received from
+    /// the selected transport protocol to the selected phasor parsing protocol.
+    /// </remarks>
     public class MultiProtocolFrameParser : IFrameParser
     {
         #region [ Members ]
@@ -320,10 +331,9 @@ namespace PCS.PhasorProtocols
                 // Setup protocol specific connection parameters...
                 switch (value)
                 {
-                    // TODO: Uncomment...
-                    //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                    //    m_connectionParameters = new BpaPdcStream.ConnectionParameters();
-                    //    break;
+                    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                        m_connectionParameters = new BpaPdcStream.ConnectionParameters();
+                        break;
                     case PhasorProtocols.PhasorProtocol.FNet:
                         m_connectionParameters = new FNet.ConnectionParameters();
                         break;
@@ -781,13 +791,9 @@ namespace PCS.PhasorProtocols
             get
             {
                 if (m_sourceName == null)
-                {
                     return m_deviceID + " (" + m_connectionString + ")";
-                }
                 else
-                {
                     return m_sourceName + ", ID " + m_deviceID + " (" + m_connectionString + ")";
-                }
             }
         }
 
@@ -807,7 +813,7 @@ namespace PCS.PhasorProtocols
                 statusText.Append(m_connectionString);
                 statusText.AppendLine();
                 statusText.Append("           Phasor protocol: ");
-                statusText.Append(Common.GetFormattedProtocolName(PhasorProtocol));
+                statusText.Append(m_phasorProtocol.GetFormattedProtocolName());
                 statusText.AppendLine();
                 statusText.Append("               Buffer size: ");
                 statusText.Append(m_bufferSize);
@@ -933,10 +939,9 @@ namespace PCS.PhasorProtocols
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
                         m_frameParser = new Ieee1344.FrameParser();
                         break;
-                    // TODO: Uncomment!
-                    //case PhasorProtocols.PhasorProtocol.BpaPdcStream:
-                    //    m_frameParser = new BpaPdcStream.FrameParser();
-                    //    break;
+                    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                        m_frameParser = new BpaPdcStream.FrameParser();
+                        break;
                     case PhasorProtocols.PhasorProtocol.FNet:
                         m_frameParser = new FNet.FrameParser();
                         break;
@@ -1344,7 +1349,7 @@ namespace PCS.PhasorProtocols
 
                 // Thread sleep time is a minimum suggested sleep time depending on system activity, so we target 9/10 of a second
                 // to make this a little more accurate. Since this is just used for replay, getting close is good enough - no need
-                // to incur the overhead of using a PCS.PrecisionTimer here...
+                // to incur the overhead of using a PrecisionTimer here...
                 if (sleepTime > 0)
                     Thread.Sleep((int)(sleepTime * 900.0D));
             }

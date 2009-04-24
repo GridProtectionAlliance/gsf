@@ -37,22 +37,6 @@ namespace PCS.PhasorProtocols
         internal static MeasurementKey UndefinedKey = new MeasurementKey(uint.MaxValue, "__");
 
         /// <summary>
-        /// This is a common optimized block copy function for any kind of data.
-        /// </summary>
-        /// <param name="channel">Source channel with BinaryImage data to copy.</param>
-        /// <param name="destination">Destination buffer to hold copied buffer data.</param>
-        /// <param name="index">
-        /// Index into <paramref name="destination"/> buffer to begin copy. Index is automatically incremented by <see cref="ISupportBinaryImage.BinaryLength"/>.
-        /// </param>
-        /// <remarks>
-        /// This function automatically advances index for convenience.
-        /// </remarks>
-        public static void CopyImage(this ISupportBinaryImage channel, byte[] destination, ref int index)
-        {
-            CopyImage(channel.BinaryImage, destination, ref index, channel.BinaryLength);
-        }
-
-        /// <summary>
         /// This is a common optimized block copy function for binary data.
         /// </summary>
         /// <param name="source">Source buffer to copy data from.</param>
@@ -69,6 +53,22 @@ namespace PCS.PhasorProtocols
                 Buffer.BlockCopy(source, 0, destination, index, length);
                 index += length;
             }
+        }
+
+        /// <summary>
+        /// This is a common optimized block copy function for any kind of data.
+        /// </summary>
+        /// <param name="channel">Source channel with BinaryImage data to copy.</param>
+        /// <param name="destination">Destination buffer to hold copied buffer data.</param>
+        /// <param name="index">
+        /// Index into <paramref name="destination"/> buffer to begin copy. Index is automatically incremented by <see cref="ISupportBinaryImage.BinaryLength"/>.
+        /// </param>
+        /// <remarks>
+        /// This function automatically advances index for convenience.
+        /// </remarks>
+        public static void CopyImage(this ISupportBinaryImage channel, byte[] destination, ref int index)
+        {
+            channel.BinaryImage.CopyImage(destination, ref index, channel.BinaryLength);
         }
 
         /// <summary>
@@ -103,6 +103,8 @@ namespace PCS.PhasorProtocols
                     return "BPA PDCstream";
                 case PhasorProtocol.FNet:
                     return "Virginia Tech F-NET";
+                case PhasorProtocol.SelFastMessage:
+                    return "SEL Fast Message";
                 default:
                     return Enum.GetName(typeof(PhasorProtocol), protocol).Replace('_', '.').ToUpper();
             }

@@ -32,7 +32,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         #region [ Members ]
 
         // Fields
-        private ChannelFlags m_flags;
+        private ChannelFlags m_channelFlags;
         private ReservedFlags m_reservedFlags;
         private ushort m_sampleNumber;
         private byte m_dataRate;
@@ -114,7 +114,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             : base(info, context)
         {
             // Deserialize data cell
-            m_flags = (ChannelFlags)info.GetValue("flags", typeof(ChannelFlags));
+            m_channelFlags = (ChannelFlags)info.GetValue("flags", typeof(ChannelFlags));
             m_reservedFlags = (ReservedFlags)info.GetValue("reservedFlags", typeof(ReservedFlags));
             m_sampleNumber = info.GetUInt16("sampleNumber");
         }
@@ -164,11 +164,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return m_flags;
+                return m_channelFlags;
             }
             set
             {
-                m_flags = value;
+                m_channelFlags = value;
             }
         }
 
@@ -286,14 +286,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.DataIsValid) == 0);
+                return ((m_channelFlags & ChannelFlags.DataIsValid) == 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags & ~ChannelFlags.DataIsValid;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataIsValid;
                 else
-                    m_flags = m_flags | ChannelFlags.DataIsValid;
+                    m_channelFlags = m_channelFlags | ChannelFlags.DataIsValid;
             }
         }
 
@@ -304,14 +304,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.PMUSynchronized) == 0);
+                return ((m_channelFlags & ChannelFlags.PMUSynchronized) == 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags & ~ChannelFlags.PMUSynchronized;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.PMUSynchronized;
                 else
-                    m_flags = m_flags | ChannelFlags.PMUSynchronized;
+                    m_channelFlags = m_channelFlags | ChannelFlags.PMUSynchronized;
             }
         }
 
@@ -322,14 +322,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return (((m_flags & ChannelFlags.DataSortedByArrival) > 0) ? PhasorProtocols.DataSortingType.ByArrival : PhasorProtocols.DataSortingType.ByTimestamp);
+                return (((m_channelFlags & ChannelFlags.DataSortedByArrival) > 0) ? PhasorProtocols.DataSortingType.ByArrival : PhasorProtocols.DataSortingType.ByTimestamp);
             }
             set
             {
                 if (value == PhasorProtocols.DataSortingType.ByArrival)
-                    m_flags = m_flags | ChannelFlags.DataSortedByArrival;
+                    m_channelFlags = m_channelFlags | ChannelFlags.DataSortedByArrival;
                 else
-                    m_flags = m_flags & ~ChannelFlags.DataSortedByArrival;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataSortedByArrival;
             }
         }
 
@@ -340,14 +340,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.TransmissionErrors) > 0);
+                return ((m_channelFlags & ChannelFlags.TransmissionErrors) > 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags | ChannelFlags.TransmissionErrors;
+                    m_channelFlags = m_channelFlags | ChannelFlags.TransmissionErrors;
                 else
-                    m_flags = m_flags & ~ChannelFlags.TransmissionErrors;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.TransmissionErrors;
             }
         }
 
@@ -358,14 +358,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.PDCExchangeFormat) > 0);
+                return ((m_channelFlags & ChannelFlags.PDCExchangeFormat) > 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags | ChannelFlags.PDCExchangeFormat;
+                    m_channelFlags = m_channelFlags | ChannelFlags.PDCExchangeFormat;
                 else
-                    m_flags = m_flags & ~ChannelFlags.PDCExchangeFormat;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.PDCExchangeFormat;
             }
         }
 
@@ -376,14 +376,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.MacrodyneFormat) > 0);
+                return ((m_channelFlags & ChannelFlags.MacrodyneFormat) > 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags | ChannelFlags.MacrodyneFormat;
+                    m_channelFlags = m_channelFlags | ChannelFlags.MacrodyneFormat;
                 else
-                    m_flags = m_flags & ~ChannelFlags.MacrodyneFormat;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.MacrodyneFormat;
             }
         }
 
@@ -394,14 +394,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.MacrodyneFormat) == 0);
+                return ((m_channelFlags & ChannelFlags.MacrodyneFormat) == 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags & ~ChannelFlags.MacrodyneFormat;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.MacrodyneFormat;
                 else
-                    m_flags = m_flags | ChannelFlags.MacrodyneFormat;
+                    m_channelFlags = m_channelFlags | ChannelFlags.MacrodyneFormat;
             }
         }
 
@@ -413,14 +413,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.DataSortedByTimestamp) == 0);
+                return ((m_channelFlags & ChannelFlags.DataSortedByTimestamp) == 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags & ~ChannelFlags.DataSortedByTimestamp;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.DataSortedByTimestamp;
                 else
-                    m_flags = m_flags | ChannelFlags.DataSortedByTimestamp;
+                    m_channelFlags = m_channelFlags | ChannelFlags.DataSortedByTimestamp;
             }
         }
 
@@ -432,14 +432,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_flags & ChannelFlags.TimestampIncluded) == 0);
+                return ((m_channelFlags & ChannelFlags.TimestampIncluded) == 0);
             }
             set
             {
                 if (value)
-                    m_flags = m_flags & ~ChannelFlags.TimestampIncluded;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.TimestampIncluded;
                 else
-                    m_flags = m_flags | ChannelFlags.TimestampIncluded;
+                    m_channelFlags = m_channelFlags | ChannelFlags.TimestampIncluded;
             }
         }
 
@@ -503,8 +503,9 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             {
                 byte[] buffer = new byte[HeaderLength];
 
-                // Add PDCstream specific image (we don't produce PDCExchangeFormat)
-                buffer[0] = (byte)(m_flags & ~ChannelFlags.PDCExchangeFormat);
+                // Add standard PDCstream specific image. There is no major benefit to justify development
+                // that would to allow production of a PDCExchangeFormat stream.
+                buffer[0] = (byte)(m_channelFlags & ~ChannelFlags.PDCExchangeFormat);
 
                 if (Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2)
                 {
@@ -584,7 +585,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             byte phasors;
 
             // Get data cell flags
-            m_flags = (ChannelFlags)binaryImage[index];
+            m_channelFlags = (ChannelFlags)binaryImage[index];
             index += 2;
 
             // Parse PDCstream specific header image
@@ -668,13 +669,13 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             // stream that's not in the config file - you could raise an event notifying consumer about the mismatch
             // instead of raising an exception - could even make a boolean property that would allow either case.
             // The important thing to consider is that to parse the cell images you have to have a defined
-            // definition (see base class "Phasors.DataCellBase.ParseBodyImage").  If you have more items defined
+            // definition (see base class method "DataCellBase.ParseBodyImage").  If you have more items defined
             // in the stream than you do in the config file then you won't get the new value, too few items and you
             // don't have enough definitions to correctly interpret the data (that would be bad) - either way the
             // definitions won't line up with the appropriate data value and you won't know which one is missing or
             // added.  I can't change the protocol so this is enough argument to just raise an error for config
             // file/stream mismatch.  So for now we'll just throw an exception and deal with consequences :)
-            // Note that this only applies to PDCstream protocol.
+            // Note that this only applies to BPA PDCstream protocol because of external configuration.
 
             // Addendum: After running this with several protocol implementations I noticed that if a device wasn't
             // reporting, the phasor count dropped to zero even if there were phasors defined in the configuration
@@ -683,10 +684,13 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
             // At least this number of phasors should be already defined in BPA PDCstream configuration file
             if (phasors > ConfigurationCell.PhasorDefinitions.Count)
-                throw new InvalidOperationException("Stream/Config File Mismatch: Phasor value count in stream (" + phasors + ") does not match defined count in configuration file (" + ConfigurationCell.PhasorDefinitions.Count + ") for " + ConfigurationCell.IDLabel);
+                throw new InvalidOperationException(
+                    "Stream/Config File Mismatch: Phasor value count in stream (" + phasors + 
+                    ") does not match defined count in configuration file (" + ConfigurationCell.PhasorDefinitions.Count + 
+                    ") for " + ConfigurationCell.IDLabel);
 
-            // If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-            // Dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            // If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file,
+            // in the mean time we dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (analogs > ConfigurationCell.AnalogDefinitions.Count)
             {
                 for (x = ConfigurationCell.AnalogDefinitions.Count; x < analogs; x++)
@@ -695,8 +699,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 }
             }
 
-            // If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file...
-            // Dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            // If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file,
+            // in the mean time we dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (digitals > ConfigurationCell.DigitalDefinitions.Count)
             {
                 for (x = ConfigurationCell.DigitalDefinitions.Count; x < digitals; x++)
@@ -744,7 +748,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             base.GetObjectData(info, context);
 
             // Serialize data cell
-            info.AddValue("flags", m_flags, typeof(ChannelFlags));
+            info.AddValue("flags", m_channelFlags, typeof(ChannelFlags));
             info.AddValue("reservedFlags", m_reservedFlags, typeof(ReservedFlags));
             info.AddValue("sampleNumber", m_sampleNumber);
         }

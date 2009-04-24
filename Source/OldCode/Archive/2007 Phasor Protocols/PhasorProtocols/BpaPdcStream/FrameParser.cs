@@ -69,16 +69,23 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         #region [ Constructors ]
 
         /// <summary>
+        /// Creates a new <see cref="FrameParser"/>.
+        /// </summary>
+        public FrameParser()
+        {
+            // Initialize protocol synchronization bytes for this frame parser
+            base.ProtocolSyncBytes = new byte[] { PhasorProtocols.Common.SyncByte };
+            m_syncLock = new object();
+        }
+
+        /// <summary>
         /// Creates a new <see cref="FrameParser"/> from specified parameters.
         /// </summary>
         /// <param name="configurationFileName">The required external BPA PDCstream INI based configuration file.</param>
         public FrameParser(string configurationFileName)
+            : this()
         {
-            // Initialize protocol synchronization bytes for this frame parser
-            base.ProtocolSyncBytes = new byte[] { PhasorProtocols.Common.SyncByte };
-
             m_configurationFileName = configurationFileName;
-            m_syncLock = new object();
         }
 
         #endregion

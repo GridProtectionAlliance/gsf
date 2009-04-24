@@ -170,7 +170,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             {
                 StringBuilder status = new StringBuilder();
 
-                status.Append("IEEEC37.118 draft revision: ");
+                status.Append("IEEE C37.118-2005 revision: ");
                 status.Append(m_draftRevision);
                 status.AppendLine();
                 status.Append("         Current time base: ");
