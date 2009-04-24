@@ -60,7 +60,8 @@ namespace System
 
         /// <summary>Creates a new <see cref="UnixTimeTag"/>, given number of seconds since 1/1/1970.</summary>
         /// <param name="seconds">Number of seconds since 1/1/1970.</param>
-        public UnixTimeTag(int seconds)
+        [CLSCompliant(false)]
+        public UnixTimeTag(uint seconds)
             : base(UnixDateOffsetTicks, (double)seconds)
         {
         }
