@@ -13,7 +13,7 @@
 //  03/16/2006 - J. Ritchie Carroll
 //       Initial version of source generated
 //  06/26/2006 - Pinal C. Patel
-//       Changed out the socket code with TcpClient and UdpClient components from TVA.Communication
+//       Changed out the socket code with TcpClient and UdpClient components from PCS.Communication
 //  01/31/2007 - J. Ritchie Carroll
 //       Added TCP "server" support to allow listening connections from devices that act as data
 //       clients, e.g., F-NET devices
@@ -24,7 +24,7 @@
 //  07/05/2007 - J. Ritchie Carroll
 //       Wrapped all event raising for frame parsing in Try/Catch so that any exceptions thrown in
 //       consumer event handlers won't have a negative effect on continuous data parsing - exceptions
-//       in consumer event handlers are duly noted and raised through the DataStreamException event
+//       in consumer event handlers are duly noted and raised through the ParsingException event
 //  09/28/2007 - J. Ritchie Carroll
 //       Implemented new disconnect overload on communications client that allows timeout on socket
 //       close to fix an issue related non-responsive threads that "lock-up" after sending connection
