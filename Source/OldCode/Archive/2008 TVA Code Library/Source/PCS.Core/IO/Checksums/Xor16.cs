@@ -20,6 +20,7 @@ using System;
 namespace PCS.IO.Checksums
 {
     /// <summary>Calculates word length (16-bit) XOR-based check-sum on specified portion of a buffer.</summary>
+    [CLSCompliant(false)]
     public sealed class Xor16 : IChecksum
     {
         #region [ Members ]
@@ -45,9 +46,8 @@ namespace PCS.IO.Checksums
         #region [ Properties ]
 
         /// <summary>
-        /// Returns the Xor 8-bit checksum computed so far.
+        /// Returns the Xor 16-bit checksum computed so far.
         /// </summary>
-        [CLSCompliant(false)]
         public ushort Value
         {
             get
@@ -79,7 +79,6 @@ namespace PCS.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ushort value.
         /// </summary>
-        [CLSCompliant(false)]
         public void Update(ushort value)
         {
             m_checksum ^= value;
@@ -133,9 +132,9 @@ namespace PCS.IO.Checksums
             if (offset + count > buffer.Length)
                 throw new ArgumentOutOfRangeException("count", "exceeds buffer size");
 
-            for (int x = 0; x < count; x++)
+            for (int x = 0; x < count; x += 2)
             {
-                m_checksum ^= buffer[offset + x];
+                m_checksum ^= BitConverter.ToUInt16(buffer, offset + x);
             }
         }
 

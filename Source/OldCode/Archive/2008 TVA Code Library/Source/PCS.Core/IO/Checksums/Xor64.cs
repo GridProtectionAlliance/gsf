@@ -46,9 +46,8 @@ namespace PCS.IO.Checksums
         #region [ Properties ]
 
         /// <summary>
-        /// Returns the Xor 8-bit checksum computed so far.
+        /// Returns the Xor 64-bit checksum computed so far.
         /// </summary>
-        [CLSCompliant(false)]
         public ulong Value
         {
             get
@@ -80,7 +79,6 @@ namespace PCS.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ulong value.
         /// </summary>
-        [CLSCompliant(false)]
         public void Update(ulong value)
         {
             m_checksum ^= value;
@@ -134,9 +132,9 @@ namespace PCS.IO.Checksums
             if (offset + count > buffer.Length)
                 throw new ArgumentOutOfRangeException("count", "exceeds buffer size");
 
-            for (int x = 0; x < count; x++)
+            for (int x = 0; x < count; x += 8)
             {
-                m_checksum ^= buffer[offset + x];
+                m_checksum ^= BitConverter.ToUInt64(buffer, offset + x);
             }
         }
 
