@@ -1324,8 +1324,12 @@ namespace PCS.PhasorProtocols
                 m_initiatingDataStream = false;
             }
 
-            // Request configuration frame once real-time data has been disabled
-            SendDeviceCommand(DeviceCommand.SendConfigurationFrame2);
+            // Request configuration frame once real-time data has been disabled. Note that SEL Fast Message
+            // doesn't define a binary configuration frame so skip requesting one...
+            if (m_phasorProtocol != PhasorProtocol.SelFastMessage)
+                SendDeviceCommand(DeviceCommand.SendConfigurationFrame2);
+            else
+                SendDeviceCommand(DeviceCommand.EnableRealTimeData);
         }
 
         private bool GetDerivedCommandSupport()
@@ -1486,8 +1490,9 @@ namespace PCS.PhasorProtocols
 
         private void m_frameParser_ReceivedConfigurationFrame(object sender, EventArgs<IConfigurationFrame> e)
         {
-            // We automatically request enabling of real-time data upon reception of config frame if requested
-            if (m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence)
+            // We automatically request enabling of real-time data upon reception of config frame if requested. Note that SEL Fast Message will
+            // have already been enabled at this point so we don't duplicate request for enabling real-time data stream
+            if (m_configurationFrame == null && m_deviceSupportsCommands && m_autoStartDataParsingSequence && m_phasorProtocol != PhasorProtocol.SelFastMessage)
                 SendDeviceCommand(DeviceCommand.EnableRealTimeData);
 
             m_frameRateTotal++;
