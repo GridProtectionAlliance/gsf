@@ -950,6 +950,9 @@ namespace PCS.PhasorProtocols
                     case PhasorProtocols.PhasorProtocol.FNet:
                         m_frameParser = new FNet.FrameParser();
                         break;
+                    case PhasorProtocols.PhasorProtocol.SelFastMessage:
+                        m_frameParser = new SelFastMessage.FrameParser();
+                        break;
                 }
 
                 // Setup event handlers
