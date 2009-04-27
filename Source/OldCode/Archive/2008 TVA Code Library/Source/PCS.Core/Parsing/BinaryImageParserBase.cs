@@ -331,8 +331,8 @@ namespace PCS.Parsing
 
                     if (syncBytesPosition > -1)
                     {
-                        ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
                         StreamInitialized = true;
+                        ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
                     }
                 }
 
