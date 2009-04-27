@@ -49,13 +49,12 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="ConfigurationCellBase"/> from specified parameters.
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCellBase"/>.</param>
-        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ConfigurationCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
         /// <param name="idCode">The numeric ID code for this <see cref="ConfigurationCellBase"/>.</param>
         /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorDefinitions"/> collection.</param>
         /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogDefinitions"/> collection.</param>
         /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalDefinitions"/> collection.</param>
-        protected ConfigurationCellBase(IConfigurationFrame parent, bool alignOnDWordBoundary, ushort idCode, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
-            : base(parent, alignOnDWordBoundary, idCode)
+        protected ConfigurationCellBase(IConfigurationFrame parent, ushort idCode, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
+            : base(parent, idCode)
         {
             m_nominalFrequency = LineFrequency.Hz60; // Defaulting to 60Hz
 

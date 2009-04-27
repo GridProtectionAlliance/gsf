@@ -46,7 +46,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCell"/>.</param>
         /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
         public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
-            : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             // Initialize single phasor value and frequency value with an empty value
             PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[0]));

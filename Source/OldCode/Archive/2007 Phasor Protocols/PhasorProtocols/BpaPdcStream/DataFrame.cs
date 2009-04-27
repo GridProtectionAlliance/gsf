@@ -116,6 +116,21 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
+        /// Gets or sets the parsing state for the this <see cref="DataFrame"/>.
+        /// </summary>
+        public new DataFrameParsingState State
+        {
+            get
+            {
+                return base.State as DataFrameParsingState;
+            }
+            set
+            {
+                base.State = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the identifier that is used to identify the IEEE C37.118 frame.
         /// </summary>
         public FrameType TypeID
@@ -145,7 +160,10 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 m_frameHeader = value;
 
                 if (m_frameHeader != null)
-                    State = m_frameHeader.State as IDataFrameParsingState;
+                {
+                    State = m_frameHeader.State as DataFrameParsingState;
+                    Timestamp = m_frameHeader.RoughTimestamp;
+                }
             }
         }
 
@@ -345,46 +363,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     m_legacyLabels[x] = Encoding.ASCII.GetString(binaryImage, index, 4);
                     // We don't need offsets, so we skip them...
                     index += 8;
-                }
-            }
-
-            return (index - startIndex);
-        }
-
-        /// <summary>
-        /// Parses the binary body image.
-        /// </summary>
-        /// <param name="binaryImage">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        /// <remarks>
-        /// We override normal frame body image parsing because any cells in PDCxchng format
-        /// will contain several PMU's within a "PDC Block" - when we encounter these we must
-        /// advance the cell index by the number of PMU's parsed instead of one at a time.
-        /// </remarks>
-        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
-        {
-            IDataFrameParsingState state = State;
-            DataCell cell;
-            int parsedLength, index = startIndex, cellIndex = 0, cellCount = state.CellCount;
-
-            while (!(cellIndex >= cellCount))
-            {
-                cell = state.CreateNewCell(this, state, cellIndex, binaryImage, index, out parsedLength) as DataCell;
-                index += parsedLength;
-
-                if (cell.UsingPDCExchangeFormat)
-                {
-                    // Advance current cell index and total cell count
-                    cellIndex += cell.PdcBlockPmuCount;
-                    cellCount += cell.PdcBlockPmuCount - 1; // Subtract one since PDC block counted as one cell
-                }
-                else
-                {
-                    // Handle normal case of adding an individual PMU
-                    Cells.Add(cell);
-                    cellIndex++;
                 }
             }
 

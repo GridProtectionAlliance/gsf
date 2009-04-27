@@ -196,7 +196,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     {
                         State = parsingState;
                         m_iniFile = new IniFile(parsingState.ConfigurationFileName);
-                        Refresh(true);
                     }
                 }
             }
@@ -476,6 +475,26 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This method is overriden so INI file can be loaded after binary image has been parsed.
+        /// </remarks>
+        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            int parsedLength = base.Initialize(binaryImage, startIndex, length);
+
+            // Load INI file image and associate parsed cells to cells in configuration file...
+            Refresh(true);
+
+            return parsedLength;
+        }
+
+        /// <summary>
         /// Reload BPA PDcstream INI based configuration file.
         /// </summary>
         public void Refresh()
@@ -503,9 +522,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     // from the configuration frame will be mapped to their associated config file cell by ID label
                     // when the configuration cell is parsed from the configuration frame
                     if (m_configurationFileCells == null)
-                    {
                         m_configurationFileCells = new ConfigurationCellCollection();
-                    }
+
                     m_configurationFileCells.Clear();
 
                     // Load phasor data for each section in config file...
@@ -567,7 +585,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                                 }
                                 else
                                 {
-                                    if (configurationFileCell.IsPDCBlockSection)
+                                    if (configurationFileCell.IsPdcBlockSection)
                                     {
                                         // This looks like a PDC block section - so we'll keep adding cells for each defined PMU in the PDC block
                                         int index = 0;

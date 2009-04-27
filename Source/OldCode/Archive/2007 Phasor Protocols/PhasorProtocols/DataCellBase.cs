@@ -93,12 +93,11 @@ namespace PCS.PhasorProtocols
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCellBase"/>.</param>
         /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCellBase"/>.</param>
-        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="DataCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
         /// <param name="maximumPhasors">Sets the maximum number of phasors for the <see cref="PhasorValues"/> collection.</param>
         /// <param name="maximumAnalogs">Sets the maximum number of phasors for the <see cref="AnalogValues"/> collection.</param>
         /// <param name="maximumDigitals">Sets the maximum number of phasors for the <see cref="DigitalValues"/> collection.</param>
-        protected DataCellBase(IDataFrame parent, IConfigurationCell configurationCell, bool alignOnDWordBoundary, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
-            : base(parent, alignOnDWordBoundary, 0)
+        protected DataCellBase(IDataFrame parent, IConfigurationCell configurationCell, int maximumPhasors, int maximumAnalogs, int maximumDigitals)
+            : base(parent, 0)
         {
             m_configurationCell = configurationCell;
             m_statusFlags = ushort.MaxValue;

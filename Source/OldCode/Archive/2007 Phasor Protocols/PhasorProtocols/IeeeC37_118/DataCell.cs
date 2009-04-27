@@ -36,7 +36,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCell"/>.</param>
         /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
         public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
-            : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(

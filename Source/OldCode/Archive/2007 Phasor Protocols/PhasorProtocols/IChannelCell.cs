@@ -48,14 +48,5 @@ namespace PCS.PhasorProtocols
         /// abstract representation of this identifier.
         /// </remarks>
         ushort IDCode { get; set; }
-
-        /// <summary>
-        /// Gets a flag that determines if the <see cref="IChannelCell"/> is aligned on a double-word (i.e., 32-bit) boundry.
-        /// </summary>
-        /// <remarks>
-        /// If protocol requires this property to be true, the <see cref="ISupportBinaryImage.BinaryLength"/> of the <see cref="IChannelCell"/>
-        /// will be padded to align evenly at 4-byte intervals.
-        /// </remarks>
-        bool AlignOnDWordBoundary { get; }
     }
 }

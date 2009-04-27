@@ -43,7 +43,7 @@ namespace PCS.PhasorProtocols
         /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="CommandCell"/>.</param>
         /// <param name="extendedDataByte">Extended data <see cref="Byte"/> that represents this <see cref="CommandCell"/>.</param>
         public CommandCell(ICommandFrame parent, byte extendedDataByte)
-            : base(parent, false, 0)
+            : base(parent, 0)
         {
             m_extendedDataByte = extendedDataByte;
         }

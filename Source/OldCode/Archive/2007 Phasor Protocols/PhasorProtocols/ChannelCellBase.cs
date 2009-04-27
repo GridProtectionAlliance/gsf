@@ -19,7 +19,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Parsing;
 
 namespace PCS.PhasorProtocols
 {
@@ -39,7 +38,6 @@ namespace PCS.PhasorProtocols
         // Fields
         private IChannelFrame m_parent;         // Reference to parent frame of this channel cell
         private ushort m_idCode;                // Numeric identifier of this logical unit of data (e.g., PMU ID code)
-        private bool m_alignOnDWordBoundary;    // Determines if protocol requires 4-byte boundary alignment
 
         #endregion
 
@@ -49,12 +47,10 @@ namespace PCS.PhasorProtocols
         /// Creates a new <see cref="ChannelCellBase"/> from specified parameters.
         /// </summary>
         /// <param name="parent">A reference to the parent <see cref="IChannelFrame"/> for this <see cref="ChannelCellBase"/>.</param>
-        /// <param name="alignOnDWordBoundary">A flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.</param>
         /// <param name="idCode">The numeric ID code for this <see cref="ChannelCellBase"/>.</param>
-        protected ChannelCellBase(IChannelFrame parent, bool alignOnDWordBoundary, ushort idCode)
+        protected ChannelCellBase(IChannelFrame parent, ushort idCode)
         {
             m_parent = parent;
-            m_alignOnDWordBoundary = alignOnDWordBoundary;
             m_idCode = idCode;
         }
 
@@ -68,7 +64,6 @@ namespace PCS.PhasorProtocols
             // Deserialize basic channel cell values
             m_parent = (IChannelFrame)info.GetValue("parent", typeof(IChannelFrame));
             m_idCode = info.GetUInt16("id");
-            m_alignOnDWordBoundary = info.GetBoolean("alignOnDWordBoundary");
         }
 
         #endregion
@@ -125,46 +120,6 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
-        /// Gets a flag that determines if the <see cref="ChannelCellBase"/> is aligned on a double-word (i.e., 32-bit) boundry.
-        /// </summary>
-        /// <remarks>
-        /// If protocol requires this property to be true, the <see cref="ISupportBinaryImage.BinaryLength"/> of the <see cref="ChannelCellBase"/>
-        /// will be padded to align evenly at 4-byte intervals.
-        /// </remarks>
-        public virtual bool AlignOnDWordBoundary
-        {
-            get
-            {
-                return m_alignOnDWordBoundary;
-            }
-        }
-
-        /// <summary>
-        /// Gets the length of the <see cref="ISupportBinaryImage.BinaryImage"/>.
-        /// </summary>
-        /// <remarks>
-        /// This property is overriden to extend length evenly at 4-byte intervals if <see cref="AlignOnDWordBoundary"/> is true.
-        /// </remarks>
-        public override int BinaryLength
-        {
-            get
-            {
-                int length = base.BinaryLength;
-
-                if (m_alignOnDWordBoundary)
-                {
-                    // If requested, we align frame cells on 32-bit word boundaries
-                    while (!(length % 4 == 0))
-                    {
-                        length++;
-                    }
-                }
-
-                return length;
-            }
-        }
-
-        /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ChannelCellBase"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
@@ -174,7 +129,6 @@ namespace PCS.PhasorProtocols
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
                 baseAttributes.Add("ID Code", IDCode.ToString());
-                baseAttributes.Add("Align on DWord Boundary", AlignOnDWordBoundary.ToString());
 
                 return baseAttributes;
             }
@@ -195,7 +149,6 @@ namespace PCS.PhasorProtocols
             // Serialize basic channel cell values
             info.AddValue("parent", m_parent, typeof(IChannelFrame));
             info.AddValue("id", m_idCode);
-            info.AddValue("alignOnDWordBoundary", m_alignOnDWordBoundary);
         }
 
         #endregion

@@ -74,7 +74,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Not sync'd if set (yes = 0).
         /// </summary>
-        PMUSynchronized = (byte)Bits.Bit05,
+        PmuSynchronized = (byte)Bits.Bit05,
         /// <summary>
         /// Data out of sync if set (yes = 1).
         /// </summary>
@@ -86,7 +86,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// PDC format if set (yes = 1).
         /// </summary>
-        PDCExchangeFormat = (byte)Bits.Bit02,
+        PdcExchangeFormat = (byte)Bits.Bit02,
         /// <summary>
         /// Macrodyne or IEEE format (Macrodyne = 1).
         /// </summary>

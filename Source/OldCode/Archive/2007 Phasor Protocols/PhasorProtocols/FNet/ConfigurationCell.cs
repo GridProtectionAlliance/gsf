@@ -48,7 +48,7 @@ namespace PCS.PhasorProtocols.FNet
         /// <param name="nominalFrequency">The nominal <see cref="LineFrequency"/> of the <see cref="FrequencyDefinition"/> of this <see cref="ConfigurationCell"/>.</param>
         /// <param name="timeOffset">The time offset of F-NET device in <see cref="Ticks"/>.</param>
         internal ConfigurationCell(ConfigurationFrame parent, LineFrequency nominalFrequency, Ticks timeOffset)
-            : base(parent, false, parent.IDCode, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, parent.IDCode, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             NominalFrequency = nominalFrequency;
             m_timeOffset = timeOffset;

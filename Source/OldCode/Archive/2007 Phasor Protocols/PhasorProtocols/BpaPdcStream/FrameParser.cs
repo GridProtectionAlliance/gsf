@@ -305,7 +305,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             if (length >= CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
-                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_parseWordCountFromByte, buffer, offset);
+                CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(m_parseWordCountFromByte, buffer, offset, length);
 
                 // As an optimization, we also make sure entire frame buffer image is available to be parsed - by doing this
                 // we eliminate the need to validate length on all subsequent data elements that comprise the frame
@@ -367,7 +367,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 {
                     // Create a new file watcher for configuration file - we'll automatically refresh configuration file
                     // when this file gets updated...
-                    m_configurationFileWatcher = new FileSystemWatcher(Path.GetFullPath(configurationFile), FilePath.GetFileName(configurationFile));
+                    m_configurationFileWatcher = new FileSystemWatcher(FilePath.GetDirectoryName(configurationFile), FilePath.GetFileName(configurationFile));
                     m_configurationFileWatcher.Changed += m_configurationFileWatcher_Changed;
                     m_configurationFileWatcher.EnableRaisingEvents = true;
                     m_configurationFileWatcher.IncludeSubdirectories = false;

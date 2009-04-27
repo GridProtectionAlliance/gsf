@@ -94,8 +94,8 @@
     <Compile Include="BpaPdcStream\ConnectionParameters.cs" />
     <Compile Include="BpaPdcStream\DataCell.cs" />
     <Compile Include="BpaPdcStream\DataCellCollection.cs" />
-    <Compile Include="BpaPdcStream\DataCellParsingState.cs" />
     <Compile Include="BpaPdcStream\DataFrame.cs" />
+    <Compile Include="BpaPdcStream\DataFrameParsingState.cs" />
     <Compile Include="BpaPdcStream\DigitalDefinition.cs" />
     <Compile Include="BpaPdcStream\DigitalValue.cs" />
     <Compile Include="BpaPdcStream\FrameParser.cs" />

@@ -44,7 +44,7 @@ namespace PCS.PhasorProtocols
         /// <param name="parent">A reference to the parent <see cref="ICommandFrame"/> for this <see cref="HeaderCell"/>.</param>
         /// <param name="character">ASCII character as a <see cref="Byte"/> that represents this <see cref="HeaderCell"/>.</param>
         public HeaderCell(IHeaderFrame parent, byte character)
-            : base(parent, false, 0)
+            : base(parent, 0)
         {
             m_character = character;
         }

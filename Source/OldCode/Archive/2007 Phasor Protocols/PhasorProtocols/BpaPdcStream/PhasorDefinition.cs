@@ -252,6 +252,17 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
+        /// Gets the maximum length of the <see cref="ChannelDefinitionBase.Label"/> of this <see cref="PhasorDefinition"/>.
+        /// </summary>
+        public override int MaximumLabelLength
+        {
+            get
+            {
+                return 256;
+            }
+        }
+
+        /// <summary>
         /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="PhasorDefinition"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes

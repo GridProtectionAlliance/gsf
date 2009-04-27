@@ -42,6 +42,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         // Fields
         private byte m_packetNumber;
         private ushort m_wordCount;
+        private Ticks m_roughTimestamp;
         private IChannelParsingState m_state;
         private Dictionary<string, string> m_attributes;
         private object m_tag;
@@ -65,7 +66,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <param name="parseWordCountFromByte">Defines flag that interprets word count in packet header from a byte instead of a word.</param>
         /// <param name="binaryImage">Buffer that contains data to parse.</param>
         /// <param name="startIndex">Start index into buffer where valid data begins.</param>
-        public CommonFrameHeader(bool parseWordCountFromByte, byte[] binaryImage, int startIndex)
+        /// <param name="length">Maximum length of valid data from start index.</param>
+        public CommonFrameHeader(bool parseWordCountFromByte, byte[] binaryImage, int startIndex, int length)
         {
             if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
                 throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in BPA PDCstream frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
@@ -80,6 +82,22 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 m_wordCount = binaryImage[startIndex + 3];
             else
                 m_wordCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 2);
+
+            // If this is a data frame get a rough timestamp down to the second (full parse will get accurate timestamp), this way
+            // data frames that don't get fully parsed because configuration hasn't been received will still show a timestamp
+            if (m_packetNumber > 0 && length > 8)
+            {
+                uint secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 4);
+
+                // Until configuration is available, we make a guess at time tag type - this will just be
+                // used for display purposes until a configuration frame arrives.  If second of century
+                // is greater than 3155673600 (SOC value for NTP timestamp 1/1/2007), then this is likely
+                // an NTP time stamp (else this is a Unix time tag for the year 2069 - not likely).
+                if (secondOfCentury > 3155673600)
+                    m_roughTimestamp = (new NtpTimeTag(secondOfCentury, 0)).ToDateTime().Ticks;
+                else
+                    m_roughTimestamp = (new UnixTimeTag(secondOfCentury)).ToDateTime().Ticks;
+            }
         }
 
         /// <summary>
@@ -178,6 +196,17 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     throw new OverflowException("Data length value cannot exceed " + Common.MaximumDataLength);
                 else
                     FrameLength = (ushort)(value + FixedLength + 2);
+            }
+        }
+
+        /// <summary>
+        /// Gets rough timestamp, accuarate to the second, that can be used until configuration frame arrives.
+        /// </summary>
+        public Ticks RoughTimestamp
+        {
+            get
+            {
+                return m_roughTimestamp;
             }
         }
 

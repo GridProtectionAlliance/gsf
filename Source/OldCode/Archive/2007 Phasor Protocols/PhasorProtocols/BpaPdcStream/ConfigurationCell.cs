@@ -51,7 +51,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
         public ConfigurationCell(IConfigurationFrame parent)
-            : base(parent, false, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
@@ -84,7 +84,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             // Deserialize configuration cell
             m_sectionEntry = info.GetString("sectionEntry");
-            m_formatFlags = (FormatFlags)info.GetValue("IEEEFormatFlags", typeof(FormatFlags));
+            m_formatFlags = (FormatFlags)info.GetValue("formatFlags", typeof(FormatFlags));
             m_offset = info.GetUInt16("offset");
             m_reserved = info.GetUInt16("reserved");
         }
@@ -200,7 +200,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Gets flag that determines if current <see cref="SectionEntry"/> defines a PDC block section.
         /// </summary>
-        public bool IsPDCBlockSection
+        public bool IsPdcBlockSection
         {
             get
             {
@@ -212,7 +212,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     return (m_sectionEntry.Length > IDLabelLength);
                 }
 
-                return m_configurationFileCell.IsPDCBlockSection;
+                return m_configurationFileCell.IsPdcBlockSection;
             }
         }
 
@@ -569,7 +569,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
             // Serialize configuration cell
             info.AddValue("sectionEntry", SectionEntry);
-            info.AddValue("IEEEFormatFlags", m_formatFlags, typeof(FormatFlags));
+            info.AddValue("formatFlags", m_formatFlags, typeof(FormatFlags));
             info.AddValue("offset", m_offset);
             info.AddValue("reserved", m_reserved);
         }

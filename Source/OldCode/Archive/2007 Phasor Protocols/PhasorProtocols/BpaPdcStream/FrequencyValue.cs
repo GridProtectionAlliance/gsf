@@ -107,8 +107,8 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             get
             {
                 // PMUs in PDC block do not include Df/Dt
-                if (Definition.Parent.IsPDCBlockSection)
-                    return base.BodyLength / 2;
+                if (Definition.Parent.IsPdcBlockSection)
+                    return 2;
                 else
                     return base.BodyLength;
             }
@@ -122,17 +122,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             get
             {
                 // PMUs in PDC block do not include Df/Dt
-                if (Definition.Parent.IsPDCBlockSection)
+                if (Definition.Parent.IsPdcBlockSection)
                 {
-                    byte[] buffer = new byte[base.BodyLength / 2];
+                    byte[] buffer = new byte[2];
 
-                    unchecked
-                    {
-                        if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                            EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
-                        else
-                            EndianOrder.BigEndian.CopyBytes((float)Frequency, buffer, 0);
-                    }
+                    EndianOrder.BigEndian.CopyBytes((short)UnscaledFrequency, buffer, 0);
 
                     return buffer;
                 }
@@ -155,16 +149,10 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
             // PMUs in PDC block do not include Df/Dt
-            if (Definition.Parent.IsPDCBlockSection)
+            if (Definition.Parent.IsPdcBlockSection)
             {
-                if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
-                {
-                    UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
-                    return 2;
-                }
-
-                Frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
-                return 4;
+                UnscaledFrequency = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex);
+                return 2;
             }
             
             return base.ParseBodyImage(binaryImage, startIndex, length);
@@ -183,7 +171,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             return (new FrequencyValue(null, definition)).BinaryLength;
         }
 
-        // Delegate handler to create a new IEEE C37.118 frequency value
+        // Delegate handler to create a new BPA PDCstream frequency value
         internal static IFrequencyValue CreateNewValue(IDataCell parent, IFrequencyDefinition definition, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             IFrequencyValue frequency = new FrequencyValue(parent, definition);

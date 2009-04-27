@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using PCS.Parsing;
 
 namespace PCS.PhasorProtocols.BpaPdcStream
 {
@@ -36,10 +37,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         private ReservedFlags m_reservedFlags;
         private ushort m_sampleNumber;
         private byte m_dataRate;
-        private byte m_pdcBlockPmuCount;
-        private bool m_isPdcBlockPmu;
-        private bool m_isPdcBlockHeader;
-        private int m_pdcBlockLength;
 
         #endregion
 
@@ -51,22 +48,15 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <param name="parent">The reference to parent <see cref="IDataFrame"/> of this <see cref="DataCell"/>.</param>
         /// <param name="configurationCell">The <see cref="IConfigurationCell"/> associated with this <see cref="DataCell"/>.</param>
         public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
-            : base(parent, configurationCell, false, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-            ConfigurationCell configCell = configurationCell as ConfigurationCell;
-            bool isPDCBlockSection = false;
-
-            if (configCell != null)
-                isPDCBlockSection = configCell.IsPDCBlockSection;
-
             // Define new parsing state which defines constructors for key data values
             State = new DataCellParsingState(
                 configurationCell,
                 BpaPdcStream.PhasorValue.CreateNewValue,
                 BpaPdcStream.FrequencyValue.CreateNewValue,
                 BpaPdcStream.AnalogValue.CreateNewValue,
-                BpaPdcStream.DigitalValue.CreateNewValue,
-                isPDCBlockSection);
+                BpaPdcStream.DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -114,7 +104,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             : base(info, context)
         {
             // Deserialize data cell
-            m_channelFlags = (ChannelFlags)info.GetValue("flags", typeof(ChannelFlags));
+            m_channelFlags = (ChannelFlags)info.GetValue("channelFlags", typeof(ChannelFlags));
             m_reservedFlags = (ReservedFlags)info.GetValue("reservedFlags", typeof(ReservedFlags));
             m_sampleNumber = info.GetUInt16("sampleNumber");
         }
@@ -199,13 +189,9 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             get
             {
                 if (Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2)
-                {
                     return (byte)Parent.ConfigurationFrame.FrameRate;
-                }
                 else
-                {
                     return m_dataRate;
-                }
             }
             set
             {
@@ -304,14 +290,14 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                return ((m_channelFlags & ChannelFlags.PMUSynchronized) == 0);
+                return ((m_channelFlags & ChannelFlags.PmuSynchronized) == 0);
             }
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.PMUSynchronized;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.PmuSynchronized;
                 else
-                    m_channelFlags = m_channelFlags | ChannelFlags.PMUSynchronized;
+                    m_channelFlags = m_channelFlags | ChannelFlags.PmuSynchronized;
             }
         }
 
@@ -354,18 +340,18 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Gets or sets flag that determines if this <see cref="DataCell"/> is using the PDC exchange format.
         /// </summary>
-        public bool UsingPDCExchangeFormat
+        public bool UsingPdcExchangeFormat
         {
             get
             {
-                return ((m_channelFlags & ChannelFlags.PDCExchangeFormat) > 0);
+                return ((m_channelFlags & ChannelFlags.PdcExchangeFormat) > 0);
             }
             set
             {
                 if (value)
-                    m_channelFlags = m_channelFlags | ChannelFlags.PDCExchangeFormat;
+                    m_channelFlags = m_channelFlags | ChannelFlags.PdcExchangeFormat;
                 else
-                    m_channelFlags = m_channelFlags & ~ChannelFlags.PDCExchangeFormat;
+                    m_channelFlags = m_channelFlags & ~ChannelFlags.PdcExchangeFormat;
             }
         }
 
@@ -390,7 +376,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Gets or sets flag that determines if this <see cref="DataCell"/> is using IEEE format.
         /// </summary>
-        public bool UsingIEEEFormat
+        public bool UsingIeeeFormat
         {
             get
             {
@@ -444,35 +430,21 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if this <see cref="DataCell"/> is a PDC block PMU.
+        /// Gets the length of the <see cref="ISupportBinaryImage.BinaryImage"/>.
         /// </summary>
-        public bool IsPdcBlockPmu
+        /// <remarks>
+        /// This property is overriden to extend length evenly at 4-byte intervals.
+        /// </remarks>
+        public override int BinaryLength
         {
             get
             {
-                return m_isPdcBlockPmu;
-            }
-        }
+                int length = base.BinaryLength;
 
-        /// <summary>
-        /// Gets the PDC block PMU count of this <see cref="DataCell"/>.
-        /// </summary>
-        public byte PdcBlockPmuCount
-        {
-            get
-            {
-                return m_pdcBlockPmuCount;
-            }
-        }
+                // We align data cells on 32-bit word boundaries (accounts for phantom digital)
+                length += 3 - (length - 1) % 4;
 
-        /// <summary>
-        /// Gets the PDC block length of this <see cref="DataCell"/>.
-        /// </summary>
-        public int PdcBlockLength
-        {
-            get
-            {
-                return m_pdcBlockLength;
+                return length;
             }
         }
 
@@ -483,10 +455,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                if (m_isPdcBlockPmu)
-                    return 2;
-                else
-                    return 6;
+                return 6;
             }
         }
 
@@ -505,7 +474,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
 
                 // Add standard PDCstream specific image. There is no major benefit to justify development
                 // that would to allow production of a PDCExchangeFormat stream.
-                buffer[0] = (byte)(m_channelFlags & ~ChannelFlags.PDCExchangeFormat);
+                buffer[0] = (byte)(m_channelFlags & ~ChannelFlags.PdcExchangeFormat);
 
                 if (Parent.ConfigurationFrame.RevisionNumber >= RevisionNumber.Revision2)
                 {
@@ -527,21 +496,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="DataCellBase.BodyImage"/>.
-        /// </summary>
-        protected override int BodyLength
-        {
-            get
-            {
-                // PDC block headers have no body elements - so we return a zero length
-                if (m_isPdcBlockHeader)
-                    return 0;
-                else
-                    return base.BodyLength;
-            }
-        }
-
-        /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
@@ -550,15 +504,12 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Channel Flags", ChannelFlags.ToString());
-                baseAttributes.Add("Reserved Flags", ReservedFlags.ToString());
+                baseAttributes.Add("Channel Flags", (int)ChannelFlags + ": " + ChannelFlags);
+                baseAttributes.Add("Reserved Flags", (int)ReservedFlags + ": " + ReservedFlags);
                 baseAttributes.Add("Sample Number", SampleNumber.ToString());
-                baseAttributes.Add("Reserved Flag 0 Is Set", ReservedFlag0IsSet.ToString());
-                baseAttributes.Add("Reserved Flag 1 Is Set", ReservedFlag1IsSet.ToString());
-                baseAttributes.Add("Using PDC Exchange Format", UsingPDCExchangeFormat.ToString());
+                baseAttributes.Add("Using PDC Exchange Format", UsingPdcExchangeFormat.ToString());
                 baseAttributes.Add("Using Macrodyne Format", UsingMacrodyneFormat.ToString());
-                baseAttributes.Add("Using IEEE Format", UsingIEEEFormat.ToString());
-                baseAttributes.Add("PMU Parsed From PDC Block", IsPdcBlockPmu.ToString());
+                baseAttributes.Add("Using IEEE Format", UsingIeeeFormat.ToString());
 
                 return baseAttributes;
             }
@@ -569,6 +520,26 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         #region [ Methods ]
 
         /// <summary>
+        /// Parses the binary image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        /// <remarks>
+        /// This property is overriden to extend parsed length evenly at 4-byte intervals.
+        /// </remarks>
+        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            int parsedLength = base.Initialize(binaryImage, startIndex, length);
+
+            // We align data cells on 32-bit word boundaries (accounts for phantom digital)
+            parsedLength += 3 - (parsedLength - 1) % 4;
+
+            return parsedLength;
+        }
+
+        /// <summary>
         /// Parses the binary header image.
         /// </summary>
         /// <param name="binaryImage">Binary image to parse.</param>
@@ -577,8 +548,10 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseHeaderImage(byte[] binaryImage, int startIndex, int length)
         {
-            DataCellParsingState state = State as DataCellParsingState;
-            RevisionNumber revision = Parent.ConfigurationFrame.RevisionNumber;
+            DataFrame parentFrame = Parent;
+            DataFrameParsingState frameState = parentFrame.State;
+            IDataCellParsingState state = State;
+            RevisionNumber revision = parentFrame.ConfigurationFrame.RevisionNumber;
             int x, index = startIndex;
             byte analogs = binaryImage[index + 1];
             byte digitals;
@@ -589,7 +562,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             index += 2;
 
             // Parse PDCstream specific header image
-            if (revision >= RevisionNumber.Revision2 && !state.IsPdcBlockPmu)
+            if (revision >= RevisionNumber.Revision2 && frameState.RemainingPdcBlockPmus == 0)
             {
                 // Strip off reserved flags
                 m_reservedFlags = (ReservedFlags)analogs & ~ReservedFlags.AnalogWordsMask;
@@ -604,14 +577,16 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 analogs = 0;
             }
 
-            if (state.IsPdcBlockPmu)
+            if (frameState.RemainingPdcBlockPmus > 0)
             {
                 // PDC Block PMU's contain exactly 2 phasors, 0 analogs and 1 digital
                 phasors = 2;
                 analogs = 0;
                 digitals = 1;
-                m_isPdcBlockPmu = true; // Have to take note of our smaller size for HeaderLength calculation!
-                UsingPDCExchangeFormat = true;
+                UsingPdcExchangeFormat = true;
+
+                // Decrement remaining PDC block PMU's
+                frameState.RemainingPdcBlockPmus--;
             }
             else
             {
@@ -630,31 +605,22 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 }
 
                 // Check for PDC exchange format
-                if (UsingPDCExchangeFormat)
+                if (UsingPdcExchangeFormat)
                 {
                     // In cases where we are using PDC exchange the phasor count is the number of PMU's in the PDC block
-                    m_pdcBlockPmuCount = phasors;
+                    int pdcBlockPmus = phasors - 1; // <-- Current PMU counts as one
+                    frameState.RemainingPdcBlockPmus = pdcBlockPmus;
+                    frameState.CellCount += pdcBlockPmus;
 
-                    // This PDC block header has no data values of its own (only PMU's) - so we cancel
-                    // data parsing for any other elements (see ParseBodyImage override below)
-                    m_isPdcBlockHeader = true;
-
-                    // Parse PMU's from PDC block...
-                    DataFrame parentFrame = Parent;
-                    int parsedLength, cellIndex = state.Index;
-
-                    // Account for channel flags in PDC block header
-                    m_pdcBlockLength = 4;
-
-                    for (x = 0; x < m_pdcBlockPmuCount; x++)
-                    {
-                        if (cellIndex + x < parentFrame.ConfigurationFrame.Cells.Count)
-                        {
-                            parentFrame.Cells.Add(DataCell.CreateNewCell(parentFrame, parentFrame.State, cellIndex + x, binaryImage, index, out parsedLength));
-                            index += parsedLength;
-                            m_pdcBlockLength += parsedLength;
-                        }
-                    }
+                    // PDC Block PMU's contain exactly 2 phasors, 0 analogs and 1 digital
+                    phasors = 2;
+                    analogs = 0;
+                    digitals = 1;
+                    
+                    // Get data cell flags for PDC block PMU
+                    m_channelFlags = (ChannelFlags)binaryImage[index];
+                    UsingPdcExchangeFormat = true;
+                    index += 2;
                 }
                 else
                 {
@@ -689,8 +655,9 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     ") does not match defined count in configuration file (" + ConfigurationCell.PhasorDefinitions.Count + 
                     ") for " + ConfigurationCell.IDLabel);
 
-            // If analog values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file,
-            // in the mean time we dyanmically add analog definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            // If analog values get a clear definition in INI file at some point, we can validate the number in the
+            // stream to the number in the config file, in the mean time we dyanmically add analog definitions to
+            // configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (analogs > ConfigurationCell.AnalogDefinitions.Count)
             {
                 for (x = ConfigurationCell.AnalogDefinitions.Count; x < analogs; x++)
@@ -699,8 +666,9 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                 }
             }
 
-            // If digital values get a clear definition in INI file at some point, we can validate the number in the stream to the number in the config file,
-            // in the mean time we dyanmically add digital definitions to configuration cell as needed (they are only defined in data frame of BPA PDCstream)
+            // If digital values get a clear definition in INI file at some point, we can validate the number in the
+            // stream to the number in the config file, in the mean time we dyanmically add digital definitions to
+            // configuration cell as needed (they are only defined in data frame of BPA PDCstream)
             if (digitals > ConfigurationCell.DigitalDefinitions.Count)
             {
                 for (x = ConfigurationCell.DigitalDefinitions.Count; x < digitals; x++)
@@ -722,22 +690,6 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Parses the binary body image.
-        /// </summary>
-        /// <param name="binaryImage">Binary image to parse.</param>
-        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
-        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
-        /// <returns>The length of the data that was parsed.</returns>
-        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
-        {
-            // PDC block headers have no body elements to parse other than children and they will have already been parsed at this point
-            if (!m_isPdcBlockHeader)
-                return base.ParseBodyImage(binaryImage, startIndex, length);
-
-            return 0;
-        }
-
-        /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
@@ -748,7 +700,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             base.GetObjectData(info, context);
 
             // Serialize data cell
-            info.AddValue("flags", m_channelFlags, typeof(ChannelFlags));
+            info.AddValue("channelFlags", m_channelFlags, typeof(ChannelFlags));
             info.AddValue("reservedFlags", m_reservedFlags, typeof(ReservedFlags));
             info.AddValue("sampleNumber", m_sampleNumber);
         }

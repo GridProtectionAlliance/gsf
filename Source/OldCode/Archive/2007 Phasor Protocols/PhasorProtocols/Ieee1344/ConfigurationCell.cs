@@ -44,7 +44,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         /// <param name="parent">The reference to parent <see cref="IConfigurationFrame"/> of this <see cref="ConfigurationCell"/>.</param>
         public ConfigurationCell(IConfigurationFrame parent)
-            : base(parent, false, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
+            : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             // Define new parsing state which defines constructors for key configuration values
             State = new ConfigurationCellParsingState(
