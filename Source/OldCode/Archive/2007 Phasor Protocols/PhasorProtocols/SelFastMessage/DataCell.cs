@@ -10,7 +10,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - James R Carroll
+//  04/27/2009 - James R Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -20,10 +20,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.Ieee1344
+namespace PCS.PhasorProtocols.SelFastMessage
 {
     /// <summary>
-    /// Represents the IEEE 1344 implementation of a <see cref="IDataCell"/> that can be sent or received.
+    /// Represents the SEL Fast Message implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
     [Serializable()]
     public class DataCell : DataCellBase
@@ -38,13 +38,6 @@ namespace PCS.PhasorProtocols.Ieee1344
         public DataCell(IDataFrame parent, IConfigurationCell configurationCell)
             : base(parent, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
-            // Define new parsing state which defines constructors for key data values
-            State = new DataCellParsingState(
-                configurationCell,
-                Ieee1344.PhasorValue.CreateNewValue,
-                Ieee1344.FrequencyValue.CreateNewValue,
-                null, // IEEE 1344 doesn't define analogs
-                Ieee1344.DigitalValue.CreateNewValue);
         }
 
         /// <summary>
@@ -68,12 +61,6 @@ namespace PCS.PhasorProtocols.Ieee1344
 
                 // Define a frequency and df/dt
                 FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
-
-                // Define any digital values
-                for (x = 0; x < ConfigurationCell.DigitalDefinitions.Count; x++)
-                {
-                    DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x]));
-                }
             }
         }
 
@@ -124,11 +111,26 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets the numeric ID code for this <see cref="DataCell"/>.
         /// </summary>
-        public new ulong IDCode
+        public new uint IDCode
         {
             get
             {
                 return ConfigurationCell.IDCode;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets status flags for this <see cref="DataCell"/>.
+        /// </summary>
+        public new StatusFlags StatusFlags
+        {
+            get
+            {
+                return (StatusFlags)base.StatusFlags;
+            }
+            set
+            {
+                base.StatusFlags = (ushort)value;
             }
         }
 
@@ -139,14 +141,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & (ushort)Bits.Bit14) == 0;
+                return (StatusFlags & SelFastMessage.StatusFlags.PMDOK) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (ushort)(StatusFlags & ~(ushort)Bits.Bit14);
+                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.PMDOK;
                 else
-                    StatusFlags = (ushort)(StatusFlags | (ushort)Bits.Bit14);
+                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.PMDOK;
             }
         }
 
@@ -157,14 +159,14 @@ namespace PCS.PhasorProtocols.Ieee1344
         {
             get
             {
-                return (StatusFlags & (ushort)Bits.Bit15) == 0;
+                return (StatusFlags & SelFastMessage.StatusFlags.TSOK) > 0;
             }
             set
             {
                 if (value)
-                    StatusFlags = (ushort)(StatusFlags & ~(ushort)Bits.Bit15);
+                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.TSOK;
                 else
-                    StatusFlags = (ushort)(StatusFlags | (ushort)Bits.Bit15);
+                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.TSOK;
             }
         }
 
@@ -186,7 +188,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// <summary>
         /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
         /// </summary>
-        /// <remarks>IEEE 1344 doesn't define bits for device error.</remarks>
+        /// <remarks>SEL Fast Message doesn't define bits for device error.</remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
@@ -196,22 +198,7 @@ namespace PCS.PhasorProtocols.Ieee1344
             }
             set
             {
-                // We just ignore this value as IEEE 1344 defines no flags for data errors
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets trigger status of this <see cref="DataCell"/>.
-        /// </summary>
-        public TriggerStatus TriggerStatus
-        {
-            get
-            {
-                return (TriggerStatus)(StatusFlags & Common.TriggerMask);
-            }
-            set
-            {
-                StatusFlags = (ushort)((StatusFlags & ~Common.TriggerMask) | (ushort)value);
+                // We just ignore this value as SEL Fast Message defines no flags for data errors
             }
         }
 
@@ -219,7 +206,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// Gets <see cref="AnalogValueCollection"/> of this <see cref="DataCell"/>.
         /// </summary>
         /// <remarks>
-        /// IEEE 1344 doesn't define any analog values.
+        /// SEL Fast Message doesn't define any analog values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override AnalogValueCollection AnalogValues
@@ -231,18 +218,55 @@ namespace PCS.PhasorProtocols.Ieee1344
         }
 
         /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
+        /// Gets <see cref="DigitalValueCollection"/> of this <see cref="DataCell"/>.
         /// </summary>
-        public override Dictionary<string, string> Attributes
+        /// <remarks>
+        /// SEL Fast Message doesn't define any digital values.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public override DigitalValueCollection DigitalValues
         {
             get
             {
-                Dictionary<string, string> baseAttributes = base.Attributes;
-
-                baseAttributes.Add("Trigger Status", (int)TriggerStatus + ": " + TriggerStatus);
-
-                return baseAttributes;
+                return base.DigitalValues;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]      
+
+        /// <summary>
+        /// Parses the binary body image.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to parse.</param>
+        /// <param name="startIndex">Start index into <paramref name="binaryImage"/> to begin parsing.</param>
+        /// <param name="length">Length of valid data within <paramref name="binaryImage"/>.</param>
+        /// <returns>The length of the data that was parsed.</returns>
+        protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
+        {
+            ConfigurationCell configCell = ConfigurationCell;
+            IPhasorValue phasorValue;
+            int x, parsedLength, index = startIndex;
+
+            // Parse out frequency value
+            FrequencyValue = SelFastMessage.FrequencyValue.CreateNewValue(this, configCell.FrequencyDefinition, binaryImage, index, out parsedLength);
+            index += parsedLength;
+
+            // Parse out phasor values
+            for (x = 0; x < configCell.PhasorDefinitions.Count; x++)
+            {
+                phasorValue = SelFastMessage.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], binaryImage, index, out parsedLength);
+                PhasorValues.Add(phasorValue);
+                index += parsedLength;
+            }
+
+            // Parse out status flags
+            StatusFlags = (StatusFlags)EndianOrder.LittleEndian.ToUInt16(binaryImage, startIndex);
+            index += 2;
+
+            // Return total parsed length
+            return (index - startIndex);
         }
 
         #endregion
@@ -251,7 +275,7 @@ namespace PCS.PhasorProtocols.Ieee1344
 
         // Static Methods
 
-        // Delegate handler to create a new IEEE 1344 data cell
+        // Delegate handler to create a new SEL Fast Message data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);

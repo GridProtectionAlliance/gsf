@@ -68,6 +68,12 @@ namespace PCS.PhasorProtocols.Ieee1344
             if (length < FrameLength)
                 throw new ArgumentOutOfRangeException("length");
 
+            // Validate check-sum
+            int sumLength = FrameLength - 2;
+
+            if (EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + sumLength) != CalculateChecksum(binaryImage, startIndex, sumLength))
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+
             Initialize(binaryImage, startIndex, length);
         }
  

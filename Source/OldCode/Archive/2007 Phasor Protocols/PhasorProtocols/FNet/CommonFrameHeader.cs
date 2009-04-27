@@ -51,7 +51,7 @@ namespace PCS.PhasorProtocols.FNet
         {
             // Validate F-NET data image
             if (binaryImage[startIndex] != Common.StartByte)
-                throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException("Bad data stream, expected start byte 0x01 as first byte in F-NET frame, got 0x" + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
 
             int endIndex = 0, stopIndex = 0;
 

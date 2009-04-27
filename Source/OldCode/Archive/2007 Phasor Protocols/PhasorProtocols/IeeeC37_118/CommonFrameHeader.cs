@@ -28,7 +28,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
     /// Represents the common header for all IEEE C37.118 frames of data.
     /// </summary>
     [Serializable()]
-    public class CommonFrameHeader : ICommonHeader<FrameType>, IChannelFrame
+    public class CommonFrameHeader : ICommonHeader<FrameType>, ISerializable
     {
         #region [ Members ]
 
@@ -48,8 +48,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         private uint m_timebase;
         private uint m_timeQualityFlags;
         private IChannelParsingState m_state;
-        private Dictionary<string, string> m_attributes;
-        private object m_tag;
 		
         #endregion
 
@@ -77,7 +75,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         public CommonFrameHeader(ConfigurationFrame1 configurationFrame, byte[] binaryImage, int startIndex)
         {
             if (binaryImage[startIndex] != PhasorProtocols.Common.SyncByte)
-                throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got " + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
+                throw new InvalidOperationException("Bad data stream, expected sync byte 0xAA as first byte in IEEE C37.118 frame, got 0x" + binaryImage[startIndex].ToString("X").PadLeft(2, '0'));
 
             // Strip out frame type and version information...
             m_frameType = (FrameType)binaryImage[startIndex + 1] & ~IeeeC37_118.FrameType.VersionNumberMask;
@@ -138,7 +136,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 m_timestamp = value;
             }
         }
-
 
         /// <summary>
         /// Gets or sets the IEEE C37.118 specific frame type of this frame.
@@ -362,17 +359,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
-        /// </summary>
-        public int BinaryLength
-        {
-            get
-            {
-                return FixedLength;
-            }
-        }
-
-        /// <summary>
         /// Gets the binary image of the common header portion of this frame.
         /// </summary>
         public byte[] BinaryImage
@@ -392,187 +378,9 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             }
         }
 
-        /// <summary>
-        /// Determines if <see cref="IChannelFrame"/> is only partially parsed.
-        /// </summary>
-        /// <remarks>
-        /// This frame is not complete - it only represents the parsed common "header" for frames.
-        /// </remarks>
-        public bool IsPartial
-        {
-            get
-            {
-                return true;
-            }
-        }
-
-        /// <summary>
-        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="CommonFrameHeader"/> object.
-        /// </summary>
-        public Dictionary<string, string> Attributes
-        {
-            get
-            {
-                // Create a new attributes dictionary or clear the contents of any existing one
-                if (m_attributes == null)
-                    m_attributes = new Dictionary<string, string>();
-                else
-                    m_attributes.Clear();
-
-                m_attributes.Add("Derived Type", this.GetType().Name);
-                m_attributes.Add("Binary Length", FixedLength.ToString());
-                m_attributes.Add("Total Cells", "0");
-                m_attributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
-                m_attributes.Add("ID Code", "undefined");
-                m_attributes.Add("Is Partial Frame", IsPartial.ToString());
-                m_attributes.Add("Published", "n/a");
-                m_attributes.Add("Ticks", "undefined");
-                m_attributes.Add("Timestamp", "n/a");
-                AppendHeaderAttributes(m_attributes);
-
-                return m_attributes;
-            }
-        }
-
-        /// <summary>
-        /// User definable object used to hold a reference associated with the <see cref="IChannel"/> object.
-        /// </summary>
-        public object Tag
-        {
-            get
-            {
-                return m_tag;
-            }
-            set
-            {
-                m_tag = value;
-            }
-        }
-
-        #region [ IChannelFrame Implementation ]
-
-        ushort IChannelFrame.IDCode
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        object IChannelFrame.Cells
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
-        {
-            // The common frame header is parsed during construction
-            throw new NotImplementedException();
-        }
-
-        int IFrame.PublishedMeasurements
-        {
-            get
-            {
-                return 0;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        IDictionary<MeasurementKey, IMeasurement> IFrame.Measurements
-        {
-            get
-            {
-                return null;
-            }
-        }
-
-        bool IFrame.Published
-        {
-            get
-            {
-                return false;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        IMeasurement IFrame.LastSortedMeasurement
-        {
-            get
-            {
-                return null;
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        #endregion
-
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Returns a value indicating whether this instance is equal to a specified <see cref="IFrame"/>.
-        /// </summary>
-        /// <param name="other">An <see cref="IFrame"/> value to compare to this instance.</param>
-        /// <returns>
-        /// True if <paramref name="other"/> has the same value as this instance; otherwise, False.
-        /// </returns>
-        public bool Equals(IFrame other)
-        {
-            return (CompareTo(other) == 0);
-        }
-
-        /// <summary>
-        /// Compares this instance to a specified <see cref="IFrame"/> and returns an indication of their
-        /// relative values.
-        /// </summary>
-        /// <param name="other">An <see cref="IFrame"/> to compare.</param>
-        /// <returns>
-        /// A signed number indicating the relative values of this instance and value. Returns less than zero
-        /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
-        /// if this instance is greater than value.
-        /// </returns>
-        public int CompareTo(IFrame other)
-        {
-            return (this as IFrame).Timestamp.CompareTo(other.Timestamp);
-        }
-
-        /// <summary>
-        /// Compares this instance to a specified object and returns an indication of their relative values.
-        /// </summary>
-        /// <param name="obj">An object to compare, or null.</param>
-        /// <returns>
-        /// A signed number indicating the relative values of this instance and value. Returns less than zero
-        /// if this instance is less than value, zero if this instance is equal to value, or greater than zero
-        /// if this instance is greater than value.
-        /// </returns>
-        /// <exception cref="ArgumentException">value is not an <see cref="IFrame"/>.</exception>
-        public int CompareTo(object obj)
-        {
-            IFrame other = obj as IFrame;
-
-            if (other != null)
-                return CompareTo(other);
-
-            throw new ArgumentException("Frame can only be compared with other IFrames...");
-        }
 
         /// <summary>
         /// Appends header specific attributes to <paramref name="attributes"/> dictionary.

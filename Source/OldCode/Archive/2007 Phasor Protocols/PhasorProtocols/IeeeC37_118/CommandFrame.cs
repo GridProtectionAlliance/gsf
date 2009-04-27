@@ -70,6 +70,12 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             if (length < m_frameHeader.FrameLength)
                 throw new ArgumentOutOfRangeException("length");
 
+            // Validate check-sum
+            int sumLength = m_frameHeader.FrameLength - 2;
+
+            if (EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + sumLength) != CalculateChecksum(binaryImage, startIndex, sumLength))
+                throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
+
             CommonHeader = m_frameHeader;
             Initialize(binaryImage, startIndex, length);
         }
