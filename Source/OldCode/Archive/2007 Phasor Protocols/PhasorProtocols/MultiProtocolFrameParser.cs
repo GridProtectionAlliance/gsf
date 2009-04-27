@@ -34,7 +34,9 @@
 //       data simulations from archived sample data
 //  10/28/2008 - James R Carroll
 //       Added support for SEL's UDP_T and UDP_U protocol implementations (UDP_S was already supported),
-//       implementation handled by allowing definition of a "CommandChannel" in the connection string.
+//       implementation handled by allowing definition of a "CommandChannel" in the connection string
+//  04/27/2009 - James R Carroll
+//       Added support for SEL Fast Message protocol
 //
 //*******************************************************************************************************
 
@@ -336,6 +338,9 @@ namespace PCS.PhasorProtocols
                         break;
                     case PhasorProtocols.PhasorProtocol.FNet:
                         m_connectionParameters = new FNet.ConnectionParameters();
+                        break;
+                    case PhasorProtocols.PhasorProtocol.SelFastMessage:
+                        m_connectionParameters = new SelFastMessage.ConnectionParameters();
                         break;
                     default:
                         m_connectionParameters = null;
@@ -1162,7 +1167,7 @@ namespace PCS.PhasorProtocols
             {
                 ICommandFrame commandFrame;
 
-                // Only the IEEE protocols support commands
+                // Only the IEEE and SEL Fast Message protocols support commands
                 switch (m_phasorProtocol)
                 {
                     case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
@@ -1171,6 +1176,16 @@ namespace PCS.PhasorProtocols
                         break;
                     case PhasorProtocols.PhasorProtocol.Ieee1344:
                         commandFrame = new Ieee1344.CommandFrame(m_deviceID, command);
+                        break;
+                    case PhasorProtocols.PhasorProtocol.SelFastMessage:
+                        // Get defined message period
+                        SelFastMessage.MessagePeriod messagePeriod = SelFastMessage.MessagePeriod.DefaultRate;
+                        SelFastMessage.ConnectionParameters connectionParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
+
+                        if (connectionParameters != null)
+                            messagePeriod = connectionParameters.MessagePeriod;
+
+                        commandFrame = new SelFastMessage.CommandFrame(command, messagePeriod);
                         break;
                     default:
                         commandFrame = null;
@@ -1313,7 +1328,7 @@ namespace PCS.PhasorProtocols
         private bool GetDerivedCommandSupport()
         {
             // Command support is based on phasor protocol, transport protocol and connection style
-            if (IsIEEEProtocol)
+            if (IsIEEEProtocol || m_phasorProtocol == PhasorProtocol.SelFastMessage)
             {
                 // IEEE protocols using TCP or Serial connection support device commands
                 if (m_transportProtocol == TransportProtocol.Tcp || m_transportProtocol == TransportProtocol.Serial)
