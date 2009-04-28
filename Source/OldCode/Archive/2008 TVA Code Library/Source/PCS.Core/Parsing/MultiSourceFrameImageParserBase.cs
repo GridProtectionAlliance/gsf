@@ -36,7 +36,7 @@ namespace PCS.Parsing
     /// creating a class derived from the <see cref="ICommonHeader{TTypeIdentifier}"/> which primarily includes a
     /// TypeID property, but also should include any state information needed to parse a particular frame if necessary.
     /// Derived classes override the <see cref="FrameImageParserBase{TTypeIdentifier, TOutputType}.ParseCommonHeader"/>
-    /// function in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
+    /// method in order to parse the <see cref="ICommonHeader{TTypeIdentifier}"/> from a provided binary image.
     /// </para>
     /// </remarks>
     /// <typeparam name="TSourceIdentifier">Type of identifier for the data source.</typeparam>
@@ -240,7 +240,7 @@ namespace PCS.Parsing
         /// <param name="source">ID of the data source.</param>
         /// <param name="image">Object to be parsed that implements the <see cref="ISupportBinaryImage"/> interface.</param>
         /// <remarks>
-        /// This function takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
+        /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
         /// </remarks>
         public void Parse(TSourceIdentifier source, ISupportBinaryImage image)
         {
@@ -248,23 +248,39 @@ namespace PCS.Parsing
         }
 
         /// <summary>
+        /// Clears the internal buffer of unparsed data received from the specified <paramref name="source"/>.
+        /// </summary>
+        /// <param name="source">ID of the data source.</param>
+        /// <remarks>
+        /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
+        /// </remarks>
+        public void PurgeBuffer(TSourceIdentifier source)
+        {
+            lock (m_unparsedBuffers)
+            {
+                if (m_unparsedBuffers.ContainsKey(source))
+                    m_unparsedBuffers.Remove(source);
+            }
+        }
+
+        /// <summary>
         /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
-        /// <exception cref="NotImplementedException">This function should not be called directly.</exception>
+        /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Parse(ISupportBinaryImage image)
         {
-            throw new NotImplementedException("This function should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead.");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead.");
         }
 
         /// <summary>
         /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
-        /// <exception cref="NotImplementedException">This function should not be called directly.</exception>
+        /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("This function should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
         }
 
         /// <summary>
@@ -335,8 +351,11 @@ namespace PCS.Parsing
                     m_sourceInitialized.Add(m_sourceID, true);
 
                 // Restore any unparsed buffers for this data source, if any
-                if (!m_unparsedBuffers.TryGetValue(m_sourceID, out UnparsedBuffer))
-                    m_unparsedBuffers.Add(m_sourceID, null);
+                lock (m_unparsedBuffers)
+                {
+                    if (!m_unparsedBuffers.TryGetValue(m_sourceID, out UnparsedBuffer))
+                        m_unparsedBuffers.Add(m_sourceID, null);
+                }
 
                 // Clear any existing parsed outputs
                 m_parsedOutputs.Clear();
@@ -345,7 +364,10 @@ namespace PCS.Parsing
                 base.Write(buffer, 0, buffer.Length);
 
                 // Track last unparsed buffer for this data source
-                m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
+                lock (m_unparsedBuffers)
+                {
+                    m_unparsedBuffers[m_sourceID] = UnparsedBuffer;
+                }
 
                 // Expose any parsed data
                 if (m_parsedOutputs.Count > 0)
