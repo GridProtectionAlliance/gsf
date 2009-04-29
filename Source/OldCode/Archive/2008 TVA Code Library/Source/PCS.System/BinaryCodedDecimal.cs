@@ -21,7 +21,7 @@ namespace System
     /// Represents functions related to binary-coded decimals.
     /// </summary>
     /// <remarks>
-    /// See <a href="http://en.wikipedia.org/wiki/Binary-coded_decimal">Wikipedia article "Binary-coded decimal"</a> for details.
+    /// See <a href="http://en.wikipedia.org/wiki/Binary-coded_decimal">Binary-coded decimal</a> for details.
     /// </remarks>
     [CLSCompliant(false)]
     public static class BinaryCodedDecimal
