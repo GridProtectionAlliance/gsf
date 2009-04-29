@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinaryCodedDecimal.cs" />
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BinaryValue.cs" />
     <Compile Include="BinaryValueBase.cs" />

@@ -54,6 +54,16 @@ namespace System
         }
 
         /// <summary>
+        /// Returns the high-nibble (high 4-bits) from a byte.
+        /// </summary>
+        /// <param name="value">Byte value.</param>
+        /// <returns>The high-nibble of the specified byte value.</returns>
+        public static byte HighNibble(this byte value)
+        {
+            return (byte)((value & (byte)0xF0) >> 4);
+        }
+
+        /// <summary>
         /// Returns the high-byte from an unsigned word (UInt16).
         /// </summary>
         /// <param name="word">2-byte, 16-bit unsigned integer value.</param>
@@ -95,6 +105,16 @@ namespace System
         public static uint HighDword(this ulong quadWord)
         {
             return (uint)((quadWord & (ulong)0xFFFFFFFF00000000) >> 32);
+        }
+
+        /// <summary>
+        /// Returns the low-nibble (low 4-bits) from a byte.
+        /// </summary>
+        /// <param name="value">Byte value.</param>
+        /// <returns>The low-nibble of the specified byte value.</returns>
+        public static byte LowNibble(this byte value)
+        {
+            return (byte)(value & (byte)0x0F);
         }
 
         /// <summary>
