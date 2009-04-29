@@ -948,12 +948,16 @@ namespace PCS
             StringBuilder result = new StringBuilder();
             string[] lines = value.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             string line;
-            int lastLineIndex = lines.Length - 1;
+            int lastLineIndex = lines.Length - 1; //(lines.Length != 0 && lines[lines.Length - 1].Trim() == string.Empty ? lines.Length - 2 : lines.Length - 1);
 
             for (int i = 0; i <= lastLineIndex; i++)
-            {
+            {                
                 // Gets current line.
                 line = lines[i];
+                
+                // Skips the last empty line as a result of split if original text had multiple lines.
+                if (i == lastLineIndex && line.Trim() == string.Empty)
+                    continue;
 
                 if (line.Length >= maxLength)
                 {
