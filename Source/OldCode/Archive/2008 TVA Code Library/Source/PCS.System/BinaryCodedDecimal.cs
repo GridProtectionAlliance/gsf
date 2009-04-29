@@ -21,7 +21,7 @@ namespace System
     /// Represents functions related to binary-coded decimals (or BCD).
     /// </summary>
     [CLSCompliant(false)]
-    public class BinaryCodedDecimal
+    public static class BinaryCodedDecimal
     {
         /// <summary>
         /// Gets binary value from binary-coded decimal.
