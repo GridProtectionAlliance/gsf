@@ -67,10 +67,9 @@ namespace System
         /// Gets binary-coded decimal from binary value.
         /// </summary>
         /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99 for a single byte.</exception>
-        public static void Encode(byte value, out byte bcd)
+        public static byte Encode(byte value)
         {
             if (value > 99U)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99 for a single byte");
@@ -78,31 +77,16 @@ namespace System
             byte high =(byte)((value / 10U) & 0x0F);
             byte low = (byte)((value % 10U) & 0x0F);
             
-            bcd = (byte)(low + (high << 4));
+            return (byte)(low + (high << 4));
         }
 
         /// <summary>
         /// Gets binary-coded decimal from binary value.
         /// </summary>
         /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
-        /// <returns>Binary-coded decimal representation of standard binary value.</returns>
-        public static void Encode(byte value, out ushort bcd)
-        {
-            byte high = (byte)(value / 100U);
-            byte low = (byte)(value % 100U);
-
-            bcd = Word.MakeWord(high, low);
-        }
-
-        /// <summary>
-        /// Gets binary-coded decimal from binary value.
-        /// </summary>
-        /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999 for two bytes.</exception>
-        public static void Encode(ushort value, out ushort bcd)
+        public static ushort Encode(ushort value)
         {
             if (value > 9999U)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999 for two bytes");
@@ -110,31 +94,16 @@ namespace System
             byte high = (byte)(value / 100U);
             byte low = (byte)(value % 100U);
 
-            bcd = Word.MakeWord(high, low);
+            return Word.MakeWord(high, low);
         }
 
         /// <summary>
         /// Gets binary-coded decimal from binary value.
         /// </summary>
         /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
-        /// <returns>Binary-coded decimal representation of standard binary value.</returns>
-        public static void Encode(ushort value, out uint bcd)
-        {
-            ushort high = (ushort)(value / 10000U);
-            ushort low = (ushort)(value % 10000U);
-
-            bcd = Word.MakeDword(high, low);
-        }
-
-        /// <summary>
-        /// Gets binary-coded decimal from binary value.
-        /// </summary>
-        /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99,999,999 for four bytes.</exception>
-        public static void Encode(uint value, out uint bcd)
+        public static uint Encode(uint value)
         {
             if (value > 99999999U)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99,999,999 for four bytes");
@@ -142,31 +111,16 @@ namespace System
             ushort high = (ushort)(value / 10000U);
             ushort low = (ushort)(value % 10000U);
 
-            bcd = Word.MakeDword(high, low);
+            return Word.MakeDword(high, low);
         }
 
         /// <summary>
         /// Gets binary-coded decimal from binary value.
         /// </summary>
         /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
-        /// <returns>Binary-coded decimal representation of standard binary value.</returns>
-        public static void Encode(uint value, out ulong bcd)
-        {
-            uint high = (uint)(value / 100000000U);
-            uint low = (uint)(value % 100000000U);
-
-            bcd = Word.MakeQword(high, low);
-        }
-
-        /// <summary>
-        /// Gets binary-coded decimal from binary value.
-        /// </summary>
-        /// <param name="value">Binary value.</param>
-        /// <param name="bcd">Binary-coded decimal result.</param>
         /// <returns>Binary-coded decimal representation of standard binary value.</returns>
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes.</exception>
-        public static void Encode(ulong value, out ulong bcd)
+        public static ulong Encode(ulong value)
         {
             if (value > 9999999999999999U)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes");
@@ -174,7 +128,7 @@ namespace System
             uint high = (uint)(value / 100000000U);
             uint low = (uint)(value % 100000000U);
 
-            bcd = Word.MakeQword(high, low);
+            return Word.MakeQword(high, low);
         }
     }
 }
