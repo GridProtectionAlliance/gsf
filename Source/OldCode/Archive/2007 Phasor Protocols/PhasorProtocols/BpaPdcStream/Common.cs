@@ -94,7 +94,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Timestamp included if not set (yes = 0).
         /// </summary>
-        TimestampIncluded = (byte)Bits.Bit00
+        TimestampIncluded = (byte)Bits.Bit00,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -114,7 +118,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Analog words mask.
         /// </summary>
-        AnalogWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03 | Bits.Bit04 | Bits.Bit05)
+        AnalogWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03 | Bits.Bit04 | Bits.Bit05),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -142,7 +150,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Digital words mask.
         /// </summary>
-        DigitalWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03)
+        DigitalWordsMask = (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -174,7 +186,11 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <summary>
         /// Data is invalid.
         /// </summary>
-        DataInvalid = (byte)Bits.Bit01
+        DataInvalid = (byte)Bits.Bit01,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     #endregion

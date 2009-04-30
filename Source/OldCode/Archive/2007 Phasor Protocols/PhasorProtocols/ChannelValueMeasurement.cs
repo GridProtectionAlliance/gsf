@@ -71,7 +71,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets reference to the <see cref="IChannelValue{T}"/> that this measurement derives its values from.
         /// </summary>
-        protected IChannelValue<T> Parent
+        public IChannelValue<T> Parent
         {
             get
             {

@@ -48,12 +48,10 @@ namespace PCS.PhasorProtocols.Macrodyne
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="CommonFrameHeader"/> from specified parameters.
+        /// Creates a new <see cref="CommonFrameHeader"/>.
         /// </summary>
-        /// <param name="statusFlags">The <see cref="Macrodyne.StatusFlags"/> of this frame.</param>
-        public CommonFrameHeader(StatusFlags statusFlags)
+        public CommonFrameHeader()
         {
-            m_statusFlags = statusFlags;
         }
 
         /// <summary>

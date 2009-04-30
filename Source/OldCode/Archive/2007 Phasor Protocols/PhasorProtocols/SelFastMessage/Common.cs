@@ -110,7 +110,11 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// <summary>
         /// User programmable bit 14.
         /// </summary>
-        PSV64 = (ushort)Bits.Bit15
+        PSV64 = (ushort)Bits.Bit15,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (ushort)Bits.Nil
     }
 
     /// <summary>

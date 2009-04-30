@@ -61,9 +61,9 @@ namespace PCS.PhasorProtocols.Macrodyne
             configCell.FrequencyDefinition = new FrequencyDefinition(configCell, "Line frequency");
 
             // Add phasors based on online format flags
-            for (int i = 0; i < DerivedPhasorCount; i++)
+            for (int i = 0; i < PhasorCount; i++)
             {
-                configCell.PhasorDefinitions.Add(new PhasorDefinition(configCell, "Phasor " + (i + 1), 1000, 1.0D, PhasorType.Voltage, null));
+                configCell.PhasorDefinitions.Add(new PhasorDefinition(configCell, "Phasor " + (i + 1), PhasorType.Voltage, null));
             }
 
             // Macrodyne protocol sends data for one device
@@ -115,7 +115,7 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// Gets phasor count derived from <see cref="OnlineDataFormatFlags"/> of this <see cref="ConfigurationFrame"/>.
         /// </summary>
-        public int DerivedPhasorCount
+        public int PhasorCount
         {
             get
             {
@@ -151,6 +151,61 @@ namespace PCS.PhasorProtocols.Macrodyne
         }
 
         /// <summary>
+        /// Gets flag that determines if status 2 flags are included in ON-LINE data.
+        /// </summary>
+        public bool Status2Included
+        {
+            get
+            {
+                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Status2ByteEnabled) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if timestamp is included in ON-LINE data.
+        /// </summary>
+        public bool TimestampIncluded
+        {
+            get
+            {
+                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.TimestampEnabled) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if reference phasor is included in ON-LINE data.
+        /// </summary>
+        public bool ReferenceIncluded
+        {
+            get
+            {
+                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.ReferenceEnabled) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if Digital 1 is included in ON-LINE data.
+        /// </summary>
+        public bool Digital1Included
+        {
+            get
+            {
+                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Digital1Enabled) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if Digital 2 is included in ON-LINE data.
+        /// </summary>
+        public bool Digital2Included
+        {
+            get
+            {
+                return (m_onlineDataFormatFlags & Macrodyne.OnlineDataFormatFlags.Digital2Enabled) > 0;
+            }
+        }
+
+        /// <summary>
         /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="ConfigurationFrame"/> object.
         /// </summary>
         public override Dictionary<string, string> Attributes
@@ -159,7 +214,7 @@ namespace PCS.PhasorProtocols.Macrodyne
             {
                 Dictionary<string, string> baseAttributes = base.Attributes;
 
-                baseAttributes.Add("Online Data Format Flags", (byte)OnlineDataFormatFlags + ": " + OnlineDataFormatFlags);
+                baseAttributes.Add("ON-LINE Data Format Flags", (byte)OnlineDataFormatFlags + ": " + OnlineDataFormatFlags);
 
                 return baseAttributes;
             }

@@ -54,7 +54,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Reserved bits for future common flags, presently set to 0.
         /// </summary>
-        ReservedFlags = (uint)(Bits.Bit20 | Bits.Bit21 | Bits.Bit22 | Bits.Bit23 | Bits.Bit24 | Bits.Bit25 | Bits.Bit26 | Bits.Bit27 | Bits.Bit28 | Bits.Bit29 | Bits.Bit30 | Bits.Bit31)
+        ReservedFlags = (uint)(Bits.Bit20 | Bits.Bit21 | Bits.Bit22 | Bits.Bit23 | Bits.Bit24 | Bits.Bit25 | Bits.Bit26 | Bits.Bit27 | Bits.Bit28 | Bits.Bit29 | Bits.Bit30 | Bits.Bit31),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (uint)Bits.Nil
     }
 
     #endregion

@@ -98,7 +98,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Unsed format bits mask.
         /// </summary>
-        UnusedMask = unchecked(ushort.MaxValue & (ushort)~(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03))
+        UnusedMask = unchecked(ushort.MaxValue & (ushort)~(Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03)),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (ushort)Bits.Nil
     }
 
     /// <summary>
@@ -126,7 +130,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Time quality indicator code mask.
         /// </summary>
-        TimeQualityIndicatorCodeMask = (uint)(Bits.Bit27 | Bits.Bit26 | Bits.Bit25 | Bits.Bit24)
+        TimeQualityIndicatorCodeMask = (uint)(Bits.Bit27 | Bits.Bit26 | Bits.Bit25 | Bits.Bit24),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (uint)Bits.Nil
     }
 
     /// <summary>
@@ -230,7 +238,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <summary>
         /// Trigger reason mask.
         /// </summary>
-        TriggerReasonMask = (ushort)(Bits.Bit03 | Bits.Bit02 | Bits.Bit01 | Bits.Bit00)
+        TriggerReasonMask = (ushort)(Bits.Bit03 | Bits.Bit02 | Bits.Bit01 | Bits.Bit00),
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (ushort)Bits.Nil
     }
 
     /// <summary>

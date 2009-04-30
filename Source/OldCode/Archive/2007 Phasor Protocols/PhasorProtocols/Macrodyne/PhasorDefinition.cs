@@ -42,12 +42,10 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// </summary>
         /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinition"/>.</param>
-        /// <param name="offset">The offset of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition voltageReference)
-            : base(parent, label, scale, offset, type, voltageReference)
+        public PhasorDefinition(ConfigurationCell parent, string label, PhasorType type, PhasorDefinition voltageReference)
+            : base(parent, label, 1, 0.0D, type, voltageReference)
         {
         }
 
@@ -64,6 +62,20 @@ namespace PCS.PhasorProtocols.Macrodyne
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the scale/bit for the <see cref="ChannelDefinitionBase.ScalingValue"/> of this <see cref="PhasorDefinition"/>.
+        /// </summary>
+        /// <remarks>
+        /// We override this for phasor values since Macrodyne transmits unscaled integer values for real and imaginary phasor components.
+        /// </remarks>
+        public override double ScalePerBit
+        {
+            get
+            {
+                return 1.0D;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.

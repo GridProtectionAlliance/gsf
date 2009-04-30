@@ -10,7 +10,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/27/2009 - James R Carroll
+//  04/30/2009 - James R Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -20,14 +20,23 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PCS.PhasorProtocols.Macrodyne
 {
     /// <summary>
-    /// Represents the SEL Fast Message implementation of a <see cref="IDataCell"/> that can be sent or received.
+    /// Represents the Macrodyne implementation of a <see cref="IDataCell"/> that can be sent or received.
     /// </summary>
     [Serializable()]
     public class DataCell : DataCellBase
     {
+        #region [ Members ]
+
+        // Fields
+        private byte m_status2Flags;
+        private ClockStatusFlags m_clockStatusFlags;
+        private ushort m_sampleNumber;
+
+        #endregion
+        
         #region [ Constructors ]
 
         /// <summary>
@@ -141,14 +150,14 @@ namespace PCS.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return (StatusFlags & SelFastMessage.StatusFlags.PMDOK) > 0;
+                return true; // (StatusFlags & Macrodyne.StatusFlags.PMDOK) > 0;
             }
             set
             {
-                if (value)
-                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.PMDOK;
-                else
-                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.PMDOK;
+                //if (value)
+                //    StatusFlags = StatusFlags | Macrodyne.StatusFlags.PMDOK;
+                //else
+                //    StatusFlags = StatusFlags & ~Macrodyne.StatusFlags.PMDOK;
             }
         }
 
@@ -159,14 +168,14 @@ namespace PCS.PhasorProtocols.SelFastMessage
         {
             get
             {
-                return (StatusFlags & SelFastMessage.StatusFlags.TSOK) > 0;
+                return true; // (StatusFlags & Macrodyne.StatusFlags.TSOK) > 0;
             }
             set
             {
-                if (value)
-                    StatusFlags = StatusFlags | SelFastMessage.StatusFlags.TSOK;
-                else
-                    StatusFlags = StatusFlags & ~SelFastMessage.StatusFlags.TSOK;
+                //if (value)
+                //    StatusFlags = StatusFlags | Macrodyne.StatusFlags.TSOK;
+                //else
+                //    StatusFlags = StatusFlags & ~Macrodyne.StatusFlags.TSOK;
             }
         }
 
@@ -188,7 +197,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Gets or sets flag that determines if source device of this <see cref="DataCell"/> is reporting an error.
         /// </summary>
-        /// <remarks>SEL Fast Message doesn't define bits for device error.</remarks>
+        /// <remarks>Macrodyne doesn't define bits for device error.</remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool DeviceError
         {
@@ -198,7 +207,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
             }
             set
             {
-                // We just ignore this value as SEL Fast Message defines no flags for data errors
+                // We just ignore this value as Macrodyne defines no flags for data errors
             }
         }
 
@@ -206,7 +215,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// Gets <see cref="AnalogValueCollection"/> of this <see cref="DataCell"/>.
         /// </summary>
         /// <remarks>
-        /// SEL Fast Message doesn't define any analog values.
+        /// Macrodyne doesn't define any analog values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override AnalogValueCollection AnalogValues
@@ -221,7 +230,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// Gets <see cref="DigitalValueCollection"/> of this <see cref="DataCell"/>.
         /// </summary>
         /// <remarks>
-        /// SEL Fast Message doesn't define any digital values.
+        /// Macrodyne doesn't define any digital values.
         /// </remarks>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override DigitalValueCollection DigitalValues
@@ -246,24 +255,84 @@ namespace PCS.PhasorProtocols.SelFastMessage
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
             ConfigurationCell configCell = ConfigurationCell;
+            ConfigurationFrame configFrame = configCell.Parent;
             IPhasorValue phasorValue;
+            IDigitalValue digitalValue;
             int x, parsedLength, index = startIndex;
 
-            // Parse out frequency value
-            FrequencyValue = SelFastMessage.FrequencyValue.CreateNewValue(this, configCell.FrequencyDefinition, binaryImage, index, out parsedLength);
-            index += parsedLength;
-
-            // Parse out phasor values
-            for (x = 0; x < configCell.PhasorDefinitions.Count; x++)
+            // Parse out status 2 flags
+            if (configFrame.Status2Included)
             {
-                phasorValue = SelFastMessage.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], binaryImage, index, out parsedLength);
+                m_status2Flags = binaryImage[index];
+                index += 1;
+            }
+
+            // Parse out time tag
+            if (configFrame.TimestampIncluded)
+            {
+                m_clockStatusFlags = (ClockStatusFlags)binaryImage[index];
+                index += 1;
+
+                ushort day = BinaryCodedDecimal.Decode(EndianOrder.BigEndian.ToUInt16(binaryImage, index));
+                byte hours = BinaryCodedDecimal.Decode(binaryImage[index + 2]);
+                byte minutes = BinaryCodedDecimal.Decode(binaryImage[index + 3]);
+                byte seconds = BinaryCodedDecimal.Decode(binaryImage[index + 4]);
+
+                m_sampleNumber = EndianOrder.BigEndian.ToUInt16(binaryImage, index + 5);
+                index += 7;
+
+                // TODO: Think about how to handle year change with floating clock...
+                // Calculate timestamp
+                Parent.Timestamp = new DateTime(DateTime.UtcNow.Year, 1, 1).AddDays(day - 1).AddMinutes(minutes).AddSeconds(seconds + m_sampleNumber / 719.0D);
+            }
+            else
+            {
+                Parent.Timestamp = DateTime.UtcNow.Ticks;
+                SynchronizationIsValid = false;  // TODO: Handle "assigned value" - change flags?
+                
+                m_sampleNumber = EndianOrder.BigEndian.ToUInt16(binaryImage, index);
+                index += 2;
+            }
+
+            // Parse out first five phasor values
+            for (x = 0; x < PCS.Common.Min(configCell.PhasorDefinitions.Count, 5); x++)
+            {
+                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], binaryImage, index, out parsedLength);
                 PhasorValues.Add(phasorValue);
                 index += parsedLength;
             }
 
-            // Parse out status flags
-            StatusFlags = (StatusFlags)EndianOrder.LittleEndian.ToUInt16(binaryImage, index);
-            index += 2;
+            // Parse out frequency value
+            FrequencyValue = Macrodyne.FrequencyValue.CreateNewValue(this, configCell.FrequencyDefinition, binaryImage, index, out parsedLength);
+            index += parsedLength;
+
+            if (configFrame.ReferenceIncluded)
+            {
+                // TODO: Parse reference phasor...
+                index += 3;
+            }
+
+            if (configFrame.Digital1Included)
+            {
+                digitalValue = DigitalValue.CreateNewValue(this, configCell.DigitalDefinitions[0], binaryImage, index, out parsedLength);
+                DigitalValues.Add(digitalValue);
+                index += parsedLength;
+            }
+
+            // Parse out next five phasor values
+            for (x = 5; x < configCell.PhasorDefinitions.Count; x++)
+            {
+                phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], binaryImage, index, out parsedLength);
+                PhasorValues.Add(phasorValue);
+                index += parsedLength;
+            }
+
+            if (configFrame.Digital2Included)
+            {
+                digitalValue = DigitalValue.CreateNewValue(this, configCell.DigitalDefinitions[configCell.DigitalDefinitions.Count - 1], binaryImage, index, out parsedLength);
+                DigitalValues.Add(digitalValue);
+                index += parsedLength;
+            }
 
             // Return total parsed length
             return (index - startIndex);
@@ -275,7 +344,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
 
         // Static Methods
 
-        // Delegate handler to create a new SEL Fast Message data cell
+        // Delegate handler to create a new Macrodyne data cell
         internal static IDataCell CreateNewCell(IChannelFrame parent, IChannelFrameParsingState<IDataCell> state, int index, byte[] binaryImage, int startIndex, out int parsedLength)
         {
             DataCell dataCell = new DataCell(parent as IDataFrame, (state as IDataFrameParsingState).ConfigurationFrame.Cells[index]);

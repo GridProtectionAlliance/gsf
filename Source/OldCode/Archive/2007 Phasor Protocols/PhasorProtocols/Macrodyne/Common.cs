@@ -60,7 +60,11 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// Set when the GPS clock 1 PPS and the GPS receiver 1 PPS differ by more than 5 microseconds.
         /// </summary>
-        ClockAndReceiverOutOfSync = (byte)Bits.Bit07
+        ClockAndReceiverOutOfSync = (byte)Bits.Bit07,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -100,7 +104,11 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// Trigger detected, but memory full.
         /// </summary>
-        TriggerDetectedMemoryFull = (byte)Bits.Bit07
+        TriggerDetectedMemoryFull = (byte)Bits.Bit07,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -236,7 +244,11 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// Digital channel 1 enabled.
         /// </summary>
-        Digital1Enabled = (ushort)Bits.Bit15
+        Digital1Enabled = (ushort)Bits.Bit15,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (ushort)Bits.Nil
     }
 
     /// <summary>
@@ -268,7 +280,19 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// LNCM operations limit reached.
         /// </summary>
-        LncmLimitReached = (byte)Bits.Bit05
+        LncmLimitReached = (byte)Bits.Bit05,
+        /// <summary>
+        /// Bit not used (undefined bit 1).
+        /// </summary>
+        NotUsed1 = (byte)Bits.Bit06,
+        /// <summary>
+        /// Bit not used (undefined bit 2).
+        /// </summary>
+        NotUsed2 = (byte)Bits.Bit07,
+        /// <summary>
+        /// No flags.
+        /// </summary>
+        NoFlags = (byte)Bits.Nil
     }
 
     /// <summary>
@@ -767,7 +791,11 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <summary>
         /// Request current raw table pretrigger (22 response bytes).
         /// </summary>
-        RequestCurrentRawTablePreTrigger = 0xBB66
+        RequestCurrentRawTablePreTrigger = 0xBB66,
+        /// <summary>
+        /// Undefined command.
+        /// </summary>
+        Undefined = 0x0000
 
         #endregion
     }
