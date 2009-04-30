@@ -26,6 +26,11 @@ namespace System
     [CLSCompliant(false)]
     public static class BinaryCodedDecimal
     {
+        private const byte TenP1 = 10;          // 10 to the power of 1 (for one byte integer)
+        private const ushort TenP2 = 100;       // 10 to the power of 2 (for two byte integer)
+        private const uint TenP4 = 10000;       // 10 to the power of 4 (for four byte integer)
+        private const ulong TenP8 = 100000000;  // 10 to the power of 8 (for eight byte integer)
+
         /// <summary>
         /// Gets binary value from binary-coded decimal.
         /// </summary>
@@ -33,7 +38,7 @@ namespace System
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
         public static byte Decode(byte bcd)
         {
-            return (byte)(bcd.HighNibble() * 10U + bcd.LowNibble());
+            return (byte)(bcd.HighNibble() * TenP1 + bcd.LowNibble());
         }
 
         /// <summary>
@@ -43,7 +48,7 @@ namespace System
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
         public static ushort Decode(ushort bcd)
         {
-            return (ushort)(Decode(bcd.HighByte()) * 100U + Decode(bcd.LowByte()));
+            return (ushort)(Decode(bcd.HighByte()) * TenP2 + Decode(bcd.LowByte()));
         }
 
         /// <summary>
@@ -53,7 +58,7 @@ namespace System
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
         public static uint Decode(uint bcd)
         {
-            return Decode(bcd.HighWord()) * 10000U + Decode(bcd.LowWord());
+            return (uint)(Decode(bcd.HighWord()) * TenP4 + Decode(bcd.LowWord()));
         }
 
         /// <summary>
@@ -63,7 +68,7 @@ namespace System
         /// <returns>Standard binary representation of binary-coded decimal value.</returns>
         public static ulong Decode(ulong bcd)
         {
-            return Decode(bcd.HighDword()) * 100000000U + Decode(bcd.LowDword());
+            return (ulong)(Decode(bcd.HighDword()) * TenP8 + Decode(bcd.LowDword()));
         }
 
         /// <summary>
@@ -74,11 +79,11 @@ namespace System
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99 for a single byte.</exception>
         public static byte Encode(byte value)
         {
-            if (value > 99U)
+            if (value > (byte)99)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99 for a single byte");
 
-            byte high =(byte)((value / 10U) & 0x0F);
-            byte low = (byte)((value % 10U) & 0x0F);
+            byte high = (byte)((value / TenP1) & 0x0F);
+            byte low = (byte)((value % TenP1) & 0x0F);
             
             return (byte)(low + (high << 4));
         }
@@ -91,11 +96,11 @@ namespace System
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999 for two bytes.</exception>
         public static ushort Encode(ushort value)
         {
-            if (value > 9999U)
+            if (value > (ushort)9999)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999 for two bytes");
 
-            byte high = (byte)(value / 100U);
-            byte low = (byte)(value % 100U);
+            byte high = Encode((byte)(value / TenP2));
+            byte low = Encode((byte)(value % TenP2));
 
             return Word.MakeWord(high, low);
         }
@@ -108,11 +113,11 @@ namespace System
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 99,999,999 for four bytes.</exception>
         public static uint Encode(uint value)
         {
-            if (value > 99999999U)
+            if (value > (uint)99999999)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 99,999,999 for four bytes");
 
-            ushort high = (ushort)(value / 10000U);
-            ushort low = (ushort)(value % 10000U);
+            ushort high = Encode((ushort)(value / TenP4));
+            ushort low = Encode((ushort)(value % TenP4));
 
             return Word.MakeDword(high, low);
         }
@@ -125,11 +130,11 @@ namespace System
         /// <exception cref="ArgumentOutOfRangeException">A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes.</exception>
         public static ulong Encode(ulong value)
         {
-            if (value > 9999999999999999U)
+            if (value > (ulong)9999999999999999)
                 throw new ArgumentOutOfRangeException("value", "A binary-coded decimal has a maximum value of 9,999,999,999,999,999 for eight bytes");
 
-            uint high = (uint)(value / 100000000U);
-            uint low = (uint)(value % 100000000U);
+            uint high = Encode((uint)(value / TenP8));
+            uint low = Encode((uint)(value % TenP8));
 
             return Word.MakeQword(high, low);
         }
