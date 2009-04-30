@@ -45,7 +45,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// Creates a new <see cref="ConfigurationFrame"/>.
         /// </summary>
         /// <remarks>
-        /// This constructor is used by a consumer to generate an F-NET configuration frame.
+        /// This constructor is used by a consumer to generate a SEL Fast Message configuration frame.
         /// </remarks>
         public ConfigurationFrame(FrameSize frameSize, MessagePeriod messagePeriod, uint idCode)
             : base(0, new ConfigurationCellCollection(), 0, 0)

@@ -10,7 +10,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/30/2009 - James R Carroll
+//  04/27/2009 - James R Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -18,10 +18,10 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PCS.PhasorProtocols.SelFastMessage
 {
     /// <summary>
-    /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
+    /// Represents the SEL Fast Message implementation of a <see cref="IFrequencyDefinition"/>.
     /// </summary>
     [Serializable()]
     public class FrequencyDefinition : FrequencyDefinitionBase
@@ -43,7 +43,7 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
         /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
         internal FrequencyDefinition(ConfigurationCell parent, string label)
-            : base(parent, label, 1000, 100, 0.0D)
+            : base(parent, label, 1, 1, 0.0D)
         {
         }
 

@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FrequencyDefinition.cs
+//  PhasorDefinition.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -21,38 +21,42 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols.Macrodyne
 {
     /// <summary>
-    /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
+    /// Represents the Macrodyne implementation of a <see cref="IPhasorDefinition"/>.
     /// </summary>
     [Serializable()]
-    public class FrequencyDefinition : FrequencyDefinitionBase
+    public class PhasorDefinition : PhasorDefinitionBase
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/>.
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
         /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
-        public FrequencyDefinition(IConfigurationCell parent)
+        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        public PhasorDefinition(IConfigurationCell parent)
             : base(parent)
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/> from specified parameters.
+        /// Creates a new <see cref="PhasorDefinition"/> from specified parameters.
         /// </summary>
-        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
-        internal FrequencyDefinition(ConfigurationCell parent, string label)
-            : base(parent, label, 1000, 100, 0.0D)
+        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="scale">The integer scaling value of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="offset">The offset of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
+        /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
+        public PhasorDefinition(ConfigurationCell parent, string label, uint scale, double offset, PhasorType type, PhasorDefinition voltageReference)
+            : base(parent, label, scale, offset, type, voltageReference)
         {
         }
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/> from serialization parameters.
+        /// Creates a new <see cref="PhasorDefinition"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
+        protected PhasorDefinition(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -62,7 +66,7 @@ namespace PCS.PhasorProtocols.Macrodyne
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
+        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="PhasorDefinition"/>.
         /// </summary>
         public virtual new ConfigurationCell Parent
         {

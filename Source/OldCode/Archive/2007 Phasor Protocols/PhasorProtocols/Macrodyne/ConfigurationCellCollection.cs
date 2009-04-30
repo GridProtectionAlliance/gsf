@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FrequencyDefinition.cs
+//  ConfigurationCellCollection.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -21,38 +21,28 @@ using System.Runtime.Serialization;
 namespace PCS.PhasorProtocols.Macrodyne
 {
     /// <summary>
-    /// Represents the Macrodyne implementation of a <see cref="IFrequencyDefinition"/>.
+    /// Represents a Macrodyne implementation of a collection of <see cref="IConfigurationCell"/> objects.
     /// </summary>
     [Serializable()]
-    public class FrequencyDefinition : FrequencyDefinitionBase
+    public class ConfigurationCellCollection : PhasorProtocols.ConfigurationCellCollection
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/>.
+        /// Creates a new <see cref="ConfigurationCellCollection"/>.
         /// </summary>
-        /// <param name="parent">The <see cref="IConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
-        public FrequencyDefinition(IConfigurationCell parent)
-            : base(parent)
+        public ConfigurationCellCollection()
+            : base(0, true)
         {
+            // Macrodyne only supports a single device - so there should only be one cell - since there's only one cell, cell lengths will be constant :)
         }
 
         /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/> from specified parameters.
-        /// </summary>
-        /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
-        /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
-        internal FrequencyDefinition(ConfigurationCell parent, string label)
-            : base(parent, label, 1000, 100, 0.0D)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="FrequencyDefinition"/> from serialization parameters.
+        /// Creates a new <see cref="ConfigurationCellCollection"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
         /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected FrequencyDefinition(SerializationInfo info, StreamingContext context)
+        protected ConfigurationCellCollection(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
@@ -62,17 +52,18 @@ namespace PCS.PhasorProtocols.Macrodyne
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.
+        /// Gets or sets <see cref="ConfigurationCell"/> at specified <paramref name="index"/>.
         /// </summary>
-        public virtual new ConfigurationCell Parent
+        /// <param name="index">Index of value to get or set.</param>
+        public new ConfigurationCell this[int index]
         {
             get
             {
-                return base.Parent as ConfigurationCell;
+                return base[index] as ConfigurationCell;
             }
             set
             {
-                base.Parent = value;
+                base[index] = value;
             }
         }
 

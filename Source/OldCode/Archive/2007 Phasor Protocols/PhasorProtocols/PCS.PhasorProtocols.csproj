@@ -226,6 +226,11 @@
     <Compile Include="IFrameParser.cs" />
     <Compile Include="Macrodyne\Common.cs" />
     <Compile Include="Macrodyne\CommonFrameHeader.cs" />
+    <Compile Include="Macrodyne\ConfigurationCell.cs" />
+    <Compile Include="Macrodyne\ConfigurationCellCollection.cs" />
+    <Compile Include="Macrodyne\ConfigurationFrame.cs" />
+    <Compile Include="Macrodyne\FrequencyDefinition.cs" />
+    <Compile Include="Macrodyne\PhasorDefinition.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="ICommandFrameParsingState.cs" />
     <Compile Include="ICommandFrame.cs" />
