@@ -88,7 +88,7 @@ namespace PCS.PhasorProtocols.Ieee1344
         /// </summary>
         UnderVoltageTrigger = (ushort)(Bits.Bit12 | Bits.Bit11),
         /// <summary>
-        /// 101 Rate trigger.
+        /// 010 Rate trigger.
         /// </summary>
         RateTrigger = (ushort)Bits.Bit12,
         /// <summary>

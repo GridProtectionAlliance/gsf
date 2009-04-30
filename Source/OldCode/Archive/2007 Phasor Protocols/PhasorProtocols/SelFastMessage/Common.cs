@@ -258,6 +258,6 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Absolute maximum number of bytes of extended data that could fit into a command frame.
         /// </summary>
-        public const ushort MaximumExtendedDataLength = 2;
+        public const ushort MaximumExtendedDataLength = 0;
     }
 }

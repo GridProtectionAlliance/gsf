@@ -224,6 +224,7 @@
     <Compile Include="IeeeC37_118\PhasorDefinition.cs" />
     <Compile Include="IeeeC37_118\PhasorValue.cs" />
     <Compile Include="IFrameParser.cs" />
+    <Compile Include="Macrodyne\Common.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
     <Compile Include="ICommandFrameParsingState.cs" />
     <Compile Include="ICommandFrame.cs" />
