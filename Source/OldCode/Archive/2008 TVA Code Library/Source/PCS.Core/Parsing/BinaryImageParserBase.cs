@@ -233,7 +233,7 @@ namespace PCS.Parsing
 
                 if (ProtocolUsesSyncBytes)
                 {
-                    status.Append("Data synchronization bytes: ");
+                    status.Append("Data synchronization bytes: 0x");
                     status.Append(ByteEncoding.Hexadecimal.GetString(ProtocolSyncBytes));
                     status.AppendLine();
                 }
