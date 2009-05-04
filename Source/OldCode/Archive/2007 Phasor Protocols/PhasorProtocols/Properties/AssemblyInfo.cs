@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -20,6 +21,10 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
+
+// Most all classes in phasor protocols use an unsigned type, instead of marking
+// each individual class as non-CLS compliant, we just mark the entire assembly.
+[assembly: CLSCompliant(false)]
 
 //The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("6d59b0ed-1991-4f12-a739-2cf8543dd9b2")]

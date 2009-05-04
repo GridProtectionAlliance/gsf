@@ -283,7 +283,7 @@ namespace PCS.PhasorProtocols.Macrodyne
 
                 // TODO: Think about how to handle year change with floating clock...
                 // Calculate timestamp
-                Parent.Timestamp = new DateTime(DateTime.UtcNow.Year, 1, 1).AddDays(day - 1).AddMinutes(minutes).AddSeconds(seconds + m_sampleNumber / 719.0D);
+                Parent.Timestamp = new DateTime(DateTime.UtcNow.Year, 1, 1).AddDays(day - 1).AddHours(hours).AddMinutes(minutes).AddSeconds(seconds + m_sampleNumber / 719.0D);
             }
             else
             {
