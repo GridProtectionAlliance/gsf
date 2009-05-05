@@ -506,14 +506,31 @@ namespace PCS.Communication
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["AutoRepeat", true].Update(m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
-                settings["ReceiveOnDemand", true].Update(m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
-                settings["ReceiveInterval", true].Update(m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
-                settings["StartingOffset", true].Update(m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
-                settings["FileOpenMode", true].Update(m_fileOpenMode, "Mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
-                settings["FileShareMode", true].Update(m_fileShareMode, "Mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used for sharing the file.");
-                settings["FileAccessMode", true].Update(m_fileAccessMode, "Mode (Read; Write; ReadWrite) to be used for accessing the file.");
+                // Add settings if they don't exist in config file.
+                settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
+                settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
+                settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
+                settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
+                settings.Add("FileOpenMode", m_fileOpenMode, "Mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+                settings.Add("FileShareMode", m_fileShareMode, "Mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used for sharing the file.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Mode (Read; Write; ReadWrite) to be used for accessing the file.");
+                // Update settings with the latest property values.
+                element = settings["AutoRepeat"];
+                element.Update(m_autoRepeat, element.Description, element.Encrypted);
+                element = settings["ReceiveOnDemand"];
+                element.Update(m_receiveOnDemand, element.Description, element.Encrypted);
+                element = settings["ReceiveInterval"];
+                element.Update(m_receiveInterval, element.Description, element.Encrypted);
+                element = settings["StartingOffset"];
+                element.Update(m_startingOffset, element.Description, element.Encrypted);
+                element = settings["FileOpenMode"];
+                element.Update(m_fileOpenMode, element.Description, element.Encrypted);
+                element = settings["FileShareMode"];
+                element.Update(m_fileShareMode, element.Description, element.Encrypted);
+                element = settings["FileAccessMode"];
+                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
                 config.Save();
             }
         }

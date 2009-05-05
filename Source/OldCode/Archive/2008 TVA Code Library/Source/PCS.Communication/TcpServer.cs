@@ -280,8 +280,13 @@ namespace PCS.Communication
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings["PayloadAware", true].Update(m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                // Add settings if they don't exist in config file.
+                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                // Update settings with the latest property values.
+                element = settings["PayloadAware"];
+                element.Update(m_payloadAware, element.Description, element.Encrypted);
                 config.Save();
             }
         }
