@@ -880,18 +880,43 @@ namespace PCS.ErrorManagement
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["LogToUI", true].Update(m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");
-                settings["LogToFile", true].Update(m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
-                settings["LogToEmail", true].Update(m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
-                settings["LogToEventLog", true].Update(m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
-                settings["LogToScreenshot", true].Update(m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
-                settings["SmtpServer", true].Update(m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
-                settings["ContactName", true].Update(m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
-                settings["ContactEmail", true].Update(m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
-                settings["ContactPhone", true].Update(m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
-                settings["HandleUnhandledException", true].Update(m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
-                settings["ExitOnUnhandledException", true].Update(m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
+                // Add settings if they don't exist in config file.
+                settings.Add("LogToUI", m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");
+                settings.Add("LogToFile", m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
+                settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
+                settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
+                settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
+                settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
+                settings.Add("ContactName", m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
+                settings.Add("ContactEmail", m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
+                settings.Add("ContactPhone", m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
+                settings.Add("HandleUnhandledException", m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
+                settings.Add("ExitOnUnhandledException", m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
+                // Update settings with the latest property values.
+                element = settings["LogToUI"];
+                element.Update(m_logToUI, element.Description, element.Encrypted);
+                element = settings["LogToFile"];
+                element.Update(m_logToFile, element.Description, element.Encrypted);
+                element = settings["LogToEmail"];
+                element.Update(m_logToEmail, element.Description, element.Encrypted);
+                element = settings["LogToEventLog"];
+                element.Update(m_logToEventLog, element.Description, element.Encrypted);
+                element = settings["LogToScreenshot"];
+                element.Update(m_logToScreenshot, element.Description, element.Encrypted);
+                element = settings["SmtpServer"];
+                element.Update(m_smtpServer, element.Description, element.Encrypted);
+                element = settings["ContactName"];
+                element.Update(m_contactName, element.Description, element.Encrypted);
+                element = settings["ContactEmail"];
+                element.Update(m_contactEmail, element.Description, element.Encrypted);
+                element = settings["ContactPhone"];
+                element.Update(m_contactPhone, element.Description, element.Encrypted);
+                element = settings["HandleUnhandledException"];
+                element.Update(m_handleUnhandledException, element.Description, element.Encrypted);
+                element = settings["ExitOnUnhandledException"];
+                element.Update(m_exitOnUnhandledException, element.Description, element.Encrypted);
                 config.Save();
             }
         }

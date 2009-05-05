@@ -535,10 +535,19 @@ namespace PCS.IO
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["FileName", true].Update(m_fileName, "Name of the log file including its path.");
-                settings["FileSize", true].Update(m_fileSize, "Maximum size of the log file in MB.");
-                settings["FileFullOperation", true].Update(m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                // Add settings if they don't exist in config file.
+                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
+                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
+                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                // Update settings with the latest property values.
+                element = settings["FileName"];
+                element.Update(m_fileName, element.Description, element.Encrypted);
+                element = settings["FileSize"];
+                element.Update(m_fileSize, element.Description, element.Encrypted);
+                element = settings["FileFullOperation"];
+                element.Update(m_fileFullOperation, element.Description, element.Encrypted);
                 config.Save();
             }
         }

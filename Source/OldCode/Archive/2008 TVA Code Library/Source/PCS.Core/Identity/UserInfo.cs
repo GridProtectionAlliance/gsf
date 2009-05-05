@@ -582,10 +582,19 @@ namespace PCS.Identity
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["PrevilegedDomain", true].Update(m_previlegedDomain, "Domain of privileged domain user account.");
-                settings["PrevilegedUserName", true].Update(m_previlegedUserName, "Username of privileged domain user account.");
-                settings["PrevilegedPassword", true].Update(m_previlegedPassword, "Password of privileged domain user account.", true);
+                // Add settings if they don't exist in config file.
+                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
+                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
+                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
+                // Update settings with the latest property values.
+                element = settings["PrevilegedDomain"];
+                element.Update(m_previlegedDomain, element.Description, element.Encrypted);
+                element = settings["PrevilegedUserName"];
+                element.Update(m_previlegedUserName, element.Description, element.Encrypted);
+                element = settings["PrevilegedPassword"];
+                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
                 config.Save();
             }
         }

@@ -850,13 +850,28 @@ namespace PCS.IO
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["FileName", true].Update(m_fileName, "Name of the file including its path.");
-                settings["AutoSaveInterval", true].Update(m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
-                settings["MinimumRecordCount", true].Update(m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
-                settings["LoadOnOpen", true].Update(m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
-                settings["SaveOnClose", true].Update(m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
-                settings["ReloadOnModify", true].Update(m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
+                // Add settings if they don't exist in config file.
+                settings.Add("FileName", m_fileName, "Name of the file including its path.");
+                settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
+                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
+                settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
+                settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
+                settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
+                // Update settings with the latest property values.
+                element = settings["FileName"];
+                element.Update(m_fileName, element.Description, element.Encrypted);
+                element = settings["AutoSaveInterval"];
+                element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
+                element = settings["MinimumRecordCount"];
+                element.Update(m_minimumRecordCount, element.Description, element.Encrypted);
+                element = settings["LoadOnOpen"];
+                element.Update(m_loadOnOpen, element.Description, element.Encrypted);
+                element = settings["SaveOnClose"];
+                element.Update(m_saveOnClose, element.Description, element.Encrypted);
+                element = settings["ReloadOnModify"];
+                element.Update(m_reloadOnModify, element.Description, element.Encrypted);
                 config.Save();
             }
         }
