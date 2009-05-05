@@ -36,10 +36,10 @@
             this.TextBoxInput = new System.Windows.Forms.TextBox();
             this.LabelInput = new System.Windows.Forms.Label();
             this.GroupBoxSettings = new System.Windows.Forms.GroupBox();
-            this.RadioButtonDecrypt = new System.Windows.Forms.RadioButton();
-            this.RadioButtonEncrypt = new System.Windows.Forms.RadioButton();
             this.TextBoxKey = new System.Windows.Forms.TextBox();
             this.LabelKey = new System.Windows.Forms.Label();
+            this.RadioButtonDecrypt = new System.Windows.Forms.RadioButton();
+            this.RadioButtonEncrypt = new System.Windows.Forms.RadioButton();
             this.GroupBoxConfiguration.SuspendLayout();
             this.GroupBoxSettings.SuspendLayout();
             this.SuspendLayout();
@@ -57,7 +57,7 @@
             this.GroupBoxConfiguration.Location = new System.Drawing.Point(12, 97);
             this.GroupBoxConfiguration.Name = "GroupBoxConfiguration";
             this.GroupBoxConfiguration.Size = new System.Drawing.Size(270, 159);
-            this.GroupBoxConfiguration.TabIndex = 3;
+            this.GroupBoxConfiguration.TabIndex = 999;
             this.GroupBoxConfiguration.TabStop = false;
             this.GroupBoxConfiguration.Text = "Config Value";
             // 
@@ -68,7 +68,7 @@
             this.LinkLabelCopy.Location = new System.Drawing.Point(171, 66);
             this.LinkLabelCopy.Name = "LinkLabelCopy";
             this.LinkLabelCopy.Size = new System.Drawing.Size(93, 13);
-            this.LinkLabelCopy.TabIndex = 4;
+            this.LinkLabelCopy.TabIndex = 5;
             this.LinkLabelCopy.TabStop = true;
             this.LinkLabelCopy.Text = "Copy to Clipboard";
             this.LinkLabelCopy.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelCopy_LinkClicked);
@@ -80,7 +80,7 @@
             this.TextBoxOutput.Name = "TextBoxOutput";
             this.TextBoxOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.TextBoxOutput.Size = new System.Drawing.Size(253, 65);
-            this.TextBoxOutput.TabIndex = 3;
+            this.TextBoxOutput.TabIndex = 4;
             // 
             // LabelOutput
             // 
@@ -88,7 +88,7 @@
             this.LabelOutput.Location = new System.Drawing.Point(6, 66);
             this.LabelOutput.Name = "LabelOutput";
             this.LabelOutput.Size = new System.Drawing.Size(45, 13);
-            this.LabelOutput.TabIndex = 2;
+            this.LabelOutput.TabIndex = 999;
             this.LabelOutput.Text = "Output:";
             // 
             // TextBoxInput
@@ -96,7 +96,7 @@
             this.TextBoxInput.Location = new System.Drawing.Point(9, 33);
             this.TextBoxInput.Name = "TextBoxInput";
             this.TextBoxInput.Size = new System.Drawing.Size(253, 21);
-            this.TextBoxInput.TabIndex = 1;
+            this.TextBoxInput.TabIndex = 3;
             this.TextBoxInput.TextChanged += new System.EventHandler(this.TextBoxInput_TextChanged);
             // 
             // LabelInput
@@ -105,7 +105,7 @@
             this.LabelInput.Location = new System.Drawing.Point(6, 17);
             this.LabelInput.Name = "LabelInput";
             this.LabelInput.Size = new System.Drawing.Size(37, 13);
-            this.LabelInput.TabIndex = 0;
+            this.LabelInput.TabIndex = 999;
             this.LabelInput.Text = "Input:";
             // 
             // GroupBoxSettings
@@ -119,9 +119,27 @@
             this.GroupBoxSettings.Location = new System.Drawing.Point(12, 11);
             this.GroupBoxSettings.Name = "GroupBoxSettings";
             this.GroupBoxSettings.Size = new System.Drawing.Size(270, 80);
-            this.GroupBoxSettings.TabIndex = 2;
+            this.GroupBoxSettings.TabIndex = 999;
             this.GroupBoxSettings.TabStop = false;
             this.GroupBoxSettings.Text = "Settings";
+            // 
+            // TextBoxKey
+            // 
+            this.TextBoxKey.Location = new System.Drawing.Point(9, 30);
+            this.TextBoxKey.Name = "TextBoxKey";
+            this.TextBoxKey.PasswordChar = '*';
+            this.TextBoxKey.Size = new System.Drawing.Size(253, 21);
+            this.TextBoxKey.TabIndex = 0;
+            this.TextBoxKey.TextChanged += new System.EventHandler(this.TextBoxKey_TextChanged);
+            // 
+            // LabelKey
+            // 
+            this.LabelKey.AutoSize = true;
+            this.LabelKey.Location = new System.Drawing.Point(6, 14);
+            this.LabelKey.Name = "LabelKey";
+            this.LabelKey.Size = new System.Drawing.Size(80, 13);
+            this.LabelKey.TabIndex = 999;
+            this.LabelKey.Text = "Key (Optional):";
             // 
             // RadioButtonDecrypt
             // 
@@ -130,7 +148,7 @@
             this.RadioButtonDecrypt.Location = new System.Drawing.Point(138, 57);
             this.RadioButtonDecrypt.Name = "RadioButtonDecrypt";
             this.RadioButtonDecrypt.Size = new System.Drawing.Size(126, 17);
-            this.RadioButtonDecrypt.TabIndex = 1;
+            this.RadioButtonDecrypt.TabIndex = 2;
             this.RadioButtonDecrypt.Text = "Decrypt Config Value";
             this.RadioButtonDecrypt.UseVisualStyleBackColor = true;
             // 
@@ -141,29 +159,11 @@
             this.RadioButtonEncrypt.Location = new System.Drawing.Point(6, 57);
             this.RadioButtonEncrypt.Name = "RadioButtonEncrypt";
             this.RadioButtonEncrypt.Size = new System.Drawing.Size(125, 17);
-            this.RadioButtonEncrypt.TabIndex = 0;
+            this.RadioButtonEncrypt.TabIndex = 1;
             this.RadioButtonEncrypt.TabStop = true;
             this.RadioButtonEncrypt.Text = "Encrypt Config Value";
             this.RadioButtonEncrypt.UseVisualStyleBackColor = true;
             this.RadioButtonEncrypt.CheckedChanged += new System.EventHandler(this.RadioButtonEncrypt_CheckedChanged);
-            // 
-            // TextBoxKey
-            // 
-            this.TextBoxKey.Location = new System.Drawing.Point(9, 30);
-            this.TextBoxKey.Name = "TextBoxKey";
-            this.TextBoxKey.PasswordChar = '*';
-            this.TextBoxKey.Size = new System.Drawing.Size(253, 21);
-            this.TextBoxKey.TabIndex = 3;
-            this.TextBoxKey.TextChanged += new System.EventHandler(this.TextBoxKey_TextChanged);
-            // 
-            // LabelKey
-            // 
-            this.LabelKey.AutoSize = true;
-            this.LabelKey.Location = new System.Drawing.Point(6, 14);
-            this.LabelKey.Name = "LabelKey";
-            this.LabelKey.Size = new System.Drawing.Size(80, 13);
-            this.LabelKey.TabIndex = 2;
-            this.LabelKey.Text = "Key (Optional):";
             // 
             // Main
             // 
