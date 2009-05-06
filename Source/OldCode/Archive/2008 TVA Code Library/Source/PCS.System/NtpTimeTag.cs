@@ -34,7 +34,7 @@ using System.Units;
 namespace System
 {
     /// <summary>
-    /// Standard Network Time Protocol Timetag.
+    /// Represents a standard Network Time Protocol (NTP) timetag.
     /// </summary>
     /// <remarks>
     /// As recommended by RFC-2030, all NTP timestamps earlier than 3h 14m 08s UTC on 20 January 1968
