@@ -29,11 +29,14 @@
 \**************************************************************************/
 
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace System
 {
-    /// <summary>Base class for alternate time tag implementations.</summary>
-    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>
+    /// <summary>
+    /// Represents tha base class for alternate timetag implementations.
+    /// </summary>
+    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>
     {
         #region [ Members ]
 
@@ -46,19 +49,9 @@ namespace System
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="TimeTagBase"/> from serialization parameters.
+        /// Creates a new <see cref="TimeTagBase"/>, given number base time (in ticks) and seconds since base time.
         /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
-        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
-        protected TimeTagBase(SerializationInfo info, StreamingContext context)
-        {
-            // Deserializes time tag
-            m_baseDateOffsetTicks = info.GetInt64("baseDateOffsetTicks");
-            m_seconds = info.GetDouble("seconds");
-        }
-
-        /// <summary>Creates a new <see cref="TimeTagBase"/>, given number base time (in ticks) and seconds since base time.</summary>
-        /// <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
+        /// <param name="baseDateOffsetTicks">Ticks of timetag base.</param>
         /// <param name="seconds">Number of seconds since base time.</param>
         protected TimeTagBase(long baseDateOffsetTicks, double seconds)
         {
@@ -66,9 +59,11 @@ namespace System
             Value = seconds;
         }
 
-        /// <summary>Creates a new <see cref="TimeTagBase"/>, given standard .NET DateTime.</summary>
-        /// <param name="baseDateOffsetTicks">Ticks of time tag base.</param>
-        /// <param name="timestamp">Timestamp in <see cref="Ticks"/> used to create time tag from.</param>
+        /// <summary>
+        /// Creates a new <see cref="TimeTagBase"/>, given standard .NET <see cref="DateTime"/>.
+        /// </summary>
+        /// <param name="baseDateOffsetTicks">Ticks of timetag base.</param>
+        /// <param name="timestamp">Timestamp in <see cref="Ticks"/> used to create timetag from.</param>
         protected TimeTagBase(long baseDateOffsetTicks, Ticks timestamp)
         {
             // Zero base 100-nanosecond ticks from 1/1/1970 and convert to seconds.
@@ -76,11 +71,25 @@ namespace System
             Value = (timestamp - m_baseDateOffsetTicks).ToSeconds();
         }
 
+        /// <summary>
+        /// Creates a new <see cref="TimeTagBase"/> from serialization parameters.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>
+        /// <param name="context">The source <see cref="StreamingContext"/> for this deserialization.</param>
+        protected TimeTagBase(SerializationInfo info, StreamingContext context)
+        {
+            // Deserializes timetag
+            m_baseDateOffsetTicks = info.GetInt64("baseDateOffsetTicks");
+            m_seconds = info.GetDouble("seconds");
+        }
+
         #endregion
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets number of seconds since base time.</summary>
+        /// <summary>
+        /// Gets or sets number of seconds (including any fractional seconds) since base time.
+        /// </summary>
         public virtual double Value
         {
             get
@@ -93,7 +102,9 @@ namespace System
             }
         }
 
-        /// <summary>Gets ticks representing the absolute minimum time of this time tag implementation.</summary>
+        /// <summary>
+        /// Gets ticks representing the absolute minimum time of this timetag implementation.
+        /// </summary>
         public virtual long BaseDateOffsetTicks
         {
             get
@@ -106,16 +117,22 @@ namespace System
 
         #region [ Methods ]
 
-        /// <summary>Returns standard .NET <see cref="DateTime"/> representation for time tag.</summary>
+        /// <summary>
+        /// Returns standard .NET <see cref="DateTime"/> representation for timetag.
+        /// </summary>
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
             return new DateTime((long)(m_seconds * Ticks.PerSecond) + m_baseDateOffsetTicks);
         }
 
-        /// <summary>Returns basic textual representation for time tag.</summary>
-        /// <remarks>Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the
-        /// correct chronological order.</remarks>
+        /// <summary>
+        /// Returns basic textual representation for timetag.
+        /// </summary>
+        /// <remarks>
+        /// Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the
+        /// correct chronological order.
+        /// </remarks>
         public override string ToString()
         {
             return ToDateTime().ToString("yyyy-MM-dd HH:mm:ss.fff");
@@ -150,9 +167,12 @@ namespace System
         /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="TimeTagBase"/> or a <see cref="DateTime"/>.</exception>
         public virtual int CompareTo(object obj)
         {
-            TimeTagBase timetag = obj as TimeTagBase;
-            if (timetag != null) return CompareTo(timetag);
-            if (obj is DateTime) return CompareTo((DateTime)obj);
+            if (obj is TimeTagBase)
+                return CompareTo(obj as TimeTagBase);
+
+            if (obj is DateTime)
+                return CompareTo((DateTime)obj);
+
             throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes...");
         }
 
@@ -184,6 +204,19 @@ namespace System
         }
 
         /// <summary>
+        /// Determines whether the specified <see cref="DateTime"/> is equal to the current <see cref="TimeTagBase"/>.
+        /// </summary>
+        /// <param name="other">The <see cref="DateTime"/> to compare with the current <see cref="TimeTagBase"/>.</param>
+        /// <returns>
+        /// true if the specified <see cref="DateTime"/> is equal to the current <see cref="TimeTagBase"/>;
+        /// otherwise, false.
+        /// </returns>
+        public bool Equals(DateTime other)
+        {
+            return (CompareTo(other) == 0);
+        }
+
+        /// <summary>
         /// Serves as a hash function for the current <see cref="TimeTagBase"/>.
         /// </summary>
         /// <returns>A hash code for the current <see cref="TimeTagBase"/>.</returns>
@@ -198,9 +231,10 @@ namespace System
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
         /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
         public virtual void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            // Serializes time tag.
+            // Serializes timetag.
             info.AddValue("baseDateOffsetTicks", m_baseDateOffsetTicks);
             info.AddValue("seconds", m_seconds);
         }
@@ -208,6 +242,8 @@ namespace System
         #endregion
 
         #region [ Operators ]
+
+        #region [ == Operators ]
 
         /// <summary>
         /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
@@ -221,6 +257,54 @@ namespace System
         }
 
         /// <summary>
+        /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator ==(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) == 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator ==(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) == 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator ==(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) == 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator ==(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) == 0);
+        }
+
+        #endregion
+
+        #region [ != Operators ]
+
+        /// <summary>
         /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
         /// </summary>
         /// <param name="value1">Value 1 in the comparision.</param>
@@ -230,6 +314,54 @@ namespace System
         {
             return (value1.CompareTo(value2) != 0);
         }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator !=(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) != 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator !=(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) != 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator !=(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) != 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is not equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is not equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator !=(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) != 0);
+        }
+
+        #endregion
+
+        #region [ <  Operators ]
 
         /// <summary>
         /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
@@ -243,6 +375,54 @@ namespace System
         }
 
         /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) < 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) < 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) < 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) < 0);
+        }
+
+        #endregion
+
+        #region [ <= Operators ]
+
+        /// <summary>
         /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
         /// </summary>
         /// <param name="value1">Value 1 in the comparision.</param>
@@ -252,6 +432,54 @@ namespace System
         {
             return (value1.CompareTo(value2) <= 0);
         }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <=(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) <= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <=(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) <= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <=(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) <= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is less than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator <=(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) <= 0);
+        }
+
+        #endregion
+
+        #region [ >  Operators ]
 
         /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
@@ -265,6 +493,54 @@ namespace System
         }
 
         /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) > 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) > 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) > 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) > 0);
+        }
+
+        #endregion
+
+        #region [ >= Operators ]
+
+        /// <summary>
         /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
         /// </summary>
         /// <param name="value1">Value 1 in the comparision.</param>
@@ -274,6 +550,52 @@ namespace System
         {
             return (value1.CompareTo(value2) >= 0);
         }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >=(DateTime value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) >= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >=(Ticks value1, TimeTagBase value2)
+        {
+            return (value1.CompareTo(value2.ToDateTime()) >= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >=(TimeTagBase value1, DateTime value2)
+        {
+            return (value1.CompareTo(value2) >= 0);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>.
+        /// </summary>
+        /// <param name="value1">Value 1 in the comparision.</param>
+        /// <param name="value2">Value 2 in the comparision.</param>
+        /// <returns>true if <paramref name="value1"/> is greater than or equal to <paramref name="value2"/>; otherwise false.</returns>
+        public static bool operator >=(TimeTagBase value1, Ticks value2)
+        {
+            return (value1.CompareTo((DateTime)value2) >= 0);
+        }
+
+        #endregion
 
         #endregion
     }

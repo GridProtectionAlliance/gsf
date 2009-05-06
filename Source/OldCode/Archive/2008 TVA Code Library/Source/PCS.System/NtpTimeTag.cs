@@ -43,14 +43,49 @@ namespace System
     /// </remarks>
     public class NtpTimeTag : TimeTagBase
     {
-        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this date to
-        // get offset in ticks for later conversion.
-        private static long NtpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+        #region [ Constructors ]
 
-        // According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
-        // at 6h 28m 16s UTC if MSB is set, so we also calculate this date to get offset in ticks for
-        // later conversion as well.
-        private static long NtpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
+        /// <summary>
+        /// Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.
+        /// </summary>
+        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
+        public NtpTimeTag(double seconds)
+            : base(GetBaseDateOffsetTicks(seconds), seconds)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="NtpTimeTag"/>, given number of seconds and fractional seconds since 1/1/1900.
+        /// </summary>
+        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
+        /// <param name="fraction">Number of fractional seconds, in whole picoseconds.</param>
+        [CLSCompliant(false)]
+        public NtpTimeTag(uint seconds, uint fraction)
+            : base(GetBaseDateOffsetTicks(seconds), seconds + (fraction / (double)uint.MaxValue))
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.
+        /// </summary>
+        /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in high-word and fractional seconds in low-word.</param>
+        [CLSCompliant(false)]
+        public NtpTimeTag(ulong timestamp)
+            : this(timestamp.HighDword(), timestamp.LowDword())
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="NtpTimeTag"/>, given specified <see cref="Ticks"/>.
+        /// </summary>
+        /// <param name="timestamp">Timestamp in <see cref="Ticks"/> to create Unix timetag from (minimum valid date is 1/1/1900).</param>
+        /// <remarks>
+        /// This constructor will accept a <see cref="DateTime"/> parameter since <see cref="Ticks"/> is implicitly castable to a <see cref="DateTime"/>.
+        /// </remarks>
+        public NtpTimeTag(Ticks timestamp)
+            : base(GetBaseDateOffsetTicks(timestamp), timestamp)
+        {
+        }
 
         /// <summary>
         /// Creates a new <see cref="NtpTimeTag"/> from serialization parameters.
@@ -62,36 +97,9 @@ namespace System
         {
         }
 
-        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds since 1/1/1900.</summary>
-        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
-        public NtpTimeTag(double seconds)
-            : base(GetBaseDateOffsetTicks(seconds), seconds)
-        {
-        }
+        #endregion
 
-        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given number of seconds and fractional seconds since 1/1/1900.</summary>
-        /// <param name="seconds">Number of seconds since 1/1/1900.</param>
-        /// <param name="fraction">Number of fractional seconds, in whole picoseconds.</param>
-        [CLSCompliant(false)]
-        public NtpTimeTag(uint seconds, uint fraction)
-            : base(GetBaseDateOffsetTicks(seconds), seconds + (fraction / (double)uint.MaxValue))
-        {
-        }
-
-        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given 64-bit NTP timestamp.</summary>
-        /// <param name="timestamp">NTP timestamp containing number of seconds since 1/1/1900 in hi-word and fractional seconds in lo-word.</param>
-        [CLSCompliant(false)]
-        public NtpTimeTag(ulong timestamp)
-            : this(timestamp.HighDword(), timestamp.LowDword())
-        {
-        }
-
-        /// <summary>Creates a new <see cref="NtpTimeTag"/>, given specified <see cref="Ticks"/>.</summary>
-        /// <param name="timestamp">Timestamp in <see cref="Ticks"/> to create Unix timetag from (minimum valid date is 1/1/1900).</param>
-        public NtpTimeTag(Ticks timestamp)
-            : base(GetBaseDateOffsetTicks(timestamp), timestamp)
-        {
-        }
+        #region [ Properties ]
 
         /// <summary>
         /// Gets 64-bit NTP timestamp.
@@ -104,6 +112,23 @@ namespace System
                 return GetNTPTimestampFromTicks(ToDateTime());
             }
         }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        // NTP dates are measured as the number of seconds since 1/1/1900, so we calculate this date to
+        // get offset in ticks for later conversion.
+        private static long NtpDateOffsetTicks = (new DateTime(1900, 1, 1, 0, 0, 0)).Ticks;
+
+        // According to RFC-2030, NTP dates can also be measured as the number of seconds since 2/7/2036
+        // at 6h 28m 16s UTC if MSB is set, so we also calculate this date to get offset in ticks for
+        // later conversion as well.
+        private static long NtpDateOffsetTicksAlt = (new DateTime(2036, 2, 7, 6, 28, 16)).Ticks;
+
+        // Static Methods
 
         /// <summary>
         /// Gets proper NTP offset based on <paramref name="seconds"/> value, see RFC-2030.
@@ -129,7 +154,7 @@ namespace System
         }
 
         /// <summary>
-        /// Gets proper NTP offset based on most significant on <paramref name="timestamp"/> value, see RFC-2030.
+        /// Gets proper NTP offset based on most significant byte on <paramref name="timestamp"/> value, see RFC-2030.
         /// </summary>
         /// <param name="seconds">NTP seconds timestamp value.</param>
         /// <returns>Proper NTP offset.</returns>
@@ -157,5 +182,7 @@ namespace System
 
             return Word.MakeQword(seconds, fraction);
         }
+
+        #endregion
     }
 }
