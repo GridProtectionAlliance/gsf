@@ -170,7 +170,7 @@ namespace PCS.IO
             m_logEntryQueue = ProcessQueue<string>.CreateSynchronousQueue(WriteLogEntries);
 
             this.FileFull += LogFile_FileFull;
-            m_logEntryQueue.ProcessException += m_logEntryQueue_ProcessException;
+            m_logEntryQueue.ProcessException += ProcessExceptionHandler;
         }
 
         /// <summary>
@@ -687,7 +687,10 @@ namespace PCS.IO
                             m_fileStream.Dispose();
 
                         if (m_logEntryQueue != null)
+                        {
+                            m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
                             m_logEntryQueue.Dispose();
+                        }
 
                         if (m_operationWaitHandle != null)
                             m_operationWaitHandle.Close();
@@ -793,9 +796,9 @@ namespace PCS.IO
             m_operationWaitHandle.Set();
         }
 
-        private void m_logEntryQueue_ProcessException(Exception ex)
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            OnLogException(new EventArgs<Exception>(ex));
+            OnLogException(e);
         }
 
         #endregion

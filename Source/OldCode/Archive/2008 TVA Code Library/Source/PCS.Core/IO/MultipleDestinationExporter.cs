@@ -202,7 +202,7 @@ namespace PCS.IO
 
             // Set up a synchronous process queue to handle exports that will limit total export time to export interval
             m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
-            m_exportQueue.ProcessException += m_exportQueue_ProcessException;
+            m_exportQueue.ProcessException += ProcessExceptionHandler;
         }
 
         #endregion
@@ -411,6 +411,9 @@ namespace PCS.IO
                         // This will be done only when the object is disposed by calling Dispose().
                         Shutdown();
                         SaveSettings();
+
+                        if (m_exportQueue != null)
+                            m_exportQueue.ProcessException -= ProcessExceptionHandler;
                     }
                 }
                 finally
@@ -732,10 +735,10 @@ namespace PCS.IO
             }
         }
 
-        private void m_exportQueue_ProcessException(Exception ex)
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
             // Something unexpected happened during export
-            OnStatusMessage("Export exception: {0}", ex.Message);
+            OnStatusMessage("Export exception: {0}", e.Argument.Message);
         }
 
         #endregion

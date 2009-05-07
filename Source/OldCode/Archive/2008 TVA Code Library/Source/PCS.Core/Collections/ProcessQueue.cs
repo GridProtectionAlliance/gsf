@@ -230,7 +230,7 @@ namespace PCS.Collections
         /// timeout is specified.</para>
         /// <para>Raised only when ProcessingStyle = OneAtATime (i.e., <see cref="ProcessQueue{T}.ProcessItemFunction"/> is defined).</para>
         /// </remarks>
-        public event Action<T> ItemProcessed;
+        public event EventHandler<EventArgs<T>> ItemProcessed;
 
         /// <summary>
         /// Event that is raised after an array of items have been successfully processed.
@@ -241,7 +241,7 @@ namespace PCS.Collections
         /// timeout is specified.</para>
         /// <para>Raised only when when ProcessingStyle = ManyAtOnce (i.e., <see cref="ProcessQueue{T}.ProcessItemsFunction"/> is defined).</para>
         /// </remarks>
-        public event Action<T[]> ItemsProcessed;
+        public event EventHandler<EventArgs<T[]>> ItemsProcessed;
 
         /// <summary>
         /// Event that is raised if an item's processing time exceeds the specified process timeout.
@@ -250,7 +250,7 @@ namespace PCS.Collections
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = OneAtATime (i.e., <see cref="ProcessQueue{T}.ProcessItemFunction"/> is defined).</para>
         /// </remarks>
-        public event Action<T> ItemTimedOut;
+        public event EventHandler<EventArgs<T>> ItemTimedOut;
 
         /// <summary>
         /// Event that is raised if the processing time for an array of items exceeds the specified process timeout.
@@ -259,7 +259,7 @@ namespace PCS.Collections
         /// <para>Allows custom handling of items that took too long to process.</para>
         /// <para>Raised only when ProcessingStyle = ManyAtOnce (i.e., <see cref="ProcessQueue{T}.ProcessItemsFunction"/> is defined).</para>
         /// </remarks>
-        public event Action<T[]> ItemsTimedOut;
+        public event EventHandler<EventArgs<T[]>> ItemsTimedOut;
 
         /// <summary>
         /// Event that is raised if an exception is encountered while attempting to processing an item in the <see cref="ProcessQueue{T}"/>.
@@ -268,7 +268,7 @@ namespace PCS.Collections
         /// Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will
         /// be exposed through this event.
         /// </remarks>
-        public event Action<Exception> ProcessException;
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 
         // Fields
         private ProcessItemFunctionSignature m_processItemFunction;
@@ -1162,7 +1162,7 @@ namespace PCS.Collections
         /// class is destructed, there may be items that remain unprocessed in the <see cref="ProcessQueue{T}"/>.
         /// </para>
         /// </remarks>
-        public void Flush()
+        public virtual void Flush()
         {
             bool enabled = m_enabled;
 
@@ -1209,73 +1209,73 @@ namespace PCS.Collections
         #region [ Item Processing Functions ]
 
         /// <summary>
-        /// Raises the base class ItemProcessed event.
+        /// Raises the base class <see cref="ItemProcessed"/> event.
         /// </summary>
         /// <remarks>
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
         /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
-        protected void RaiseItemProcessed(T item)
+        protected virtual void OnItemProcessed(T item)
         {
             if (ItemProcessed != null)
-                ItemProcessed(item);
+                ItemProcessed(this, new EventArgs<T>(item));
         }
 
         /// <summary>
-        /// Raises the base class ItemsProcessed event.
+        /// Raises the base class <see cref="ItemsProcessed"/> event.
         /// </summary>
         /// <remarks>
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
         /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
-        protected void RaiseItemsProcessed(T[] items)
+        protected virtual void OnItemsProcessed(T[] items)
         {
             if (ItemsProcessed != null)
-                ItemsProcessed(items);
+                ItemsProcessed(this, new EventArgs<T[]>(items));
         }
 
         /// <summary>
-        /// Raises the base class ItemTimedOut event.
+        /// Raises the base class <see cref="ItemTimedOut"/> event.
         /// </summary>
         /// <remarks>
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
         /// <param name="item">A generic type T to be passed to ItemProcessed.</param>
-        protected void RaiseItemTimedOut(T item)
+        protected virtual void OnItemTimedOut(T item)
         {
             if (ItemTimedOut != null)
-                ItemTimedOut(item);
+                ItemTimedOut(this, new EventArgs<T>(item));
         }
 
         /// <summary>
-        /// Raises the base class ItemsTimedOut event.
+        /// Raises the base class <see cref="ItemsTimedOut"/> event.
         /// </summary>
         /// <remarks>
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
         /// <param name="items">An array of generic type T to be passed to ItemsProcessed.</param>
-        protected void RaiseItemsTimedOut(T[] items)
+        protected virtual void OnItemsTimedOut(T[] items)
         {
             if (ItemsTimedOut != null)
-                ItemsTimedOut(items);
+                ItemsTimedOut(this, new EventArgs<T[]>(items));
         }
 
         /// <summary>
-        /// Raises the base class ProcessException event.
+        /// Raises the base class <see cref="ProcessException"/> event.
         /// </summary>
         /// <remarks>
         /// Derived classes cannot raise events of their base classes, so we expose event wrapper methods to accomodate
         /// as needed.
         /// </remarks>
         /// <param name="ex"><see cref="Exception"/> to be passed to ProcessException.</param>
-        protected void RaiseProcessException(Exception ex)
+        protected virtual void OnProcessException(Exception ex)
         {
             if (ProcessException != null)
-                ProcessException(ex);
+                ProcessException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -1291,14 +1291,12 @@ namespace PCS.Collections
         /// invoked from within a SyncLock of the exposed SyncRoot (i.e., m_processQueue).
         /// </para>
         /// </remarks>
-        protected void DataAdded()
+        protected virtual void DataAdded()
         {
             // For queues that are not processing in real-time, we start the intervaled process timer
             // when data is added, if it's not running already
             if (!m_processingIsRealTime && !m_processTimer.Enabled)
-            {
                 m_processTimer.Enabled = m_enabled;
-            }
         }
 
         /// <summary>
@@ -1335,8 +1333,7 @@ namespace PCS.Collections
                 catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
                 {
                     // Processing will not stop for any errors thrown by the user function, but errors will be reported.
-                    if (ProcessException != null)
-                        ProcessException(ex);
+                    OnProcessException(ex);
                 }
 
                 // Assuming processing must go on if the user function fails
@@ -1423,8 +1420,7 @@ namespace PCS.Collections
                 Interlocked.Increment(ref m_itemsProcessed);
 
                 // Notifies consumers of successfully processed items.
-                if (ItemProcessed != null)
-                    ItemProcessed(item);
+                OnItemProcessed(item);
             }
             catch (ThreadAbortException ex)
             {
@@ -1438,8 +1434,7 @@ namespace PCS.Collections
                     RequeueItem(item, m_requeueModeOnException);
 
                 // Processing will not stop for any errors thrown by the user function, but errors will be reported.
-                if (ProcessException != null)
-                    ProcessException(ex);
+                OnProcessException(ex);
             }
         }
 
@@ -1453,8 +1448,7 @@ namespace PCS.Collections
                 Interlocked.Add(ref m_itemsProcessed, items.Length);
 
                 // Notifies consumers of successfully processed items.
-                if (ItemsProcessed != null)
-                    ItemsProcessed(items);
+                OnItemsProcessed(items);
             }
             catch (ThreadAbortException ex)
             {
@@ -1468,8 +1462,7 @@ namespace PCS.Collections
                     RequeueItems(items, m_requeueModeOnException);
 
                 // Processing will not stop for any errors thrown by the user function, but errors will be reported.
-                if (ProcessException != null)
-                    ProcessException(ex);
+                OnProcessException(ex);
             }
         }
 
@@ -1576,9 +1569,8 @@ namespace PCS.Collections
 
                         if (!processThread.WaitUntil(m_processTimeout))
                         {
-                            // Notifies user of process timeout, in case they want to do anything special.
-                            if (ItemTimedOut != null)
-                                ItemTimedOut(nextItem);
+                            // Notify user of process timeout, in case they want to do anything special.
+                            OnItemTimedOut(nextItem);
 
                             // Requeues item on processing timeout, if requested.
                             if (m_requeueOnTimeout)
@@ -1595,8 +1587,7 @@ namespace PCS.Collections
             catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
-                if (ProcessException != null)
-                    ProcessException(ex);
+                OnProcessException(ex);
             }
             finally
             {
@@ -1667,9 +1658,8 @@ namespace PCS.Collections
 
                         if (!processThread.WaitUntil(m_processTimeout))
                         {
-                            // Notifies the user of the process timeout, in case they want to do anything special.
-                            if (ItemsTimedOut != null)
-                                ItemsTimedOut(nextItems);
+                            // Notify the user of the process timeout, in case they want to do anything special.
+                            OnItemsTimedOut(nextItems);
 
                             // Requeues items on processing timeout, if requested.
                             if (m_requeueOnTimeout)
@@ -1686,8 +1676,7 @@ namespace PCS.Collections
             catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
-                if (ProcessException != null)
-                    ProcessException(ex);
+                OnProcessException(ex);
             }
             finally
             {

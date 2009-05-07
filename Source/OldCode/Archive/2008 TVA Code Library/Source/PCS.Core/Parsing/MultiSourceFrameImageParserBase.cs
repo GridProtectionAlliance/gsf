@@ -77,7 +77,7 @@ namespace PCS.Parsing
         protected MultiSourceFrameImageParserBase()
         {
             m_bufferQueue = CreateBufferQueue();
-            m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
+            m_bufferQueue.ProcessException += ProcessExceptionHandler;
             
             if (ProtocolUsesSyncBytes)
                 m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
@@ -153,7 +153,7 @@ namespace PCS.Parsing
                     {
                         if (m_bufferQueue != null)
                         {
-                            m_bufferQueue.ProcessException -= m_bufferQueue_ProcessException;
+                            m_bufferQueue.ProcessException -= ProcessExceptionHandler;
                             m_bufferQueue.Dispose();
                         }
                         m_bufferQueue = null;
@@ -400,9 +400,9 @@ namespace PCS.Parsing
         }
 
         // We just bubble any exceptions captured in process queue out to parsing exception event...
-        private void m_bufferQueue_ProcessException(Exception ex)
+        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            OnParsingException(ex);
+            OnParsingException(e.Argument);
         }
 
         #endregion
