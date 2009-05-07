@@ -210,7 +210,7 @@ namespace PCS.Measurements
         }
 
         /// <summary>Returns measurement key list of specified tag, if it exists.</summary>
-        public ReadOnlyCollection<MeasurementKey> TagMeasurementKeys(string tag)
+        public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
         {
             return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
         }
