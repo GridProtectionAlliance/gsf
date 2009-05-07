@@ -251,7 +251,7 @@ namespace PCS.Measurements
         {
             foreach (DataRow row in taggedMeasurements.Rows)
             {
-                AddTaggedMeasurement(row["Tag"].ToString(), new MeasurementKey(Convert.ToUInt32(row["ID"]), row["Source"].ToString()));
+                AddTaggedMeasurement(row["Tag"].ToNonNullString("_tag_"), new MeasurementKey(uint.Parse(row["ID"].ToNonNullString(uint.MaxValue.ToString())), row["Source"].ToNonNullString("__")));
             }
         }
 
