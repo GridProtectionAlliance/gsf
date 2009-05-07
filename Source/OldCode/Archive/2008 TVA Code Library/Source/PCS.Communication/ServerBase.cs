@@ -227,7 +227,7 @@ namespace PCS.Communication
         private bool m_persistSettings;
         private string m_settingsCategory;
         private Encoding m_textEncoding;
-        private Action<Guid,byte[],int,int> m_receiveClientDataHandler;
+        private Action<Guid, byte[], int, int> m_receiveClientDataHandler;
         private ServerState m_currentState;
         private TransportProtocol m_transportProtocol;
         private Guid m_serverID;
@@ -629,7 +629,7 @@ namespace PCS.Communication
         /// </remarks>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Action<Guid,byte[],int,int> ReceiveClientDataHandler
+        public virtual Action<Guid, byte[], int, int> ReceiveClientDataHandler
         {
             get
             {
@@ -1384,6 +1384,5 @@ namespace PCS.Communication
         }
 
         #endregion
-
     }
 }
