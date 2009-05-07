@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 
 namespace PCS.Measurements
@@ -209,9 +210,9 @@ namespace PCS.Measurements
         }
 
         /// <summary>Returns measurement key list of specified tag, if it exists.</summary>
-        public List<MeasurementKey> TagMeasurementKeys(string tag)
+        public ReadOnlyCollection<MeasurementKey> TagMeasurementKeys(string tag)
         {
-            return m_taggedMeasurements[tag];
+            return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
         }
 
         /// <summary>We only store a new measurement value that is newer than the cached value.</summary>
