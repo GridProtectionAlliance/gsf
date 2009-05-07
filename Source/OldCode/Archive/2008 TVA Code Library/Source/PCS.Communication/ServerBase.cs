@@ -20,7 +20,8 @@
 //  02/19/2008 - Pinal C. Patel
 //       Added code to detect and avoid redundant calls to Dispose().
 //  09/29/2008 - James R Carroll
-//       Converted to C#.//
+//       Converted to C#.
+//
 //*******************************************************************************************************
 
 using System;
