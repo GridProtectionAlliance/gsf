@@ -42,7 +42,7 @@ namespace PCS.PhasorProtocols.Macrodyne
         /// </summary>
         /// <param name="parent">The <see cref="ConfigurationCell"/> parent of this <see cref="FrequencyDefinition"/>.</param>
         /// <param name="label">The label of this <see cref="FrequencyDefinition"/>.</param>
-        internal FrequencyDefinition(ConfigurationCell parent, string label)
+        public FrequencyDefinition(ConfigurationCell parent, string label)
             : base(parent, label, 1000, 100, 0.0D)
         {
         }

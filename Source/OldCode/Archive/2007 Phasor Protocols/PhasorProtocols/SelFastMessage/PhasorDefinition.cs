@@ -44,7 +44,7 @@ namespace PCS.PhasorProtocols.SelFastMessage
         /// <param name="label">The label of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="type">The <see cref="PhasorType"/> of this <see cref="PhasorDefinition"/>.</param>
         /// <param name="voltageReference">The associated <see cref="IPhasorDefinition"/> that represents the voltage reference (if any).</param>
-        internal PhasorDefinition(ConfigurationCell parent, string label, PhasorType type, PhasorDefinition voltageReference)
+        public PhasorDefinition(ConfigurationCell parent, string label, PhasorType type, PhasorDefinition voltageReference)
             : base(parent, label, 1, 0.0D, type, voltageReference)
         {
         }

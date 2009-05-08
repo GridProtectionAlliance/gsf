@@ -142,7 +142,7 @@ namespace PCS.PhasorProtocols
                     if (m_bufferQueue == null)
                     {
                         m_bufferQueue = CreateBufferQueue();
-                        m_bufferQueue.ProcessException += OnParsingException;
+                        m_bufferQueue.ProcessException += m_bufferQueue_ProcessException;
                     }
 
                     if (Enabled && !m_bufferQueue.Enabled)
@@ -153,7 +153,7 @@ namespace PCS.PhasorProtocols
                     if (m_bufferQueue != null)
                     {
                         m_bufferQueue.Stop();
-                        m_bufferQueue.ProcessException -= OnParsingException;
+                        m_bufferQueue.ProcessException -= m_bufferQueue_ProcessException;
                     }
 
                     m_bufferQueue = null;
@@ -264,7 +264,7 @@ namespace PCS.PhasorProtocols
                     {
                         if (m_bufferQueue != null)
                         {
-                            m_bufferQueue.ProcessException -= OnParsingException;
+                            m_bufferQueue.ProcessException -= m_bufferQueue_ProcessException;
                             m_bufferQueue.Dispose();
                         }
                         m_bufferQueue = null;
@@ -513,6 +513,12 @@ namespace PCS.PhasorProtocols
         {
             // Call overridable channel frame function handler...
             OnReceivedChannelFrame(e.Argument as IChannelFrame);
+        }
+
+        // Handles any exceptions encountered in the buffer queue
+        private void m_bufferQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnParsingException(e.Argument);
         }
 
         #endregion
