@@ -650,21 +650,20 @@ namespace PCS.IO
         /// <summary>
         /// Raises the <see cref="FileFull"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnFileFull(EventArgs e)
+        protected virtual void OnFileFull()
         {
             if (FileFull != null)
-                FileFull(this, e);
+                FileFull(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="LogException"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnLogException(EventArgs<Exception> e)
+        /// <param name="ex"><see cref="Exception"/> to send to <see cref="LogException"/> event.</param>
+        protected virtual void OnLogException(Exception ex)
         {
             if (LogException != null)
-                LogException(this, e);
+                LogException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -741,7 +740,7 @@ namespace PCS.IO
                         }
 
                         // Truncates file or roll over to new file.
-                        OnFileFull(EventArgs.Empty);
+                        OnFileFull();
 
                         return;
                     }
@@ -798,7 +797,7 @@ namespace PCS.IO
 
         private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
         {
-            OnLogException(e);
+            OnLogException(e.Argument);
         }
 
         #endregion

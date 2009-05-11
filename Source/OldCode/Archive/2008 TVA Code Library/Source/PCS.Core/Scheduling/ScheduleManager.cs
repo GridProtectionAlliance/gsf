@@ -392,7 +392,7 @@ namespace PCS.Scheduling
 
                     // Schedule is due so raise the event.
                     if (schedule.IsDue())
-                        OnScheduleDue(new EventArgs<Schedule>(schedule));
+                        OnScheduleDue(schedule);
                 }
             }
         }
@@ -624,35 +624,34 @@ namespace PCS.Scheduling
         /// <summary>
         /// Raises the <see cref="Starting"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnStarting(EventArgs e)
+        protected virtual void OnStarting()
         {
             if (Starting != null)
-                Starting(this, e);
+                Starting(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="Started"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnStarted(EventArgs e)
+        protected virtual void OnStarted()
         {           
             if (Started != null)
-                Started(this, e);
+                Started(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="ScheduleDue"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnScheduleDue(EventArgs<Schedule> e)
+        /// <param name="schedule"><see cref="Schedule"/> to send to <see cref="ScheduleDue"/> event.</param>
+        protected virtual void OnScheduleDue(Schedule schedule)
         {
             if (ScheduleDue != null)
             {
+                EventArgs<Schedule> args = new EventArgs<Schedule>(schedule);
                 foreach (EventHandler<EventArgs<Schedule>> handler in ScheduleDue.GetInvocationList())
                 {
                     // Asynchrnonously invoke handlers...
-                    handler.BeginInvoke(this, e, null, null);
+                    handler.BeginInvoke(this, args, null, null);
                 }
             }
         }
@@ -702,14 +701,14 @@ namespace PCS.Scheduling
         {
             while (true)
             {
-                OnStarting(EventArgs.Empty);
+                OnStarting();
 
                 if (DateTime.Now.Second == 0)
                 {
                     // We'll start the timer that will check the schedules at top of the minute.
                     m_timer.Start();
                     m_startTimerThread = null;
-                    OnStarted(EventArgs.Empty);
+                    OnStarted();
                     
                     CheckAllSchedules();
                     break;

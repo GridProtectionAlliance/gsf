@@ -756,7 +756,7 @@ namespace PCS.IO
 
                 try
                 {
-                    OnDataLoading(EventArgs.Empty);
+                    OnDataLoading();
 
                     if (m_fileRecords == null)
                         m_fileRecords = new List<T>();
@@ -768,7 +768,7 @@ namespace PCS.IO
                         m_fileRecords.InsertRange(0, records);
                     }
 
-                    OnDataLoaded(EventArgs.Empty);
+                    OnDataLoaded();
                 }
                 finally
                 {
@@ -813,7 +813,7 @@ namespace PCS.IO
 
                 try
                 {
-                    OnDataSaving(EventArgs.Empty);
+                    OnDataSaving();
 
                     // Saves (persists) records to the file, if present in memory.
                     if (m_fileRecords != null)
@@ -824,7 +824,7 @@ namespace PCS.IO
                         }
                     }
 
-                    OnDataSaved(EventArgs.Empty);
+                    OnDataSaved();
                 }
                 finally
                 {
@@ -1094,51 +1094,46 @@ namespace PCS.IO
         /// <summary>
         /// Raises the <see cref="FileModified"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnFileModified(EventArgs e)
+        protected virtual void OnFileModified()
         {
             if (FileModified != null)
-                FileModified(this, e);
+                FileModified(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="DataLoading"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnDataLoading(EventArgs e)
+        protected virtual void OnDataLoading()
         {
             if (DataLoading != null)
-                DataLoading(this, e);
+                DataLoading(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="DataLoaded"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnDataLoaded(EventArgs e)
+        protected virtual void OnDataLoaded()
         {
             if (DataLoaded != null)
-                DataLoaded(this, e);
+                DataLoaded(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="DataSaving"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnDataSaving(EventArgs e)
+        protected virtual void OnDataSaving()
         {
             if (DataSaving != null)
-                DataSaving(this, e);
+                DataSaving(this, EventArgs.Empty);
         }
 
         /// <summary>
         /// Raises the <see cref="DataSaved"/> event.
         /// </summary>
-        /// <param name="e">Event data.</param>
-        protected virtual void OnDataSaved(EventArgs e)
+        protected virtual void OnDataSaved()
         {
             if (DataSaved != null)
-                DataSaved(this, e);
+                DataSaved(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1270,7 +1265,7 @@ namespace PCS.IO
 
         private void FileSystemWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
-            OnFileModified(EventArgs.Empty);
+            OnFileModified();
 
             // Reload records if they have been loaded in memory and reloading is enabled.
             if ((m_fileRecords != null) && m_reloadOnModify) Load();
