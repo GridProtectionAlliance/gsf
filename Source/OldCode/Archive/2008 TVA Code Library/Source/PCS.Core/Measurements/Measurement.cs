@@ -339,7 +339,7 @@ namespace PCS.Measurements
         {
             IMeasurement other = obj as IMeasurement;
             
-            if (other != null)
+            if ((object)other != null)
                 return Equals(other);
             
             throw new ArgumentException("Object is not a Measurement");
@@ -367,7 +367,7 @@ namespace PCS.Measurements
         {
             IMeasurement other = obj as IMeasurement;
             
-            if (other != null)
+            if ((object)other != null)
                 return CompareTo(other);
 
             throw new ArgumentException("Measurement can only be compared with other IMeasurements...");

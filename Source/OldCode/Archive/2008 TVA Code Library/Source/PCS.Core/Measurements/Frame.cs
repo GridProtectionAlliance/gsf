@@ -197,7 +197,7 @@ namespace PCS.Measurements
         {
             IFrame other = obj as IFrame;
             
-            if (other != null)
+            if ((object)other != null)
                 return Equals(other);
 
             throw new ArgumentException("Object is not an IFrame");
@@ -225,7 +225,7 @@ namespace PCS.Measurements
         {
             IFrame other = obj as IFrame;
 
-            if (other != null)
+            if ((object)other != null)
                 return CompareTo(other);
 
             throw new ArgumentException("Frame can only be compared with other IFrames...");
