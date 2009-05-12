@@ -146,7 +146,10 @@ namespace System
         public int CompareTo(TimeTagBase other)
         {
             // Since compared time tags may not have the same base time, we compare using .NET date time.
-            return CompareTo(other.ToDateTime());
+            if (object.Equals(other, null))
+                return 1;
+            else
+                return CompareTo(other.ToDateTime());
         }
 
         /// <summary>
