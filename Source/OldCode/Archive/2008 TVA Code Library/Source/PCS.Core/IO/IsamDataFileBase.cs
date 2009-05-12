@@ -21,6 +21,8 @@
 //       Edited code comments.
 //  12/04/2008 - J. Ritchie Carroll
 //       Modified class an example to use new ISupportBinaryImage
+//  05/12/2009 - Pinal C. Patel
+//       Optimized Read() for better memory management by using "yield return".
 //
 //*******************************************************************************************************
 
@@ -311,11 +313,11 @@ namespace PCS.IO
         private string m_settingsCategory;
         private List<T> m_fileRecords;
         private byte[] m_recordBuffer;
-        private FileStream m_fileStream;
+        private FileStream m_fileData;
         private ManualResetEvent m_loadWaitHandle;
         private ManualResetEvent m_saveWaitHandle;
         private System.Timers.Timer m_autoSaveTimer;
-        private FileSystemWatcher m_fileSystemWatcher;
+        private FileSystemWatcher m_fileWatcher;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -341,8 +343,8 @@ namespace PCS.IO
 
             m_autoSaveTimer = new System.Timers.Timer();
             m_autoSaveTimer.Elapsed += m_autoSaveTimer_Elapsed;
-            m_fileSystemWatcher = new FileSystemWatcher();
-            m_fileSystemWatcher.Changed += FileSystemWatcher_Changed;
+            m_fileWatcher = new FileSystemWatcher();
+            m_fileWatcher.Changed += m_fileWatcher_Changed;
         }
 
         #endregion
@@ -559,7 +561,7 @@ namespace PCS.IO
         {
             get
             {
-                return (m_fileStream != null);
+                return (m_fileData != null);
             }
         }
 
@@ -575,9 +577,9 @@ namespace PCS.IO
                 {
                     long fileLength;
 
-                    lock (m_fileStream)
+                    lock (m_fileData)
                     {
-                        fileLength = m_fileStream.Length;
+                        fileLength = m_fileData.Length;
                     }
 
                     return (fileLength % m_recordBuffer.Length != 0);
@@ -616,9 +618,9 @@ namespace PCS.IO
                 {
                     long fileLength;
 
-                    lock (m_fileStream)
+                    lock (m_fileData)
                     {
-                        fileLength = m_fileStream.Length;
+                        fileLength = m_fileData.Length;
                     }
 
                     return (int)(fileLength / (long)m_recordBuffer.Length);
@@ -652,9 +654,40 @@ namespace PCS.IO
             }
         }
 
+        /// <summary>
+        /// Gets the underlying <see cref="FileStream"/> of the file.
+        /// </summary>
+        /// <remarks>
+        /// Thread-safety Warning: A lock must be obtained on <see cref="FileData"/> before accessing it.
+        /// </remarks>
+        protected FileStream FileData
+        {
+            get
+            {
+                return m_fileData;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        #region [ Abstract ]
+
+        /// <summary>
+        /// When overridden in a derived class, gets the size of a record (in bytes).
+        /// </summary>
+        /// <returns>Size of a record in bytes.</returns>
+        protected abstract int GetRecordSize();
+
+        /// <summary>
+        /// When overridden in a derived class, returns a new empty record.
+        /// </summary>
+        /// <param name="recordIndex">1-based index of the new record.</param>
+        /// <returns>New empty record.</returns>
+        protected abstract T CreateNewRecord(int recordIndex);
+
+        #endregion
 
         /// <summary>
         /// Opens the file.
@@ -674,7 +707,7 @@ namespace PCS.IO
                     Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
                 // Open if file exists, or create it if it doesn't.
-                m_fileStream = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+                m_fileData = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
 
                 // Load records into memory if specified to do so.
                 if (m_loadOnOpen) Load();
@@ -688,9 +721,9 @@ namespace PCS.IO
                 if (m_reloadOnModify)
                 {
                     // Watch for any modifications made to the file on disk.
-                    m_fileSystemWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                    m_fileSystemWatcher.Filter = FilePath.GetFileName(m_fileName);
-                    m_fileSystemWatcher.EnableRaisingEvents = true;
+                    m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                    m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
+                    m_fileWatcher.EnableRaisingEvents = true;
                 }
 
                 if (m_autoSaveInterval > 0)
@@ -713,20 +746,20 @@ namespace PCS.IO
                 m_autoSaveTimer.Stop();
 
                 // Stop monitoring for changes to the file.
-                m_fileSystemWatcher.EnableRaisingEvents = false;
+                m_fileWatcher.EnableRaisingEvents = false;
 
                 // Save records back to the file if specified.
                 if (m_saveOnClose) Save();
 
                 // Close the file stream used for file I/O.
-                if (m_fileStream != null)
+                if (m_fileData != null)
                 {
-                    lock (m_fileStream)
+                    lock (m_fileData)
                     {
-                        m_fileStream.Dispose();
+                        m_fileData.Dispose();
                     }
                 }
-                m_fileStream = null;
+                m_fileData = null;
 
                 // Clear the records loaded in memory.
                 if (m_fileRecords != null)
@@ -1026,27 +1059,23 @@ namespace PCS.IO
         /// Reads file records from disk if records were not loaded in memory otherwise returns the records in memory.
         /// </summary>
         /// <returns>Records of the file.</returns>
-        public virtual List<T> Read()
+        public virtual IEnumerable<T> Read()
         {
             if (IsOpen)
             {
-                List<T> records = new List<T>();
-
-                if (m_fileRecords == null)
+                 if (m_fileRecords == null)
                 {
                     // Reads persisted records if no records are in memory.
-                    records.InsertRange(0, ReadFromDisk());
+                    return ReadFromDisk();
                 }
                 else
                 {
                     // Reads records in memory.
                     lock (m_fileRecords)
                     {
-                        records.InsertRange(0, m_fileRecords);
+                        return m_fileRecords;
                     }
                 }
-
-                return records;
             }
             else
             {
@@ -1161,8 +1190,8 @@ namespace PCS.IO
                         if (m_autoSaveTimer != null)
                             m_autoSaveTimer.Dispose();
 
-                        if (m_fileSystemWatcher != null)
-                            m_fileSystemWatcher.Dispose();
+                        if (m_fileWatcher != null)
+                            m_fileWatcher.Dispose();
                     }
                 }
                 finally
@@ -1172,19 +1201,6 @@ namespace PCS.IO
                 }
             }
         }
-
-        /// <summary>
-        /// When overridden in a derived class, gets the size of a record (in bytes).
-        /// </summary>
-        /// <returns>Size of a record in bytes.</returns>
-        protected abstract int GetRecordSize();
-
-        /// <summary>
-        /// When overridden in a derived class, returns a new empty record.
-        /// </summary>
-        /// <param name="recordIndex">1-based index of the new record.</param>
-        /// <returns>New empty record.</returns>
-        protected abstract T CreateNewRecord(int recordIndex);
 
         /// <summary>
         /// Writes records to disk.
@@ -1201,9 +1217,9 @@ namespace PCS.IO
             }
 
             // Discard previously existing records that were not written.
-            lock (m_fileStream)
+            lock (m_fileData)
             {
-                m_fileStream.SetLength(index * m_recordBuffer.Length);
+                m_fileData.SetLength(index * m_recordBuffer.Length);
             }
         }
 
@@ -1214,28 +1230,23 @@ namespace PCS.IO
         /// <param name="record">Record to be written to disk.</param>
         private void WriteToDisk(int recordIndex, T record)
         {
-            lock (m_fileStream)
+            lock (m_fileData)
             {
-                m_fileStream.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
-                m_fileStream.Write(record.BinaryImage, 0, record.BinaryLength);
+                m_fileData.Seek((recordIndex - 1) * record.BinaryLength, SeekOrigin.Begin);
+                m_fileData.Write(record.BinaryImage, 0, record.BinaryLength);
             }
         }
 
-        /// <summary>
+         /// <summary>
         /// Reads all records from disk.
         /// </summary>
         /// <returns>Records from disk.</returns>
-        private List<T> ReadFromDisk()
+        private IEnumerable<T> ReadFromDisk()
         {
-            List<T> records = new List<T>();
-            int recordCount = RecordsOnDisk;
-
-            for (int i = 1; i <= recordCount; i++)
+            for (int i = 1; i <= RecordsOnDisk; i++)
             {
-                records.Add(ReadFromDisk(i));
+                yield return ReadFromDisk(i);
             }
-
-            return records;
         }
 
         /// <summary>
@@ -1245,10 +1256,10 @@ namespace PCS.IO
         /// <returns>Record from the disk.</returns>
         private T ReadFromDisk(int recordIndex)
         {
-            lock (m_fileStream)
+            lock (m_fileData)
             {
-                m_fileStream.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
-                m_fileStream.Read(m_recordBuffer, 0, m_recordBuffer.Length);
+                m_fileData.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
+                m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
             }
 
             T newRecord = CreateNewRecord(recordIndex);
@@ -1263,7 +1274,7 @@ namespace PCS.IO
             if ((m_fileRecords != null) && IsOpen) Save();
         }
 
-        private void FileSystemWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
+        private void m_fileWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
             OnFileModified();
 
