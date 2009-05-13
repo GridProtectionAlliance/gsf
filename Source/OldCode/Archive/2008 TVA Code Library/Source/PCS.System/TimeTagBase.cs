@@ -135,7 +135,7 @@ namespace System
         /// </remarks>
         public override string ToString()
         {
-            return ToDateTime().ToString("yyyy-MM-dd HH:mm:ss.fff");
+            return ToString("yyyy-MM-dd HH:mm:ss.fff");
         }
 
         /// <summary>
