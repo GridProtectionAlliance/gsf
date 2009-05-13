@@ -139,6 +139,16 @@ namespace System
         }
 
         /// <summary>
+        /// Returns textual representation for timetag in the specified <paramref name="format"/>.
+        /// </summary>
+        /// <param name="format">Format of text output.</param>
+        /// <returns><see cref="string"/> of textual representation for timetag.</returns>
+        public string ToString(string format)
+        {
+            return ToDateTime().ToString(format);
+        }
+
+        /// <summary>
         /// Compares the <see cref="TimeTagBase"/> with another <see cref="TimeTagBase"/>.
         /// </summary>
         /// <param name="other">The <see cref="TimeTagBase"/> to compare with the current <see cref="TimeTagBase"/>.</param>
