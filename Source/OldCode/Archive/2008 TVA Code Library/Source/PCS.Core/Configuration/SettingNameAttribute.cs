@@ -30,7 +30,7 @@ namespace PCS.Configuration
     /// if the attribute doesn't exist the property or field name is used.
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class SettingNameAttribute : Attribute
+    public sealed class SettingNameAttribute : Attribute
     {
         #region [ Members ]
 
@@ -55,17 +55,13 @@ namespace PCS.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets name used to serialize field or property into config file.
+        /// Gets the name used to serialize field or property into config file.
         /// </summary>
         public string Name
         {
             get
             {
                 return m_name;
-            }
-            set
-            {
-                m_name = value;
             }
         }
 

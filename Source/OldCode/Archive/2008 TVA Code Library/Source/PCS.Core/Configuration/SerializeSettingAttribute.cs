@@ -26,7 +26,7 @@ namespace PCS.Configuration
     /// to the configuration file.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class SerializeSettingAttribute : Attribute
+    public sealed class SerializeSettingAttribute : Attribute
     {
         #region [ Members ]
 

@@ -26,7 +26,7 @@ namespace PCS.Configuration
     /// when it is serialized to the configuration file.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class EncryptSettingAttribute : Attribute
+    public sealed class EncryptSettingAttribute : Attribute
     {
         #region [ Members ]
 
