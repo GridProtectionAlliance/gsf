@@ -1027,14 +1027,11 @@ namespace PCS.Services
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 // Add settings if they don't exist in config file.
-                settings.Add("TelnetPassword", m_telnetPassword, "Password for telnet-like remote command session.", true);
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
                 settings.Add("QueryableSettingsCategories", m_queryableSettingsCategories, "Category names under categorizedSettings section of the config file that can be managed by the service.");
                 // Update settings with the latest property values.
-                element = settings["TelnetPassword"];
-                element.Update(m_telnetPassword, element.Description, element.Encrypted);
                 element = settings["LogStatusUpdates"];
                 element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
                 element = settings["MonitorServiceHealth"];
@@ -1061,7 +1058,8 @@ namespace PCS.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                m_telnetPassword = settings["TelnetPassword", true].ValueAs(m_telnetPassword);
+                if (settings["TelnetPassword"] != null)
+                    m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
                 LogStatusUpdates = settings["LogStatusUpdates", true].ValueAs(m_logStatusUpdates);
                 MonitorServiceHealth = settings["MonitorServiceHealth", true].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit", true].ValueAs(m_requestHistoryLimit);
@@ -1682,6 +1680,10 @@ namespace PCS.Services
                     {
                         foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[category])
                         {
+                            // Skip encrypted settings for security purpose.
+                            if (setting.Encrypted)
+                                continue;   
+
                             responseMessage.AppendLine();
                             responseMessage.Append(category.PadRight(25));
                             responseMessage.Append(' ');
