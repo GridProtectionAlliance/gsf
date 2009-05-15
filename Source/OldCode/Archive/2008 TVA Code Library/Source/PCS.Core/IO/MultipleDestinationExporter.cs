@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -447,11 +448,11 @@ namespace PCS.IO
         /// must be called in order to initialize exports.  Even if used as a component this method can be
         /// called at anytime to reintialize the exports with new configuration information.
         /// </remarks>
-        public void Initialize(List<ExportDestination> defaultDestinations)
+        public void Initialize(IEnumerable<ExportDestination> defaultDestinations)
         {
             // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
 #if ThreadTracking
-            ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations);
+            ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
             thread.Name = "PCS.IO.MultipleDestinationExporter.Initialize()";
 #else
             ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations);
@@ -627,9 +628,13 @@ namespace PCS.IO
             {
                 m_exportDestinations = state as List<ExportDestination>;
             }
-            LoadSettings(); // Load export destinations from the config file.
+
+            // Load export destinations from the config file - if nothing is in config file yet,
+            // the default settings (passed in via state) will be used instead
+            LoadSettings();
 
             List<ExportDestination> destinations;
+
             lock (m_exportDestinations)
             {
                 // Cache a local copy of export destinations to reduce lock time,
