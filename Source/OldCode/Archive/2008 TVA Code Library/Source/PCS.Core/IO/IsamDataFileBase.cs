@@ -236,6 +236,11 @@ namespace PCS.IO
         public const string DefaultFileName = "IsamDataFile" + Extension;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="FileAccessMode"/> property.
+        /// </summary>
+        public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="AutoSaveInterval"/> property.
         /// </summary>
         public const int DefaultAutoSaveInterval = -1;
@@ -304,6 +309,7 @@ namespace PCS.IO
 
         // Fields
         private string m_fileName;
+        private FileAccess m_fileAccessMode;
         private int m_autoSaveInterval;
         private int m_minimumRecordCount;
         private bool m_loadOnOpen;
@@ -331,6 +337,7 @@ namespace PCS.IO
         public IsamDataFileBase()
         {
             m_fileName = DefaultFileName;
+            m_fileAccessMode = DefaultFileAccessMode;
             m_autoSaveInterval = DefaultAutoSaveInterval;
             m_minimumRecordCount = DefaultMinimumRecordCount;
             m_loadOnOpen = DefaultLoadOnOpen;
@@ -380,6 +387,24 @@ namespace PCS.IO
                     Close();
                     Open();
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="FileAccess"/> value to use when opening the file.
+        /// </summary>
+        [Category("Settings"), 
+        DefaultValue(DefaultFileAccessMode), 
+        Description("The System.IO.FileAccess value to use when opening the file.")]
+        public FileAccess FileAccessMode
+        {
+            get
+            {
+                return m_fileAccessMode;
+            }
+            set
+            {
+                m_fileAccessMode = value;
             }
         }
 
@@ -707,7 +732,7 @@ namespace PCS.IO
                     Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
                 // Open if file exists, or create it if it doesn't.
-                m_fileData = new FileStream(m_fileName, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite);
+                m_fileData = new FileStream(m_fileName, FileMode.OpenOrCreate, m_fileAccessMode, FileShare.ReadWrite);
 
                 // Load records into memory if specified to do so.
                 if (m_loadOnOpen) Load();
@@ -887,6 +912,7 @@ namespace PCS.IO
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 // Add settings if they don't exist in config file.
                 settings.Add("FileName", m_fileName, "Name of the file including its path.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
                 settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
                 settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
                 settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
@@ -895,6 +921,8 @@ namespace PCS.IO
                 // Update settings with the latest property values.
                 element = settings["FileName"];
                 element.Update(m_fileName, element.Description, element.Encrypted);
+                element = settings["FileAccessMode"];
+                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
                 element = settings["AutoSaveInterval"];
                 element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
                 element = settings["MinimumRecordCount"];
@@ -924,6 +952,7 @@ namespace PCS.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 FileName = settings["FileName", true].ValueAs(m_fileName);
+                FileAccessMode = settings["FileAccessMode", true].ValueAs(m_fileAccessMode);
                 AutoSaveInterval = settings["AutoSaveInterval", true].ValueAs(m_autoSaveInterval);
                 MinimumRecordCount = settings["MinimumRecordCount", true].ValueAs(m_minimumRecordCount);
                 LoadOnOpen = settings["LoadOnOpen", true].ValueAs(m_loadOnOpen);
@@ -1063,7 +1092,7 @@ namespace PCS.IO
         {
             if (IsOpen)
             {
-                 if (m_fileRecords == null)
+                if (m_fileRecords == null)
                 {
                     // Reads persisted records if no records are in memory.
                     return ReadFromDisk();
@@ -1181,10 +1210,10 @@ namespace PCS.IO
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_loadWaitHandle != null) 
+                        if (m_loadWaitHandle != null)
                             m_loadWaitHandle.Close();
 
-                        if (m_saveWaitHandle != null) 
+                        if (m_saveWaitHandle != null)
                             m_saveWaitHandle.Close();
 
                         if (m_autoSaveTimer != null)
@@ -1237,7 +1266,7 @@ namespace PCS.IO
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Reads all records from disk.
         /// </summary>
         /// <returns>Records from disk.</returns>

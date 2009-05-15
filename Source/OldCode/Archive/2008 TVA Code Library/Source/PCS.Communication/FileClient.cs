@@ -346,7 +346,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("File"),
         DefaultValue(DefaultFileOpenMode),
-        Description("Gets or sets the System.IO.FileMode value to be used when opening the file.")]
+        Description("The System.IO.FileMode value to be used when opening the file.")]
         public FileMode FileOpenMode
         {
             get
@@ -364,7 +364,7 @@ namespace PCS.Communication
         /// </summary>
         [Category("File"),
         DefaultValue(DefaultFileShareMode),
-        Description("Gets or sets the System.IO.FileShare value to be used when opening the file.")]
+        Description("The System.IO.FileShare value to be used when opening the file.")]
         public FileShare FileShareMode
         {
             get
@@ -383,7 +383,7 @@ namespace PCS.Communication
         /// <exception cref="InvalidOperationException"><see cref="FileAccessMode"/> is set to <see cref="FileAccess.ReadWrite"/> when <see cref="AutoRepeat"/> is enabled.</exception>
         [Category("File"),
         DefaultValue(DefaultFileAccessMode),
-        Description("Gets or sets the System.IO.FileAccess value to be used when opening the file.")]
+        Description("The System.IO.FileAccess value to be used when opening the file.")]
         public FileAccess FileAccessMode
         {
             get
@@ -513,9 +513,9 @@ namespace PCS.Communication
                 settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
                 settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
                 settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
-                settings.Add("FileOpenMode", m_fileOpenMode, "Mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
-                settings.Add("FileShareMode", m_fileShareMode, "Mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used for sharing the file.");
-                settings.Add("FileAccessMode", m_fileAccessMode, "Mode (Read; Write; ReadWrite) to be used for accessing the file.");
+                settings.Add("FileOpenMode", m_fileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+                settings.Add("FileShareMode", m_fileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
                 // Update settings with the latest property values.
                 element = settings["AutoRepeat"];
                 element.Update(m_autoRepeat, element.Description, element.Encrypted);
