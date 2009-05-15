@@ -768,17 +768,14 @@ namespace PCS.IO
                     }
                     break;
                 case LogFileFullOperation.Rollover:
-                    string fileDir = FilePath.GetDirectoryName(m_fileName);
-                    string fileName = FilePath.GetFileNameWithoutExtension(m_fileName) + "_" + 
-                                      File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" + 
-                                      File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + 
-                                      FilePath.GetExtension(m_fileName);
-
                     // Rolls over to a new log file, and keeps the current file for history.
                     try
                     {
                         Close(false);
-                        File.Move(m_fileName, Path.Combine(fileDir, fileName));
+                        File.Move(m_fileName, FilePath.GetDirectoryName(m_fileName) + 
+                                              FilePath.GetFileNameWithoutExtension(m_fileName) + "_" + 
+                                              File.GetCreationTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + "_to_" +
+                                              File.GetLastWriteTime(m_fileName).ToString("yyyy-MM-dd hh!mm!ss") + FilePath.GetExtension(m_fileName));
                     }
                     catch
                     {
