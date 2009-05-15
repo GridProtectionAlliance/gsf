@@ -522,6 +522,14 @@ namespace System
                 // Removes whole minutes from remaining seconds
                 seconds = seconds - minutes * SecondsPerMinute;
 
+                // If no fractional seconds were requested and remaining seconds are approximately 60,
+                // then we just add another minute
+                if (secondPrecision == 0 && (int)Math.Round(seconds) == 60)
+                {
+                    minutes++;
+                    seconds = 0;
+                }
+
                 // Appends textual representation of minutes
                 timeImage.Append(' ');
                 timeImage.Append(minutes);
