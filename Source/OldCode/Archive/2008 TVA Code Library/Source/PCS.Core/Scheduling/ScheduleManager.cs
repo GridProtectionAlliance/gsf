@@ -307,7 +307,7 @@ namespace PCS.Scheduling
             get
             {
                 StringBuilder status = new StringBuilder();
-                status.Append("        Number of schedules: ");
+                status.Append("       Number of schedules: ");
                 status.Append(m_schedules.Count);
                 status.AppendLine();
                 lock (m_schedules)
