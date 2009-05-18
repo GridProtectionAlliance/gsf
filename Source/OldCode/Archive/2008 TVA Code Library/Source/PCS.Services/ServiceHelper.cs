@@ -2890,14 +2890,14 @@ namespace PCS.Services
                         UpdateStatus("Remote command session established - status updates are suspended.\r\n\r\n");
 
                         m_remoteCommandClientID = requestinfo.Sender.ClientID;
-                        SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("CommandSession", "Established"));
+                        SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Established"));
                     }
                     else
                     {
                         UpdateStatus(requestinfo.Sender.ClientID, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
-                else if (string.Compare(requestinfo.Request.Command, "Command", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
+                else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= m_remoteCommandProcess_ErrorDataReceived;
@@ -2910,7 +2910,7 @@ namespace PCS.Services
                     m_remoteCommandProcess = null;
                  
                     m_remoteCommandClientID = Guid.Empty;
-                    SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("CommandSession", "Terminated"));
+                    SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Terminated"));
 
                     UpdateStatus("Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }

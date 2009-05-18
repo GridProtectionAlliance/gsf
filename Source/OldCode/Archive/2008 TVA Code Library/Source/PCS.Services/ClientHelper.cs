@@ -67,18 +67,18 @@ namespace PCS.Services
         public event EventHandler<EventArgs<ObjectState<ServiceProcessState>>> ProcessStateChanged;
 		
 		/// <summary>
-		/// Occurs when a remote command session has been established.
+		/// Occurs when a telnet session has been established.
 		/// </summary>
 		[Category("Command"),
-        Description("Occurs when a remote command session has been established.")]
-        public event EventHandler CommandSessionEstablished;	
+        Description("Occurs when a telnet session has been established.")]
+        public event EventHandler TelnetSessionEstablished;	
 		
 		/// <summary>
-		/// Occurs when a remote command session has been terminated.
+		/// Occurs when a telnet session has been terminated.
 		/// </summary>
         [Category("Command"),
-        Description("Occurs when a remote command session has been terminated.")]
-        public event EventHandler CommandSessionTerminated;
+        Description("Occurs when a telnet session has been terminated.")]
+        public event EventHandler TelnetSessionTerminated;
 
         // Fields
 		private ClientBase m_remotingClient;
@@ -299,14 +299,14 @@ namespace PCS.Services
                             }
                         }
                         break;
-                    case "COMMANDSESSION":
+                    case "TELNETSESSION":
                         switch (response.Message.ToUpper())
                         {
                             case "ESTABLISHED":
-                                OnCommandSessionEstablished();
+                                OnTelnetSessionEstablished();
                                 break;
                             case "TERMINATED":
-                                OnCommandSessionTerminated();
+                                OnTelnetSessionTerminated();
                                 break;
                         }
                         break;
@@ -355,21 +355,21 @@ namespace PCS.Services
         }
 
         /// <summary>
-        /// Raises the <see cref="CommandSessionEstablished"/> event.
+        /// Raises the <see cref="TelnetSessionEstablished"/> event.
         /// </summary>
-        protected virtual void OnCommandSessionEstablished()
+        protected virtual void OnTelnetSessionEstablished()
         {
-            if (CommandSessionEstablished != null)
-                CommandSessionEstablished(this, EventArgs.Empty);
+            if (TelnetSessionEstablished != null)
+                TelnetSessionEstablished(this, EventArgs.Empty);
         }
 
         /// <summary>
-        /// Raises the <see cref="CommandSessionTerminated"/> event.
+        /// Raises the <see cref="TelnetSessionTerminated"/> event.
         /// </summary>
-        protected virtual void OnCommandSessionTerminated()
+        protected virtual void OnTelnetSessionTerminated()
         {
-            if (CommandSessionTerminated != null)
-                CommandSessionTerminated(this, EventArgs.Empty);
+            if (TelnetSessionTerminated != null)
+                TelnetSessionTerminated(this, EventArgs.Empty);
         }
 
         #endregion
