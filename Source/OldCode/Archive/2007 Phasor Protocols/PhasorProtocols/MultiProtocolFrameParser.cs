@@ -48,6 +48,7 @@ using System.Text;
 using System.Threading;
 using System.Units;
 using PCS.Communication;
+using PCS.IO;
 
 namespace PCS.PhasorProtocols
 {
@@ -380,6 +381,16 @@ namespace PCS.PhasorProtocols
             set
             {
                 m_connectionString = value;
+
+                // Parse connection string to see if a phasor or transport protocol was assigned
+                Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+
+                if (settings.ContainsKey("phasorprotocol"))
+                    m_phasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), settings["phasorprotocol"]);
+
+                if (settings.ContainsKey("transportprotocol"))
+                    m_transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), settings["transportprotocol"]);
+
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
             }
         }
@@ -610,6 +621,24 @@ namespace PCS.PhasorProtocols
                 return (m_phasorProtocol == PhasorProtocols.PhasorProtocol.IeeeC37_118V1 || 
                         m_phasorProtocol == PhasorProtocols.PhasorProtocol.IeeeC37_118D6 || 
                         m_phasorProtocol == PhasorProtocols.PhasorProtocol.Ieee1344);
+            }
+        }
+
+        /// <summary>
+        /// Gets a flag that determines if the currently selected <see cref="TransportProtocol"/> is connected.
+        /// </summary>
+        public bool IsConnected
+        {
+            get
+            {
+                if (m_commandChannel != null)
+                    return (m_commandChannel.CurrentState == ClientState.Connected);
+                else if (m_communicationClient != null)
+                    return (m_communicationClient.CurrentState == ClientState.Connected);
+                else if (m_communicationServer != null)
+                    return (m_communicationServer.ClientIDs.Length > 0);
+
+                return false;
             }
         }
 
@@ -965,13 +994,49 @@ namespace PCS.PhasorProtocols
                 m_frameParser.ConfigurationChanged += m_frameParser_ConfigurationChanged;
                 m_frameParser.ParsingException += m_frameParser_ParsingException;
 
-                // Define frame parser specific properties and start parsing engine
-                m_frameParser.ConnectionParameters = m_connectionParameters;
-                m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread;
-                m_frameParser.Start();
-
                 // Parse connection string to check for special parameters
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+
+                // Handle special connection parameters
+                if (m_phasorProtocol == PhasorProtocol.BpaPdcStream)
+                {
+                    // Check for BPA PDCstream protocol parameters specified in connection string
+                    BpaPdcStream.ConnectionParameters connectionParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
+
+                    if (connectionParameters != null)
+                    {
+                        if (settings.ContainsKey("inifilename"))
+                            connectionParameters.ConfigurationFileName = FilePath.GetAbsolutePath(settings["inifilename"]);
+                        else if (string.IsNullOrEmpty(connectionParameters.ConfigurationFileName))
+                            OnParsingException(new InvalidOperationException("BPA PDCstream INI filename setting (e.g., \"inifilename=DEVICE_PDC.ini\") was not found. This setting is required for BPA PDCstream protocol connections - device may fail to connect."));
+
+                        if (settings.ContainsKey("refreshconfigurationfileonchange"))
+                            connectionParameters.RefreshConfigurationFileOnChange = settings["refreshconfigurationfileonchange"].ParseBoolean();
+
+                        if (settings.ContainsKey("parsewordcountfrombyte"))
+                            connectionParameters.ParseWordCountFromByte = settings["parsewordcountfrombyte"].ParseBoolean();
+                    }
+                }
+                else if (m_phasorProtocol == PhasorProtocol.FNet)
+                {
+                    // Check for F-NET protocol parameters specified in connection string
+                    FNet.ConnectionParameters connectionParameters = m_connectionParameters as FNet.ConnectionParameters;
+
+                    if (connectionParameters != null)
+                    {
+                        if (settings.ContainsKey("timeoffset"))
+                            connectionParameters.TimeOffset = long.Parse(settings["timeoffset"]);
+
+                        if (settings.ContainsKey("stationname"))
+                            connectionParameters.StationName = settings["stationname"];
+
+                        if (settings.ContainsKey("framerate"))
+                            connectionParameters.FrameRate = ushort.Parse(settings["framerate"]);
+
+                        if (settings.ContainsKey("nominalfrequency"))
+                            connectionParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), settings["nominalfrequency"]);
+                    }
+                }
 
                 // Instantiate selected transport layer
                 if (m_transportProtocol == TransportProtocol.Tcp)
@@ -989,7 +1054,6 @@ namespace PCS.PhasorProtocols
                     else
                     {
                         // If the key doesn't exist, we assume it's a client connection
-                        // (this way old connections strings are still backwards compatible)
                         m_communicationClient = new TcpClient();
                     }
                 }
@@ -1084,6 +1148,11 @@ namespace PCS.PhasorProtocols
                 {
                     throw new InvalidOperationException("No communications layer was initialized, cannot start parser");
                 }
+
+                // Define frame parser specific properties and start parsing engine
+                m_frameParser.ConnectionParameters = m_connectionParameters;
+                m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread;
+                m_frameParser.Start();
 
                 m_rateCalcTimer.Enabled = true;
                 m_enabled = true;
