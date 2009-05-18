@@ -43,6 +43,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -83,7 +84,11 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// SEL Fast Message protocol.
         /// </summary>
-        SelFastMessage
+        SelFastMessage,
+        /// <summary>
+        /// Macrodyne protocol.
+        /// </summary>
+        Macrodyne
     }
 
     #endregion
@@ -386,10 +391,10 @@ namespace PCS.PhasorProtocols
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
 
                 if (settings.ContainsKey("phasorprotocol"))
-                    m_phasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), settings["phasorprotocol"]);
+                    PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), settings["phasorprotocol"]);
 
                 if (settings.ContainsKey("transportprotocol"))
-                    m_transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), settings["transportprotocol"]);
+                    TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), settings["transportprotocol"]);
 
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
             }
@@ -945,6 +950,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Starts the <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
+        [SuppressMessage("Microsoft.Maintainability", "CA1502")] // Yes, this method is complex...
         public void Start()
         {
             // Stop parser if is already running - thus calling start after already started will have the effect
@@ -964,23 +970,26 @@ namespace PCS.PhasorProtocols
                 // Instantiate protocol specific frame parser
                 switch (m_phasorProtocol)
                 {
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118V1:
+                    case PhasorProtocol.IeeeC37_118V1:
                         m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
                         break;
-                    case PhasorProtocols.PhasorProtocol.IeeeC37_118D6:
+                    case PhasorProtocol.IeeeC37_118D6:
                         m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
                         break;
-                    case PhasorProtocols.PhasorProtocol.Ieee1344:
+                    case PhasorProtocol.Ieee1344:
                         m_frameParser = new Ieee1344.FrameParser();
                         break;
-                    case PhasorProtocols.PhasorProtocol.BpaPdcStream:
+                    case PhasorProtocol.BpaPdcStream:
                         m_frameParser = new BpaPdcStream.FrameParser();
                         break;
-                    case PhasorProtocols.PhasorProtocol.FNet:
+                    case PhasorProtocol.FNet:
                         m_frameParser = new FNet.FrameParser();
                         break;
-                    case PhasorProtocols.PhasorProtocol.SelFastMessage:
+                    case PhasorProtocol.SelFastMessage:
                         m_frameParser = new SelFastMessage.FrameParser();
+                        break;
+                    case PhasorProtocol.Macrodyne:
+                        m_frameParser = new Macrodyne.FrameParser();
                         break;
                 }
 
@@ -1005,6 +1014,7 @@ namespace PCS.PhasorProtocols
 
                     if (connectionParameters != null)
                     {
+                        // INI file name setting is required
                         if (settings.ContainsKey("inifilename"))
                             connectionParameters.ConfigurationFileName = FilePath.GetAbsolutePath(settings["inifilename"]);
                         else if (string.IsNullOrEmpty(connectionParameters.ConfigurationFileName))
@@ -1035,6 +1045,17 @@ namespace PCS.PhasorProtocols
 
                         if (settings.ContainsKey("nominalfrequency"))
                             connectionParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), settings["nominalfrequency"]);
+                    }
+                }
+                else if (m_phasorProtocol == PhasorProtocol.SelFastMessage)
+                {
+                    // Check for SEL Fast Message protocol parameters specified in connection string
+                    SelFastMessage.ConnectionParameters connectionParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
+
+                    if (connectionParameters != null)
+                    {
+                        if (settings.ContainsKey("messageperiod"))
+                            connectionParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), settings["messageperiod"]);
                     }
                 }
 
@@ -1145,9 +1166,7 @@ namespace PCS.PhasorProtocols
                     m_communicationServer.Start();
                 }
                 else
-                {
                     throw new InvalidOperationException("No communications layer was initialized, cannot start parser");
-                }
 
                 // Define frame parser specific properties and start parsing engine
                 m_frameParser.ConnectionParameters = m_connectionParameters;

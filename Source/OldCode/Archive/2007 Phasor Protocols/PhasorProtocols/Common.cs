@@ -105,6 +105,8 @@ namespace PCS.PhasorProtocols
                     return "Virginia Tech F-NET";
                 case PhasorProtocol.SelFastMessage:
                     return "SEL Fast Message";
+                case PhasorProtocol.Macrodyne:
+                    return "Macrodyne";
                 default:
                     return Enum.GetName(typeof(PhasorProtocol), protocol).Replace('_', '.').ToUpper();
             }
