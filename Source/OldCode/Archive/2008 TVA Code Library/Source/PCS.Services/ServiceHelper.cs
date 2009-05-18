@@ -727,6 +727,7 @@ namespace PCS.Services
             m_serviceComponents.Add(m_processScheduler);
             m_serviceComponents.Add(m_statusLog);
             m_serviceComponents.Add(m_errorLogger);
+            m_serviceComponents.Add(m_errorLogger.ErrorLog);
             m_serviceComponents.Add(m_remotingServer);
 
             // Initialize all service components when service has started.
