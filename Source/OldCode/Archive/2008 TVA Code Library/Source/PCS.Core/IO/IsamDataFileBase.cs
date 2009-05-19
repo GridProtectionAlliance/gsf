@@ -226,14 +226,9 @@ namespace PCS.IO
         // Constants
 
         /// <summary>
-        /// Specifies the required extension of the <see cref="FileName"/>.
-        /// </summary>
-        public const string Extension = ".dat";
-
-        /// <summary>
         /// Specifies the default value for the <see cref="FileName"/> property.
         /// </summary>
-        public const string DefaultFileName = "IsamDataFile" + Extension;
+        public const string DefaultFileName = "IsamDataFile.dat";
 
         /// <summary>
         /// Specifies the default value for the <see cref="FileAccessMode"/> property.
@@ -377,10 +372,7 @@ namespace PCS.IO
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException();
-
-                if (string.Compare(Path.GetExtension(value), Extension, true) != 0)
-                    throw new ArgumentException(string.Format("Name must have an extension of {0}.", Extension));
-
+                
                 m_fileName = value;
                 if (IsOpen)
                 {
