@@ -23,6 +23,8 @@
 //       Modified class an example to use new ISupportBinaryImage
 //  05/12/2009 - Pinal C. Patel
 //       Optimized Read() for better memory management by using "yield return".
+//  05/19/2009 - Pinal C. Patel
+//       Implemented the IProvideStatus interface.
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,7 @@ using System.IO;
 using System.Threading;
 using PCS.Configuration;
 using PCS.Parsing;
+using System.Text;
 
 namespace PCS.IO
 {
@@ -219,7 +222,7 @@ namespace PCS.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings where T : ISupportBinaryImage
+    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings where T : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -372,7 +375,7 @@ namespace PCS.IO
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException();
-                
+
                 m_fileName = value;
                 if (IsOpen)
                 {
@@ -385,8 +388,8 @@ namespace PCS.IO
         /// <summary>
         /// Gets or sets the <see cref="FileAccess"/> value to use when opening the file.
         /// </summary>
-        [Category("Settings"), 
-        DefaultValue(DefaultFileAccessMode), 
+        [Category("Settings"),
+        DefaultValue(DefaultFileAccessMode),
         Description("The System.IO.FileAccess value to use when opening the file.")]
         public FileAccess FileAccessMode
         {
@@ -668,6 +671,61 @@ namespace PCS.IO
                 }
 
                 return recordCount;
+            }
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the file.
+        /// </summary>
+        [Browsable(false)]
+        public string Name
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the file.
+        /// </summary>
+        [Browsable(false)]
+        public string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                status.Append("                 File name: ");
+                status.Append(FilePath.TrimFileName(FileName, 30));
+                status.AppendLine();
+                status.Append("                File state: ");
+                status.Append(IsOpen ? "Open" : "Closed");
+                status.AppendLine();
+                status.Append("          File access mode: ");
+                status.Append(FileAccessMode);
+                status.AppendLine();
+                status.Append("             Data validity: ");
+                status.Append(IsCorrupt ? "Invalid" : "Valid");
+                status.AppendLine();
+                status.Append("            Auto-save data: ");
+                if (LoadOnOpen && AutoSaveInterval > 0 && !SaveOnClose)                   
+                    status.AppendFormat("Every {0}ms", AutoSaveInterval);
+                if (LoadOnOpen && AutoSaveInterval > 0 && SaveOnClose)
+                    status.AppendFormat("Every {0}ms & File Close", AutoSaveInterval);
+                if (!LoadOnOpen || (LoadOnOpen && AutoSaveInterval < 1 && !SaveOnClose))
+                    status.Append("Never");
+                status.AppendLine();
+                status.Append("           Records on disk: ");
+                status.Append(RecordsOnDisk);
+                status.AppendLine();
+                status.Append("         Records in memory: ");
+                status.Append(RecordsInMemory);
+                status.AppendLine();
+                status.Append("    Memory usage (approx.): ");
+                status.AppendFormat("{0} KB", MemoryUsage);
+                status.AppendLine();
+
+                return status.ToString();
             }
         }
 
