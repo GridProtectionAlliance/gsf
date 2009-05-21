@@ -31,7 +31,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\..\Build\Output\Debug\</OutputPath>
-    <DocumentationFile>PCS.Communication.xml</DocumentationFile>
+    <DocumentationFile>PCS.Communication.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <DefineConstants>TRACE;DEBUG;ThreadTracking</DefineConstants>
@@ -42,7 +42,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Build\Output\Release\</OutputPath>
-    <DocumentationFile>PCS.Communication.xml</DocumentationFile>
+    <DocumentationFile>PCS.Communication.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <DefineConstants>TRACE</DefineConstants>
@@ -64,6 +64,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="FileClient.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="IClient.cs" />
     <Compile Include="IServer.cs" />
@@ -76,6 +77,7 @@
     </Compile>
     <Compile Include="Transport.cs" />
     <Compile Include="SerialClient.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="TcpClient.cs">
       <SubType>Component</SubType>
@@ -87,6 +89,7 @@
     <Compile Include="TransportProvider.cs" />
     <Compile Include="TransportStatistics.cs" />
     <Compile Include="UdpClient.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="UdpServer.cs">
       <SubType>Component</SubType>

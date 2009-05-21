@@ -31,7 +31,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>..\..\Build\Output\Debug\</OutputPath>
-    <DocumentationFile>PCS.Windows.xml</DocumentationFile>
+    <DocumentationFile>PCS.Windows.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <DefineConstants>TRACE;DEBUG;ThreadTracking</DefineConstants>
@@ -42,7 +42,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>..\..\Build\Output\Release\</OutputPath>
-    <DocumentationFile>PCS.Windows.xml</DocumentationFile>
+    <DocumentationFile>PCS.Windows.XML</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <DefineConstants>TRACE</DefineConstants>
