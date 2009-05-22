@@ -84,7 +84,7 @@ namespace PCS.PhasorProtocols
         /// otherwise, null is returned.
         /// </param>
         /// <returns><c>true</c> if the <see cref="ConfigurationCellCollection"/> contains an element with the specified <paramref name="idCode"/>; otherwise, <c>false</c>.</returns>
-        public virtual bool TryGetByIDCode(ushort idCode, ref IConfigurationCell configurationCell)
+        public virtual bool TryGetByIDCode(ushort idCode, out IConfigurationCell configurationCell)
         {
             configurationCell = this.FirstOrDefault(cell => cell.IDCode == idCode);
             return (configurationCell != null);

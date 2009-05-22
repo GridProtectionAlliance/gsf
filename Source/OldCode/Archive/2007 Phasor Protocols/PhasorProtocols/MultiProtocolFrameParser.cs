@@ -845,29 +845,28 @@ namespace PCS.PhasorProtocols
             {
                 StringBuilder statusText = new StringBuilder();
 
-                statusText.Append("      Device Connection ID: ");
-                statusText.Append(m_deviceID);
+                statusText.AppendFormat("      Device Connection ID: {0}", m_deviceID);
                 statusText.AppendLine();
                 statusText.Append("         Connection string: ");
-                statusText.Append(m_connectionString);
                 statusText.AppendLine();
-                statusText.Append("           Phasor protocol: ");
-                statusText.Append(m_phasorProtocol.GetFormattedProtocolName());
+
+                foreach (KeyValuePair<string,string> item in m_connectionString.ParseKeyValuePairs())
+                {
+                    statusText.AppendFormat("                            {0} = {1}", item.Key, item.Value);
+                    statusText.AppendLine();
+                }
+
+                statusText.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
                 statusText.AppendLine();
-                statusText.Append("               Buffer size: ");
-                statusText.Append(m_bufferSize);
+                statusText.AppendFormat("               Buffer size: {0}", m_bufferSize);
                 statusText.AppendLine();
-                statusText.Append("     Total frames received: ");
-                statusText.Append(m_totalFramesReceived);
+                statusText.AppendFormat("     Total frames received: {0}", m_totalFramesReceived);
                 statusText.AppendLine();
-                statusText.Append("     Calculated frame rate: ");
-                statusText.Append(m_frameRate);
+                statusText.AppendFormat("     Calculated frame rate: {0}", m_frameRate);
                 statusText.AppendLine();
-                statusText.Append("      Calculated byte rate: ");
-                statusText.Append(m_byteRate);
+                statusText.AppendFormat("      Calculated byte rate: {0}", m_byteRate);
                 statusText.AppendLine();
-                statusText.Append("   Calculated MegaBit rate: ");
-                statusText.Append(MegaBitRate.ToString("0.0000") + " mbps");
+                statusText.AppendFormat("   Calculated MegaBit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
                 statusText.AppendLine();
 
                 if (m_frameParser != null)
