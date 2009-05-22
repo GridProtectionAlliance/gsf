@@ -1010,8 +1010,8 @@ namespace PCS.PhasorProtocols
                         else if (string.IsNullOrEmpty(connectionParameters.ConfigurationFileName))
                             throw new ArgumentException("BPA PDCstream INI filename setting (e.g., \"inifilename=DEVICE_PDC.ini\") was not found. This setting is required for BPA PDCstream protocol connections - device may fail to connect.");
 
-                        if (settings.ContainsKey("refreshconfigurationfileonchange"))
-                            connectionParameters.RefreshConfigurationFileOnChange = settings["refreshconfigurationfileonchange"].ParseBoolean();
+                        if (settings.ContainsKey("refreshconfigfileonchange"))
+                            connectionParameters.RefreshConfigurationFileOnChange = settings["refreshconfigfileonchange"].ParseBoolean();
 
                         if (settings.ContainsKey("parsewordcountfrombyte"))
                             connectionParameters.ParseWordCountFromByte = settings["parsewordcountfrombyte"].ParseBoolean();
