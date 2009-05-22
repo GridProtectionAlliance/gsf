@@ -843,45 +843,36 @@ namespace PCS.PhasorProtocols
         {
             get
             {
-                StringBuilder statusText = new StringBuilder();
+                StringBuilder status = new StringBuilder();
 
-                statusText.AppendFormat("      Device Connection ID: {0}", m_deviceID);
-                statusText.AppendLine();
-                statusText.Append("         Connection string: ");
-                statusText.AppendLine();
-
-                foreach (KeyValuePair<string,string> item in m_connectionString.ParseKeyValuePairs())
-                {
-                    statusText.AppendFormat("                            {0} = {1}", item.Key, item.Value);
-                    statusText.AppendLine();
-                }
-
-                statusText.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
-                statusText.AppendLine();
-                statusText.AppendFormat("               Buffer size: {0}", m_bufferSize);
-                statusText.AppendLine();
-                statusText.AppendFormat("     Total frames received: {0}", m_totalFramesReceived);
-                statusText.AppendLine();
-                statusText.AppendFormat("     Calculated frame rate: {0}", m_frameRate);
-                statusText.AppendLine();
-                statusText.AppendFormat("      Calculated byte rate: {0}", m_byteRate);
-                statusText.AppendLine();
-                statusText.AppendFormat("   Calculated MegaBit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
-                statusText.AppendLine();
+                status.AppendFormat("      Device Connection ID: {0}", m_deviceID);
+                status.AppendLine();
+                status.AppendFormat("           Phasor protocol: {0}", m_phasorProtocol.GetFormattedProtocolName());
+                status.AppendLine();
+                status.AppendFormat("               Buffer size: {0}", m_bufferSize);
+                status.AppendLine();
+                status.AppendFormat("     Total frames received: {0}", m_totalFramesReceived);
+                status.AppendLine();
+                status.AppendFormat("     Calculated frame rate: {0}", m_frameRate);
+                status.AppendLine();
+                status.AppendFormat("      Calculated byte rate: {0}", m_byteRate);
+                status.AppendLine();
+                status.AppendFormat("   Calculated MegaBit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
+                status.AppendLine();
 
                 if (m_frameParser != null)
-                    statusText.Append(m_frameParser.Status);
+                    status.Append(m_frameParser.Status);
 
                 if (m_communicationClient != null)
-                    statusText.Append(m_communicationClient.Status);
+                    status.Append(m_communicationClient.Status);
 
                 if (m_communicationServer != null)
-                    statusText.Append(m_communicationServer.Status);
+                    status.Append(m_communicationServer.Status);
 
                 if (m_commandChannel != null)
-                    statusText.Append(m_commandChannel.Status);
+                    status.Append(m_commandChannel.Status);
 
-                return statusText.ToString();
+                return status.ToString();
             }
         }
 
