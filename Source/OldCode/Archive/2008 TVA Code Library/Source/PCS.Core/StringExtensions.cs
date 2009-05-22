@@ -864,13 +864,13 @@ namespace PCS
         }
 
         /// <summary>
-        /// Converts the provided string into TitleCase (upper case first letter of each word).
+        /// Converts the provided string into title case (upper case first letter of each word).
         /// </summary>
         /// <param name="value">Input string.</param>
         /// <remarks>Note: This function performs "ToLower" in input string then applies TextInfo.ToTitleCase for CurrentCulture. This way, even
         /// strings formatted in all-caps will still be properly formatted.</remarks>
         /// <returns>A <see cref="String"/> that has the first letter of each word capitalized.</returns>
-        public static string TitleCase(this string value)
+        public static string ToTitleCase(this string value)
         {
             if (string.IsNullOrEmpty(value))
                 return "";
