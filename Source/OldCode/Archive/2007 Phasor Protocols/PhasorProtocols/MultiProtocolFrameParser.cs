@@ -648,6 +648,24 @@ namespace PCS.PhasorProtocols
         }
 
         /// <summary>
+        /// Gets total time connection has been active.
+        /// </summary>
+        public Time ConnectionTime
+        {
+            get
+            {
+                if (m_commandChannel != null)
+                    return m_commandChannel.ConnectionTime;
+                else if (m_communicationClient != null)
+                    return m_communicationClient.ConnectionTime;
+                else if (m_communicationServer != null)
+                    return m_communicationServer.RunTime;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="MultiProtocolFrameParser"/> is currently enabled.
         /// </summary>
         /// <remarks>
@@ -857,7 +875,7 @@ namespace PCS.PhasorProtocols
                 status.AppendLine();
                 status.AppendFormat("      Calculated byte rate: {0}", m_byteRate);
                 status.AppendLine();
-                status.AppendFormat("   Calculated MegaBit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
+                status.AppendFormat("   Calculated megabit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
                 status.AppendLine();
 
                 if (m_frameParser != null)
