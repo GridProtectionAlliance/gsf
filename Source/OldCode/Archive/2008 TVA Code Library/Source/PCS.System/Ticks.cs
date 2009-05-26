@@ -524,7 +524,7 @@ namespace System
 
                 // If no fractional seconds were requested and remaining seconds are approximately 60,
                 // then we just add another minute
-                if (secondPrecision == 0 && (int)Math.Round(seconds) == 60)
+                if (secondPrecision == 0 && (int)seconds == 60)
                 {
                     minutes++;
                     seconds = 0;
@@ -545,7 +545,7 @@ namespace System
             if (secondPrecision == 0)
             {
                 // No fractional seconds requested. Rounds seconds to nearest integer
-                int wholeSeconds = (int)Math.Round(seconds);
+                int wholeSeconds = (int)seconds;
 
                 if (wholeSeconds > 0)
                 {
