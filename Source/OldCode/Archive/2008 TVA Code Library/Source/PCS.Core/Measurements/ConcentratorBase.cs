@@ -613,28 +613,17 @@ namespace PCS.Measurements
                 DateTime currentTime = DateTime.UtcNow;
 #endif
 
-                status.Append("     Data concentration is: ");
-                if (m_enabled)
-                    status.Append("Enabled");
-                else
-                    status.Append("Disabled");
+                status.AppendFormat("     Data concentration is: {0}", Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                status.Append("    Total process run time: ");
-                status.Append(RunTime.ToString());
+                status.AppendFormat("    Total process run time: {0}", RunTime.ToString());
                 status.AppendLine();
-                status.Append("    Measurement wait delay: ");
-                status.Append(m_lagTime);
-                status.Append(" seconds (lag time)");
+                status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
-                status.Append("     Local clock tolerance: ");
-                status.Append(m_leadTime);
-                status.Append(" seconds (lead time)");
+                status.AppendFormat("     Local clock tolerance: {0} seconds (lead time)", m_leadTime);
                 status.AppendLine();
-                status.Append("    Local clock time (UTC): ");
-                status.Append(currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
-                status.Append("  Using clock as real-time: ");
-                status.Append(m_useLocalClockAsRealTime);
+                status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
                 status.AppendLine();
                 if (!m_useLocalClockAsRealTime)
                 {
@@ -647,17 +636,13 @@ namespace PCS.Measurements
                     status.Append(" second deviation from latest time");
                     status.AppendLine();
                 }
-                status.Append(" Allowing sorts by arrival: ");
-                status.Append(m_allowSortsByArrival);
+                status.AppendFormat(" Allowing sorts by arrival: {0}", m_allowSortsByArrival);
                 status.AppendLine();
-                status.Append("        Total measurements: ");
-                status.Append(m_totalMeasurements);
+                status.AppendFormat("        Total measurements: {0}", m_totalMeasurements);
                 status.AppendLine();
-                status.Append("    Published measurements: ");
-                status.Append(m_publishedMeasurements);
+                status.AppendFormat("    Published measurements: {0}", m_publishedMeasurements);
                 status.AppendLine();
-                status.Append("    Discarded measurements: ");
-                status.Append(m_discardedMeasurements);
+                status.AppendFormat("    Discarded measurements: {0}", m_discardedMeasurements);
                 status.AppendLine();
                 status.Append("Last discarded measurement: ");
                 if (m_lastDiscardedMeasurement == null)
@@ -671,44 +656,27 @@ namespace PCS.Measurements
                     status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 }
                 status.AppendLine();
-                status.Append("    Total sorts by arrival: ");
-                status.Append(m_measurementsSortedByArrival);
+                status.AppendFormat("    Total sorts by arrival: {0}", m_measurementsSortedByArrival);
                 status.AppendLine();
-                status.Append("   Missed sorts by timeout: ");
-                status.Append(m_missedSortsByTimeout);
+                status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
                 status.AppendLine();
-                status.Append("  Average publication time: ");
-                status.Append((AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
-                status.Append(" milliseconds");
+                status.AppendFormat("  Average publication time: {0} milliseconds", (AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
-                status.Append(" User function utilization: ");
-                status.Append(((decimal)1.0 - (m_ticksPerFrame - (decimal)AveratePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
-                status.Append(" of available time used");
+                status.AppendFormat(" User function utilization: {0} of available time used", ((decimal)1.0 - (m_ticksPerFrame - (decimal)AveratePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
-                status.Append("Published measurement loss: ");
-                status.Append((m_discardedMeasurements / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.Append("      Loss due to timeouts: ");
-                status.Append((m_missedSortsByTimeout / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.Append(" Measurement time accuracy: ");
-                status.Append((1.0D - m_measurementsSortedByArrival / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.Append("    Total published frames: ");
-                status.Append(m_publishedFrames);
+                status.AppendFormat("    Total published frames: {0}", m_publishedFrames);
                 status.AppendLine();
-                status.Append("        Defined frame rate: ");
-                status.Append(m_framesPerSecond);
-                status.Append(" frames/sec, ");
-                status.Append(m_ticksPerFrame.ToString("0.00"));
-                status.Append(" ticks/frame");
+                status.AppendFormat("        Defined frame rate: {0} frames/sec, {1} ticks/frame", m_framesPerSecond, m_ticksPerFrame.ToString("0.00"));
                 status.AppendLine();
-                status.Append("    Actual mean frame rate: ");
-                status.Append((m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
-                status.Append(" frames/sec");
+                status.AppendFormat("    Actual mean frame rate: {0} frames/sec", (m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
-                status.Append("        Queued frame count: ");
-                status.Append(m_frameQueue.Count);
+                status.AppendFormat("        Queued frame count: {0}", m_frameQueue.Count);
                 status.AppendLine();
                 status.Append("      Last published frame: ");
 
