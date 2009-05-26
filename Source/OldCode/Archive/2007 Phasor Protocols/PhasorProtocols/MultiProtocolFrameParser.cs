@@ -389,12 +389,13 @@ namespace PCS.PhasorProtocols
 
                 // Parse connection string to see if a phasor or transport protocol was assigned
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+                string setting;
 
-                if (settings.ContainsKey("phasorprotocol"))
-                    PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), settings["phasorprotocol"]);
+                if (settings.TryGetValue("phasorProtocol", out setting))
+                    PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), setting);
 
-                if (settings.ContainsKey("transportprotocol"))
-                    TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), settings["transportprotocol"]);
+                if (settings.TryGetValue("transportProtocol", out setting))
+                    TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting);
 
                 m_deviceSupportsCommands = GetDerivedCommandSupport();
             }
@@ -1013,6 +1014,7 @@ namespace PCS.PhasorProtocols
 
                 // Parse connection string to check for special parameters
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+                string setting;
 
                 // Handle special connection parameters
                 if (m_phasorProtocol == PhasorProtocol.BpaPdcStream)
@@ -1023,16 +1025,16 @@ namespace PCS.PhasorProtocols
                     if (connectionParameters != null)
                     {
                         // INI file name setting is required
-                        if (settings.ContainsKey("inifilename"))
-                            connectionParameters.ConfigurationFileName = FilePath.GetAbsolutePath(settings["inifilename"]);
+                        if (settings.TryGetValue("iniFileName", out setting))
+                            connectionParameters.ConfigurationFileName = FilePath.GetAbsolutePath(setting);
                         else if (string.IsNullOrEmpty(connectionParameters.ConfigurationFileName))
                             throw new ArgumentException("BPA PDCstream INI filename setting (e.g., \"inifilename=DEVICE_PDC.ini\") was not found. This setting is required for BPA PDCstream protocol connections - device may fail to connect.");
 
-                        if (settings.ContainsKey("refreshconfigfileonchange"))
-                            connectionParameters.RefreshConfigurationFileOnChange = settings["refreshconfigfileonchange"].ParseBoolean();
+                        if (settings.TryGetValue("refreshConfigFileOnChange", out setting))
+                            connectionParameters.RefreshConfigurationFileOnChange = setting.ParseBoolean();
 
-                        if (settings.ContainsKey("parsewordcountfrombyte"))
-                            connectionParameters.ParseWordCountFromByte = settings["parsewordcountfrombyte"].ParseBoolean();
+                        if (settings.TryGetValue("parseWordCountFromByte", out setting))
+                            connectionParameters.ParseWordCountFromByte = setting.ParseBoolean();
                     }
                 }
                 else if (m_phasorProtocol == PhasorProtocol.FNet)
@@ -1042,17 +1044,17 @@ namespace PCS.PhasorProtocols
 
                     if (connectionParameters != null)
                     {
-                        if (settings.ContainsKey("timeoffset"))
-                            connectionParameters.TimeOffset = long.Parse(settings["timeoffset"]);
+                        if (settings.TryGetValue("timeOffset", out setting))
+                            connectionParameters.TimeOffset = long.Parse(setting);
 
-                        if (settings.ContainsKey("stationname"))
-                            connectionParameters.StationName = settings["stationname"];
+                        if (settings.TryGetValue("stationName", out setting))
+                            connectionParameters.StationName = setting;
 
-                        if (settings.ContainsKey("framerate"))
-                            connectionParameters.FrameRate = ushort.Parse(settings["framerate"]);
+                        if (settings.TryGetValue("frameRate", out setting))
+                            connectionParameters.FrameRate = ushort.Parse(setting);
 
-                        if (settings.ContainsKey("nominalfrequency"))
-                            connectionParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), settings["nominalfrequency"]);
+                        if (settings.TryGetValue("nominalFrequency", out setting))
+                            connectionParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), setting);
                     }
                 }
                 else if (m_phasorProtocol == PhasorProtocol.SelFastMessage)
@@ -1062,8 +1064,8 @@ namespace PCS.PhasorProtocols
 
                     if (connectionParameters != null)
                     {
-                        if (settings.ContainsKey("messageperiod"))
-                            connectionParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), settings["messageperiod"]);
+                        if (settings.TryGetValue("messageperiod", out setting))
+                            connectionParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), setting);
                     }
                 }
 
@@ -1073,9 +1075,9 @@ namespace PCS.PhasorProtocols
                     // The TCP transport may be set up as a server or as a client, we distinguish
                     // this simply by deriving the value of an added key/value pair in the
                     // connection string called "IsListener"
-                    if (settings.ContainsKey("islistener"))
+                    if (settings.TryGetValue("islistener", out setting))
                     {
-                        if (settings["islistener"].ParseBoolean())
+                        if (setting.ParseBoolean())
                             m_communicationServer = new TcpServer();
                         else
                             m_communicationClient = new TcpClient();
@@ -1105,11 +1107,10 @@ namespace PCS.PhasorProtocols
                 }
 
                 // Handle command channel connection, if defined...
-                if (settings.ContainsKey("commandchannel"))
+                if (settings.TryGetValue("commandchannel", out setting))
                 {
                     // Parse command channel connection settings
-                    string connectionString = settings["commandchannel"];
-                    Dictionary<string, string> commandSettings = connectionString.ParseKeyValuePairs();
+                    Dictionary<string, string> commandSettings = setting.ParseKeyValuePairs();
 
                     // Verify user did not attempt to setup command channel as a TCP server
                     if (commandSettings.ContainsKey("islistener") && commandSettings["islistener"].ParseBoolean())
@@ -1122,7 +1123,7 @@ namespace PCS.PhasorProtocols
                         throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File");
 
                     // Instantiate command channel based on defined transport layer
-                    m_commandChannel = ClientBase.Create(connectionString);
+                    m_commandChannel = ClientBase.Create(setting);
 
                     // Setup event handlers
                     m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
