@@ -96,11 +96,6 @@ namespace PCS.Scheduling
         // Constants
 
         /// <summary>
-        /// Specifies the default value for the <see cref="Enabled"/> property.
-        /// </summary>
-        public const bool DefaultEnabled = true;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
         /// </summary>
         public const bool DefaultPersistSettings = false;
@@ -156,7 +151,6 @@ namespace PCS.Scheduling
 #else
         private Thread m_startTimerThread;
 #endif
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -170,7 +164,6 @@ namespace PCS.Scheduling
         public ScheduleManager()
             : base()
         {
-            m_enabled = DefaultEnabled;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_schedules = new List<Schedule>();
@@ -278,11 +271,14 @@ namespace PCS.Scheduling
         {
             get
             {
-                return m_enabled;
+                return IsRunning;
             }
             set
             {
-                m_enabled = value;
+                if (value && !IsRunning)
+                    m_timer.Start();
+                else if (!value && IsRunning)
+                    m_timer.Stop();
             }
         }
 
