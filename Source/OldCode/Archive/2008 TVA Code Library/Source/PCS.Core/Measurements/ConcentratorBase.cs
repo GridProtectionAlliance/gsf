@@ -1033,8 +1033,8 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Consumers override this method in order to publish a <see cref="IFrame"/> which contains a time-aligned collection of <see cref="IMeasurement"/> values
-        /// that arrived within the concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
+        /// Publish <see cref="IFrame"/> of time-aligned collection of <see cref="IMeasurement"/> values that arrived within the
+        /// concentrator's defined <see cref="ConcentratorBase.LagTime"/>.
         /// </summary>
         /// <remarks>
         /// If user implemented publication function consistently exceeds available publishing time (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds),
