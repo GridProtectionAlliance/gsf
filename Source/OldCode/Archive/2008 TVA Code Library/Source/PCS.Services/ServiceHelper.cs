@@ -1046,6 +1046,23 @@ namespace PCS.Services
         }
 
         /// <summary>
+        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be saved.</param>
+        public void SaveSettings(bool includeServiceComponents)
+        {
+            SaveSettings();
+            if (includeServiceComponents)
+            {
+                foreach (IPersistSettings component in m_serviceComponents)
+                {
+                    if (component != null)
+                        component.SaveSettings();
+                }
+            }
+        }
+
+        /// <summary>
         /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>        
         public void LoadSettings()
@@ -1065,6 +1082,23 @@ namespace PCS.Services
                 MonitorServiceHealth = settings["MonitorServiceHealth", true].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit", true].ValueAs(m_requestHistoryLimit);
                 QueryableSettingsCategories = settings["QueryableSettingsCategories", true].ValueAs(m_queryableSettingsCategories);
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be loaded.</param>
+        public void LoadSettings(bool includeServiceComponents)
+        {
+            LoadSettings();
+            if (includeServiceComponents)
+            {
+                foreach (IPersistSettings component in m_serviceComponents)
+                {
+                    if (component != null)
+                        component.LoadSettings();
+                }
             }
         }
 
