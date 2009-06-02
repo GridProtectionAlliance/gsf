@@ -57,7 +57,7 @@ namespace PCS.Parsing
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is a list of objects deserialized from the data image.
         /// </remarks>
         [Description("Occurs when a data image is deserialized successfully to one or more object of the Type that the data image was for.")]
-        public new event EventHandler<EventArgs<TSourceIdentifier, ICollection<TOutputType>>> DataParsed;
+        public new event EventHandler<EventArgs<TSourceIdentifier, IList<TOutputType>>> DataParsed;
 
         // Fields
         private ProcessQueue<IdentifiableItem<TSourceIdentifier, byte[]>> m_bufferQueue;
@@ -383,7 +383,7 @@ namespace PCS.Parsing
         protected void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
         {            
             if (DataParsed != null)
-                DataParsed(this, new EventArgs<TSourceIdentifier, ICollection<TOutputType>>(sourceID, parsedData));
+                DataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(sourceID, parsedData));
         }
 
         // Cumulate output data for current data source
