@@ -24,6 +24,8 @@
 //       Added predicate based IndexOf that extends IList<T>.
 //  04/02/2009 - J. Ritchie Carroll
 //       Added seed based scramble and unscramble IList<T> extensions.
+//  06/05/2009 - Pinal C. Patel
+//       Added generic AddRange() extension method for ICollection<T>.
 //
 //*******************************************************************************************************
 
@@ -37,6 +39,20 @@ namespace PCS.Collections
     /// <summary>Defines extension functions related to manipulation of arrays and collections.</summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Adds the specified <paramref name="items"/> to the <paramref name="collection"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of <paramref name="items"/> to be added.</typeparam>
+        /// <param name="collection">The collection to which the <paramref name="items"/> are to be added.</param>
+        /// <param name="items">The items to be added to the <paramref name="collection"/>.</param>
+        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                collection.Add(item);
+            }
+        }
+
         /// <summary>
         /// Returns the index of the first element of the sequence that satisfies a condition or <c>-1</c> if no such element is found.
         /// </summary>
