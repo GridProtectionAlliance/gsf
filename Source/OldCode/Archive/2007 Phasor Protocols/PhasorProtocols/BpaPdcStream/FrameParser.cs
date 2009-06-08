@@ -469,7 +469,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
                     // Create equivalent dervied analog definitions (assuming analog type = SinglePointOnWave)
                     foreach (IAnalogDefinition sourceAnalog in sourceCell.AnalogDefinitions)
                     {
-                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset));
+                        derivedCell.AnalogDefinitions.Add(new AnalogDefinition(derivedCell, sourceAnalog.Label, sourceAnalog.ScalingValue, sourceAnalog.Offset, sourceAnalog.AnalogType));
                     }
 
                     // Create equivalent dervied digital definitions

@@ -662,7 +662,7 @@ namespace PCS.PhasorProtocols.BpaPdcStream
             {
                 for (x = ConfigurationCell.AnalogDefinitions.Count; x < analogs; x++)
                 {
-                    ConfigurationCell.AnalogDefinitions.Add(new AnalogDefinition(ConfigurationCell, "Analog " + (x + 1), 1, 0.0D));
+                    ConfigurationCell.AnalogDefinitions.Add(new AnalogDefinition(ConfigurationCell, "Analog " + (x + 1), 1, 0.0D, AnalogType.SinglePointOnWave));
                 }
             }
 

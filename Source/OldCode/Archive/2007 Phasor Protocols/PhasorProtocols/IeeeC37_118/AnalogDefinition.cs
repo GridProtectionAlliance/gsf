@@ -16,9 +16,7 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols.IeeeC37_118
 {
@@ -32,9 +30,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
 
         // Constants        
         internal const int ConversionFactorLength = 4;
-
-        // Fields
-        private AnalogType m_type;
 
         #endregion
 
@@ -58,9 +53,8 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// <param name="offset">The offset of this <see cref="AnalogDefinition"/>.</param>
         /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.</param>
         public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
-            : base(parent, label, scale, offset)
+            : base(parent, label, scale, offset, type)
         {
-            m_type = type;
         }
 
         /// <summary>
@@ -71,28 +65,11 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         protected AnalogDefinition(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            // Deserialize analog definition
-            m_type = (AnalogType)info.GetValue("type", typeof(AnalogType));
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.
-        /// </summary>
-        public AnalogType AnalogType
-        {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                m_type = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets the <see cref="ConfigurationCell"/> parent of this <see cref="AnalogDefinition"/>.
@@ -120,27 +97,12 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 UInt24 scalingFactor = (ScalingValue > UInt24.MaxValue ? UInt24.MaxValue : (UInt24)ScalingValue);
 
                 // Store analog type in first byte
-                buffer[0] = (byte)m_type;
+                buffer[0] = (byte)this.AnalogType;
 
                 // Store scaling in last three bytes
                 EndianOrder.BigEndian.CopyBytes(scalingFactor, buffer, 1);
 
                 return buffer;
-            }
-        }
-
-        /// <summary>
-        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="FrequencyDefinition"/> object.
-        /// </summary>
-        public override Dictionary<string, string> Attributes
-        {
-            get
-            {
-                Dictionary<string, string> baseAttributes = base.Attributes;
-
-                baseAttributes.Add("Analog Type", (int)AnalogType + ": " + AnalogType);
-
-                return baseAttributes;
             }
         }
 
@@ -156,26 +118,12 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         internal int ParseConversionFactor(byte[] binaryImage, int startIndex)
         {
             // Get analog type from first byte
-            m_type = (AnalogType)binaryImage[startIndex];
+            this.AnalogType = (AnalogType)binaryImage[startIndex];
 
             // Last three bytes represent scaling factor
             ScalingValue = EndianOrder.BigEndian.ToUInt24(binaryImage, startIndex + 1);
 
             return ConversionFactorLength;
-        }
-
-        /// <summary>
-        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
-        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
-        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
-        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-        {
-            base.GetObjectData(info, context);
-
-            // Serialize analog definition
-            info.AddValue("type", m_type, typeof(AnalogType));
         }
 
         #endregion

@@ -341,26 +341,6 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         Manual = (byte)Bits.Nil
     }
 
-    /// <summary>
-    /// Analog types enumeration.
-    /// </summary>
-    [Serializable()]
-    public enum AnalogType : byte
-    {
-        /// <summary>
-        /// Single point-on-wave.
-        /// </summary>
-        SinglePointOnWave = 0,
-        /// <summary>
-        /// RMS of analog input.
-        /// </summary>
-        RmsOfAnalogInput = 1,
-        /// <summary>
-        /// Peak of analog input.
-        /// </summary>
-        PeakOfAnalogInput = 2
-    }
-
     #endregion
 
     /// <summary>

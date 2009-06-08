@@ -16,16 +16,49 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+    
+    /// <summary>
+    /// Analog types enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum AnalogType : byte
+    {
+        /// <summary>
+        /// Single point-on-wave.
+        /// </summary>
+        SinglePointOnWave = 0,
+        /// <summary>
+        /// RMS of analog input.
+        /// </summary>
+        RmsOfAnalogInput = 1,
+        /// <summary>
+        /// Peak of analog input.
+        /// </summary>
+        PeakOfAnalogInput = 2
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of an <see cref="IAnalogValue"/>.
     /// </summary>
     [Serializable()]
     public abstract class AnalogDefinitionBase : ChannelDefinitionBase, IAnalogDefinition
     {
+        #region [ Members ]
+
+        // Fields
+        private AnalogType m_type;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -44,9 +77,11 @@ namespace PCS.PhasorProtocols
         /// <param name="label">The label of this <see cref="AnalogDefinitionBase"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinitionBase"/>.</param>
         /// <param name="offset">The offset of this <see cref="AnalogDefinitionBase"/>.</param>
-        protected AnalogDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset)
+        /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefinitionBase"/>.</param>
+        protected AnalogDefinitionBase(IConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
             : base(parent, label, scale, offset)
         {
+            m_type = type;
         }
 
         /// <summary>
@@ -57,6 +92,8 @@ namespace PCS.PhasorProtocols
         protected AnalogDefinitionBase(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            // Deserialize analog definition
+            m_type = (AnalogType)info.GetValue("type", typeof(AnalogType));
         }
 
         #endregion
@@ -72,6 +109,54 @@ namespace PCS.PhasorProtocols
             {
                 return Parent.AnalogDataFormat;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="AnalogType"/> of this <see cref="AnalogDefinitionBase"/>.
+        /// </summary>
+        public virtual AnalogType AnalogType
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for this <see cref="AnalogDefinitionBase"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Analog Type", (int)AnalogType + ": " + AnalogType);
+
+                return baseAttributes;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize analog definition
+            info.AddValue("type", m_type, typeof(AnalogType));
         }
 
         #endregion

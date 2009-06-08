@@ -22,5 +22,9 @@ namespace PCS.PhasorProtocols
     /// </summary>
     public interface IAnalogDefinition : IChannelDefinition
     {
+        /// <summary>
+        /// Gets or sets <see cref="AnalogType"/> of this <see cref="IAnalogDefinition"/>.
+        /// </summary>
+        AnalogType AnalogType { get; set; }
     }
 }

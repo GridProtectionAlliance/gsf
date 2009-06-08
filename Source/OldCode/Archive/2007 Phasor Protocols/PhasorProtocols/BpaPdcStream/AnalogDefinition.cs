@@ -45,8 +45,9 @@ namespace PCS.PhasorProtocols.BpaPdcStream
         /// <param name="label">The label of this <see cref="AnalogDefinition"/>.</param>
         /// <param name="scale">The integer scaling value of this <see cref="AnalogDefinition"/>.</param>
         /// <param name="offset">The offset of this <see cref="AnalogDefinition"/>.</param>
-        public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset)
-            : base(parent, label, scale, offset)
+        /// <param name="type">The <see cref="AnalogType"/> of this <see cref="AnalogDefinition"/>.</param>
+        public AnalogDefinition(ConfigurationCell parent, string label, uint scale, double offset, AnalogType type)
+            : base(parent, label, scale, offset, type)
         {
         }
 
