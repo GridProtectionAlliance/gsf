@@ -89,14 +89,14 @@ namespace PCS.Measurements
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
-        /// Raised, for the benefit of dependent classes, when lead time is updated.
-        /// </summary> 
-        internal event Action<double> LeadTimeUpdated;
-
-        /// <summary>
         /// Raised, for the benefit of dependent classes, when lag time is updated.
         /// </summary> 
         internal event Action<double> LagTimeUpdated;
+
+        /// <summary>
+        /// Raised, for the benefit of dependent classes, when lead time is updated.
+        /// </summary> 
+        internal event Action<double> LeadTimeUpdated;
 
         // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
@@ -140,7 +140,7 @@ namespace PCS.Measurements
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         /// <remarks>
         /// <para>
-        /// <paramref name="framesPerSecond"/> must be at least one.
+        /// <paramref name="framesPerSecond"/> must be between 1 and 1000.
         /// </para>
         /// <para>
         /// <paramref name="lagTime"/> must be greater than zero, but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time).
@@ -158,9 +158,6 @@ namespace PCS.Measurements
         /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
         {
-            if (framesPerSecond < 1)
-                throw new ArgumentOutOfRangeException("framesPerSecond", "framesPerSecond must be at least one");
-
             if (lagTime <= 0)
                 throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
 
@@ -168,6 +165,7 @@ namespace PCS.Measurements
                 throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
 
             this.FramesPerSecond = framesPerSecond;
+
 #if UseHighResolutionTime
             m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
 #else
@@ -279,7 +277,8 @@ namespace PCS.Measurements
         /// Gets or sets flag to start tracking the absolute latest received measurement values.
         /// </summary>
         /// <remarks>
-        /// Enabling this option will slightly increase the required sorting time.
+        /// Lastest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// Note that enabling this option will slightly increase the required sorting time.
         /// </remarks>
         public bool TrackLatestMeasurements
         {
@@ -318,6 +317,9 @@ namespace PCS.Measurements
         /// <summary>
         /// Gets or sets the number of frames per second.
         /// </summary>
+        /// <remarks>
+        /// Valid frame rates for a <see cref="ConcentratorBase"/> are between 1 and 1000 frames per second.
+        /// </remarks>
         public int FramesPerSecond
         {
             get
@@ -326,6 +328,9 @@ namespace PCS.Measurements
             }
             set
             {
+                if (value < 1 || value > 1000)
+                    throw new ArgumentOutOfRangeException("FramesPerSecond", "Frames per second must be between 1 and 1000");
+
                 m_framesPerSecond = value;
                 m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
 
@@ -449,9 +454,9 @@ namespace PCS.Measurements
         }
 
         /// <summary>
-        /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>,
-        /// then this function will return <see cref="UtcNow.Ticks"/>. Otherwise, this function will return the timestamp of
-        /// the most recent measurement, or <see cref="UtcNow.Ticks"/> if no measurement timestamps are within time deviation
+        /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
+        /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
+        /// most recent measurement, or <see cref="DateTime.UtcNow"/> if no measurement timestamps are within time deviation
         /// tolerances as specified by the <see cref="LeadTime"/> value.
         /// </summary>
         /// <remarks>
@@ -1239,7 +1244,7 @@ namespace PCS.Measurements
         }
 
         // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
-        // so we use this function to evenly distribute wait times across a second.
+        // so we use this function to evenly distribute integer based millisecond wait times across a second.
         private int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
         {
             // Jian Zuo...
