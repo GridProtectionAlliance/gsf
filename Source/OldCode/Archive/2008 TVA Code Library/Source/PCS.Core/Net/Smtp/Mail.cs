@@ -61,7 +61,7 @@ namespace PCS.Net.Smtp
         /// <summary>
         /// Default <see cref="SmtpServer"/> to be used if one is not specified.
         /// </summary>
-        public const string DefaultSmtpServer = "mailhost.cha.tva.gov";
+        public const string DefaultSmtpServer = "localhost";
 
         // Fields
         private string m_from;
