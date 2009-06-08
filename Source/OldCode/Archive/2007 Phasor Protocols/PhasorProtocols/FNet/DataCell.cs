@@ -49,7 +49,7 @@ namespace PCS.PhasorProtocols.FNet
             : base(parent, configurationCell, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
             // Initialize single phasor value and frequency value with an empty value
-            PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[0]));
+            PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[0]));
 
             // Initialize frequency and df/dt
             FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);

@@ -61,18 +61,18 @@ namespace PCS.PhasorProtocols.Ieee1344
                 int x;
 
                 // Define needed phasor values
-                for (x = 0; x < ConfigurationCell.PhasorDefinitions.Count; x++)
+                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
                 {
-                    PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x]));
+                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
                 }
 
                 // Define a frequency and df/dt
                 FrequencyValue = new FrequencyValue(this, configurationCell.FrequencyDefinition);
 
                 // Define any digital values
-                for (x = 0; x < ConfigurationCell.DigitalDefinitions.Count; x++)
+                for (x = 0; x < configurationCell.DigitalDefinitions.Count; x++)
                 {
-                    DigitalValues.Add(new DigitalValue(this, ConfigurationCell.DigitalDefinitions[x]));
+                    DigitalValues.Add(new DigitalValue(this, configurationCell.DigitalDefinitions[x]));
                 }
             }
         }

@@ -63,9 +63,9 @@ namespace PCS.PhasorProtocols.Macrodyne
                 int x;
 
                 // Define needed phasor values
-                for (x = 0; x < ConfigurationCell.PhasorDefinitions.Count; x++)
+                for (x = 0; x < configurationCell.PhasorDefinitions.Count; x++)
                 {
-                    PhasorValues.Add(new PhasorValue(this, ConfigurationCell.PhasorDefinitions[x]));
+                    PhasorValues.Add(new PhasorValue(this, configurationCell.PhasorDefinitions[x]));
                 }
 
                 // Define a frequency and df/dt
