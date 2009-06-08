@@ -230,7 +230,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="ChannelValueMeasurement{T}"/> is good.
         /// </summary>
-        /// <remarks>This value returns timestamp quality of parent data cell unless assigned an alternate value</remarks>
+        /// <remarks>This value returns timestamp quality of parent data cell unless assigned an alternate value.</remarks>
         public virtual bool TimestampQualityIsGood
         {
             get
@@ -249,7 +249,7 @@ namespace PCS.PhasorProtocols
         /// <summary>
         /// Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="ChannelValueMeasurement{T}"/> is good.
         /// </summary>
-        /// <remarks>This value returns data quality of parent data cell unless assigned an alternate value</remarks>
+        /// <remarks>This value returns data quality of parent data cell unless assigned an alternate value.</remarks>
         public virtual bool ValueQualityIsGood
         {
             get
@@ -269,7 +269,7 @@ namespace PCS.PhasorProtocols
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="ChannelValueMeasurement{T}"/>.
         /// </summary>
         /// <remarks>
-        /// This value returns timestamp of parent data cell unless assigned an alternate value.<br/>
+        /// This value returns timestamp of parent data frame unless assigned an alternate value.<br/>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
         public virtual Ticks Timestamp
