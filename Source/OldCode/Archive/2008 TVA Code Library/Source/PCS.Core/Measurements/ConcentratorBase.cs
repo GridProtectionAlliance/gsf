@@ -822,18 +822,18 @@ namespace PCS.Measurements
         {
             if (m_enabled)
             {
+                m_enabled = false;
+
                 m_publicationTimer.Stop();
                 m_monitorTimer.Stop();
-            }
-
-            m_enabled = false;
-            m_frameQueue.Clear();
+                m_frameQueue.Clear();
 
 #if UseHighResolutionTime
-            m_stopTime = PrecisionTimer.UtcNow.Ticks;
+                m_stopTime = PrecisionTimer.UtcNow.Ticks;
 #else
-            m_stopTime = DateTime.UtcNow.Ticks;
+                m_stopTime = DateTime.UtcNow.Ticks;
 #endif
+            }
         }
 
         /// <summary>
