@@ -66,10 +66,12 @@ namespace PCS.Collections
         public static IList<T> GetRange<T>(this IList<T> collection, int index, int count)
         {
             List<T> result = new List<T>();
+
             for (int i = index; i < index + count; i++)
 			{
                 result.Add(collection[i]);
 			}
+
             return result;
         }
 
