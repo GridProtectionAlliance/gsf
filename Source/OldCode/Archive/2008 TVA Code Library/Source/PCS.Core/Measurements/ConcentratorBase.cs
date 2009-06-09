@@ -824,10 +824,11 @@ namespace PCS.Measurements
             {
                 m_publicationTimer.Stop();
                 m_monitorTimer.Stop();
-                m_frameQueue.Clear();
             }
 
             m_enabled = false;
+            m_frameQueue.Clear();
+
 #if UseHighResolutionTime
             m_stopTime = PrecisionTimer.UtcNow.Ticks;
 #else
@@ -868,6 +869,8 @@ namespace PCS.Measurements
         /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
         public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)
         {
+            if (!m_enabled) return;
+
             // This function is called continually with new measurements to handle "time-alignment" (i.e., sorting)
             // of these new values. Many threads will be waiting for frames of time aligned data so make sure any
             // work to be done here is executed as efficiently as possible.
