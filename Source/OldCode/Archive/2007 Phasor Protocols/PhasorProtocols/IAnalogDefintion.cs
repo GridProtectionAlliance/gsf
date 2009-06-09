@@ -15,8 +15,34 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace PCS.PhasorProtocols
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Analog types enumeration.
+    /// </summary>
+    [Serializable()]
+    public enum AnalogType : byte
+    {
+        /// <summary>
+        /// Single point-on-wave.
+        /// </summary>
+        SinglePointOnWave = 0,
+        /// <summary>
+        /// RMS of analog input.
+        /// </summary>
+        RmsOfAnalogInput = 1,
+        /// <summary>
+        /// Peak of analog input.
+        /// </summary>
+        PeakOfAnalogInput = 2
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of an <see cref="IAnalogValue"/>.
     /// </summary>

@@ -22,30 +22,6 @@ using System.Security.Permissions;
 
 namespace PCS.PhasorProtocols
 {
-    #region [ Enumerations ]
-    
-    /// <summary>
-    /// Analog types enumeration.
-    /// </summary>
-    [Serializable()]
-    public enum AnalogType : byte
-    {
-        /// <summary>
-        /// Single point-on-wave.
-        /// </summary>
-        SinglePointOnWave = 0,
-        /// <summary>
-        /// RMS of analog input.
-        /// </summary>
-        RmsOfAnalogInput = 1,
-        /// <summary>
-        /// Peak of analog input.
-        /// </summary>
-        PeakOfAnalogInput = 2
-    }
-
-    #endregion
-
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of an <see cref="IAnalogValue"/>.
     /// </summary>
