@@ -25,7 +25,9 @@
 //  04/02/2009 - J. Ritchie Carroll
 //       Added seed based scramble and unscramble IList<T> extensions.
 //  06/05/2009 - Pinal C. Patel
-//       Added generic AddRange() extension method for ICollection<T>.
+//       Added generic AddRange() extension method for IList<T>.
+//  06/09/2009 - Pinal C. Patel
+//       Added generic GetRange() extension method for IList<T>.
 //
 //*******************************************************************************************************
 
@@ -45,12 +47,30 @@ namespace PCS.Collections
         /// <typeparam name="T"><see cref="Type"/> of <paramref name="items"/> to be added.</typeparam>
         /// <param name="collection">The collection to which the <paramref name="items"/> are to be added.</param>
         /// <param name="items">The items to be added to the <paramref name="collection"/>.</param>
-        public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+        public static void AddRange<T>(this IList<T> collection, IEnumerable<T> items)
         {
             foreach (T item in items)
             {
                 collection.Add(item);
             }
+        }
+
+        /// <summary>
+        /// Returns elements in the specified range from the <paramref name="collection"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="collection"/>.</typeparam>
+        /// <param name="collection">The collection from which elements are to be retrieved.</param>
+        /// <param name="index">The 0-based index position in the <paramref name="collection"/> from which elements are to be retrieved.</param>
+        /// <param name="count">The number of elements to be retrieved from the <paramref name="collection"/> starting at the <paramref name="index"/>.</param>
+        /// <returns>An <see cref="IList{T}"/> object.</returns>
+        public static IList<T> GetRange<T>(this IList<T> collection, int index, int count)
+        {
+            List<T> result = new List<T>();
+            for (int i = index; i < index + count; i++)
+			{
+                result.Add(collection[i]);
+			}
+            return result;
         }
 
         /// <summary>
