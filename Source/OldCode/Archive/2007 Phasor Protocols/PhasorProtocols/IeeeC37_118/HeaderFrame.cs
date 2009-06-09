@@ -52,6 +52,19 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         }
 
         /// <summary>
+        /// Creates a new <see cref="HeaderFrame"/>.
+        /// </summary>
+        /// <param name="headerData"><see cref="string"/> based data to include in this <see cref="HeaderFrame"/>.</param>
+        /// <remarks>
+        /// This constructor is used by a consumer to generate an IEEE C37.118 header frame.
+        /// </remarks>
+        public HeaderFrame(string headerData)
+            : this()
+        {
+            base.HeaderData = headerData;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="HeaderFrame"/> from serialization parameters.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> with populated with data.</param>

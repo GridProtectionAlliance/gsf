@@ -57,7 +57,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is not large enough to parse frame.</exception>
         public CommandFrame(byte[] binaryImage, int startIndex, int length)
-            : base(new CommandCellCollection(0), DeviceCommand.ReservedBits)
+            : base(new CommandCellCollection(Common.MaximumExtendedDataLength), DeviceCommand.ReservedBits)
         {
             if (length < CommonFrameHeader.FixedLength)
                 throw new ArgumentOutOfRangeException("length");
@@ -68,7 +68,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
                 throw new InvalidOperationException("Binary image does not represent an IEEE C37.118 command frame");
 
             if (length < m_frameHeader.FrameLength)
-                throw new ArgumentOutOfRangeException("length");
+                throw new ArgumentOutOfRangeException("length", string.Format("Buffer size, {0}, is not large enough to parse IEEE C37.118 command frame with a length of {1}", length, m_frameHeader.FrameLength));
 
             // Validate check-sum
             int sumLength = m_frameHeader.FrameLength - 2;
@@ -76,6 +76,7 @@ namespace PCS.PhasorProtocols.IeeeC37_118
             if (EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + sumLength) != CalculateChecksum(binaryImage, startIndex, sumLength))
                 throw new InvalidOperationException("Invalid binary image detected - check sum of " + this.GetType().Name + " did not match");
 
+            m_frameHeader.State = new CommandFrameParsingState(m_frameHeader.FrameLength, m_frameHeader.DataLength);
             CommonHeader = m_frameHeader;
             Initialize(binaryImage, startIndex, length);
         }
