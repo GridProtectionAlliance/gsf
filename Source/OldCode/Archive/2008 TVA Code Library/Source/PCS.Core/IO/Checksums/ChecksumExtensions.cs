@@ -70,7 +70,7 @@ namespace PCS.IO.Checksums
         /// perform check-sum over.</param>
         /// <returns>Computed CRC-CCITT checksum over the specified portion of the buffer.</returns>
         /// <remarks>
-        /// The CRC-CCITT is a non-table based 16-bit CRC popular for modem protocols defined for use by the
+        /// The CRC-CCITT is a table based 16-bit CRC popular for modem protocols defined for use by the
         /// Consultative Committee on International Telegraphy and Telephony (CCITT) 
         /// </remarks>
         public static ushort CrcCCITTChecksum(this byte[] data, int startIndex, int length)
@@ -81,6 +81,21 @@ namespace PCS.IO.Checksums
 
             return checksum.Value;
         }
+
+		/// <summary>Calculates the CRC-ModBus check-sum on specified portion of a buffer.</summary>
+		/// <param name="data">Data buffer to perform check-sum on.</param>
+		/// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
+		/// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
+		/// perform check-sum over.</param>
+		/// <returns>Computed CRC-ModBus checksum over the specified portion of the buffer.</returns>		
+		public static ushort ModBusCrcChecksum(this byte[] data, int startIndex, int length)
+		{
+			Crc16 checksum = new Crc16(ChecksumType.ModBus);
+
+			checksum.Update(data, startIndex, length);
+
+			return checksum.Value;
+		}
 
         /// <summary>Calculates the CRC32 check-sum on specified portion of a buffer.</summary>
         /// <param name="data">Data buffer to perform check-sum on.</param>
