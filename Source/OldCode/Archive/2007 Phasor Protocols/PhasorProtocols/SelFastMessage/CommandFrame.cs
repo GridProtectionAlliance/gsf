@@ -270,34 +270,6 @@ namespace PhasorProtocols.SelFastMessage
         }
 
         /// <summary>
-        /// Appends checksum onto <paramref name="buffer"/> starting at <paramref name="startIndex"/>.
-        /// </summary>
-        /// <param name="buffer">Buffer image on which to append checksum.</param>
-        /// <param name="startIndex">Index into <paramref name="buffer"/> where checksum should be appended.</param>
-        /// <remarks>
-        /// We override default implementation since SEL Fast Message implements check sum for frames in little-endian.
-        /// </remarks>
-        protected override void AppendChecksum(byte[] buffer, int startIndex)
-        {
-            EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
-        }
-
-        /// <summary>
-        /// Determines if checksum in the <paramref name="buffer"/> is valid.
-        /// </summary>
-        /// <param name="buffer">Buffer image to validate.</param>
-        /// <param name="startIndex">Start index into <paramref name="buffer"/> to perform checksum.</param>
-        /// <returns>Flag that determines if checksum over <paramref name="buffer"/> is valid.</returns>
-        /// <remarks>
-        /// We override default implementation since SEL Fast Message implements check sum for frames in little-endian.
-        /// </remarks>
-        protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
-        {
-            int sumLength = BinaryLength - 2;
-            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
-        }
-
-        /// <summary>
         /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
         /// </summary>
         /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
