@@ -403,12 +403,12 @@ namespace PhasorProtocols.Ieee1344
         // Static Methods
 
         /// <summary>
-        /// Validates the CRC16 for the specified IEEE 1344 buffer.
+        /// Validates the CRC-CCITT for the specified IEEE 1344 buffer.
         /// </summary>
         public static bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
         {
             int sumLength = length - 2;
-            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.Crc16Checksum(startIndex, sumLength);
+            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == buffer.CrcCCITTChecksum(startIndex, sumLength);
         }
 
         #endregion       

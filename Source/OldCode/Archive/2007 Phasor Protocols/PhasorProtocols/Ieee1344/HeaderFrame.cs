@@ -287,8 +287,8 @@ namespace PhasorProtocols.Ieee1344
         /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
-            // IEEE 1344 uses CRC16 to calculate checksum for frames
-            return buffer.Crc16Checksum(offset, length);
+            // IEEE 1344 uses CRC-CCITT to calculate checksum for frames
+            return buffer.CrcCCITTChecksum(offset, length);
         }
 
         /// <summary>
