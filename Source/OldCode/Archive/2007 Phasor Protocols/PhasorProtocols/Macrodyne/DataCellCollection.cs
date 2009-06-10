@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents a Macrodyne implementation of a collection of <see cref="IDataCell"/> objects.

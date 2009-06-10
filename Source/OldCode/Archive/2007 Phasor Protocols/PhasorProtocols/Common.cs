@@ -16,10 +16,11 @@
 //*******************************************************************************************************
 
 using System;
+using PCS;
 using PCS.Measurements;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Common constants, functions and extensions for phasor classes.

@@ -16,11 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IFrequencyDefinition"/>.

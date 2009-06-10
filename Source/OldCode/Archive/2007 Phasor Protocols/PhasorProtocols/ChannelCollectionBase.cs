@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IChannel"/> objects.<br/>

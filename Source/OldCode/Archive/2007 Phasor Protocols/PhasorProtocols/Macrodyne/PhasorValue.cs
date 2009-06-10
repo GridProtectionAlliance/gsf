@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Units;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IPhasorValue"/>.

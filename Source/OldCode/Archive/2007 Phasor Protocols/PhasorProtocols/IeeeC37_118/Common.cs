@@ -17,7 +17,7 @@
 
 using System;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     #region [ Enumerations ]
 

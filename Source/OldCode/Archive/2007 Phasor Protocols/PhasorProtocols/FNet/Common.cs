@@ -15,10 +15,9 @@
 //
 //*******************************************************************************************************
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     #region [ Enumerations ]
 

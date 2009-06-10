@@ -20,7 +20,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using PCS.Collections;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IConfigurationCell"/> objects.

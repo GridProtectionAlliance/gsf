@@ -17,7 +17,7 @@
 
 using System;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     #region [ Enumerations ]
 

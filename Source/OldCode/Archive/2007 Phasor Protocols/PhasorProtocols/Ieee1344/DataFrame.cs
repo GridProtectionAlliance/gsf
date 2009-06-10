@@ -23,7 +23,7 @@ using System.Security.Permissions;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Ieee1344
+namespace PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IDataFrame"/> that can be sent or received.

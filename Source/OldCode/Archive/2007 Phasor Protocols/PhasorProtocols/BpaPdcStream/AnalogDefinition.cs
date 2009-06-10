@@ -16,10 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of an <see cref="IAnalogDefinition"/>.

@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Defines function signature for creating new <see cref="IChannelDefinition"/> objects.

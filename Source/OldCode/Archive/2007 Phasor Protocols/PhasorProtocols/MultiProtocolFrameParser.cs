@@ -48,10 +48,11 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Units;
+using PCS;
 using PCS.Communication;
 using PCS.IO;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     #region [ Enumerations ]
 

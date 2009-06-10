@@ -17,12 +17,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.

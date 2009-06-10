@@ -17,7 +17,7 @@
 
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of custom connection parameters.

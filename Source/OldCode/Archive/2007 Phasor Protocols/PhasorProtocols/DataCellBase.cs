@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.Measurements;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     #region [ Enumerations ]
 
@@ -608,9 +608,8 @@ namespace PCS.PhasorProtocols
             get
             {
                 if (m_key.Equals(PhasorProtocols.Common.UndefinedKey))
-                {
                     m_key = new MeasurementKey(m_id, m_source);
-                }
+
                 return m_key;
             }
         }
@@ -656,19 +655,19 @@ namespace PCS.PhasorProtocols
             IMeasurement measurement = obj as IMeasurement;
 
             if (measurement != null)
-                return ((IComparable<IMeasurement>)this).CompareTo(measurement);
+                return (this as IComparable<IMeasurement>).CompareTo(measurement);
 
             throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
         }
 
         int IComparable<IMeasurement>.CompareTo(IMeasurement other)
         {
-            return ((IMeasurement)this).Value.CompareTo(other.Value);
+            return (this as IMeasurement).Value.CompareTo(other.Value);
         }
 
         bool IEquatable<IMeasurement>.Equals(IMeasurement other)
         {
-            return (((IComparable<IMeasurement>)this).CompareTo(other) == 0);
+            return ((this as IComparable<IMeasurement>).CompareTo(other) == 0);
         }
 
         #endregion

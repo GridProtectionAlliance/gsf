@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.Ieee1344
+namespace PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents a IEEE 1344 implementation of a collection of <see cref="IDataCell"/> objects.

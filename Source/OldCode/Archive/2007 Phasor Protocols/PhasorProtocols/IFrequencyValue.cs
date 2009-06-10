@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface of a frequency value.

@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents a frame parser for a SEL Fast Message binary data stream that returns parsed data via events.

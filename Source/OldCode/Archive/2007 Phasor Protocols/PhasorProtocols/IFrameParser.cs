@@ -16,9 +16,10 @@
 //*******************************************************************************************************
 
 using System;
+using PCS;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent representation of a frame parser.

@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Text;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of an element of header data for cells in a <see cref="IHeaderFrame"/>.

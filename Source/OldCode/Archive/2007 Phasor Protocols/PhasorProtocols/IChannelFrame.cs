@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using PCS.Measurements;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     #region [ Enumerations ]
 

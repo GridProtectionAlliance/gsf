@@ -17,7 +17,7 @@
 
 using System;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     #region [ Enumerations ]
 

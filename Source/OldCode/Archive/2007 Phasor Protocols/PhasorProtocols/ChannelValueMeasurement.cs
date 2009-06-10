@@ -19,7 +19,7 @@ using System;
 using System.ComponentModel;
 using PCS.Measurements;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> implementation for composite values of a given <see cref="IChannelValue{T}"/>.

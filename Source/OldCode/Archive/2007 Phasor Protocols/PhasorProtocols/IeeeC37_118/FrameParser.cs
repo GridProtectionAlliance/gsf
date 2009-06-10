@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents a frame parser for an IEEE C37.118 binary data stream and returns parsed data via events.

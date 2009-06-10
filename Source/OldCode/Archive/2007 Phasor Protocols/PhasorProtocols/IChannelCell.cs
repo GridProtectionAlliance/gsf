@@ -16,9 +16,8 @@
 //*******************************************************************************************************
 
 using System.Runtime.Serialization;
-using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of <see cref="IChannelFrame"/> cell.

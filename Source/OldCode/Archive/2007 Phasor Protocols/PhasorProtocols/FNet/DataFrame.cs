@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataFrame"/> that can be sent or received.

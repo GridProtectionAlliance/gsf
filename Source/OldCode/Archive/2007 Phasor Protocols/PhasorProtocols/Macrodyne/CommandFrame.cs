@@ -22,7 +22,7 @@ using System.Security.Permissions;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="ICommandFrame"/> that can be sent or received.

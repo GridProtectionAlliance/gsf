@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IDataCell"/> that can be sent or received.

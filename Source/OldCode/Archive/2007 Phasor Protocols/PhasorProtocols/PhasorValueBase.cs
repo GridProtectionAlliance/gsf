@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Units;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     #region [ Enumerations ]
 

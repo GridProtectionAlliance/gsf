@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of any kind

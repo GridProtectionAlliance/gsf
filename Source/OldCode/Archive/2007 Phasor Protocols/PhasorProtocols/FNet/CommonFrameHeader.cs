@@ -17,9 +17,10 @@
 
 using System;
 using System.Text;
+using PCS;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the common header for a F-NET frame of data.

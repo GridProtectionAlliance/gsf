@@ -19,10 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Measurements;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the common header for all IEEE C37.118 frames of data.

@@ -17,7 +17,7 @@
 
 using System;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     #region [ Enumerations ]
 

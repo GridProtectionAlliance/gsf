@@ -24,7 +24,7 @@ using System.Text;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IDataFrame"/> that can be sent or received.

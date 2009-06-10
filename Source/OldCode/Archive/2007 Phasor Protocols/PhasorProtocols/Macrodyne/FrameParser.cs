@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Text;
+using PCS;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents a frame parser for a Macrodyne binary data stream that returns parsed data via events.

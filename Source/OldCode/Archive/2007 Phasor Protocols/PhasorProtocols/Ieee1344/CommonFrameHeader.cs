@@ -20,10 +20,9 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.IO.Checksums;
-using PCS.Measurements;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Ieee1344
+namespace PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the common header for all IEEE 1344 frames of data.

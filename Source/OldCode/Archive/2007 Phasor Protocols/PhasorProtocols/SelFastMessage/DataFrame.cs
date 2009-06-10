@@ -23,7 +23,7 @@ using System.Security.Permissions;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IDataFrame"/> that can be sent or received.

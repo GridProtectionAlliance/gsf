@@ -16,14 +16,11 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.IO.Checksums;
-using PCS.Measurements;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.Macrodyne
+namespace PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the common header for all Macrodyne frames of data.

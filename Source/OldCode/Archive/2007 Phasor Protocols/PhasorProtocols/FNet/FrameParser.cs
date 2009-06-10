@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents a frame parser for a F-NET text based data stream that returns parsed data via events.

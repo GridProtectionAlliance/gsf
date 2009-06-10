@@ -16,7 +16,6 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
@@ -25,7 +24,7 @@ using System.Security.Permissions;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// INI file name browser used with BPA PDCstream <see cref="ConnectionParameters"/>.

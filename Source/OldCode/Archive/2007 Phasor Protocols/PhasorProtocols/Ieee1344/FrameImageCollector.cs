@@ -19,7 +19,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
-namespace PCS.PhasorProtocols.Ieee1344
+namespace PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Collects frame images until a full IEEE 1344 frame has been received.

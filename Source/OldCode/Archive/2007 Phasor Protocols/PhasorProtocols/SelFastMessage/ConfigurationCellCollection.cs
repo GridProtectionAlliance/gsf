@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents a SEL Fast Message implementation of a collection of <see cref="IConfigurationCell"/> objects.

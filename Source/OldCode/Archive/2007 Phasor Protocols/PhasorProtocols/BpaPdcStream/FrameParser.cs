@@ -16,15 +16,13 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using PCS.Parsing;
-using PCS.IO;
-using System.Threading;
 using System.Security.Permissions;
+using System.Text;
+using PCS.IO;
+using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents a frame parser for a BPA PDCstream binary data stream and returns parsed data via events.

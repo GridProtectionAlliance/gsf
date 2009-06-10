@@ -21,7 +21,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using PCS.Measurements;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of any kind of data value.

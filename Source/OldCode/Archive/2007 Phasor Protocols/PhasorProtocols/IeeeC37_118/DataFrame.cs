@@ -23,7 +23,7 @@ using System.Security.Permissions;
 using PCS.IO.Checksums;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IDataFrame"/> that can be sent or received.

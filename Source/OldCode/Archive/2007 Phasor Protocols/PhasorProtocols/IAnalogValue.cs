@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of an analog value.

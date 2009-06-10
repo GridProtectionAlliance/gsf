@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Units;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IPhasorValue"/>.

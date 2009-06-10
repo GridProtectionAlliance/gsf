@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of any data type that can

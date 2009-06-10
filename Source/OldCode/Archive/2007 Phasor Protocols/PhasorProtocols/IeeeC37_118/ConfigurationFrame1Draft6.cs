@@ -20,7 +20,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.IeeeC37_118
+namespace PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.

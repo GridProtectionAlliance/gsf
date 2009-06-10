@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="ICommandFrame"/> that can be sent or received.

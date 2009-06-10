@@ -20,10 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PCS;
 using PCS.Collections;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a frame parser that defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events.

@@ -16,14 +16,11 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.IO.Checksums;
-using PCS.Measurements;
 using PCS.Parsing;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the common header for all SEL Fast Message frames of data.

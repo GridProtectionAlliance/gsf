@@ -19,7 +19,7 @@ using System;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IChannelFrame"/> objects.

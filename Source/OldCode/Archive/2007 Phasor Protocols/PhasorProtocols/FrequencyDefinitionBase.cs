@@ -21,7 +21,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of a <see cref="IFrequencyValue"/>.

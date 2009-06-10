@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="IDataFrame"/> that can be sent or received.

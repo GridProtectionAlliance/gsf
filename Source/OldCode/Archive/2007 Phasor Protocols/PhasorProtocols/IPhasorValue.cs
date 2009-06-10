@@ -17,7 +17,7 @@
 
 using System.Units;
 
-namespace PCS.PhasorProtocols
+namespace PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of a phasor value.

@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PCS.PhasorProtocols.FNet
+namespace PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IFrequencyDefinition"/>.

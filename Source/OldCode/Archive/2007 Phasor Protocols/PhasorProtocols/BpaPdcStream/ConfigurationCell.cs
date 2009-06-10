@@ -17,12 +17,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Text;
-using System.ComponentModel;
 
-namespace PCS.PhasorProtocols.BpaPdcStream
+namespace PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationCell"/> that can be sent or received.

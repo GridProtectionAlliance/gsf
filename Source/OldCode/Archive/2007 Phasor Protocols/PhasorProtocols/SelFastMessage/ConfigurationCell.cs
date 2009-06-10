@@ -16,12 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PCS.PhasorProtocols.SelFastMessage
+namespace PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IConfigurationCell"/> that can be sent or received.
