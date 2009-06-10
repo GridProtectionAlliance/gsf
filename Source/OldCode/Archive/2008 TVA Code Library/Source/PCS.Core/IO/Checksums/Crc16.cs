@@ -143,10 +143,10 @@ namespace PCS.IO.Checksums
 		public void Update(byte value)
 		{
 			ushort temp;
-			temp = (ushort)(crc ^ (value & 0x00FF));
-			crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
-			crc = (ushort)(((crc & 0xFF) * 256) + (crc >> 8));
-		}
+            temp = (ushort)(value & 0x00FF);
+            temp = (ushort)(crc ^ temp);
+            crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
+        }
 
 		void IChecksum.Update(int value)
 		{
@@ -185,9 +185,9 @@ namespace PCS.IO.Checksums
 			ushort temp;
 			for (int i = offset; i < count; i++)
 			{
-                temp = (ushort)(crc ^ (buffer[offset + i] & 0x00FF));
+                temp = (ushort)(buffer[offset + i] & 0x00FF);
+                temp = (ushort)(crc ^ temp);
                 crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
-                crc = (ushort)(((crc & 0xFF) * 256) + (crc >> 8));
             }			
 		}
 
