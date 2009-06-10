@@ -1,0 +1,12 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 1
+		SccLocalPath0 = .
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
