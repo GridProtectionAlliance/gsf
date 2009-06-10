@@ -53,6 +53,35 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Collections\" />
+    <Folder Include="Configuration\" />
+    <Folder Include="Console\" />
+    <Folder Include="Data\" />
+    <Folder Include="Diagnostics\" />
+    <Folder Include="ErrorManagement\" />
+    <Folder Include="Identity\" />
+    <Folder Include="Interop\" />
+    <Folder Include="IO\Checksum\" />
+    <Folder Include="IO\Compression\BZip2\" />
+    <Folder Include="IO\Compression\Core\" />
+    <Folder Include="IO\Compression\GZip\" />
+    <Folder Include="IO\Compression\Tar\" />
+    <Folder Include="IO\Compression\Zip\" />
+    <Folder Include="Measurements\" />
+    <Folder Include="Media\" />
+    <Folder Include="Net\Ftp\" />
+    <Folder Include="Net\Smtp\" />
+    <Folder Include="NumericalAnalysis\" />
+    <Folder Include="Parsing\" />
+    <Folder Include="Reflection\" />
+    <Folder Include="Scheduling\" />
+    <Folder Include="Security\Cryptography\Pkzip\" />
+    <Folder Include="Threading\" />
+    <Folder Include="Units\" />
+    <Folder Include="Windows\Forms\" />
+    <Folder Include="Xml\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
