@@ -1,10 +1,79 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "TVA.Communication\TVA.Communication.csproj", "{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "TVA.Services\TVA.Services.csproj", "{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "TVA.Security\TVA.Security.csproj", "{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "TVA.Web\TVA.Web.csproj", "{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "TVA.Windows\TVA.Windows.csproj", "{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 1
+		SccNumberOfProjects = 8
 		SccLocalPath0 = .
+		SccProjectUniqueName1 = TVA.Core\\TVA.Core.csproj
+		SccLocalPath1 = .
+		SccProjectFilePathRelativizedFromConnection1 = TVA.Core\\
+		SccProjectUniqueName2 = TVA.Security\\TVA.Security.csproj
+		SccLocalPath2 = .
+		SccProjectFilePathRelativizedFromConnection2 = TVA.Security\\
+		SccProjectUniqueName3 = TVA.Web\\TVA.Web.csproj
+		SccLocalPath3 = .
+		SccProjectFilePathRelativizedFromConnection3 = TVA.Web\\
+		SccProjectUniqueName4 = TVA.Windows\\TVA.Windows.csproj
+		SccLocalPath4 = .
+		SccProjectFilePathRelativizedFromConnection4 = TVA.Windows\\
+		SccProjectUniqueName5 = TVA.Services\\TVA.Services.csproj
+		SccLocalPath5 = .
+		SccProjectFilePathRelativizedFromConnection5 = TVA.Services\\
+		SccProjectUniqueName6 = TVA.Communication\\TVA.Communication.csproj
+		SccLocalPath6 = .
+		SccProjectFilePathRelativizedFromConnection6 = TVA.Communication\\
+		SccProjectUniqueName7 = TVA.Historian\\TVA.Historian.csproj
+		SccLocalPath7 = .
+		SccProjectFilePathRelativizedFromConnection7 = TVA.Historian\\
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
