@@ -168,7 +168,7 @@ namespace PhasorProtocols.Macrodyne
                 
                 // Only add desired message rate for enable command
                 //if (Command == DeviceCommand.EnableUnsolicitedMessages)
-                //    EndianOrder.LittleEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
+                //    EndianOrder.BigEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
 
                 return buffer;
             }

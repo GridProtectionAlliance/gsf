@@ -79,9 +79,9 @@ namespace PhasorProtocols.SelFastMessage
 
             // Parse relevant common header values
             m_frameSize = (FrameSize)binaryImage[startIndex + 2];
-            m_idCode = EndianOrder.LittleEndian.ToUInt32(binaryImage, startIndex + 12);
-            sampleCount = EndianOrder.LittleEndian.ToUInt16(binaryImage, startIndex + 18);
-            secondOfCentury = EndianOrder.LittleEndian.ToUInt32(binaryImage, startIndex + 20);
+            m_idCode = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 12);
+            sampleCount = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 18);
+            secondOfCentury = EndianOrder.BigEndian.ToUInt32(binaryImage, startIndex + 20);
             
             // We use an NTP time tag since SEL Fast Message SOC also starts at 1/1/1900
             timetag = new NtpTimeTag(secondOfCentury, 0);
@@ -227,16 +227,16 @@ namespace PhasorProtocols.SelFastMessage
                 buffer[10] = 0xC0;  // Sequence byte
 
                 // Include destination address (PMADDR setting)
-                EndianOrder.LittleEndian.CopyBytes(m_idCode, buffer, 12);
+                EndianOrder.BigEndian.CopyBytes(m_idCode, buffer, 12);
 
                 // Include register count
-                EndianOrder.LittleEndian.CopyBytes(RegisterCount, buffer, 16);
+                EndianOrder.BigEndian.CopyBytes(RegisterCount, buffer, 16);
 
                 // Include sample number
-                EndianOrder.LittleEndian.CopyBytes(SampleNumber, buffer, 18);
+                EndianOrder.BigEndian.CopyBytes(SampleNumber, buffer, 18);
 
                 // Include second of century
-                EndianOrder.LittleEndian.CopyBytes(SecondOfCentury, buffer, 20);
+                EndianOrder.BigEndian.CopyBytes(SecondOfCentury, buffer, 20);
 
                 return buffer;
             }

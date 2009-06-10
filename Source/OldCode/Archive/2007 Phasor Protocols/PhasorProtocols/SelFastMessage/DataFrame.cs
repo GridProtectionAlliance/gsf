@@ -308,7 +308,7 @@ namespace PhasorProtocols.SelFastMessage
         /// </remarks>
         protected override void AppendChecksum(byte[] buffer, int startIndex)
         {
-            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace PhasorProtocols.SelFastMessage
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
             int sumLength = BinaryLength - 2;
-            return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
         }
 
         /// <summary>

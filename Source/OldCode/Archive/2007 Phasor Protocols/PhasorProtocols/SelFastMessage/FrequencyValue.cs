@@ -116,7 +116,7 @@ namespace PhasorProtocols.SelFastMessage
         {
             get
             {
-                return EndianOrder.LittleEndian.GetBytes((float)Frequency);
+                return EndianOrder.BigEndian.GetBytes((float)Frequency);
             }
         }
 
@@ -133,7 +133,7 @@ namespace PhasorProtocols.SelFastMessage
         /// <returns>The length of the data that was parsed.</returns>
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
-            Frequency = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex);
+            Frequency = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
             return 4;
         }
 

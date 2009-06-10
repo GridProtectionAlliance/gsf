@@ -126,8 +126,8 @@ namespace PhasorProtocols.SelFastMessage
             {
                 byte[] buffer = new byte[8];
 
-                EndianOrder.LittleEndian.CopyBytes((float)Magnitude, buffer, 0);
-                EndianOrder.LittleEndian.CopyBytes((float)Angle.ToDegrees(), buffer, 4);
+                EndianOrder.BigEndian.CopyBytes((float)Magnitude, buffer, 0);
+                EndianOrder.BigEndian.CopyBytes((float)Angle.ToDegrees(), buffer, 4);
 
                 return buffer;
             }
@@ -147,8 +147,8 @@ namespace PhasorProtocols.SelFastMessage
         protected override int ParseBodyImage(byte[] binaryImage, int startIndex, int length)
         {
             // Parse magnitude and angle in degrees
-            Magnitude = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex);
-            Angle = Angle.FromDegrees(EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 4));
+            Magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
+            Angle = Angle.FromDegrees(EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4));
 
             return 8;
         }

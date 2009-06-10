@@ -261,7 +261,7 @@ namespace PhasorProtocols.SelFastMessage
             }
 
             // Parse out status flags
-            StatusFlags = (StatusFlags)EndianOrder.LittleEndian.ToUInt16(binaryImage, index);
+            StatusFlags = (StatusFlags)EndianOrder.BigEndian.ToUInt16(binaryImage, index);
             index += 2;
 
             // Return total parsed length

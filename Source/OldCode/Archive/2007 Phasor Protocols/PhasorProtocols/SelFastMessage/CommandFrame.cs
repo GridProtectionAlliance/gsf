@@ -73,7 +73,7 @@ namespace PhasorProtocols.SelFastMessage
             Command = (DeviceCommand)binaryImage[startIndex + 9];
 
             if (Command == DeviceCommand.EnableUnsolicitedMessages)
-                m_messagePeriod = (MessagePeriod)EndianOrder.LittleEndian.ToUInt16(binaryImage, startIndex + 14);
+                m_messagePeriod = (MessagePeriod)EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex + 14);
             
             // Validate check-sum
             int sumLength = FrameSize - 2;
@@ -231,7 +231,7 @@ namespace PhasorProtocols.SelFastMessage
                 
                 // Only add desired message rate for enable command
                 if (Command == DeviceCommand.EnableUnsolicitedMessages)
-                    EndianOrder.LittleEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
+                    EndianOrder.BigEndian.CopyBytes((ushort)m_messagePeriod, buffer, 5);
 
                 return buffer;
             }
@@ -279,7 +279,7 @@ namespace PhasorProtocols.SelFastMessage
         /// </remarks>
         protected override void AppendChecksum(byte[] buffer, int startIndex)
         {
-            EndianOrder.LittleEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
+            EndianOrder.BigEndian.CopyBytes(CalculateChecksum(buffer, 0, startIndex), buffer, startIndex);
         }
 
         /// <summary>
@@ -294,7 +294,7 @@ namespace PhasorProtocols.SelFastMessage
         protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
         {
             int sumLength = BinaryLength - 2;
-            return EndianOrder.LittleEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
+            return EndianOrder.BigEndian.ToUInt16(buffer, startIndex + sumLength) == CalculateChecksum(buffer, startIndex, sumLength);
         }
 
         /// <summary>
