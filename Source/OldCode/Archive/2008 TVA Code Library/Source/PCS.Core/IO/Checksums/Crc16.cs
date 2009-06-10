@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/25/2008 - James R Carroll
 //       Generated original version of source code.
+//  06/10/2009 - Mehul Thakkar
+//       Modified code to calculate either standard CRC-16 or ModBus CRC.
 //
 //*******************************************************************************************************
 
@@ -23,17 +25,17 @@ namespace PCS.IO.Checksums
 	#region [ Enumerations ]
 
 	/// <summary>
-	/// Indicates type of calculation performed.
+	/// Indicates type of CRC-16 calculation performed.
 	/// </summary>
 	public enum ChecksumType
 	{
 		/// <summary>
-		/// Regular CRC16 calculation
+		/// Regular CRC-16 calculation.
 		/// </summary>
 		Crc16,
 
 		/// <summary>
-		/// ModBus CRC16 calculation
+		/// ModBus CRC-16 calculation.
 		/// </summary>
 		ModBus
 	}
@@ -53,8 +55,8 @@ namespace PCS.IO.Checksums
 		#region [ Members]
 
 		// Constants
-		const ushort Crc16Seed = 0x0000;
-		const ushort ModBusSeed = 0xFFFF;
+		private const ushort Crc16Seed = 0x0000;
+        private const ushort ModBusSeed = 0xFFFF;
 
 		// Fields
 		private ushort crc; // The crc data checksum so far.
@@ -76,7 +78,7 @@ namespace PCS.IO.Checksums
 		/// Creates a new instance of the Crc16 class.
 		/// </summary>
 		/// <param name="checksumType">
-		/// Type of calculation to perform, CRC16 or ModBus.
+		/// Type of calculation to perform, CRC-16 or ModBus.
 		/// </param>
 		public Crc16(ChecksumType checksumType)
 		{
@@ -88,7 +90,7 @@ namespace PCS.IO.Checksums
 		#region [ Properties ]
 
 		/// <summary>
-		/// Returns the CRC16 data checksum computed so far.
+		/// Returns the CRC-16 data checksum computed so far.
 		/// </summary>
 		[CLSCompliant(false)]
 		public ushort Value
@@ -116,7 +118,7 @@ namespace PCS.IO.Checksums
 		#region [ Methods ]
 
 		/// <summary>
-		/// Resets the CRC16 data checksum as if no update was ever called.
+		/// Resets the CRC-16 data checksum as if no update was ever called.
 		/// </summary>
 		public void Reset()
 		{
@@ -124,9 +126,9 @@ namespace PCS.IO.Checksums
 		}
 		
 		/// <summary>
-		/// Resets the CRC16 data checksum as if no update was ever called.
+		/// Resets the CRC-16 data checksum as if no update was ever called.
 		/// </summary>
-		/// <param name="checksumType">Type of CRC calculation. CRC16 resets to 0x0000, ModBus resets to 0xFFFF</param>
+		/// <param name="checksumType">Type of CRC calculation. CRC-16 resets to 0x0000, ModBus resets to 0xFFFF</param>
 		public void Reset(ChecksumType checksumType)
 		{
 			if (checksumType == ChecksumType.ModBus)
@@ -183,10 +185,10 @@ namespace PCS.IO.Checksums
 			ushort temp;
 			for (int i = offset; i < count; i++)
 			{
-				temp = (ushort)(buffer[offset + i] & 0x00FF);
-				temp = (ushort)(crc ^ temp);
-				crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
-			}			
+                temp = (ushort)(crc ^ (buffer[offset + i] & 0x00FF));
+                crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
+                crc = (ushort)(((crc & 0xFF) * 256) + (crc >> 8));
+            }			
 		}
 
 		#endregion

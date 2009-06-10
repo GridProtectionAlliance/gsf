@@ -29,7 +29,7 @@ namespace PCS.IO.Checksums
 		#region [ Members ]
 
         // Constants
-        const ushort CrcSeed = 0xFFFF;
+        private const ushort CrcSeed = 0xFFFF;
 
         // Fields
         private ushort crc; // The crc data checksum so far.
@@ -80,7 +80,7 @@ namespace PCS.IO.Checksums
         #region [ Methods ]
 
         /// <summary>
-        /// Resets the CRC16 data checksum as if no update was ever called.
+        /// Resets the CRC-CCITT data checksum as if no update was ever called.
         /// </summary>
         public void Reset()
         {

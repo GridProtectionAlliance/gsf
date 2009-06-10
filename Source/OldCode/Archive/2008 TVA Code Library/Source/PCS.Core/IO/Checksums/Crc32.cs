@@ -83,7 +83,7 @@ namespace PCS.IO.Checksums
 	/// </summary>
 	public sealed class Crc32 : IChecksum
 	{
-		const uint CrcSeed = 0xFFFFFFFF;
+		private const uint CrcSeed = 0xFFFFFFFF;
 		
 		readonly static uint[] CrcTable = new uint[] {
 			0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419,
@@ -151,7 +151,7 @@ namespace PCS.IO.Checksums
 		uint crc;
 		
 		/// <summary>
-		/// Returns the CRC32 data checksum computed so far.
+		/// Returns the CRC-32 data checksum computed so far.
 		/// </summary>
         [CLSCompliant(false)]
         public uint Value
@@ -173,7 +173,7 @@ namespace PCS.IO.Checksums
         }
 
 		/// <summary>
-		/// Resets the CRC32 data checksum as if no update was ever called.
+		/// Resets the CRC-32 data checksum as if no update was ever called.
 		/// </summary>
 		public void Reset() 
 		{ 
