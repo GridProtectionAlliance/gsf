@@ -425,7 +425,7 @@ namespace TVA.Historian.Files
                 }
                 if (dataBlockPointer.HistorianId == -1 || dataBlockPointer.HistorianId == historianId)
                 {
-                    // The data block is either unallocated or allocated to the specified Historian identifier.
+                    // The data block is either unallocated or allocated to the specified historian identifier.
                     dataBlock = dataBlockPointer.DataBlock;
                     if (dataBlockPointer.HistorianId == -1 && dataBlock.SlotsUsed > 0)
                     {
@@ -445,7 +445,7 @@ namespace TVA.Historian.Files
                 dataBlock = FindLastDataBlock(historianId);
                 if (dataBlock != null && dataBlock.SlotsAvailable == 0)
                 {
-                    // We found a previously used data block for the specified Historian identifier but it's full.
+                    // We found a previously used data block for the specified historian identifier but it's full.
                     dataBlock = null;
                 }
 

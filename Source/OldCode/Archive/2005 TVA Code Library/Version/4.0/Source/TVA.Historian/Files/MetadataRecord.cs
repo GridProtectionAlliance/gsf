@@ -602,7 +602,7 @@ namespace TVA.Historian.Files
         /// </summary>
         /// <remarks>
         /// <see cref="SourceId"/> is used for the determination of "global time" when that client option is in effect.  
-        /// When "global time" is in effect, Historian Retriever returns the current data time for a <see cref="HistorianId"/> 
+        /// When "global time" is in effect, the historian returns the current data time for a <see cref="HistorianId"/> 
         /// based on the latest time received for all <see cref="HistorianId"/>s with the same <see cref="SourceId"/>.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">Value being set is not between 1 and 20.</exception>
@@ -698,7 +698,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the Historian identifier of <see cref="MetadataRecord"/>.
+        /// Gets the historian identifier of <see cref="MetadataRecord"/>.
         /// </summary>
         public int HistorianId
         {

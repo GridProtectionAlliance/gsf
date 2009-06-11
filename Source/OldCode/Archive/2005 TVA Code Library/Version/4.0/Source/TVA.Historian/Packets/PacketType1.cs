@@ -26,7 +26,7 @@ using TVA.Measurements;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet to be used for sending single time series data point to Historian for archival.
+    /// Represents a packet to be used for sending single time series data point to a historian for archival.
     /// </summary>
     public class PacketType1 : PacketBase
     {
@@ -124,7 +124,7 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the Historian identifier of the time series data.
+        /// Gets or sets the historian identifier of the time series data.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive.</exception>
         public int HistorianId

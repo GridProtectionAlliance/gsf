@@ -121,7 +121,7 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the Historian identifier of <see cref="ArchiveData"/>.
+        /// Gets or sets the historian identifier of <see cref="ArchiveData"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive.</exception>
         public int HistorianId

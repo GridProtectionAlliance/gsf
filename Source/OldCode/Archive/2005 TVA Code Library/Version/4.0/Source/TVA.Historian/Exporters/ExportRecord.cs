@@ -49,7 +49,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// Initializes a new instance of the <see cref="ExportRecord"/> class.
         /// </summary>
-        /// <param name="instance">Name of the Historian instance providing the time series data.</param>
+        /// <param name="instance">Name of the historian instance providing the time series data.</param>
         /// <param name="identifier">Historian identifier of the <paramref name="instance"/> whose time series data is to be exported.</param>
         public ExportRecord(string instance, int identifier)
         {
@@ -62,7 +62,7 @@ namespace TVA.Historian.Exporters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the Historian instance providing the time series data.
+        /// Gets or sets the name of the historian instance providing the time series data.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
         public string Instance
@@ -81,7 +81,7 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Gets or sets the Historian identifier of the <paramref name="Instance"/> whose time series data is to be exported.
+        /// Gets or sets the historian identifier of the <paramref name="Instance"/> whose time series data is to be exported.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
         public int Identifier

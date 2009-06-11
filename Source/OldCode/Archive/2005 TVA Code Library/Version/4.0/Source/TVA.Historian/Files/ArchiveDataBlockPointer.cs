@@ -79,7 +79,7 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the Historian identifier of <see cref="ArchiveDataBlockPointer"/>.
+        /// Gets or sets the historian identifier of <see cref="ArchiveDataBlockPointer"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
         public int HistorianId

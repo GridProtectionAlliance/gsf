@@ -63,14 +63,14 @@ namespace TVA.Historian
     #endregion
 
     /// <summary>
-    /// Defines time series data warehoused by Historian.
+    /// Defines time series data warehoused by a historian.
     /// </summary>
     public interface IDataPoint : ISupportBinaryImage
     {
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the Historian identifier of the data point.
+        /// Gets or sets the historian identifier of the data point.
         /// </summary>
         int HistorianId { get; set; }
 

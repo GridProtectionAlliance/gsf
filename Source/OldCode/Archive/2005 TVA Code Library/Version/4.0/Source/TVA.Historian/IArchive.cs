@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace TVA.Historian
 {
     /// <summary>
-    /// Defines a repository where time series data is warehoused by Historian.
+    /// Defines a repository where time series data is warehoused by a historian.
     /// </summary>
     public interface IArchive
     {

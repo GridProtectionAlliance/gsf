@@ -227,7 +227,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the Historian identifier of <see cref="StateRecord"/>.
+        /// Gets the historian identifier of <see cref="StateRecord"/>.
         /// </summary>
         public int HistorianId
         {

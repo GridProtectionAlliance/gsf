@@ -23,7 +23,7 @@ using System.Collections.Generic;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet that can be used to query the status of Historian.
+    /// Represents a packet that can be used to query the status of a historian.
     /// </summary>
     public class PacketType5 : PacketBase
     {
