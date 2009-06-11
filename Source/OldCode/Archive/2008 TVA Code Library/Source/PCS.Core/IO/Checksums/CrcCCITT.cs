@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/25/2008 - James R Carroll
 //       Generated original version of source code.
+//	06/10/2009 - Mehul Thakkar
+//		 Modified calculation to use predefined table instead of calculation on the fly.
 //
 //*******************************************************************************************************
 
