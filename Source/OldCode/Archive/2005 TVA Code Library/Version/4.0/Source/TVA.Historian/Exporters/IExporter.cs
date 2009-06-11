@@ -90,25 +90,5 @@ namespace TVA.Historian.Exporters
         void ProcessExport(string exportName);
 
         #endregion
-
-        #region [ Obsolete ]
-
-        event EventHandler<EventArgs<Export>> ExportAdded;
-
-        event EventHandler<EventArgs<Export>> ExportRemoved;
-
-        event EventHandler<EventArgs<Export>> ExportUpdated;
-
-        void DataParsed(DataListener listener, List<IPacket> parsedData);
-
-        void DataListChanged(DataListener listener);
-
-        bool AddExport(Export export);
-
-        bool RemoveExport(Export export);
-
-        bool UpdateExport(Export export);
-
-        #endregion
     }
 }

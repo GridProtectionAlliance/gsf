@@ -70,22 +70,22 @@ namespace TVA.Historian
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the historian identifier of the data point.
+        /// Gets or sets the historian identifier of the time series data point.
         /// </summary>
         int HistorianId { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of the data point.
+        /// Gets or sets the <see cref="TimeTag"/> of the time series data point.
         /// </summary>
         TimeTag Time { get; set; }
 
         /// <summary>
-        /// Gets or sets the value of the data point.
+        /// Gets or sets the value of the time series data point.
         /// </summary>
         float Value { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="Quality"/> of the data point.
+        /// Gets or sets the <see cref="Quality"/> of the time series data point.
         /// </summary>
         Quality Quality { get; set; }
 
