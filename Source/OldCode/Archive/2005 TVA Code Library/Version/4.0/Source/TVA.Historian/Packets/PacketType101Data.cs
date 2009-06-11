@@ -14,7 +14,7 @@ namespace TVA.Historian.Packets
         // **************************************************************************************************
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 4          0-3        Int32      DatAWareId                                                    *
+        // * 4          0-3        Int32      HistorianId                                                    *
         // * 4          4-7        Int32      Time                                                          *
         // * 2          8-9        Int16      Flags (Quality & Milliseconds)                                *
         // * 4          10-13      Single     Value                                                         *
@@ -45,12 +45,12 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="PacketType101Data"/>.</param>
+        /// <param name="historianId">Historian identifier of <see cref="PacketType101Data"/>.</param>
         /// <param name="time"><see cref="TimeTag"/> of <see cref="PacketType101Data"/>.</param>
         /// <param name="value">Floating-point value of <see cref="PacketType101Data"/>.</param>
         /// <param name="quality"><see cref="Quality"/> of <see cref="PacketType101Data"/>.</param>
-        public PacketType101Data(int datawareId, TimeTag time, float value, Quality quality)
-            : base(datawareId, time, value, quality)
+        public PacketType101Data(int historianId, TimeTag time, float value, Quality quality)
+            : base(historianId, time, value, quality)
         {
         }
 
@@ -89,7 +89,7 @@ namespace TVA.Historian.Packets
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(DatAWareId), 0, image, 0, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(HistorianId), 0, image, 0, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes((int)Time.Value), 0, image, 4, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes((short)Flags), 0, image, 8, 2);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(Value), 0, image, 10, 4);
@@ -110,7 +110,7 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                DatAWareId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
                 Flags = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 8);
                 Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 10);
                 Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 4) +  // Seconds

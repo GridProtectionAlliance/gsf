@@ -24,7 +24,7 @@ using TVA.Parsing;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Defines a binary packet received by the archival process of DatAWare.
+    /// Defines a binary packet received by the archival process of Historian.
     /// </summary>
     public interface IPacket : ISupportBinaryImage, ISupportFrameImage<short>
     {

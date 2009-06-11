@@ -50,7 +50,7 @@ namespace TVA.Historian.Notifiers
         }
 
         // Constants
-        private const string NotifierInterface = "DatAWare.Notifiers.INotifier";
+        private const string NotifierInterface = "Historian.Notifiers.INotifier";
         private const int NotificationDispatchTimeout = 30000;
 
         // Events

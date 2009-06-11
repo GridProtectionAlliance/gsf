@@ -261,7 +261,7 @@ namespace TVA.Historian.Exporters
                                         {
                                             foreach (IDataPoint dataPoint in dataPoints)
                                             {
-                                                rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.DatAWareId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                                                rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                             }
                                         }
                                     }
@@ -291,8 +291,8 @@ namespace TVA.Historian.Exporters
                                         {
                                             foreach (IDataPoint dataPoint in dataPoints)
                                             {
-                                                if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.DatAWareId) != null)
-                                                    rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.DatAWareId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                                                if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianId) != null)
+                                                    rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                             }
                                         }
                                     }

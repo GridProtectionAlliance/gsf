@@ -40,7 +40,7 @@ namespace TVA.Historian.Files
 
         // Fields
         private int m_index;
-        private int m_datawareId;
+        private int m_historianId;
         private TimeTag m_startTime;
         private ArchiveFile m_parent;
 
@@ -79,21 +79,21 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the DatAWare identifier of <see cref="ArchiveDataBlockPointer"/>.
+        /// Gets or sets the Historian identifier of <see cref="ArchiveDataBlockPointer"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
-        public int DatAWareId
+        public int HistorianId
         {
             get
             {
-                return m_datawareId;
+                return m_historianId;
             }
             set
             {
                 if (value < 1 && value != -1)
                     throw new ArgumentException("Value must be positive or -1.");
 
-                m_datawareId = value;
+                m_historianId = value;
             }
         }
 
@@ -134,7 +134,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return new ArchiveDataBlock(m_parent, m_index, m_datawareId);
+                return new ArchiveDataBlock(m_parent, m_index, m_historianId);
             }
         }
 
@@ -145,7 +145,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return m_datawareId != -1 && m_startTime.CompareTo(TimeTag.MinValue) != 0;
+                return m_historianId != -1 && m_startTime.CompareTo(TimeTag.MinValue) != 0;
             }
         }
 
@@ -169,7 +169,7 @@ namespace TVA.Historian.Files
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_datawareId), 0, image, 0, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 0, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_startTime.Value), 0, image, 4, 8);
 
                 return image;
@@ -185,7 +185,7 @@ namespace TVA.Historian.Files
         /// </summary>
         public void Reset()
         {
-            m_datawareId = -1;
+            m_historianId = -1;
             m_startTime = TimeTag.MinValue;
         }
 
@@ -201,7 +201,7 @@ namespace TVA.Historian.Files
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                DatAWareId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
                 StartTime = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 4));
 
                 return ByteCount;
@@ -231,7 +231,7 @@ namespace TVA.Historian.Files
             }
             else
             {
-                int result = m_datawareId.CompareTo(other.DatAWareId);
+                int result = m_historianId.CompareTo(other.HistorianId);
                 if (result != 0)
                     return result;
                 else
@@ -255,7 +255,7 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
         {
-            return string.Format("Id: {0}; Start time: {1}", m_datawareId, m_startTime);
+            return string.Format("Id: {0}; Start time: {1}", m_historianId, m_startTime);
         }
 
         /// <summary>
@@ -264,7 +264,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer value.</returns>
         public override int GetHashCode()
         {
-            return m_datawareId.GetHashCode();
+            return m_historianId.GetHashCode();
         }
 
         #endregion

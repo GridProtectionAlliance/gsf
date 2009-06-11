@@ -20,7 +20,7 @@ using System.Collections.Generic;
 namespace TVA.Historian
 {
     /// <summary>
-    /// Defines a repository where time series data is warehoused by DatAWare.
+    /// Defines a repository where time series data is warehoused by Historian.
     /// </summary>
     public interface IArchive
     {
@@ -43,55 +43,55 @@ namespace TVA.Historian
         void WriteData(IDataPoint dataPoint);
 
         /// <summary>
-        /// Writes meta information for the specified <paramref name="datawareId"/> to the repository.
+        /// Writes meta information for the specified <paramref name="historianId"/> to the repository.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <param name="metaData">Binary image of the meta information.</param>
-        void WriteMetaData(int datawareId, byte[] metaData);
+        void WriteMetaData(int historianId, byte[] metaData);
 
         /// <summary>
-        /// Writes state information for the specified <paramref name="datawareId"/> to the repository.
+        /// Writes state information for the specified <paramref name="historianId"/> to the repository.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <param name="stateData">Binary image of the state information.</param>
-        void WriteStateData(int datawareId, byte[] stateData);
+        void WriteStateData(int historianId, byte[] stateData);
 
         /// <summary>
         /// Reads time series data from the repository.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(int datawareId, TimeTag startTime, TimeTag endTime);
+        IEnumerable<IDataPoint> ReadData(int historianId, TimeTag startTime, TimeTag endTime);
 
         /// <summary>
-        /// Read meta information for the specified <paramref name="datawareId"/>.
+        /// Read meta information for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing meta information.</returns>
-        byte[] ReadMetaData(int datawareId);
+        byte[] ReadMetaData(int historianId);
 
         /// <summary>
-        /// Reads state information for the specified <paramref name="datawareId"/>.
+        /// Reads state information for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing state information.</returns>
-        byte[] ReadStateData(int datawareId);
+        byte[] ReadStateData(int historianId);
 
         /// <summary>
-        /// Reads meta information summary for the specified <paramref name="datawareId"/>.
+        /// Reads meta information summary for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing meta information summary.</returns>
-        byte[] ReadMetaDataSummary(int datawareId);
+        byte[] ReadMetaDataSummary(int historianId);
 
         /// <summary>
-        /// Read state information summary for the specified <paramref name="datawareId"/>.
+        /// Read state information summary for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing state information summary.</returns>
-        byte[] ReadStateDataSummary(int datawareId);
+        byte[] ReadStateDataSummary(int historianId);
 
         #endregion
     }

@@ -60,7 +60,7 @@ namespace TVA.Historian.Files
         protected const Bits MillisecondMask = Bits.Bit05 | Bits.Bit06 | Bits.Bit07 | Bits.Bit08 | Bits.Bit09 | Bits.Bit10 | Bits.Bit11 | Bits.Bit12 | Bits.Bit13 | Bits.Bit14 | Bits.Bit15;
 
         // Fields
-        private int m_datawareId;
+        private int m_historianId;
         private TimeTag m_time;
         private float m_value;
         private int m_flags;
@@ -72,11 +72,11 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="ArchiveData"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="ArchiveData"/>.</param>
-        public ArchiveData(int datawareId)
+        /// <param name="historianId">Historian identifier of <see cref="ArchiveData"/>.</param>
+        public ArchiveData(int historianId)
         {
             m_time = TimeTag.MinValue;
-            this.DatAWareId = datawareId;
+            this.HistorianId = historianId;
         }
 
         /// <summary>
@@ -84,19 +84,19 @@ namespace TVA.Historian.Files
         /// </summary>
         /// <param name="dataPoint">A time series data point.</param>
         public ArchiveData(IDataPoint dataPoint)
-            : this(dataPoint.DatAWareId, dataPoint.Time, dataPoint.Value, dataPoint.Quality)
+            : this(dataPoint.HistorianId, dataPoint.Time, dataPoint.Value, dataPoint.Quality)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ArchiveData"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="ArchiveData"/>.</param>
+        /// <param name="historianId">Historian identifier of <see cref="ArchiveData"/>.</param>
         /// <param name="time"><see cref="TimeTag"/> of <see cref="ArchiveData"/>.</param>
         /// <param name="value">Floating-point value of <see cref="ArchiveData"/>.</param>
         /// <param name="quality"><see cref="Quality"/> of <see cref="ArchiveData"/>.</param>
-        public ArchiveData(int datawareId, TimeTag time, float value, Quality quality)
-            : this(datawareId)
+        public ArchiveData(int historianId, TimeTag time, float value, Quality quality)
+            : this(historianId)
         {
             this.Time = time;
             this.Value = value;
@@ -106,12 +106,12 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="ArchiveData"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="ArchiveData"/>.</param>
+        /// <param name="historianId">Historian identifier of <see cref="ArchiveData"/>.</param>
         /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveData"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public ArchiveData(int datawareId, byte[] binaryImage, int startIndex, int length)
-            : this(datawareId)
+        public ArchiveData(int historianId, byte[] binaryImage, int startIndex, int length)
+            : this(historianId)
         {
             Initialize(binaryImage, startIndex, length);
         }
@@ -121,21 +121,21 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the DatAWare identifier of <see cref="ArchiveData"/>.
+        /// Gets or sets the Historian identifier of <see cref="ArchiveData"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive.</exception>
-        public int DatAWareId
+        public int HistorianId
         {
             get
             {
-                return m_datawareId;
+                return m_historianId;
             }
             set
             {
                 if (value < 1)
                     throw new ArgumentException("Value must be positive.");
 
-                m_datawareId = value;
+                m_historianId = value;
             }
         }
 
@@ -293,7 +293,7 @@ namespace TVA.Historian.Files
             }
             else
             {
-                int result = m_datawareId.CompareTo(other.DatAWareId);
+                int result = m_historianId.CompareTo(other.HistorianId);
                 if (result != 0)
                     return result;
                 else
@@ -317,7 +317,7 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
         {
-            return string.Format("Id={0}; Time={1}; Value={2}; Quality={3}", m_datawareId, m_time, m_value, Quality);
+            return string.Format("Id={0}; Time={1}; Value={2}; Quality={3}", m_historianId, m_time, m_value, Quality);
         }
 
         /// <summary>
@@ -326,7 +326,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer value.</returns>
         public override int GetHashCode()
         {
-            return m_datawareId.GetHashCode();
+            return m_historianId.GetHashCode();
         }
 
         #endregion

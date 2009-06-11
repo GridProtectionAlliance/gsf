@@ -24,7 +24,7 @@ using TVA.Parsing;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents a record in the <see cref="StateFile"/> that contains the state information associated to a <see cref="DatAWareId"/>.
+    /// Represents a record in the <see cref="StateFile"/> that contains the state information associated to a <see cref="HistorianId"/>.
     /// </summary>
     /// <seealso cref="StateFile"/>
     /// <seealso cref="StateRecordData"/>
@@ -55,7 +55,7 @@ namespace TVA.Historian.Files
         public const int ByteCount = 72;
 
         // Fields
-        private int m_datawareId;
+        private int m_historianId;
         private StateRecordData m_archivedData;
         private StateRecordData m_previousData;
         private StateRecordData m_currentData;
@@ -71,13 +71,13 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="StateRecord"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="StateRecord"/>.</param>
-        public StateRecord(int datawareId)
+        /// <param name="historianId">Historian identifier of <see cref="StateRecord"/>.</param>
+        public StateRecord(int historianId)
         {
-            m_datawareId = datawareId;
-            m_archivedData = new StateRecordData(m_datawareId);
-            m_previousData = new StateRecordData(m_datawareId);
-            m_currentData = new StateRecordData(m_datawareId);
+            m_historianId = historianId;
+            m_archivedData = new StateRecordData(m_historianId);
+            m_previousData = new StateRecordData(m_historianId);
+            m_currentData = new StateRecordData(m_historianId);
             m_activeDataBlockIndex = -1;
             m_activeDataBlockSlot = 1;
         }
@@ -85,12 +85,12 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="StateRecord"/> class.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier of <see cref="StateRecord"/>.</param>
+        /// <param name="historianId">Historian identifier of <see cref="StateRecord"/>.</param>
         /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecord"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public StateRecord(int datawareId, byte[] binaryImage, int startIndex, int length)
-            : this(datawareId)
+        public StateRecord(int historianId, byte[] binaryImage, int startIndex, int length)
+            : this(historianId)
         {
             Initialize(binaryImage, startIndex, length);
         }
@@ -100,7 +100,7 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the most recently archived <see cref="StateRecordData"/> for the <see cref="DatAWareId"/>.
+        /// Gets or sets the most recently archived <see cref="StateRecordData"/> for the <see cref="HistorianId"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public StateRecordData ArchivedData
@@ -119,7 +119,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the previous <see cref="StateRecordData"/> received for the <see cref="DatAWareId"/>.
+        /// Gets or sets the previous <see cref="StateRecordData"/> received for the <see cref="HistorianId"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public StateRecordData PreviousData
@@ -138,7 +138,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the most current <see cref="StateRecordData"/> received for the <see cref="DatAWareId"/>.
+        /// Gets or sets the most current <see cref="StateRecordData"/> received for the <see cref="HistorianId"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public StateRecordData CurrentData
@@ -157,7 +157,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the 0-based index of the active <see cref="ArchiveDataBlock"/> for the <see cref="DatAWareId"/>.
+        /// Gets or sets the 0-based index of the active <see cref="ArchiveDataBlock"/> for the <see cref="HistorianId"/>.
         /// </summary>
         /// <remarks>Index is persisted to disk as 1-based index for backwards compatibility.</remarks>
         public int ActiveDataBlockIndex
@@ -179,7 +179,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the next slot position in the active <see cref="ArchiveDataBlock"/> for the <see cref="DatAWareId"/> where data can be written.
+        /// Gets or sets the next slot position in the active <see cref="ArchiveDataBlock"/> for the <see cref="HistorianId"/> where data can be written.
         /// </summary>
         public int ActiveDataBlockSlot
         {
@@ -227,13 +227,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the DatAWare identifier of <see cref="StateRecord"/>.
+        /// Gets the Historian identifier of <see cref="StateRecord"/>.
         /// </summary>
-        public int DatAWareId
+        public int HistorianId
         {
             get
             {
-                return m_datawareId;
+                return m_historianId;
             }
         }
 
@@ -328,7 +328,7 @@ namespace TVA.Historian.Files
             if (other == null)
                 return 1;
             else
-                return m_datawareId.CompareTo(other.DatAWareId);
+                return m_historianId.CompareTo(other.HistorianId);
         }
 
         /// <summary>
@@ -347,7 +347,7 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
         {
-            return string.Format("Id={0}; ActiveDataBlock={1}", m_datawareId, m_activeDataBlockIndex);
+            return string.Format("Id={0}; ActiveDataBlock={1}", m_historianId, m_activeDataBlockIndex);
         }
 
         /// <summary>
@@ -356,7 +356,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer value.</returns>
         public override int GetHashCode()
         {
-            return m_datawareId.GetHashCode();
+            return m_historianId.GetHashCode();
         }
 
         #endregion

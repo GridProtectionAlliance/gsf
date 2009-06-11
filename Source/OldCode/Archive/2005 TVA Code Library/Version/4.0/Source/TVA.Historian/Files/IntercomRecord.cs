@@ -24,7 +24,7 @@ using TVA.Parsing;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents a record in the <see cref="IntercomFile"/> that contains information shared between DatAWare Archiver and DatAWare Retriever.
+    /// Represents a record in the <see cref="IntercomFile"/> that contains information shared between Historian Archiver and Historian Retriever.
     /// </summary>
     /// <seealso cref="IntercomFile"/>
     public class IntercomRecord : ISupportBinaryImage
@@ -162,7 +162,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the DatAWare identifier of latest <see cref="ArchiveData"/> received by the active <see cref="ArchiveFile"/>.
+        /// Gets or sets the Historian identifier of latest <see cref="ArchiveData"/> received by the active <see cref="ArchiveFile"/>.
         /// </summary>
         public int LatestDataId
         {

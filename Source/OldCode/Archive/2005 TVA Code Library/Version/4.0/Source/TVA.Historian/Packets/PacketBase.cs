@@ -24,7 +24,7 @@ using TVA.Parsing;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// A base class for a binary packet received by the archival process of DatAWare.
+    /// A base class for a binary packet received by the archival process of Historian.
     /// </summary>
     /// <seealso cref="IPacket"/>
     public abstract class PacketBase : IPacket

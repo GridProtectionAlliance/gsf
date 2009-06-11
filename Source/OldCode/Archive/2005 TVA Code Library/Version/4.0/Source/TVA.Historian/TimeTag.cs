@@ -24,7 +24,7 @@ using System;
 namespace TVA.Historian
 {
     /// <summary>
-    /// Represents DatAWare time tag as number of seconds from the <see cref="BaseDate"/>.
+    /// Represents Historian time tag as number of seconds from the <see cref="BaseDate"/>.
     /// </summary>
     public class TimeTag : TimeTagBase
     {

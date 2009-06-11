@@ -24,10 +24,10 @@ namespace TVA.Historian.Files
 {
     /// <summary>
     /// A class with just <see cref="StateRecord.CurrentData"/>. The <see cref="BinaryImage"/> of <see cref="MetadataRecordSummary"/> 
-    /// is sent back as a reply to <see cref="DatAWare.Packets.PacketType11"/>.
+    /// is sent back as a reply to <see cref="Historian.Packets.PacketType11"/>.
     /// </summary>
     /// <seealso cref="StateRecord"/>
-    /// <seealso cref="DatAWare.Packets.PacketType11"/>
+    /// <seealso cref="Historian.Packets.PacketType11"/>
     public class StateRecordSummary : ISupportBinaryImage
     {
         // **************************************************************************************************
@@ -35,7 +35,7 @@ namespace TVA.Historian.Files
         // **************************************************************************************************
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 4          0-3        Int32      DatAWareId                                                    *
+        // * 4          0-3        Int32      HistorianId                                                    *
         // * 16         4-19       Byte(16)   CurrentData                                                   *
         // **************************************************************************************************
 
@@ -49,7 +49,7 @@ namespace TVA.Historian.Files
         public const int ByteCount = 20;
 
         // Fields
-        private int m_datawareId;
+        private int m_historianId;
         private StateRecordData m_currentData;
 
         #endregion
@@ -62,7 +62,7 @@ namespace TVA.Historian.Files
         /// <param name="record">A <see cref="StateRecord"/> object.</param>
         public StateRecordSummary(StateRecord record)
         {
-            DatAWareId = record.DatAWareId;
+            HistorianId = record.HistorianId;
             CurrentData = record.CurrentData;
         }
 
@@ -82,21 +82,21 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Same as <see cref="StateRecord.DatAWareId"/>.
+        /// Same as <see cref="StateRecord.HistorianId"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
-        public int DatAWareId
+        public int HistorianId
         {
             get
             {
-                return m_datawareId;
+                return m_historianId;
             }
             private set
             {
                 if (value < 1 && value != -1)
                     throw new ArgumentException("Value must be positive or -1.");
 
-                m_datawareId = value;
+                m_historianId = value;
             }
         }
 
@@ -139,7 +139,7 @@ namespace TVA.Historian.Files
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_datawareId), 0, image, 0, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 0, 4);
                 Array.Copy(m_currentData.BinaryImage, 0, image, 4, StateRecordData.ByteCount);
 
                 return image;
@@ -162,8 +162,8 @@ namespace TVA.Historian.Files
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                DatAWareId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
-                CurrentData = new StateRecordData(DatAWareId, binaryImage, startIndex + 4, StateRecordData.ByteCount);
+                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+                CurrentData = new StateRecordData(HistorianId, binaryImage, startIndex + 4, StateRecordData.ByteCount);
 
                 return ByteCount;
             }

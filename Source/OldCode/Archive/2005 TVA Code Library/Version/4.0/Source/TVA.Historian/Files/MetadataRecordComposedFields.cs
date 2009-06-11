@@ -198,7 +198,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the DatAWare identifiers being used in the <see cref="Equation"/>.
+        /// Gets or sets the Historian identifiers being used in the <see cref="Equation"/>.
         /// </summary>
         public IList<int> InputPointers
         {

@@ -63,16 +63,16 @@ namespace TVA.Historian
     #endregion
 
     /// <summary>
-    /// Defines time series data warehoused by DatAWare.
+    /// Defines time series data warehoused by Historian.
     /// </summary>
     public interface IDataPoint : ISupportBinaryImage
     {
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the DatAWare identifier of the data point.
+        /// Gets or sets the Historian identifier of the data point.
         /// </summary>
-        int DatAWareId { get; set; }
+        int HistorianId { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of the data point.

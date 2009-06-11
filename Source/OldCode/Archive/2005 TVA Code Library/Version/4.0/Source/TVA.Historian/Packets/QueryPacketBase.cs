@@ -23,7 +23,7 @@ using System.Collections.Generic;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// A base class for a packet to be used for requesting information from the archival process of DatAWare.
+    /// A base class for a packet to be used for requesting information from the archival process of Historian.
     /// </summary>
     public abstract class QueryPacketBase : PacketBase
     {
@@ -62,9 +62,9 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a list of DatAWare identifiers whose information is being requested.
+        /// Gets a list of Historian identifiers whose information is being requested.
         /// </summary>
-        /// <remarks>A singe entry with Id of -1 can be used to request information for all defined DatAWare identifiers.</remarks>
+        /// <remarks>A singe entry with Id of -1 can be used to request information for all defined Historian identifiers.</remarks>
         public IList<int> RequestIds
         {
             get

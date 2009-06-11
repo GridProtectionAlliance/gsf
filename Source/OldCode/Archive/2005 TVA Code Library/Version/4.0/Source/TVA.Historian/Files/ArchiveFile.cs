@@ -1302,7 +1302,7 @@ namespace TVA.Historian.Files
                         endTime = state.ArchivedData.Time;
                     }
 
-                    m_stateFile.Write(state.DatAWareId, state);
+                    m_stateFile.Write(state.HistorianId, state);
                 }
                 m_fat.FileEndTime = endTime;
 
@@ -1401,7 +1401,7 @@ namespace TVA.Historian.Files
                 throw new InvalidOperationException("Data can only be directly written to files that are Active.");
 
             ArchiveData data = (ArchiveData)dataPoint;
-            MetadataRecord metadata = m_metadataFile.Read(data.DatAWareId);
+            MetadataRecord metadata = m_metadataFile.Read(data.HistorianId);
             if (metadata == null || !metadata.GeneralFlags.Enabled)
             {
                 // Don't proceed if data is not to be archived.
@@ -1451,13 +1451,13 @@ namespace TVA.Historian.Files
             }
 
             // Initialize local variables.
-            StateRecord state = m_stateFile.Read(data.DatAWareId);
+            StateRecord state = m_stateFile.Read(data.HistorianId);
             IntercomRecord system = m_intercomFile.Read(1);
 
             if (data.Time > system.LatestDataTime)
             {
                 // Update the environment data that is written to the Intercom File.
-                system.LatestDataId = data.DatAWareId;
+                system.LatestDataId = data.HistorianId;
                 system.LatestDataTime = data.Time;
                 m_intercomFile.Write(1, system);
             }
@@ -1528,18 +1528,18 @@ namespace TVA.Historian.Files
                             // then we'll make sure that quality of the data for the point stays the same for the
                             // specified time before alarm processing takes place.
                             double first;
-                            if (m_delayedAlarmProcessing.TryGetValue(data.DatAWareId, out first))
+                            if (m_delayedAlarmProcessing.TryGetValue(data.HistorianId, out first))
                             {
                                 // We waited for the specified time, so we can process the alarm now.
                                 if (state.CurrentData.Time.Value - first > delay)
                                 {
-                                    m_delayedAlarmProcessing.Remove(data.DatAWareId);
+                                    m_delayedAlarmProcessing.Remove(data.HistorianId);
                                     OnProcessAlarmNotification(state);
                                 }
                             }
                             else
                             {
-                                m_delayedAlarmProcessing.Add(state.DatAWareId, state.CurrentData.Time.Value);
+                                m_delayedAlarmProcessing.Add(state.HistorianId, state.CurrentData.Time.Value);
                             }
                         }
                         else
@@ -1550,7 +1550,7 @@ namespace TVA.Historian.Files
                     }
                     else
                     {
-                        m_delayedAlarmProcessing.Remove(data.DatAWareId);
+                        m_delayedAlarmProcessing.Remove(data.HistorianId);
                     }
                 }
 
@@ -1625,7 +1625,7 @@ namespace TVA.Historian.Files
                     ArchiveDataBlock dataBlock;
                     lock (m_dataBlocks)
                     {
-                        dataBlock = m_dataBlocks[data.DatAWareId - 1];
+                        dataBlock = m_dataBlocks[data.HistorianId - 1];
                     }
 
                     if (dataBlock == null || dataBlock.SlotsAvailable == 0)
@@ -1641,7 +1641,7 @@ namespace TVA.Historian.Files
                         if (state.ActiveDataBlockIndex >= 0)
                         {
                             // We have the index of a previously used data block.
-                            dataBlock = m_fat.RequestDataBlock(data.DatAWareId, data.Time, state.ActiveDataBlockIndex);
+                            dataBlock = m_fat.RequestDataBlock(data.HistorianId, data.Time, state.ActiveDataBlockIndex);
                             if (dataBlock.SlotsAvailable == 0)
                             {
                                 // Previously used data block is full.
@@ -1652,7 +1652,7 @@ namespace TVA.Historian.Files
                         if (dataBlock == null)
                         {
                             // Previously used data block could not be used so get a new one.
-                            dataBlock = m_fat.RequestDataBlock(data.DatAWareId, data.Time, system.DataBlocksUsed);
+                            dataBlock = m_fat.RequestDataBlock(data.HistorianId, data.Time, system.DataBlocksUsed);
 
                             if (dataBlock != null)
                             {
@@ -1668,7 +1668,7 @@ namespace TVA.Historian.Files
                         // Keep in-memory reference to the data block for consecutive writes.
                         lock (m_dataBlocks)
                         {
-                            m_dataBlocks[data.DatAWareId - 1] = dataBlock;
+                            m_dataBlocks[data.HistorianId - 1] = dataBlock;
                         }
 
                         if (PercentFileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
@@ -1705,7 +1705,7 @@ namespace TVA.Historian.Files
                         }
 
                         // Re-read the point state since it is modified during the rollover.
-                        state = m_stateFile.Read(data.DatAWareId);
+                        state = m_stateFile.Read(data.HistorianId);
                     }
                 }
                 else
@@ -1736,7 +1736,7 @@ namespace TVA.Historian.Files
             state.PreviousData = state.CurrentData;
 
             // Update state information for the point in the State file.
-            m_stateFile.Write(state.DatAWareId, state);
+            m_stateFile.Write(state.HistorianId, state);
             // [END]     Write data
         }
 
@@ -1760,24 +1760,24 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Writes <paramref name="metadata"/> for the specified <paramref name="datawareId"/>.
+        /// Writes <paramref name="metadata"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <param name="metadata"><see cref="MetadataRecord.BinaryImage"/> data.</param>
-        public void WriteMetaData(int datawareId, byte[] metadata)
+        public void WriteMetaData(int historianId, byte[] metadata)
         { 
-            MetadataFile.Write(datawareId, new MetadataRecord(datawareId, metadata, 0, metadata.Length));
+            MetadataFile.Write(historianId, new MetadataRecord(historianId, metadata, 0, metadata.Length));
             MetadataFile.Save();
         }
 
         /// <summary>
-        /// Writes <paramref name="statedata"/> for the specified <paramref name="datawareId"/>.
+        /// Writes <paramref name="statedata"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <param name="statedata"><see cref="StateRecord.BinaryImage"/> data.</param>
-        public void WriteStateData(int datawareId, byte[] statedata)
+        public void WriteStateData(int historianId, byte[] statedata)
         {
-            StateFile.Write(datawareId, new StateRecord(datawareId, statedata, 0, statedata.Length));
+            StateFile.Write(historianId, new StateRecord(historianId, statedata, 0, statedata.Length));
             StateFile.Save();
         }
 
@@ -1941,78 +1941,78 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId)
+        public IEnumerable<IDataPoint> ReadData(int historianId)
         {
-            return ReadData(datawareId, TimeTag.MinValue);
+            return ReadData(historianId, TimeTag.MinValue);
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, string startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, string startTime)
         {
-            return ReadData(datawareId, startTime, TimeTag.MinValue.ToString());
+            return ReadData(historianId, startTime, TimeTag.MinValue.ToString());
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <param name="endTime"><see cref="String"/> representation of the end time (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, string startTime, string endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, string startTime, string endTime)
         {
-            return ReadData(datawareId, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime));
+            return ReadData(historianId, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime));
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, DateTime startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, DateTime startTime)
         {
-            return ReadData(datawareId, startTime, TimeTag.MinValue.ToDateTime());
+            return ReadData(historianId, startTime, TimeTag.MinValue.ToDateTime());
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <param name="endTime">End <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, DateTime startTime, DateTime endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, DateTime startTime, DateTime endTime)
         {
-            return ReadData(datawareId, new TimeTag(startTime), new TimeTag(endTime));
+            return ReadData(historianId, new TimeTag(startTime), new TimeTag(endTime));
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, TimeTag startTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, TimeTag startTime)
         {
-            return ReadData(datawareId, startTime, TimeTag.MaxValue);
+            return ReadData(historianId, startTime, TimeTag.MaxValue);
         }
 
         /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
+        /// <param name="historianId">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveData"/> points to be retrieved.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
-        public IEnumerable<IDataPoint> ReadData(int datawareId, TimeTag startTime, TimeTag endTime)
+        public IEnumerable<IDataPoint> ReadData(int historianId, TimeTag startTime, TimeTag endTime)
         {
             // TODO: Review, optimize and organize.
 
@@ -2074,7 +2074,7 @@ namespace TVA.Historian.Files
                     file.MetadataFile = m_metadataFile;
                     file.Open();
 
-                    dataBlocks = file.Fat.FindDataBlocks(datawareId, startTime, endTime);
+                    dataBlocks = file.Fat.FindDataBlocks(historianId, startTime, endTime);
                     if (dataBlocks.Count > 0)
                     {
                         // Read data from the block before the first found block for the point as it most
@@ -2083,7 +2083,7 @@ namespace TVA.Historian.Files
                         {
                             for (int i = dataBlocks[0].Index - 1; i >= 0; i--)
                             {
-                                if (file.Fat.DataBlockPointers[i].DatAWareId == datawareId)
+                                if (file.Fat.DataBlockPointers[i].HistorianId == historianId)
                                 {
                                     foreach (ArchiveData data in file.Fat.DataBlockPointers[i].DataBlock.Read())
                                     {
@@ -2132,43 +2132,43 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Reads <see cref="MetadataRecord.BinaryImage"/> for the specified <paramref name="datawareId"/>.
+        /// Reads <see cref="MetadataRecord.BinaryImage"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecord.BinaryImage"/>.</returns>
-        public byte[] ReadMetaData(int datawareId)
+        public byte[] ReadMetaData(int historianId)
         {
-            return MetadataFile.Read(datawareId).BinaryImage;
+            return MetadataFile.Read(historianId).BinaryImage;
         }
 
         /// <summary>
-        /// Reads <see cref="StateRecord.BinaryImage"/> for the specified <paramref name="datawareId"/>.
+        /// Reads <see cref="StateRecord.BinaryImage"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing <see cref="StateRecord.BinaryImage"/>.</returns>
-        public byte[] ReadStateData(int datawareId)
+        public byte[] ReadStateData(int historianId)
         {
-            return StateFile.Read(datawareId).BinaryImage;
+            return StateFile.Read(historianId).BinaryImage;
         }
 
         /// <summary>
-        /// Reads <see cref="MetadataRecordSummary.BinaryImage"/> for the specified <paramref name="datawareId"/>.
+        /// Reads <see cref="MetadataRecordSummary.BinaryImage"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecordSummary.BinaryImage"/>.</returns>
-        public byte[] ReadMetaDataSummary(int datawareId)
+        public byte[] ReadMetaDataSummary(int historianId)
         {
-            return MetadataFile.Read(datawareId).Summary.BinaryImage;
+            return MetadataFile.Read(historianId).Summary.BinaryImage;
         }
 
         /// <summary>
-        /// Reads <see cref="StateRecordSummary.BinaryImage"/> for the specified <paramref name="datawareId"/>.
+        /// Reads <see cref="StateRecordSummary.BinaryImage"/> for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier.</param>
+        /// <param name="historianId">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing <see cref="StateRecordSummary.BinaryImage"/>.</returns>
-        public byte[] ReadStateDataSummary(int datawareId)
+        public byte[] ReadStateDataSummary(int historianId)
         {
-            return StateFile.Read(datawareId).Summary.BinaryImage;
+            return StateFile.Read(historianId).Summary.BinaryImage;
         }
 
         /// <summary>
@@ -2756,12 +2756,12 @@ namespace TVA.Historian.Files
             // First we'll seperate all point data by ID.
             for (int i = 0; i < items.Length; i++)
             {
-                if (!sortedPointData.ContainsKey(items[i].DatAWareId))
+                if (!sortedPointData.ContainsKey(items[i].HistorianId))
                 {
-                    sortedPointData.Add(items[i].DatAWareId, new List<ArchiveData>());
+                    sortedPointData.Add(items[i].HistorianId, new List<ArchiveData>());
                 }
 
-                sortedPointData[items[i].DatAWareId].Add(items[i]);
+                sortedPointData[items[i].HistorianId].Add(items[i]);
             }
 
             ProcessProgress<int> historicWriteProgress = new ProcessProgress<int>("HistoricWrite");

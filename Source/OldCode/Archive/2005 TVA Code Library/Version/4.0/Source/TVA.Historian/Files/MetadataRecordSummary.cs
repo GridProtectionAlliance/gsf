@@ -24,8 +24,8 @@ namespace TVA.Historian.Files
 {
     /// <summary>
     /// A class with a subset of information defined in <see cref="MetadataRecord"/>. The <see cref="BinaryImage"/> of 
-    /// <see cref="MetadataRecordSummary"/> is sent back as a reply to <see cref="DatAWare.Packets.PacketType3"/> and 
-    /// <see cref="DatAWare.Packets.PacketType4"/>.
+    /// <see cref="MetadataRecordSummary"/> is sent back as a reply to <see cref="Historian.Packets.PacketType3"/> and 
+    /// <see cref="Historian.Packets.PacketType4"/>.
     /// </summary>
     /// <seealso cref="MetadataRecord"/>
     public class MetadataRecordSummary : ISupportBinaryImage
@@ -35,7 +35,7 @@ namespace TVA.Historian.Files
         // **************************************************************************************************
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 4          0-3        Int32      DatAWareId                                                    *
+        // * 4          0-3        Int32      HistorianId                                                    *
         // * 4          4-7        Single     ExceptionLimit                                                *
         // * 4          8-11       Int32      Enabled                                                       *
         // * 4          12-15      Single     HighWarning                                                   *
@@ -56,7 +56,7 @@ namespace TVA.Historian.Files
         public const int ByteCount = 36;
 
         // Fields
-        private int m_datawareId;
+        private int m_historianId;
         private float m_exceptionLimit;
         private int m_enabled;
         private float m_highWarning;
@@ -76,7 +76,7 @@ namespace TVA.Historian.Files
         /// <param name="record">A <see cref="MetadataRecord"/> object.</param>
         public MetadataRecordSummary(MetadataRecord record)
         {
-            DatAWareId = record.DatAWareId;
+            HistorianId = record.HistorianId;
             ExceptionLimit = record.AnalogFields.ExceptionLimit;
             Enabled = record.GeneralFlags.Enabled;
             HighWarning = record.AnalogFields.HighWarning;
@@ -103,21 +103,21 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Same as <see cref="MetadataRecord.DatAWareId"/>.
+        /// Same as <see cref="MetadataRecord.HistorianId"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
-        public int DatAWareId
+        public int HistorianId
         {
             get
             {
-                return m_datawareId;
+                return m_historianId;
             }
             private set
             {
                 if (value < 1 && value != -1)
                     throw new ArgumentException("Value must be positive or -1.");
 
-                m_datawareId = value;
+                m_historianId = value;
             }
         }
 
@@ -261,7 +261,7 @@ namespace TVA.Historian.Files
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_datawareId), 0, image, 0, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 0, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_exceptionLimit), 0, image, 4, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(Convert.ToInt32(m_enabled)), 0, image, 8, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_highWarning), 0, image, 12, 4);
@@ -291,7 +291,7 @@ namespace TVA.Historian.Files
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                DatAWareId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 0);
+                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 0);
                 ExceptionLimit = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 4);
                 Enabled = Convert.ToBoolean(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 8));
                 HighWarning = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 12);

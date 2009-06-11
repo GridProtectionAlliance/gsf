@@ -24,7 +24,7 @@ using TVA.Measurements;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet that can be used to send multiple time series data points to DatAWare for archival.
+    /// Represents a packet that can be used to send multiple time series data points to Historian for archival.
     /// </summary>
     /// <seealso cref="PacketType101Data"/>
     public class PacketType101 : PacketBase

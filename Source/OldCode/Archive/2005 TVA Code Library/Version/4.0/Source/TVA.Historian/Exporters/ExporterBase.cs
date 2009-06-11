@@ -551,7 +551,7 @@ namespace TVA.Historian.Exporters
             {
                 foreach (IDataPoint dataPoint in exportData[listenerName])
                 {
-                    result.Tables[0].Rows.Add(listenerName, dataPoint.DatAWareId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                    result.Tables[0].Rows.Add(listenerName, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                 }
             }
 
@@ -619,7 +619,7 @@ namespace TVA.Historian.Exporters
                             {
                                 foreach (IDataPoint dataPoint in dataPoints)
                                 {
-                                    if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.DatAWareId) != null)
+                                    if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianId) != null)
                                         filteredData.Add(dataPoint);
                                 }
                             }
@@ -758,11 +758,11 @@ namespace TVA.Historian.Exporters
         ///     </listheader>
         ///     <item>
         ///         <term>Instance</term>
-        ///         <description>DatAWare instance providing the time series data.</description>
+        ///         <description>Historian instance providing the time series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Id</term>
-        ///         <description><see cref="IDataPoint.DatAWareId"/> of the time series data.</description>
+        ///         <description><see cref="IDataPoint.HistorianId"/> of the time series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Time</term>

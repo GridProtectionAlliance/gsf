@@ -705,19 +705,19 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets the current data for the specified <paramref name="datawareId"/>.
+        /// Gets the current data for the specified <paramref name="historianId"/>.
         /// </summary>
-        /// <param name="datawareId">DatAWare identifier whose current data is to be retrieved.</param>
+        /// <param name="historianId">Historian identifier whose current data is to be retrieved.</param>
         /// <returns><see cref="IDataPoint"/> if a match is found; otherwise null.</returns>
-        public IDataPoint FindData(int datawareId)
+        public IDataPoint FindData(int historianId)
         {
             IDataPoint currentData = null;
             lock (m_data)
             {
-                if (datawareId > 0 && datawareId <= m_data.Count)
+                if (historianId > 0 && historianId <= m_data.Count)
                 {
                     // Valid id is specified, so we'll lookup it's current data.
-                    currentData = m_data[datawareId - 1];
+                    currentData = m_data[historianId - 1];
                 }
             }
             return currentData;
@@ -974,11 +974,11 @@ namespace TVA.Historian
         private void DataInitClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             StateRecordSummary state = new StateRecordSummary(e.Argument1, 0, e.Argument2);
-            if (state.DatAWareId > 0)
+            if (state.HistorianId > 0)
             {
                 lock (m_data)
                 {
-                    m_data.Add(new ArchiveData(state.DatAWareId, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
+                    m_data.Add(new ArchiveData(state.HistorianId, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
                 }
             }
             else
@@ -1047,17 +1047,17 @@ namespace TVA.Historian
                     {
                         foreach (IDataPoint dataPoint in dataPoints)
                         {
-                            if (dataPoint.DatAWareId > m_data.Count)
+                            if (dataPoint.HistorianId > m_data.Count)
                             {
                                 // No data exists for the id, so add one for it and others in-between.
-                                for (int i = m_data.Count + 1; i <= dataPoint.DatAWareId; i++)
+                                for (int i = m_data.Count + 1; i <= dataPoint.HistorianId; i++)
                                 {
                                     m_data.Add(new ArchiveData(i));
                                 }
                             }
 
                             // Replace existing data with the new data.
-                            m_data[dataPoint.DatAWareId - 1] = dataPoint;
+                            m_data[dataPoint.HistorianId - 1] = dataPoint;
                         }
                     }
                 }
