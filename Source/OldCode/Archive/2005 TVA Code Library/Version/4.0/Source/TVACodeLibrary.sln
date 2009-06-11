@@ -15,9 +15,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "TVA.Windows\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 8
+		SccNumberOfProjects = 9
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = TVA.Core\\TVA.Core.csproj
 		SccLocalPath1 = .
@@ -40,6 +44,10 @@ Global
 		SccProjectUniqueName7 = TVA.Historian\\TVA.Historian.csproj
 		SccLocalPath7 = .
 		SccProjectFilePathRelativizedFromConnection7 = TVA.Historian\\
+		SccProjectUniqueName8 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
+		SccProjectTopLevelParentUniqueName8 = TVACodeLibrary.sln
+		SccLocalPath8 = .
+		SccProjectFilePathRelativizedFromConnection8 = Tools\\ConfigCrypter\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,8 +82,15 @@ Global
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 	EndGlobalSection
 EndGlobal
