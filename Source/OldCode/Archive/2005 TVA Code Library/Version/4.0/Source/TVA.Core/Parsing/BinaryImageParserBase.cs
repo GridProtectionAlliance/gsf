@@ -454,7 +454,9 @@ namespace TVA.Parsing
                 StreamInitialized = !ProtocolUsesSyncBytes;
                 UnparsedBuffer = null;
 
-                OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
+                if (offset < count)
+                    OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
+
                 OnParsingException(ex);
             }
         }
