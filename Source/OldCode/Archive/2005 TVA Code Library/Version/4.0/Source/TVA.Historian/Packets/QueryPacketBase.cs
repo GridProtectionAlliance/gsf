@@ -19,9 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// A base class for a packet to be used for requesting information from the archival process of DatAWare.

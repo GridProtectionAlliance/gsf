@@ -31,11 +31,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using TVA;
 using TVA.Interop;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents the File Allocation Table of an <see cref="ArchiveFile"/>.

@@ -1,8 +1,7 @@
 ﻿using System;
-using DatAWare.Files;
-using TVA;
+using TVA.Historian.Files;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents time series data transmitted in <see cref="PacketType101"/>.

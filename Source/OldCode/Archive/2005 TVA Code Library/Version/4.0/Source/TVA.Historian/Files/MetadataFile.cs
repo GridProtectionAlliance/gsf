@@ -21,7 +21,7 @@ using System.ComponentModel;
 using System.Drawing;
 using TVA.IO;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents a file containing <see cref="MetadataRecord"/>s.

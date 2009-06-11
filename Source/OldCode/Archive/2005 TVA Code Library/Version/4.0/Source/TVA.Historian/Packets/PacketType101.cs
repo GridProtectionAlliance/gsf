@@ -18,11 +18,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using DatAWare.Files;
-using TVA;
+using TVA.Historian.Files;
 using TVA.Measurements;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents a packet that can be used to send multiple time series data points to DatAWare for archival.

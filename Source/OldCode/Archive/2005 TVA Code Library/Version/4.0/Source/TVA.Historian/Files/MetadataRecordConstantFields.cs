@@ -18,10 +18,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Defines specific fields for <see cref="MetadataRecord"/>s that are of type <see cref="DataType.Constant"/>.

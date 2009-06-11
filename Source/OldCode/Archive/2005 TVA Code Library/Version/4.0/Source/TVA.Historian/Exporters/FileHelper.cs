@@ -23,7 +23,7 @@ using System.IO;
 using TVA.Data;
 using TVA.IO;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// A class with helper methods for file related operations.

@@ -22,11 +22,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Threading;
-using TVA;
 using TVA.Collections;
 using TVA.IO;
 
-namespace DatAWare.Notifiers
+namespace TVA.Historian.Notifiers
 {
     public class NotificationDispatcher
     {

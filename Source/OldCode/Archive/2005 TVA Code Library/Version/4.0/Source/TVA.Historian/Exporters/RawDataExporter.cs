@@ -25,11 +25,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
-using DatAWare.Packets;
-using TVA;
 using TVA.Collections;
+using TVA.Historian.Packets;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Represents an exporter that can export real-time time series data in CSV or XML format to a file.

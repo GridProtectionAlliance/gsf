@@ -19,7 +19,7 @@
 
 using System;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// A class that can be used to add custom settings to an <see cref="Export"/>.

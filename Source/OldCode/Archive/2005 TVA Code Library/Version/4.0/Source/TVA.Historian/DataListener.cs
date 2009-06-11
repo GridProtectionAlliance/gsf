@@ -30,14 +30,13 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Text;
 using System.Threading;
-using DatAWare.Files;
-using DatAWare.Packets;
-using TVA;
 using TVA.Communication;
 using TVA.Configuration;
+using TVA.Historian.Files;
+using TVA.Historian.Packets;
 using TVA.Units;
 
-namespace DatAWare
+namespace TVA.Historian
 {
     /// <summary>
     /// Represents a listener that can receive time series data in real-time using <see cref="System.Net.Sockets.Socket"/>s.

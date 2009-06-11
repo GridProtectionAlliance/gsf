@@ -19,7 +19,7 @@
 
 using System;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// A class that can be used to define the time series data to be exported for an <see cref="Export"/>.

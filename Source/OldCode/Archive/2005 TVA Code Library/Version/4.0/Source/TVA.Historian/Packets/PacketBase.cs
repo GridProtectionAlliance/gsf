@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using TVA.Parsing;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// A base class for a binary packet received by the archival process of DatAWare.

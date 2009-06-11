@@ -25,7 +25,7 @@ using System.IO;
 using TVA.Data;
 using TVA.IO;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Represents an exporter that can export current and runtime historic time series data in CSV or XML format to a file.

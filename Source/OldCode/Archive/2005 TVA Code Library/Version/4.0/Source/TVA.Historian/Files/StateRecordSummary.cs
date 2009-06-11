@@ -18,10 +18,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// A class with just <see cref="StateRecord.CurrentData"/>. The <see cref="BinaryImage"/> of <see cref="MetadataRecordSummary"/> 

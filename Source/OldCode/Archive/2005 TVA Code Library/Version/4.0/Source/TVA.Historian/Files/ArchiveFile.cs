@@ -31,12 +31,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using TVA;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     #region [ Enumerations ]
 

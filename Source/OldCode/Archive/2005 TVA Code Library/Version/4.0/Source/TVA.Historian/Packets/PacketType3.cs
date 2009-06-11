@@ -18,9 +18,9 @@
 //*******************************************************************************************************
 
 using System.Collections.Generic;
-using DatAWare.Files;
+using TVA.Historian.Files;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents a packet to be used for requesting <see cref="MetadataRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIds"/>.

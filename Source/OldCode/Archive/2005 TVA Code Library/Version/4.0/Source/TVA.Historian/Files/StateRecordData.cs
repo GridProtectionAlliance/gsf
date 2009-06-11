@@ -16,9 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents time series data stored in <see cref="StateFile"/>.

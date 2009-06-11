@@ -21,10 +21,9 @@
 
 using System;
 using System.Collections.Generic;
-using DatAWare.Packets;
-using TVA;
+using TVA.Historian.Packets;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Defines an exporter of real-time time series data.

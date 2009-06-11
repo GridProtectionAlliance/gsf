@@ -25,7 +25,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using TVA.Units;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     #region [ Enumerations ]
 

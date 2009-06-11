@@ -19,7 +19,7 @@
 
 using TVA.Configuration;
 
-namespace DatAWare.Notifiers
+namespace TVA.Historian.Notifiers
 {
     #region [ Enumerations ]
 

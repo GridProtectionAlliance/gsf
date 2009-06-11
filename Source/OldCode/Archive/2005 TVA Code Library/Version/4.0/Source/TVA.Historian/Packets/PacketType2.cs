@@ -20,10 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using DatAWare.Files;
-using TVA;
+using TVA.Historian.Files;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents a packet to be used for sending single time (expanded format) series data point to DatAWare for archival.

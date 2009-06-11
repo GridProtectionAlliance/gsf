@@ -17,7 +17,7 @@
 
 using System.Collections.Generic;
 
-namespace DatAWare
+namespace TVA.Historian
 {
     /// <summary>
     /// Defines a repository where time series data is warehoused by DatAWare.

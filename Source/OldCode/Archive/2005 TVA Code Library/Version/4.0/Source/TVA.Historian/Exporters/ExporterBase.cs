@@ -32,12 +32,11 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Timers;
-using DatAWare.Files;
-using DatAWare.Packets;
-using TVA;
 using TVA.Collections;
+using TVA.Historian.Files;
+using TVA.Historian.Packets;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// A base class for an exporter of real-time time series data.

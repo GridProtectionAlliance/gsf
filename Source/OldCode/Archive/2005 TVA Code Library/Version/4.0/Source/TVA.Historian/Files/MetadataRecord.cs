@@ -19,10 +19,9 @@
 
 using System;
 using System.Text;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents a record in the <see cref="MetadataFile"/> that contains the various attributes associates to a <see cref="DatAWareId"/>.

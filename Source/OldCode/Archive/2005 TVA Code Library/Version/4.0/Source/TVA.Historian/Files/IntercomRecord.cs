@@ -19,10 +19,9 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents a record in the <see cref="IntercomFile"/> that contains information shared between DatAWare Archiver and DatAWare Retriever.

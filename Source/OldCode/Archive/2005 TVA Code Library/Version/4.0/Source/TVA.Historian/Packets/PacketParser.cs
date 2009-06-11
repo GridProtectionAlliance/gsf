@@ -20,7 +20,7 @@
 using System;
 using TVA.Parsing;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents a data parser that can parse binary data in to <see cref="IPacket"/>s.

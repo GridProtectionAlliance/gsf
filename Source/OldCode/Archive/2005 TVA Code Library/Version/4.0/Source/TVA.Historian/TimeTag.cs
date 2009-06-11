@@ -20,9 +20,8 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 
-namespace DatAWare
+namespace TVA.Historian
 {
     /// <summary>
     /// Represents DatAWare time tag as number of seconds from the <see cref="BaseDate"/>.

@@ -16,10 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents the common header information that is present in the binary image of all <see cref="Type"/>s that implement the <see cref="IPacket"/> interface.

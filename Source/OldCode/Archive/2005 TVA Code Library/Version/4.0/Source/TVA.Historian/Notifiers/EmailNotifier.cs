@@ -21,7 +21,7 @@ using System;
 using TVA.Configuration;
 using TVA.Net.Smtp;
 
-namespace DatAWare.Notifiers
+namespace TVA.Historian.Notifiers
 {
     public class EmailNotifier : NotifierBase
     {

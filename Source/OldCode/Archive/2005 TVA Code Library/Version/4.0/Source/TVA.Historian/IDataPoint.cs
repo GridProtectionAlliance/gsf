@@ -19,7 +19,7 @@
 
 using TVA.Parsing;
 
-namespace DatAWare
+namespace TVA.Historian
 {
     #region [ Enumerations ]
 

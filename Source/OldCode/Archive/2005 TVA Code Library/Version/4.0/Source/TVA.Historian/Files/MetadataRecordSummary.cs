@@ -18,10 +18,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// A class with a subset of information defined in <see cref="MetadataRecord"/>. The <see cref="BinaryImage"/> of 

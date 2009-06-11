@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Represents an exporter that can export the current time series data in CSV format to a file.

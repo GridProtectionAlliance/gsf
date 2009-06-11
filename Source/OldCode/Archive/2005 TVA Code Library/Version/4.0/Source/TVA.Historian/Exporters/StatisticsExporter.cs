@@ -26,9 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using TVA;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Represents an exporter that can calculate MIN, MAX and AVG of real-time time series data over a period of time and export it in CSV or XML format to a file.

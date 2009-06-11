@@ -18,10 +18,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents a pointer to an <see cref="ArchiveDataBlock"/>.

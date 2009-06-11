@@ -27,7 +27,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Represents a block of <see cref="ArchiveData"/> in an <see cref="ArchiveFile"/>.

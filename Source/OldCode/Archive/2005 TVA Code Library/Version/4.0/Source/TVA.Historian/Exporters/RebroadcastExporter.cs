@@ -19,11 +19,11 @@
 
 using System;
 using System.Collections.Generic;
-using DatAWare.Packets;
 using TVA.Collections;
 using TVA.Communication;
+using TVA.Historian.Packets;
 
-namespace DatAWare.Exporters
+namespace TVA.Historian.Exporters
 {
     /// <summary>
     /// Represents an exporter that can export real-time time series data using TCP or UDP to a listening <see cref="System.Net.Sockets.Socket"/>.

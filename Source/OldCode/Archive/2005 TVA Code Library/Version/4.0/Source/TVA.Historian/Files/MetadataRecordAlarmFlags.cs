@@ -17,9 +17,8 @@
 //
 //*******************************************************************************************************
 
-using TVA;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Defines which data <see cref="Quality"/> should trigger an alarm notification.

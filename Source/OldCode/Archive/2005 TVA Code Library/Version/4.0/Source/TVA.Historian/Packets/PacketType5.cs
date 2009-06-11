@@ -19,9 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using TVA;
 
-namespace DatAWare.Packets
+namespace TVA.Historian.Packets
 {
     /// <summary>
     /// Represents a packet that can be used to query the status of DatAWare.

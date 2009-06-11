@@ -20,7 +20,7 @@
 using System;
 using TVA.Configuration;
 
-namespace DatAWare.Notifiers
+namespace TVA.Historian.Notifiers
 {
     public abstract class NotifierBase : INotifier
     {

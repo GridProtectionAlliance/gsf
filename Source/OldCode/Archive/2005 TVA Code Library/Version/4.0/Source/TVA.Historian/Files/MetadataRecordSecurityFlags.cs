@@ -17,9 +17,8 @@
 //
 //*******************************************************************************************************
 
-using TVA;
 
-namespace DatAWare.Files
+namespace TVA.Historian.Files
 {
     /// <summary>
     /// Defines the security level for a <see cref="MetadataRecord"/>.
