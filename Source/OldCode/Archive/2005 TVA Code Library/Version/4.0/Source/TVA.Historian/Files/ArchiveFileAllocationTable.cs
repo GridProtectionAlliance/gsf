@@ -614,7 +614,7 @@ namespace TVA.Historian.Files
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveFileAllocationTable"/>.</returns>
-        /// <exception cref="NotSupportedException"><see cref="Initialize(byte[],int,int)"/> is not implemented by <see cref="ArchiveFileAllocationTable"/>.</exception>
+        /// <exception cref="NotSupportedException">Always</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
