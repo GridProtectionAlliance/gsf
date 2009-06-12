@@ -66,9 +66,9 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.CouldNotCalculatePoint"/> should trigger an alarm notification.
+        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.CouldNotCalculate"/> should trigger an alarm notification.
         /// </summary>
-        public bool CouldNotCalculatePoint
+        public bool CouldNotCalculate
         {
             get
             {
@@ -81,9 +81,9 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.DASFrontEndHardwareError"/> should trigger an alarm notification.
+        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.FrontEndHardwareError"/> should trigger an alarm notification.
         /// </summary>
-        public bool DASFrontEndHardwareError
+        public bool FrontEndHardwareError
         {
             get
             {
@@ -111,9 +111,9 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.OpenTransducerDetection"/> should trigger an alarm notification.
+        /// Gets or sets a boolean value that indicates whether a data <see cref="Quality"/> of <see cref="Quality.OpenThermocouple"/> should trigger an alarm notification.
         /// </summary>
-        public bool OpenTransducerDetection
+        public bool OpenThermocouple
         {
             get
             {

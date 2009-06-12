@@ -28,35 +28,125 @@ namespace TVA.Historian
     /// </summary>
     public enum Quality
     {
+        /// <summary>
+        /// Unknown
+        /// </summary>
         Unknown,
+        /// <summary>
+        /// DeletedFromProcessing
+        /// </summary>
         DeletedFromProcessing,
-        CouldNotCalculatePoint,
-        DASFrontEndHardwareError,
+        /// <summary>
+        /// CouldNotCalculate
+        /// </summary>
+        CouldNotCalculate,
+        /// <summary>
+        /// FrontEndHardwareError
+        /// </summary>
+        FrontEndHardwareError,
+        /// <summary>
+        /// SensorReadError
+        /// </summary>
         SensorReadError,
-        OpenTransducerDetection,
+        /// <summary>
+        /// OpenThermocouple
+        /// </summary>
+        OpenThermocouple,
+        /// <summary>
+        /// InputCountsOutOfSensorRange
+        /// </summary>
         InputCountsOutOfSensorRange,
+        /// <summary>
+        /// UnreasonableHigh
+        /// </summary>
         UnreasonableHigh,
+        /// <summary>
+        /// UnreasonableLow
+        /// </summary>
         UnreasonableLow,
+        /// <summary>
+        /// Old
+        /// </summary>
         Old,
+        /// <summary>
+        /// SuspectValueAboveHiHiLimit
+        /// </summary>
         SuspectValueAboveHiHiLimit,
+        /// <summary>
+        /// SuspectValueBelowLoLoLimit
+        /// </summary>
         SuspectValueBelowLoLoLimit,
+        /// <summary>
+        /// SuspectValueAboveHiLimit
+        /// </summary>
         SuspectValueAboveHiLimit,
+        /// <summary>
+        /// SuspectValueBelowLoLimit
+        /// </summary>
         SuspectValueBelowLoLimit,
+        /// <summary>
+        /// SuspectData
+        /// </summary>
         SuspectData,
+        /// <summary>
+        /// DigitalSuspectAlarm
+        /// </summary>
         DigitalSuspectAlarm,
+        /// <summary>
+        /// InsertedValueAboveHiHiLimit
+        /// </summary>
         InsertedValueAboveHiHiLimit,
+        /// <summary>
+        /// InsertedValueBelowLoLoLimit
+        /// </summary>
         InsertedValueBelowLoLoLimit,
+        /// <summary>
+        /// InsertedValueAboveHiLimit
+        /// </summary>
         InsertedValueAboveHiLimit,
+        /// <summary>
+        /// InsertedValueBelowLoLimit
+        /// </summary>
         InsertedValueBelowLoLimit,
+        /// <summary>
+        /// InsertedValue
+        /// </summary>
         InsertedValue,
+        /// <summary>
+        /// DigitalInsertedStatusInAlarm
+        /// </summary>
         DigitalInsertedStatusInAlarm,
+        /// <summary>
+        /// LogicalAlarm
+        /// </summary>
         LogicalAlarm,
+        /// <summary>
+        /// ValueAboveHiHiAlarm
+        /// </summary>
         ValueAboveHiHiAlarm,
+        /// <summary>
+        /// ValueBelowLoLoAlarm
+        /// </summary>
         ValueBelowLoLoAlarm,
+        /// <summary>
+        /// ValueAboveHiAlarm
+        /// </summary>
         ValueAboveHiAlarm,
+        /// <summary>
+        /// ValueBelowLoAlarm
+        /// </summary>
         ValueBelowLoAlarm,
+        /// <summary>
+        /// DeletedFromAlarmChecks
+        /// </summary>
         DeletedFromAlarmChecks,
+        /// <summary>
+        /// InhibitedByCutoutPoint
+        /// </summary>
         InhibitedByCutoutPoint,
+        /// <summary>
+        /// Good
+        /// </summary>
         Good
     }
 
