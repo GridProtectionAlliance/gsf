@@ -65,6 +65,8 @@ namespace TVA.Historian
     /// <summary>
     /// Defines time series data warehoused by a historian.
     /// </summary>
+    /// <seealso cref="TimeTag"/>
+    /// <seealso cref="Quality"/>
     public interface IDataPoint : ISupportBinaryImage
     {
         #region [ Properties ]

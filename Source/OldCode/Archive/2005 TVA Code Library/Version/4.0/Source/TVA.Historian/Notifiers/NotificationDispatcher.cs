@@ -27,6 +27,10 @@ using TVA.IO;
 
 namespace TVA.Historian.Notifiers
 {
+    /// <summary>
+    /// A class that can be used to dispath notifications using all available <see cref="INotifier">Notifiers</see>.
+    /// </summary>
+    /// <seealso cref="INotifier"/>
     public class NotificationDispatcher
     {
         #region [ Members ]
@@ -49,33 +53,50 @@ namespace TVA.Historian.Notifiers
             public NotificationType NotificationType;
         }
 
-        // Constants
-        private const string NotifierInterface = "Historian.Notifiers.INotifier";
-        private const int NotificationDispatchTimeout = 30000;
-
         // Events
 
         /// <summary>
-        /// Occurs when a new notifier is found.
+        /// Occurs when a new <see cref="INotifier">Notifier</see> is added.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="INotifier">Notifier</see> that was added.
+        /// </remarks>
         public event EventHandler<EventArgs<INotifier>> NotifierAdded;
 
         /// <summary>
-        /// Occurs when a notification is sent successfully using a notifier.
+        /// Occurs when a notification is sent successfully using a <see cref="INotifier">Notifier</see>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="INotifier">Notifier</see> used for sending the notification.
+        /// </remarks>
         public event EventHandler<EventArgs<INotifier>> NotificationSendSuccess;
 
         /// <summary>
-        /// Occurs when sending a notification using a notifier times out.
+        /// Occurs when a notification cannot be sent using a <see cref="INotifier">Notifier</see>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="INotifier">Notifier</see> used for sending the notification.
+        /// </remarks>
+        public event EventHandler<EventArgs<INotifier>> NotificationSendFailure;
+
+        /// <summary>
+        /// Occurs when sending a notification using a <see cref="INotifier">Notifier</see> times out.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="INotifier">Notifier</see> used for sending the notification.
+        /// </remarks>
         public event EventHandler<EventArgs<INotifier>> NotificationSendTimeout;
 
         /// <summary>
-        /// Occurs when an exception is encountered when sending a notification.
+        /// Occurs when an <see cref="Exception"/> is encountered when sending a notification.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when sending a notification.
+        /// </remarks>
         public event EventHandler<EventArgs<Exception>> NotificationSendException;
 
         // Fields
+        private int m_dispatchTimeout;
         private List<INotifier> m_notifiers;
         private ProcessQueue<Notification> m_dispatchQueue;
         private FileSystemWatcher m_fileSystemWatcher;
@@ -84,13 +105,16 @@ namespace TVA.Historian.Notifiers
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NotificationDispatcher"/> class.
+        /// </summary>
         public NotificationDispatcher()
         {
+            m_dispatchTimeout = 30000;
             m_notifiers = new List<INotifier>();
             m_dispatchQueue = ProcessQueue<Notification>.CreateSynchronousQueue(ProcessNotification);
 
             m_fileSystemWatcher = new FileSystemWatcher();
-            //m_fileSystemWatcher.EnableRaisingEvents = true; // HACK: Fix this
             m_fileSystemWatcher.Filter = "*.dll";
             m_fileSystemWatcher.Created += FileSystemWatcher_Created;
         }
@@ -100,13 +124,33 @@ namespace TVA.Historian.Notifiers
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a list of all available notifiers.
+        /// Gets or sets the number of milliseconds to wait for a notification to be sent.
+        /// </summary>
+        /// <remarks>Set <see cref="DispatchTimeout"/> to -1 to wait indefinitely.</remarks>
+        /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
+        public int DispatchTimeout
+        {
+            get
+            {
+                return m_dispatchTimeout;
+            }
+            set
+            {
+                if (value < 1 && value != -1)
+                    throw new ArgumentException("Value must be positive or -1.");
+
+                m_dispatchTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets all available <see cref="INotifier">Notifiers</see>.
         /// </summary>
         public IList<INotifier> Notifiers
         {
             get
             {
-                return m_notifiers;
+                return m_notifiers.AsReadOnly();
             }
         }
 
@@ -114,18 +158,28 @@ namespace TVA.Historian.Notifiers
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Starts the <see cref="NotificationDispatcher"/>.
+        /// </summary>
         public void Start()
         {
-            foreach (string dll in Directory.GetFiles(FilePath.GetAbsolutePath(""), "*.dll"))
+            // Load all available notifiers.
+            foreach (Type type in typeof(INotifier).LoadImplementations())
             {
-                ProcessDll(dll);
+                ProcessNotifier(type);
             }
 
+            // Start notification queue and notifier file watcher.
+            m_dispatchQueue.ProcessTimeout = m_dispatchTimeout;
             m_dispatchQueue.Start();
             m_fileSystemWatcher.Path = FilePath.GetAbsolutePath("");
+            m_fileSystemWatcher.Filter = "*.dll";
             m_fileSystemWatcher.EnableRaisingEvents = true;
         }
 
+        /// <summary>
+        /// Stops the <see cref="NotificationDispatcher"/>.
+        /// </summary>
         public void @Stop()
         {
             m_fileSystemWatcher.EnableRaisingEvents = false;
@@ -137,11 +191,24 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Sends a notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
         public void SendNotification(string subject, string message, NotificationType notificationType)
         {
             SendNotification(subject, message, "", notificationType);
         }
 
+        /// <summary>
+        /// Sends a notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
         public void SendNotification(string subject, string message, string details, NotificationType notificationType)
         {
             m_dispatchQueue.Add(new Notification(subject, message, details, notificationType));
@@ -168,6 +235,16 @@ namespace TVA.Historian.Notifiers
         }
 
         /// <summary>
+        /// Raises the <see cref="NotificationSendFailure"/> event.
+        /// </summary>
+        /// <param name="notifier"><see cref="INotifier"/> to send to <see cref="NotificationSendFailure"/> event.</param>
+        protected virtual void OnNotificationSendFailure(INotifier notifier)
+        {
+            if (NotificationSendFailure != null)
+                NotificationSendFailure(this, new EventArgs<INotifier>(notifier));
+        }
+
+        /// <summary>
         /// Raises the <see cref="NotificationSendTimeout"/> event.
         /// </summary>
         /// <param name="notifier"><see cref="INotifier"/> to send to <see cref="NotificationSendTimeout"/> event.</param>
@@ -187,79 +264,48 @@ namespace TVA.Historian.Notifiers
                 NotificationSendException(this, new EventArgs<Exception>(ex));
         }
 
-        /// <summary>
-        /// Delegate function used by the ProcessQueue for processing notifications.
-        /// </summary>
+        private void ProcessNotifier(Type type)
+        {
+            INotifier notifier = (INotifier)(Activator.CreateInstance(type));
+            notifier.LoadSettings();
+            m_notifiers.Add(notifier);
+
+            OnNotifierAdded(notifier);
+        }
+
         private void ProcessNotification(Notification notification)
         {
+            // Send notification using all available notifiers.
             foreach (INotifier notifier in m_notifiers)
             {
-                // We'll send the notification using a loaded notifier on a seperate thread just so that we can
-                // timeout on the send if it is taking abnormally long to process.
-                Thread processThread = new Thread(ProcessNotificationAsync);
-                processThread.Start(new object[] { notification, notifier });
-                if (!processThread.Join(NotificationDispatchTimeout))
+                try
                 {
-                    // The notification could not be processed in a timely manner, so we'll abort the send.
-                    processThread.Abort();
+                    // Send the notification.
+                    if (notifier.Notify(notification.Subject, notification.Message, notification.Details, notification.NotificationType))
+                        OnNotificationSendSuccess(notifier);
+                    else
+                        OnNotificationSendFailure(notifier);
+                }
+                catch (ThreadAbortException)
+                {
+                    // Sending the notification took too long.
                     OnNotificationSendTimeout(notifier);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Processes a notification using the specified notifier. This method is to executed asynchronously.
-        /// </summary>
-        private void ProcessNotificationAsync(object state)
-        {
-            try
-            {
-                object[] args = (object[])state;
-                INotifier notifier = (INotifier)args[1];
-                Notification notification = (Notification)args[0];
-
-                if (notifier.Notify(notification.Subject, notification.Message, notification.Details, notification.NotificationType))
+                catch (Exception ex)
                 {
-                    OnNotificationSendSuccess(notifier);
+                    // Exception encountered when sending the notification.
+                    OnNotificationSendException(ex);
                 }
-            }
-            catch (ThreadAbortException)
-            {
-
-            }
-            catch (Exception ex)
-            {
-                OnNotificationSendException(ex);
-            }
-        }
-
-        private void ProcessDll(string dllName)
-        {
-            try
-            {
-                Assembly asm = Assembly.LoadFrom(dllName);
-                foreach (Type asmType in asm.GetExportedTypes())
-                {
-                    if (!asmType.IsAbstract && (asmType.GetInterface(NotifierInterface, true) != null))
-                    {
-                        // The scanned type can be instantiated and implements the required interface.
-                        INotifier notifier = (INotifier)(Activator.CreateInstance(asmType));
-                        notifier.LoadSettings();
-                        m_notifiers.Add(notifier);
-
-                        OnNotifierAdded(notifier);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                // It is possible that we encounter exception when we come accross DLLs that are not .Net.
             }
         }
 
         private void FileSystemWatcher_Created(object sender, FileSystemEventArgs e)
         {
-            ProcessDll(e.FullPath);
+            // Process assemblies at runtime for notifiers.
+            foreach (Type type in typeof(INotifier).LoadImplementations(e.FullPath))
+            {
+                ProcessNotifier(type);
+            }
         }
 
         #endregion

@@ -22,6 +22,10 @@ using TVA.Configuration;
 
 namespace TVA.Historian.Notifiers
 {
+    /// <summary>
+    /// A base class for a notifier that can process notification messages.
+    /// </summary>
+    /// <see cref="NotificationType"/>
     public abstract class NotifierBase : INotifier
     {
         #region [ Members ]
@@ -38,6 +42,13 @@ namespace TVA.Historian.Notifiers
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Initializes a new instance of the notifier.
+        /// </summary>
+        /// <param name="notifiesInformation">true if <see cref="NotificationType.Information"/> notification will be processed; otherwise false.</param>
+        /// <param name="notifiesWarnings">true if <see cref="NotificationType.Warning"/> notification will be processed; otherwise false.</param>
+        /// <param name="notifiesAlarms">true if <see cref="NotificationType.Alarm"/> notification will be processed; otherwise false.</param>
+        /// <param name="notifiesHeartbeat">true if <see cref="NotificationType.Heartbeat"/> notification will be processed; otherwise false.</param>
         public NotifierBase(bool notifiesInformation, bool notifiesWarnings, bool notifiesAlarms, bool notifiesHeartbeat)
         {
             m_notifiesInformation = notifiesInformation;
@@ -52,6 +63,9 @@ namespace TVA.Historian.Notifiers
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Alarm"/> notifications will be processed.
+        /// </summary>
         public bool NotifiesAlarms
         {
             get
@@ -64,6 +78,9 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Warning"/> notifications will be processed.
+        /// </summary>
         public bool NotifiesWarnings
         {
             get
@@ -76,6 +93,9 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Information"/> notifications will be processed.
+        /// </summary>
         public bool NotifiesInformation
         {
             get
@@ -88,6 +108,9 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Heartbeat"/> notifications will be processed.
+        /// </summary>
         public bool NotifiesHeartbeat
         {
             get
@@ -100,6 +123,9 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the notifier settings are to be saved to the config file.
+        /// </summary>
         public bool PersistSettings
         {
             get
@@ -112,6 +138,10 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets the category under which the notifier settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
         public string SettingsCategory
         {
             get
@@ -120,14 +150,10 @@ namespace TVA.Historian.Notifiers
             }
             set
             {
-                if (!string.IsNullOrEmpty(value))
-                {
-                    m_settingsCategory = value;
-                }
-                else
-                {
-                    throw (new ArgumentNullException("SettingsCategoryName"));
-                }
+                if (string.IsNullOrEmpty(value))
+                    throw (new ArgumentNullException());
+
+                m_settingsCategory = value;
             }
         }
 
@@ -137,85 +163,117 @@ namespace TVA.Historian.Notifiers
 
         #region [ Abstract ]
 
+        /// <summary>
+        /// When overridden in a derived class, processes a <see cref="NotificationType.Alarm"/> notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
         protected abstract bool NotifyAlarm(string subject, string message, string details);
 
+        /// <summary>
+        /// When overridden in a derived class, processes a <see cref="NotificationType.Warning"/> notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
         protected abstract bool NotifyWarning(string subject, string message, string details);
 
+        /// <summary>
+        /// When overridden in a derived class, processes a <see cref="NotificationType.Information"/> notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
         protected abstract bool NotifyInformation(string subject, string message, string details);
 
+        /// <summary>
+        /// When overridden in a derived class, processes a <see cref="NotificationType.Heartbeat"/> notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
         protected abstract bool NotifyHeartbeat(string subject, string message, string details);
 
         #endregion
 
+        /// <summary>
+        /// Process a notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
         public bool Notify(string subject, string message, string details, NotificationType notificationType)
         {
-            if (m_notifiesAlarms && notificationType == Notifiers.NotificationType.Alarm)
-            {
+            if (notificationType == Notifiers.NotificationType.Alarm && m_notifiesAlarms)
                 return NotifyAlarm(subject, message, details);
-            }
-            else if (m_notifiesWarnings && notificationType == Notifiers.NotificationType.Warning)
-            {
+            else if (notificationType == Notifiers.NotificationType.Warning && m_notifiesWarnings)
                 return NotifyWarning(subject, message, details);
-            }
-            else if (m_notifiesInformation && notificationType == Notifiers.NotificationType.Information)
-            {
+            else if (notificationType == Notifiers.NotificationType.Information && m_notifiesInformation)
                 return NotifyInformation(subject, message, details);
-            }
-            else if (m_notifiesHeartbeat && notificationType == Notifiers.NotificationType.Heartbeat)
-            {
+            else if (notificationType == Notifiers.NotificationType.Heartbeat && m_notifiesHeartbeat)
                 return NotifyHeartbeat(subject, message, details);
-            }
             else
-            {
                 return false;
-            }
         }
 
-        public virtual void LoadSettings()
-        {
-            try
-            {
-                TVA.Configuration.CategorizedSettingsElementCollection with_1 = ConfigurationFile.Current.Settings[m_settingsCategory];
-                if (with_1.Count > 0)
-                {
-                    NotifiesAlarms = with_1["NotifiesAlarms"].ValueAs(m_notifiesAlarms);
-                    NotifiesWarnings = with_1["NotifiesWarnings"].ValueAs(m_notifiesWarnings);
-                    NotifiesInformation = with_1["NotifiesInformation"].ValueAs(m_notifiesInformation);
-                    NotifiesHeartbeat = with_1["NotifiesHeartbeat"].ValueAs(m_notifiesHeartbeat);
-                }
-            }
-            catch (Exception)
-            {
-                // We'll encounter exceptions if the settings are not present in the config file.
-            }
-        }
-
+        /// <summary>
+        /// Saves notifier settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
-                try
-                {
-                    TVA.Configuration.CategorizedSettingsElementCollection with_1 = ConfigurationFile.Current.Settings[m_settingsCategory];
-                    with_1.Clear();
-                    TVA.Configuration.CategorizedSettingsElement with_2 = with_1["NotifiesAlarms", true];
-                    with_2.Value = m_notifiesAlarms.ToString();
-                    with_2.Description = "True if alarm notifications are to be sent; otherwise False.";
-                    TVA.Configuration.CategorizedSettingsElement with_3 = with_1["NotifiesWarnings", true];
-                    with_3.Value = m_notifiesWarnings.ToString();
-                    with_3.Description = "True if warning notifications are to be sent; otherwise False.";
-                    TVA.Configuration.CategorizedSettingsElement with_4 = with_1["NotifiesInformation", true];
-                    with_4.Value = m_notifiesInformation.ToString();
-                    with_4.Description = "True if information notifications are to be sent; otherwise False.";
-                    TVA.Configuration.CategorizedSettingsElement with_5 = with_1["NotifiesHeartbeat", true];
-                    with_5.Value = m_notifiesHeartbeat.ToString();
-                    with_5.Description = "True if heartbeat notifications are to be sent; otherwise False.";
-                    ConfigurationFile.Current.Save();
-                }
-                catch (Exception)
-                {
-                    // We might encounter an exception if for some reason the settings cannot be saved to the config file.
-                }
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                // Add settings if they don't exist in config file.
+                settings.Add("NotifiesAlarms", m_notifiesAlarms, "True if alarm notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesWarnings", m_notifiesWarnings, "True if warning notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesInformation", m_notifiesInformation, "True if information notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesHeartbeat", m_notifiesHeartbeat, "True if heartbeat notifications are to be processed; otherwise False.");
+                // Update settings with the latest property values.
+                element = settings["NotifiesAlarms"];
+                element.Update(m_notifiesAlarms, element.Description, element.Encrypted);
+                element = settings["NotifiesWarnings"];
+                element.Update(m_notifiesWarnings, element.Description, element.Encrypted);
+                element = settings["NotifiesInformation"];
+                element.Update(m_notifiesInformation, element.Description, element.Encrypted);
+                element = settings["NotifiesHeartbeat"];
+                element.Update(m_notifiesHeartbeat, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved notifier settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public virtual void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                NotifiesAlarms = settings["NotifiesAlarms", true].ValueAs(m_notifiesAlarms);
+                NotifiesWarnings = settings["NotifiesWarnings", true].ValueAs(m_notifiesWarnings);
+                NotifiesInformation = settings["NotifiesInformation", true].ValueAs(m_notifiesInformation);
+                NotifiesHeartbeat = settings["NotifiesHeartbeat", true].ValueAs(m_notifiesHeartbeat);
             }
         }
 

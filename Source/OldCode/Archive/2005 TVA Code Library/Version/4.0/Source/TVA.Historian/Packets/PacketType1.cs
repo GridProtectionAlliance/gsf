@@ -98,6 +98,7 @@ namespace TVA.Historian.Packets
         /// Initializes a new instance of the <see cref="PacketType1"/> class.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
+        [CLSCompliant(false)]
         public PacketType1(IMeasurement measurement)
             : this()
         {
