@@ -32,8 +32,9 @@ using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using TVA;
+using System;
 
-namespace System
+namespace TVA
 {
     /// <summary>
     /// Handles conversion of byte buffers to and from user presentable data formats.

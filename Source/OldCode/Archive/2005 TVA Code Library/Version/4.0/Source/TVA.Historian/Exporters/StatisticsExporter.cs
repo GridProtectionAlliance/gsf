@@ -30,7 +30,7 @@ using System.Data;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// Represents an exporter that can calculate MIN, MAX and AVG of real-time time series data over a period of time and export it in CSV or XML format to a file.
+    /// Represents an exporter that can export the <see cref="Statistics"/> in CSV or XML format to a file.
     /// </summary>
     /// <example>
     /// Definition of a sample <see cref="Export"/> that can be processed by <see cref="StatisticsExporter"/>:
@@ -54,7 +54,11 @@ namespace TVA.Historian.Exporters
     ///     <ExportSetting>
     ///       <Name>FilterClause</Name>
     ///       <Value>Value&gt;=59 And Value&lt;=61</Value>
-    ///     </ExportSetting>    
+    ///     </ExportSetting>
+    ///     <ExportSetting>
+    ///       <Name>SlopeThreshold</Name>
+    ///       <Value>.9</Value>
+    ///     </ExportSetting>
     ///   </Settings>
     ///   <Records>
     ///     <ExportRecord>
