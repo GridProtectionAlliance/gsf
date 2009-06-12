@@ -52,11 +52,13 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Specifies the bit-mask for <see cref="Quality"/> stored in <see cref="Flags"/>.
         /// </summary>
+        [CLSCompliant(false)]
         protected const Bits QualityMask = Bits.Bit00 | Bits.Bit01 | Bits.Bit02 | Bits.Bit03 | Bits.Bit04;
 
         /// <summary>
         /// Specifies the bit-mask for <see cref="TimeTag"/> milliseconds stored in <see cref="Flags"/>.
         /// </summary>
+        [CLSCompliant(false)]
         protected const Bits MillisecondMask = Bits.Bit05 | Bits.Bit06 | Bits.Bit07 | Bits.Bit08 | Bits.Bit09 | Bits.Bit10 | Bits.Bit11 | Bits.Bit12 | Bits.Bit13 | Bits.Bit14 | Bits.Bit15;
 
         // Fields
