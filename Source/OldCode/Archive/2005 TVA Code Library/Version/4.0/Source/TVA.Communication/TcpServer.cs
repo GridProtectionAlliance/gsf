@@ -40,6 +40,7 @@ namespace TVA.Communication
     /// This example shows how to use the <see cref="TcpServer"/> component:
     /// <code>
     /// using System;
+    /// using TVA;
     /// using TVA.Communication;
     /// using TVA.Security.Cryptography;
     /// using TVA.IO.Compression;

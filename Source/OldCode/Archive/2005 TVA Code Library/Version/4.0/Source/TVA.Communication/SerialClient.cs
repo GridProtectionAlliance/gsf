@@ -34,6 +34,7 @@ namespace TVA.Communication
     /// This example shows how to use <see cref="SerialClient"/> for communicating with <see cref="SerialPort"/>:
     /// <code>
     /// using System;
+    /// using TVA;
     /// using TVA.Communication;
     /// 
     /// class Program
