@@ -35,7 +35,7 @@ namespace TVA.Historian.Files
         // **************************************************************************************************
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 4          0-3        Int32      HistorianID                                                    *
+        // * 4          0-3        Int32      HistorianID                                                   *
         // * 4          4-7        Single     ExceptionLimit                                                *
         // * 4          8-11       Int32      Enabled                                                       *
         // * 4          12-15      Single     HighWarning                                                   *

@@ -35,7 +35,7 @@ namespace TVA.Historian.Packets
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
         // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      HistorianID                                                    *
+        // * 4          2-5        Int32      HistorianID                                                   *
         // * 2          6-7        Int16      Year                                                          *
         // * 1          8          Byte       Month                                                         *
         // * 1          9          Byte       Day                                                           *
