@@ -47,10 +47,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
-using TVA.Units;
 using TVA;
 using TVA.Communication;
 using TVA.IO;
+using TVA.Units;
 
 namespace PhasorProtocols
 {

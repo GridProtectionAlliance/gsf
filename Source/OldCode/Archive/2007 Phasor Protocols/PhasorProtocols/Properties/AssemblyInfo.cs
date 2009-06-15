@@ -5,10 +5,10 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NERC PCS Phasor Protocols")]
+[assembly: AssemblyTitle("Phasor Protocol Implementations")]
 [assembly: AssemblyDescription("Standard Phasor Protocol Implementations")]
 [assembly: AssemblyCompany("TVA")]
-[assembly: AssemblyProduct("NERC Phasor Concentration System")]
+[assembly: AssemblyProduct("Synchrophasor Projects")]
 [assembly: AssemblyCopyright("Copyright © 2009, TVA")]
 [assembly: AssemblyTrademark("Author: J. Ritchie Carroll, Gbtc")]
 #if DEBUG
