@@ -39,6 +39,7 @@ using System.Data.OracleClient;
 using System.Data.SqlClient;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Data.Common;
 
 namespace TVA.Data
 {
@@ -1149,7 +1150,7 @@ namespace TVA.Data
                     // Assigns the values to the the Parameters.
                     for (int i = 0; i < command.Parameters.Count; i++)
                     {
-                        command.Parameters[i] = parameters[i];
+                        ((DbParameter)command.Parameters[i]).Value = parameters[i];
                     }
                 }
             }
