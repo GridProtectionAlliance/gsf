@@ -19,8 +19,9 @@ using System;
 using System.IO;
 using System.Security.Permissions;
 using System.Text;
-using PCS.IO;
-using PCS.Parsing;
+using TVA;
+using TVA.IO;
+using TVA.Parsing;
 
 namespace PhasorProtocols.BpaPdcStream
 {

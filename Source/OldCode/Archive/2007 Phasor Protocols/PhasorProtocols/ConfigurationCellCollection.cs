@@ -18,7 +18,7 @@
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
-using PCS.Collections;
+using TVA.Collections;
 
 namespace PhasorProtocols
 {

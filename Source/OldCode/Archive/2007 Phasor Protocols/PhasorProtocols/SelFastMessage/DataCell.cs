@@ -18,6 +18,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using TVA;
 
 namespace PhasorProtocols.SelFastMessage
 {

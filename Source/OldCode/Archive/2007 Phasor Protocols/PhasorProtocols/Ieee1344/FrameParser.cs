@@ -16,7 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using PCS.Parsing;
+using TVA;
+using TVA.Parsing;
 
 namespace PhasorProtocols.Ieee1344
 {

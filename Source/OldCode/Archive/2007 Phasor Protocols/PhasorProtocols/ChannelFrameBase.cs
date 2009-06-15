@@ -19,7 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Measurements;
+using TVA;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {
@@ -438,7 +439,7 @@ namespace PhasorProtocols
         /// <example>
         /// This example provides a CRC-CCITT checksum:
         /// <code>
-        /// using PCS.IO.Checksums;
+        /// using TVA.IO.Checksums;
         /// 
         /// protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         /// {

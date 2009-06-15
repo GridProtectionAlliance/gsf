@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Parsing;
+using TVA.Parsing;
 
 namespace PhasorProtocols
 {

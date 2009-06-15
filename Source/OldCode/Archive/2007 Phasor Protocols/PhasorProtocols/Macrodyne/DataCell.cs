@@ -18,6 +18,7 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using TVA;
 
 namespace PhasorProtocols.Macrodyne
 {
@@ -294,7 +295,7 @@ namespace PhasorProtocols.Macrodyne
             }
 
             // Parse out first five phasor values
-            for (x = 0; x < PCS.Common.Min(configCell.PhasorDefinitions.Count, 5); x++)
+            for (x = 0; x < TVA.Common.Min(configCell.PhasorDefinitions.Count, 5); x++)
             {
                 phasorValue = Macrodyne.PhasorValue.CreateNewValue(this, configCell.PhasorDefinitions[x], binaryImage, index, out parsedLength);
                 PhasorValues.Add(phasorValue);

@@ -16,7 +16,7 @@
 //*******************************************************************************************************
 
 using System;
-using PCS.Measurements;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {

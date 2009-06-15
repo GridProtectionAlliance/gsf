@@ -16,7 +16,7 @@
 //*******************************************************************************************************
 
 using System.Runtime.Serialization;
-using PCS.Measurements;
+using TVA.Measurements;
 
 namespace PhasorProtocols
 {

@@ -16,8 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using PCS;
-using PCS.Parsing;
+using TVA;
+using TVA.Parsing;
 
 namespace PhasorProtocols.Macrodyne
 {

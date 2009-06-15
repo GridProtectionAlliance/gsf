@@ -13,7 +13,7 @@
 //  03/16/2006 - J. Ritchie Carroll
 //       Initial version of source generated
 //  06/26/2006 - Pinal C. Patel
-//       Changed out the socket code with TcpClient and UdpClient components from PCS.Communication
+//       Changed out the socket code with TcpClient and UdpClient components from TVA.Communication
 //  01/31/2007 - J. Ritchie Carroll
 //       Added TCP "server" support to allow listening connections from devices that act as data
 //       clients, e.g., F-NET devices
@@ -47,10 +47,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Units;
-using PCS;
-using PCS.Communication;
-using PCS.IO;
+using TVA.Units;
+using TVA;
+using TVA.Communication;
+using TVA.IO;
 
 namespace PhasorProtocols
 {

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using TVA;
 
 namespace PhasorProtocols.IeeeC37_118
 {

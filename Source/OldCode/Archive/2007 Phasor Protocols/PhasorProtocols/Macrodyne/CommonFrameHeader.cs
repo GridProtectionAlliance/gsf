@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Parsing;
+using TVA.Parsing;
 
 namespace PhasorProtocols.Macrodyne
 {

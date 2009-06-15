@@ -20,8 +20,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.IO.Checksums;
-using PCS.Parsing;
+using TVA;
+using TVA.IO.Checksums;
+using TVA.Parsing;
 
 namespace PhasorProtocols.SelFastMessage
 {
@@ -285,6 +286,11 @@ namespace PhasorProtocols.SelFastMessage
             return CommonFrameHeader.FixedLength;
         }
 
+        protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
+        {
+            return true;
+        }
+
         /// <summary>
         /// Calculates checksum of given <paramref name="buffer"/>.
         /// </summary>
@@ -294,8 +300,8 @@ namespace PhasorProtocols.SelFastMessage
         /// <returns>Checksum over specified portion of <paramref name="buffer"/>.</returns>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
-            // SEL Fast Message uses CRC16 to calculate checksum for frames
-            return buffer.Crc16Checksum(offset, length);
+            // SEL Fast Message uses CRC Modbus to calculate checksum for frames
+            return buffer.ModBusCrcChecksum(offset, length);
         }
 
         /// <summary>

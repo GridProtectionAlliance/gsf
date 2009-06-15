@@ -19,7 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using System.Units;
+using TVA;
+using TVA.Units;
 
 namespace PhasorProtocols
 {
@@ -86,7 +87,7 @@ namespace PhasorProtocols
         /// </summary>
         /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="PhasorValueBase"/>.</param>
         /// <param name="phasorDefinition">The <see cref="IPhasorDefinition"/> associated with this <see cref="PhasorValueBase"/>.</param>
-        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.</param>
+        /// <param name="angle">The <see cref="TVA.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.</param>
         /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValueBase"/>.</param>
         protected PhasorValueBase(IDataCell parent, IPhasorDefinition phasorDefinition, Angle angle, double magnitude)
             : base(parent, phasorDefinition)
@@ -135,7 +136,7 @@ namespace PhasorProtocols
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
+        /// Gets or sets the <see cref="TVA.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValueBase"/>, in radians.
         /// </summary>
         public virtual Angle Angle
         {

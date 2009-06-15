@@ -19,7 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using PCS.Parsing;
+using TVA;
+using TVA.Parsing;
 
 namespace PhasorProtocols.BpaPdcStream
 {

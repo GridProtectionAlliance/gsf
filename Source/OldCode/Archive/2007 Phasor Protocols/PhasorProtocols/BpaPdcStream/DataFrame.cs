@@ -21,8 +21,9 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Text;
-using PCS.IO.Checksums;
-using PCS.Parsing;
+using TVA;
+using TVA.IO.Checksums;
+using TVA.Parsing;
 
 namespace PhasorProtocols.BpaPdcStream
 {

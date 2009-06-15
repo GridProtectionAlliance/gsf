@@ -18,7 +18,8 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using PCS.Parsing;
+using TVA;
+using TVA.Parsing;
 
 namespace PhasorProtocols.IeeeC37_118
 {

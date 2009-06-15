@@ -17,6 +17,7 @@
 
 using System;
 using System.Runtime.Serialization;
+using TVA;
 
 namespace PhasorProtocols.Ieee1344
 {

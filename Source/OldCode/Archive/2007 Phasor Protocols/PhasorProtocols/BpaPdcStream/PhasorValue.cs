@@ -17,7 +17,7 @@
 
 using System;
 using System.Runtime.Serialization;
-using System.Units;
+using TVA.Units;
 
 namespace PhasorProtocols.BpaPdcStream
 {
@@ -56,7 +56,7 @@ namespace PhasorProtocols.BpaPdcStream
         /// </summary>
         /// <param name="parent">The <see cref="DataCell"/> parent of this <see cref="PhasorValue"/>.</param>
         /// <param name="phasorDefinition">The <see cref="PhasorDefinition"/> associated with this <see cref="PhasorValue"/>.</param>
-        /// <param name="angle">The <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
+        /// <param name="angle">The <see cref="TVA.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.</param>
         /// <param name="magnitude">The magnitude value (a.k.a., the absolute value or modulus) of this <see cref="PhasorValue"/>.</param>
         public PhasorValue(DataCell parent, PhasorDefinition phasorDefinition, Angle angle, double magnitude)
             : base(parent, phasorDefinition, angle, magnitude)
@@ -108,7 +108,7 @@ namespace PhasorProtocols.BpaPdcStream
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="System.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.
+        /// Gets or sets the <see cref="TVA.Units.Angle"/> value (a.k.a., the argument) of this <see cref="PhasorValue"/>, in radians.
         /// </summary>
         public override Angle Angle
         {
