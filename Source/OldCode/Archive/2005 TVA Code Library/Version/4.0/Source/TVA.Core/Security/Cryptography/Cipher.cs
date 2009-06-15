@@ -645,6 +645,7 @@ namespace TVA.Security.Cryptography
             List<byte> rgbKey = new List<byte>();
             int length = algorithm.LegalKeySizes[0].MaxSize / 8;
 
+            // See http://en.wikipedia.org/wiki/Salt_(cryptography)
             for (int x = 0; x < length; x++)
             {
                 if (x < key.Length)
@@ -666,6 +667,7 @@ namespace TVA.Security.Cryptography
             List<byte> rgbIV = new List<byte>();
             int length = algorithm.LegalBlockSizes[0].MinSize / 8;
 
+            // See http://en.wikipedia.org/wiki/Salt_(cryptography)
             for (int x = 0; x < length; x++)
             {
                 if (x < IV.Length)
