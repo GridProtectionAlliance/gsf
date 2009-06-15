@@ -169,9 +169,9 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= 6)
             {
                 // Binary image has sufficient data.
-                short packetId = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetId != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetId, TypeID));
+                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                if (packetID != TypeID)
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
 
                 // Ensure that the binary image is complete
                 int dataCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);

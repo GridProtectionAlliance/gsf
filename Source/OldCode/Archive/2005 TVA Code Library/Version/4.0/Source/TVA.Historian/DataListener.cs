@@ -51,9 +51,9 @@ namespace TVA.Historian
         // Constants
 
         /// <summary>
-        /// Specifies the default value for the <see cref="Id"/> property.
+        /// Specifies the default value for the <see cref="ID"/> property.
         /// </summary>
-        public const string DefaultId = "Default";
+        public const string DefaultID = "Default";
 
         /// <summary>
         /// Specifies the default value for the <see cref="Server"/> property.
@@ -215,7 +215,7 @@ namespace TVA.Historian
         public DataListener()
             : base()
         {
-            m_id = DefaultId;
+            m_id = DefaultID;
             m_server = DefaultServer;
             m_port = DefaultPort;
             m_protocol = DefaultProtocol;
@@ -274,9 +274,9 @@ namespace TVA.Historian
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
         [Category("Identity"),
-        DefaultValue(DefaultId),
+        DefaultValue(DefaultID),
         Description("Alpha-numeric identifier of the DataListener.")]
-        public string Id
+        public string ID
         {
             get
             {
@@ -622,7 +622,7 @@ namespace TVA.Historian
 
                         // We'll request current data for all points.
                         PacketType11 request = new PacketType11();
-                        request.RequestIds.Add(-1);
+                        request.RequestIDs.Add(-1);
                         m_dataInitClient.Send(request.BinaryImage);
 
                         // Wait for the data to be initialized and timeout if it takes too long.
@@ -705,19 +705,19 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets the current data for the specified <paramref name="historianId"/>.
+        /// Gets the current data for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="historianId">Historian identifier whose current data is to be retrieved.</param>
+        /// <param name="historianID">Historian identifier whose current data is to be retrieved.</param>
         /// <returns><see cref="IDataPoint"/> if a match is found; otherwise null.</returns>
-        public IDataPoint FindData(int historianId)
+        public IDataPoint FindData(int historianID)
         {
             IDataPoint currentData = null;
             lock (m_data)
             {
-                if (historianId > 0 && historianId <= m_data.Count)
+                if (historianID > 0 && historianID <= m_data.Count)
                 {
                     // Valid id is specified, so we'll lookup it's current data.
-                    currentData = m_data[historianId - 1];
+                    currentData = m_data[historianID - 1];
                 }
             }
             return currentData;
@@ -754,7 +754,7 @@ namespace TVA.Historian
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 // Add settings if they don't exist in config file.
-                settings.Add("Id", m_id, "Alpha-numeric identifier of the listener.");
+                settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
                 settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
                 settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
                 settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
@@ -762,7 +762,7 @@ namespace TVA.Historian
                 settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
                 settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
                 // Update settings with the latest property values.
-                element = settings["Id"];
+                element = settings["ID"];
                 element.Update(m_id, element.Description, element.Encrypted);
                 element = settings["Server"];
                 element.Update(m_server, element.Description, element.Encrypted);
@@ -794,7 +794,7 @@ namespace TVA.Historian
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                Id = settings["Id", true].ValueAs(m_id);
+                ID = settings["ID", true].ValueAs(m_id);
                 Server = settings["Server", true].ValueAs(m_server);
                 Port = settings["Port", true].ValueAs(m_port);
                 Protocol = settings["Protocol", true].ValueAs(m_protocol);
@@ -851,7 +851,7 @@ namespace TVA.Historian
             if (other == null)
                 return false;
             else
-                return string.Compare(m_id, other.Id, true) == 0;
+                return string.Compare(m_id, other.ID, true) == 0;
         }
 
         /// <summary>
@@ -974,11 +974,11 @@ namespace TVA.Historian
         private void DataInitClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             StateRecordSummary state = new StateRecordSummary(e.Argument1, 0, e.Argument2);
-            if (state.HistorianId > 0)
+            if (state.HistorianID > 0)
             {
                 lock (m_data)
                 {
-                    m_data.Add(new ArchiveData(state.HistorianId, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
+                    m_data.Add(new ArchiveData(state.HistorianID, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
                 }
             }
             else
@@ -1047,17 +1047,17 @@ namespace TVA.Historian
                     {
                         foreach (IDataPoint dataPoint in dataPoints)
                         {
-                            if (dataPoint.HistorianId > m_data.Count)
+                            if (dataPoint.HistorianID > m_data.Count)
                             {
                                 // No data exists for the id, so add one for it and others in-between.
-                                for (int i = m_data.Count + 1; i <= dataPoint.HistorianId; i++)
+                                for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
                                 {
                                     m_data.Add(new ArchiveData(i));
                                 }
                             }
 
                             // Replace existing data with the new data.
-                            m_data[dataPoint.HistorianId - 1] = dataPoint;
+                            m_data[dataPoint.HistorianID - 1] = dataPoint;
                         }
                     }
                 }

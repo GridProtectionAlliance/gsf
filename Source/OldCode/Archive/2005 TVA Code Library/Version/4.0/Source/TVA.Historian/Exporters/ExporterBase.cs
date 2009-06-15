@@ -455,7 +455,7 @@ namespace TVA.Historian.Exporters
             // Process all the exports.
             foreach (Export export in exportsList)
             {
-                if (export.Type == ExportType.RealTime && export.FindRecords(listener.Id).Count > 0)
+                if (export.Type == ExportType.RealTime && export.FindRecords(listener.ID).Count > 0)
                 {
                     // This export is configured to be processed in real-time and has one or more records 
                     // from this listener to be exported, so we'll queue the real-time data for processing.
@@ -551,7 +551,7 @@ namespace TVA.Historian.Exporters
             {
                 foreach (IDataPoint dataPoint in exportData[listenerName])
                 {
-                    result.Tables[0].Rows.Add(listenerName, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                    result.Tables[0].Rows.Add(listenerName, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                 }
             }
 
@@ -598,7 +598,7 @@ namespace TVA.Historian.Exporters
                 {
                     List<IDataPoint> filteredData = new List<IDataPoint>();
 
-                    exportRecords = item.Export.FindRecords(item.Listener.Id);
+                    exportRecords = item.Export.FindRecords(item.Listener.ID);
                     if (exportRecords.Count == 1 && exportRecords[0].Identifier == -1)
                     {
                         // Include all data from the listener.
@@ -619,7 +619,7 @@ namespace TVA.Historian.Exporters
                             {
                                 foreach (IDataPoint dataPoint in dataPoints)
                                 {
-                                    if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianId) != null)
+                                    if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
                                         filteredData.Add(dataPoint);
                                 }
                             }
@@ -761,8 +761,8 @@ namespace TVA.Historian.Exporters
         ///         <description>Historian instance providing the time series data.</description>
         ///     </item>
         ///     <item>
-        ///         <term>Id</term>
-        ///         <description><see cref="IDataPoint.HistorianId"/> of the time series data.</description>
+        ///         <term>ID</term>
+        ///         <description><see cref="IDataPoint.HistorianID"/> of the time series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Time</term>
@@ -809,7 +809,7 @@ namespace TVA.Historian.Exporters
             data.Tables.Add(dataTableName);
             DataTable dataTable = data.Tables[dataTableName];
             dataTable.Columns.Add("Instance", typeof(string));
-            dataTable.Columns.Add("Id", typeof(int));
+            dataTable.Columns.Add("ID", typeof(int));
             dataTable.Columns.Add("Time", typeof(string));
             dataTable.Columns.Add("Value", typeof(float));
             dataTable.Columns.Add("Quality", typeof(int));

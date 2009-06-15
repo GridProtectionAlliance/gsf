@@ -251,10 +251,10 @@ namespace TVA.Historian.Exporters
             //   available yet.
             // - Data for a point was last received before the export's rolling history window.
             // - Data for a point was not updated between the current and previous runs. This is required because
-            //   Instance, Id and Time make up the primary key for the table and since the data between runs has
+            //   Instance, ID and Time make up the primary key for the table and since the data between runs has
             //   not changed, we'll be adding duplicates resulting in an exception. So we add "dummy" data for that
             //   point since we have to provide data for every defined point during every run.
-            table.Rows.Add(data["Instance"], data["Id"], new TimeTag(DateTime.UtcNow).ToString(), float.NaN, Quality.Unknown);
+            table.Rows.Add(data["Instance"], data["ID"], new TimeTag(DateTime.UtcNow).ToString(), float.NaN, Quality.Unknown);
         }
 
         #endregion

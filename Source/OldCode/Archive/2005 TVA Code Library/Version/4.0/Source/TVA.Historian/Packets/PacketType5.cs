@@ -113,9 +113,9 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                short packetId = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetId != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetId, TypeID));
+                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                if (packetID != TypeID)
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
 
                 // We have a binary image with the correct packet id and that all this packet type will contain.
                 return ByteCount;

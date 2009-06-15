@@ -37,7 +37,7 @@ namespace TVA.Historian.Files
         // * 4          0-3        Int32      DataBlocksUsed                                                *
         // * 4          4-7        Boolean    RolloverInProggress                                           *
         // * 8          8-15       Double     LatestDataTime                                                *
-        // * 4          16-19      Int32      LatestDataId                                                  *
+        // * 4          16-19      Int32      LatestDataID                                                  *
         // * 160        20-179     Double(20) SourceLatestDataTime                                                     *
         // **************************************************************************************************
 
@@ -55,7 +55,7 @@ namespace TVA.Historian.Files
         private int m_dataBlocksUsed;
         private bool m_rolloverInProgress;
         private TimeTag m_latestDataTime;
-        private int m_latestDataId;
+        private int m_latestDataID;
         private List<TimeTag> m_sourceLatestDataTime;
 
         #endregion
@@ -164,26 +164,26 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the historian identifier of latest <see cref="ArchiveData"/> received by the active <see cref="ArchiveFile"/>.
         /// </summary>
-        public int LatestDataId
+        public int LatestDataID
         {
             get
             {
                 lock (this)
                 {
-                    return m_latestDataId;
+                    return m_latestDataID;
                 }
             }
             set
             {
                 lock (this)
                 {
-                    m_latestDataId = value;
+                    m_latestDataID = value;
                 }
             }
         }
 
         /// <summary>
-        /// Gets a list of <see cref="TimeTag"/>s of the latest <see cref="ArchiveData"/> received from each of the <see cref="MetadataRecord.SourceId"/>s.
+        /// Gets a list of <see cref="TimeTag"/>s of the latest <see cref="ArchiveData"/> received from each of the <see cref="MetadataRecord.SourceID"/>s.
         /// </summary>
         public IList<TimeTag> SourceLatestDataTime
         {
@@ -221,7 +221,7 @@ namespace TVA.Historian.Files
                     Array.Copy(EndianOrder.LittleEndian.GetBytes(m_dataBlocksUsed), 0, image, 0, 4);
                     Array.Copy(EndianOrder.LittleEndian.GetBytes(Convert.ToInt32(m_rolloverInProgress)), 0, image, 4, 4);
                     Array.Copy(EndianOrder.LittleEndian.GetBytes(m_latestDataTime.Value), 0, image, 8, 8);
-                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_latestDataId), 0, image, 16, 4);
+                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_latestDataID), 0, image, 16, 4);
                     for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                     {
                         Array.Copy(EndianOrder.LittleEndian.GetBytes(m_sourceLatestDataTime[i].Value), 0, image, (20 + (i * 8)), 8);
@@ -251,7 +251,7 @@ namespace TVA.Historian.Files
                 DataBlocksUsed = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
                 RolloverInProgress = EndianOrder.LittleEndian.ToBoolean(binaryImage, startIndex + 4);
                 LatestDataTime = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 8));
-                LatestDataId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 16);
+                LatestDataID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 16);
                 for (int i = 0; i < m_sourceLatestDataTime.Count; i++)
                 {
                     m_sourceLatestDataTime[i] = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 20 + (i * 8)));

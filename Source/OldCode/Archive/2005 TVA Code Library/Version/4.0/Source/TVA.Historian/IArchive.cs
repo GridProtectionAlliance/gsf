@@ -43,55 +43,55 @@ namespace TVA.Historian
         void WriteData(IDataPoint dataPoint);
 
         /// <summary>
-        /// Writes meta information for the specified <paramref name="historianId"/> to the repository.
+        /// Writes meta information for the specified <paramref name="historianID"/> to the repository.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <param name="metaData">Binary image of the meta information.</param>
-        void WriteMetaData(int historianId, byte[] metaData);
+        void WriteMetaData(int historianID, byte[] metaData);
 
         /// <summary>
-        /// Writes state information for the specified <paramref name="historianId"/> to the repository.
+        /// Writes state information for the specified <paramref name="historianID"/> to the repository.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <param name="stateData">Binary image of the state information.</param>
-        void WriteStateData(int historianId, byte[] stateData);
+        void WriteStateData(int historianID, byte[] stateData);
 
         /// <summary>
         /// Reads time series data from the repository.
         /// </summary>
-        /// <param name="historianId">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianId, TimeTag startTime, TimeTag endTime);
+        IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime);
 
         /// <summary>
-        /// Read meta information for the specified <paramref name="historianId"/>.
+        /// Read meta information for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing meta information.</returns>
-        byte[] ReadMetaData(int historianId);
+        byte[] ReadMetaData(int historianID);
 
         /// <summary>
-        /// Reads state information for the specified <paramref name="historianId"/>.
+        /// Reads state information for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing state information.</returns>
-        byte[] ReadStateData(int historianId);
+        byte[] ReadStateData(int historianID);
 
         /// <summary>
-        /// Reads meta information summary for the specified <paramref name="historianId"/>.
+        /// Reads meta information summary for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing meta information summary.</returns>
-        byte[] ReadMetaDataSummary(int historianId);
+        byte[] ReadMetaDataSummary(int historianID);
 
         /// <summary>
-        /// Read state information summary for the specified <paramref name="historianId"/>.
+        /// Read state information summary for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
+        /// <param name="historianID">Historian identifier.</param>
         /// <returns>A <see cref="byte"/> array containing state information summary.</returns>
-        byte[] ReadStateDataSummary(int historianId);
+        byte[] ReadStateDataSummary(int historianID);
 
         #endregion
     }

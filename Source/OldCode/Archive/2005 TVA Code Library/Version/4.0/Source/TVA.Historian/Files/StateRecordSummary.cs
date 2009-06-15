@@ -35,7 +35,7 @@ namespace TVA.Historian.Files
         // **************************************************************************************************
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 4          0-3        Int32      HistorianId                                                    *
+        // * 4          0-3        Int32      HistorianID                                                    *
         // * 16         4-19       Byte(16)   CurrentData                                                   *
         // **************************************************************************************************
 
@@ -49,7 +49,7 @@ namespace TVA.Historian.Files
         public const int ByteCount = 20;
 
         // Fields
-        private int m_historianId;
+        private int m_historianID;
         private StateRecordData m_currentData;
 
         #endregion
@@ -62,7 +62,7 @@ namespace TVA.Historian.Files
         /// <param name="record">A <see cref="StateRecord"/> object.</param>
         public StateRecordSummary(StateRecord record)
         {
-            HistorianId = record.HistorianId;
+            HistorianID = record.HistorianID;
             CurrentData = record.CurrentData;
         }
 
@@ -82,21 +82,21 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Same as <see cref="StateRecord.HistorianId"/>.
+        /// Same as <see cref="StateRecord.HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
-        public int HistorianId
+        public int HistorianID
         {
             get
             {
-                return m_historianId;
+                return m_historianID;
             }
             private set
             {
                 if (value < 1 && value != -1)
                     throw new ArgumentException("Value must be positive or -1.");
 
-                m_historianId = value;
+                m_historianID = value;
             }
         }
 
@@ -139,7 +139,7 @@ namespace TVA.Historian.Files
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 0, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, image, 0, 4);
                 Array.Copy(m_currentData.BinaryImage, 0, image, 4, StateRecordData.ByteCount);
 
                 return image;
@@ -162,8 +162,8 @@ namespace TVA.Historian.Files
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
-                CurrentData = new StateRecordData(HistorianId, binaryImage, startIndex + 4, StateRecordData.ByteCount);
+                HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
+                CurrentData = new StateRecordData(HistorianID, binaryImage, startIndex + 4, StateRecordData.ByteCount);
 
                 return ByteCount;
             }

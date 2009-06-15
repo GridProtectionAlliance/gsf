@@ -23,7 +23,7 @@ using TVA.Historian.Files;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet to be used for requesting <see cref="StateRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIds"/>.
+    /// Represents a packet to be used for requesting <see cref="StateRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.
     /// </summary>
     public class PacketType11 : QueryPacketBase
     {
@@ -57,14 +57,14 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Processes <see cref="PacketType11"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object containing the binary images of <see cref="StateRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIds"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object containing the binary images of <see cref="StateRecord.Summary"/> for the <see cref="QueryPacketBase.RequestIDs"/>.</returns>
         protected virtual IEnumerable<byte[]> Process()
         {
             if (Archive == null)
                 return null;
 
             List<byte[]> reply = new List<byte[]>();
-            if (RequestIds.Count == 0 || (RequestIds.Count == 1 && RequestIds[0] == -1))
+            if (RequestIDs.Count == 0 || (RequestIDs.Count == 1 && RequestIDs[0] == -1))
             {
                 // Information for all defined records is requested.
                 int id = 0;
@@ -83,7 +83,7 @@ namespace TVA.Historian.Packets
             else
             {
                 // Information for specific records is requested.
-                foreach (int id in RequestIds)
+                foreach (int id in RequestIDs)
                 {
                     try
                     {

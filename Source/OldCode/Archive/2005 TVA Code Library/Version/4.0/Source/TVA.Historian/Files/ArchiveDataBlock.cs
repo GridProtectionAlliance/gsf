@@ -47,7 +47,7 @@ namespace TVA.Historian.Files
 
         // Fields
         private int m_index;
-        private int m_historianId;
+        private int m_historianID;
         private ArchiveFile m_parent;
         private long m_writeCursor;
         private DateTime m_lastActivityTime;
@@ -61,12 +61,12 @@ namespace TVA.Historian.Files
         /// </summary>
         /// <param name="parent">An <see cref="ArchiveFile"/> object.</param>
         /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="historianId">Historian identifier whose <see cref="ArchiveData"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
-        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianId)
+        /// <param name="historianID">Historian identifier whose <see cref="ArchiveData"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
+        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID)
         {
             m_parent = parent;
             m_index = index;
-            m_historianId = historianId;
+            m_historianID = historianID;
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
             // Initialize the write cursor position by reading existing data. We have to iterate through the returned
@@ -173,7 +173,7 @@ namespace TVA.Historian.Files
                     // Read the data in the block.
                     m_lastActivityTime = DateTime.Now;
                     m_parent.FileData.Read(binaryImage, 0, binaryImage.Length);
-                    ArchiveData pointData = new ArchiveData(m_historianId, binaryImage, 0, binaryImage.Length);
+                    ArchiveData pointData = new ArchiveData(m_historianID, binaryImage, 0, binaryImage.Length);
                     if (!pointData.IsEmpty)
                     {
                         // There is data - use it.
@@ -226,7 +226,7 @@ namespace TVA.Historian.Files
             m_writeCursor = Location;
             for (int i = 1; i <= Capacity; i++)
             {
-                Write(new ArchiveData(m_historianId));
+                Write(new ArchiveData(m_historianID));
             }
             m_writeCursor = Location;
         }

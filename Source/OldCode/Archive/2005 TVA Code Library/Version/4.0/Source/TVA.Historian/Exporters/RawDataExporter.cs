@@ -207,7 +207,7 @@ namespace TVA.Historian.Exporters
             // - Export is not "Real-Time", since real-time exports are not supported by this exporter
             foreach (Export export in exportsList)
             {
-                if (export.FindRecords(listener.Id).Count > 0 && export.Type != ExportType.RealTime)
+                if (export.FindRecords(listener.ID).Count > 0 && export.Type != ExportType.RealTime)
                     m_realTimeQueue.Add(new RealTimeData(export, listener, e.Argument2));
             }
         }
@@ -246,7 +246,7 @@ namespace TVA.Historian.Exporters
                     if (rawData != null)
                     {
                         // Buffer-up the parsed data for the export.
-                        exportRecords = item.Export.FindRecords(item.Listener.Id);
+                        exportRecords = item.Export.FindRecords(item.Listener.ID);
                         if (exportRecords.Count == 1 && exportRecords[0].Identifier == -1)
                         {
                             // Include all data from the listener.
@@ -261,7 +261,7 @@ namespace TVA.Historian.Exporters
                                         {
                                             foreach (IDataPoint dataPoint in dataPoints)
                                             {
-                                                rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                                                rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                             }
                                         }
                                     }
@@ -279,7 +279,7 @@ namespace TVA.Historian.Exporters
                         else
                         {
                             // Buffer data for selected records only (filtered).
-                            ExportRecord comparer = new ExportRecord(item.Listener.Id, -1);
+                            ExportRecord comparer = new ExportRecord(item.Listener.ID, -1);
                             if (Monitor.TryEnter(rawData))
                             {
                                 try
@@ -291,8 +291,8 @@ namespace TVA.Historian.Exporters
                                         {
                                             foreach (IDataPoint dataPoint in dataPoints)
                                             {
-                                                if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianId) != null)
-                                                    rawData.Tables[0].Rows.Add(item.Listener.Id, dataPoint.HistorianId, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
+                                                if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
+                                                    rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                             }
                                         }
                                     }

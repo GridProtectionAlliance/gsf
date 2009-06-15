@@ -164,7 +164,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the historian identifier of the time series data point.
         /// </summary>
-        int HistorianId { get; set; }
+        int HistorianID { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of the time series data point.

@@ -33,15 +33,15 @@ namespace TVA.Historian.Packets
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
         // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      RequestIds.Count                                              *
-        // * 4          6-9        Int32      RequestIds[0]                                                 *
-        // * 4          n1-n2      Int32      RequestIds[RequestIds.Count -1 ]                              *
+        // * 4          2-5        Int32      RequestIDs.Count                                              *
+        // * 4          6-9        Int32      RequestIDs[0]                                                 *
+        // * 4          n1-n2      Int32      RequestIDs[RequestIDs.Count -1 ]                              *
         // **************************************************************************************************
 
         #region [ Members ]
 
         // Fields
-        private List<int> m_requestIds;
+        private List<int> m_requestIDs;
 
         #endregion
 
@@ -50,11 +50,11 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the query packet.
         /// </summary>
-        /// <param name="packetId">Numeric identifier for the packet type.</param>
-        protected QueryPacketBase(short packetId)
-            : base(packetId)
+        /// <param name="packetID">Numeric identifier for the packet type.</param>
+        protected QueryPacketBase(short packetID)
+            : base(packetID)
         {
-            m_requestIds = new List<int>();
+            m_requestIDs = new List<int>();
         }
 
         #endregion
@@ -64,12 +64,12 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets a list of historian identifiers whose information is being requested.
         /// </summary>
-        /// <remarks>A singe entry with Id of -1 can be used to request information for all defined historian identifiers.</remarks>
-        public IList<int> RequestIds
+        /// <remarks>A singe entry with ID of -1 can be used to request information for all defined historian identifiers.</remarks>
+        public IList<int> RequestIDs
         {
             get
             {
-                return m_requestIds;
+                return m_requestIDs;
             }
         }
 
@@ -80,7 +80,7 @@ namespace TVA.Historian.Packets
         {
             get
             {
-                return (2 + 4 + (m_requestIds.Count * 4));
+                return (2 + 4 + (m_requestIDs.Count * 4));
             }
         }
 
@@ -94,10 +94,10 @@ namespace TVA.Historian.Packets
                 byte[] image = new byte[BinaryLength];
 
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIds.Count), 0, image, 2, 4);
-                for (int i = 0; i < m_requestIds.Count; i++)
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, image, 2, 4);
+                for (int i = 0; i < m_requestIDs.Count; i++)
                 {
-                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIds[i]), 0, image, 6 + (i * 4), 4);
+                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, image, 6 + (i * 4), 4);
                 }
 
                 return image;
@@ -120,20 +120,20 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= 6)
             {
                 // Binary image has sufficient data.
-                short packetId = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetId != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetId, TypeID));
+                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                if (packetID != TypeID)
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
 
                 // Ensure that the binary image is complete
-                int requestIdCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-                if (length - startIndex < 6 + requestIdCount * 4)
+                int requestIDCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
+                if (length - startIndex < 6 + requestIDCount * 4)
                     return 0;
 
                 // We have a binary image with the correct packet id.
-                m_requestIds.Clear();
-                for (int i = 0; i < requestIdCount; i++)
+                m_requestIDs.Clear();
+                for (int i = 0; i < requestIDCount; i++)
                 {
-                    m_requestIds.Add(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 6 + (i * 4)));
+                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 6 + (i * 4)));
                 }
 
                 return BinaryLength;

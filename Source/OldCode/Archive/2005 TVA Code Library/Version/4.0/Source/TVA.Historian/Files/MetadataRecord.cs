@@ -24,7 +24,7 @@ using TVA.Parsing;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents a record in the <see cref="MetadataFile"/> that contains the various attributes associates to a <see cref="HistorianId"/>.
+    /// Represents a record in the <see cref="MetadataFile"/> that contains the various attributes associates to a <see cref="HistorianID"/>.
     /// </summary>
     /// <seealso cref="MetadataFile"/>
     /// <seealso cref="MetadataRecordAlarmFlags"/>
@@ -83,7 +83,7 @@ namespace TVA.Historian.Files
         public const int ByteCount = 2664;
 
         // Fields
-        private int m_historianId;
+        private int m_historianID;
         private string m_remarks;
         private string m_hardwareInfo;
         private string m_emailAddresses;
@@ -105,7 +105,7 @@ namespace TVA.Historian.Files
         private MetadataRecordAlarmFlags m_alarmFlags;
         private int m_compressionMinTime;
         private int m_compressionMaxTime;
-        private int m_sourceId;
+        private int m_sourceID;
         private MetadataRecordAnalogFields m_analogFields;
         private MetadataRecordDigitalFields m_digitalFields;
         private MetadataRecordComposedFields m_composedFields;
@@ -118,10 +118,10 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecord"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier of <see cref="MetadataRecord"/>.</param>
-        public MetadataRecord(int historianId)
+        /// <param name="historianID">Historian identifier of <see cref="MetadataRecord"/>.</param>
+        public MetadataRecord(int historianID)
         {
-            m_historianId = historianId;
+            m_historianID = historianID;
             m_remarks = string.Empty;
             m_hardwareInfo = string.Empty;
             m_emailAddresses = string.Empty;
@@ -148,12 +148,12 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="MetadataRecord"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier of <see cref="MetadataRecord"/>.</param>
+        /// <param name="historianID">Historian identifier of <see cref="MetadataRecord"/>.</param>
         /// <param name="binaryImage">Binary image to be used for initializing <see cref="MetadataRecord"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public MetadataRecord(int historianId, byte[] binaryImage, int startIndex, int length)
-            : this(historianId)
+        public MetadataRecord(int historianID, byte[] binaryImage, int startIndex, int length)
+            : this(historianID)
         {
             Initialize(binaryImage, startIndex, length);
         }
@@ -163,7 +163,7 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets any remarks associated with the <see cref="HistorianId"/>.
+        /// Gets or sets any remarks associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Remarks"/> is 512 characters.
@@ -185,7 +185,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets hardware information associated with the <see cref="HistorianId"/>.
+        /// Gets or sets hardware information associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="HardwareInfo"/> is 512 characters.
@@ -208,7 +208,7 @@ namespace TVA.Historian.Files
 
         /// <summary>
         /// Gets or sets a comma-seperated list of email addresses that will receive alarm notification email messages based 
-        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianId"/>.
+        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="EmailAddresses"/> is 512 characters.
@@ -230,7 +230,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the description associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the description associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Description"/> is 80 characters.
@@ -252,7 +252,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the time, value and quality of the most current data received for the <see cref="HistorianId"/>.
+        /// Gets or sets the time, value and quality of the most current data received for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="CurrentData"/> is 80 characters.
@@ -274,7 +274,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a alpha-numeric name for the <see cref="HistorianId"/>.
+        /// Gets or sets a alpha-numeric name for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Name"/> is 40 characters.
@@ -296,7 +296,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianId"/>.
+        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Synonym1"/> is 40 characters.
@@ -318,7 +318,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianId"/>.
+        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Synonym2"/> is 40 characters.
@@ -340,7 +340,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianId"/>.
+        /// Gets or sets an alternate <see cref="Name"/> for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="Synonym3"/> is 40 characters.
@@ -363,7 +363,7 @@ namespace TVA.Historian.Files
 
         /// <summary>
         /// Gets or sets a comma-seperated list of pager numbers that will receive alarm notification text messages based 
-        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianId"/>.
+        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="PagerNumbers"/> is 40 characters.
@@ -386,7 +386,7 @@ namespace TVA.Historian.Files
 
         /// <summary>
         /// Gets or sets a comma-seperated list of phone numbers that will receive alarm notification voice messages based 
-        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianId"/>.
+        /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="PhoneNumbers"/> is 40 characters.
@@ -408,7 +408,7 @@ namespace TVA.Historian.Files
         }
         
         /// <summary>
-        /// Gets or sets the name of the plant to which the <see cref="HistorianId"/> is associated.
+        /// Gets or sets the name of the plant to which the <see cref="HistorianID"/> is associated.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="PlantCode"/> is 24 characters.
@@ -430,7 +430,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the alpha-numeric system identifier for the <see cref="HistorianId"/>.
+        /// Gets or sets the alpha-numeric system identifier for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="System"/> is 24 characters.
@@ -452,7 +452,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the data and time when an alarm notification is sent based on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianId"/>.
+        /// Gets or sets the data and time when an alarm notification is sent based on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// Maximum length for <see cref="EmailTime"/> is 40 characters.
@@ -471,7 +471,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the rate at which the source device scans and sends data for the <see cref="HistorianId"/>.
+        /// Gets or sets the rate at which the source device scans and sends data for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
         /// <see cref="ScanRate"/> is used by data aquisition components for polling data from the actual device.
@@ -489,7 +489,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the unit (i.e. generator) to which the <see cref="HistorianId"/> is associated.
+        /// Gets or sets the unit (i.e. generator) to which the <see cref="HistorianID"/> is associated.
         /// </summary>
         public int UnitNumber
         {
@@ -504,7 +504,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordSecurityFlags"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordSecurityFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordSecurityFlags SecurityFlags
@@ -523,7 +523,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordGeneralFlags"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordGeneralFlags GeneralFlags
@@ -542,7 +542,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordAlarmFlags"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordAlarmFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordAlarmFlags AlarmFlags
@@ -561,10 +561,10 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the minimum allowable time (in seconds) between archived data for the <see cref="HistorianId"/>.
+        /// Gets or sets the minimum allowable time (in seconds) between archived data for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="CompressionMinTime"/> is useful for limiting archived data for noisy <see cref="HistorianId"/>s.
+        /// <see cref="CompressionMinTime"/> is useful for limiting archived data for noisy <see cref="HistorianID"/>s.
         /// </remarks>
         public int CompressionMinTime
         {
@@ -579,10 +579,10 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the maximum time (in seconds) after which data is to be archived for the <see cref="HistorianId"/>.
+        /// Gets or sets the maximum time (in seconds) after which data is to be archived for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="CompressionMaxTime"/> ensures that archived data exist every "n" seconds for the <see cref="HistorianId"/>, 
+        /// <see cref="CompressionMaxTime"/> ensures that archived data exist every "n" seconds for the <see cref="HistorianID"/>, 
         /// which would otherwise be omitted due to compression.
         /// </remarks>
         public int CompressionMaxTime
@@ -598,31 +598,31 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the numeric identifier of the data source for the <see cref="HistorianId"/>.
+        /// Gets or sets the numeric identifier of the data source for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// <see cref="SourceId"/> is used for the determination of "global time" when that client option is in effect.  
-        /// When "global time" is in effect, the historian returns the current data time for a <see cref="HistorianId"/> 
-        /// based on the latest time received for all <see cref="HistorianId"/>s with the same <see cref="SourceId"/>.
+        /// <see cref="SourceID"/> is used for the determination of "global time" when that client option is in effect.  
+        /// When "global time" is in effect, the historian returns the current data time for a <see cref="HistorianID"/> 
+        /// based on the latest time received for all <see cref="HistorianID"/>s with the same <see cref="SourceID"/>.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">Value being set is not between 1 and 20.</exception>
-        public int SourceId
+        public int SourceID
         {
             get
             {
-                return m_sourceId;
+                return m_sourceID;
             }
             set
             {
                 if (value < 1 || value > 20)
                     throw new ArgumentOutOfRangeException("SourceID", "Value must be between 1 and 20.");
 
-                m_sourceId = value;
+                m_sourceID = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordAnalogFields"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordAnalogFields AnalogFields
@@ -641,7 +641,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordDigitalFields"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordDigitalFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordDigitalFields DigitalFields
@@ -660,7 +660,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordComposedFields"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordComposedFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordComposedFields ComposedFields
@@ -679,7 +679,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="MetadataRecordConstantFields"/> associated with the <see cref="HistorianId"/>.
+        /// Gets or sets the <see cref="MetadataRecordConstantFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">Value being set is null.</exception>
         public MetadataRecordConstantFields ConstantFields
@@ -700,11 +700,11 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets the historian identifier of <see cref="MetadataRecord"/>.
         /// </summary>
-        public int HistorianId
+        public int HistorianID
         {
             get
             {
-                return m_historianId;
+                return m_historianID;
             }
         }
 
@@ -761,7 +761,7 @@ namespace TVA.Historian.Files
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_alarmFlags.Value), 0, image, 2120, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_compressionMinTime), 0, image, 2124, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_compressionMaxTime), 0, image, 2128, 4);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_sourceId), 0, image, 2132, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_sourceID), 0, image, 2132, 4);
                 switch (m_generalFlags.DataType)
                 {
                     case DataType.Analog:
@@ -819,7 +819,7 @@ namespace TVA.Historian.Files
                 AlarmFlags.Value = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2120);
                 CompressionMinTime = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2124);
                 CompressionMaxTime = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2128);
-                SourceId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2132);
+                SourceID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2132);
                 switch (GeneralFlags.DataType)
                 {
                     case DataType.Analog:
@@ -860,7 +860,7 @@ namespace TVA.Historian.Files
             if (other == null)
                 return 1;
             else
-                return m_historianId.CompareTo(other.HistorianId);
+                return m_historianID.CompareTo(other.HistorianID);
         }
 
         /// <summary>
@@ -879,7 +879,7 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
         {
-            return string.Format("Id={0}; Name={1}", m_historianId, m_name);
+            return string.Format("ID={0}; Name={1}", m_historianID, m_name);
         }
 
         /// <summary>
@@ -888,7 +888,7 @@ namespace TVA.Historian.Files
         /// <returns>A 32-bit signed integer value.</returns>
         public override int GetHashCode()
         {
-            return m_historianId.GetHashCode();
+            return m_historianID.GetHashCode();
         }
 
         #endregion

@@ -35,7 +35,7 @@ namespace TVA.Historian.Packets
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
         // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      HistorianId                                                    *
+        // * 4          2-5        Int32      HistorianID                                                    *
         // * 2          6-7        Int16      Year                                                          *
         // * 1          8          Byte       Month                                                         *
         // * 1          9          Byte       Day                                                           *
@@ -58,7 +58,7 @@ namespace TVA.Historian.Packets
         public new const int ByteCount = 22;
 
         // Fields
-        private int m_historianId;
+        private int m_historianID;
         private short m_year;
         private short m_month;
         private short m_day;
@@ -103,18 +103,18 @@ namespace TVA.Historian.Packets
         /// Gets or sets the historian identifier of the time series data.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive.</exception>
-        public int HistorianId
+        public int HistorianID
         {
             get
             {
-                return m_historianId;
+                return m_historianID;
             }
             set
             {
                 if (value < 1)
                     throw new ArgumentException("Value must be positive.");
 
-                m_historianId = value;
+                m_historianID = value;
             }
         }
 
@@ -317,7 +317,7 @@ namespace TVA.Historian.Packets
                 byte[] image = new byte[ByteCount];
 
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 2, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, image, 2, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_year), 0, image, 6, 2);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_month), 0, image, 8, 1);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_day), 0, image, 9, 1);
@@ -349,12 +349,12 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                short packetId = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetId != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetId, TypeID));
+                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                if (packetID != TypeID)
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
-                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
+                HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
                 Year = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 6);
                 Month = Convert.ToInt16(binaryImage[startIndex + 8]);
                 Day = Convert.ToInt16(binaryImage[startIndex + 9]);
@@ -387,7 +387,7 @@ namespace TVA.Historian.Packets
         {
             DateTime timestamp = new DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, m_second, m_millisecond, DateTimeKind.Utc);
 
-            return new ArchiveData[] { new ArchiveData(m_historianId, new TimeTag(timestamp), m_value, m_quality) };
+            return new ArchiveData[] { new ArchiveData(m_historianID, new TimeTag(timestamp), m_value, m_quality) };
         }
 
         /// <summary>

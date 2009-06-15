@@ -36,7 +36,7 @@ namespace TVA.Historian.Packets
         // * # Of Bytes Byte Index Data Type  Property Name                                                 *
         // * ---------- ---------- ---------- --------------------------------------------------------------*
         // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      HistorianId                                                    *
+        // * 4          2-5        Int32      HistorianID                                                    *
         // * 8          6-13       Double     Time                                                          *
         // * 4          14-17      Int32      Quality                                                       *
         // * 4          18-21      Single     Value                                                         *
@@ -52,7 +52,7 @@ namespace TVA.Historian.Packets
         public new const int ByteCount = 22;
 
         // Fields
-        private int m_historianId;
+        private int m_historianID;
         private TimeTag m_time;
         private Quality m_quality;
         private float m_value;
@@ -74,11 +74,11 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType1"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier.</param>
-        public PacketType1(int historianId)
+        /// <param name="historianID">Historian identifier.</param>
+        public PacketType1(int historianID)
             : this()
         {
-            HistorianId = historianId;
+            HistorianID = historianID;
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace TVA.Historian.Packets
         public PacketType1(IDataPoint dataPoint)
             : this()
         {
-            HistorianId = dataPoint.HistorianId;
+            HistorianID = dataPoint.HistorianID;
             Time = dataPoint.Time;
             Value = dataPoint.Value;
             Quality = dataPoint.Quality;
@@ -102,7 +102,7 @@ namespace TVA.Historian.Packets
         public PacketType1(IMeasurement measurement)
             : this()
         {
-            HistorianId = (int)measurement.ID;
+            HistorianID = (int)measurement.ID;
             Time = new TimeTag((DateTime)measurement.Timestamp);
             Value = (float)measurement.AdjustedValue;
             Quality = (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData);
@@ -128,18 +128,18 @@ namespace TVA.Historian.Packets
         /// Gets or sets the historian identifier of the time series data.
         /// </summary>
         /// <exception cref="ArgumentException">Value being set is not positive.</exception>
-        public int HistorianId
+        public int HistorianID
         {
             get
             {
-                return m_historianId;
+                return m_historianID;
             }
             set
             {
                 if (value < 1)
                     throw new ArgumentException("Value must be positive.");
 
-                m_historianId = value;
+                m_historianID = value;
             }
         }
 
@@ -213,7 +213,7 @@ namespace TVA.Historian.Packets
                 byte[] image = new byte[ByteCount];
 
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianId), 0, image, 2, 4);
+                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, image, 2, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_time.Value), 0, image, 6, 8);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes((int)m_quality), 0, image, 14, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_value), 0, image, 18, 4);
@@ -238,12 +238,12 @@ namespace TVA.Historian.Packets
             if (length - startIndex >= ByteCount)
             {
                 // Binary image has sufficient data.
-                short packetId = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetId != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetId, TypeID));
+                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
+                if (packetID != TypeID)
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
-                HistorianId = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
+                HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
                 Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 6));
                 Quality = (Quality)(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 14));
                 Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 18);
@@ -267,7 +267,7 @@ namespace TVA.Historian.Packets
         /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveData"/>.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
-            return new ArchiveData[] { new ArchiveData(m_historianId, m_time, m_value, m_quality) };
+            return new ArchiveData[] { new ArchiveData(m_historianID, m_time, m_value, m_quality) };
         }
 
         /// <summary>

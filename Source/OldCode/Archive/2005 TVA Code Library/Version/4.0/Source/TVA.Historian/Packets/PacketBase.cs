@@ -53,10 +53,10 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the packet.
         /// </summary>
-        /// <param name="packetId">Numeric identifier for the packet type.</param>
-        protected PacketBase(short packetId)
+        /// <param name="packetID">Numeric identifier for the packet type.</param>
+        protected PacketBase(short packetID)
         {
-            m_typeID = packetId;
+            m_typeID = packetID;
         }
 
         #endregion

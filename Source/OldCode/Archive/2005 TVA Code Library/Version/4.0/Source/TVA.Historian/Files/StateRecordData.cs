@@ -65,9 +65,9 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="StateRecordData"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier of <see cref="StateRecordData"/>.</param>
-        public StateRecordData(int historianId)
-            : base(historianId)
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
+        public StateRecordData(int historianID)
+            : base(historianID)
         {
         }
 
@@ -83,24 +83,24 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Initializes a new instance of the <see cref="StateRecordData"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier of <see cref="StateRecordData"/>.</param>
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
         /// <param name="time"><see cref="TimeTag"/> of <see cref="StateRecordData"/>.</param>
         /// <param name="value">Floating-point value of <see cref="StateRecordData"/>.</param>
         /// <param name="quality"><see cref="Quality"/> of <see cref="StateRecordData"/>.</param>
-        public StateRecordData(int historianId, TimeTag time, float value, Quality quality)
-            : base(historianId, time, value, quality)
+        public StateRecordData(int historianID, TimeTag time, float value, Quality quality)
+            : base(historianID, time, value, quality)
         {
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="StateRecordData"/> class.
         /// </summary>
-        /// <param name="historianId">Historian identifier of <see cref="StateRecordData"/>.</param>
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
         /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordData"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public StateRecordData(int historianId, byte[] binaryImage, int startIndex, int length)
-            : this(historianId)
+        public StateRecordData(int historianID, byte[] binaryImage, int startIndex, int length)
+            : this(historianID)
         {
             Initialize(binaryImage, startIndex, length);
         }
