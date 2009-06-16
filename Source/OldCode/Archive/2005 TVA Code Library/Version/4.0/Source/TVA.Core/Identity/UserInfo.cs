@@ -594,7 +594,7 @@ namespace TVA.Identity
                 element = settings["PrevilegedUserName"];
                 element.Update(m_previlegedUserName, element.Description, element.Encrypted);
                 element = settings["PrevilegedPassword"];
-                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
+                element.Update(m_previlegedPassword, element.Description, true);
                 config.Save();
             }
         }
