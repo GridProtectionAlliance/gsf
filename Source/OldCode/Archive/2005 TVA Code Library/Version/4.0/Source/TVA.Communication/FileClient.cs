@@ -507,15 +507,6 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
-                settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
-                settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
-                settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
-                settings.Add("FileOpenMode", m_fileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
-                settings.Add("FileShareMode", m_fileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
-                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
-                // Update settings with the latest property values.
                 element = settings["AutoRepeat"];
                 element.Update(m_autoRepeat, element.Description, element.Encrypted);
                 element = settings["ReceiveOnDemand"];
@@ -545,13 +536,20 @@ namespace TVA.Communication
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                AutoRepeat = settings["AutoRepeat", true].ValueAs(m_autoRepeat);
-                ReceiveOnDemand = settings["ReceiveOnDemand", true].ValueAs(m_receiveOnDemand);
-                ReceiveInterval = settings["ReceiveInterval", true].ValueAs(m_receiveInterval);
-                StartingOffset = settings["StartingOffset", true].ValueAs(m_startingOffset);
-                FileOpenMode = settings["FileOpenMode", true].ValueAs(m_fileOpenMode);
-                FileShareMode = settings["FileShareMode", true].ValueAs(m_fileShareMode);
-                FileAccessMode = settings["FileAccessMode", true].ValueAs(m_fileAccessMode);
+                settings.Add("AutoRepeat", m_autoRepeat, "True if receiving (reading) of data is to be repeated endlessly, otherwise False.");
+                settings.Add("ReceiveOnDemand", m_receiveOnDemand, "True if receiving (reading) of data will be initiated manually, otherwise False.");
+                settings.Add("ReceiveInterval", m_receiveInterval, "Number of milliseconds to pause before receiving (reading) the next available set of data.");
+                settings.Add("StartingOffset", m_startingOffset, "Starting point relative to the beginning of the file from where the data is to be received (read).");
+                settings.Add("FileOpenMode", m_fileOpenMode, "Open mode (CreateNew; Create; Open; OpenOrCreate; Truncate; Append) to be used when opening the file.");
+                settings.Add("FileShareMode", m_fileShareMode, "Share mode (None; Read; Write; ReadWrite; Delete; Inheritable) to be used when opening the file.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+                AutoRepeat = settings["AutoRepeat"].ValueAs(m_autoRepeat);
+                ReceiveOnDemand = settings["ReceiveOnDemand"].ValueAs(m_receiveOnDemand);
+                ReceiveInterval = settings["ReceiveInterval"].ValueAs(m_receiveInterval);
+                StartingOffset = settings["StartingOffset"].ValueAs(m_startingOffset);
+                FileOpenMode = settings["FileOpenMode"].ValueAs(m_fileOpenMode);
+                FileShareMode = settings["FileShareMode"].ValueAs(m_fileShareMode);
+                FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
             }
         }
 

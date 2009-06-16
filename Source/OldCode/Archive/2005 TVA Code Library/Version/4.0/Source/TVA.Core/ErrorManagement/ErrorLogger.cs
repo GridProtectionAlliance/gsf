@@ -882,19 +882,6 @@ namespace TVA.ErrorManagement
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("LogToUI", m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");
-                settings.Add("LogToFile", m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
-                settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
-                settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
-                settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
-                settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
-                settings.Add("ContactName", m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
-                settings.Add("ContactEmail", m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
-                settings.Add("ContactPhone", m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
-                settings.Add("HandleUnhandledException", m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
-                settings.Add("ExitOnUnhandledException", m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
-                // Update settings with the latest property values.
                 element = settings["LogToUI"];
                 element.Update(m_logToUI, element.Description, element.Encrypted);
                 element = settings["LogToFile"];
@@ -936,17 +923,28 @@ namespace TVA.ErrorManagement
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                LogToUI = settings["LogToUI", true].ValueAs(m_logToUI);
-                LogToFile = settings["LogToFile", true].ValueAs(m_logToFile);
-                LogToEmail = settings["LogToEmail", true].ValueAs(m_logToEmail);
-                LogToEventLog = settings["LogToEventLog", true].ValueAs(m_logToEventLog);
-                LogToScreenshot = settings["LogToScreenshot", true].ValueAs(m_logToScreenshot);
-                SmtpServer = settings["SmtpServer", true].ValueAs(m_smtpServer);
-                ContactEmail = settings["ContactEmail", true].ValueAs(m_contactEmail);
-                ContactName = settings["ContactName", true].ValueAs(m_contactName);
-                ContactPhone = settings["ContactPhone", true].ValueAs(m_contactPhone);
-                HandleUnhandledException = settings["HandleUnhandledException", true].ValueAs(m_handleUnhandledException);
-                ExitOnUnhandledException = settings["ExitOnUnhandledException", true].ValueAs(m_exitOnUnhandledException);
+                settings.Add("LogToUI", m_logToUI, "True if an encountered exception is to be logged to the User Interface; otherwise False.");
+                settings.Add("LogToFile", m_logToFile, "True if an encountered exception is to be logged to a file; otherwise False.");
+                settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
+                settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
+                settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
+                settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
+                settings.Add("ContactName", m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
+                settings.Add("ContactEmail", m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
+                settings.Add("ContactPhone", m_contactPhone, "Phone number of the person that the end-user can contact when an exception is encountered.");
+                settings.Add("HandleUnhandledException", m_handleUnhandledException, "True if unhandled exceptions are to be handled automatically; otherwise False.");
+                settings.Add("ExitOnUnhandledException", m_exitOnUnhandledException, "True if the application must exit when an unhandled exception is encountered; otherwise False.");
+                LogToUI = settings["LogToUI"].ValueAs(m_logToUI);
+                LogToFile = settings["LogToFile"].ValueAs(m_logToFile);
+                LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
+                LogToEventLog = settings["LogToEventLog"].ValueAs(m_logToEventLog);
+                LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
+                SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
+                ContactEmail = settings["ContactEmail"].ValueAs(m_contactEmail);
+                ContactName = settings["ContactName"].ValueAs(m_contactName);
+                ContactPhone = settings["ContactPhone"].ValueAs(m_contactPhone);
+                HandleUnhandledException = settings["HandleUnhandledException"].ValueAs(m_handleUnhandledException);
+                ExitOnUnhandledException = settings["ExitOnUnhandledException"].ValueAs(m_exitOnUnhandledException);
             }
         }
 

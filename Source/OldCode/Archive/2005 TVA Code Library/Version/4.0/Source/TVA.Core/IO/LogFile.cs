@@ -537,11 +537,6 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
-                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
-                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
-                // Update settings with the latest property values.
                 element = settings["FileName"];
                 element.Update(m_fileName, element.Description, element.Encrypted);
                 element = settings["FileSize"];
@@ -567,9 +562,12 @@ namespace TVA.IO
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                FileName = settings["FileName", true].ValueAs(m_fileName);
-                FileSize = settings["FileSize", true].ValueAs(m_fileSize);
-                FileFullOperation = settings["FileFullOperation", true].ValueAs(m_fileFullOperation);
+                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
+                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
+                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                FileName = settings["FileName"].ValueAs(m_fileName);
+                FileSize = settings["FileSize"].ValueAs(m_fileSize);
+                FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
             }
         }
 

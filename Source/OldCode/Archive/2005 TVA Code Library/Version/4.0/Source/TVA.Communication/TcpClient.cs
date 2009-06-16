@@ -280,9 +280,6 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                // Update settings with the latest property values.
                 element = settings["PayloadAware"];
                 element.Update(m_payloadAware, element.Description, element.Encrypted);
                 config.Save();
@@ -300,7 +297,8 @@ namespace TVA.Communication
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                PayloadAware = settings["PayloadAware", true].ValueAs(m_payloadAware);
+                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
             }
         }
 

@@ -132,11 +132,6 @@ namespace TVA.Historian.Notifiers
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("EmailServer", m_emailServer, "SMTP server to use for sending the email notifications.");
-                settings.Add("EmailSender", m_emailSender, "Email address to be used for sending the email notifications.");
-                settings.Add("EmailRecipients", m_emailRecipients, "Email addresses (comma or semicolon delimited) where the email notifications are to be sent.");
-                // Update settings with the latest property values.
                 element = settings["EmailServer"];
                 element.Update(m_emailServer, element.Description, element.Encrypted);
                 element = settings["EmailSender"];
@@ -163,9 +158,12 @@ namespace TVA.Historian.Notifiers
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                EmailServer = settings["EmailServer", true].ValueAs(m_emailServer);
-                EmailSender = settings["EmailSender", true].ValueAs(m_emailSender);
-                EmailRecipients = settings["EmailRecipients", true].ValueAs(m_emailRecipients);
+                settings.Add("EmailServer", m_emailServer, "SMTP server to use for sending the email notifications.");
+                settings.Add("EmailSender", m_emailSender, "Email address to be used for sending the email notifications.");
+                settings.Add("EmailRecipients", m_emailRecipients, "Email addresses (comma or semicolon delimited) where the email notifications are to be sent.");
+                EmailServer = settings["EmailServer"].ValueAs(m_emailServer);
+                EmailSender = settings["EmailSender"].ValueAs(m_emailSender);
+                EmailRecipients = settings["EmailRecipients"].ValueAs(m_emailRecipients);
             }
         }
 

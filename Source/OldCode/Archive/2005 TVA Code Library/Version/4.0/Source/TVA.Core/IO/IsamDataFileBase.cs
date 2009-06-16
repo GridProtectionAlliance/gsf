@@ -960,15 +960,6 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("FileName", m_fileName, "Name of the file including its path.");
-                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
-                settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
-                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
-                settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
-                settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
-                settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
-                // Update settings with the latest property values.
                 element = settings["FileName"];
                 element.Update(m_fileName, element.Description, element.Encrypted);
                 element = settings["FileAccessMode"];
@@ -1001,13 +992,20 @@ namespace TVA.IO
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                FileName = settings["FileName", true].ValueAs(m_fileName);
-                FileAccessMode = settings["FileAccessMode", true].ValueAs(m_fileAccessMode);
-                AutoSaveInterval = settings["AutoSaveInterval", true].ValueAs(m_autoSaveInterval);
-                MinimumRecordCount = settings["MinimumRecordCount", true].ValueAs(m_minimumRecordCount);
-                LoadOnOpen = settings["LoadOnOpen", true].ValueAs(m_loadOnOpen);
-                SaveOnClose = settings["SaveOnClose", true].ValueAs(m_saveOnClose);
-                ReloadOnModify = settings["ReloadOnModify", true].ValueAs(m_reloadOnModify);
+                settings.Add("FileName", m_fileName, "Name of the file including its path.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+                settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
+                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
+                settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
+                settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
+                settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
+                FileName = settings["FileName"].ValueAs(m_fileName);
+                FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
+                AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
+                MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
+                LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
+                SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
+                ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
             }
         }
 

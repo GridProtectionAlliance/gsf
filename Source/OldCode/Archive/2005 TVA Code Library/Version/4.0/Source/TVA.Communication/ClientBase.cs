@@ -890,18 +890,6 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("ConnectionString", m_connectionString, "Data required by the client to connect to the server.");
-                settings.Add("MaxConnectionAttempts", m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
-                settings.Add("Handshake", m_handshake, "True if the client will do a handshake with the server after the connection has been established; otherwise False.");
-                settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the client will wait for the server's response to the Handshake.");
-                settings.Add("HandshakePassphrase", m_handshakePassphrase, "Passpharse that the client will provided to the server for authentication during the Handshake process.");
-                settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
-                settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");
-                settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
-                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the client and server.");
-                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the client and server.");
-                // Update settings with the latest property values.
                 element = settings["ConnectionString"];
                 element.Update(m_connectionString, element.Description, element.Encrypted);
                 element = settings["MaxConnectionAttempts"];
@@ -940,16 +928,26 @@ namespace TVA.Communication
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                ConnectionString = settings["ConnectionString", true].ValueAs(m_connectionString);
-                MaxConnectionAttempts = settings["MaxConnectionAttempts", true].ValueAs(m_maxConnectionAttempts);
-                Handshake = settings["Handshake", true].ValueAs(m_handshake);
-                HandshakeTimeout = settings["HandshakeTimeout", true].ValueAs(m_handshakeTimeout);
-                HandshakePassphrase = settings["HandshakePassphrase", true].ValueAs(m_handshakePassphrase);
-                ReceiveTimeout = settings["ReceiveTimeout", true].ValueAs(m_receiveTimeout);
-                ReceiveBufferSize = settings["ReceiveBufferSize", true].ValueAs(m_receiveBufferSize);
-                Encryption = settings["Encryption", true].ValueAs(m_encryption);
-                Compression = settings["Compression", true].ValueAs(m_compression);
-                SecureSession = settings["SecureSession", true].ValueAs(m_secureSession);
+                settings.Add("ConnectionString", m_connectionString, "Data required by the client to connect to the server.");
+                settings.Add("MaxConnectionAttempts", m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
+                settings.Add("Handshake", m_handshake, "True if the client will do a handshake with the server after the connection has been established; otherwise False.");
+                settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the client will wait for the server's response to the Handshake.");
+                settings.Add("HandshakePassphrase", m_handshakePassphrase, "Passpharse that the client will provided to the server for authentication during the Handshake process.");
+                settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
+                settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");
+                settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
+                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the client and server.");
+                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the client and server.");
+                ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
+                MaxConnectionAttempts = settings["MaxConnectionAttempts"].ValueAs(m_maxConnectionAttempts);
+                Handshake = settings["Handshake"].ValueAs(m_handshake);
+                HandshakeTimeout = settings["HandshakeTimeout"].ValueAs(m_handshakeTimeout);
+                HandshakePassphrase = settings["HandshakePassphrase"].ValueAs(m_handshakePassphrase);
+                ReceiveTimeout = settings["ReceiveTimeout"].ValueAs(m_receiveTimeout);
+                ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
+                Encryption = settings["Encryption"].ValueAs(m_encryption);
+                Compression = settings["Compression"].ValueAs(m_compression);
+                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
             }
         }
 

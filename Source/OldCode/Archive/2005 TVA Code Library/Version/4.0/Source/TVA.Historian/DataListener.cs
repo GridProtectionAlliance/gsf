@@ -753,15 +753,6 @@ namespace TVA.Historian
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
-                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
-                settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
-                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
-                settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
-                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
-                settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
-                // Update settings with the latest property values.
                 element = settings["ID"];
                 element.Update(m_id, element.Description, element.Encrypted);
                 element = settings["Server"];
@@ -794,13 +785,20 @@ namespace TVA.Historian
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                ID = settings["ID", true].ValueAs(m_id);
-                Server = settings["Server", true].ValueAs(m_server);
-                Port = settings["Port", true].ValueAs(m_port);
-                Protocol = settings["Protocol", true].ValueAs(m_protocol);
-                ConnectToServer = settings["ConnectToServer", true].ValueAs(m_connectToServer);
-                InitializeData = settings["InitializeData", true].ValueAs(m_initializeData);
-                InitializeDataTimeout = settings["InitializeDataTimeout", true].ValueAs(m_initializeDataTimeout);
+                settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
+                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
+                settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
+                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
+                settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
+                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
+                settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
+                ID = settings["ID"].ValueAs(m_id);
+                Server = settings["Server"].ValueAs(m_server);
+                Port = settings["Port"].ValueAs(m_port);
+                Protocol = settings["Protocol"].ValueAs(m_protocol);
+                ConnectToServer = settings["ConnectToServer"].ValueAs(m_connectToServer);
+                InitializeData = settings["InitializeData"].ValueAs(m_initializeData);
+                InitializeDataTimeout = settings["InitializeDataTimeout"].ValueAs(m_initializeDataTimeout);
             }
         }
 

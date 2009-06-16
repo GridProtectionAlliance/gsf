@@ -238,12 +238,6 @@ namespace TVA.Historian.Notifiers
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("NotifiesAlarms", m_notifiesAlarms, "True if alarm notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesWarnings", m_notifiesWarnings, "True if warning notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesInformation", m_notifiesInformation, "True if information notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesHeartbeat", m_notifiesHeartbeat, "True if heartbeat notifications are to be processed; otherwise False.");
-                // Update settings with the latest property values.
                 element = settings["NotifiesAlarms"];
                 element.Update(m_notifiesAlarms, element.Description, element.Encrypted);
                 element = settings["NotifiesWarnings"];
@@ -270,10 +264,14 @@ namespace TVA.Historian.Notifiers
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                NotifiesAlarms = settings["NotifiesAlarms", true].ValueAs(m_notifiesAlarms);
-                NotifiesWarnings = settings["NotifiesWarnings", true].ValueAs(m_notifiesWarnings);
-                NotifiesInformation = settings["NotifiesInformation", true].ValueAs(m_notifiesInformation);
-                NotifiesHeartbeat = settings["NotifiesHeartbeat", true].ValueAs(m_notifiesHeartbeat);
+                settings.Add("NotifiesAlarms", m_notifiesAlarms, "True if alarm notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesWarnings", m_notifiesWarnings, "True if warning notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesInformation", m_notifiesInformation, "True if information notifications are to be processed; otherwise False.");
+                settings.Add("NotifiesHeartbeat", m_notifiesHeartbeat, "True if heartbeat notifications are to be processed; otherwise False.");
+                NotifiesAlarms = settings["NotifiesAlarms"].ValueAs(m_notifiesAlarms);
+                NotifiesWarnings = settings["NotifiesWarnings"].ValueAs(m_notifiesWarnings);
+                NotifiesInformation = settings["NotifiesInformation"].ValueAs(m_notifiesInformation);
+                NotifiesHeartbeat = settings["NotifiesHeartbeat"].ValueAs(m_notifiesHeartbeat);
             }
         }
 

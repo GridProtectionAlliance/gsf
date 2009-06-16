@@ -584,17 +584,12 @@ namespace TVA.Identity
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
-                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
-                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
-                // Update settings with the latest property values.
                 element = settings["PrevilegedDomain"];
                 element.Update(m_previlegedDomain, element.Description, element.Encrypted);
                 element = settings["PrevilegedUserName"];
                 element.Update(m_previlegedUserName, element.Description, element.Encrypted);
                 element = settings["PrevilegedPassword"];
-                element.Update(m_previlegedPassword, element.Description, true);
+                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -614,9 +609,12 @@ namespace TVA.Identity
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                m_previlegedDomain = settings["PrevilegedDomain", true].ValueAs(m_previlegedDomain);
-                m_previlegedUserName = settings["PrevilegedUserName", true].ValueAs(m_previlegedUserName);
-                m_previlegedPassword = settings["PrevilegedPassword", true].ValueAs(m_previlegedPassword);
+                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
+                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
+                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
+                m_previlegedDomain = settings["PrevilegedDomain"].ValueAs(m_previlegedDomain);
+                m_previlegedUserName = settings["PrevilegedUserName"].ValueAs(m_previlegedUserName);
+                m_previlegedPassword = settings["PrevilegedPassword"].ValueAs(m_previlegedPassword);
             }
         }
 

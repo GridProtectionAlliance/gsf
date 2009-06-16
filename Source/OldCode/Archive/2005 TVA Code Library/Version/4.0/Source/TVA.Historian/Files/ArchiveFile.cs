@@ -1859,22 +1859,6 @@ namespace TVA.Historian.Files
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                // Add settings if they don't exist in config file.
-                settings.Add("FileName", m_fileName, "Name of the file including its path.");
-                settings.Add("FileType", m_fileType, "Type (Active; Standby; Historic) of the file.");
-                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file.");
-                settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
-                settings.Add("RolloverOnFull", m_rolloverOnFull, "True if rollover of the file is to be performed when it is full; otherwise False.");
-                settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
-                settings.Add("FileOffloadLocation", m_fileOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
-                settings.Add("FileOffloadCount", m_fileOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
-                settings.Add("FileOffloadThreshold", m_fileOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
-                settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
-                settings.Add("CompressData", m_compressData, "True if compression is to be performed on the incoming data points; otherwise False.");
-                settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
-                settings.Add("CacheWrites", m_cacheWrites, "True if writes are to be cached for performance; otherwise False.");
-                settings.Add("ConserveMemory", m_conserveMemory, "True if attempts are to be made to conserve memory; otherwise False.");
-                // Update settings with the latest property values.
                 element = settings["FileName"];
                 element.Update(m_fileName, element.Description, element.Encrypted);
                 element = settings["FileType"];
@@ -1921,20 +1905,34 @@ namespace TVA.Historian.Files
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                FileName = settings["FileName", true].ValueAs(FileName);
-                FileType = settings["FileType", true].ValueAs(FileType);
-                FileSize = settings["FileSize", true].ValueAs(FileSize);
-                DataBlockSize = settings["DataBlockSize", true].ValueAs(DataBlockSize);
-                RolloverOnFull = settings["RolloverOnFull", true].ValueAs(RolloverOnFull);
-                RolloverPreparationThreshold = settings["RolloverPreparationThreshold", true].ValueAs(RolloverPreparationThreshold);
-                FileOffloadLocation = settings["FileOffloadLocation", true].ValueAs(FileOffloadLocation);
-                FileOffloadCount = settings["FileOffloadCount", true].ValueAs(FileOffloadCount);
-                FileOffloadThreshold = settings["FileOffloadThreshold", true].ValueAs(FileOffloadThreshold);
-                LeadTimeTolerance = settings["LeadTimeTolerance", true].ValueAs(LeadTimeTolerance);
-                CompressData = settings["CompressData", true].ValueAs(CompressData);
-                DiscardOutOfSequenceData = settings["DiscardOutOfSequenceData", true].ValueAs(DiscardOutOfSequenceData);
-                CacheWrites = settings["CacheWrites", true].ValueAs(CacheWrites);
-                ConserveMemory = settings["ConserveMemory", true].ValueAs(ConserveMemory);
+                settings.Add("FileName", m_fileName, "Name of the file including its path.");
+                settings.Add("FileType", m_fileType, "Type (Active; Standby; Historic) of the file.");
+                settings.Add("FileSize", m_fileSize, "Size (in MB) of the file.");
+                settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
+                settings.Add("RolloverOnFull", m_rolloverOnFull, "True if rollover of the file is to be performed when it is full; otherwise False.");
+                settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
+                settings.Add("FileOffloadLocation", m_fileOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
+                settings.Add("FileOffloadCount", m_fileOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
+                settings.Add("FileOffloadThreshold", m_fileOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
+                settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
+                settings.Add("CompressData", m_compressData, "True if compression is to be performed on the incoming data points; otherwise False.");
+                settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
+                settings.Add("CacheWrites", m_cacheWrites, "True if writes are to be cached for performance; otherwise False.");
+                settings.Add("ConserveMemory", m_conserveMemory, "True if attempts are to be made to conserve memory; otherwise False.");
+                FileName = settings["FileName"].ValueAs(FileName);
+                FileType = settings["FileType"].ValueAs(FileType);
+                FileSize = settings["FileSize"].ValueAs(FileSize);
+                DataBlockSize = settings["DataBlockSize"].ValueAs(DataBlockSize);
+                RolloverOnFull = settings["RolloverOnFull"].ValueAs(RolloverOnFull);
+                RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(RolloverPreparationThreshold);
+                FileOffloadLocation = settings["FileOffloadLocation"].ValueAs(FileOffloadLocation);
+                FileOffloadCount = settings["FileOffloadCount"].ValueAs(FileOffloadCount);
+                FileOffloadThreshold = settings["FileOffloadThreshold"].ValueAs(FileOffloadThreshold);
+                LeadTimeTolerance = settings["LeadTimeTolerance"].ValueAs(LeadTimeTolerance);
+                CompressData = settings["CompressData"].ValueAs(CompressData);
+                DiscardOutOfSequenceData = settings["DiscardOutOfSequenceData"].ValueAs(DiscardOutOfSequenceData);
+                CacheWrites = settings["CacheWrites"].ValueAs(CacheWrites);
+                ConserveMemory = settings["ConserveMemory"].ValueAs(ConserveMemory);
             }
         }
 
