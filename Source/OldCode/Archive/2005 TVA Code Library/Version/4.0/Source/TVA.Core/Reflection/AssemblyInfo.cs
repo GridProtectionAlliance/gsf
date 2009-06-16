@@ -45,8 +45,8 @@ namespace TVA.Reflection
 
         #region [ Constructors ]
 
-        /// <summary>Initializes an instance of TVA.AssemblyInformation for the specified Assembly.</summary>
-        /// <param name="assemblyInstance">An instance of Assembly for which a TVA.AssemblyInformation instance is to be created.</param>
+        /// <summary>Initializes a new instance of the <see cref="AssemblyInfo"/> class.</summary>
+        /// <param name="assemblyInstance">An <see cref="Assembly"/> object.</param>
         public AssemblyInfo(Assembly assemblyInstance)
         {
             m_assemblyInstance = assemblyInstance;
@@ -470,8 +470,7 @@ namespace TVA.Reflection
 
         // Static Properties
 
-        /// <summary>Gets the TVA.Assembly instance of the assembly that invoked the currently executing method.</summary>
-        /// <returns>The TVA.Assembly instance of the assembly that invoked the currently executing method.</returns>
+        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the assembly that invoked the currently executing method.</summary>
         public static AssemblyInfo CallingAssembly
         {
             get
@@ -498,8 +497,7 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the TVA.Assembly instance of the process executable in the default application domain.</summary>
-        /// <returns>The TVA.Assembly instance of the process executable in the default application domain.</returns>
+        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the process executable in the default application domain.</summary>
         public static AssemblyInfo EntryAssembly
         {
             get
@@ -511,8 +509,7 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the TVA.Assembly instance of the assembly that contains the code that is currently executing.</summary>
-        /// <returns>The TVA.Assembly instance of the assembly that contains the code that is currently executing.</returns>
+        /// <summary>Gets the <see cref="AssemblyInfo"/> object of the assembly that contains the code that is currently executing.</summary>
         public static AssemblyInfo ExecutingAssembly
         {
             get

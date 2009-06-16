@@ -228,8 +228,7 @@ namespace TVA.Configuration
         #region [ Methods ]
 
         /// <summary>
-        /// Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object
-        /// to the configuration file that it represents.
+        /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the configuration file that it represents.
         /// </summary>
         public void Save()
         {
@@ -237,18 +236,16 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object
-        /// to the configuration file that it represents.
+        /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the configuration file that it represents.
         /// </summary>
-        /// <param name="saveMode">A System.Configuration.ConfigurationSaveMode value that determines which property values to save.</param>
+        /// <param name="saveMode">One of the <see cref="ConfigurationSaveMode"/> values.</param>
         public void Save(ConfigurationSaveMode saveMode)
         {
             m_configuration.Save(saveMode);
         }
 
         /// <summary>
-        /// Writes the configuration settings contained within this TVA.Configuration.ConfigurationFile object
-        /// to the specified configuration file.
+        /// Writes the configuration settings contained within this <see cref="ConfigurationFile"/> object to the specified configuration file.
         /// </summary>
         /// <param name="fileName">The path and file name to save the configuration file to.</param>
         public void SaveAs(string fileName)
