@@ -1,10 +1,10 @@
 //*******************************************************************************************************
 //  VBArrayDescriptor.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
-//      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
+//  Primary Developer: Pinal C. Patel
+//      Office: INFO SVCS APP DEV, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-3024
 //       Email: pcpatel@tva.gov
 //

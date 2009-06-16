@@ -3,7 +3,7 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: Pinal C Patel
+//  Primary Developer: Pinal C. Patel
 //      Office: INFO SVCS APP DEV, CHATTANOOGA - MR 2W-C
 //       Phone: 423-751-2250
 //       Email: pcpatel@tva.gov
@@ -18,11 +18,11 @@
 //       Added GetTypedValue overload to handle boolean types as a special case.
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/17/2008 - Pinal C Patel
+//  09/17/2008 - Pinal C. Patel
 //       Converted code to C#.
 //  09/22/2008 - J. Ritchie Carroll
 //       Made boolean types a special case (i.e., using ParseBoolean extension).
-//  09/29/2008 - Pinal C Patel
+//  09/29/2008 - Pinal C. Patel
 //       Reviewed code comments.
 //
 //*******************************************************************************************************

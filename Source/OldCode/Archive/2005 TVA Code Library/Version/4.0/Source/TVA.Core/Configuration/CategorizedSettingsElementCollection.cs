@@ -3,7 +3,7 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: Pinal C Patel
+//  Primary Developer: Pinal C. Patel
 //      Office: INFO SVCS APP DEV, CHATTANOOGA - MR 2W-C
 //       Phone: 423-751-2250
 //       Email: pcpatel@tva.gov
@@ -16,9 +16,9 @@
 //       Modified the Item(name) property to add a configuration element if it does not exist.
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/17/2008 - Pinal C Patel
+//  09/17/2008 - Pinal C. Patel
 //       Converted code to C#.
-//  09/29/2008 - Pinal C Patel
+//  09/29/2008 - Pinal C. Patel
 //       Reviewed code comments.
 //
 //*******************************************************************************************************

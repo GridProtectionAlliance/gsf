@@ -1,12 +1,12 @@
 //*******************************************************************************************************
 //  BitmapExtensions.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
+//  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
-//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
-//       Phone: 423/751-2827
-//       Email: jrcarrol@tva.gov
+//  Primary Developer: Pinal C. Patel
+//      Office: INFO SVCS APP DEV, CHATTANOOGA - MR BK-C
+//       Phone: 423/751-3024
+//       Email: pcpatel@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -14,7 +14,7 @@
 //       Original version of source code generated.
 //  09/12/2008 - J. Ritchie Carroll
 //      Converted to C# extensions.
-//  10/02/2008 - Pinal C Patel
+//  10/02/2008 - Pinal C. Patel
 //       Entered code comments.
 //
 //*******************************************************************************************************

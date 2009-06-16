@@ -3,7 +3,7 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: Pinal C Patel
+//  Primary Developer: Pinal C. Patel
 //      Office: INFO SVCS APP DEV, CHATTANOOGA - MR 2W-C
 //       Phone: 423-751-2250
 //       Email: pcpatel@tva.gov
@@ -14,9 +14,9 @@
 //       Generated original version of source code.
 //  09/13/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/24/2008 - Pinal C Patel
+//  09/24/2008 - Pinal C. Patel
 //       Converted code to C#.
-//  10/17/2008 - Pinal C Patel
+//  10/17/2008 - Pinal C. Patel
 //       Edited code comments.
 //
 //*******************************************************************************************************

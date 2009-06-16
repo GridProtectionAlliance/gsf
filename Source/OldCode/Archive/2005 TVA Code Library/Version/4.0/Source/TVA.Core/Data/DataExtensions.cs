@@ -27,7 +27,7 @@
 //       Edited code comments.
 //  09/15/2008 - J. Ritchie Carroll
 //      Converted to C# extensions.
-//  09/29/2008 - Pinal C Patel
+//  09/29/2008 - Pinal C. Patel
 //      Reviewed code comments.
 //
 //*******************************************************************************************************
