@@ -127,7 +127,7 @@ namespace TVA.Services
         /// <summary>
         /// Gets or sets the command text for the <see cref="ClientRequest"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is either a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
         public string Command
         {
             get

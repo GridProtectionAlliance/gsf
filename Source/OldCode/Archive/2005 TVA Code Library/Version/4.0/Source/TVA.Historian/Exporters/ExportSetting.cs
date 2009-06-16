@@ -64,7 +64,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// Gets or sets the name of the <see cref="ExportSetting"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string Name
         {
             get

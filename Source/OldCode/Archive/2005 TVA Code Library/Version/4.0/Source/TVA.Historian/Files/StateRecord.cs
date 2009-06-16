@@ -102,7 +102,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the most recently archived <see cref="StateRecordData"/> for the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public StateRecordData ArchivedData
         {
             get
@@ -121,7 +121,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the previous <see cref="StateRecordData"/> received for the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public StateRecordData PreviousData
         {
             get
@@ -140,7 +140,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the most current <see cref="StateRecordData"/> received for the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public StateRecordData CurrentData
         {
             get

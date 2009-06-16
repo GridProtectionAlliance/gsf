@@ -118,7 +118,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of the oldest <see cref="ArchiveDataBlock"/> in the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 01/01/1995 and 01/19/2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public TimeTag FileStartTime
         {
             get
@@ -137,7 +137,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of the newest <see cref="ArchiveDataBlock"/> in the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 01/01/1995 and 01/19/2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public TimeTag FileEndTime
         {
             get
@@ -156,7 +156,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the number <see cref="ArchiveData"/> points received by the <see cref="ArchiveFile"/> for archival.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or zero.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int DataPointsReceived
         {
             get
@@ -175,7 +175,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the number <see cref="ArchiveData"/> points archived by the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or zero.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int DataPointsArchived
         {
             get

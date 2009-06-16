@@ -84,7 +84,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Same as <see cref="StateRecord.HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int HistorianID
         {
             get
@@ -103,7 +103,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Same as <see cref="StateRecord.CurrentData"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public StateRecordData CurrentData
         {
             get

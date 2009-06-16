@@ -177,7 +177,7 @@ namespace TVA.Diagnostics
         /// Gets or sets the measurement unit of <see cref="LastValue"/>, <see cref="MinimumValue"/>, 
         /// <see cref="MaximumValue"/> and <see cref="AverageValue"/>
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string ValueUnit
         {
             get
@@ -196,7 +196,7 @@ namespace TVA.Diagnostics
         /// Gets or sets the divisor to be applied to the <see cref="LastValue"/>, <see cref="MinimumValue"/>, 
         /// <see cref="MaximumValue"/> and <see cref="AverageValue"/>.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">The value being set is not greater than 0.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not greater than 0.</exception>
         public float ValueDivisor
         {
             get
@@ -215,7 +215,7 @@ namespace TVA.Diagnostics
         /// Gets or sets the number of samples to use to determine the <see cref="LastValue"/>, 
         /// <see cref="MinimumValue"/>, <see cref="MaximumValue"/> and <see cref="AverageValue"/>.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">The value being set is not greater than 0.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not greater than 0.</exception>
         public int SamplingWindow
         {
             get

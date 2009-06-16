@@ -127,7 +127,7 @@ namespace TVA.Historian.Notifiers
         /// Gets or sets the number of milliseconds to wait for a notification to be sent.
         /// </summary>
         /// <remarks>Set <see cref="DispatchTimeout"/> to -1 to wait indefinitely.</remarks>
-        /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int DispatchTimeout
         {
             get

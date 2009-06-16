@@ -168,7 +168,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Remarks"/> is 512 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Remarks
         {
             get
@@ -190,7 +190,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="HardwareInfo"/> is 512 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string HardwareInfo
         {
             get
@@ -213,7 +213,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="EmailAddresses"/> is 512 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string EmailAddresses
         {
             get
@@ -235,7 +235,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Description"/> is 80 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Description
         {
             get
@@ -257,7 +257,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="CurrentData"/> is 80 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string CurrentData
         {
             get
@@ -279,7 +279,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Name"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Name
         {
             get
@@ -301,7 +301,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Synonym1"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym1
         {
             get
@@ -323,7 +323,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Synonym2"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym2
         {
             get
@@ -345,7 +345,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="Synonym3"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string Synonym3
         {
             get
@@ -368,7 +368,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="PagerNumbers"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string PagerNumbers
         {
             get
@@ -391,7 +391,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="PhoneNumbers"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string PhoneNumbers
         {
             get
@@ -413,7 +413,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="PlantCode"/> is 24 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string PlantCode
         {
             get
@@ -435,7 +435,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="System"/> is 24 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string System
         {
             get
@@ -457,7 +457,7 @@ namespace TVA.Historian.Files
         /// <remarks>
         /// Maximum length for <see cref="EmailTime"/> is 40 characters.
         /// </remarks>
-        /// <exception cref="ArgumentNullException">Value being set is a null string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
         public string EmailTime
         {
             get
@@ -506,7 +506,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordSecurityFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordSecurityFlags SecurityFlags
         {
             get
@@ -525,7 +525,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordGeneralFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordGeneralFlags GeneralFlags
         {
             get
@@ -544,7 +544,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAlarmFlags"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordAlarmFlags AlarmFlags
         {
             get
@@ -605,7 +605,7 @@ namespace TVA.Historian.Files
         /// When "global time" is in effect, the historian returns the current data time for a <see cref="HistorianID"/> 
         /// based on the latest time received for all <see cref="HistorianID"/>s with the same <see cref="SourceID"/>.
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">Value being set is not between 1 and 20.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 1 and 20.</exception>
         public int SourceID
         {
             get
@@ -624,7 +624,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordAnalogFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordAnalogFields AnalogFields
         {
             get
@@ -643,7 +643,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordDigitalFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordDigitalFields DigitalFields
         {
             get
@@ -662,7 +662,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordComposedFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordComposedFields ComposedFields
         {
             get
@@ -681,7 +681,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="MetadataRecordConstantFields"/> associated with the <see cref="HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public MetadataRecordConstantFields ConstantFields
         {
             get

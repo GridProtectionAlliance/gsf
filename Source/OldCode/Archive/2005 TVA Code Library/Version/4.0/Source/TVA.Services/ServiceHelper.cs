@@ -325,7 +325,7 @@ namespace TVA.Services
         /// <summary>
         /// Gets or sets the maximum number of <see cref="ClientRequest"/> entries to be maintained in the <see cref="ClientRequestHistory"/>.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">The value being set is zero or negative.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         [Category("Settings"), 
         DefaultValue(DefaultRequestHistoryLimit), 
         Description("Maximum number of ClientRequest entries to be maintained in the ClientRequestHistory.")]
@@ -348,7 +348,7 @@ namespace TVA.Services
         /// Gets or sets a comma-seperated list of <see cref="ConfigurationFile.Settings"/> section names whose settings can 
         /// be manupulated by the <see cref="ServiceHelper"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is either a null empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is either a null empty string.</exception>
         [Category("Settings"), 
         DefaultValue(DefaultQueryableSettingsCategories), 
         Description("Comma-seperated list of ConfigurationFile.Settings section names whose settings can be manupulated by the ServiceHelper.")]

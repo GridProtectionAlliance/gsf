@@ -105,7 +105,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Same as <see cref="MetadataRecord.HistorianID"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int HistorianID
         {
             get

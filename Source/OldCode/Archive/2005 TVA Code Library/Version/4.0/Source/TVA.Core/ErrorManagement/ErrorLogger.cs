@@ -456,7 +456,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the category under which the settings of <see cref="ErrorLogger"/> object are to be saved
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ErrorLogger object are to be saved to the config file if the PersistSettings property is set to true.")]
@@ -552,7 +552,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the <see cref="Delegate"/> that provides common text stating what could have possibly 
         /// caused the <see cref="Exception"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>
@@ -581,7 +581,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the <see cref="Delegate"/> that provides text stating what is going to happen as a result 
         /// of the <see cref="Exception"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>The action you requested was not performed.</para>
@@ -607,7 +607,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the <see cref="Delegate"/> that provides text stating the action(s) that can be taken by 
         /// the end-user after an <see cref="Exception"/> is encountered.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         /// <example>
         /// Sample text:
         /// <para>Close your browser, navigate back to the website, and try repeating you last action.</para>
@@ -633,7 +633,7 @@ namespace TVA.ErrorManagement
         /// Gets or sets the <see cref="Delegate"/> that provides text contaning detailed information about the 
         /// encountered <see cref="Exception"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<string> MoreInfoTextMethod

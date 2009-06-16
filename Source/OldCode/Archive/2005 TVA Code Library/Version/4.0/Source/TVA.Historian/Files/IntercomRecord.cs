@@ -97,7 +97,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the number of allocated <see cref="ArchiveDataBlock"/>s in the active <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or zero.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int DataBlocksUsed
         {
             get

@@ -81,7 +81,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the historian identifier of <see cref="ArchiveDataBlockPointer"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or -1.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int HistorianID
         {
             get
@@ -100,7 +100,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of fist <see cref="ArchiveData"/> point in the <see cref="DataBlock"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 01/01/1995 and 01/19/2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public TimeTag StartTime
         {
             get

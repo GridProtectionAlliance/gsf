@@ -115,7 +115,7 @@ namespace TVA.Services
         /// <summary>
         /// Gets or sets the name of the <see cref="ServiceProcess"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string Name
         {
             get

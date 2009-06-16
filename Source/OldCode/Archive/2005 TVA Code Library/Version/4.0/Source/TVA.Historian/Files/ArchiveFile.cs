@@ -549,8 +549,8 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the name of the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
-        /// <exception cref="ArgumentException">Value being set contains an invalid file extension.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        /// <exception cref="ArgumentException">The value being assigned contains an invalid file extension.</exception>
         [Category("Configuration"),
         DefaultValue(DefaultFileName),
         Description("Name of the ArchiveFile.")]
@@ -598,7 +598,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the size (in MB) of the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         [Category("Configuration"),
         DefaultValue(DefaultFileSize),
         Description("Size (in MB) of the ArchiveFile.")]
@@ -638,7 +638,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the size (in KB) of the <see cref="ArchiveDataBlock"/>s.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         [Category("Configuration"),
         DefaultValue(DefaultDataBlockSize),
         Description("Size (in KB) of the ArchiveDataBlocks.")]
@@ -689,7 +689,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="ArchiveFile"/> usage (in %) that will trigger the creation of an empty <see cref="ArchiveFile"/> for rollover.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 1 and 95.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 1 and 95.</exception>
         [Category("Rollover"),
         DefaultValue(DefaultRolloverPreparationThreshold),
         Description("ArchiveFile usage (in %) that will trigger the creation of an empty ArchiveFile for rollover.")]
@@ -729,7 +729,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the number of historic <see cref="ArchiveFile"/>s to be offloaded to the <see cref="FileOffloadLocation"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         [Category("Offload"),
         DefaultValue(DefaultFileOffloadCount),
         Description("Number of historic ArchiveFiles to be offloaded to the FileOffloadPath.")]
@@ -751,7 +751,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the free disk space (in %) of the primary archive location that triggers the offload of historic <see cref="ArchiveFile"/>s.
         /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">Value being set is not between 1 and 99.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 1 and 99.</exception>
         [Category("Offload"),
         DefaultValue(DefaultFileOffloadThreshold),
         Description("Free disk space (in %) of the primary archive location that triggers the offload of historic ArchiveFiles.")]
@@ -773,7 +773,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the number of minutes by which incoming <see cref="ArchiveData"/> can be ahead of local system clock and still be considered valid.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not zero or positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not zero or positive.</exception>
         [Category("Data"),
         DefaultValue(DefaultLeadTimeTolerance),
         Description("Number of minutes by which incoming ArchiveData can be ahead of local system clock and still be considered valid.")]

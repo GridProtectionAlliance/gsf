@@ -112,7 +112,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the 0-based index of the time-zone for the <see cref="Time"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive or zero.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public short TimeZoneIndex
         {
             get
@@ -146,7 +146,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of <see cref="StateRecordData"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 01/01/1995 and 01/19/2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public override TimeTag Time
         {
             get

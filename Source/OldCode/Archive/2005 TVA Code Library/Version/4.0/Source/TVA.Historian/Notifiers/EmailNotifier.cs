@@ -57,7 +57,7 @@ namespace TVA.Historian.Notifiers
         /// <summary>
         /// Gets or sets the SMTP server to use for sending the email messages.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string EmailServer
         {
             get
@@ -76,7 +76,7 @@ namespace TVA.Historian.Notifiers
         /// <summary>
         /// Gets or sets the email address to be used for sending the email messages.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string EmailSender
         {
             get

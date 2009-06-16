@@ -151,7 +151,7 @@ namespace TVA.Scheduling
         /// <summary>
         /// Gets or sets the name of the <see cref="Schedule"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
         public string Name
         {
             get
@@ -170,7 +170,7 @@ namespace TVA.Scheduling
         /// <summary>
         /// Gets or sets the rule of the <see cref="Schedule"/> defined in UNIX crontab syntax.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
         /// <exception cref="ArgumentException">The number of <see cref="SchedulePart"/> in the rule is not exactly 5.</exception>
         public string Rule
         {

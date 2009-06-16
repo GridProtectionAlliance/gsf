@@ -102,7 +102,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the historian identifier of the time series data.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         public int HistorianID
         {
             get
@@ -121,7 +121,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the year-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 1995 and 2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 1995 and 2063.</exception>
         public short Year
         {
             get
@@ -140,7 +140,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the month-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 1 and 12.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 1 and 12.</exception>
         public short Month
         {
             get
@@ -159,7 +159,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the day-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 1 and 31.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 1 and 31.</exception>
         public short Day
         {
             get
@@ -178,7 +178,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the hour-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 0 and 23.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 0 and 23.</exception>
         public short Hour
         {
             get
@@ -197,7 +197,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the minute-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 0 and 59.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 0 and 59.</exception>
         public short Minute
         {
             get
@@ -216,7 +216,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the second-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 0 and 59.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 0 and 59.</exception>
         public short Second
         {
             get
@@ -250,7 +250,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Gets or sets the millisecond-part of the time.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 0 and 999.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 0 and 999.</exception>
         public short Millisecond
         {
             get

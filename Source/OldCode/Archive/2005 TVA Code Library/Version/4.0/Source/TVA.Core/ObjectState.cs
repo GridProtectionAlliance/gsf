@@ -80,7 +80,7 @@ namespace TVA
         /// <summary>
         /// Gets or sets a text label for the object whose state is being tracked.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string ObjectName
         {
             get

@@ -119,7 +119,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// Gets or sets the name of the <see cref="Export"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string Name
         {
             get
@@ -168,7 +168,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// Gets or sets the name of the exporter (any <see cref="Type"/> that implements the <see cref="IExporter"/> interface) responsible for processing the export.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string Exporter
         {
             get

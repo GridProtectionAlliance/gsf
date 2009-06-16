@@ -125,7 +125,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the historian identifier of <see cref="ArchiveData"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         public int HistorianID
         {
             get
@@ -144,7 +144,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the <see cref="TimeTag"/> of <see cref="ArchiveData"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 01/01/1995 and 01/19/2063.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public virtual TimeTag Time
         {
             get

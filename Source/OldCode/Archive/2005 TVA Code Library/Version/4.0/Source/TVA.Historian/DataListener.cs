@@ -272,7 +272,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the alpha-numeric identifier of the <see cref="DataListener"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Identity"),
         DefaultValue(DefaultID),
         Description("Alpha-numeric identifier of the DataListener.")]
@@ -294,7 +294,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the DNS name or IP address of the server from where the <see cref="DataListener"/> will get the time series data.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Connection"),
         DefaultValue(DefaultServer),
         Description("DNS name or IP address of the server from where the DataListener will get the time series data.")]
@@ -316,7 +316,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the network port of the <see cref="Server"/> where the <see cref="DataListener"/> will connect to get the time series data.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not between 0 and 65535.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not between 0 and 65535.</exception>
         [Category("Connection"),
         DefaultValue(DefaultPort),
         Description("Network port of the Server where the DataListener will connect to get the time series data.")]
@@ -338,7 +338,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the <see cref="TransportProtocol"/> to be used for receiving time series data from the <see cref="Server"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not Tcp or Udp.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not Tcp or Udp.</exception>
         [Category("Connection"),
         DefaultValue(DefaultProtocol),
         Description("Protocol to be used for receiving time series data from the Server.")]
@@ -401,7 +401,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the time (in milliseconds) to wait for the <see cref="Data"/> to be initialized from the <see cref="Server"/> on <see cref="Start"/>up.
         /// </summary>
-        /// <exception cref="ArgumentException">Value being set is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         [Category("Data"),
         DefaultValue(DefaultInitializeDataTimeout),
         Description("Time (in milliseconds) to wait for the Data to be initialized from the Server on Startup.")]
@@ -441,7 +441,7 @@ namespace TVA.Historian
         /// <summary>
         /// Gets or sets the category under which the settings of <see cref="DataListener"/> are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of DataListener are to be saved to the config file if the PersistSettings property is set to true.")]

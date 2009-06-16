@@ -108,7 +108,7 @@ namespace TVA.Historian.Files
         /// Gets or sets the value (0 or 1) that indicates alarm state for the <see cref="MetadataRecord"/>.
         /// </summary>
         /// <remarks>A value of -1 indicates no alarm state.</remarks>
-        /// <exception cref="ArgumentException">Value being set is not -1, 0 or 1.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not -1, 0 or 1.</exception>
         public int AlarmState
         {
             get

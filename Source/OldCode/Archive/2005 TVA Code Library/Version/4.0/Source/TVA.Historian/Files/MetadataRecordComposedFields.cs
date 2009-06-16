@@ -211,7 +211,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the engineering units of archived data values for the <see cref="MetadataRecord"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public string EngineeringUnits
         {
             get
@@ -230,7 +230,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the mathematical equation used for calculating the data value for the <see cref="MetadataRecord"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">Value being set is null.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
         public string Equation
         {
             get
