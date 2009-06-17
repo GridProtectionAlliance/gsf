@@ -389,7 +389,7 @@ namespace TVA.Services
         /// Gets or sets the category under which the settings of <see cref="ServiceHelper"/> are to be saved to the config file 
         /// if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the settings of ServiceHelper are to be saved to the config file if the PersistSettings property is set to true.")]

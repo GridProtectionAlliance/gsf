@@ -352,7 +352,7 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the number of milliseconds that the client will wait for the server's response to the <see cref="Handshake"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
         [Category("Security"),
         DefaultValue(DefaultHandshakeTimeout),
         Description("The number of milliseconds that the client will wait for the server's response to the Handshake.")]
@@ -448,7 +448,7 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the size of the buffer used by the client for receiving data from the server.
         /// </summary>
-        /// <exception cref="ArgumentException">The value specified is either zero or negative.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is either zero or negative.</exception>
         [Category("Data"),
         DefaultValue(DefaultReceiveBufferSize),
         Description("The size of the buffer used by the client for receiving data from the server.")]
@@ -545,7 +545,7 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the category under which the client settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Persistance"),
         DefaultValue(DefaultSettingsCategory),
         Description("Category under which the client settings are to be saved to the config file if the PersistSettings property is set to true.")]

@@ -321,7 +321,7 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the starting point relative to the beginning of the file from where the data is to be received (read).
         /// </summary>
-        /// <exception cref="ArgumentException">The value specified is not a positive number.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not a positive number.</exception>
         [Category("File"),
         DefaultValue(DefaultStartingOffset),
         Description("The starting point relative to the beginning of the file from where the data is to be received (read).")]

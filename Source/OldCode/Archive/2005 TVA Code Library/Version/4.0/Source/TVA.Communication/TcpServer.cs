@@ -191,7 +191,7 @@ namespace TVA.Communication
         /// <summary>
         /// Gets or sets the byte sequence used to mark the beginning of a payload in a <see cref="PayloadAware"/> transmission.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value specified is null or empty buffer.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is null or empty buffer.</exception>
         [Browsable(false),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public byte[] PayloadMarker
