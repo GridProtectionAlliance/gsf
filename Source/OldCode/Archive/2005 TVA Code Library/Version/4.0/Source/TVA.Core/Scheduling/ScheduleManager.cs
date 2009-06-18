@@ -468,7 +468,14 @@ namespace TVA.Scheduling
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void BeginInit()
         {
-            // Nothing needs to be done before component is initialized.
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
         }
 
         /// <summary>
