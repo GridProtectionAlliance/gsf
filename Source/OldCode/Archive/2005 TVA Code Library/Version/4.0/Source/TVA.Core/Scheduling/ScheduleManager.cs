@@ -27,6 +27,8 @@
 //       Convert to C#.
 //  11/04/2008 - Pinal C. Patel
 //       Edited code comments.
+//  06/18/2009 - Pinal C. Patel
+//       Fixed the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -274,10 +276,10 @@ namespace TVA.Scheduling
             }
             set
             {
-                if (value && !IsRunning)
-                    m_timer.Start();
-                else if (!value && IsRunning)
-                    m_timer.Stop();
+                if (value && !Enabled)
+                    Start();
+                else if (!value && Enabled)
+                    Stop();
             }
         }
 

@@ -20,7 +20,6 @@
 using System;
 using TVA.Configuration;
 using TVA.Net.Smtp;
-using TVA.Identity;
 
 namespace TVA.Historian.Notifiers
 {

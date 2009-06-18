@@ -20,6 +20,8 @@
 //       Added CacheWrites and ConserveMemory properties for performance improvement.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
+//  06/18/2009 - Pinal C. Patel
+//       Fixed the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -984,9 +986,9 @@ namespace TVA.Historian.Files
             }
             set
             {
-                if (value && !IsOpen)
+                if (value && !Enabled)
                     Open();
-                else if (!value && IsOpen)
+                else if (!value && Enabled)
                     Close();
             }
         }

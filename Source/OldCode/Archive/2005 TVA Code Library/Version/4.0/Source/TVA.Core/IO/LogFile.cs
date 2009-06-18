@@ -19,6 +19,8 @@
 //       Converted to C#.
 //  10/21/2008 - Pinal C. Patel
 //       Edited code comments.
+//  06/18/2009 - Pinal C. Patel
+//       Fixed the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -326,11 +328,14 @@ namespace TVA.IO
         {
             get
             {
-                return m_logEntryQueue.Enabled;
+                return IsOpen;
             }
             set
             {
-                m_logEntryQueue.Enabled = value;
+                if (value && !Enabled)
+                    Open();
+                else if (!value && Enabled)
+                    Close();
             }
         }
 

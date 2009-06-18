@@ -21,6 +21,8 @@
 //       Added code to detect and avoid redundant calls to Dispose().
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  06/18/2009 - Pinal C. Patel
+//       Fixed the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -587,9 +589,9 @@ namespace TVA.Communication
             }
             set
             {
-                if (value && m_currentState != ServerState.Running)
+                if (value && !Enabled)
                     Start();
-                else if (!value && m_currentState == ServerState.Running)
+                else if (!value && Enabled)
                     Stop();
             }
         }

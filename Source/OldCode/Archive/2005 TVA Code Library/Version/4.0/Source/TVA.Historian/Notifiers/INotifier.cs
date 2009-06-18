@@ -52,7 +52,7 @@ namespace TVA.Historian.Notifiers
     /// Defines a notifier that can process notification messages.
     /// </summary>
     /// <seealso cref="NotificationType"/>
-    public interface INotifier : IPersistSettings
+    public interface INotifier : ISupportLifecycle, IPersistSettings
     {
         #region [ Properties ]
 

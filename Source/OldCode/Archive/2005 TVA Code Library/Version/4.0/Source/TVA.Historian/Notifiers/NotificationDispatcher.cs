@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using TVA.Collections;
 using TVA.IO;
@@ -31,7 +30,7 @@ namespace TVA.Historian.Notifiers
     /// A class that can be used to dispath notifications using all available <see cref="INotifier">Notifiers</see>.
     /// </summary>
     /// <seealso cref="INotifier"/>
-    public class NotificationDispatcher
+    public class NotificationDispatcher : ISupportLifecycle
     {
         #region [ Members ]
 
@@ -100,6 +99,8 @@ namespace TVA.Historian.Notifiers
         private List<INotifier> m_notifiers;
         private ProcessQueue<Notification> m_dispatchQueue;
         private FileSystemWatcher m_fileSystemWatcher;
+        private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
@@ -117,6 +118,14 @@ namespace TVA.Historian.Notifiers
             m_fileSystemWatcher = new FileSystemWatcher();
             m_fileSystemWatcher.Filter = "*.dll";
             m_fileSystemWatcher.Created += FileSystemWatcher_Created;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="NotificationDispatcher"/> is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~NotificationDispatcher()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -144,6 +153,27 @@ namespace TVA.Historian.Notifiers
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="NotificationDispatcher"/> is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        public bool Enabled
+        {
+            get
+            {
+                return m_dispatchQueue.Enabled;
+            }
+            set
+            {
+                if (value && !Enabled)
+                    Start();
+                else if (!value && Enabled)
+                    Stop();
+            }
+        }
+
+        /// <summary>
         /// Gets all available <see cref="INotifier">Notifiers</see>.
         /// </summary>
         public IList<INotifier> Notifiers
@@ -159,15 +189,38 @@ namespace TVA.Historian.Notifiers
         #region [ Methods ]
 
         /// <summary>
+        /// Releases all the resources used by the <see cref="NotificationDispatcher"/>.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="NotificationDispatcher"/>.
+        /// </summary>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                // Load all available notifiers.
+                foreach (Type type in typeof(INotifier).LoadImplementations())
+                {
+                    ProcessNotifier(type);
+                }
+
+                m_initialized = true; // Initialize only once.
+            }
+        }
+
+        /// <summary>
         /// Starts the <see cref="NotificationDispatcher"/>.
         /// </summary>
         public void Start()
         {
-            // Load all available notifiers.
-            foreach (Type type in typeof(INotifier).LoadImplementations())
-            {
-                ProcessNotifier(type);
-            }
+            // Initialize if uninitialized.
+            Initialize();
 
             // Start notification queue and notifier file watcher.
             m_dispatchQueue.ProcessTimeout = m_dispatchTimeout;
@@ -184,11 +237,6 @@ namespace TVA.Historian.Notifiers
         {
             m_fileSystemWatcher.EnableRaisingEvents = false;
             m_dispatchQueue.Flush();
-
-            foreach (INotifier notifier in m_notifiers)
-            {
-                notifier.SaveSettings();
-            }
         }
 
         /// <summary>
@@ -212,6 +260,34 @@ namespace TVA.Historian.Notifiers
         public void SendNotification(string subject, string message, string details, NotificationType notificationType)
         {
             m_dispatchQueue.Add(new Notification(subject, message, details, notificationType));
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="NotificationDispatcher"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.				
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        foreach (INotifier notifier in m_notifiers)
+                        {
+                            notifier.Dispose();
+                        }
+                        m_notifiers.Clear();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         /// <summary>
@@ -267,7 +343,7 @@ namespace TVA.Historian.Notifiers
         private void ProcessNotifier(Type type)
         {
             INotifier notifier = (INotifier)(Activator.CreateInstance(type));
-            notifier.LoadSettings();
+            notifier.Initialize();
             m_notifiers.Add(notifier);
 
             OnNotifierAdded(notifier);

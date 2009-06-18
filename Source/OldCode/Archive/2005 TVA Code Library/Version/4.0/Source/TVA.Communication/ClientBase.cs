@@ -21,6 +21,8 @@
 //       Added code to detect and avoid redundant calls to Dispose().
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  06/18/2009 - Pinal C. Patel
+//       Fixed the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -581,9 +583,9 @@ namespace TVA.Communication
             }
             set
             {
-                if (value && m_currentState == ClientState.Disconnected)
+                if (value && !Enabled)
                     Connect();
-                else if (!value && m_currentState != ClientState.Disconnected)
+                else if (!value && Enabled)
                     Disconnect();
             }
         }

@@ -37,6 +37,9 @@ namespace TVA.Historian.Notifiers
         private bool m_notifiesHeartbeat;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
@@ -57,6 +60,14 @@ namespace TVA.Historian.Notifiers
             m_notifiesHeartbeat = notifiesHeartbeat;
             m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the notifier is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~NotifierBase()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -157,6 +168,24 @@ namespace TVA.Historian.Notifiers
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the notifier is currently enabled.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// </remarks>
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -200,27 +229,26 @@ namespace TVA.Historian.Notifiers
         protected abstract bool NotifyHeartbeat(string subject, string message, string details);
 
         #endregion
+               
+        /// <summary>
+        /// Releases all the resources used by the notifier.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
-        /// Process a notification.
+        /// Initializes the notifier.
         /// </summary>
-        /// <param name="subject">Subject matter for the notification.</param>
-        /// <param name="message">Brief message for the notification.</param>
-        /// <param name="details">Detailed message for the notification.</param>
-        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        public bool Notify(string subject, string message, string details, NotificationType notificationType)
+        public void Initialize()
         {
-            if (notificationType == Notifiers.NotificationType.Alarm && m_notifiesAlarms)
-                return NotifyAlarm(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Warning && m_notifiesWarnings)
-                return NotifyWarning(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Information && m_notifiesInformation)
-                return NotifyInformation(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Heartbeat && m_notifiesHeartbeat)
-                return NotifyHeartbeat(subject, message, details);
-            else
-                return false;
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
         }
 
         /// <summary>
@@ -272,6 +300,56 @@ namespace TVA.Historian.Notifiers
                 NotifiesWarnings = settings["NotifiesWarnings"].ValueAs(m_notifiesWarnings);
                 NotifiesInformation = settings["NotifiesInformation"].ValueAs(m_notifiesInformation);
                 NotifiesHeartbeat = settings["NotifiesHeartbeat"].ValueAs(m_notifiesHeartbeat);
+            }
+        }
+
+        /// <summary>
+        /// Process a notification.
+        /// </summary>
+        /// <param name="subject">Subject matter for the notification.</param>
+        /// <param name="message">Brief message for the notification.</param>
+        /// <param name="details">Detailed message for the notification.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
+        /// <returns>true if notification is processed successfully; otherwise false.</returns>
+        public bool Notify(string subject, string message, string details, NotificationType notificationType)
+        {
+            if (!m_enabled)
+                return false;
+
+            if (notificationType == Notifiers.NotificationType.Alarm && m_notifiesAlarms)
+                return NotifyAlarm(subject, message, details);
+            else if (notificationType == Notifiers.NotificationType.Warning && m_notifiesWarnings)
+                return NotifyWarning(subject, message, details);
+            else if (notificationType == Notifiers.NotificationType.Information && m_notifiesInformation)
+                return NotifyInformation(subject, message, details);
+            else if (notificationType == Notifiers.NotificationType.Heartbeat && m_notifiesHeartbeat)
+                return NotifyHeartbeat(subject, message, details);
+            else
+                return false;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the notifier and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
             }
         }
 
