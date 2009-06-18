@@ -46,7 +46,7 @@ namespace TVA.Historian.Notifiers
             : base(true, true, true, false)
         {
             m_emailServer = Mail.DefaultSmtpServer;
-            m_emailSender = string.Format("{0}@{1}.com", Environment.UserName, Environment.UserDomainName);
+            m_emailSender = string.Format("{0}@{1}.local", Environment.UserName, Environment.UserDomainName);
         }
 
         #endregion
