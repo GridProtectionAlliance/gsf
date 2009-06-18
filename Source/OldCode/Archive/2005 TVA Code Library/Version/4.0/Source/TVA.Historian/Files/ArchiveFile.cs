@@ -512,25 +512,25 @@ namespace TVA.Historian.Files
             m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
 
             m_conserveMemoryTimer = new System.Timers.Timer(DataBlockCheckInterval);
-            m_conserveMemoryTimer.Elapsed += m_conserveMemoryTimer_Elapsed;
+            m_conserveMemoryTimer.Elapsed += ConserveMemoryTimer_Elapsed;
 
             m_historicDataQueue = ProcessQueue<ArchiveData>.CreateRealTimeQueue(WriteToHistoricArchiveFile);
-            m_historicDataQueue.ProcessException += m_historicDataQueue_ProcessException;
+            m_historicDataQueue.ProcessException += HistoricDataQueue_ProcessException;
 
             m_outOfSequenceDataQueue = ProcessQueue<ArchiveData>.CreateRealTimeQueue(InsertInCurrentArchiveFile);
-            m_outOfSequenceDataQueue.ProcessException += m_outOfSequenceDataQueue_ProcessException;
+            m_outOfSequenceDataQueue.ProcessException += OutOfSequenceDataQueue_ProcessException;
 
             m_currentLocationFileWatcher = new FileSystemWatcher();
             m_currentLocationFileWatcher.IncludeSubdirectories = true;
-            m_currentLocationFileWatcher.Renamed += m_fileWatcher_Renamed;
-            m_currentLocationFileWatcher.Deleted += m_fileWatcher_Deleted;
-            m_currentLocationFileWatcher.Created += m_fileWatcher_Created;
+            m_currentLocationFileWatcher.Renamed += FileWatcher_Renamed;
+            m_currentLocationFileWatcher.Deleted += FileWatcher_Deleted;
+            m_currentLocationFileWatcher.Created += FileWatcher_Created;
 
             m_offloadLocationFileWatcher = new FileSystemWatcher();
             m_offloadLocationFileWatcher.IncludeSubdirectories = true;
-            m_offloadLocationFileWatcher.Renamed += m_fileWatcher_Renamed;
-            m_offloadLocationFileWatcher.Deleted += m_fileWatcher_Deleted;
-            m_offloadLocationFileWatcher.Created += m_fileWatcher_Created;
+            m_offloadLocationFileWatcher.Renamed += FileWatcher_Renamed;
+            m_offloadLocationFileWatcher.Deleted += FileWatcher_Deleted;
+            m_offloadLocationFileWatcher.Created += FileWatcher_Created;
         }
 
         /// <summary>
@@ -882,7 +882,7 @@ namespace TVA.Historian.Files
                 if (m_stateFile != null)
                 {
                     // Detach events from any existing instance
-                    m_stateFile.FileModified -= m_stateFile_FileModified;
+                    m_stateFile.FileModified -= StateFile_FileModified;
                 }
 
                 m_stateFile = value;
@@ -890,7 +890,7 @@ namespace TVA.Historian.Files
                 if (m_stateFile != null)
                 {
                     // Attach events to new instance
-                    m_stateFile.FileModified += m_stateFile_FileModified;
+                    m_stateFile.FileModified += StateFile_FileModified;
                 }
             }
         }
@@ -2872,7 +2872,7 @@ namespace TVA.Historian.Files
 
         #region [ Event Handlers ]
 
-        private void m_stateFile_FileModified(object sender, EventArgs e)
+        private void StateFile_FileModified(object sender, EventArgs e)
         {
             if (m_stateFile.RecordsOnDisk > m_dataBlocks.Count)
             {
@@ -2886,7 +2886,7 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void m_conserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ConserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             lock (m_dataBlocks)
             {
@@ -2902,17 +2902,17 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void m_historicDataQueue_ProcessException(object sender, EventArgs<Exception> e)
+        private void HistoricDataQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnHistoricDataWriteException(e.Argument);
         }
 
-        private void m_outOfSequenceDataQueue_ProcessException(object sender, EventArgs<Exception> e)
+        private void OutOfSequenceDataQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnOutOfSequenceDataWriteException(e.Argument);
         }
 
-        private void m_fileWatcher_Created(object sender, FileSystemEventArgs e)
+        private void FileWatcher_Created(object sender, FileSystemEventArgs e)
         {
             if (IsOpen)
             {
@@ -2934,7 +2934,7 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void m_fileWatcher_Deleted(object sender, FileSystemEventArgs e)
+        private void FileWatcher_Deleted(object sender, FileSystemEventArgs e)
         {
             if (IsOpen)
             {
@@ -2956,7 +2956,7 @@ namespace TVA.Historian.Files
             }
         }
 
-        private void m_fileWatcher_Renamed(object sender, RenamedEventArgs e)
+        private void FileWatcher_Renamed(object sender, RenamedEventArgs e)
         {
             if (IsOpen)
             {
