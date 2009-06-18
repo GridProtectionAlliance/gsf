@@ -24,7 +24,7 @@ using TVA.Net.Smtp;
 namespace TVA.Historian.Notifiers
 {
     /// <summary>
-    /// Represents a notifier that can sent notifications in email messages.
+    /// Represents a notifier that can send notifications in email messages.
     /// </summary>
     public class EmailNotifier : NotifierBase
     {
@@ -120,7 +120,6 @@ namespace TVA.Historian.Notifiers
         public override void SaveSettings()
         {
             base.SaveSettings();
-
             if (PersistSettings)
             {
                 // Ensure that settings category is specified.
@@ -147,7 +146,6 @@ namespace TVA.Historian.Notifiers
         public override void LoadSettings()
         {
             base.LoadSettings();
-
             if (PersistSettings)
             {
                 // Ensure that settings category is specified.
