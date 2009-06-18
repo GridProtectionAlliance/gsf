@@ -30,6 +30,8 @@
 //      Edited code comments.
 //  10/06/2008 - Pinal C. Patel
 //      Added static properties RemoteUserID and RemoteUserInfo.
+//  06/18/2009 - Pinal C. Patel
+//      Modified GetUserProperty() to quit if Enabled is false.
 //
 //*******************************************************************************************************
 
@@ -108,10 +110,10 @@ namespace TVA.Identity
         /// <param name="domain">Domain where the user's account exists.</param>
         /// <param name="username">Username of user's account whose information is to be retrieved.</param>
         public UserInfo(string domain, string username)
+            : this()
         {
             m_domain = domain;
             m_username = username;
-            m_settingsCategory = this.GetType().Name;
         }
 
         /// <summary>
@@ -119,6 +121,7 @@ namespace TVA.Identity
         /// </summary>
         /// <param name="loginID">Login ID in "domain\username" format of the user's account whose information is to be retrieved.</param>
         public UserInfo(string loginID)
+            : this()
         {
             string[] parts = loginID.Split('\\');
 
@@ -130,6 +133,14 @@ namespace TVA.Identity
 
             m_domain = parts[0];
             m_username = parts[1];
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserInfo"/> class.
+        /// </summary>
+        private UserInfo()
+        {
+            m_enabled = true;
             m_settingsCategory = this.GetType().Name;
         }
 
@@ -151,8 +162,8 @@ namespace TVA.Identity
         /// <remarks>
         /// <see cref="Enabled"/> property is not be set by user-code directly.
         /// </remarks>
-        [Browsable(false), 
-        EditorBrowsable(EditorBrowsableState.Never), 
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Never),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
@@ -541,7 +552,12 @@ namespace TVA.Identity
             WindowsImpersonationContext currentContext = null;
             try
             {
-                Initialize();   // Initialize if uninitialized.
+                // Quit if disabled.
+                if (!m_enabled)
+                    return string.Empty;
+
+                // Initialize if uninitialized.
+                Initialize();
 
                 // Impersonate to the privileged account if specified.
                 if (!string.IsNullOrEmpty(m_previlegedDomain) &&

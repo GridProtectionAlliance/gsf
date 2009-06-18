@@ -58,6 +58,7 @@ namespace TVA.Historian.Notifiers
             m_notifiesWarnings = notifiesWarnings;
             m_notifiesAlarms = notifiesAlarms;
             m_notifiesHeartbeat = notifiesHeartbeat;
+            m_enabled = true;
             m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
         }

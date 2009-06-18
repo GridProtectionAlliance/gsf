@@ -19,6 +19,8 @@
 //       Converted code to C#.
 //  10/16/2008 - Pinal C. Patel
 //       Edited code comments.
+//  06/18/2009 - Pinal C. Patel
+//      Modified Log() to quit if Enabled is false.
 //
 //*******************************************************************************************************
 
@@ -213,6 +215,7 @@ namespace TVA.ErrorManagement
         public ErrorLogger()
             : base()
         {
+            m_enabled = true;
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -799,9 +802,15 @@ namespace TVA.ErrorManagement
         /// <param name="exitApplication">true to exit the application; otherwise false.</param>
         public void Log(Exception ex, bool exitApplication)
         {
-            Initialize();           // Initialize if uninitialized.
+            // Quit if disabled.
+            if (!m_enabled)
+                return;
 
-            m_lastException = ex;   // Save the encountered exception.
+            // Initialize if uninitialized.
+            Initialize();           
+
+            // Save the encountered exception.
+            m_lastException = ex;   
 
             // Iterate through all of the registered logger methods and invoke them for processing the exception.
             foreach (Action<Exception> logger in m_loggers)
