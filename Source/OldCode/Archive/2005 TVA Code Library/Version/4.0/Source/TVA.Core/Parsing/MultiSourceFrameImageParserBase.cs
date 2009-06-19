@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/03/2008 - James R Carroll
 //       Generated original version of source code.
+//  06/19/2009 - Pinal C. Patel
+//       Parsed output is now being delivered in a new collection instead of reusing a single collection.
 //
 //*******************************************************************************************************
 
@@ -83,7 +85,6 @@ namespace TVA.Parsing
                 m_sourceInitialized = new Dictionary<TSourceIdentifier, bool>();
 
             m_unparsedBuffers = new Dictionary<TSourceIdentifier, byte[]>();
-            m_parsedOutputs = new List<TOutputType>();
 
             // We attach to base class events so we can cumulate outputs per data source and handle data errors
             base.DataParsed += CumulateParsedOutput;
@@ -169,12 +170,6 @@ namespace TVA.Parsing
                             m_unparsedBuffers.Clear();
                         }
                         m_unparsedBuffers = null;
-
-                        if (m_parsedOutputs != null)
-                        {
-                            m_parsedOutputs.Clear();
-                        }
-                        m_parsedOutputs = null;
 
                         // Detach from base class events
                         base.DataParsed -= CumulateParsedOutput;
@@ -357,8 +352,8 @@ namespace TVA.Parsing
                         m_unparsedBuffers.Add(m_sourceID, null);
                 }
 
-                // Clear any existing parsed outputs
-                m_parsedOutputs.Clear();
+                // Create new collection for parsed output
+                m_parsedOutputs = new List<TOutputType>();
 
                 // Start parsing sequence for this buffer - this will cumulate new parsed outputs
                 base.Write(buffer, 0, buffer.Length);
