@@ -605,7 +605,7 @@ namespace TVA.Historian.Files
         /// When "global time" is in effect, the historian returns the current data time for a <see cref="HistorianID"/> 
         /// based on the latest time received for all <see cref="HistorianID"/>s with the same <see cref="SourceID"/>.
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 1 and 20.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int SourceID
         {
             get
@@ -614,8 +614,8 @@ namespace TVA.Historian.Files
             }
             set
             {
-                if (value < 1 || value > 20)
-                    throw new ArgumentOutOfRangeException("SourceID", "Value must be between 1 and 20.");
+                if (value < 0)
+                    throw new ArgumentException("Value must be positive or zero.");
 
                 m_sourceID = value;
             }
