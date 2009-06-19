@@ -173,20 +173,19 @@ namespace TVA.Historian.Files
                     // Read the data in the block.
                     m_lastActivityTime = DateTime.Now;
                     m_parent.FileData.Read(binaryImage, 0, binaryImage.Length);
-                    ArchiveData pointData = new ArchiveData(m_historianID, binaryImage, 0, binaryImage.Length);
-                    if (!pointData.IsEmpty)
+                    ArchiveData dataPoint = new ArchiveData(m_historianID, binaryImage, 0, binaryImage.Length);
+                    if (!dataPoint.IsEmpty)
                     {
                         // There is data - use it.
-                        yield return pointData;
+                        m_writeCursor = m_parent.FileData.Position;
+                        yield return dataPoint;
                     }
                     else
                     {
                         // Data is empty - stop reading.
-                        m_parent.FileData.Seek(-binaryImage.Length, SeekOrigin.Current);
                         yield break;
                     }
                 }
-                m_writeCursor = m_parent.FileData.Position;
             }
         }
 

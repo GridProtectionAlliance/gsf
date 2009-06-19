@@ -125,7 +125,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the historian identifier of <see cref="ArchiveData"/>.
         /// </summary>
-        /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
+        /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int HistorianID
         {
             get
@@ -134,8 +134,8 @@ namespace TVA.Historian.Files
             }
             set
             {
-                if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                if (value < 1 && value != -1)
+                    throw new ArgumentException("Value must be positive or -1.");
 
                 m_historianID = value;
             }

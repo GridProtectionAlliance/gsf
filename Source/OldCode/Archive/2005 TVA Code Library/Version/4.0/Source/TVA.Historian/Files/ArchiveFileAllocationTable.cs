@@ -484,13 +484,16 @@ namespace TVA.Historian.Files
             }
 
             if (dataBlock != null && dataBlock.SlotsUsed == 0)
-            {
-                // We must update the data block pointer since we're allocating a new data block.
+            {                
+                // Mark the data block as allocated.
                 dataBlockPointer.HistorianID = historianID;
                 dataBlockPointer.StartTime = dataTime;
+                
+                // Set the file start time if unset.
                 if (m_fileStartTime == TimeTag.MinValue)
                     m_fileStartTime = dataTime;
 
+                // Persist data block information to disk.
                 lock (m_parent.FileData)
                 {
                     // We'll write information about the just allocated data block to the file.
@@ -502,6 +505,9 @@ namespace TVA.Historian.Files
                     if (!m_parent.CacheWrites)
                         m_parent.FileData.Flush();
                 }
+
+                // Re-fetch the data block with updated information after allocation.
+                dataBlock = dataBlockPointer.DataBlock;
             }
 
             return dataBlock;
