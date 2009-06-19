@@ -21,6 +21,8 @@
 //       Generated original version of source code.
 //  03/06/2009 - Pinal C. Patel
 //       Edited code comments.
+//  06/19/2009 - Pinal C. Patel
+//       Modified Initialize() method to just load settings from the config file.
 //
 //*******************************************************************************************************
 
@@ -730,9 +732,6 @@ namespace TVA.Services
             m_serviceComponents.Add(m_errorLogger.ErrorLog);
             m_serviceComponents.Add(m_remotingServer);
 
-            // Initialize all service components when service has started.
-            Initialize();
-
             // Open log file if file logging is enabled.
             if (m_logStatusUpdates)
                 m_statusLog.Open();
@@ -1001,14 +1000,8 @@ namespace TVA.Services
         {
             if (!m_initialized)
             {
-                // Initialize all service components.
-                foreach (ISupportLifecycle component in m_serviceComponents)
-                {
-                    if (component != null)
-                        component.Initialize();
-                }
-
-                m_initialized = true; // Initialize only once.
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
             }
         }
 
