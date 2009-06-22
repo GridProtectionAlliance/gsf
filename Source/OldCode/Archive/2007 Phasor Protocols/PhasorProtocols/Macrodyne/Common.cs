@@ -91,7 +91,7 @@ namespace PhasorProtocols.Macrodyne
         /// </summary>
         TimeError = (byte)Bits.Bit03,
         /// <summary>
-        /// RL = 1 - Reference expected but bot received.
+        /// RL = 1 - Reference expected but not received.
         /// </summary>
         ReferenceLost = (byte)Bits.Bit04,
         /// <summary>

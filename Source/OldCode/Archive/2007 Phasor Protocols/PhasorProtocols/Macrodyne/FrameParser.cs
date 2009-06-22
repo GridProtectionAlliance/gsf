@@ -141,6 +141,8 @@ namespace PhasorProtocols.Macrodyne
                 // Parse common frame header
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
 
+                // TODO: Make sure there is enough buffer available to parse entire data frame - otherwise return null...
+
                 //// Create configuration frame if it doesn't exist or frame size has changed
                 //if (m_configurationFrame == null)
                 //{

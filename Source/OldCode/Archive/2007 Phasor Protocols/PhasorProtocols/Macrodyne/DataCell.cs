@@ -16,8 +16,10 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 using TVA;
 
 namespace PhasorProtocols.Macrodyne
@@ -31,12 +33,13 @@ namespace PhasorProtocols.Macrodyne
         #region [ Members ]
 
         // Fields
+        private byte m_status1Flags;
         private byte m_status2Flags;
         private ClockStatusFlags m_clockStatusFlags;
         private ushort m_sampleNumber;
 
         #endregion
-        
+
         #region [ Constructors ]
 
         /// <summary>
@@ -81,6 +84,11 @@ namespace PhasorProtocols.Macrodyne
         protected DataCell(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+            // Deserialize data cell
+            m_status1Flags = info.GetByte("status1Flags");
+            m_status2Flags = info.GetByte("status2Flags");
+            m_clockStatusFlags = (ClockStatusFlags)info.GetValue("clockStatusFlags", typeof(ClockStatusFlags));
+            m_sampleNumber = info.GetUInt16("sampleNumber");
         }
 
         #endregion
@@ -129,17 +137,79 @@ namespace PhasorProtocols.Macrodyne
         }
 
         /// <summary>
-        /// Gets or sets status flags for this <see cref="DataCell"/>.
+        /// Gets or sets <see cref="Macrodyne.ClockStatusFlags"/> for this <see cref="DataCell"/>.
         /// </summary>
-        public new StatusFlags StatusFlags
+        public ClockStatusFlags ClockStatusFlags
         {
             get
             {
-                return (StatusFlags)base.StatusFlags;
+                return m_clockStatusFlags;
             }
             set
             {
-                base.StatusFlags = (ushort)value;
+                m_clockStatusFlags = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets status 1 flags for this <see cref="DataCell"/>.
+        /// </summary>
+        public StatusFlags Status1Flags
+        {
+            get
+            {
+                return (StatusFlags)m_status1Flags;
+            }
+            set
+            {
+                m_status1Flags = (byte)value;
+                base.StatusFlags = Word.MakeWord(m_status1Flags, m_status2Flags);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets status 2 flags for this <see cref="DataCell"/>.
+        /// </summary>
+        public byte Status2Flags
+        {
+            get
+            {
+                return m_status2Flags;
+            }
+            set
+            {
+                m_status2Flags = value;
+                base.StatusFlags = Word.MakeWord(m_status1Flags, m_status2Flags);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Macrodyne.TriggerReason"/> for this <see cref="DataCell"/>.
+        /// </summary>
+        public TriggerReason TriggerReason
+        {
+            get
+            {
+                return (TriggerReason)(m_status2Flags & (byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02));
+            }
+            set
+            {
+                m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit00 | Bits.Bit01 | Bits.Bit02)) | (byte)value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Macrodyne.GpsStatus"/> for this <see cref="DataCell"/>.
+        /// </summary>
+        public GpsStatus GpsStatus
+        {
+            get
+            {
+                return (GpsStatus)(m_status2Flags & (byte)(Bits.Bit03 | Bits.Bit04));
+            }
+            set
+            {
+                m_status2Flags = (byte)((m_status2Flags & ~(byte)(Bits.Bit03 | Bits.Bit04)) | (byte)value);
             }
         }
 
@@ -150,14 +220,14 @@ namespace PhasorProtocols.Macrodyne
         {
             get
             {
-                return true; // (StatusFlags & Macrodyne.StatusFlags.PMDOK) > 0;
+                return !((Status1Flags & Macrodyne.StatusFlags.OperationalLimitReached) > 0);
             }
             set
             {
-                //if (value)
-                //    StatusFlags = StatusFlags | Macrodyne.StatusFlags.PMDOK;
-                //else
-                //    StatusFlags = StatusFlags & ~Macrodyne.StatusFlags.PMDOK;
+                if (value)
+                    Status1Flags = Status1Flags & ~Macrodyne.StatusFlags.OperationalLimitReached;
+                else
+                    Status1Flags = Status1Flags | Macrodyne.StatusFlags.OperationalLimitReached;
             }
         }
 
@@ -168,14 +238,14 @@ namespace PhasorProtocols.Macrodyne
         {
             get
             {
-                return true; // (StatusFlags & Macrodyne.StatusFlags.TSOK) > 0;
+                return !((Status1Flags & Macrodyne.StatusFlags.TimeError) > 0);
             }
             set
             {
-                //if (value)
-                //    StatusFlags = StatusFlags | Macrodyne.StatusFlags.TSOK;
-                //else
-                //    StatusFlags = StatusFlags & ~Macrodyne.StatusFlags.TSOK;
+                if (value)
+                    Status1Flags = Status1Flags & ~Macrodyne.StatusFlags.TimeError;
+                else
+                    Status1Flags = Status1Flags | Macrodyne.StatusFlags.TimeError;
             }
         }
 
@@ -241,6 +311,25 @@ namespace PhasorProtocols.Macrodyne
             }
         }
 
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("Status 1 Flags", (int)Status1Flags + ": " + Status1Flags);
+                baseAttributes.Add("Status 2 Flags", Status2Flags.ToString());
+                baseAttributes.Add("Clock Status Flags", (int)ClockStatusFlags + ": " + ClockStatusFlags);
+                baseAttributes.Add("GPS Status", (int)GpsStatus + ": " + GpsStatus);
+                baseAttributes.Add("Trigger Reason", (int)TriggerReason + ": " + TriggerReason);
+
+                return baseAttributes;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -260,12 +349,19 @@ namespace PhasorProtocols.Macrodyne
             IDigitalValue digitalValue;
             int x, parsedLength, index = startIndex;
 
+            m_status1Flags = binaryImage[index];
+            index++;
+
             // Parse out status 2 flags
             if (configFrame.Status2Included)
             {
                 m_status2Flags = binaryImage[index];
-                index += 1;
+                index++;
             }
+            else
+                m_status2Flags = 0;
+
+            base.StatusFlags = Word.MakeWord(m_status1Flags, m_status2Flags);
 
             // Parse out time tag
             if (configFrame.TimestampIncluded)
@@ -289,7 +385,7 @@ namespace PhasorProtocols.Macrodyne
             {
                 Parent.Timestamp = DateTime.UtcNow.Ticks;
                 SynchronizationIsValid = false;  // TODO: Handle "assigned value" - change flags?
-                
+
                 m_sampleNumber = EndianOrder.BigEndian.ToUInt16(binaryImage, index);
                 index += 2;
             }
@@ -338,6 +434,23 @@ namespace PhasorProtocols.Macrodyne
             return (index - startIndex);
         }
 
+        /// <summary>
+        /// Populates a <see cref="SerializationInfo"/> with the data needed to serialize the target object.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+
+            // Serialize data cell
+            info.AddValue("status1Flags", m_status1Flags);
+            info.AddValue("status2Flags", m_status2Flags);
+            info.AddValue("clockStatusFlags", m_clockStatusFlags, typeof(ClockStatusFlags));
+            info.AddValue("sampleNumber", m_sampleNumber);
+        }
+
         #endregion
 
         #region [ Static ]
@@ -354,6 +467,6 @@ namespace PhasorProtocols.Macrodyne
             return dataCell;
         }
 
-        #endregion        
+        #endregion
     }
 }

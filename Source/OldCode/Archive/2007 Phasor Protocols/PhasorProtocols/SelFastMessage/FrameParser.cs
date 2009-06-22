@@ -205,32 +205,36 @@ namespace PhasorProtocols.SelFastMessage
         protected override ICommonHeader<int> ParseCommonHeader(byte[] buffer, int offset, int length)
         {
             // See if there is enough data in the buffer to parse the common frame header.
-            if (length > 0)
+            if (length > CommonFrameHeader.FixedLength)
             {
                 // Parse common frame header
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
-
-                // Create configuration frame if it doesn't exist or frame size has changed
-                if (m_configurationFrame == null || m_configurationFrame.FrameSize != parsedFrameHeader.FrameSize)
+                
+                // We also make sure entire frame buffer image is available to be parsed
+                if (length >= (int)parsedFrameHeader.FrameSize)
                 {
-                    // Create virtual configuration frame
-                    m_configurationFrame = new ConfigurationFrame(parsedFrameHeader.FrameSize, m_messagePeriod, parsedFrameHeader.IDCode);
+                    // Create configuration frame if it doesn't exist or frame size has changed
+                    if (m_configurationFrame == null || m_configurationFrame.FrameSize != parsedFrameHeader.FrameSize)
+                    {
+                        // Create virtual configuration frame
+                        m_configurationFrame = new ConfigurationFrame(parsedFrameHeader.FrameSize, m_messagePeriod, parsedFrameHeader.IDCode);
 
-                    // Notify clients of new configuration frame
-                    OnReceivedChannelFrame(m_configurationFrame);
-                }
+                        // Notify clients of new configuration frame
+                        OnReceivedChannelFrame(m_configurationFrame);
+                    }
 
-                if (m_configurationFrame != null)
-                {
-                    int parsedLength = (int)parsedFrameHeader.FrameSize;
+                    if (m_configurationFrame != null)
+                    {
+                        int parsedLength = (int)parsedFrameHeader.FrameSize;
 
-                    // Assign common header and data frame parsing state
-                    parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
+                        // Assign common header and data frame parsing state
+                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
 
-                    // Expose the frame buffer image in case client needs this data for any reason
-                    OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
+                        // Expose the frame buffer image in case client needs this data for any reason
+                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
 
-                    return parsedFrameHeader;
+                        return parsedFrameHeader;
+                    }
                 }
             }
             

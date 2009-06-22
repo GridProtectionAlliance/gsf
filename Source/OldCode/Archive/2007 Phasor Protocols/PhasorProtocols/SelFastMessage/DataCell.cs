@@ -16,6 +16,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using TVA;
@@ -229,6 +230,21 @@ namespace PhasorProtocols.SelFastMessage
             get
             {
                 return base.DigitalValues;
+            }
+        }
+
+        /// <summary>
+        /// <see cref="Dictionary{TKey,TValue}"/> of string based property names and values for the <see cref="DataCell"/> object.
+        /// </summary>
+        public override Dictionary<string, string> Attributes
+        {
+            get
+            {
+                Dictionary<string, string> baseAttributes = base.Attributes;
+
+                baseAttributes.Add("SEL Status Flags", (int)StatusFlags + ": " + StatusFlags);
+
+                return baseAttributes;
             }
         }
 

@@ -40,6 +40,9 @@
 //
 //*******************************************************************************************************
 
+// Define this constant to enable a raw data export for debugging - do not leave this on for deployed builds
+#define RawDataCapture
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -272,6 +275,12 @@ namespace PhasorProtocols
         private IConnectionParameters m_connectionParameters;
         private int m_connectionAttempts;
         private bool m_disposed;
+
+        #if RawDataCapture
+
+        FileStream m_rawDataCapture;
+
+        #endif
 
         #endregion
 
@@ -1253,6 +1262,15 @@ namespace PhasorProtocols
                 m_frameParser.Dispose();
             }
             m_frameParser = null;
+
+            #if RawDataCapture
+
+            if (m_rawDataCapture != null)
+                m_rawDataCapture.Close();
+
+            m_rawDataCapture = null;
+
+            #endif
         }
 
         /// <summary>
@@ -1326,6 +1344,15 @@ namespace PhasorProtocols
             // This is the delegate implementation used by the communication source for reception
             // of data directly from the socket (i.e., ReceiveDataHandler) that is used for a
             // speed boost in communications processing...
+
+            #if RawDataCapture
+
+            if (m_rawDataCapture == null)
+                m_rawDataCapture = new FileStream(FilePath.GetAbsolutePath("RawData.Capture"), FileMode.Create);
+
+            m_rawDataCapture.Write(buffer, offset, count);
+
+            #endif
 
             // Pass data from communications client into protocol specific frame parser
             m_frameParser.Write(buffer, offset, count);

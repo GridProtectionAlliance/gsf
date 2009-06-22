@@ -286,11 +286,6 @@ namespace PhasorProtocols.SelFastMessage
             return CommonFrameHeader.FixedLength;
         }
 
-        protected override bool ChecksumIsValid(byte[] buffer, int startIndex)
-        {
-            return true;
-        }
-
         /// <summary>
         /// Calculates checksum of given <paramref name="buffer"/>.
         /// </summary>
