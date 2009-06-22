@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.IO.Ports;
 using System.Threading;
 
@@ -107,6 +108,7 @@ namespace TVA.Communication
         // Fields
         private TransportProvider<SerialPort> m_serialClient;
         private Dictionary<string, string> m_connectData;
+        private int m_receivedBytesThreshold;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
 #else
@@ -133,6 +135,7 @@ namespace TVA.Communication
             : base(TransportProtocol.Serial, connectString)
         {
             m_serialClient = new TransportProvider<SerialPort>();
+            m_receivedBytesThreshold = 1;
         }
 
         /// <summary>
@@ -174,6 +177,21 @@ namespace TVA.Communication
             }
         }
 
+        /// <summary>
+        /// Gets or sets the needed number of bytes in the internal input buffer before a <see cref="ClientBase.OnReceiveDataComplete"/> event occurs.
+        /// </summary>
+        public int ReceivedBytesThreshold
+        {
+            get
+            {
+                return m_receivedBytesThreshold;
+            }
+            set
+            {
+                m_receivedBytesThreshold = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -211,6 +229,7 @@ namespace TVA.Communication
                 m_serialClient.Passphrase = this.HandshakePassphrase;
                 m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                 m_serialClient.Provider = new SerialPort();
+                m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
                 m_serialClient.Provider.DataReceived += SerialPort_DataReceived;
                 m_serialClient.Provider.ErrorReceived += SerialPort_ErrorReceived;
                 m_serialClient.Provider.PortName = m_connectData["port"];
@@ -350,17 +369,27 @@ namespace TVA.Communication
         /// <summary>
         /// Receive (read) data from the <see cref="SerialPort"/> (.NET serial port class raises this event when data is available).
         /// </summary>
-        private void SerialPort_DataReceived(object sender, System.IO.Ports.SerialDataReceivedEventArgs e)
+        private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            // JRC: Modified code to make sure all available data on the serial port buffer is read.
-            for (int x = 1; x <= (int)(Math.Ceiling((double)m_serialClient.Provider.BytesToRead / m_serialClient.ReceiveBuffer.Length)); x++)
+            try
             {
-                // Retrieve data from the port.
-                m_serialClient.ReceiveBufferLength = m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferOffset, m_serialClient.ReceiveBuffer.Length);
-                m_serialClient.Statistics.UpdateBytesReceived(m_serialClient.ReceiveBufferLength);
+                int bytesRead = 0;
+
+                while (bytesRead < m_serialClient.Provider.BytesToRead)
+                {
+                    // Retrieve data from the port.
+                    bytesRead += m_serialClient.Provider.Read(m_serialClient.ReceiveBuffer, bytesRead, m_serialClient.ReceiveBuffer.Length - bytesRead);
+                }
+
+                m_serialClient.ReceiveBufferLength = bytesRead;
+                m_serialClient.Statistics.UpdateBytesReceived(bytesRead);
 
                 // Notify of the retrieved data.
-                OnReceiveDataComplete(m_serialClient.ReceiveBuffer, m_serialClient.ReceiveBufferLength);
+                OnReceiveDataComplete(m_serialClient.ReceiveBuffer, bytesRead);
+            }
+            catch (Exception ex)
+            {
+                OnReceiveDataException(ex);
             }
         }
 
