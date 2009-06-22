@@ -41,7 +41,7 @@
 //*******************************************************************************************************
 
 // Define this constant to enable a raw data export for debugging - do not leave this on for deployed builds
-#define RawDataCapture
+#undef RawDataCapture
 
 using System;
 using System.Collections.Generic;
@@ -277,9 +277,7 @@ namespace PhasorProtocols
         private bool m_disposed;
 
         #if RawDataCapture
-
         FileStream m_rawDataCapture;
-
         #endif
 
         #endregion
@@ -1212,6 +1210,9 @@ namespace PhasorProtocols
             m_lastFrameReceivedTime = 0;
             m_configurationFrame = null;
 
+            // Make sure data stream is disabled
+            SendDeviceCommand(DeviceCommand.DisableRealTimeData);
+
             if (m_communicationClient != null)
             {
                 m_communicationClient.Disconnect();
@@ -1264,12 +1265,9 @@ namespace PhasorProtocols
             m_frameParser = null;
 
             #if RawDataCapture
-
             if (m_rawDataCapture != null)
                 m_rawDataCapture.Close();
-
             m_rawDataCapture = null;
-
             #endif
         }
 
@@ -1346,12 +1344,9 @@ namespace PhasorProtocols
             // speed boost in communications processing...
 
             #if RawDataCapture
-
             if (m_rawDataCapture == null)
                 m_rawDataCapture = new FileStream(FilePath.GetAbsolutePath("RawData.Capture"), FileMode.Create);
-
             m_rawDataCapture.Write(buffer, offset, count);
-
             #endif
 
             // Pass data from communications client into protocol specific frame parser
