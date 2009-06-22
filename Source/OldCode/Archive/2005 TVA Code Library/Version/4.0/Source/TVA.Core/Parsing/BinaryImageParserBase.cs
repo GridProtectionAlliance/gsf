@@ -423,13 +423,40 @@ namespace TVA.Parsing
                 }
 
                 int endOfBuffer = offset + count - 1;
-                int parsedFrameLength;
+                int parsedFrameLength = 0;
 
                 // Move through buffer parsing all available frames
                 while (!(offset > endOfBuffer) && m_enabled)
                 {
-                    // Call derived class frame parsing algorithm - this is protocol specific
-                    parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
+                    try
+                    {
+                        // Call derived class frame parsing algorithm - this is protocol specific
+                        parsedFrameLength = ParseFrame(buffer, offset, endOfBuffer - offset + 1);
+                    }
+                    catch (Exception ex)
+                    {
+                        // If protocol defines synchronization bytes there's a chance at recovering any unused portion of this buffer,
+                        // otherwise we'll just rethrow the exception and scrap the buffer...
+                        if (ProtocolUsesSyncBytes)
+                        {
+                            // Attempt to locate sync byte(s) after exception to line data stream back up
+                            int syncBytesPosition = buffer.IndexOfSequence(ProtocolSyncBytes, offset + 1, endOfBuffer - offset);
+
+                            if (syncBytesPosition > -1)
+                            {
+                                // Found the next sync byte(s), pass through malformed frame
+                                parsedFrameLength = syncBytesPosition - offset;
+                                
+                                // We'll still let consumer know there was an issue
+                                OnDataDiscarded(buffer.BlockCopy(offset, parsedFrameLength));
+                                OnParsingException(ex);
+                            }
+                            else
+                                throw ex;
+                        }
+                        else
+                            throw ex;
+                    }
 
                     // Returned value represents total bytes of data in the buffer image that were
                     // parsed. There could still be data remaining in the buffer, but user parsing
