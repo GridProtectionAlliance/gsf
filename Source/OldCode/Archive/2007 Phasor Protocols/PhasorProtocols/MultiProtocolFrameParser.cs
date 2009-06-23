@@ -249,8 +249,8 @@ namespace PhasorProtocols
         private ushort m_deviceID;
         private int m_bufferSize;
         private IFrameParser m_frameParser;
-        private IClient m_communicationClient;
-        private IServer m_communicationServer;
+        private IClient m_dataChannel;
+        private IServer m_serverBasedDataChannel;
         private IClient m_commandChannel;
         private System.Timers.Timer m_rateCalcTimer;
         private IConfigurationFrame m_configurationFrame;
@@ -333,7 +333,7 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets or sets <see cref="PhasorProtocols.PhasorProtocol"/> to use with this <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
-        public PhasorProtocol PhasorProtocol
+        public virtual PhasorProtocol PhasorProtocol
         {
             get
             {
@@ -342,7 +342,7 @@ namespace PhasorProtocols
             set
             {
                 m_phasorProtocol = value;
-                m_deviceSupportsCommands = GetDerivedCommandSupport();
+                m_deviceSupportsCommands = DeriveCommandSupport();
 
                 // Setup protocol specific connection parameters...
                 switch (value)
@@ -366,7 +366,7 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets or sets <see cref="TransportProtocol"/> to use with this <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
-        public TransportProtocol TransportProtocol
+        public virtual TransportProtocol TransportProtocol
         {
             get
             {
@@ -375,7 +375,7 @@ namespace PhasorProtocols
             set
             {
                 m_transportProtocol = value;
-                m_deviceSupportsCommands = GetDerivedCommandSupport();
+                m_deviceSupportsCommands = DeriveCommandSupport();
 
                 if (m_transportProtocol == TransportProtocol.File && m_autoRepeatCapturedPlayback)
                     ExecuteParseOnSeparateThread = false;
@@ -385,7 +385,7 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets or sets the key/value pair based connection information required by the <see cref="MultiProtocolFrameParser"/> to connect to a device.
         /// </summary>
-        public string ConnectionString
+        public virtual string ConnectionString
         {
             get
             {
@@ -402,10 +402,10 @@ namespace PhasorProtocols
                 if (settings.TryGetValue("phasorProtocol", out setting))
                     PhasorProtocol = (PhasorProtocol)Enum.Parse(typeof(PhasorProtocol), setting);
 
-                if (settings.TryGetValue("transportProtocol", out setting))
+                if (settings.TryGetValue("transportProtocol", out setting) || settings.TryGetValue("protocol", out setting))
                     TransportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), setting);
 
-                m_deviceSupportsCommands = GetDerivedCommandSupport();
+                m_deviceSupportsCommands = DeriveCommandSupport();
             }
         }
 
@@ -628,7 +628,7 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets a flag that determines if the currently selected <see cref="PhasorProtocol"/> is an IEEE standard protocol.
         /// </summary>
-        public bool IsIEEEProtocol
+        public virtual bool IsIEEEProtocol
         {
             get
             {
@@ -641,16 +641,16 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets a flag that determines if the currently selected <see cref="TransportProtocol"/> is connected.
         /// </summary>
-        public bool IsConnected
+        public virtual bool IsConnected
         {
             get
             {
                 if (m_commandChannel != null)
                     return (m_commandChannel.CurrentState == ClientState.Connected);
-                else if (m_communicationClient != null)
-                    return (m_communicationClient.CurrentState == ClientState.Connected);
-                else if (m_communicationServer != null)
-                    return (m_communicationServer.ClientIDs.Length > 0);
+                else if (m_dataChannel != null)
+                    return (m_dataChannel.CurrentState == ClientState.Connected);
+                else if (m_serverBasedDataChannel != null)
+                    return (m_serverBasedDataChannel.ClientIDs.Length > 0);
 
                 return false;
             }
@@ -659,16 +659,16 @@ namespace PhasorProtocols
         /// <summary>
         /// Gets total time connection has been active.
         /// </summary>
-        public Time ConnectionTime
+        public virtual Time ConnectionTime
         {
             get
             {
                 if (m_commandChannel != null)
                     return m_commandChannel.ConnectionTime;
-                else if (m_communicationClient != null)
-                    return m_communicationClient.ConnectionTime;
-                else if (m_communicationServer != null)
-                    return m_communicationServer.RunTime;
+                else if (m_dataChannel != null)
+                    return m_dataChannel.ConnectionTime;
+                else if (m_serverBasedDataChannel != null)
+                    return m_serverBasedDataChannel.RunTime;
 
                 return 0;
             }
@@ -711,76 +711,33 @@ namespace PhasorProtocols
         }
 
         /// <summary>
-        /// Gets a boolean value that determines if connection is defined as a server based connection.
+        /// Gets a boolean value that determines if data channel is defined as a server based connection.
         /// </summary>
-        public bool ConnectionIsServerBased
+        public virtual bool DataChannelIsServerBased
         {
             get
             {
-                if (m_communicationClient != null)
+                if (m_dataChannel != null)
                     return false;
 
-                if (m_communicationServer == null)
+                if (m_serverBasedDataChannel == null)
                 {
                     // No connection is currently active, see if connection string defines a server based connection
                     if (!string.IsNullOrEmpty(m_connectionString))
                     {
                         Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-                        return settings.ContainsKey("server");
+                        string setting;
+
+                        if (settings.TryGetValue("islistener", out setting))
+                            return setting.ParseBoolean();
+
+                        return false;
                     }
 
                     return false;
                 }
 
                 return true;
-            }
-        }
-
-        /// <summary>
-        /// Gets a reference to the internal <see cref="IFrameParser"/>.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IFrameParser InternalFrameParser
-        {
-            get
-            {
-                return m_frameParser;
-            }
-        }
-
-        /// <summary>
-        /// Gets a reference to the internal <see cref="IClient"/>, if any.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IClient InternalCommunicationClient
-        {
-            get
-            {
-                return m_communicationClient;
-            }
-        }
-
-        /// <summary>
-        /// Gets a reference to the internal <see cref="IServer"/>, if any.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IServer InternalCommunicationServer
-        {
-            get
-            {
-                return m_communicationServer;
-            }
-        }
-
-        /// <summary>
-        /// Gets a reference to the internal <see cref="IClient"/> used for a command channel, if any.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Advanced)]
-        public IClient InternalCommandChannel
-        {
-            get
-            {
-                return m_commandChannel;
             }
         }
 
@@ -829,7 +786,7 @@ namespace PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the calculated bit rate (i.e., bits per second) based on data received from device connection.
+        /// Gets the calculated bit rate (i.e., bits per second (bps)) based on data received from device connection.
         /// </summary>
         public double BitRate
         {
@@ -840,15 +797,76 @@ namespace PhasorProtocols
         }
 
         /// <summary>
-        /// Gets the calculated mbps rate (i.e., megabits per second) based on data received from device connection.
+        /// Gets the calculated megabits per second (Mbps) rate based on data received from device connection.
         /// </summary>
         public double MegaBitRate
         {
             get
             {
-                return BitRate / SI2.Mega;;
+                return BitRate / SI2.Mega;
             }
         }
+
+        /// <summary>
+        /// Gets or sets a reference to the active <see cref="IFrameParser"/>.
+        /// </summary>
+        protected IFrameParser FrameParser
+        {
+            get
+            {
+                return m_frameParser;
+            }
+            set
+            {
+                m_frameParser = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a reference to the <see cref="IClient"/> data channel.
+        /// </summary>
+        protected IClient DataChannel
+        {
+            get
+            {
+                return m_dataChannel;
+            }
+            set
+            {
+                m_dataChannel = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a reference to the <see cref="IServer"/> server based data channel.
+        /// </summary>
+        protected IServer ServerBasedDataChannel
+        {
+            get
+            {
+                return m_serverBasedDataChannel;
+            }
+            set
+            {
+                m_serverBasedDataChannel = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a reference to the <see cref="IClient"/> command channel.
+        /// </summary>
+        protected IClient CommandChannel
+        {
+            get
+            {
+                return m_commandChannel;
+            }
+            set
+            {
+                m_commandChannel = value;
+            }
+        }
+
         /// <summary>
         /// Gets a descriptive name for a device connection that includes <see cref="SourceName"/>, if provided, as well as connection information.
         /// </summary>
@@ -856,10 +874,11 @@ namespace PhasorProtocols
         {
             get
             {
-                if (m_sourceName == null)
-                    return m_deviceID + " (" + m_connectionString + ")";
+
+                if (string.IsNullOrEmpty(m_sourceName))
+                    return "ID " + m_deviceID + " using " + m_phasorProtocol.GetFormattedProtocolName() + " over " + m_transportProtocol;
                 else
-                    return m_sourceName + ", ID " + m_deviceID + " (" + m_connectionString + ")";
+                    return m_sourceName + " (" + m_deviceID + ")";
             }
         }
 
@@ -882,19 +901,17 @@ namespace PhasorProtocols
                 status.AppendLine();
                 status.AppendFormat("     Calculated frame rate: {0}", m_frameRate);
                 status.AppendLine();
-                status.AppendFormat("      Calculated byte rate: {0}", m_byteRate);
-                status.AppendLine();
-                status.AppendFormat("   Calculated megabit rate: {0} mbps", MegaBitRate.ToString("0.0000"));
+                status.AppendFormat("      Calculated data rate: {0} bytes/sec, {1} Mbps", m_byteRate.ToString("0.0"), MegaBitRate.ToString("0.0000"));
                 status.AppendLine();
 
                 if (m_frameParser != null)
                     status.Append(m_frameParser.Status);
 
-                if (m_communicationClient != null)
-                    status.Append(m_communicationClient.Status);
+                if (m_dataChannel != null)
+                    status.Append(m_dataChannel.Status);
 
-                if (m_communicationServer != null)
-                    status.Append(m_communicationServer.Status);
+                if (m_serverBasedDataChannel != null)
+                    status.Append(m_serverBasedDataChannel.Status);
 
                 if (m_commandChannel != null)
                     status.Append(m_commandChannel.Status);
@@ -967,8 +984,7 @@ namespace PhasorProtocols
         /// <summary>
         /// Starts the <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
-        [SuppressMessage("Microsoft.Maintainability", "CA1502")] // Yes, this method is complex...
-        public void Start()
+        public virtual void Start()
         {
             // Stop parser if is already running - thus calling start after already started will have the effect
             // of "restarting" the parsing engine...
@@ -984,210 +1000,21 @@ namespace PhasorProtocols
 
             try
             {
-                // Instantiate protocol specific frame parser
-                switch (m_phasorProtocol)
-                {
-                    case PhasorProtocol.IeeeC37_118V1:
-                        m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
-                        break;
-                    case PhasorProtocol.IeeeC37_118D6:
-                        m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
-                        break;
-                    case PhasorProtocol.Ieee1344:
-                        m_frameParser = new Ieee1344.FrameParser();
-                        break;
-                    case PhasorProtocol.BpaPdcStream:
-                        m_frameParser = new BpaPdcStream.FrameParser();
-                        break;
-                    case PhasorProtocol.FNet:
-                        m_frameParser = new FNet.FrameParser();
-                        break;
-                    case PhasorProtocol.SelFastMessage:
-                        m_frameParser = new SelFastMessage.FrameParser();
-                        break;
-                    case PhasorProtocol.Macrodyne:
-                        m_frameParser = new Macrodyne.FrameParser();
-                        break;
-                }
-
-                // Setup event handlers
-                m_frameParser.ReceivedCommandFrame += m_frameParser_ReceivedCommandFrame;
-                m_frameParser.ReceivedConfigurationFrame += m_frameParser_ReceivedConfigurationFrame;
-                m_frameParser.ReceivedDataFrame += m_frameParser_ReceivedDataFrame;
-                m_frameParser.ReceivedHeaderFrame += m_frameParser_ReceivedHeaderFrame;
-                m_frameParser.ReceivedUndeterminedFrame += m_frameParser_ReceivedUndeterminedFrame;
-                m_frameParser.ReceivedFrameBufferImage += m_frameParser_ReceivedFrameBufferImage;
-                m_frameParser.ConfigurationChanged += m_frameParser_ConfigurationChanged;
-                m_frameParser.ParsingException += m_frameParser_ParsingException;
-
                 // Parse connection string to check for special parameters
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
                 string setting;
 
-                // Handle special connection parameters
-                if (m_phasorProtocol == PhasorProtocol.BpaPdcStream)
-                {
-                    // Check for BPA PDCstream protocol parameters specified in connection string
-                    BpaPdcStream.ConnectionParameters connectionParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
+                // Establish protocol specific frame parser
+                InitializeFrameParser(settings);
 
-                    if (connectionParameters != null)
-                    {
-                        // INI file name setting is required
-                        if (settings.TryGetValue("iniFileName", out setting))
-                            connectionParameters.ConfigurationFileName = FilePath.GetAbsolutePath(setting);
-                        else if (string.IsNullOrEmpty(connectionParameters.ConfigurationFileName))
-                            throw new ArgumentException("BPA PDCstream INI filename setting (e.g., \"inifilename=DEVICE_PDC.ini\") was not found. This setting is required for BPA PDCstream protocol connections - device may fail to connect.");
+                // Establish command channel connection, if defined...
+                if (settings.TryGetValue("commandChannel", out setting))
+                    InitializeCommandChannel(setting);
 
-                        if (settings.TryGetValue("refreshConfigFileOnChange", out setting))
-                            connectionParameters.RefreshConfigurationFileOnChange = setting.ParseBoolean();
+                // Establish data channel connection - must be defined.
+                InitializeDataChannel(settings);
 
-                        if (settings.TryGetValue("parseWordCountFromByte", out setting))
-                            connectionParameters.ParseWordCountFromByte = setting.ParseBoolean();
-                    }
-                }
-                else if (m_phasorProtocol == PhasorProtocol.FNet)
-                {
-                    // Check for F-NET protocol parameters specified in connection string
-                    FNet.ConnectionParameters connectionParameters = m_connectionParameters as FNet.ConnectionParameters;
-
-                    if (connectionParameters != null)
-                    {
-                        if (settings.TryGetValue("timeOffset", out setting))
-                            connectionParameters.TimeOffset = long.Parse(setting);
-
-                        if (settings.TryGetValue("stationName", out setting))
-                            connectionParameters.StationName = setting;
-
-                        if (settings.TryGetValue("frameRate", out setting))
-                            connectionParameters.FrameRate = ushort.Parse(setting);
-
-                        if (settings.TryGetValue("nominalFrequency", out setting))
-                            connectionParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), setting);
-                    }
-                }
-                else if (m_phasorProtocol == PhasorProtocol.SelFastMessage)
-                {
-                    // Check for SEL Fast Message protocol parameters specified in connection string
-                    SelFastMessage.ConnectionParameters connectionParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
-
-                    if (connectionParameters != null)
-                    {
-                        if (settings.TryGetValue("messageperiod", out setting))
-                            connectionParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), setting);
-                    }
-                }
-
-                // Instantiate selected transport layer
-                if (m_transportProtocol == TransportProtocol.Tcp)
-                {
-                    // The TCP transport may be set up as a server or as a client, we distinguish
-                    // this simply by deriving the value of an added key/value pair in the
-                    // connection string called "IsListener"
-                    if (settings.TryGetValue("islistener", out setting))
-                    {
-                        if (setting.ParseBoolean())
-                            m_communicationServer = new TcpServer();
-                        else
-                            m_communicationClient = new TcpClient();
-                    }
-                    else
-                    {
-                        // If the key doesn't exist, we assume it's a client connection
-                        m_communicationClient = new TcpClient();
-                    }
-                }
-                else if (m_transportProtocol == TransportProtocol.Udp)
-                {
-                    m_communicationClient = new UdpClient();
-                }
-                else if (m_transportProtocol == TransportProtocol.Serial)
-                {
-                    m_communicationClient = new SerialClient();
-                }
-                else if (m_transportProtocol == TransportProtocol.File)
-                {
-                    // For file based playback, we allow the option of auto-repeat
-                    FileClient fileClient = new FileClient();
-                    fileClient.FileAccessMode = FileAccess.Read;
-                    fileClient.FileShareMode = FileShare.Read;
-                    fileClient.AutoRepeat = m_autoRepeatCapturedPlayback;
-                    m_communicationClient = fileClient;
-                }
-
-                // Handle command channel connection, if defined...
-                if (settings.TryGetValue("commandchannel", out setting))
-                {
-                    // Parse command channel connection settings
-                    Dictionary<string, string> commandSettings = setting.ParseKeyValuePairs();
-
-                    // Verify user did not attempt to setup command channel as a TCP server
-                    if (commandSettings.ContainsKey("islistener") && commandSettings["islistener"].ParseBoolean())
-                        throw new ArgumentException("Command channel cannot be setup as a TCP server.");
-
-                    // Validate command channel transport protocol selection
-                    TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), commandSettings["protocol"], true);
-
-                    if (transportProtocol != TransportProtocol.Tcp && transportProtocol != TransportProtocol.Serial && transportProtocol != TransportProtocol.File)
-                        throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File");
-
-                    // Instantiate command channel based on defined transport layer
-                    m_commandChannel = ClientBase.Create(setting);
-
-                    // Setup event handlers
-                    m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
-                    m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
-                    m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
-                    m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
-
-                    // Attempt connection to device over command channel
-                    m_commandChannel.ReceiveDataHandler = Write;
-                    m_commandChannel.ReceiveBufferSize = m_bufferSize;
-                    m_commandChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
-                    m_commandChannel.Handshake = false;
-                    m_commandChannel.Connect();
-                    m_connectionAttempts = 0;
-                }
-
-                // Handle primary data connection, this *must* be defined...
-                if (m_communicationClient != null)
-                {
-                    // Setup event handlers
-                    m_communicationClient.ConnectionEstablished += m_communicationClient_ConnectionEstablished;
-                    m_communicationClient.ConnectionAttempt += m_communicationClient_ConnectionAttempt;
-                    m_communicationClient.ConnectionException += m_communicationClient_ConnectionException;
-                    m_communicationClient.ConnectionTerminated += m_communicationClient_ConnectionTerminated;
-
-                    // Attempt connection to device
-                    m_communicationClient.ReceiveDataHandler = Write;
-                    m_communicationClient.ReceiveBufferSize = m_bufferSize;
-                    m_communicationClient.ConnectionString = m_connectionString;
-                    m_communicationClient.MaxConnectionAttempts = m_maximumConnectionAttempts;
-                    m_communicationClient.Handshake = false;
-                    m_communicationClient.Connect();
-                    m_connectionAttempts = 0;
-                }
-                else if (m_communicationServer != null)
-                {
-                    // Setup event handlers
-                    m_communicationServer.ClientConnected += m_communicationServer_ClientConnected;
-                    m_communicationServer.ClientDisconnected += m_communicationServer_ClientDisconnected;
-                    m_communicationServer.ServerStarted += m_communicationServer_ServerStarted;
-                    m_communicationServer.ServerStopped += m_communicationServer_ServerStopped;
-
-                    // Listen for device connection
-                    m_communicationServer.ReceiveClientDataHandler = Write;
-                    m_communicationServer.ReceiveBufferSize = m_bufferSize;
-                    m_communicationServer.ConfigurationString = m_connectionString;
-                    m_communicationServer.MaxClientConnections = 1;
-                    m_communicationServer.Handshake = false;
-                    m_communicationServer.Start();
-                }
-                else
-                    throw new InvalidOperationException("No communications layer was initialized, cannot start parser");
-
-                // Define frame parser specific properties and start parsing engine
-                m_frameParser.ConnectionParameters = m_connectionParameters;
-                m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread;
+                // Start parsing engine
                 m_frameParser.Start();
 
                 m_rateCalcTimer.Enabled = true;
@@ -1201,9 +1028,227 @@ namespace PhasorProtocols
         }
 
         /// <summary>
+        /// Initialize frame parser.
+        /// </summary>
+        /// <param name="settings">Key/value pairs dictionary parsed from connection string.</param>
+        protected virtual void InitializeFrameParser(Dictionary<string, string> settings)
+        {
+            string setting;
+
+            // Instantiate protocol specific frame parser
+            switch (m_phasorProtocol)
+            {
+                case PhasorProtocol.IeeeC37_118V1:
+                    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft7);
+                    break;
+                case PhasorProtocol.IeeeC37_118D6:
+                    m_frameParser = new IeeeC37_118.FrameParser(IeeeC37_118.DraftRevision.Draft6);
+                    break;
+                case PhasorProtocol.Ieee1344:
+                    m_frameParser = new Ieee1344.FrameParser();
+                    break;
+                case PhasorProtocol.BpaPdcStream:
+                    m_frameParser = new BpaPdcStream.FrameParser();
+
+                    // Check for BPA PDCstream protocol specific parameters in connection string
+                    BpaPdcStream.ConnectionParameters bpaPdcParameters = m_connectionParameters as BpaPdcStream.ConnectionParameters;
+
+                    if (bpaPdcParameters != null)
+                    {
+                        // INI file name setting is required
+                        if (settings.TryGetValue("iniFileName", out setting))
+                            bpaPdcParameters.ConfigurationFileName = FilePath.GetAbsolutePath(setting);
+                        else if (string.IsNullOrEmpty(bpaPdcParameters.ConfigurationFileName))
+                            throw new ArgumentException("BPA PDCstream INI filename setting (e.g., \"inifilename=DEVICE_PDC.ini\") was not found. This setting is required for BPA PDCstream protocol connections - frame parser initialization terminated.");
+
+                        if (settings.TryGetValue("refreshConfigFileOnChange", out setting))
+                            bpaPdcParameters.RefreshConfigurationFileOnChange = setting.ParseBoolean();
+
+                        if (settings.TryGetValue("parseWordCountFromByte", out setting))
+                            bpaPdcParameters.ParseWordCountFromByte = setting.ParseBoolean();
+                    }
+                    break;
+                case PhasorProtocol.FNet:
+                    m_frameParser = new FNet.FrameParser();
+
+                    // Check for F-NET protocol specific parameters in connection string
+                    FNet.ConnectionParameters fnetParameters = m_connectionParameters as FNet.ConnectionParameters;
+
+                    if (fnetParameters != null)
+                    {
+                        if (settings.TryGetValue("timeOffset", out setting))
+                            fnetParameters.TimeOffset = long.Parse(setting);
+
+                        if (settings.TryGetValue("stationName", out setting))
+                            fnetParameters.StationName = setting;
+
+                        if (settings.TryGetValue("frameRate", out setting))
+                            fnetParameters.FrameRate = ushort.Parse(setting);
+
+                        if (settings.TryGetValue("nominalFrequency", out setting))
+                            fnetParameters.NominalFrequency = (LineFrequency)Enum.Parse(typeof(LineFrequency), setting);
+                    }
+                    break;
+                case PhasorProtocol.SelFastMessage:
+                    m_frameParser = new SelFastMessage.FrameParser();
+
+                    // Check for SEL Fast Message protocol specific parameters in connection string
+                    SelFastMessage.ConnectionParameters selParameters = m_connectionParameters as SelFastMessage.ConnectionParameters;
+
+                    if (selParameters != null)
+                    {
+                        if (settings.TryGetValue("messageperiod", out setting))
+                            selParameters.MessagePeriod = (SelFastMessage.MessagePeriod)Enum.Parse(typeof(SelFastMessage.MessagePeriod), setting);
+                    }
+                    break;
+                case PhasorProtocol.Macrodyne:
+                    m_frameParser = new Macrodyne.FrameParser();
+                    break;
+                default:
+                    throw new InvalidOperationException(string.Format("Phasor protocol \"{0}\" is not recognized, failed to initialize frame parser", m_phasorProtocol));
+            }
+
+            // Assign frame parser properties
+            m_frameParser.ConnectionParameters = m_connectionParameters;
+            m_frameParser.ExecuteParseOnSeparateThread = m_executeParseOnSeparateThread;
+
+            // Setup event handlers
+            m_frameParser.ReceivedCommandFrame += m_frameParser_ReceivedCommandFrame;
+            m_frameParser.ReceivedConfigurationFrame += m_frameParser_ReceivedConfigurationFrame;
+            m_frameParser.ReceivedDataFrame += m_frameParser_ReceivedDataFrame;
+            m_frameParser.ReceivedHeaderFrame += m_frameParser_ReceivedHeaderFrame;
+            m_frameParser.ReceivedUndeterminedFrame += m_frameParser_ReceivedUndeterminedFrame;
+            m_frameParser.ReceivedFrameBufferImage += m_frameParser_ReceivedFrameBufferImage;
+            m_frameParser.ConfigurationChanged += m_frameParser_ConfigurationChanged;
+            m_frameParser.ParsingException += m_frameParser_ParsingException;
+        }
+
+        /// <summary>
+        /// Initialize command channel.
+        /// </summary>
+        /// <param name="connectionString">Command channel connection string.</param>
+        protected virtual void InitializeCommandChannel(string connectionString)
+        {
+            // Parse command channel connection settings
+            Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+            // Verify user did not attempt to setup command channel as a TCP server
+            if (settings.ContainsKey("islistener") && settings["islistener"].ParseBoolean())
+                throw new ArgumentException("Command channel cannot be setup as a TCP server.");
+
+            // Validate command channel transport protocol selection
+            TransportProtocol transportProtocol = (TransportProtocol)Enum.Parse(typeof(TransportProtocol), settings["protocol"], true);
+
+            if (transportProtocol != TransportProtocol.Tcp && transportProtocol != TransportProtocol.Serial && transportProtocol != TransportProtocol.File)
+                throw new ArgumentException("Command channel transport protocol can only be defined as TCP, Serial or File");
+
+            // Instantiate command channel based on defined transport layer
+            m_commandChannel = ClientBase.Create(connectionString);
+
+            // Setup event handlers
+            m_commandChannel.ConnectionEstablished += m_commandChannel_ConnectionEstablished;
+            m_commandChannel.ConnectionAttempt += m_commandChannel_ConnectionAttempt;
+            m_commandChannel.ConnectionException += m_commandChannel_ConnectionException;
+            m_commandChannel.ConnectionTerminated += m_commandChannel_ConnectionTerminated;
+
+            // Attempt connection to device over command channel
+            m_commandChannel.ReceiveDataHandler = Write;
+            m_commandChannel.ReceiveBufferSize = m_bufferSize;
+            m_commandChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
+            m_commandChannel.Handshake = false;
+            m_commandChannel.Connect();
+            m_connectionAttempts = 0;
+        }
+
+        /// <summary>
+        /// Initialize data channel.
+        /// </summary>
+        /// <param name="settings">Key/value pairs dictionary parsed from connection string.</param>
+        protected virtual void InitializeDataChannel(Dictionary<string, string> settings)
+        {
+            string setting;
+
+            // Instantiate selected transport layer
+            switch (m_transportProtocol)
+            {
+                case TransportProtocol.Tcp:
+                    // The TCP transport may be set up as a server or as a client, we distinguish
+                    // this simply by deriving the value of an added key/value pair in the
+                    // connection string called "IsListener"
+                    if (settings.TryGetValue("islistener", out setting))
+                    {
+                        if (setting.ParseBoolean())
+                            m_serverBasedDataChannel = new TcpServer();
+                        else
+                            m_dataChannel = new TcpClient();
+                    }
+                    else
+                    {
+                        // If the key doesn't exist, we assume it's a client connection
+                        m_dataChannel = new TcpClient();
+                    }
+                    break;
+                case TransportProtocol.Udp:
+                    m_dataChannel = new UdpClient();
+                    break;
+                case TransportProtocol.Serial:
+                    m_dataChannel = new SerialClient();
+                    break;
+                case TransportProtocol.File:
+                    // For file based playback, we allow the option of auto-repeat
+                    FileClient fileClient = new FileClient();
+
+                    fileClient.FileAccessMode = FileAccess.Read;
+                    fileClient.FileShareMode = FileShare.Read;
+                    fileClient.AutoRepeat = m_autoRepeatCapturedPlayback;
+                    m_dataChannel = fileClient;
+                    break;
+                default:
+                    throw new InvalidOperationException(string.Format("Transport protocol \"{0}\" is not recognized, failed to initialize data channel", m_transportProtocol));
+            }
+
+            // Handle primary data connection, this *must* be defined...
+            if (m_dataChannel != null)
+            {
+                // Setup event handlers
+                m_dataChannel.ConnectionEstablished += m_dataChannel_ConnectionEstablished;
+                m_dataChannel.ConnectionAttempt += m_dataChannel_ConnectionAttempt;
+                m_dataChannel.ConnectionException += m_dataChannel_ConnectionException;
+                m_dataChannel.ConnectionTerminated += m_dataChannel_ConnectionTerminated;
+
+                // Attempt connection to device
+                m_dataChannel.ReceiveDataHandler = Write;
+                m_dataChannel.ReceiveBufferSize = m_bufferSize;
+                m_dataChannel.ConnectionString = m_connectionString;
+                m_dataChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
+                m_dataChannel.Handshake = false;
+                m_dataChannel.Connect();
+                m_connectionAttempts = 0;
+            }
+            else if (m_serverBasedDataChannel != null)
+            {
+                // Setup event handlers
+                m_serverBasedDataChannel.ClientConnected += m_serverBasedDataChannel_ClientConnected;
+                m_serverBasedDataChannel.ClientDisconnected += m_serverBasedDataChannel_ClientDisconnected;
+                m_serverBasedDataChannel.ServerStarted += m_serverBasedDataChannel_ServerStarted;
+                m_serverBasedDataChannel.ServerStopped += m_serverBasedDataChannel_ServerStopped;
+
+                // Listen for device connection
+                m_serverBasedDataChannel.ReceiveClientDataHandler = Write;
+                m_serverBasedDataChannel.ReceiveBufferSize = m_bufferSize;
+                m_serverBasedDataChannel.ConfigurationString = m_connectionString;
+                m_serverBasedDataChannel.MaxClientConnections = 1;
+                m_serverBasedDataChannel.Handshake = false;
+                m_serverBasedDataChannel.Start();
+            }
+            else
+                throw new InvalidOperationException("No data channel was initialized, cannot start frame parser");
+        }
+
+        /// <summary>
         /// Stops the <see cref="MultiProtocolFrameParser"/>.
         /// </summary>
-        public void Stop()
+        public virtual void Stop()
         {
             m_enabled = false;
             m_rateCalcTimer.Enabled = false;
@@ -1213,29 +1258,29 @@ namespace PhasorProtocols
             // Make sure data stream is disabled
             SendDeviceCommand(DeviceCommand.DisableRealTimeData);
 
-            if (m_communicationClient != null)
+            if (m_dataChannel != null)
             {
-                m_communicationClient.Disconnect();
-                m_communicationClient.ReceiveDataHandler = null;
-                m_communicationClient.ConnectionEstablished -= m_communicationClient_ConnectionEstablished;
-                m_communicationClient.ConnectionAttempt -= m_communicationClient_ConnectionAttempt;
-                m_communicationClient.ConnectionException -= m_communicationClient_ConnectionException;
-                m_communicationClient.ConnectionTerminated -= m_communicationClient_ConnectionTerminated;
-                m_communicationClient.Dispose();
+                m_dataChannel.Disconnect();
+                m_dataChannel.ReceiveDataHandler = null;
+                m_dataChannel.ConnectionEstablished -= m_dataChannel_ConnectionEstablished;
+                m_dataChannel.ConnectionAttempt -= m_dataChannel_ConnectionAttempt;
+                m_dataChannel.ConnectionException -= m_dataChannel_ConnectionException;
+                m_dataChannel.ConnectionTerminated -= m_dataChannel_ConnectionTerminated;
+                m_dataChannel.Dispose();
             }
-            m_communicationClient = null;
+            m_dataChannel = null;
 
-            if (m_communicationServer != null)
+            if (m_serverBasedDataChannel != null)
             {
-                m_communicationServer.DisconnectAll();
-                m_communicationServer.ReceiveClientDataHandler = null;
-                m_communicationServer.ClientConnected -= m_communicationServer_ClientConnected;
-                m_communicationServer.ClientDisconnected -= m_communicationServer_ClientDisconnected;
-                m_communicationServer.ServerStarted -= m_communicationServer_ServerStarted;
-                m_communicationServer.ServerStopped -= m_communicationServer_ServerStopped;
-                m_communicationServer.Dispose();
+                m_serverBasedDataChannel.DisconnectAll();
+                m_serverBasedDataChannel.ReceiveClientDataHandler = null;
+                m_serverBasedDataChannel.ClientConnected -= m_serverBasedDataChannel_ClientConnected;
+                m_serverBasedDataChannel.ClientDisconnected -= m_serverBasedDataChannel_ClientDisconnected;
+                m_serverBasedDataChannel.ServerStarted -= m_serverBasedDataChannel_ServerStarted;
+                m_serverBasedDataChannel.ServerStopped -= m_serverBasedDataChannel_ServerStopped;
+                m_serverBasedDataChannel.Dispose();
             }
-            m_communicationServer = null;
+            m_serverBasedDataChannel = null;
 
             if (m_commandChannel != null)
             {
@@ -1278,9 +1323,9 @@ namespace PhasorProtocols
         /// <remarks>
         /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
         /// </remarks>
-        public void SendDeviceCommand(DeviceCommand command)
+        public virtual void SendDeviceCommand(DeviceCommand command)
         {
-            if (m_deviceSupportsCommands && (m_communicationClient != null || m_communicationServer != null || m_commandChannel != null))
+            if (m_deviceSupportsCommands && (m_dataChannel != null || m_serverBasedDataChannel != null || m_commandChannel != null))
             {
                 ICommandFrame commandFrame;
 
@@ -1317,10 +1362,10 @@ namespace PhasorProtocols
                     // will take precedence over other communications channels for command traffic...
                     if (m_commandChannel != null)
                         m_commandChannel.SendAsync(buffer, 0, buffer.Length);
-                    else if (m_communicationClient != null)
-                        m_communicationClient.SendAsync(buffer, 0, buffer.Length);
+                    else if (m_dataChannel != null)
+                        m_dataChannel.SendAsync(buffer, 0, buffer.Length);
                     else
-                        m_communicationServer.MulticastAsync(buffer, 0, buffer.Length);
+                        m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length);
 
                     if (SentCommandFrame != null)
                         SentCommandFrame(this, new EventArgs<ICommandFrame>(commandFrame));
@@ -1337,7 +1382,7 @@ namespace PhasorProtocols
         /// <param name="buffer">Buffer containing data to be parsed.</param>
         /// <param name="offset">Offset into buffer where data begins.</param>
         /// <param name="count">Length of data in buffer to be parsed.</param>
-        public void Write(byte[] buffer, int offset, int count)
+        public virtual void Write(byte[] buffer, int offset, int count)
         {
             // This is the delegate implementation used by the communication source for reception
             // of data directly from the socket (i.e., ReceiveDataHandler) that is used for a
@@ -1369,7 +1414,7 @@ namespace PhasorProtocols
         /// Raises the <see cref="ParsingException"/> event.
         /// </summary>
         /// <param name="ex">Exception to send to <see cref="ParsingException"/> event.</param>
-        private void OnParsingException(Exception ex)
+        protected virtual void OnParsingException(Exception ex)
         {
             if (ParsingException != null && !(ex is ThreadAbortException))
                 ParsingException(this, new EventArgs<Exception>(ex));
@@ -1381,43 +1426,50 @@ namespace PhasorProtocols
         /// <param name="innerException">Actual exception to send as inner exception to <see cref="ParsingException"/> event.</param>
         /// <param name="message">Message of new exception to send to <see cref="ParsingException"/> event.</param>
         /// <param name="args">Arguments of message of new exception to send to <see cref="ParsingException"/> event.</param>
-        private void OnParsingException(Exception innerException, string message, params object[] args)
+        protected virtual void OnParsingException(Exception innerException, string message, params object[] args)
         {
             if (!(innerException is ThreadAbortException))
                 OnParsingException(new Exception(string.Format(message, args), innerException));
         }
 
-        private void m_rateCalcTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        /// <summary>
+        /// Derives a flag based on settings that determines if the current connection supports device commands.
+        /// </summary>
+        /// <returns>Derived flag that determines if the current connection supports device commands.</returns>
+        protected virtual bool DeriveCommandSupport()
         {
-            double time = Ticks.ToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
-
-            m_frameRate = (double)m_frameRateTotal / time;
-            m_byteRate = (double)m_byteRateTotal / time;
-
-            m_totalFramesReceived += m_frameRateTotal;
-            m_totalBytesReceived += m_byteRateTotal;
-
-            m_frameRateTotal = 0;
-            m_byteRateTotal = 0;
-            m_dataStreamStartTime = DateTime.Now.Ticks;
-        }
-
-        private void ClientConnected()
-        {
-            if (ConnectionEstablished != null)
-                ConnectionEstablished(this, EventArgs.Empty);
-
-            // Begin data parsing sequence to handle reception of configuration frame
-            if (m_deviceSupportsCommands && m_autoStartDataParsingSequence)
+            // Command support is based on phasor protocol, transport protocol and connection style
+            if (IsIEEEProtocol || m_phasorProtocol == PhasorProtocol.SelFastMessage)
             {
-                m_initialBytesReceived = 0;
-                m_initiatingDataStream = true;
-                ThreadPool.QueueUserWorkItem(StartDataParsingSequence, null);
+                // IEEE protocols using TCP or Serial connection support device commands
+                if (m_transportProtocol == TransportProtocol.Tcp || m_transportProtocol == TransportProtocol.Serial)
+                    return true;
+
+                if (!string.IsNullOrEmpty(m_connectionString))
+                {
+                    Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
+
+                    // A defined command channel inherently means commands are supported
+                    if (settings.ContainsKey("commandchannel"))
+                    {
+                        return true;
+                    }
+                    else if (m_transportProtocol == TransportProtocol.Udp)
+                    {
+                        // IEEE protocols "can" use UDP connection to support devices commands, but only
+                        // when remote device acts as a UDP listener (i.e., a "server" connection)
+                        return settings.ContainsKey("server");
+                    }
+                }
             }
+
+            return false;
         }
 
+        // Starts data parsing sequence.
         private void StartDataParsingSequence(object state)
         {
+            // This thread pool delegate is used to start streaming data on a remote device.
             int attempts = 0;
 
             // Some devices will only send a config frame once data streaming has been disabled, so
@@ -1452,34 +1504,35 @@ namespace PhasorProtocols
                 SendDeviceCommand(DeviceCommand.EnableRealTimeData);
         }
 
-        private bool GetDerivedCommandSupport()
+        // Calculate frame and data rates
+        private void m_rateCalcTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // Command support is based on phasor protocol, transport protocol and connection style
-            if (IsIEEEProtocol || m_phasorProtocol == PhasorProtocol.SelFastMessage)
+            double time = Ticks.ToSeconds(DateTime.Now.Ticks - m_dataStreamStartTime);
+
+            m_frameRate = (double)m_frameRateTotal / time;
+            m_byteRate = (double)m_byteRateTotal / time;
+
+            m_totalFramesReceived += m_frameRateTotal;
+            m_totalBytesReceived += m_byteRateTotal;
+
+            m_frameRateTotal = 0;
+            m_byteRateTotal = 0;
+            m_dataStreamStartTime = DateTime.Now.Ticks;
+        }
+
+        // Handles needed start-up actions once a client is connected
+        private void ClientConnectedHandler()
+        {
+            if (ConnectionEstablished != null)
+                ConnectionEstablished(this, EventArgs.Empty);
+
+            // Begin data parsing sequence to handle reception of configuration frame
+            if (m_deviceSupportsCommands && m_autoStartDataParsingSequence)
             {
-                // IEEE protocols using TCP or Serial connection support device commands
-                if (m_transportProtocol == TransportProtocol.Tcp || m_transportProtocol == TransportProtocol.Serial)
-                    return true;
-                
-                if (!string.IsNullOrEmpty(m_connectionString))
-                {
-                    Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
-
-                    // A defined command channel inherently means commands are supported
-                    if (settings.ContainsKey("commandchannel"))
-                    {
-                        return true;
-                    }
-                    else if (m_transportProtocol == TransportProtocol.Udp)
-                    {
-                        // IEEE protocols "can" use UDP connection to support devices commands, but only
-                        // when remote device acts as a UDP listener (i.e., a "server" connection)
-                        return settings.ContainsKey("server");
-                    }
-                }
+                m_initialBytesReceived = 0;
+                m_initiatingDataStream = true;
+                ThreadPool.QueueUserWorkItem(StartDataParsingSequence, null);
             }
-
-            return false;
         }
 
         private void MaintainCapturedFrameReplayTiming()
@@ -1501,12 +1554,12 @@ namespace PhasorProtocols
 
         #region [ Communications Client Event Handlers ]
 
-        private void m_communicationClient_ConnectionEstablished(object sender, EventArgs e)
+        private void m_dataChannel_ConnectionEstablished(object sender, EventArgs e)
         {
-            ClientConnected();
+            ClientConnectedHandler();
         }
 
-        private void m_communicationClient_ConnectionAttempt(object sender, EventArgs e)
+        private void m_dataChannel_ConnectionAttempt(object sender, EventArgs e)
         {
             m_connectionAttempts++;
 
@@ -1514,13 +1567,13 @@ namespace PhasorProtocols
                 ConnectionAttempt(this, EventArgs.Empty);
         }
 
-        private void m_communicationClient_ConnectionException(object sender, EventArgs<Exception> e)
+        private void m_dataChannel_ConnectionException(object sender, EventArgs<Exception> e)
         {
             if (ConnectionException != null && !(e.Argument is ThreadAbortException))
                 ConnectionException(this, new EventArgs<Exception,int>(e.Argument, m_connectionAttempts));
         }
 
-        private void m_communicationClient_ConnectionTerminated(object sender, EventArgs e)
+        private void m_dataChannel_ConnectionTerminated(object sender, EventArgs e)
         {
             if (ConnectionTerminated != null)
                 ConnectionTerminated(this, EventArgs.Empty);
@@ -1530,24 +1583,24 @@ namespace PhasorProtocols
 
         #region [ Communications Server Event Handlers ]
 
-        private void m_communicationServer_ClientConnected(object sender, EventArgs<Guid> e)
+        private void m_serverBasedDataChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
-            ClientConnected();
+            ClientConnectedHandler();
         }
 
-        private void m_communicationServer_ClientDisconnected(object sender, EventArgs<Guid> e)
+        private void m_serverBasedDataChannel_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             if (ConnectionTerminated != null)
                 ConnectionTerminated(this, EventArgs.Empty);
         }
 
-        private void m_communicationServer_ServerStarted(object sender, EventArgs e)
+        private void m_serverBasedDataChannel_ServerStarted(object sender, EventArgs e)
         {
             if (ServerStarted != null)
                 ServerStarted(this, EventArgs.Empty);
         }
 
-        private void m_communicationServer_ServerStopped(object sender, EventArgs e)
+        private void m_serverBasedDataChannel_ServerStopped(object sender, EventArgs e)
         {
             if (ServerStopped != null)
                 ServerStopped(this, EventArgs.Empty);
@@ -1559,7 +1612,7 @@ namespace PhasorProtocols
 
         private void m_commandChannel_ConnectionEstablished(object sender, EventArgs e)
         {
-            ClientConnected();
+            ClientConnectedHandler();
         }
 
         private void m_commandChannel_ConnectionAttempt(object sender, EventArgs e)

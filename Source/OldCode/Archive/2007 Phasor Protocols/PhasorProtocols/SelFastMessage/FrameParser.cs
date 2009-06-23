@@ -209,9 +209,12 @@ namespace PhasorProtocols.SelFastMessage
             {
                 // Parse common frame header
                 CommonFrameHeader parsedFrameHeader = new CommonFrameHeader(buffer, offset);
+
+                // Derive frame length from common frame header
+                int frameLength = (int)parsedFrameHeader.FrameSize;
                 
                 // We also make sure entire frame buffer image is available to be parsed
-                if (length >= (int)parsedFrameHeader.FrameSize)
+                if (length >= frameLength)
                 {
                     // Create configuration frame if it doesn't exist or frame size has changed
                     if (m_configurationFrame == null || m_configurationFrame.FrameSize != parsedFrameHeader.FrameSize)
@@ -225,13 +228,11 @@ namespace PhasorProtocols.SelFastMessage
 
                     if (m_configurationFrame != null)
                     {
-                        int parsedLength = (int)parsedFrameHeader.FrameSize;
-
                         // Assign common header and data frame parsing state
-                        parsedFrameHeader.State = new DataFrameParsingState(parsedLength, m_configurationFrame, DataCell.CreateNewCell);
+                        parsedFrameHeader.State = new DataFrameParsingState(frameLength, m_configurationFrame, DataCell.CreateNewCell);
 
                         // Expose the frame buffer image in case client needs this data for any reason
-                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, parsedLength);
+                        OnReceivedFrameBufferImage(FundamentalFrameType.DataFrame, buffer, offset, frameLength);
 
                         return parsedFrameHeader;
                     }
