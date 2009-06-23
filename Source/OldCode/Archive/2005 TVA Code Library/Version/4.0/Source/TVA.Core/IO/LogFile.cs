@@ -395,6 +395,115 @@ namespace TVA.IO
         #region [ Methods ]
 
         /// <summary>
+        /// Initializes the <see cref="LogFile"/> object.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="LogFile"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="LogFile"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="LogFile"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves settings for the <see cref="LogFile"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["FileName"];
+                element.Update(m_fileName, element.Description, element.Encrypted);
+                element = settings["FileSize"];
+                element.Update(m_fileSize, element.Description, element.Encrypted);
+                element = settings["FileFullOperation"];
+                element.Update(m_fileFullOperation, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings for the <see cref="LogFile"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
+                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
+                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
+                FileName = settings["FileName"].ValueAs(m_fileName);
+                FileSize = settings["FileSize"].ValueAs(m_fileSize);
+                FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
+            }
+        }
+
+        /// <summary>
         /// Opens the <see cref="LogFile"/> for use if it is closed.
         /// </summary>
         public void Open()
@@ -508,115 +617,6 @@ namespace TVA.IO
         public void WriteTimestampedLine(string text)
         {
             Write("[" + DateTime.Now.ToString() + "] " + text + "\r\n");
-        }
-
-        /// <summary>
-        /// Initializes the <see cref="LogFile"/> object.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="LogFile"/> 
-        /// object is not consumed through the designer surface of the IDE.
-        /// </remarks>
-        public void Initialize()
-        {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
-        }
-
-        /// <summary>
-        /// Saves settings for the <see cref="LogFile"/> object to the config file if the <see cref="PersistSettings"/> 
-        /// property is set to true.
-        /// </summary>        
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName"];
-                element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileSize"];
-                element.Update(m_fileSize, element.Description, element.Encrypted);
-                element = settings["FileFullOperation"];
-                element.Update(m_fileFullOperation, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings for the <see cref="LogFile"/> object from the config file if the <see cref="PersistSettings"/> 
-        /// property is set to true.
-        /// </summary>        
-        public void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("FileName", m_fileName, "Name of the log file including its path.");
-                settings.Add("FileSize", m_fileSize, "Maximum size of the log file in MB.");
-                settings.Add("FileFullOperation", m_fileFullOperation, "Operation (Truncate; Rollover) that is to be performed on the file when it is full.");
-                FileName = settings["FileName"].ValueAs(m_fileName);
-                FileSize = settings["FileSize"].ValueAs(m_fileSize);
-                FileFullOperation = settings["FileFullOperation"].ValueAs(m_fileFullOperation);
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the <see cref="LogFile"/> object properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            try
-            {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the <see cref="LogFile"/> object properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="LogFile"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
         }
 
         /// <summary>

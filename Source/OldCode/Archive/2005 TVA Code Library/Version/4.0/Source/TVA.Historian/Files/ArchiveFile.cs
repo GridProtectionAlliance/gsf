@@ -1111,679 +1111,6 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Opens the <see cref="ArchiveFile"/> for use.
-        /// </summary>
-        /// <exception cref="InvalidOperationException">One or all of the <see cref="StateFile"/>, <see cref="IntercomFile"/> or <see cref="MetadataFile"/> properties are not set.</exception>
-        public void Open()
-        {
-            if (!IsOpen)
-            {
-                // Check for the existance of dependencies.
-                if (m_stateFile == null || m_intercomFile == null | m_metadataFile == null)
-                    throw (new InvalidOperationException("One or more of the dependency files are not specified."));
-
-                // Change the file name for a standby file.
-                if (m_fileType == ArchiveFileType.Standby)
-                    m_fileName = StandbyArchiveFileName;
-                // Get the absolute path for the file name.
-                m_fileName = FilePath.GetAbsolutePath(m_fileName);
-                // Create the directory if it does not exist.
-                if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
-                    Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
-
-                if (File.Exists(m_fileName))
-                {
-                    // File has been created already, so we just need to read it.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
-                    m_fat = new ArchiveFileAllocationTable(this);
-                }
-                else
-                {
-                    // File does not exist, so we have to create it and initialize it.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                    m_fat = new ArchiveFileAllocationTable(this);
-                    m_fat.Save();
-                }
-
-                // Don't proceed further for standby and historic files.
-                if (m_fileType != ArchiveFileType.Active)
-                    return;
-
-                // Start internal process queues.
-                m_historicDataQueue.Start();
-                m_outOfSequenceDataQueue.Start();
-
-                // Open state file if closed.
-                if (!m_stateFile.IsOpen)
-                    m_stateFile.Open();
-                //Open intercom file if closed.
-                if (!m_intercomFile.IsOpen)
-                    m_intercomFile.Open();
-                // Open metadata file if closed.
-                if (!m_metadataFile.IsOpen)
-                    m_metadataFile.Open();
-
-                // Create data block lookup list.
-                if (m_stateFile.RecordsInMemory > 0)
-                    m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsInMemory]);
-                else
-                    m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsOnDisk]);
-
-                // Start the memory conservation process.
-                if (m_conserveMemory)
-                    m_conserveMemoryTimer.Start();
-
-                // Ensure that "rollover in progress" is not set.
-                IntercomRecord system = m_intercomFile.Read(1);
-                system.RolloverInProgress = false;
-                m_intercomFile.Write(1, system);
-
-                // Start preparing the list of historic files.
-                m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
-                m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest;
-                m_buildHistoricFileListThread.Start();
-
-                // Start file watchers to monitor file system changes.
-                m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                m_currentLocationFileWatcher.EnableRaisingEvents = true;
-                if (Directory.Exists(m_fileOffloadLocation))
-                {
-                    m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                    m_offloadLocationFileWatcher.Path = m_fileOffloadLocation;
-                    m_offloadLocationFileWatcher.EnableRaisingEvents = true;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Closes the <see cref="ArchiveFile"/> if it <see cref="IsOpen"/>.
-        /// </summary>
-        public void Close()
-        {
-            if (IsOpen)
-            {
-                // Abort any asynchronous processing.
-                m_rolloverPreparationThread.Abort();
-                m_buildHistoricFileListThread.Abort();
-
-                // Stop checking allocated data blocks for activity.
-                m_conserveMemoryTimer.Stop();
-
-                // Stop the historic and out-of-sequence data queues.
-                m_historicDataQueue.Stop();
-                m_outOfSequenceDataQueue.Stop();
-
-                // Dispose the underlying file stream object.
-                m_fat = null;
-                if (m_fileStream != null)
-                {
-                    lock (m_fileStream)
-                    {
-                        m_fileStream.Dispose();
-                    }
-                    m_fileStream = null;
-                }
-
-                if (m_dataBlocks != null)
-                {
-                    lock (m_dataBlocks)
-                    {
-                        m_dataBlocks.Clear();
-                    }
-                    m_dataBlocks = null;
-                }
-
-                // Stop watching for historic archive files.
-                m_currentLocationFileWatcher.EnableRaisingEvents = false;
-                m_offloadLocationFileWatcher.EnableRaisingEvents = false;
-
-                // Clear the list of historic archive files.
-                if (m_historicArchiveFiles != null)
-                {
-                    lock (m_historicArchiveFiles)
-                    {
-                        m_historicArchiveFiles.Clear();
-                    }
-                    m_historicArchiveFiles = null;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Saves the <see cref="ArchiveFile"/>.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="ArchiveFile"/> is not open.</exception>
-        public void Save()
-        {
-            if (IsOpen)
-            {
-                m_fat.Save();
-            }
-            else
-            {
-                throw new InvalidOperationException(string.Format("'{0}' is not open.", m_fileName));
-            }
-        }
-
-        /// <summary>
-        /// Performs rollover of active <see cref="ArchiveFile"/> to a new <see cref="ArchiveFile"/>.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="ArchiveFile"/> is not <see cref="ArchiveFileType.Active"/>.</exception>
-        public void Rollover()
-        {
-            if (m_fileType != ArchiveFileType.Active)
-                throw new InvalidOperationException("Cannot rollover a file that is not active.");
-
-            try
-            {
-                OnRolloverStart();
-
-                // Notify other threads that rollover is in progress.
-                m_rolloverWaitHandle.Reset();
-
-                // Notify server that rollover is in progress.
-                IntercomRecord system = m_intercomFile.Read(1);
-                system.DataBlocksUsed = 0;
-                system.RolloverInProgress = true;
-                system.LatestDataID = -1;
-                system.LatestDataTime = TimeTag.MinValue;
-                m_intercomFile.Write(1, system);
-                m_intercomFile.Save();
-
-                // Figure out the end date for this file.
-                StateRecord state;
-                TimeTag endTime = m_fat.FileEndTime;
-                for (int i = 1; i <= m_stateFile.RecordsOnDisk; i++)
-                {
-                    state = m_stateFile.Read(i);
-                    state.ActiveDataBlockIndex = -1;
-                    state.ActiveDataBlockSlot = 1;
-                    if (state.ArchivedData.Time > endTime)
-                    {
-                        endTime = state.ArchivedData.Time;
-                    }
-
-                    m_stateFile.Write(state.HistorianID, state);
-                }
-                m_fat.FileEndTime = endTime;
-
-                List<Info> historicFiles = new List<Info>();
-                string historyFileName = HistoryArchiveFileName;
-                string standbyFileName = StandbyArchiveFileName;
-                // We get a local copy of the list of historic archive files before closing as closing the
-                // file clears the list. After file's been closed, we re-assign the local copy to the list
-                // in order to avoid this list from being created over and over again after rollovers.
-                lock (m_historicArchiveFiles)
-                {
-                    historicFiles.AddRange(m_historicArchiveFiles);
-                }
-                Close();
-                m_historicArchiveFiles = historicFiles;
-
-                // CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
-                //           Possible if the server fails to give up the file or for some reason the current file
-                //           doesn't release all locks on the file.
-                if (File.Exists(m_fileName))
-                {
-                    try
-                    {
-                        FilePath.WaitForWriteLock(m_fileName, 60); // Wait for the server to release the file.
-                        File.Move(m_fileName, historyFileName); // Make the active archive file historic.
-                        // We add the file that we just rolled over from to the list of historic files.
-                        lock (m_historicArchiveFiles)
-                        {
-                            m_historicArchiveFiles.Add(GetHistoricFileInfo(historyFileName));
-                        }
-
-                        if (File.Exists(standbyFileName))
-                        {
-                            // We have a "standby" archive file for us to use, so we'll use it. It is possible that
-                            // the "standby" file may not be available for use if it could not be created due to
-                            // insufficient disk space during the "rollover preparation stage". If that's the case,
-                            // Open() below will try to create a new archive file, but will only succeed if there
-                            // is enough disk space.
-                            File.Move(standbyFileName, m_fileName); // Make the standby archive file active.
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        Open();
-                        throw;
-                    }
-                }
-
-                // CRITICAL: Exception can be encountered if a "standby" archive is not present for us to use and
-                //           we cannot create a new archive file probably because there isn't enough disk space.
-                try
-                {
-                    Open();
-                    m_fat.FileStartTime = endTime;
-
-                    // Notify server that rollover is complete.
-                    system.RolloverInProgress = false;
-                    m_intercomFile.Write(1, system);
-                    m_intercomFile.Save();
-
-                    // Notify other threads that rollover is complete.
-                    m_rolloverWaitHandle.Set();
-
-                    OnRolloverComplete();
-                }
-                catch (Exception)
-                {
-                    Close(); // Close the file if we fail to open it.
-                    File.Delete(m_fileName);
-                    throw; // Rethrow the exception so that the exception event can be raised.
-                }
-            }
-            catch (Exception ex)
-            {
-                OnRolloverException(ex);
-            }
-        }
-
-        /// <summary>
-        /// Writes the specified <paramref name="dataPoint"/> to the <see cref="ArchiveFile"/>.
-        /// </summary>
-        /// <param name="dataPoint"><see cref="ArchiveData"/> to be written.</param>
-        public void WriteData(IDataPoint dataPoint)
-        {
-            // TODO: Review, optimize and organize.
-
-            // Yeild to the rollover process if it is in progress.
-            m_rolloverWaitHandle.WaitOne();
-
-            if (!IsOpen)
-                // Don't proceed is file is not open.
-                throw new InvalidOperationException(string.Format("'{0}' file is not open.", m_fileName));
-
-            if (m_fileType != ArchiveFileType.Active)
-                // Don't proceed if file is not active.
-                throw new InvalidOperationException("Data can only be directly written to files that are Active.");
-
-            ArchiveData data = (ArchiveData)dataPoint;
-            MetadataRecord metadata = m_metadataFile.Read(data.HistorianID);
-            if (metadata == null || !metadata.GeneralFlags.Enabled)
-            {
-                // Don't proceed if data is not to be archived.
-                OnOrphanDataReceived(data);
-                return;
-            }
-
-            if (data.Time > DateTime.UtcNow.AddMinutes(m_leadTimeTolerance))
-            {
-                // Don't proceed if data timetag is beyond the defined lead time tolerance.
-                OnFutureDataReceived(data);
-                return;
-            }
-
-            if ((int)data.Quality == 31)
-            {
-                // Perform limit check since quality is not set.
-                // Note: Here we're checking if the Quality is 31 instead of -1 because the quality value is stored
-                // in the first 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is
-                // set to -1, all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the
-                // Quality, which is a masked value of Flags, we get 31 and not -1.
-                switch (metadata.GeneralFlags.DataType)
-                {
-                    case DataType.Analog:
-                        if (data.Value >= metadata.AnalogFields.HighRange)
-                            data.Quality = Quality.UnreasonableHigh;
-                        else if (data.Value >= metadata.AnalogFields.HighAlarm)
-                            data.Quality = Quality.ValueAboveHiHiAlarm;
-                        else if (data.Value >= metadata.AnalogFields.HighWarning)
-                            data.Quality = Quality.ValueAboveHiAlarm;
-                        else if (data.Value <= metadata.AnalogFields.LowRange)
-                            data.Quality = Quality.UnreasonableLow;
-                        else if (data.Value <= metadata.AnalogFields.LowAlarm)
-                            data.Quality = Quality.ValueBelowLoLoAlarm;
-                        else if (data.Value <= metadata.AnalogFields.LowWarning)
-                            data.Quality = Quality.ValueBelowLoAlarm;
-                        else
-                            data.Quality = Quality.Good;
-                        break;
-                    case DataType.Digital:
-                        if (data.Value == metadata.DigitalFields.AlarmState)
-                            data.Quality = Quality.LogicalAlarm;
-                        else
-                            data.Quality = Quality.Good;
-                        break;
-                }
-            }
-
-            // Initialize local variables.
-            StateRecord state = m_stateFile.Read(data.HistorianID);
-            IntercomRecord system = m_intercomFile.Read(1);
-
-            if (data.Time > system.LatestDataTime)
-            {
-                // Update the environment data that is written to the Intercom File.
-                system.LatestDataID = data.HistorianID;
-                system.LatestDataTime = data.Time;
-                m_intercomFile.Write(1, system);
-            }
-
-            if (data.Time <= state.ArchivedData.Time)
-            {
-                if (data.Time < state.ArchivedData.Time)
-                {
-                    // Data is out-of-sequence, so insert it or discard it.
-                    if (!m_discardOutOfSequenceData)
-                    {
-                        // Insert the data into the current file.
-                        m_outOfSequenceDataQueue.Add(data);
-                    }
-                    OnOutOfSequenceDataReceived(data);
-                }
-
-                return;
-            }
-
-            // [BEGIN]   Compression logic
-            bool archiveData = false;
-            bool calculateSlopes = false;
-            float compressionLimit = metadata.AnalogFields.CompressionLimit;
-
-            if (metadata.GeneralFlags.DataType == DataType.Digital)
-            {
-                // Set the compression limit to a very low number for digital points.
-                compressionLimit = 0.000000001f;
-            }
-
-            // Assign the new data as "current data".
-            state.CurrentData = new StateRecordData(data);
-
-            if (state.ArchivedData.IsEmpty)
-            {
-                // This is the first time data is received for the point.
-                state.CurrentData = new StateRecordData(-1);
-                archiveData = true;
-            }
-            else if (state.PreviousData.IsEmpty)
-            {
-                // This is the second time data is received for the point.
-                calculateSlopes = true;
-            }
-            else
-            {
-                if (metadata.GeneralFlags.AlarmEnabled)
-                {
-                    // Quality-based alarming is enabled on this point.
-                    if ((metadata.AlarmFlags.Value & (2 ^ (int)state.CurrentData.Quality)) != 0)
-                    {
-                        // Quality of the current data warrants alarming based on alarming settings for the point.
-                        float delay = 0;
-                        switch (metadata.GeneralFlags.DataType)
-                        {
-                            case DataType.Analog:
-                                delay = metadata.AnalogFields.AlarmDelay;
-                                break;
-                            case DataType.Digital:
-                                delay = metadata.DigitalFields.AlarmDelay;
-                                break;
-                        }
-
-                        if (delay > 0)
-                        {
-                            // If there's a delay specified before alarm processing is to take place for the point
-                            // then we'll make sure that quality of the data for the point stays the same for the
-                            // specified time before alarm processing takes place.
-                            double first;
-                            if (m_delayedAlarmProcessing.TryGetValue(data.HistorianID, out first))
-                            {
-                                // We waited for the specified time, so we can process the alarm now.
-                                if (state.CurrentData.Time.Value - first > delay)
-                                {
-                                    m_delayedAlarmProcessing.Remove(data.HistorianID);
-                                    OnProcessAlarmNotification(state);
-                                }
-                            }
-                            else
-                            {
-                                m_delayedAlarmProcessing.Add(state.HistorianID, state.CurrentData.Time.Value);
-                            }
-                        }
-                        else
-                        {
-                            // No delay is specified for the point, so we'll immediately process the alarm.
-                            OnProcessAlarmNotification(state);
-                        }
-                    }
-                    else
-                    {
-                        m_delayedAlarmProcessing.Remove(data.HistorianID);
-                    }
-                }
-
-                if (m_compressData)
-                {
-                    // Perform compression check.
-                    if (metadata.CompressionMinTime > 0 && state.CurrentData.Time.Value - state.ArchivedData.Time.Value < metadata.CompressionMinTime)
-                    {
-                        // The "cmpMinTime" parameter specifies (when > 0), that a point should
-                        // not be archived if it was already archived less than "cmpMinTime" seconds
-                        // ago.  Determine difference between current event time and Last Archived
-                        // Value time, and exit if less than this amount of seconds.
-                        archiveData = false;
-                        calculateSlopes = false;
-                    }
-                    else if (state.CurrentData.Quality != state.ArchivedData.Quality || state.CurrentData.Quality != state.PreviousData.Quality || (metadata.CompressionMaxTime > 0 && state.PreviousData.Time.Value - state.ArchivedData.Time.Value > metadata.CompressionMaxTime)) // If quality changed, or MaxTimeExceeded, archive it,
-                    {
-                        // If quality changed, or MaxTimeExceeded, archive it,
-                        // and recalculate slopes
-
-                        // The "cmpMaxTime" parameter specifies (when > 0) that a point should
-                        // be archived if the last time it was archived is more than "cmpMaxTime"
-                        // seconds ago.  Determine this difference and set flag accordingly.
-                        data = new ArchiveData(state.PreviousData);
-                        archiveData = true;
-                        calculateSlopes = true;
-                    }
-                    else
-                    {
-                        // Perform a compression test.
-                        double slope1;
-                        double slope2;
-                        double currentSlope;
-
-                        slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                        slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                        currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-
-                        if (slope1 >= state.Slope1)
-                        {
-                            state.Slope1 = slope1;
-                        }
-                        if (slope2 <= state.Slope2)
-                        {
-                            state.Slope2 = slope2;
-                        }
-                        if (currentSlope <= state.Slope1 || currentSlope >= state.Slope2)
-                        {
-                            data = new ArchiveData(state.PreviousData);
-                            archiveData = true;
-                            calculateSlopes = true;
-                        }
-                    }
-                }
-                else
-                {
-                    // No compression check required.
-                    data = new ArchiveData(state.PreviousData);
-                    archiveData = true;
-                }
-            }
-            // [END]     Compression logic
-
-            // [BEGIN]   Write data
-            m_fat.DataPointsReceived++;
-            if (archiveData)
-            {
-                if (data.Time >= m_fat.FileStartTime)
-                {
-                    // Data belongs to this file.
-                    m_fat.DataPointsArchived++;
-                    ArchiveDataBlock dataBlock;
-                    lock (m_dataBlocks)
-                    {
-                        dataBlock = m_dataBlocks[data.HistorianID - 1];
-                    }
-
-                    if (dataBlock == null || dataBlock.SlotsAvailable == 0)
-                    {
-                        // Need to find a data block for writting the data.
-                        if (dataBlock != null)
-                        {
-                            // This is done to get a brand new data block.
-                            dataBlock = null;
-                            state.ActiveDataBlockIndex = -1;
-                        }
-
-                        if (state.ActiveDataBlockIndex >= 0)
-                        {
-                            // We have the index of a previously used data block.
-                            dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, state.ActiveDataBlockIndex);
-                            if (dataBlock.SlotsAvailable == 0)
-                            {
-                                // Previously used data block is full.
-                                dataBlock = null;
-                            }
-                        }
-
-                        if (dataBlock == null)
-                        {
-                            // Previously used data block could not be used so get a new one.
-                            dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, system.DataBlocksUsed);
-
-                            if (dataBlock != null)
-                            {
-                                // Update the total number of data blocks used.
-                                system.DataBlocksUsed++;
-                                m_intercomFile.Write(1, system);
-
-                                // Update the active data block index for the point.
-                                state.ActiveDataBlockIndex = dataBlock.Index;
-                            }
-                        }
-
-                        // Keep in-memory reference to the data block for consecutive writes.
-                        lock (m_dataBlocks)
-                        {
-                            m_dataBlocks[data.HistorianID - 1] = dataBlock;
-                        }
-
-                        if (PercentFileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
-                        {
-                            // We've requested the specified percent of the total number of data
-                            // blocks in the file, so we must now prepare for the rollover process
-                            // since it has not been done yet and it is not already in progress.
-                            m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
-                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
-                            m_rolloverPreparationThread.Start();
-                        }
-                    }
-
-                    if (dataBlock != null)
-                    {
-                        // We have a data block to which we can write the data.
-                        dataBlock.Write(data);
-                    }
-                    else
-                    {
-                        // There are no more data blocks available for writing data to.
-                        OnFileFull();
-
-                        if (m_rolloverOnFull)
-                        {
-                            while (true)
-                            {
-                                Rollover(); // Start rollover.
-                                if (m_rolloverWaitHandle.WaitOne(1, false))
-                                {
-                                    break; // Rollover is successful.
-                                }
-                            }
-                        }
-
-                        // Re-read the point state since it is modified during the rollover.
-                        state = m_stateFile.Read(data.HistorianID);
-                    }
-                }
-                else
-                {
-                    // Data is historic.
-                    m_fat.DataPointsReceived--;
-                    m_historicDataQueue.Add(data);
-                    OnHistoricDataReceived(data);
-                }
-
-                state.ArchivedData = new StateRecordData(data);
-            }
-
-            if (calculateSlopes)
-            {
-                if (state.CurrentData.Time.Value != state.ArchivedData.Time.Value)
-                {
-                    state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                    state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                }
-                else
-                {
-                    state.Slope1 = 0;
-                    state.Slope2 = 0;
-                }
-            }
-
-            state.PreviousData = state.CurrentData;
-
-            // Update state information for the point in the State file.
-            m_stateFile.Write(state.HistorianID, state);
-            // [END]     Write data
-        }
-
-        /// <summary>
-        /// Writes the specified <paramref name="dataPoints"/> to the <see cref="ArchiveFile"/>.
-        /// </summary>
-        /// <param name="dataPoints"><see cref="ArchiveData"/> points to be written.</param>
-        public void WriteData(IEnumerable<IDataPoint> dataPoints)
-        {
-            if (IsOpen)
-            {
-                foreach (IDataPoint dataPoint in dataPoints)
-                {
-                    WriteData(dataPoint);
-                }
-            }
-            else
-            {
-                throw (new InvalidOperationException(string.Format("{0} '{1}' is not open.", this.GetType().Name, m_fileName)));
-            }
-        }
-
-        /// <summary>
-        /// Writes <paramref name="metadata"/> for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <param name="metadata"><see cref="MetadataRecord.BinaryImage"/> data.</param>
-        public void WriteMetaData(int historianID, byte[] metadata)
-        { 
-            MetadataFile.Write(historianID, new MetadataRecord(historianID, metadata, 0, metadata.Length));
-            MetadataFile.Save();
-        }
-
-        /// <summary>
-        /// Writes <paramref name="statedata"/> for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier.</param>
-        /// <param name="statedata"><see cref="StateRecord.BinaryImage"/> data.</param>
-        public void WriteStateData(int historianID, byte[] statedata)
-        {
-            StateFile.Write(historianID, new StateRecord(historianID, statedata, 0, statedata.Length));
-            StateFile.Save();
-        }
-
-        /// <summary>
         /// Initializes the <see cref="ArchiveFile"/>.
         /// </summary>
         /// <remarks>
@@ -1939,6 +1266,661 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Opens the <see cref="ArchiveFile"/> for use.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">One or all of the <see cref="StateFile"/>, <see cref="IntercomFile"/> or <see cref="MetadataFile"/> properties are not set.</exception>
+        public void Open()
+        {
+            if (!IsOpen)
+            {
+                // Check for the existance of dependencies.
+                if (m_stateFile == null || m_intercomFile == null | m_metadataFile == null)
+                    throw (new InvalidOperationException("One or more of the dependency files are not specified."));
+
+                // Change the file name for a standby file.
+                if (m_fileType == ArchiveFileType.Standby)
+                    m_fileName = StandbyArchiveFileName;
+                // Get the absolute path for the file name.
+                m_fileName = FilePath.GetAbsolutePath(m_fileName);
+                // Create the directory if it does not exist.
+                if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
+                    Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
+
+                if (File.Exists(m_fileName))
+                {
+                    // File has been created already, so we just need to read it.
+                    m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
+                    m_fat = new ArchiveFileAllocationTable(this);
+                }
+                else
+                {
+                    // File does not exist, so we have to create it and initialize it.
+                    m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    m_fat = new ArchiveFileAllocationTable(this);
+                    m_fat.Save();
+                }
+
+                // Don't proceed further for standby and historic files.
+                if (m_fileType != ArchiveFileType.Active)
+                    return;
+
+                // Start internal process queues.
+                m_historicDataQueue.Start();
+                m_outOfSequenceDataQueue.Start();
+
+                // Open state file if closed.
+                if (!m_stateFile.IsOpen)
+                    m_stateFile.Open();
+                //Open intercom file if closed.
+                if (!m_intercomFile.IsOpen)
+                    m_intercomFile.Open();
+                // Open metadata file if closed.
+                if (!m_metadataFile.IsOpen)
+                    m_metadataFile.Open();
+
+                // Create data block lookup list.
+                if (m_stateFile.RecordsInMemory > 0)
+                    m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsInMemory]);
+                else
+                    m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsOnDisk]);
+
+                // Start the memory conservation process.
+                if (m_conserveMemory)
+                    m_conserveMemoryTimer.Start();
+
+                // Ensure that "rollover in progress" is not set.
+                IntercomRecord system = m_intercomFile.Read(1);
+                system.RolloverInProgress = false;
+                m_intercomFile.Write(1, system);
+
+                // Start preparing the list of historic files.
+                m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
+                m_buildHistoricFileListThread.Priority = ThreadPriority.Lowest;
+                m_buildHistoricFileListThread.Start();
+
+                // Start file watchers to monitor file system changes.
+                m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                m_currentLocationFileWatcher.EnableRaisingEvents = true;
+                if (Directory.Exists(m_fileOffloadLocation))
+                {
+                    m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
+                    m_offloadLocationFileWatcher.Path = m_fileOffloadLocation;
+                    m_offloadLocationFileWatcher.EnableRaisingEvents = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Closes the <see cref="ArchiveFile"/> if it <see cref="IsOpen"/>.
+        /// </summary>
+        public void Close()
+        {
+            if (IsOpen)
+            {
+                // Abort any asynchronous processing.
+                m_rolloverPreparationThread.Abort();
+                m_buildHistoricFileListThread.Abort();
+
+                // Stop checking allocated data blocks for activity.
+                m_conserveMemoryTimer.Stop();
+
+                // Stop the historic and out-of-sequence data queues.
+                m_historicDataQueue.Stop();
+                m_outOfSequenceDataQueue.Stop();
+
+                // Dispose the underlying file stream object.
+                m_fat = null;
+                if (m_fileStream != null)
+                {
+                    lock (m_fileStream)
+                    {
+                        m_fileStream.Dispose();
+                    }
+                    m_fileStream = null;
+                }
+
+                if (m_dataBlocks != null)
+                {
+                    lock (m_dataBlocks)
+                    {
+                        m_dataBlocks.Clear();
+                    }
+                    m_dataBlocks = null;
+                }
+
+                // Stop watching for historic archive files.
+                m_currentLocationFileWatcher.EnableRaisingEvents = false;
+                m_offloadLocationFileWatcher.EnableRaisingEvents = false;
+
+                // Clear the list of historic archive files.
+                if (m_historicArchiveFiles != null)
+                {
+                    lock (m_historicArchiveFiles)
+                    {
+                        m_historicArchiveFiles.Clear();
+                    }
+                    m_historicArchiveFiles = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves the <see cref="ArchiveFile"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="ArchiveFile"/> is not open.</exception>
+        public void Save()
+        {
+            if (IsOpen)
+            {
+                m_fat.Save();
+            }
+            else
+            {
+                throw new InvalidOperationException(string.Format("\"{0}\" is not open.", m_fileName));
+            }
+        }
+
+        /// <summary>
+        /// Performs rollover of active <see cref="ArchiveFile"/> to a new <see cref="ArchiveFile"/>.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="ArchiveFile"/> is not <see cref="ArchiveFileType.Active"/>.</exception>
+        public void Rollover()
+        {
+            if (m_fileType != ArchiveFileType.Active)
+                throw new InvalidOperationException("Cannot rollover a file that is not active.");
+
+            try
+            {
+                OnRolloverStart();
+
+                // Notify other threads that rollover is in progress.
+                m_rolloverWaitHandle.Reset();
+
+                // Notify server that rollover is in progress.
+                IntercomRecord system = m_intercomFile.Read(1);
+                system.DataBlocksUsed = 0;
+                system.RolloverInProgress = true;
+                system.LatestDataID = -1;
+                system.LatestDataTime = TimeTag.MinValue;
+                m_intercomFile.Write(1, system);
+                m_intercomFile.Save();
+
+                // Figure out the end date for this file.
+                StateRecord state;
+                TimeTag endTime = m_fat.FileEndTime;
+                for (int i = 1; i <= m_stateFile.RecordsOnDisk; i++)
+                {
+                    state = m_stateFile.Read(i);
+                    state.ActiveDataBlockIndex = -1;
+                    state.ActiveDataBlockSlot = 1;
+                    if (state.ArchivedData.Time > endTime)
+                    {
+                        endTime = state.ArchivedData.Time;
+                    }
+
+                    m_stateFile.Write(state.HistorianID, state);
+                }
+                m_fat.FileEndTime = endTime;
+
+                List<Info> historicFiles = new List<Info>();
+                string historyFileName = HistoryArchiveFileName;
+                string standbyFileName = StandbyArchiveFileName;
+                // We get a local copy of the list of historic archive files before closing as closing the
+                // file clears the list. After file's been closed, we re-assign the local copy to the list
+                // in order to avoid this list from being created over and over again after rollovers.
+                lock (m_historicArchiveFiles)
+                {
+                    historicFiles.AddRange(m_historicArchiveFiles);
+                }
+                Close();
+                m_historicArchiveFiles = historicFiles;
+
+                // CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
+                //           Possible if the server fails to give up the file or for some reason the current file
+                //           doesn't release all locks on the file.
+                if (File.Exists(m_fileName))
+                {
+                    try
+                    {
+                        FilePath.WaitForWriteLock(m_fileName, 60); // Wait for the server to release the file.
+                        File.Move(m_fileName, historyFileName); // Make the active archive file historic.
+                        // We add the file that we just rolled over from to the list of historic files.
+                        lock (m_historicArchiveFiles)
+                        {
+                            m_historicArchiveFiles.Add(GetHistoricFileInfo(historyFileName));
+                        }
+
+                        if (File.Exists(standbyFileName))
+                        {
+                            // We have a "standby" archive file for us to use, so we'll use it. It is possible that
+                            // the "standby" file may not be available for use if it could not be created due to
+                            // insufficient disk space during the "rollover preparation stage". If that's the case,
+                            // Open() below will try to create a new archive file, but will only succeed if there
+                            // is enough disk space.
+                            File.Move(standbyFileName, m_fileName); // Make the standby archive file active.
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        Open();
+                        throw;
+                    }
+                }
+
+                // CRITICAL: Exception can be encountered if a "standby" archive is not present for us to use and
+                //           we cannot create a new archive file probably because there isn't enough disk space.
+                try
+                {
+                    Open();
+                    m_fat.FileStartTime = endTime;
+
+                    // Notify server that rollover is complete.
+                    system.RolloverInProgress = false;
+                    m_intercomFile.Write(1, system);
+                    m_intercomFile.Save();
+
+                    // Notify other threads that rollover is complete.
+                    m_rolloverWaitHandle.Set();
+
+                    OnRolloverComplete();
+                }
+                catch (Exception)
+                {
+                    Close(); // Close the file if we fail to open it.
+                    File.Delete(m_fileName);
+                    throw; // Rethrow the exception so that the exception event can be raised.
+                }
+            }
+            catch (Exception ex)
+            {
+                OnRolloverException(ex);
+            }
+        }
+
+        /// <summary>
+        /// Writes the specified <paramref name="dataPoint"/> to the <see cref="ArchiveFile"/>.
+        /// </summary>
+        /// <param name="dataPoint"><see cref="ArchiveData"/> to be written.</param>
+        public void WriteData(IDataPoint dataPoint)
+        {
+            // Ensure that the current file is open.
+            if (!IsOpen)
+                throw new InvalidOperationException(string.Format("\"{0}\" file is not open.", m_fileName));
+
+            // Ensure that the current file is active.
+            if (m_fileType != ArchiveFileType.Active)
+                throw new InvalidOperationException("Data can only be directly written to files that are Active.");
+
+            // Yeild to the rollover process if it is in progress.
+            m_rolloverWaitHandle.WaitOne();
+
+            // Initialize local variables.
+            ArchiveData data = (ArchiveData)dataPoint;
+            MetadataRecord metadata = m_metadataFile.Read(data.HistorianID);
+            StateRecord state = m_stateFile.Read(data.HistorianID);
+            IntercomRecord system = m_intercomFile.Read(1);
+
+            // Ensure that the received data is to be archived.
+            if (metadata == null || !metadata.GeneralFlags.Enabled)
+            {
+                OnOrphanDataReceived(data);
+                return;
+            }
+
+            // Ensure that data is not far out in to the future.
+            if (data.Time > DateTime.UtcNow.AddMinutes(m_leadTimeTolerance))
+            {
+                OnFutureDataReceived(data);
+                return;
+            }
+
+            // Perform quality check if data quality is not set.
+            if ((int)data.Quality == 31)
+            {
+                // Note: Here we're checking if the Quality is 31 instead of -1 because the quality value is stored
+                // in the first 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is
+                // set to -1, all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the
+                // Quality, which is a masked value of Flags, we get 31 and not -1.
+                switch (metadata.GeneralFlags.DataType)
+                {
+                    case DataType.Analog:
+                        if (data.Value >= metadata.AnalogFields.HighRange)
+                            data.Quality = Quality.UnreasonableHigh;
+                        else if (data.Value >= metadata.AnalogFields.HighAlarm)
+                            data.Quality = Quality.ValueAboveHiHiAlarm;
+                        else if (data.Value >= metadata.AnalogFields.HighWarning)
+                            data.Quality = Quality.ValueAboveHiAlarm;
+                        else if (data.Value <= metadata.AnalogFields.LowRange)
+                            data.Quality = Quality.UnreasonableLow;
+                        else if (data.Value <= metadata.AnalogFields.LowAlarm)
+                            data.Quality = Quality.ValueBelowLoLoAlarm;
+                        else if (data.Value <= metadata.AnalogFields.LowWarning)
+                            data.Quality = Quality.ValueBelowLoAlarm;
+                        else
+                            data.Quality = Quality.Good;
+                        break;
+                    case DataType.Digital:
+                        if (data.Value == metadata.DigitalFields.AlarmState)
+                            data.Quality = Quality.LogicalAlarm;
+                        else
+                            data.Quality = Quality.Good;
+                        break;
+                }
+            }
+
+            // Update information about the latest data point received.
+            if (data.Time > system.LatestDataTime)
+            {
+                system.LatestDataID = data.HistorianID;
+                system.LatestDataTime = data.Time;
+                m_intercomFile.Write(1, system);
+            }
+
+            // Check for data that out-of-sequence based on it's time.
+            if (data.Time <= state.PreviousData.Time)
+            {
+                if (data.Time == state.PreviousData.Time)
+                {
+                    // Discard data that is an exact duplicate of data in line for archival.
+                    if (data.Value == state.PreviousData.Value && data.Quality == state.PreviousData.Quality)
+                        return;
+                }
+                else
+                {
+                    // Queue out-of-sequence data for processing if it is not be discarded.
+                    if (!m_discardOutOfSequenceData)
+                        m_outOfSequenceDataQueue.Add(data);
+
+                    OnOutOfSequenceDataReceived(data);
+                    return;
+                }
+            }
+
+            // [BEGIN]   Data compression
+            bool archiveData = false;
+            bool calculateSlopes = false;
+            float compressionLimit = metadata.AnalogFields.CompressionLimit;
+
+            // Set the compression limit to a very low number for digital points.
+            if (metadata.GeneralFlags.DataType == DataType.Digital)
+                compressionLimit = 0.000000001f;
+
+            state.CurrentData = new StateRecordData(data);
+            if (state.ArchivedData.IsEmpty)
+            {
+                // This is the first time data is received.
+                state.CurrentData = new StateRecordData(-1);
+                archiveData = true;
+            }
+            else if (state.PreviousData.IsEmpty)
+            {
+                // This is the second time data is received.
+                calculateSlopes = true;
+            }
+            else
+            {
+                // Process quality-based alarming if enabled.
+                if (metadata.GeneralFlags.AlarmEnabled)
+                {
+                    if ((metadata.AlarmFlags.Value & (2 ^ (int)state.CurrentData.Quality)) != 0)
+                    {
+                        // Current data quality warrants alarming based on the alarming settings.
+                        float delay = 0;
+                        switch (metadata.GeneralFlags.DataType)
+                        {
+                            case DataType.Analog:
+                                delay = metadata.AnalogFields.AlarmDelay;
+                                break;
+                            case DataType.Digital:
+                                delay = metadata.DigitalFields.AlarmDelay;
+                                break;
+                        }
+
+                        // Dispatch the alarm immediately or after a given time based on settings.
+                        if (delay > 0)
+                        {
+                            // Wait before dispatching alarm.
+                            double first;
+                            if (m_delayedAlarmProcessing.TryGetValue(data.HistorianID, out first))
+                            {
+                                if (state.CurrentData.Time.Value - first > delay)
+                                {
+                                    // Wait is now over, dispatch the alarm.
+                                    m_delayedAlarmProcessing.Remove(data.HistorianID);
+                                    OnProcessAlarmNotification(state);
+                                }
+                            }
+                            else
+                            {
+                                m_delayedAlarmProcessing.Add(state.HistorianID, state.CurrentData.Time.Value);
+                            }
+                        }
+                        else
+                        {
+                            // Dispatch the alarm immediately.
+                            OnProcessAlarmNotification(state);
+                        }
+                    }
+                    else
+                    {
+                        m_delayedAlarmProcessing.Remove(data.HistorianID);
+                    }
+                }
+
+                if (m_compressData)
+                {
+                    // Data is to be compressed.
+                    if (metadata.CompressionMinTime > 0 && state.CurrentData.Time.Value - state.ArchivedData.Time.Value < metadata.CompressionMinTime)
+                    {
+                        // CompressionMinTime is in effect.
+                        archiveData = false;
+                        calculateSlopes = false;
+                    }
+                    else if (state.CurrentData.Quality != state.ArchivedData.Quality || state.CurrentData.Quality != state.PreviousData.Quality || (metadata.CompressionMaxTime > 0 && state.PreviousData.Time.Value - state.ArchivedData.Time.Value > metadata.CompressionMaxTime))
+                    {
+                        // Quality changed or CompressionMaxTime is exceeded.
+                        data = new ArchiveData(state.PreviousData);
+                        archiveData = true;
+                        calculateSlopes = true;
+                    }
+                    else
+                    {
+                        // Perform a compression test.
+                        double slope1;
+                        double slope2;
+                        double currentSlope;
+
+                        slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                        slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                        currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+
+                        if (slope1 >= state.Slope1)
+                            state.Slope1 = slope1;
+                        
+                        if (slope2 <= state.Slope2)
+                            state.Slope2 = slope2;
+                        
+                        if (currentSlope <= state.Slope1 || currentSlope >= state.Slope2)
+                        {
+                            data = new ArchiveData(state.PreviousData);
+                            archiveData = true;
+                            calculateSlopes = true;
+                        }
+                    }
+                }
+                else
+                {
+                    // Data is not to be compressed.
+                    data = new ArchiveData(state.PreviousData);
+                    archiveData = true;
+                }
+            }
+            // [END]     Data compression
+
+            // [BEGIN]   Data archival
+            m_fat.DataPointsReceived++;
+            if (archiveData)
+            {
+                if (data.Time >= m_fat.FileStartTime)
+                {
+                    // Data belongs to this file.
+                    m_fat.DataPointsArchived++;
+                    ArchiveDataBlock dataBlock;
+                    lock (m_dataBlocks)
+                    {
+                        dataBlock = m_dataBlocks[data.HistorianID - 1];
+                    }
+
+                    if (dataBlock == null || dataBlock.SlotsAvailable == 0)
+                    {
+                        // Need to find a data block for writting the data.
+                        if (dataBlock != null)
+                        {
+                            dataBlock = null;
+                            state.ActiveDataBlockIndex = -1;
+                        }
+
+                        if (state.ActiveDataBlockIndex >= 0)
+                        {
+                            // Retrieve previously used data block.
+                            dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, state.ActiveDataBlockIndex);
+                            // Use the data block if it is not full.
+                            if (dataBlock.SlotsAvailable == 0)
+                                dataBlock = null;
+                        }
+
+                        if (dataBlock == null)
+                        {
+                            // Time to request a brand new data block.
+                            dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, system.DataBlocksUsed);
+
+                            if (dataBlock != null)
+                            {
+                                // Update the total number of data blocks used.
+                                system.DataBlocksUsed++;
+                                m_intercomFile.Write(1, system);
+
+                                // Update the active data block index information.
+                                state.ActiveDataBlockIndex = dataBlock.Index;
+                            }
+                        }
+
+                        // Keep in-memory reference to the data block for consecutive writes.
+                        lock (m_dataBlocks)
+                        {
+                            m_dataBlocks[data.HistorianID - 1] = dataBlock;
+                        }
+
+                        // Kick-off the rollover preparation when its threshold is reached.
+                        if (PercentFileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
+                        {
+                            m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
+                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
+                            m_rolloverPreparationThread.Start();
+                        }
+                    }
+
+                    if (dataBlock != null)
+                    {
+                        // Write data to the data block.
+                        dataBlock.Write(data);
+                    }
+                    else
+                    {
+                        // File is full, rollover if configured.
+                        OnFileFull();
+
+                        if (m_rolloverOnFull)
+                        {
+                            while (true)
+                            {
+                                Rollover(); // Start rollover.
+                                if (m_rolloverWaitHandle.WaitOne(1, false))
+                                {
+                                    break; // Rollover is successful.
+                                }
+                            }
+                        }
+
+                        // Re-read the state information since it is modified during the rollover.
+                        state = m_stateFile.Read(data.HistorianID);
+                    }
+                }
+                else
+                {
+                    // Data is historic.
+                    m_fat.DataPointsReceived--;
+                    m_historicDataQueue.Add(data);
+                    OnHistoricDataReceived(data);
+                }
+
+                state.ArchivedData = new StateRecordData(data);
+            }
+
+            if (calculateSlopes)
+            {
+                if (state.CurrentData.Time.Value != state.ArchivedData.Time.Value)
+                {
+                    state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                    state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                }
+                else
+                {
+                    state.Slope1 = 0;
+                    state.Slope2 = 0;
+                }
+            }
+
+            state.PreviousData = state.CurrentData;
+
+            // Write state information to the file.
+            m_stateFile.Write(state.HistorianID, state);
+            // [END]     Data archival
+        }
+
+        /// <summary>
+        /// Writes the specified <paramref name="dataPoints"/> to the <see cref="ArchiveFile"/>.
+        /// </summary>
+        /// <param name="dataPoints"><see cref="ArchiveData"/> points to be written.</param>
+        public void WriteData(IEnumerable<IDataPoint> dataPoints)
+        {
+            if (IsOpen)
+            {
+                foreach (IDataPoint dataPoint in dataPoints)
+                {
+                    WriteData(dataPoint);
+                }
+            }
+            else
+            {
+                throw (new InvalidOperationException(string.Format("{0} '{1}' is not open.", this.GetType().Name, m_fileName)));
+            }
+        }
+
+        /// <summary>
+        /// Writes <paramref name="metadata"/> for the specified <paramref name="historianID"/>.
+        /// </summary>
+        /// <param name="historianID">Historian identifier.</param>
+        /// <param name="metadata"><see cref="MetadataRecord.BinaryImage"/> data.</param>
+        public void WriteMetaData(int historianID, byte[] metadata)
+        {
+            MetadataFile.Write(historianID, new MetadataRecord(historianID, metadata, 0, metadata.Length));
+            MetadataFile.Save();
+        }
+
+        /// <summary>
+        /// Writes <paramref name="statedata"/> for the specified <paramref name="historianID"/>.
+        /// </summary>
+        /// <param name="historianID">Historian identifier.</param>
+        /// <param name="statedata"><see cref="StateRecord.BinaryImage"/> data.</param>
+        public void WriteStateData(int historianID, byte[] statedata)
+        {
+            StateFile.Write(historianID, new StateRecord(historianID, statedata, 0, statedata.Length));
+            StateFile.Save();
+        }
+
+        /// <summary>
         /// Reads <see cref="ArchiveData"/> points.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="ArchiveData"/> points are to be retrieved.</param>
@@ -2014,34 +1996,28 @@ namespace TVA.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
         {
-            // TODO: Review, optimize and organize.
+            // Ensure that the current file is open.
+            if (!IsOpen)
+                throw new InvalidOperationException(string.Format("\"{0}\" file is not open.", m_fileName));
+
+            // Ensure that the current file is active.
+            if (m_fileType != ArchiveFileType.Active)
+                throw new InvalidOperationException("Data can only be directly read from files that are Active.");
+
+            // Ensure that the start and end time are valid.
+            if (startTime > endTime)
+                throw new ArgumentException("End Time preceeds Start Time in the specified timespan.");
 
             // Yeild to the rollover process if it is in progress.
             m_rolloverWaitHandle.WaitOne();
 
-            // Don't proceed is file is not open.
-            if (!IsOpen)
-                throw (new InvalidOperationException(string.Format("'{0}' file is not open.", m_fileName)));
-
-            // Don't proceed if file is not active.
-            if (m_fileType != ArchiveFileType.Active)
-                throw (new InvalidOperationException("Data can only be directly read from files that are Active."));
-
-            // Don't proceed if end time preceeds start time.
-            if (startTime > endTime)
-                throw (new ArgumentException("End Time preceeds Start Time in the specified timespan."));
-
             List<Info> dataFiles = new List<Info>();
             if (startTime < m_fat.FileStartTime)
             {
-                // We need to read data from historic file(s).
+                // Data is to be read from historic file(s).
                 if (m_buildHistoricFileListThread.IsAlive)
-                {
-                    // Wait for historic file list to be built.
                     m_buildHistoricFileListThread.Join();
-                }
 
-                // Find historic file(s) we need to data from.
                 m_readSearchStartTimeTag = startTime;
                 m_readSearchEndTimeTag = endTime;
                 lock (m_historicArchiveFiles)
@@ -2052,7 +2028,7 @@ namespace TVA.Historian.Files
 
             if (endTime >= m_fat.FileStartTime)
             {
-                // We need to read data from the active file.
+                // Data is to be read from the active file.
                 Info activeFileInfo = new Info();
                 activeFileInfo.FileName = m_fileName;
                 activeFileInfo.StartTimeTag = m_fat.FileStartTime;
@@ -2060,9 +2036,9 @@ namespace TVA.Historian.Files
                 dataFiles.Add(activeFileInfo);
             }
 
+            // Read data from all qualifying files.
             foreach (Info dataFile in dataFiles)
             {
-                // Read data from all necessary files.
                 ArchiveFile file = new ArchiveFile();
                 IList<ArchiveDataBlock> dataBlocks;
                 try
@@ -2077,8 +2053,8 @@ namespace TVA.Historian.Files
                     dataBlocks = file.Fat.FindDataBlocks(historianID, startTime, endTime);
                     if (dataBlocks.Count > 0)
                     {
-                        // Read data from the block before the first found block for the point as it most
-                        // likely will contain data for the point that falls under the specified timespan.
+                        // Data block before the first data block matching the search criteria might contain some data 
+                        // for the specified search criteria, so look for such a data block and process its data.
                         lock (file.Fat.DataBlockPointers)
                         {
                             for (int i = dataBlocks[0].Index - 1; i >= 0; i--)
@@ -2091,15 +2067,18 @@ namespace TVA.Historian.Files
                                             yield return data;
                                     }
 
-                                    break; // Just process the block before the first found block.
+                                    break;
                                 }
                             }
                         }
 
+                        // Read data from rest of the data blocks and scan the last data block for data matching the
+                        // the search criteria as it may contain data beyond the timespan specified in the search.
                         for (int i = 0; i < dataBlocks.Count; i++)
                         {
                             if (i < dataBlocks.Count - 1)
                             {
+                                // Read all the data.
                                 foreach (ArchiveData data in dataBlocks[i].Read())
                                 {
                                     yield return data;
@@ -2107,9 +2086,7 @@ namespace TVA.Historian.Files
                             }
                             else
                             {
-                                // We have to scan the data of the last block and only add the data that have a timetag
-                                // that's less than or equal to the specified end time. If we don't do this we might
-                                // return data that is beyond the specified time range.
+                                // Scan through the data block.
                                 foreach (ArchiveData data in dataBlocks[i].Read())
                                 {
                                     if (data.Time <= endTime)
@@ -2169,52 +2146,6 @@ namespace TVA.Historian.Files
         public byte[] ReadStateDataSummary(int historianID)
         {
             return StateFile.Read(historianID).Summary.BinaryImage;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ArchiveFile"/> and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Close();
-                        SaveSettings();
-
-                        if (m_rolloverWaitHandle != null)
-                            m_rolloverWaitHandle.Close();
-
-                        if (m_historicDataQueue != null)
-                            m_historicDataQueue.Dispose();
-
-                        if (m_outOfSequenceDataQueue != null)
-                            m_outOfSequenceDataQueue.Dispose();
-
-                        if (m_currentLocationFileWatcher != null)
-                            m_currentLocationFileWatcher.Dispose();
-
-                        if (m_offloadLocationFileWatcher != null)
-                            m_offloadLocationFileWatcher.Dispose();
-
-                        // Detach from all of the dependency files.
-                        StateFile = null;
-                        IntercomFile = null;
-                        MetadataFile = null;
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
         }
 
         /// <summary>
@@ -2483,6 +2414,52 @@ namespace TVA.Historian.Files
                 ProcessAlarmNotification(this, new EventArgs<StateRecord>(pointState));
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ArchiveFile"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Close();
+                        SaveSettings();
+
+                        if (m_rolloverWaitHandle != null)
+                            m_rolloverWaitHandle.Close();
+
+                        if (m_historicDataQueue != null)
+                            m_historicDataQueue.Dispose();
+
+                        if (m_outOfSequenceDataQueue != null)
+                            m_outOfSequenceDataQueue.Dispose();
+
+                        if (m_currentLocationFileWatcher != null)
+                            m_currentLocationFileWatcher.Dispose();
+
+                        if (m_offloadLocationFileWatcher != null)
+                            m_offloadLocationFileWatcher.Dispose();
+
+                        // Detach from all of the dependency files.
+                        StateFile = null;
+                        IntercomFile = null;
+                        MetadataFile = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
         #region [ Helper Methods ]
 
         private void BuildHistoricFileList()
@@ -2558,6 +2535,7 @@ namespace TVA.Historian.Files
                 standbyArchiveFile.DataBlockSize = m_dataBlockSize;
                 standbyArchiveFile.StateFile = m_stateFile;
                 standbyArchiveFile.IntercomFile = m_intercomFile;
+                standbyArchiveFile.MetadataFile = m_metadataFile;
                 try
                 {
                     standbyArchiveFile.Open();
@@ -2666,6 +2644,7 @@ namespace TVA.Historian.Files
                     historicArchiveFile.FileType = ArchiveFileType.Historic;
                     historicArchiveFile.StateFile = m_stateFile;
                     historicArchiveFile.IntercomFile = m_intercomFile;
+                    historicArchiveFile.MetadataFile = m_metadataFile;
                     try
                     {
                         historicArchiveFile.Open();
@@ -2866,6 +2845,7 @@ namespace TVA.Historian.Files
 
         private void InsertInCurrentArchiveFile(ArchiveData[] items)
         {
+            // TODO: Implement archival of out-of-sequence data.
         }
 
         #endregion

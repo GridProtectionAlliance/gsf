@@ -341,55 +341,44 @@ namespace TVA.Scheduling
         }
 
         /// <summary>
-        /// Starts the <see cref="ScheduleManager"/> asynchronously if not running.
+        /// Performs necessary operations before the <see cref="ScheduleManager"/> object properties are initialized.
         /// </summary>
-        public void Start()
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
         {
-            if (m_startTimerThread == null && !m_timer.Enabled)
+            try
             {
-                // Initialize if uninitialized.
-                Initialize();
-
-                // Schedule manager is not running and no active attempt to start it is in progress.
-#if ThreadTracking
-                m_startTimerThread = new ManagedThread(StartTimer);
-                m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()";
-#else
-                m_startTimerThread = new Thread(StartTimer);
-#endif
-                m_startTimerThread.Start();
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
             }
         }
 
         /// <summary>
-        /// Stops the <see cref="ScheduleManager"/> if running.
+        /// Performs necessary operations after the <see cref="ScheduleManager"/> object properties are initialized.
         /// </summary>
-        public void Stop()
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
         {
-            if (m_timer.Enabled)
-                m_timer.Stop();
-
-            if (m_startTimerThread != null)
+            if (!DesignMode)
             {
-                m_startTimerThread.Abort();
-                m_startTimerThread = null;
-            }
-        }
-
-        /// <summary>
-        /// Checks all of the <see cref="Schedules"/> to determine if they are due.
-        /// </summary>
-        public void CheckAllSchedules()
-        {
-            lock (m_schedules)
-            {
-                foreach (Schedule schedule in m_schedules)
+                try
                 {
-                    OnScheduleDueCheck(new EventArgs<Schedule>(schedule));
-
-                    // Schedule is due so raise the event.
-                    if (schedule.IsDue())
-                        OnScheduleDue(schedule);
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
                 }
             }
         }
@@ -461,44 +450,55 @@ namespace TVA.Scheduling
         }
 
         /// <summary>
-        /// Performs necessary operations before the <see cref="ScheduleManager"/> object properties are initialized.
+        /// Starts the <see cref="ScheduleManager"/> asynchronously if not running.
         /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
+        public void Start()
         {
-            try
+            if (m_startTimerThread == null && !m_timer.Enabled)
             {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
+                // Initialize if uninitialized.
+                Initialize();
+
+                // Schedule manager is not running and no active attempt to start it is in progress.
+#if ThreadTracking
+                m_startTimerThread = new ManagedThread(StartTimer);
+                m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()";
+#else
+                m_startTimerThread = new Thread(StartTimer);
+#endif
+                m_startTimerThread.Start();
             }
         }
 
         /// <summary>
-        /// Performs necessary operations after the <see cref="ScheduleManager"/> object properties are initialized.
+        /// Stops the <see cref="ScheduleManager"/> if running.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ScheduleManager"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
+        public void Stop()
         {
-            if (!DesignMode)
+            if (m_timer.Enabled)
+                m_timer.Stop();
+
+            if (m_startTimerThread != null)
             {
-                try
+                m_startTimerThread.Abort();
+                m_startTimerThread = null;
+            }
+        }
+
+        /// <summary>
+        /// Checks all of the <see cref="Schedules"/> to determine if they are due.
+        /// </summary>
+        public void CheckAllSchedules()
+        {
+            lock (m_schedules)
+            {
+                foreach (Schedule schedule in m_schedules)
                 {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
+                    OnScheduleDueCheck(new EventArgs<Schedule>(schedule));
+
+                    // Schedule is due so raise the event.
+                    if (schedule.IsDue())
+                        OnScheduleDue(schedule);
                 }
             }
         }

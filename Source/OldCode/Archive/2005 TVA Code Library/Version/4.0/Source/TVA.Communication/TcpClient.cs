@@ -232,6 +232,40 @@ namespace TVA.Communication
         #region [ Methods ]
 
         /// <summary>
+        /// Saves <see cref="TcpClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                element = settings["PayloadAware"];
+                element.Update(m_payloadAware, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="TcpClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+            }
+        }
+
+        /// <summary>
         /// Disconnects the <see cref="TcpClient"/> from the connected server synchronously.
         /// </summary>
         public override void Disconnect()
@@ -265,40 +299,6 @@ namespace TVA.Communication
             else
             {
                 throw new InvalidOperationException("Client is currently not disconnected.");
-            }
-        }
-
-        /// <summary>
-        /// Saves <see cref="TcpClient"/> settings to the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
-        /// </summary>
-        public override void SaveSettings()
-        {
-            base.SaveSettings();
-            if (PersistSettings)
-            {
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["PayloadAware"];
-                element.Update(m_payloadAware, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved <see cref="TcpClient"/> settings from the config file if the <see cref="ClientBase.PersistSettings"/> property is set to true.
-        /// </summary>
-        public override void LoadSettings()
-        {
-            base.LoadSettings();
-            if (PersistSettings)
-            {
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
-                PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
             }
         }
 

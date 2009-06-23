@@ -397,6 +397,15 @@ namespace TVA.Identity
         #endregion
 
         #region [ Methods ]
+        
+        /// <summary>
+        /// Releases all the resources used by the <see cref="UserInfo"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         /// Initializes the <see cref="UserInfo"/> object.
@@ -454,38 +463,52 @@ namespace TVA.Identity
         }
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="UserInfo"/> object.
+        /// Saves settings for the <see cref="UserInfo"/> object to the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
         /// </summary>
-        public void Dispose()
+        public void SaveSettings()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["PrevilegedDomain"];
+                element.Update(m_previlegedDomain, element.Description, element.Encrypted);
+                element = settings["PrevilegedUserName"];
+                element.Update(m_previlegedUserName, element.Description, element.Encrypted);
+                element = settings["PrevilegedPassword"];
+                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
+                config.Save();
+            }
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
+        /// Loads saved settings for the <see cref="UserInfo"/> object from the config file if the <see cref="PersistSettings"/> 
+        /// property is set to true.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        public void LoadSettings()
         {
-            if (!m_disposed)
+            if (m_persistSettings)
             {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
 
-                        if (m_userEntry != null)
-                            m_userEntry.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
+                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
+                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
+                m_previlegedDomain = settings["PrevilegedDomain"].ValueAs(m_previlegedDomain);
+                m_previlegedUserName = settings["PrevilegedUserName"].ValueAs(m_previlegedUserName);
+                m_previlegedPassword = settings["PrevilegedPassword"].ValueAs(m_previlegedPassword);
             }
         }
 
@@ -585,52 +608,29 @@ namespace TVA.Identity
         }
 
         /// <summary>
-        /// Saves settings for the <see cref="UserInfo"/> object to the config file if the <see cref="PersistSettings"/> 
-        /// property is set to true.
+        /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
         /// </summary>
-        public void SaveSettings()
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
         {
-            if (m_persistSettings)
+            if (!m_disposed)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
 
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["PrevilegedDomain"];
-                element.Update(m_previlegedDomain, element.Description, element.Encrypted);
-                element = settings["PrevilegedUserName"];
-                element.Update(m_previlegedUserName, element.Description, element.Encrypted);
-                element = settings["PrevilegedPassword"];
-                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings for the <see cref="UserInfo"/> object from the config file if the <see cref="PersistSettings"/> 
-        /// property is set to true.
-        /// </summary>
-        public void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
-                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
-                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
-                m_previlegedDomain = settings["PrevilegedDomain"].ValueAs(m_previlegedDomain);
-                m_previlegedUserName = settings["PrevilegedUserName"].ValueAs(m_previlegedUserName);
-                m_previlegedPassword = settings["PrevilegedPassword"].ValueAs(m_previlegedPassword);
+                        if (m_userEntry != null)
+                            m_userEntry.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
             }
         }
 

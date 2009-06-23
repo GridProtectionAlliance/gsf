@@ -685,7 +685,154 @@ namespace TVA.Services
         #endregion
 
         #region [ Methods ]
-				
+
+        /// <summary>
+        /// Initializes the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ServiceHelper"/> 
+        /// object is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ServiceHelper"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ServiceHelper"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["LogStatusUpdates"];
+                element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
+                element = settings["MonitorServiceHealth"];
+                element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
+                element = settings["RequestHistoryLimit"];
+                element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
+                element = settings["QueryableSettingsCategories"];
+                element.Update(m_queryableSettingsCategories, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be saved.</param>
+        public void SaveSettings(bool includeServiceComponents)
+        {
+            SaveSettings();
+            if (includeServiceComponents)
+            {
+                foreach (IPersistSettings component in m_serviceComponents)
+                {
+                    if (component != null)
+                        component.SaveSettings();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
+                settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
+                settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+                settings.Add("QueryableSettingsCategories", m_queryableSettingsCategories, "Category names under categorizedSettings section of the config file that can be managed by the service.");
+                if (settings["TelnetPassword"] != null)
+                    m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
+                LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
+                MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
+                RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+                QueryableSettingsCategories = settings["QueryableSettingsCategories"].ValueAs(m_queryableSettingsCategories);
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be loaded.</param>
+        public void LoadSettings(bool includeServiceComponents)
+        {
+            LoadSettings();
+            if (includeServiceComponents)
+            {
+                foreach (IPersistSettings component in m_serviceComponents)
+                {
+                    if (component != null)
+                        component.LoadSettings();
+                }
+            }
+        }
+
         /// <summary>
         /// To be called from the <see cref="ServiceBase.OnStart(string[])"/> method of <see cref="ParentService"/>.
         /// </summary>
@@ -990,153 +1137,6 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Initializes the <see cref="ServiceHelper"/>.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="ServiceHelper"/> 
-        /// object is not consumed through the designer surface of the IDE.
-        /// </remarks>
-        public void Initialize()
-        {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
-        }
-
-        /// <summary>
-        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["LogStatusUpdates"];
-                element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
-                element = settings["MonitorServiceHealth"];
-                element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
-                element = settings["RequestHistoryLimit"];
-                element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
-                element = settings["QueryableSettingsCategories"];
-                element.Update(m_queryableSettingsCategories, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be saved.</param>
-        public void SaveSettings(bool includeServiceComponents)
-        {
-            SaveSettings();
-            if (includeServiceComponents)
-            {
-                foreach (IPersistSettings component in m_serviceComponents)
-                {
-                    if (component != null)
-                        component.SaveSettings();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
-                settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
-                settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
-                settings.Add("QueryableSettingsCategories", m_queryableSettingsCategories, "Category names under categorizedSettings section of the config file that can be managed by the service.");
-                if (settings["TelnetPassword"] != null)
-                    m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
-                LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
-                MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
-                RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
-                QueryableSettingsCategories = settings["QueryableSettingsCategories"].ValueAs(m_queryableSettingsCategories);
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be loaded.</param>
-        public void LoadSettings(bool includeServiceComponents)
-        {
-            LoadSettings();
-            if (includeServiceComponents)
-            {
-                foreach (IPersistSettings component in m_serviceComponents)
-                {
-                    if (component != null)
-                        component.LoadSettings();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the <see cref="ServiceHelper"/> properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            try
-            {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the <see cref="ServiceHelper"/> properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ServiceHelper"/> is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets the <see cref="ServiceProcess"/> for the specified <paramref name="processName"/>.
         /// </summary>
         /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be retrieved.</param>
@@ -1197,85 +1197,6 @@ namespace TVA.Services
             }
 
             return match;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ServiceHelper"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        if (m_statusLog != null)
-                        {
-                            m_statusLog.LogException -= m_statusLog_LogException;
-                            m_statusLog.Dispose();
-                        }
-                        m_statusLog = null;
-
-                        if (m_processScheduler != null)
-                        {
-                            m_processScheduler.ScheduleDue -= m_scheduler_ScheduleDue;
-                            m_processScheduler.Dispose();
-                        }
-                        m_processScheduler = null;
-
-                        if (m_errorLogger != null)
-                        {
-                            m_errorLogger.Dispose();
-                        }
-                        m_errorLogger = null;
-
-                        if (m_performanceMonitor != null)
-                        {
-                            m_performanceMonitor.Dispose();
-                        }
-                        m_performanceMonitor = null;
-
-                        if (m_remoteCommandProcess != null)
-                        {
-                            m_remoteCommandProcess.ErrorDataReceived -= m_remoteCommandProcess_ErrorDataReceived;
-                            m_remoteCommandProcess.OutputDataReceived -= m_remoteCommandProcess_OutputDataReceived;
-
-                            if (!m_remoteCommandProcess.HasExited)
-                                m_remoteCommandProcess.Kill();
-
-                            m_remoteCommandProcess.Dispose();
-                        }
-                        m_remoteCommandProcess = null;
-
-                        // Service processes are created and owned by remoting server, so we dispose them
-                        if (m_processes != null)
-                        {
-                            foreach (ServiceProcess process in m_processes)
-                            {
-                                process.StateChanged -= process_StateChanged;
-                                process.Dispose();
-                            }
-
-                            m_processes.Clear();
-                        }
-                        m_processes = null;
-
-                        // Detach any remoting server events, we don't own this component so we don't dispose it
-                        RemotingServer = null;
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
         }
 
         /// <summary>
@@ -1408,6 +1329,85 @@ namespace TVA.Services
 
             // Notify all remote clients of change in process state
             SendProcessStateChangedResponse(processName, processState);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ServiceHelper"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
+                        if (m_statusLog != null)
+                        {
+                            m_statusLog.LogException -= m_statusLog_LogException;
+                            m_statusLog.Dispose();
+                        }
+                        m_statusLog = null;
+
+                        if (m_processScheduler != null)
+                        {
+                            m_processScheduler.ScheduleDue -= m_scheduler_ScheduleDue;
+                            m_processScheduler.Dispose();
+                        }
+                        m_processScheduler = null;
+
+                        if (m_errorLogger != null)
+                        {
+                            m_errorLogger.Dispose();
+                        }
+                        m_errorLogger = null;
+
+                        if (m_performanceMonitor != null)
+                        {
+                            m_performanceMonitor.Dispose();
+                        }
+                        m_performanceMonitor = null;
+
+                        if (m_remoteCommandProcess != null)
+                        {
+                            m_remoteCommandProcess.ErrorDataReceived -= m_remoteCommandProcess_ErrorDataReceived;
+                            m_remoteCommandProcess.OutputDataReceived -= m_remoteCommandProcess_OutputDataReceived;
+
+                            if (!m_remoteCommandProcess.HasExited)
+                                m_remoteCommandProcess.Kill();
+
+                            m_remoteCommandProcess.Dispose();
+                        }
+                        m_remoteCommandProcess = null;
+
+                        // Service processes are created and owned by remoting server, so we dispose them
+                        if (m_processes != null)
+                        {
+                            foreach (ServiceProcess process in m_processes)
+                            {
+                                process.StateChanged -= process_StateChanged;
+                                process.Dispose();
+                            }
+
+                            m_processes.Clear();
+                        }
+                        m_processes = null;
+
+                        // Detach any remoting server events, we don't own this component so we don't dispose it
+                        RemotingServer = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         private void SendUpdateClientStatusResponse(string response)

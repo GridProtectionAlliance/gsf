@@ -395,35 +395,6 @@ namespace TVA.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MultipleDestinationExporter"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Shutdown();
-                        SaveSettings();
-
-                        if (m_exportQueue != null)
-                            m_exportQueue.ProcessException -= ProcessExceptionHandler;
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
         /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
         /// </summary>
         /// <remarks>
@@ -455,28 +426,6 @@ namespace TVA.IO
 #else
             ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations);
 #endif
-        }
-
-        /// <summary>
-        /// Start multiple file export.
-        /// </summary>
-        /// <param name="fileData">Text based data to export to each destination.</param>
-        public void ExportData(string fileData)
-        {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
-            if (m_exportQueue != null)
-                m_exportQueue.Add(m_textEncoding.GetBytes(fileData));
-        }
-
-        /// <summary>
-        /// Start multiple file export.
-        /// </summary>
-        /// <param name="fileData">Binary data to export to each destination.</param>
-        public void ExportData(byte[] fileData)
-        {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
-            if (m_exportQueue != null)
-                m_exportQueue.Add(fileData);
         }
 
         /// <summary>
@@ -604,6 +553,28 @@ namespace TVA.IO
         }
 
         /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Text based data to export to each destination.</param>
+        public void ExportData(string fileData)
+        {
+            // Queue data for export - multiple exports may take some time, so we do this on another thread...
+            if (m_exportQueue != null)
+                m_exportQueue.Add(m_textEncoding.GetBytes(fileData));
+        }
+
+        /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Binary data to export to each destination.</param>
+        public void ExportData(byte[] fileData)
+        {
+            // Queue data for export - multiple exports may take some time, so we do this on another thread...
+            if (m_exportQueue != null)
+                m_exportQueue.Add(fileData);
+        }
+
+        /// <summary>
         /// Raises the <see cref="Initialized"/> event.
         /// </summary>
         protected virtual void OnInitialized()
@@ -617,10 +588,39 @@ namespace TVA.IO
         /// </summary>
         /// <param name="status">Status message to report.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters used for status message.</param>
-        protected void OnStatusMessage(string status, params object[] args)
+        protected virtual void OnStatusMessage(string status, params object[] args)
         {
             if (StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(string.Format(status, args)));
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="MultipleDestinationExporter"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Shutdown();
+                        SaveSettings();
+
+                        if (m_exportQueue != null)
+                            m_exportQueue.ProcessException -= ProcessExceptionHandler;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         private void Initialize(object state)

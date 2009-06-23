@@ -765,6 +765,129 @@ namespace TVA.IO
         #endregion
 
         /// <summary>
+        /// Initializes the file.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the file is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();                             // Load settings from the config file.
+                m_recordBuffer = new byte[GetRecordSize()]; // Create buffer for reading records.
+                m_initialized = true;                       // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the file properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the file is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the file properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the file is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves settings of the file to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["FileName"];
+                element.Update(m_fileName, element.Description, element.Encrypted);
+                element = settings["FileAccessMode"];
+                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
+                element = settings["AutoSaveInterval"];
+                element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
+                element = settings["MinimumRecordCount"];
+                element.Update(m_minimumRecordCount, element.Description, element.Encrypted);
+                element = settings["LoadOnOpen"];
+                element.Update(m_loadOnOpen, element.Description, element.Encrypted);
+                element = settings["SaveOnClose"];
+                element.Update(m_saveOnClose, element.Description, element.Encrypted);
+                element = settings["ReloadOnModify"];
+                element.Update(m_reloadOnModify, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings of the file from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("FileName", m_fileName, "Name of the file including its path.");
+                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
+                settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
+                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
+                settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
+                settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
+                settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
+                FileName = settings["FileName"].ValueAs(m_fileName);
+                FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
+                AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
+                MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
+                LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
+                SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
+                ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
+            }
+        }
+
+        /// <summary>
         /// Opens the file.
         /// </summary>
         public void Open()
@@ -890,22 +1013,6 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Initializes the file.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the file is not consumed through the designer surface of the IDE.
-        /// </remarks>
-        public void Initialize()
-        {
-            if (!m_initialized)
-            {
-                LoadSettings();                             // Load settings from the config file.
-                m_recordBuffer = new byte[GetRecordSize()]; // Create buffer for reading records.
-                m_initialized = true;                       // Initialize only once.
-            }
-        }
-
-        /// <summary>
         /// Saves records loaded in memory to disk.
         /// </summary>
         public void Save()
@@ -942,113 +1049,6 @@ namespace TVA.IO
             else
             {
                 throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
-            }
-        }
-
-        /// <summary>
-        /// Saves settings of the file to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName"];
-                element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileAccessMode"];
-                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
-                element = settings["AutoSaveInterval"];
-                element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
-                element = settings["MinimumRecordCount"];
-                element.Update(m_minimumRecordCount, element.Description, element.Encrypted);
-                element = settings["LoadOnOpen"];
-                element.Update(m_loadOnOpen, element.Description, element.Encrypted);
-                element = settings["SaveOnClose"];
-                element.Update(m_saveOnClose, element.Description, element.Encrypted);
-                element = settings["ReloadOnModify"];
-                element.Update(m_reloadOnModify, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings of the file from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("FileName", m_fileName, "Name of the file including its path.");
-                settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
-                settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
-                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
-                settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
-                settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
-                settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
-                FileName = settings["FileName"].ValueAs(m_fileName);
-                FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
-                AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
-                MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
-                LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
-                SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
-                ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the file properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the file is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            try
-            {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the file properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the file is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
             }
         }
 

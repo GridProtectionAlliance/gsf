@@ -840,6 +840,125 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Performs necessary operations before the server properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through 
+        /// the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the server properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through the 
+        /// designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves server settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public virtual void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["ConfigurationString"];
+                element.Update(m_configurationString, element.Description, element.Encrypted);
+                element = settings["MaxClientConnections"];
+                element.Update(m_maxClientConnections, element.Description, element.Encrypted);
+                element = settings["Handshake"];
+                element.Update(m_handshake, element.Description, element.Encrypted);
+                element = settings["HandshakeTimeout"];
+                element.Update(m_handshakeTimeout, element.Description, element.Encrypted);
+                element = settings["HandshakePassphrase"];
+                element.Update(m_handshakePassphrase, element.Description, element.Encrypted);
+                element = settings["SecureSession"];
+                element.Update(m_secureSession, element.Description, element.Encrypted);
+                element = settings["ReceiveTimeout"];
+                element.Update(m_receiveTimeout, element.Description, element.Encrypted);
+                element = settings["ReceiveBufferSize"];
+                element.Update(m_receiveBufferSize, element.Description, element.Encrypted);
+                element = settings["Encryption"];
+                element.Update(m_encryption, element.Description, element.Encrypted);
+                element = settings["Compression"];
+                element.Update(m_compression, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved server settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public virtual void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
+                settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
+                settings.Add("Handshake", m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
+                settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
+                settings.Add("HandshakePassphrase", m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the Handshake process.");
+                settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
+                settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
+                settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
+                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
+                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
+                ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
+                MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
+                Handshake = settings["Handshake"].ValueAs(m_handshake);
+                HandshakeTimeout = settings["HandshakeTimeout"].ValueAs(m_handshakeTimeout);
+                HandshakePassphrase = settings["HandshakePassphrase"].ValueAs(m_handshakePassphrase);
+                ReceiveTimeout = settings["ReceiveTimeout"].ValueAs(m_receiveTimeout);
+                ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
+                Encryption = settings["Encryption"].ValueAs(m_encryption);
+                Compression = settings["Compression"].ValueAs(m_compression);
+                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
+            }
+        }
+
+        /// <summary>
         /// Sends data to the specified client synchronously.
         /// </summary>
         /// <param name="clientID">ID of the client to which the data is to be sent.</param>
@@ -927,130 +1046,11 @@ namespace TVA.Communication
         /// <summary>
         /// Disconnects all of the connected clients.
         /// </summary>
-        public void DisconnectAll()
+        public virtual void DisconnectAll()
         {
             foreach (Guid clientID in ClientIDs)
             {
                 DisconnectOne(clientID);
-            }
-        }
-
-        /// <summary>
-        /// Saves server settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public virtual void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ConfigurationString"];
-                element.Update(m_configurationString, element.Description, element.Encrypted);
-                element = settings["MaxClientConnections"];
-                element.Update(m_maxClientConnections, element.Description, element.Encrypted);
-                element = settings["Handshake"];
-                element.Update(m_handshake, element.Description, element.Encrypted);
-                element = settings["HandshakeTimeout"];
-                element.Update(m_handshakeTimeout, element.Description, element.Encrypted);
-                element = settings["HandshakePassphrase"];
-                element.Update(m_handshakePassphrase, element.Description, element.Encrypted);
-                element = settings["SecureSession"];
-                element.Update(m_secureSession, element.Description, element.Encrypted);
-                element = settings["ReceiveTimeout"];
-                element.Update(m_receiveTimeout, element.Description, element.Encrypted);
-                element = settings["ReceiveBufferSize"];
-                element.Update(m_receiveBufferSize, element.Description, element.Encrypted);
-                element = settings["Encryption"];
-                element.Update(m_encryption, element.Description, element.Encrypted);
-                element = settings["Compression"];
-                element.Update(m_compression, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved server settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public virtual void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("ConfigurationString", m_configurationString, "Data required by the server to initialize.");
-                settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
-                settings.Add("Handshake", m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
-                settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
-                settings.Add("HandshakePassphrase", m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the Handshake process.");
-                settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
-                settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
-                settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
-                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
-                settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
-                ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
-                MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
-                Handshake = settings["Handshake"].ValueAs(m_handshake);
-                HandshakeTimeout = settings["HandshakeTimeout"].ValueAs(m_handshakeTimeout);
-                HandshakePassphrase = settings["HandshakePassphrase"].ValueAs(m_handshakePassphrase);
-                ReceiveTimeout = settings["ReceiveTimeout"].ValueAs(m_receiveTimeout);
-                ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
-                Encryption = settings["Encryption"].ValueAs(m_encryption);
-                Compression = settings["Compression"].ValueAs(m_compression);
-                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the server properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through 
-        /// the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            try
-            {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the server properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through the 
-        /// designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
             }
         }
 
@@ -1155,32 +1155,6 @@ namespace TVA.Communication
             }
 
             return handles.ToArray();
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the server and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.                  
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Stop();
-                        SaveSettings();
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
         }
 
         /// <summary>
@@ -1339,6 +1313,32 @@ namespace TVA.Communication
         {
             if (ReceiveClientDataException != null)
                 ReceiveClientDataException(this, new EventArgs<Guid, Exception>(clientID, ex));
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the server and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.                  
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Stop();
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         #endregion

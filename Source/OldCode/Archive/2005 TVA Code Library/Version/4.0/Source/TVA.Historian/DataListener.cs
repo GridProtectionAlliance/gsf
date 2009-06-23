@@ -197,6 +197,7 @@ namespace TVA.Historian
         private bool m_listenerStopping;
         private Thread m_startupThread;
         private AutoResetEvent m_initializeWaitHandle;
+        private bool m_disposed;
         private bool m_initialized;
         // WithEvents
         private PacketParser m_parser;
@@ -411,7 +412,7 @@ namespace TVA.Historian
             {
                 return m_initializeDataTimeout;
             }
-            set 
+            set
             {
                 if (value < 1)
                     throw new ArgumentException("Value must be positive.");
@@ -599,6 +600,128 @@ namespace TVA.Historian
         #region [ Methods ]
 
         /// <summary>
+        /// Initializes the <see cref="DataListener"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="DataListener"/> is not consumed through the designer surface of the IDE.
+        /// </remarks>
+        public void Initialize()
+        {
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="DataListener"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="DataListener"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="DataListener"/> properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="DataListener"/> is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves settings for the <see cref="DataListener"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["ID"];
+                element.Update(m_id, element.Description, element.Encrypted);
+                element = settings["Server"];
+                element.Update(m_server, element.Description, element.Encrypted);
+                element = settings["Port"];
+                element.Update(m_port, element.Description, element.Encrypted);
+                element = settings["Protocol"];
+                element.Update(m_protocol, element.Description, element.Encrypted);
+                element = settings["ConnectToServer"];
+                element.Update(m_connectToServer, element.Description, element.Encrypted);
+                element = settings["InitializeData"];
+                element.Update(m_initializeData, element.Description, element.Encrypted);
+                element = settings["InitializeDataTimeout"];
+                element.Update(m_initializeDataTimeout, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved settings for the <see cref="DataListener"/> from the config file if the <see cref="PersistSettings"/>  property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
+                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
+                settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
+                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
+                settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
+                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
+                settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
+                ID = settings["ID"].ValueAs(m_id);
+                Server = settings["Server"].ValueAs(m_server);
+                Port = settings["Port"].ValueAs(m_port);
+                Protocol = settings["Protocol"].ValueAs(m_protocol);
+                ConnectToServer = settings["ConnectToServer"].ValueAs(m_connectToServer);
+                InitializeData = settings["InitializeData"].ValueAs(m_initializeData);
+                InitializeDataTimeout = settings["InitializeDataTimeout"].ValueAs(m_initializeDataTimeout);
+            }
+        }
+
+        /// <summary>
         /// Starts the <see cref="DataListener"/> synchronously.
         /// </summary>
         public void Start()
@@ -692,7 +815,7 @@ namespace TVA.Historian
                 m_startupThread.Abort();
 
             // Prevent communication clients from reconnecting.
-            m_listenerStopping = true; 
+            m_listenerStopping = true;
 
             m_tcpServer.Stop();
             m_tcpClient.Disconnect();
@@ -721,128 +844,6 @@ namespace TVA.Historian
                 }
             }
             return currentData;
-        }
-
-        /// <summary>
-        /// Initializes the <see cref="DataListener"/>.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="DataListener"/> is not consumed through the designer surface of the IDE.
-        /// </remarks>
-        public void Initialize()
-        {
-            if (!m_initialized)
-            {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
-        }
-
-        /// <summary>
-        /// Saves settings for the <see cref="DataListener"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ID"];
-                element.Update(m_id, element.Description, element.Encrypted);
-                element = settings["Server"];
-                element.Update(m_server, element.Description, element.Encrypted);
-                element = settings["Port"];
-                element.Update(m_port, element.Description, element.Encrypted);
-                element = settings["Protocol"];
-                element.Update(m_protocol, element.Description, element.Encrypted);
-                element = settings["ConnectToServer"];
-                element.Update(m_connectToServer, element.Description, element.Encrypted);
-                element = settings["InitializeData"];
-                element.Update(m_initializeData, element.Description, element.Encrypted);
-                element = settings["InitializeDataTimeout"];
-                element.Update(m_initializeDataTimeout, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved settings for the <see cref="DataListener"/> from the config file if the <see cref="PersistSettings"/>  property is set to true.
-        /// </summary>        
-        public void LoadSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
-                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
-                settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
-                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
-                settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
-                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
-                settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
-                ID = settings["ID"].ValueAs(m_id);
-                Server = settings["Server"].ValueAs(m_server);
-                Port = settings["Port"].ValueAs(m_port);
-                Protocol = settings["Protocol"].ValueAs(m_protocol);
-                ConnectToServer = settings["ConnectToServer"].ValueAs(m_connectToServer);
-                InitializeData = settings["InitializeData"].ValueAs(m_initializeData);
-                InitializeDataTimeout = settings["InitializeDataTimeout"].ValueAs(m_initializeDataTimeout);
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the <see cref="DataListener"/> properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="DataListener"/> is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            try
-            {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the <see cref="DataListener"/> properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="DataListener"/> is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
         }
 
         /// <summary>
@@ -974,6 +975,54 @@ namespace TVA.Historian
         {
             if (DataChanged != null)
                 DataChanged(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="DataListener"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Stop();
+                        SaveSettings();
+
+                        if (m_data != null)
+                            m_data.Clear();
+
+                        if (m_parser != null)
+                            m_parser.Dispose();
+
+                        if (m_tcpServer != null)
+                            m_tcpServer.Dispose();
+
+                        if (m_tcpClient != null)
+                            m_tcpClient.Dispose();
+
+                        if (m_udpClient != null)
+                            m_udpClient.Dispose();
+
+                        if (m_dataInitClient != null)
+                            m_dataInitClient.Dispose();
+
+                        if (m_initializeWaitHandle != null)
+                            m_initializeWaitHandle.Close();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         private void DataInitClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)

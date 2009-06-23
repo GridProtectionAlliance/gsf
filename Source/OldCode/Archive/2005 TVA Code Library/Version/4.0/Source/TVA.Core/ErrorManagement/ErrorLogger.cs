@@ -787,78 +787,6 @@ namespace TVA.ErrorManagement
         #region [ Methods ]
 
         /// <summary>
-        /// Logs information about the encountered <see cref="Exception"/>.
-        /// </summary>
-        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
-        public void Log(Exception ex)
-        {
-            Log(ex, false);
-        }
-
-        /// <summary>
-        /// Logs information about the encountered <see cref="Exception"/>.
-        /// </summary>
-        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
-        /// <param name="exitApplication">true to exit the application; otherwise false.</param>
-        public void Log(Exception ex, bool exitApplication)
-        {
-            // Quit if disabled.
-            if (!m_enabled)
-                return;
-
-            // Initialize if uninitialized.
-            Initialize();           
-
-            // Save the encountered exception.
-            m_lastException = ex;   
-
-            // Iterate through all of the registered logger methods and invoke them for processing the exception.
-            foreach (Action<Exception> logger in m_loggers)
-            {
-                try
-                {
-                    logger(ex);
-                }
-                catch
-                {
-                    // Absorb any exception.
-                }
-            }
-            m_suppressInteractiveLogging = false;   // Enable interactive logging if disabled.
-
-            // Exit the current application if specified.
-            if (exitApplication)
-            {
-                ErrorLog.Flush();
-                switch (ApplicationType)
-                {
-                    // In windows environment we can simply call Environment.Exit() to exit the application. This
-                    // will terminate the application regardless of active foreground/background threads.
-                    case ApplicationType.WindowsGui:
-                    case ApplicationType.WindowsCui:
-                        Environment.Exit(-1);
-                        break;
-                    // In web environment we unload the app domain of the current application instead of terminating
-                    // the entire process, because in ASP.NET a single process (App Pool) can host one or more 
-                    // app domains (web sites or web services).
-                    case ApplicationType.Web:
-                        HttpRuntime.UnloadAppDomain();
-                        break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Disables <see cref="Loggers"/> that require interaction either directly or indirectly when logging 
-        /// handled <see cref="Exception"/> using the <see cref="Log(Exception)"/> method. All loggers are enabled
-        /// automatically after a handled <see cref="Exception"/> has been logged.
-        /// </summary>
-        public void SuppressInteractiveLogging()
-        {
-            m_suppressInteractiveLogging = true;
-        }
-
-        /// <summary>
         /// Initializes the <see cref="ErrorLogger"/> object.
         /// </summary>
         /// <remarks>
@@ -872,6 +800,49 @@ namespace TVA.ErrorManagement
                 LoadSettings();                                     // Load settings from the config file.
                 Register();                                         // Register the logger for unhandled exceptions.
                 m_initialized = true;                               // Initialize only once.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations before the <see cref="ErrorLogger"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ErrorLogger"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void BeginInit()
+        {
+            try
+            {
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
+        }
+
+        /// <summary>
+        /// Performs necessary operations after the <see cref="ErrorLogger"/> object properties are initialized.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
+        /// by the designer if the <see cref="ErrorLogger"/> object is consumed through the designer surface of the IDE.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public void EndInit()
+        {
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 
@@ -958,46 +929,75 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
-        /// Performs necessary operations before the <see cref="ErrorLogger"/> object properties are initialized.
+        /// Logs information about the encountered <see cref="Exception"/>.
         /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ErrorLogger"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
+        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
+        public void Log(Exception ex)
         {
-            try
+            Log(ex, false);
+        }
+
+        /// <summary>
+        /// Logs information about the encountered <see cref="Exception"/>.
+        /// </summary>
+        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
+        /// <param name="exitApplication">true to exit the application; otherwise false.</param>
+        public void Log(Exception ex, bool exitApplication)
+        {
+            // Quit if disabled.
+            if (!m_enabled)
+                return;
+
+            // Initialize if uninitialized.
+            Initialize();           
+
+            // Save the encountered exception.
+            m_lastException = ex;   
+
+            // Iterate through all of the registered logger methods and invoke them for processing the exception.
+            foreach (Action<Exception> logger in m_loggers)
             {
-                // Nothing needs to be done before component is initialized.
+                try
+                {
+                    logger(ex);
+                }
+                catch
+                {
+                    // Absorb any exception.
+                }
             }
-            catch (Exception)
+            m_suppressInteractiveLogging = false;   // Enable interactive logging if disabled.
+
+            // Exit the current application if specified.
+            if (exitApplication)
             {
-                // Prevent the IDE from crashing when component is in design mode.
+                ErrorLog.Flush();
+                switch (ApplicationType)
+                {
+                    // In windows environment we can simply call Environment.Exit() to exit the application. This
+                    // will terminate the application regardless of active foreground/background threads.
+                    case ApplicationType.WindowsGui:
+                    case ApplicationType.WindowsCui:
+                        Environment.Exit(-1);
+                        break;
+                    // In web environment we unload the app domain of the current application instead of terminating
+                    // the entire process, because in ASP.NET a single process (App Pool) can host one or more 
+                    // app domains (web sites or web services).
+                    case ApplicationType.Web:
+                        HttpRuntime.UnloadAppDomain();
+                        break;
+                }
             }
         }
 
         /// <summary>
-        /// Performs necessary operations after the <see cref="ErrorLogger"/> object properties are initialized.
+        /// Disables <see cref="Loggers"/> that require interaction either directly or indirectly when logging 
+        /// handled <see cref="Exception"/> using the <see cref="Log(Exception)"/> method. All loggers are enabled
+        /// automatically after a handled <see cref="Exception"/> has been logged.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the <see cref="ErrorLogger"/> object is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
+        public void SuppressInteractiveLogging()
         {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
+            m_suppressInteractiveLogging = true;
         }
 
         /// <summary>

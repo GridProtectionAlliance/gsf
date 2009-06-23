@@ -826,55 +826,44 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Connects the client to the server synchronously.
+        /// Performs necessary operations before the client properties are initialized.
         /// </summary>
-        public void Connect()
+        /// <remarks>
+        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through 
+        /// the designer surface of the IDE.
+        /// </remarks>
+        public void BeginInit()
         {
-            // Start asynchronous connection attempt.
-            ConnectAsync();
-            // Block for connection process to complete.
-            do
+            try
             {
-                Thread.Sleep(1000);
-            } while (m_currentState == ClientState.Connecting);
+                // Nothing needs to be done before component is initialized.
+            }
+            catch (Exception)
+            {
+                // Prevent the IDE from crashing when component is in design mode.
+            }
         }
 
         /// <summary>
-        /// Sends data to the server synchronously.
+        /// Performs necessary operations after the client properties are initialized.
         /// </summary>
-        /// <param name="data">The plain-text data that is to be sent.</param>
-        public virtual void Send(string data)
+        /// <remarks>
+        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through the 
+        /// designer surface of the IDE.
+        /// </remarks>
+        public void EndInit()
         {
-            Send(m_textEncoding.GetBytes(data));
-        }
-
-        /// <summary>
-        /// Sends data to the server synchronously.
-        /// </summary>
-        /// <param name="serializableObject">The serializable object that is to be sent.</param>
-        public virtual void Send(object serializableObject)
-        {
-            Send(Serialization.GetBytes(serializableObject));
-        }
-
-        /// <summary>
-        /// Sends data to the server synchronously.
-        /// </summary>
-        /// <param name="data">The binary data that is to be sent.</param>
-        public virtual void Send(byte[] data)
-        {
-            Send(data, 0, data.Length);
-        }
-
-        /// <summary>
-        /// Sends data to the server synchronously.
-        /// </summary>
-        /// <param name="data">The buffer that contains the binary data to be sent.</param>
-        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
-        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-        public virtual void Send(byte[] data, int offset, int length)
-        {
-            SendAsync(data, offset, length).WaitOne();
+            if (!DesignMode)
+            {
+                try
+                {
+                    Initialize();
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
+            }
         }
 
         /// <summary>
@@ -954,44 +943,55 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Performs necessary operations before the client properties are initialized.
+        /// Connects the client to the server synchronously.
         /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through 
-        /// the designer surface of the IDE.
-        /// </remarks>
-        public void BeginInit()
+        public virtual void Connect()
         {
-            try
+            // Start asynchronous connection attempt.
+            ConnectAsync();
+            // Block for connection process to complete.
+            do
             {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
-            }
+                Thread.Sleep(1000);
+            } while (m_currentState == ClientState.Connecting);
         }
 
         /// <summary>
-        /// Performs necessary operations after the client properties are initialized.
+        /// Sends data to the server synchronously.
         /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use by the designer if the server is consumed through the 
-        /// designer surface of the IDE.
-        /// </remarks>
-        public void EndInit()
+        /// <param name="data">The plain-text data that is to be sent.</param>
+        public virtual void Send(string data)
         {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
+            Send(m_textEncoding.GetBytes(data));
+        }
+
+        /// <summary>
+        /// Sends data to the server synchronously.
+        /// </summary>
+        /// <param name="serializableObject">The serializable object that is to be sent.</param>
+        public virtual void Send(object serializableObject)
+        {
+            Send(Serialization.GetBytes(serializableObject));
+        }
+
+        /// <summary>
+        /// Sends data to the server synchronously.
+        /// </summary>
+        /// <param name="data">The binary data that is to be sent.</param>
+        public virtual void Send(byte[] data)
+        {
+            Send(data, 0, data.Length);
+        }
+
+        /// <summary>
+        /// Sends data to the server synchronously.
+        /// </summary>
+        /// <param name="data">The buffer that contains the binary data to be sent.</param>
+        /// <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+        /// <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+        public virtual void Send(byte[] data, int offset, int length)
+        {
+            SendAsync(data, offset, length).WaitOne();
         }
 
         /// <summary>
@@ -1042,32 +1042,6 @@ namespace TVA.Communication
             else
             {
                 throw new InvalidOperationException("Client is not connected.");
-            }
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the client and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.                  
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Disconnect();
-                        SaveSettings();
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
             }
         }
 
@@ -1219,6 +1193,32 @@ namespace TVA.Communication
         {
             if (ReceiveDataException != null)
                 ReceiveDataException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the client and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.                  
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Disconnect();
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
         }
 
         #endregion
