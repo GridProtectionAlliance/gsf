@@ -1462,6 +1462,7 @@ namespace TVA.Historian.Files
                     m_stateFile.Write(state.HistorianID, state);
                 }
                 m_fat.FileEndTime = endTime;
+                Save();
 
                 List<Info> historicFiles = new List<Info>();
                 string historyFileName = HistoryArchiveFileName;
