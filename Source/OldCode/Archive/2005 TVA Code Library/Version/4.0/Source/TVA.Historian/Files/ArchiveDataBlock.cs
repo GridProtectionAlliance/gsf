@@ -62,16 +62,18 @@ namespace TVA.Historian.Files
         /// <param name="parent">An <see cref="ArchiveFile"/> object.</param>
         /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
         /// <param name="historianID">Historian identifier whose <see cref="ArchiveData"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
-        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID)
+        /// <param name="reset">true if the <see cref="ArchiveDataBlock"/> is to be <see cref="Reset()"/>; otherwise false.</param>
+        internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool reset)
         {
             m_parent = parent;
             m_index = index;
             m_historianID = historianID;
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
-            // Initialize the write cursor position by reading existing data. We have to iterate through the returned
-            // data in order for the write cursor to progress since Read() implements a "yield return" for return data.
-            foreach (ArchiveData dataPoint in Read()) { }
+            if (reset)
+                Reset();                                        // Clear existing data.
+            else
+                foreach (ArchiveData dataPoint in Read()) { }   // Read existing data.
         }
 
         #endregion

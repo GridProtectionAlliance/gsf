@@ -389,20 +389,24 @@ namespace TVA.Historian.Files
         /// <param name="dataBlocksToAdd">Number of <see cref="ArchiveDataBlock"/>s to add to the <see cref="ArchiveFile"/>.</param>
         public void Extend(int dataBlocksToAdd)
         {
-            // Extend the FAT and persist it to the disk.
-            ArchiveDataBlockPointer blockPointer;
+            // Extend the FAT.
             lock (m_dataBlockPointers)
             {
                 for (int i = 1; i <= dataBlocksToAdd; i++)
                 {
-                    blockPointer = new ArchiveDataBlockPointer(m_parent, m_dataBlockPointers.Count);
-                    blockPointer.DataBlock.Reset();
+                    m_dataBlockPointers.Add(new ArchiveDataBlockPointer(m_parent, m_dataBlockPointers.Count));
 
-                    m_dataBlockPointers.Add(blockPointer);
                 }
+                m_dataBlockCount = m_dataBlockPointers.Count;
             }
-            m_dataBlockCount += dataBlocksToAdd;
             Save();
+
+            // Initialize newly added data blocks.
+            ArchiveDataBlock dataBlock;
+            for (int i = m_dataBlockCount - dataBlocksToAdd; i < m_dataBlockCount; i++)
+            {
+                dataBlock = new ArchiveDataBlock(m_parent, i, -1, true);
+            }
         }
 
         /// <summary>
@@ -423,29 +427,29 @@ namespace TVA.Historian.Files
                 {
                     dataBlockPointer = m_dataBlockPointers[blockIndex];
                 }
-                if (dataBlockPointer.HistorianID == -1 || dataBlockPointer.HistorianID == historianID)
+
+                dataBlock = dataBlockPointer.DataBlock;
+                if (!dataBlockPointer.IsAllocated && dataBlock.SlotsUsed > 0)
                 {
-                    // Data block is either unallocated or allocated to the specified historian identifier.
-                    dataBlock = dataBlockPointer.DataBlock;
-                    if (dataBlockPointer.HistorianID == -1 && dataBlock.SlotsUsed > 0)
-                    {
-                        // Reset the data block since it's marked as unallocated but has data in it.
-                        dataBlock.Reset();
-                    }
+                    // Clear existing data from the data block since it is unallocated.
+                    dataBlock.Reset();
                 }
-                else
+                else if (dataBlockPointer.IsAllocated &&
+                         (dataBlockPointer.HistorianID != historianID ||
+                          (dataBlockPointer.HistorianID == historianID && dataBlock.SlotsAvailable == 0)))
                 {
-                    // Invalid data block index is specified.
-                    throw (new InvalidOperationException(string.Format("Invalid block index {0} specified for Historian ID {1} - Block used by Historian ID {2} for data from {3}.", blockIndex, historianID, dataBlockPointer.HistorianID, dataBlockPointer.StartTime)));
+                    // Search for a new data block since the suggested data block cannot be used.
+                    blockIndex = -1;
                 }
             }
-            else if (blockIndex < 0)
+
+            if (blockIndex < 0)
             {
                 // Negative data block index is specified indicating a search must be performed for a data block.
                 dataBlock = FindLastDataBlock(historianID);
                 if (dataBlock != null && dataBlock.SlotsAvailable == 0)
                 {
-                    // Previously used data block exists for the specified historian identifier but it's full.
+                    // Previously used data block is full.
                     dataBlock = null;
                 }
 
@@ -455,7 +459,7 @@ namespace TVA.Historian.Files
                     dataBlock = FindDataBlock(-1);
                     if (dataBlock == null)
                     {
-                        // Extend the file by one data block for allocation only if the request is for historic writes.
+                        // Extend the file for historic writes only.
                         if (m_parent.FileType == ArchiveFileType.Historic)
                         {
                             Extend();
@@ -473,7 +477,11 @@ namespace TVA.Historian.Files
                 }
 
                 // Get the pointer to the data block so that its information can be updated if necessary.
-                if (dataBlock != null)
+                if (dataBlock == null)
+                {
+                    dataBlockPointer = null;
+                }
+                else
                 {
                     lock (m_dataBlockPointers)
                     {
@@ -482,12 +490,12 @@ namespace TVA.Historian.Files
                 }
             }
 
-            if (dataBlock != null && dataBlock.SlotsUsed == 0)
-            {                
+            if (dataBlockPointer != null && !dataBlockPointer.IsAllocated)
+            {
                 // Mark the data block as allocated.
                 dataBlockPointer.HistorianID = historianID;
                 dataBlockPointer.StartTime = dataTime;
-                
+
                 // Set the file start time if not set.
                 if (m_fileStartTime == TimeTag.MinValue)
                     m_fileStartTime = dataTime;

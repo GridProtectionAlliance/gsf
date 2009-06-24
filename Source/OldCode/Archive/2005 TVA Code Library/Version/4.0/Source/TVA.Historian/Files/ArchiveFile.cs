@@ -1766,7 +1766,6 @@ namespace TVA.Historian.Files
                 if (data.Time >= m_fat.FileStartTime)
                 {
                     // Data belongs to this file.
-                    m_fat.DataPointsArchived++;
                     ArchiveDataBlock dataBlock;
                     lock (m_dataBlocks)
                     {
@@ -1786,25 +1785,24 @@ namespace TVA.Historian.Files
                         {
                             // Retrieve previously used data block.
                             dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, state.ActiveDataBlockIndex);
-                            // Use the data block if it is not full.
-                            if (dataBlock.SlotsAvailable == 0)
-                                dataBlock = null;
                         }
-
-                        if (dataBlock == null)
+                        else
                         {
                             // Time to request a brand new data block.
                             dataBlock = m_fat.RequestDataBlock(data.HistorianID, data.Time, system.DataBlocksUsed);
+                        }
 
-                            if (dataBlock != null)
+                        if (dataBlock != null)
+                        {
+                            // Update the total number of data blocks used.
+                            if (dataBlock.SlotsUsed == 0 && system.DataBlocksUsed == dataBlock.Index)
                             {
-                                // Update the total number of data blocks used.
                                 system.DataBlocksUsed++;
                                 m_intercomFile.Write(1, system);
-
-                                // Update the active data block index information.
-                                state.ActiveDataBlockIndex = dataBlock.Index;
                             }
+
+                            // Update the active data block index information.
+                            state.ActiveDataBlockIndex = dataBlock.Index;
                         }
 
                         // Keep in-memory reference to the data block for consecutive writes.
@@ -1826,6 +1824,7 @@ namespace TVA.Historian.Files
                     {
                         // Write data to the data block.
                         dataBlock.Write(data);
+                        m_fat.DataPointsArchived++;
                     }
                     else
                     {

@@ -134,7 +134,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return new ArchiveDataBlock(m_parent, m_index, m_historianID);
+                return new ArchiveDataBlock(m_parent, m_index, m_historianID, false);
             }
         }
 
