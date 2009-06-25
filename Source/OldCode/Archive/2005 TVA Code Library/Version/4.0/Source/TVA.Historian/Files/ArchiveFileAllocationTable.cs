@@ -361,6 +361,20 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
+        /// Initializes <see cref="ArchiveFileAllocationTable"/> from the specified <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveFileAllocationTable"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveFileAllocationTable"/>.</returns>
+        /// <exception cref="NotSupportedException">Always</exception>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
         /// Saves the <see cref="ArchiveFileAllocationTable"/> data to the <see cref="ArchiveFile"/>.
         /// </summary>
         public void Save()
@@ -407,117 +421,6 @@ namespace TVA.Historian.Files
             {
                 dataBlock = new ArchiveDataBlock(m_parent, i, -1, true);
             }
-        }
-
-        /// <summary>
-        /// Returns an <see cref="ArchiveDataBlock"/> for writting <see cref="ArchiveData"/> points for the specified <paramref name="historianID"/>.
-        /// </summary>
-        /// <param name="historianID">Historian identifier for which the <see cref="ArchiveDataBlock"/> is being requested.</param>
-        /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveData"/> point to be written to the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writting <see cref="ArchiveData"/> points for the <paramref name="historianID"/>.</param>
-        /// <returns><see cref="ArchiveDataBlock"/> object if available; otherwise null if all <see cref="ArchiveDataBlock"/>s have been allocated.</returns>
-        public ArchiveDataBlock RequestDataBlock(int historianID, TimeTag dataTime, int blockIndex)
-        {
-            ArchiveDataBlock dataBlock = null;
-            ArchiveDataBlockPointer dataBlockPointer = null;
-            if (blockIndex >= 0 && blockIndex < m_dataBlockCount)
-            {
-                // Valid data block index is specified, so retrieve the corresponding data block.
-                lock (m_dataBlockPointers)
-                {
-                    dataBlockPointer = m_dataBlockPointers[blockIndex];
-                }
-
-                dataBlock = dataBlockPointer.DataBlock;
-                if (!dataBlockPointer.IsAllocated && dataBlock.SlotsUsed > 0)
-                {
-                    // Clear existing data from the data block since it is unallocated.
-                    dataBlock.Reset();
-                }
-                else if (dataBlockPointer.IsAllocated &&
-                         (dataBlockPointer.HistorianID != historianID ||
-                          (dataBlockPointer.HistorianID == historianID && dataBlock.SlotsAvailable == 0)))
-                {
-                    // Search for a new data block since the suggested data block cannot be used.
-                    blockIndex = -1;
-                }
-            }
-
-            if (blockIndex < 0)
-            {
-                // Negative data block index is specified indicating a search must be performed for a data block.
-                dataBlock = FindLastDataBlock(historianID);
-                if (dataBlock != null && dataBlock.SlotsAvailable == 0)
-                {
-                    // Previously used data block is full.
-                    dataBlock = null;
-                }
-
-                if (dataBlock == null)
-                {
-                    // Look for the first unallocated data block.
-                    dataBlock = FindDataBlock(-1);
-                    if (dataBlock == null)
-                    {
-                        // Extend the file for historic writes only.
-                        if (m_parent.FileType == ArchiveFileType.Historic)
-                        {
-                            Extend();
-                            dataBlock = m_dataBlockPointers[m_dataBlockPointers.Count - 1].DataBlock;
-                        }
-                    }
-                    else
-                    {
-                        // Reset the unallocated data block if there is data in it.
-                        if (dataBlock.SlotsUsed > 0)
-                        {
-                            dataBlock.Reset();
-                        }
-                    }
-                }
-
-                // Get the pointer to the data block so that its information can be updated if necessary.
-                if (dataBlock == null)
-                {
-                    dataBlockPointer = null;
-                }
-                else
-                {
-                    lock (m_dataBlockPointers)
-                    {
-                        dataBlockPointer = m_dataBlockPointers[dataBlock.Index];
-                    }
-                }
-            }
-
-            if (dataBlockPointer != null && !dataBlockPointer.IsAllocated)
-            {
-                // Mark the data block as allocated.
-                dataBlockPointer.HistorianID = historianID;
-                dataBlockPointer.StartTime = dataTime;
-
-                // Set the file start time if not set.
-                if (m_fileStartTime == TimeTag.MinValue)
-                    m_fileStartTime = dataTime;
-
-                // Persist data block information to disk.
-                lock (m_parent.FileData)
-                {
-                    // We'll write information about the just allocated data block to the file.
-                    m_parent.FileData.Seek(DataBinaryLength + ArrayDescriptorLength + (dataBlockPointer.Index * ArchiveDataBlockPointer.ByteCount), SeekOrigin.Begin);
-                    m_parent.FileData.Write(dataBlockPointer.BinaryImage, 0, ArchiveDataBlockPointer.ByteCount);
-                    // We'll also write the fixed part of the FAT data that resides at the end.
-                    m_parent.FileData.Seek(-FixedBinaryLength, SeekOrigin.End);
-                    m_parent.FileData.Write(FixedBinaryImage, 0, FixedBinaryLength);
-                    if (!m_parent.CacheWrites)
-                        m_parent.FileData.Flush();
-                }
-
-                // Re-fetch the data block with updated information after allocation.
-                dataBlock = dataBlockPointer.DataBlock;
-            }
-
-            return dataBlock;
         }
 
         /// <summary>
@@ -621,17 +524,114 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Initializes <see cref="ArchiveFileAllocationTable"/> from the specified <paramref name="binaryImage"/>.
+        /// Returns an <see cref="ArchiveDataBlock"/> for writting <see cref="ArchiveData"/> points for the specified <paramref name="historianID"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveFileAllocationTable"/>.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveFileAllocationTable"/>.</returns>
-        /// <exception cref="NotSupportedException">Always</exception>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        /// <param name="historianID">Historian identifier for which the <see cref="ArchiveDataBlock"/> is being requested.</param>
+        /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveData"/> point to be written to the <see cref="ArchiveDataBlock"/>.</param>
+        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writting <see cref="ArchiveData"/> points for the <paramref name="historianID"/>.</param>
+        /// <returns><see cref="ArchiveDataBlock"/> object if available; otherwise null if all <see cref="ArchiveDataBlock"/>s have been allocated.</returns>
+        internal ArchiveDataBlock RequestDataBlock(int historianID, TimeTag dataTime, int blockIndex)
         {
-            throw new NotSupportedException();
+            ArchiveDataBlock dataBlock = null;
+            ArchiveDataBlockPointer dataBlockPointer = null;
+            if (blockIndex >= 0 && blockIndex < m_dataBlockCount)
+            {
+                // Valid data block index is specified, so retrieve the corresponding data block.
+                lock (m_dataBlockPointers)
+                {
+                    dataBlockPointer = m_dataBlockPointers[blockIndex];
+                }
+
+                dataBlock = dataBlockPointer.DataBlock;
+                if (!dataBlockPointer.IsAllocated && dataBlock.SlotsUsed > 0)
+                {
+                    // Clear existing data from the data block since it is unallocated.
+                    dataBlock.Reset();
+                }
+                else if (dataBlockPointer.IsAllocated &&
+                         (dataBlockPointer.HistorianID != historianID ||
+                          (dataBlockPointer.HistorianID == historianID && dataBlock.SlotsAvailable == 0)))
+                {
+                    // Search for a new data block since the suggested data block cannot be used.
+                    blockIndex = -1;
+                }
+            }
+
+            if (blockIndex < 0)
+            {
+                // Negative data block index is specified indicating a search must be performed for a data block.
+                dataBlock = FindLastDataBlock(historianID);
+                if (dataBlock != null && dataBlock.SlotsAvailable == 0)
+                {
+                    // Previously used data block is full.
+                    dataBlock = null;
+                }
+
+                if (dataBlock == null)
+                {
+                    // Look for the first unallocated data block.
+                    dataBlock = FindDataBlock(-1);
+                    if (dataBlock == null)
+                    {
+                        // Extend the file for historic writes only.
+                        if (m_parent.FileType == ArchiveFileType.Historic)
+                        {
+                            Extend();
+                            dataBlock = m_dataBlockPointers[m_dataBlockPointers.Count - 1].DataBlock;
+                        }
+                    }
+                    else
+                    {
+                        // Reset the unallocated data block if there is data in it.
+                        if (dataBlock.SlotsUsed > 0)
+                        {
+                            dataBlock.Reset();
+                        }
+                    }
+                }
+
+                // Get the pointer to the data block so that its information can be updated if necessary.
+                if (dataBlock == null)
+                {
+                    dataBlockPointer = null;
+                }
+                else
+                {
+                    lock (m_dataBlockPointers)
+                    {
+                        dataBlockPointer = m_dataBlockPointers[dataBlock.Index];
+                    }
+                }
+            }
+
+            if (dataBlockPointer != null && !dataBlockPointer.IsAllocated)
+            {
+                // Mark the data block as allocated.
+                dataBlockPointer.HistorianID = historianID;
+                dataBlockPointer.StartTime = dataTime;
+
+                // Set the file start time if not set.
+                if (m_fileStartTime == TimeTag.MinValue)
+                    m_fileStartTime = dataTime;
+
+                // Persist data block information to disk.
+                lock (m_parent.FileData)
+                {
+                    // We'll write information about the just allocated data block to the file.
+                    m_parent.FileData.Seek(DataBinaryLength + ArrayDescriptorLength + (dataBlockPointer.Index * ArchiveDataBlockPointer.ByteCount), SeekOrigin.Begin);
+                    m_parent.FileData.Write(dataBlockPointer.BinaryImage, 0, ArchiveDataBlockPointer.ByteCount);
+                    // We'll also write the fixed part of the FAT data that resides at the end.
+                    m_parent.FileData.Seek(-FixedBinaryLength, SeekOrigin.End);
+                    m_parent.FileData.Write(FixedBinaryImage, 0, FixedBinaryLength);
+                    if (!m_parent.CacheWrites)
+                        m_parent.FileData.Flush();
+                }
+
+                // Re-fetch the data block with updated information after allocation.
+                dataBlock = dataBlockPointer.DataBlock;
+            }
+
+            return dataBlock;
         }
 
         /// <summary>
