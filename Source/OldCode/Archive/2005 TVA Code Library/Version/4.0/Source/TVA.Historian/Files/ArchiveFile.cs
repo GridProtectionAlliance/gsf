@@ -1467,9 +1467,7 @@ namespace TVA.Historian.Files
                     state.ActiveDataBlockIndex = -1;
                     state.ActiveDataBlockSlot = 1;
                     if (state.ArchivedData.Time > endTime)
-                    {
                         endTime = state.ArchivedData.Time;
-                    }
 
                     m_stateFile.Write(state.HistorianID, state);
                 }
@@ -2869,7 +2867,7 @@ namespace TVA.Historian.Files
             if (m_stateFile.RecordsOnDisk > m_dataBlocks.Count)
             {
                 // We synchronize the block list with the number of state records physically present on the disk.
-                // This count goees up when new metadata records are added which in turn causes new state records
+                // This count goes up when new metadata records are added which in turn causes new state records
                 // to be added to match with the metadata records.
                 lock (m_dataBlocks)
                 {
@@ -2887,6 +2885,7 @@ namespace TVA.Historian.Files
                 // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
                 // State File to grow in-memory or on-disk depending on how it's configured.
                 m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
+                m_stateFile.Save();
             }
         }
 
