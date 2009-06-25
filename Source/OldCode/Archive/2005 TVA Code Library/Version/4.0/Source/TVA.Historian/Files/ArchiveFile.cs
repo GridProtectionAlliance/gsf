@@ -896,6 +896,35 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="MetadataFile"/> used by the <see cref="ArchiveFile"/>.
+        /// </summary>
+        [Category("Dependencies"),
+        Description("MetadataFile used by the ArchiveFile.")]
+        public MetadataFile MetadataFile
+        {
+            get
+            {
+                return m_metadataFile;
+            }
+            set
+            {
+                if (m_metadataFile != null)
+                {
+                    // Detach events from any existing instance
+                    m_metadataFile.FileModified -= MetadataFile_FileModified;
+                }
+
+                m_metadataFile = value;
+
+                if (m_stateFile != null)
+                {
+                    // Attach events to new instance
+                    m_metadataFile.FileModified += MetadataFile_FileModified;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="IntercomFile"/> used by the <see cref="ArchiveFile"/>.
         /// </summary>
         [Category("Dependencies"),
@@ -909,23 +938,6 @@ namespace TVA.Historian.Files
             set
             {
                 m_intercomFile = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="MetadataFile"/> used by the <see cref="ArchiveFile"/>.
-        /// </summary>
-        [Category("Dependencies"),
-        Description("MetadataFile used by the ArchiveFile.")]
-        public MetadataFile MetadataFile
-        {
-            get
-            {
-                return m_metadataFile;
-            }
-            set
-            {
-                m_metadataFile = value;
             }
         }
 
@@ -2448,8 +2460,8 @@ namespace TVA.Historian.Files
 
                         // Detach from all of the dependency files.
                         StateFile = null;
-                        IntercomFile = null;
                         MetadataFile = null;
+                        IntercomFile = null;
                     }
                 }
                 finally
@@ -2863,6 +2875,18 @@ namespace TVA.Historian.Files
                 {
                     m_dataBlocks.AddRange(new ArchiveDataBlock[m_stateFile.RecordsOnDisk - m_dataBlocks.Count]);
                 }
+            }
+        }
+
+        private void MetadataFile_FileModified(object sender, System.EventArgs e)
+        {
+            if (m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
+            {
+                // Since we have more number of records in the Metadata File than in the State File we'll synchronize
+                // the number of records in both the files (very important) by writting a new records to the State
+                // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
+                // State File to grow in-memory or on-disk depending on how it's configured.
+                m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
             }
         }
 
