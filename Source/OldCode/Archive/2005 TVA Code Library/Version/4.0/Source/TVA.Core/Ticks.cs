@@ -108,10 +108,10 @@ namespace TVA
         // Constants
 
         // Standard time names used by ToString method
-        private static string[] m_timeNames = new string[] { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 60 Seconds", "0 Seconds" };
+        private static string[] m_timeNames = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
 
         // Standard time names, without seconds, used by ToString method
-        private static string[] m_timeNamesNoSeconds = new string[] { "Year", "Years", "Day", "Days", "Hour", "Hours", "Minute", "Minutes", "Second", "Seconds", "Less Than 1 Minute", "0 Minutes" };
+        private static string[] m_timeNamesNoSeconds = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
 
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>
         public const long PerSecond = 10000000L;
@@ -469,7 +469,6 @@ namespace TVA
 
                 // Appends textual representation of years
                 timeImage.Append(years);
-                timeImage.Append(' ');
 
                 if (years == 1)
                     timeImage.Append(timeNames[TimeName.Year]);
@@ -488,7 +487,6 @@ namespace TVA
                 // Appends textual representation of days
                 timeImage.Append(' ');
                 timeImage.Append(days);
-                timeImage.Append(' ');
 
                 if (days == 1)
                     timeImage.Append(timeNames[TimeName.Day]);
@@ -507,7 +505,6 @@ namespace TVA
                 // Appends textual representation of hours
                 timeImage.Append(' ');
                 timeImage.Append(hours);
-                timeImage.Append(' ');
 
                 if (hours == 1)
                     timeImage.Append(timeNames[TimeName.Hour]);
@@ -534,7 +531,6 @@ namespace TVA
                 // Appends textual representation of minutes
                 timeImage.Append(' ');
                 timeImage.Append(minutes);
-                timeImage.Append(' ');
 
                 if (minutes == 1)
                     timeImage.Append(timeNames[TimeName.Minute]);
@@ -553,7 +549,6 @@ namespace TVA
                     // Appends textual representation of whole seconds
                     timeImage.Append(' ');
                     timeImage.Append(wholeSeconds);
-                    timeImage.Append(' ');
 
                     if (wholeSeconds == 1)
                         timeImage.Append(timeNames[TimeName.Second]);
@@ -578,7 +573,6 @@ namespace TVA
                         // Appends textual representation of fractional seconds
                         timeImage.Append(' ');
                         timeImage.Append(seconds.ToString("0." + (new string('0', secondPrecision))));
-                        timeImage.Append(' ');
 
                         if (seconds == 1)
                             timeImage.Append(timeNames[TimeName.Second]);

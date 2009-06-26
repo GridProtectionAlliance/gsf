@@ -79,6 +79,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Files\ArchiveFileAllocationTable.cs" />
+    <Compile Include="Files\ArchiveFileStatistics.cs" />
     <Compile Include="Files\IntercomFile.cs">
       <SubType>Component</SubType>
     </Compile>
