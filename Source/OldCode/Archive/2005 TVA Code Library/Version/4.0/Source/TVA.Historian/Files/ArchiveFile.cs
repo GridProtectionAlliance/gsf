@@ -36,6 +36,7 @@ using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
+using TVA.Units;
 
 namespace TVA.Historian.Files
 {
@@ -1006,50 +1007,6 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets a percentage value that indicates how full the <see cref="ArchiveFile"/> is.
-        /// </summary>
-        [Browsable(false)]
-        public double PercentFileUsage
-        {
-            get
-            {
-                if (m_fileType == ArchiveFileType.Active)
-                {
-                    IntercomRecord environRecord = m_intercomFile.Read(1);
-                    return ((double)environRecord.DataBlocksUsed / (double)m_fat.DataBlockCount) * 100;
-                }
-                else if (m_fileType == ArchiveFileType.Historic)
-                {
-                    // Historic file will always be 100% full.
-                    return 100;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets a percentage value that indicates the amount of compression achieved on incoming <see cref="ArchiveData"/>.
-        /// </summary>
-        [Browsable(false)]
-        public double PercentDataCompression
-        {
-            get
-            {
-                if (m_fat.DataPointsReceived > 0)
-                {
-                    return ((double)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (double)m_fat.DataPointsReceived) * 100;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-        }
-
-        /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="ArchiveFile"/> is currently open.
         /// </summary>
         [Browsable(false)]
@@ -1082,6 +1039,43 @@ namespace TVA.Historian.Files
             get
             {
                 return m_fat;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ArchiveFileStatistics"/> object of the <see cref="ArchiveFile"/>.
+        /// </summary>
+        public ArchiveFileStatistics Statistics
+        {
+            get
+            {
+                ArchiveFileStatistics statistics = new ArchiveFileStatistics();
+
+                // Calculate file usage.
+                if (m_fileType == ArchiveFileType.Active)
+                    statistics.FileUsage = ((float)m_intercomFile.Read(1).DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
+                else
+                    statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
+
+                // Calculate compression rate.
+                if (m_fat.DataPointsReceived > 0)
+                    statistics.CompressionRate = ((float)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (float)m_fat.DataPointsReceived) * 100;
+                else
+                    statistics.CompressionRate = 0f;
+
+                // Calculate write speed averaging window.
+                if (m_fat.FileStartTime != TimeTag.MinValue)
+                    statistics.AveragingWindow = new Time((DateTime.UtcNow - m_fat.FileStartTime.ToDateTime()).TotalSeconds);
+                else
+                    statistics.AveragingWindow = Time.MinValue;
+
+                // Calculate average write speed.
+                if (m_fat.DataPointsArchived > 0)
+                    statistics.AverageWriteSpeed = m_fat.DataPointsArchived / (int)statistics.AveragingWindow;
+                else
+                    statistics.AverageWriteSpeed = 0;
+
+                return statistics;
             }
         }
 
@@ -1822,7 +1816,7 @@ namespace TVA.Historian.Files
                         }
 
                         // Kick-off the rollover preparation when its threshold is reached.
-                        if (PercentFileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
+                        if (Statistics.FileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
                         {
                             m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
                             m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
