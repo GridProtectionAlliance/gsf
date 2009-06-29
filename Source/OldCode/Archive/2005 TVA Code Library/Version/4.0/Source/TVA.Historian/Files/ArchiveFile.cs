@@ -32,6 +32,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
@@ -568,15 +569,12 @@ namespace TVA.Historian.Files
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException();
 
-                if (string.Compare(FilePath.GetExtension(value), FileExtension, true) != 0)
-                    throw (new ArgumentException(string.Format("{0} must have an extension of {1}.", this.GetType().Name, FileExtension)));
+                if (string.Compare(FilePath.GetExtension(value), FileExtension, true) != 0 &&
+                    string.Compare(FilePath.GetExtension(value), StandbyFileExtension, true) != 0)
+                    throw (new ArgumentException(string.Format("{0} must have an extension of {1} or {2}.", this.GetType().Name, FileExtension, StandbyFileExtension)));
 
                 m_fileName = value;
-                if (IsOpen)
-                {
-                    Close();
-                    Open();
-                }
+                ReOpen();
             }
         }
 
@@ -595,6 +593,7 @@ namespace TVA.Historian.Files
             set
             {
                 m_fileType = value;
+                ReOpen();
             }
         }
 
@@ -635,6 +634,7 @@ namespace TVA.Historian.Files
             set
             {
                 m_fileAccessMode = value;
+                ReOpen();
             }
         }
 
@@ -1283,9 +1283,15 @@ namespace TVA.Historian.Files
                 if (m_stateFile == null || m_intercomFile == null | m_metadataFile == null)
                     throw (new InvalidOperationException("One or more of the dependency files are not specified."));
 
-                // Change the file name for a standby file.
-                if (m_fileType == ArchiveFileType.Standby)
-                    m_fileName = StandbyArchiveFileName;
+                // Validate file type against its name.
+                m_fileName = m_fileName.ToLower();
+                if (Path.GetExtension(m_fileName) == StandbyFileExtension)
+                    m_fileType = ArchiveFileType.Standby;
+                else if (Regex.IsMatch(m_fileName, string.Format(".+_.+_to_.+\\{0}$", FileExtension)))
+                    m_fileType = ArchiveFileType.Historic;
+                else
+                    m_fileType = ArchiveFileType.Active;
+
                 // Get the absolute path for the file name.
                 m_fileName = FilePath.GetAbsolutePath(m_fileName);
                 // Create the directory if it does not exist.
@@ -2048,7 +2054,6 @@ namespace TVA.Historian.Files
                 try
                 {
                     file.FileName = dataFile.FileName;
-                    file.FileType = ArchiveFileType.Historic;
                     file.StateFile = m_stateFile;
                     file.IntercomFile = m_intercomFile;
                     file.MetadataFile = m_metadataFile;
@@ -2466,6 +2471,15 @@ namespace TVA.Historian.Files
 
         #region [ Helper Methods ]
 
+        private void ReOpen()
+        {
+            if (IsOpen)
+            {
+                Close();
+                Open();
+            }
+        }
+
         private void BuildHistoricFileList()
         {
             if (m_historicArchiveFiles == null)
@@ -2533,8 +2547,7 @@ namespace TVA.Historian.Files
 
                 // Opening and closing a new archive file in "standby" mode will create a "standby" archive file.
                 ArchiveFile standbyArchiveFile = new ArchiveFile();
-                standbyArchiveFile.FileName = m_fileName;
-                standbyArchiveFile.FileType = ArchiveFileType.Standby;
+                standbyArchiveFile.FileName = StandbyArchiveFileName;
                 standbyArchiveFile.FileSize = m_fileSize;
                 standbyArchiveFile.DataBlockSize = m_dataBlockSize;
                 standbyArchiveFile.StateFile = m_stateFile;
@@ -2645,7 +2658,6 @@ namespace TVA.Historian.Files
                     // We'll open the file and get relevant information about it.
                     ArchiveFile historicArchiveFile = new ArchiveFile();
                     historicArchiveFile.FileName = fileName;
-                    historicArchiveFile.FileType = ArchiveFileType.Historic;
                     historicArchiveFile.StateFile = m_stateFile;
                     historicArchiveFile.IntercomFile = m_intercomFile;
                     historicArchiveFile.MetadataFile = m_metadataFile;
@@ -2775,7 +2787,6 @@ namespace TVA.Historian.Files
                                 // Found a historic file where the data can be written.
                                 historicFile = new ArchiveFile();
                                 historicFile.FileName = historicFileInfo.FileName;
-                                historicFile.FileType = ArchiveFileType.Historic;
                                 historicFile.StateFile = m_stateFile;
                                 historicFile.IntercomFile = m_intercomFile;
                                 historicFile.MetadataFile = m_metadataFile;
