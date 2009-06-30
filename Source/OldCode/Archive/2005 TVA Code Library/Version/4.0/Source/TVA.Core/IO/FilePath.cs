@@ -22,6 +22,8 @@
 //       Edited code comments.
 //  12/17/2008 - Russell F. Robertson
 //       Fixed bug in GetFilePatternRegularExpression().
+//  06/30/2009 - Pinal C. Patel
+//       Removed FilePathHasFileName() since the result was error prone.
 //
 //*******************************************************************************************************
 
@@ -184,27 +186,13 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Determines whether the specified file path contains a file name.
-        /// </summary>
-        /// <param name="filePath">The file path to be tested.</param>
-        /// <returns>true if the file path contains a file name; otherwise false.</returns>
-        /// <remarks>Note that this will always return false for file names with no extension.</remarks>
-        public static bool FilePathHasFileName(string filePath)
-        {
-            return Path.GetFileName(RemovePathSuffix(filePath)).Contains(".");
-        }
-
-        /// <summary>
         /// Gets the file name and extension from the specified file path.
         /// </summary>
         /// <param name="filePath">The file path from which the file name and extension is to be obtained.</param>
         /// <returns>File name and extension if the file path has it; otherwise empty string.</returns>
         public static string GetFileName(string filePath)
         {
-            if (!FilePathHasFileName(filePath))
-                return string.Empty;
-            else
-                return Path.GetFileName(RemovePathSuffix(filePath));
+            return Path.GetFileName(RemovePathSuffix(filePath));
         }
 
         /// <summary>
@@ -224,10 +212,7 @@ namespace TVA.IO
         /// <returns>File name without the extension if the file path has it; otherwise empty string.</returns>
         public static string GetFileNameWithoutExtension(string filePath)
         {
-            if (!FilePathHasFileName(filePath))
-                return string.Empty;
-            else
-                return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
+            return Path.GetFileNameWithoutExtension(RemovePathSuffix(filePath));
         }
 
         /// <summary>
@@ -299,10 +284,7 @@ namespace TVA.IO
         /// <returns>Directory information.</returns>
         public static string GetDirectoryName(string filePath)
         {
-            if (!FilePathHasFileName(filePath))
-                return AddPathSuffix(filePath);
-            else
-                return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
+            return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
         }
 
         /// <summary>
@@ -359,7 +341,7 @@ namespace TVA.IO
                 }
             }
 
-            return filePath;
+            return RemovePathSuffix(filePath);
         }
 
         /// <summary>

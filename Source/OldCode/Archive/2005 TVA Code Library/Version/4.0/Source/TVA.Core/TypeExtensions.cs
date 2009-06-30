@@ -16,6 +16,8 @@
 //      Edited code comments.
 //  01/30/2009 - James R Carroll
 //      Added TryGetAttribute extension.
+//  06/30/2009 - Pinal C. Patel
+//      Fixed LoadImplementations() to correctly use FilePath.GetFileList().
 //
 //*******************************************************************************************************
 
@@ -125,11 +127,11 @@ namespace TVA
                     case ApplicationType.WindowsGui:
                     case ApplicationType.WindowsCui:
                         // Use application install directory for windows applications.
-                        binariesDirectory = FilePath.GetAbsolutePath("");
+                        binariesDirectory = FilePath.GetAbsolutePath("*.*");
                         break;
                     case ApplicationType.Web:
                         // Use the bin directory for web applications.
-                        binariesDirectory = FilePath.GetAbsolutePath("bin");
+                        binariesDirectory = FilePath.GetAbsolutePath("bin\\*.*");
                         break;
                 }
             }
