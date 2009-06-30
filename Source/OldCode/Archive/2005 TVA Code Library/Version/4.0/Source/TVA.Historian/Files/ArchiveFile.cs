@@ -1070,7 +1070,7 @@ namespace TVA.Historian.Files
                     statistics.AveragingWindow = Time.MinValue;
 
                 // Calculate average write speed.
-                if (m_fat.DataPointsArchived > 0)
+                if (statistics.AveragingWindow != Time.MinValue)
                     statistics.AverageWriteSpeed = m_fat.DataPointsArchived / (int)statistics.AveragingWindow;
                 else
                     statistics.AverageWriteSpeed = 0;
