@@ -23,6 +23,8 @@
 //       Edited code comments.
 //  06/19/2009 - Pinal C. Patel
 //       Modified Initialize() method to just load settings from the config file.
+//  06/30/2009 - Pinal C. Patel
+//       Changed ServiceComponents to be a collection of object instead of ISupportLifecycle.
 //
 //*******************************************************************************************************
 
@@ -220,7 +222,7 @@ namespace TVA.Services
         private ErrorLogger m_errorLogger;
         private PerformanceMonitor m_performanceMonitor;
         private List<ServiceProcess> m_processes;
-        private List<ISupportLifecycle> m_serviceComponents;
+        private List<object> m_serviceComponents;
 		private List<ClientInfo> m_remoteClients;
 		private List<ClientRequest.Info> m_clientRequestHistory;
 		private List<ClientRequestHandler> m_clientRequestHandlers;
@@ -251,7 +253,7 @@ namespace TVA.Services
 			m_processes = new List<ServiceProcess>();
 			m_remoteClients = new List<ClientInfo>();
 			m_clientRequestHistory = new List<ClientRequest.Info>();
-			m_serviceComponents = new List<ISupportLifecycle>();
+			m_serviceComponents = new List<object>();
 			m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
 			m_telnetPassword = "s3cur3";
@@ -521,13 +523,15 @@ namespace TVA.Services
                 {
                     // Re-enable all service components.
                     bool state;
-                    foreach (ISupportLifecycle component in m_serviceComponents)
+                    ISupportLifecycle typedComponent;
+                    foreach (object component in m_serviceComponents)
                     {
-                        if (component != null)
+                        typedComponent = component as ISupportLifecycle;
+                        if (typedComponent != null)
                         {
                             // Restore previous state.
-                            if (m_componentEnabledStates.TryGetValue(component, out state))
-                                component.Enabled = state;
+                            if (m_componentEnabledStates.TryGetValue(typedComponent, out state))
+                                typedComponent.Enabled = state;
                         }
                     }
                 }
@@ -535,12 +539,15 @@ namespace TVA.Services
                 {
                     // Disable all service components.
                     m_componentEnabledStates.Clear();
-                    foreach (ISupportLifecycle component in m_serviceComponents)
+                    ISupportLifecycle typedComponent;
+                    foreach (object component in m_serviceComponents)
                     {
-                        if (component != null)
+                        typedComponent = component as ISupportLifecycle;
+                        if (typedComponent != null)
                         {
-                            m_componentEnabledStates.Add(component, component.Enabled);
-                            component.Enabled = false;
+                            // Save current state.
+                            m_componentEnabledStates.Add(typedComponent, typedComponent.Enabled);
+                            typedComponent.Enabled = false;
                         }
                     }
                 }
@@ -554,7 +561,7 @@ namespace TVA.Services
         /// </summary>
 		[Browsable(false), 
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ISupportLifecycle> ServiceComponents
+        public List<object> ServiceComponents
 		{
 			get
 			{
@@ -664,16 +671,16 @@ namespace TVA.Services
                 status.AppendFormat("Status of components used by {0}:", Name);
                 status.AppendLine();
                 status.AppendLine();
-                foreach (ISupportLifecycle serviceComponent in m_serviceComponents)
+                IProvideStatus typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    IProvideStatus statusProvider = serviceComponent as IProvideStatus;
-
-                    if (statusProvider != null)
+                    typedComponent = component as IProvideStatus;
+                    if (typedComponent != null)
                     {
                         // This component provides status information.                       
-                        status.AppendFormat("Status of {0}:", statusProvider.Name);
+                        status.AppendFormat("Status of {0}:", typedComponent.Name);
                         status.AppendLine();
-                        status.Append(statusProvider.Status);
+                        status.Append(typedComponent.Status);
                         status.AppendLine();
                     }
                 }
@@ -781,10 +788,12 @@ namespace TVA.Services
             SaveSettings();
             if (includeServiceComponents)
             {
-                foreach (IPersistSettings component in m_serviceComponents)
+                IPersistSettings typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    if (component != null)
-                        component.SaveSettings();
+                    typedComponent = component as IPersistSettings;
+                    if (typedComponent != null)
+                        typedComponent.SaveSettings();
                 }
             }
         }
@@ -825,10 +834,12 @@ namespace TVA.Services
             LoadSettings();
             if (includeServiceComponents)
             {
-                foreach (IPersistSettings component in m_serviceComponents)
+                IPersistSettings typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    if (component != null)
-                        component.LoadSettings();
+                    typedComponent = component as IPersistSettings;
+                    if (typedComponent != null)
+                        typedComponent.LoadSettings();
                 }
             }
         }
@@ -950,20 +961,7 @@ namespace TVA.Services
         public void OnShutdown()
         {
             OnSystemShutdown();
-
-            // Abort any processes that may be currently executing.
-            foreach (ServiceProcess process in m_processes)
-            {
-                if (process != null)
-                    process.Abort();
-            }
-
-            // Dispose of all service components when service is shutting down
-            foreach (ISupportLifecycle component in m_serviceComponents)
-            {
-                if (component != null)
-                    component.Dispose();
-            }
+            OnStop();
         }
 
         /// <summary>
