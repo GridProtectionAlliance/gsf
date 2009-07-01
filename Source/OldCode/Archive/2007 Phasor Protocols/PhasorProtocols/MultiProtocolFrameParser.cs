@@ -868,7 +868,7 @@ namespace PhasorProtocols
         }
 
         /// <summary>
-        /// Gets a descriptive name for a device connection that includes <see cref="SourceName"/>, if provided, as well as connection information.
+        /// Gets a descriptive name for a device connection that includes <see cref="SourceName"/>, if provided.
         /// </summary>
         public string Name
         {
