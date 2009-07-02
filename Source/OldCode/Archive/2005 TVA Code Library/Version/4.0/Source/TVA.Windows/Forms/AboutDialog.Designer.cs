@@ -193,7 +193,7 @@
             this.PictureBoxLogo.TabStop = false;
             this.PictureBoxLogo.Click += new System.EventHandler(this.PictureBoxLogo_Click);
             // 
-            // _AboutDialog
+            // AboutDialog
             // 
             this.AcceptButton = this.ButtonOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -206,8 +206,9 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "_AboutDialog";
+            this.Name = "AboutDialog";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "About {0}";
             this.Load += new System.EventHandler(this._AboutDialog_Load);
             this.TabControlInformation.ResumeLayout(false);
