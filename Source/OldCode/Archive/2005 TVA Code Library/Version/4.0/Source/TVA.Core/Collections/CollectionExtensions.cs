@@ -341,14 +341,14 @@ namespace TVA.Collections
                 throw new ArgumentException("Cannot modify items in a read only list");
 
             Random random = new Random(seed);
-            int x, y;
+            int x, y, count = source.Count;
             TSource currentItem;
 
             // Mixes up the data in random order.
-            for (x = 0; x < source.Count; x++)
+            for (x = 0; x < count; x++)
             {
                 // Calls random function from System namespace.
-                y = random.Next(source.Count);
+                y = random.Next(count);
 
                 if (x != y)
                 {
@@ -373,18 +373,18 @@ namespace TVA.Collections
 
             Random random = new Random(seed);
             List<int> sequence = new List<int>();
-            int x, y;
+            int x, y, count = source.Count;
             TSource currentItem;
 
             // Generate original scramble sequence.
-            for (x = 0; x < source.Count; x++)
+            for (x = 0; x < count; x++)
             {
                 // Calls random function from System namespace.
-                sequence.Add(random.Next(source.Count));
+                sequence.Add(random.Next(count));
             }
 
             // Unmix the data order (traverse same sequence in reverse order).
-            for (x = source.Count - 1; x >= 0 ; x--)
+            for (x = count - 1; x >= 0; x--)
             {
                 y = sequence[x];
 
