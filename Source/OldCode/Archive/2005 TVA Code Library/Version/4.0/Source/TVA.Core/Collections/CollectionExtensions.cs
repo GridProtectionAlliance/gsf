@@ -316,7 +316,7 @@ namespace TVA.Collections
             for (x = 0; x < source.Count; x++)
             {
                 // Calls random function from TVA namespace.
-                y = Random.Int32Between(0, source.Count - 1);
+                y = TVA.Security.Cryptography.Random.Int32Between(0, source.Count - 1);
 
                 if (x != y)
                 {
@@ -340,7 +340,7 @@ namespace TVA.Collections
             if (source.IsReadOnly)
                 throw new ArgumentException("Cannot modify items in a read only list");
 
-            System.Random random = new System.Random(seed);
+            Random random = new Random(seed);
             int x, y;
             TSource currentItem;
 
@@ -371,7 +371,7 @@ namespace TVA.Collections
             if (source.IsReadOnly)
                 throw new ArgumentException("Cannot modify items in a read only list");
 
-            System.Random random = new System.Random(seed);
+            Random random = new Random(seed);
             List<int> sequence = new List<int>();
             int x, y;
             TSource currentItem;

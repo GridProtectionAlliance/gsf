@@ -22,7 +22,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace TVA
+namespace TVA.Security.Cryptography
 {
     /// <summary>Generates cryptographically strong random numbers.</summary>
     public static class Random

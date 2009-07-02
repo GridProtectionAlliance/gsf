@@ -3337,7 +3337,7 @@ namespace TVA.IO.Compression.Zip
 			//rnd.NextBytes(cryptBuffer);
 
             // JRC: Converted to use cryptographically strong sequence of random values.
-            Random.GetBytes(cryptBuffer);
+            TVA.Security.Cryptography.Random.GetBytes(cryptBuffer);
 
 			cryptBuffer[11] = (byte)(crcValue >> 24);
 			stream.Write(cryptBuffer, 0, cryptBuffer.Length);
