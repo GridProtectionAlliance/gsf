@@ -22,6 +22,8 @@
 //       Converted to C#.
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
+//  07/02/2009 - Pinal C. Patel
+//       Modified state alterning properties to reopen the file when changed.
 //
 //*******************************************************************************************************
 
@@ -864,6 +866,7 @@ namespace TVA.Historian.Files
             set
             {
                 m_conserveMemory = value;
+                ReOpen();
             }
         }
 

@@ -23,6 +23,8 @@
 //       Converted to C#.
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
+//  07/02/2009 - Pinal C. Patel
+//       Modified state alterning properties to reconnect the client when changed.
 //
 //*******************************************************************************************************
 
@@ -294,12 +296,7 @@ namespace TVA.Communication
                 ValidateConnectionString(value);
 
                 m_connectionString = value;
-                if (m_currentState == ClientState.Connected)
-                {
-                    // Reconnect the client when connection data is changed.
-                    Disconnect();
-                    Connect();
-                }
+                ReConnect();
             }
         }
 
@@ -348,6 +345,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Handshake is required when SecureSession is enabled.");
 
                 m_handshake = value;
+                ReConnect();
             }
         }
 
@@ -370,6 +368,7 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative.");
 
                 m_handshakeTimeout = value;
+                ReConnect();
             }
         }
 
@@ -391,6 +390,7 @@ namespace TVA.Communication
                     m_handshakePassphrase = value;
                 else
                     m_handshakePassphrase = DefaultHandshakePassphrase;
+                ReConnect();
             }
         }
 
@@ -422,6 +422,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession.");
 
                 m_secureSession = value;
+                ReConnect();
             }
         }
 
@@ -444,6 +445,7 @@ namespace TVA.Communication
                     m_receiveTimeout = -1;
                 else
                     m_receiveTimeout = value;
+                ReConnect();
             }
         }
 
@@ -466,6 +468,7 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative.");
 
                 m_receiveBufferSize = value;
+                ReConnect();
             }
         }
 
@@ -505,6 +508,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
 
                 m_encryption = value;
+                ReConnect();
             }
         }
 
@@ -523,6 +527,7 @@ namespace TVA.Communication
             set
             {
                 m_compression = value;
+                ReConnect();
             }
         }
 
@@ -1218,6 +1223,22 @@ namespace TVA.Communication
                     base.Dispose(disposing);    // Call base class Dispose().
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
+            }
+        }
+
+        /// <summary>
+        /// Re-connects the client if currently connected.
+        /// </summary>
+        private void ReConnect()
+        {
+            if (m_currentState == ClientState.Connected)
+            {
+                Disconnect();
+                while (m_currentState != ClientState.Disconnected)
+                {
+                    Thread.Sleep(100);
+                }
+                Connect();
             }
         }
 

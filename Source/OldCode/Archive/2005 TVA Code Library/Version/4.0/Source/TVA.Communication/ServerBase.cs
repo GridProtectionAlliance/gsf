@@ -23,6 +23,8 @@
 //       Converted to C#.
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
+//  07/02/2009 - Pinal C. Patel
+//       Modified state alterning properties to restart the server when changed.
 //
 //*******************************************************************************************************
 
@@ -298,12 +300,7 @@ namespace TVA.Communication
                 ValidateConfigurationString(value);
 
                 m_configurationString = value;
-                if (m_currentState == ServerState.Running)
-                {
-                    // Restart the server when configuration data is changed.
-                    Stop();
-                    Start();
-                }
+                ReStart();
             }
         }
 
@@ -354,6 +351,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Handshake is required when SecureSession is enabled.");
 
                 m_handshake = value;
+                ReStart();
             }
         }
 
@@ -376,6 +374,7 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative.");
 
                 m_handshakeTimeout = value;
+                ReStart();
             }
         }
 
@@ -397,6 +396,7 @@ namespace TVA.Communication
                     m_handshakePassphrase = value;
                 else
                     m_handshakePassphrase = DefaultHandshakePassphrase;
+                ReStart();
             }
         }
 
@@ -428,6 +428,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession.");
 
                 m_secureSession = value;
+                ReStart();
             }
         }
 
@@ -450,6 +451,7 @@ namespace TVA.Communication
                     m_receiveTimeout = -1;
                 else
                     m_receiveTimeout = value;
+                ReStart();
             }
         }
 
@@ -472,6 +474,7 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative.");
 
                 m_receiveBufferSize = value;
+                ReStart();
             }
         }
 
@@ -511,6 +514,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
 
                 m_encryption = value;
+                ReStart();
             }
         }
 
@@ -529,6 +533,7 @@ namespace TVA.Communication
             set
             {
                 m_compression = value;
+                ReStart();
             }
         }
 
@@ -1338,6 +1343,22 @@ namespace TVA.Communication
                     base.Dispose(disposing);    // Call base class Dispose().
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
+            }
+        }
+
+        /// <summary>
+        /// Re-starts the server if currently running.
+        /// </summary>
+        private void ReStart()
+        {
+            if (m_currentState == ServerState.Running)
+            {
+                Stop();
+                while (m_currentState != ServerState.NotRunning)
+                {
+                    Thread.Sleep(100);
+                }
+                Start();
             }
         }
 

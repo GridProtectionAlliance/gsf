@@ -25,6 +25,8 @@
 //       Optimized Read() for better memory management by using "yield return".
 //  05/19/2009 - Pinal C. Patel
 //       Implemented the IProvideStatus interface.
+//  07/02/2009 - Pinal C. Patel
+//       Modified state alterning properties to reopen the file when changed.
 //
 //*******************************************************************************************************
 
@@ -377,11 +379,7 @@ namespace TVA.IO
                     throw new ArgumentNullException();
 
                 m_fileName = value;
-                if (IsOpen)
-                {
-                    Close();
-                    Open();
-                }
+                ReOpen();
             }
         }
 
@@ -400,6 +398,7 @@ namespace TVA.IO
             set
             {
                 m_fileAccessMode = value;
+                ReOpen();
             }
         }
 
@@ -422,6 +421,7 @@ namespace TVA.IO
             set
             {
                 m_autoSaveInterval = value;
+                ReOpen();
             }
         }
 
@@ -440,6 +440,7 @@ namespace TVA.IO
             set
             {
                 m_minimumRecordCount = value;
+                ReOpen();
             }
         }
 
@@ -459,6 +460,7 @@ namespace TVA.IO
             set
             {
                 m_loadOnOpen = value;
+                ReOpen();
             }
         }
 
@@ -505,6 +507,7 @@ namespace TVA.IO
             set
             {
                 m_reloadOnModify = value;
+                ReOpen();
             }
         }
 
@@ -1283,6 +1286,18 @@ namespace TVA.IO
                     base.Dispose(disposing);    // Call base class Dispose().
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
+            }
+        }
+
+        /// <summary>
+        /// Re-opens the file if currently open.
+        /// </summary>
+        private void ReOpen()
+        {
+            if (IsOpen)
+            {
+                Close();
+                Open();
             }
         }
 
