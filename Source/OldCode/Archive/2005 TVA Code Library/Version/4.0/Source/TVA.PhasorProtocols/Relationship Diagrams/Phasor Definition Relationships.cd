@@ -1,19 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Comment CommentText="Phasor Definition Relationships">
-    <Position X="6.781" Y="0.5" Height="0.263" Width="1.823" />
+  <Comment CommentText=" Phasor Definition Relationships">
+    <Position X="5.625" Y="0.5" Height="0.263" Width="1.823" />
   </Comment>
-  <Comment CommentText="BPA PDC Stream">
-    <Position X="3.689" Y="4.932" Height="0.263" Width="1.068" />
+  <Comment CommentText=" BPA PDCstream">
+    <Position X="3.731" Y="4.984" Height="0.263" Width="1.068" />
   </Comment>
   <Comment CommentText="IEEE 1344 ">
-    <Position X="6.331" Y="4.916" Height="0.263" Width="0.81" />
+    <Position X="6.341" Y="4.968" Height="0.263" Width="0.81" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="8.542" Y="4.916" Height="0.27" Width="0.893" />
+  <Comment CommentText="IEEE C37.118">
+    <Position X="8.552" Y="4.968" Height="0.27" Width="0.893" />
   </Comment>
-  <Comment CommentText="Virginia Tech FNET">
-    <Position X="10.57" Y="4.933" Height="0.263" Width="1.22" />
+  <Comment CommentText=" Virginia Tech FNET">
+    <Position X="10.518" Y="4.985" Height="0.263" Width="1.199" />
+  </Comment>
+  <Comment CommentText="  SEL Fast Message">
+    <Position X="12.521" Y="4.979" Height="0.263" Width="1.199" />
+  </Comment>
+  <Comment CommentText="       Macrodyne">
+    <Position X="14.531" Y="4.979" Height="0.263" Width="1.199" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.PhasorDefinitionBase">
     <Position X="4.25" Y="1.75" Width="1.75" />
@@ -32,77 +38,81 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.PhasorDefinition">
-    <Position X="3" Y="5.25" Width="2.5" />
+    <Position X="3" Y="5.5" Width="2.5" />
     <TypeIdentifier>
       <HashCode>AwAAAAAAAAAACAAAABQAQAAwAABAQCAAAMAABAAAQAA=</HashCode>
       <FileName>BpaPdcStream\PhasorDefinition.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.PhasorDefinition">
-    <Position X="5.75" Y="5.25" Width="2" />
+    <Position X="5.75" Y="5.5" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAACCAAAAAAAQAAAAAAAQAAAAAAAIAAAAAA=</HashCode>
       <FileName>Ieee1344\PhasorDefinition.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.PhasorDefinition">
-    <Position X="8" Y="5.25" Width="2" />
+    <Position X="8" Y="5.5" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAACCAAAAAAAQAAAAAAAQAAAAAAAIAAAAAA=</HashCode>
       <FileName>IeeeC37_118\PhasorDefinition.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.FNet.PhasorDefinition">
-    <Position X="10.25" Y="5.25" Width="1.75" />
+    <Position X="10.25" Y="5.5" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>FNet\PhasorDefinition.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
-    <Position X="0.5" Y="6.25" Width="2.25" />
+    <Position X="0.5" Y="6.5" Width="2.25" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
+  <Class Name="TVA.PhasorProtocols.SelFastMessage.PhasorDefinition">
+    <Position X="12.25" Y="5.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SelFastMessage\PhasorDefinition.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Macrodyne.PhasorDefinition">
+    <Position X="14.25" Y="5.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAIAAAAAAAAA=</HashCode>
+      <FileName>Macrodyne\PhasorDefinition.cs</FileName>
+    </TypeIdentifier>
+  </Class>
   <Interface Name="TVA.PhasorProtocols.IChannelDefinition">
-    <Position X="12.75" Y="2.75" Width="2" />
+    <Position X="7" Y="1" Width="2" />
     <TypeIdentifier>
       <HashCode>AQAIAAAAEAAAAAAAAIAAQAAAAAAAAAIAAIEABAAAgAE=</HashCode>
       <FileName>IChannelDefinition.cs</FileName>
     </TypeIdentifier>
   </Interface>
-  <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="7" Y="1" Width="1.5" />
-    <TypeIdentifier />
-  </Interface>
-  <Interface Name="System.IEquatable&lt;T&gt;">
-    <Position X="9.25" Y="1" Width="1.5" />
-    <TypeIdentifier />
-  </Interface>
-  <Interface Name="System.IComparable&lt;T&gt;">
-    <Position X="11.5" Y="1" Width="1.75" />
-    <TypeIdentifier />
-  </Interface>
-  <Interface Name="System.IComparable">
-    <Position X="13.75" Y="1" Width="1.5" />
-    <TypeIdentifier />
-  </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="7.25" Y="2.75" Width="1.75" />
+    <Position X="12" Y="3" Width="1.75" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="9.75" Y="2.5" Width="1.5" />
+    <Position X="12" Y="1" Width="1.5" />
+    <InheritanceLine Type="TVA.Parsing.ISupportBinaryImage" FixedFromPoint="true">
+      <Path>
+        <Point X="12.75" Y="3" />
+        <Point X="12.75" Y="2.43" />
+      </Path>
+    </InheritanceLine>
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IPhasorDefinition">
-    <Position X="12.75" Y="6.5" Width="2" />
+    <Position X="9.5" Y="2.25" Width="2" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAIAAAAAAAAAAAAEAAAAAAAAAAQAAAAAA=</HashCode>
       <FileName>IPhasorDefinition.cs</FileName>

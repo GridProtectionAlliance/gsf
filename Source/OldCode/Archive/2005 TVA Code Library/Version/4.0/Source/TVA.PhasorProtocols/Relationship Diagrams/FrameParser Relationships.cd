@@ -1,19 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
   <Comment CommentText="   Frame Parser Relationships">
-    <Position X="8.012" Y="0.5" Height="0.315" Width="1.782" />
+    <Position X="8.012" Y="0.5" Height="0.273" Width="1.782" />
   </Comment>
-  <Comment CommentText="  BPA PDC Stream">
-    <Position X="1.5" Y="9.25" Height="0.302" Width="1.169" />
+  <Comment CommentText="  BPA PDCstream">
+    <Position X="1.5" Y="9.25" Height="0.263" Width="1.117" />
   </Comment>
   <Comment CommentText="   Virginia Tech FNET">
-    <Position X="4.396" Y="9.208" Height="0.312" Width="1.365" />
+    <Position X="4.365" Y="9.25" Height="0.263" Width="1.271" />
   </Comment>
   <Comment CommentText="  IEEE 1344">
-    <Position X="15.862" Y="1.459" Height="0.292" Width="0.887" />
+    <Position X="10.57" Y="9.23" Height="0.263" Width="0.887" />
   </Comment>
   <Comment CommentText="  IEEE C37.118">
-    <Position X="7.511" Y="9.198" Height="0.305" Width="1.075" />
+    <Position X="7.521" Y="9.229" Height="0.263" Width="0.992" />
+  </Comment>
+  <Comment CommentText="   SEL Fast Message">
+    <Position X="13.344" Y="9.24" Height="0.263" Width="1.271" />
+  </Comment>
+  <Comment CommentText="   Macrodyne">
+    <Position X="16.552" Y="9.229" Height="0.263" Width="0.927" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.FrameParser">
     <Position X="0.75" Y="9.75" Width="2.5" />
@@ -55,18 +61,40 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.FrameParser">
-    <Position X="14" Y="2" Width="2.5" />
+    <Position X="9.75" Y="9.75" Width="2.5" />
     <TypeIdentifier>
       <HashCode>AAAAADAAACAAIAgAAAAAAgAAAIAAAAQIAEACAAgIAQg=</HashCode>
       <FileName>Ieee1344\FrameParser.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Enum Name="TVA.PhasorProtocols.Ieee1344.FrameType">
-    <Position X="16.75" Y="2" Width="1.5" />
+  <Class Name="TVA.PhasorProtocols.SelFastMessage.FrameParser">
+    <Position X="12.75" Y="9.75" Width="2.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAgAAAgAEAAQAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
-      <FileName>Ieee1344\Common.cs</FileName>
+      <HashCode>AQAAAJAEACAAIAgAAACAAgAAAAAAAAAIAEAAAAgAAQA=</HashCode>
+      <FileName>SelFastMessage\FrameParser.cs</FileName>
     </TypeIdentifier>
-  </Enum>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Macrodyne.FrameParser">
+    <Position X="15.75" Y="9.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAABAAACAAIAgAAAAAAgAAAAAAAAAIAEAAAAgAAQA=</HashCode>
+      <FileName>Macrodyne\FrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="TVA.PhasorProtocols.IFrameParser">
+    <Position X="13" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>ABAIAIEAACAAAIgAAAAAAAABAgAAAAAAIEACAAkABAg=</HashCode>
+      <FileName>IFrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.Parsing.IFrameImageParser&lt;TTypeIdentifier, TOutputType&gt;">
+    <Position X="15.5" Y="5.75" Width="2.25" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="TVA.Parsing.IBinaryImageParser">
+    <Position X="13" Y="5" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
   <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

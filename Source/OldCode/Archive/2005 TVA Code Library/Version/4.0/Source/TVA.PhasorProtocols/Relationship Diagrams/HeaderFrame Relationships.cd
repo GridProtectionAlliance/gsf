@@ -1,129 +1,120 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Header Frame Relationships">
-    <Position X="6.703" Y="0.809" Height="0.281" Width="1.7" />
+  <Comment CommentText=" Header Frame Relationships">
+    <Position X="5.547" Y="0.5" Height="0.281" Width="1.7" />
   </Comment>
   <Comment CommentText="  IEEE 1344">
-    <Position X="4.049" Y="4.672" Height="0.263" Width="0.846" />
+    <Position X="3.82" Y="4.839" Height="0.263" Width="0.846" />
   </Comment>
-  <Comment CommentText="  IEEE C37 118">
-    <Position X="6.198" Y="4.677" Height="0.263" Width="1.058" />
+  <Comment CommentText="  IEEE C37.118">
+    <Position X="6.208" Y="4.875" Height="0.263" Width="1.058" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.HeaderFrameBase">
     <Position X="3.25" Y="2" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAQAAAAAACAAQAABAAAAAA=</HashCode>
       <FileName>HeaderFrameBase.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAACIAAAAQAAAAAAAAAQAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelFrameBase&lt;T&gt;">
     <Position X="0.5" Y="0.5" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAlIABAQgAAIEQwBiAIKAAAxQBAAAICgAAAQRBAgIAA=</HashCode>
       <FileName>ChannelFrameBase.cs</FileName>
-      <HashCode>IAEIABAQgAAIEQQBCCIKAAAxQBAACAAgAIEQADAAIAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
-    <Position X="0.5" Y="7.25" Width="2.25" />
+    <Position X="0.5" Y="8.25" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.HeaderFrame">
-    <Position X="3.5" Y="5.25" Width="2" />
+    <Position X="3.25" Y="5.5" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAEAABAIAAAAEQCEAQAKAAAxAAAAAAAgAAAAAAAAIAA=</HashCode>
       <FileName>Ieee1344\HeaderFrame.cs</FileName>
-      <HashCode>CAEAABAAAAAAEAAEQCACIAAxEAAAAACAAAAAAAAAIAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.HeaderFrameBase" ManuallyRouted="true">
-      <Path>
-        <Point X="4.25" Y="3.976" />
-        <Point X="4.25" Y="4.49" />
-        <Point X="4.5" Y="4.49" />
-        <Point X="4.5" Y="5.25" />
-      </Path>
-    </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.HeaderFrame">
-    <Position X="5.75" Y="5.25" Width="2" />
-    <TypeIdentifier>
-      <FileName>IeeeC37_118\HeaderFrame.cs</FileName>
-      <HashCode>LAAIAAAAIAAAAAAEACAAAIgxAAAAAACAAABAAAgAAAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="5.75" Y="5.5" Width="2" />
     <InheritanceLine Type="TVA.PhasorProtocols.HeaderFrameBase" ManuallyRouted="true">
       <Path>
-        <Point X="4.25" Y="3.976" />
-        <Point X="4.25" Y="4.5" />
-        <Point X="6.75" Y="4.5" />
-        <Point X="6.75" Y="5.25" />
+        <Point X="4.25" Y="4.141" />
+        <Point X="4.25" Y="4.979" />
+        <Point X="6.75" Y="4.979" />
+        <Point X="6.75" Y="5.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>JAEIAAAIIAAAAACAAQAKAAAwAAAAAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>IeeeC37_118\HeaderFrame.cs</FileName>
+    </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Interface Name="TVA.PhasorProtocols.IHeaderFrame">
-    <Position X="12.5" Y="0.5" Width="1.5" />
+    <Position X="14.25" Y="2.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAQAABAAAAAA=</HashCode>
       <FileName>IHeaderFrame.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAQAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelFrame">
-    <Position X="12.5" Y="2.5" Width="1.5" />
-    <TypeIdentifier>
-      <FileName>IChannelFrame.cs</FileName>
-      <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="12.25" Y="2.75" Width="1.5" />
     <InheritanceLine Type="TVA.Measurements.IFrame" ManuallyRouted="true">
       <Path>
-        <Point X="11.25" Y="5.25" />
-        <Point X="11.25" Y="5.061" />
-        <Point X="13.25" Y="5.061" />
-        <Point X="13.25" Y="4.62" />
+        <Point X="10.625" Y="6" />
+        <Point X="10.625" Y="5.245" />
+        <Point X="13" Y="5.245" />
+        <Point X="13" Y="4.87" />
       </Path>
     </InheritanceLine>
     <InheritanceLine Type="System.Runtime.Serialization.ISerializable" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.812" Y="3.231" />
-        <Point X="6.812" Y="4.384" />
-        <Point X="12.5" Y="4.384" />
-        <Point X="12.5" Y="4.375" />
+        <Point X="6.562" Y="3.981" />
+        <Point X="6.562" Y="4.625" />
+        <Point X="12.25" Y="4.625" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
+      <FileName>IChannelFrame.cs</FileName>
+    </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="10.5" Y="2" Width="1.5" />
+    <Position X="10.25" Y="2.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelCell">
-    <Position X="8.25" Y="2" Width="1.75" />
+    <Position X="8" Y="2.75" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAAAQAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannelCell.cs</FileName>
-      <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="6" Y="2.25" Width="1.5" />
+    <Position X="5.75" Y="3" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Measurements.IFrame">
-    <Position X="10.5" Y="5.25" Width="1.5" />
+    <Position X="9.75" Y="6" Width="1.75" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="10.25" Y="0.5" Width="2" />
+    <Position X="10" Y="0.5" Width="2" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable" Collapsed="true">
-    <Position X="12.75" Y="5.25" Width="1.5" />
+    <Position X="12.25" Y="6.75" Width="1.5" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

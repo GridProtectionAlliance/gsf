@@ -1,92 +1,76 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText="   Analog Definition Relationships">
     <Position X="5.237" Y="0.538" Height="0.271" Width="1.96" />
   </Comment>
-  <Comment CommentText="  BPA PDCStream&#xD;&#xA;">
-    <Position X="4.774" Y="6.246" Height="0.263" Width="1.127" />
+  <Comment CommentText="  BPA PDCstream&#xD;&#xA;">
+    <Position X="4.774" Y="6.746" Height="0.263" Width="1.127" />
   </Comment>
-  <Comment CommentText="  IEEE C37 118">
-    <Position X="7" Y="6.25" Height="0.281" Width="0.95" />
+  <Comment CommentText="  IEEE C37.118">
+    <Position X="7" Y="6.75" Height="0.281" Width="0.95" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.AnalogDefinitionBase">
     <Position X="5.75" Y="4" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAABAAAAAAAAAAwAAAAAAIAAAAAAAAAAAA=</HashCode>
       <FileName>AnalogDefinitionBase.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelDefinitionBase">
     <Position X="3" Y="0.75" Width="2" />
     <TypeIdentifier>
+      <HashCode>AQAIAAAAEAAAACQhgIAIQAAwAAAAIIIgAIEABAAAgAE=</HashCode>
       <FileName>ChannelDefinitionBase.cs</FileName>
-      <HashCode>AQAAAAAAEAAAACQhgIAIQAgwAAAAIAIgAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
     <Position X="0.5" Y="0.75" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.AnalogDefinition">
-    <Position X="4.5" Y="6.75" Width="1.75" />
+    <Position X="4.5" Y="7.25" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAQAAgAAAABAAAAAA=</HashCode>
       <FileName>BpaPdcStream\AnalogDefinition.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAAACgAAAABAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.AnalogDefinitionBase" ManuallyRouted="true">
-      <Path>
-        <Point X="6.625" Y="5.483" />
-        <Point X="6.625" Y="6.375" />
-        <Point X="5.375" Y="6.375" />
-        <Point X="5.375" Y="6.75" />
-      </Path>
-    </InheritanceLine>
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.AnalogDefinition">
-    <Position X="6.5" Y="6.75" Width="2" />
+    <Position X="6.5" Y="7.25" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACCAAAAAAAQAAAAAAAQAAAAAAAIAAAAAA=</HashCode>
       <FileName>IeeeC37_118\AnalogDefinition.cs</FileName>
-      <HashCode>AAAAIACAAAACCAAAAAAAQAAwAAAAAACAAQAAIAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.AnalogDefinitionBase" ManuallyRouted="true">
-      <Path>
-        <Point X="6.625" Y="5.483" />
-        <Point X="6.625" Y="6.375" />
-        <Point X="7.5" Y="6.375" />
-        <Point X="7.5" Y="6.75" />
-      </Path>
-    </InheritanceLine>
   </Class>
   <Interface Name="TVA.PhasorProtocols.IAnalogValue">
     <Position X="10" Y="1" Width="2" />
     <TypeIdentifier>
-      <FileName>IAnalogValue.cs</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
+      <FileName>IAnalogValue.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelValue&lt;T&gt;">
     <Position X="7.75" Y="1" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAAAAIAAAgQAAAAAAA=</HashCode>
       <FileName>IChannelValue.cs</FileName>
-      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
     <Position X="7.75" Y="3.75" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
     <Position X="5.5" Y="1.5" Width="1.75" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

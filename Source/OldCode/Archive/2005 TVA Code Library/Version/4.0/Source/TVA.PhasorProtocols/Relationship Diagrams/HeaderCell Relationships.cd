@@ -1,83 +1,83 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText=" Header Cell Relationships">
-    <Position X="5.25" Y="0.75" Height="0.263" Width="1.523" />
+    <Position X="5.906" Y="0.5" Height="0.263" Width="1.523" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.HeaderCell">
-    <Position X="3" Y="1.25" Width="1.75" />
+    <Position X="3" Y="0.75" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAgAAAAAAAAAAAABAAAIQAAwQAAAAAAgAAAAAAAACAA=</HashCode>
       <FileName>HeaderCell.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAABAAAIQAAwQAAAAACgAAAAAAAACAI=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelCellBase">
     <Position X="0.5" Y="1.25" Width="2" />
-    <TypeIdentifier>
-      <FileName>ChannelCellBase.cs</FileName>
-      <HashCode>AAAAAhAAAAAAEAAAAAAAQAAxAAAAIACAAAAAAAAAAAA=</HashCode>
-    </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.ChannelBase" FixedToPoint="true">
+    <InheritanceLine Type="TVA.PhasorProtocols.ChannelBase" FixedFromPoint="true">
       <Path>
-        <Point X="1.625" Y="4.75" />
-        <Point X="1.625" Y="4.265" />
+        <Point X="1.5" Y="4.5" />
+        <Point X="1.5" Y="3.937" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAEAAAAAAAQAAwAAAAIAAAAAAABAAAAAA=</HashCode>
+      <FileName>ChannelCellBase.cs</FileName>
+    </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
-    <Position X="0.5" Y="4.75" Width="2.25" />
+    <Position X="0.5" Y="4.5" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Interface Name="TVA.PhasorProtocols.IHeaderCell">
-    <Position X="5.25" Y="5.5" Width="1.5" />
+    <Position X="7" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <FileName>IHeaderCell.cs</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>IHeaderCell.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelCell">
-    <Position X="8.75" Y="2.25" Width="1.75" />
+    <Position X="9.75" Y="2.75" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAAAQAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannelCell.cs</FileName>
-      <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="7" Y="2.25" Width="1.5" />
+    <Position X="7.75" Y="2.75" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.ICommandCell" Collapsed="true">
-    <Position X="3" Y="5.5" Width="1.5" />
+    <Position X="4.75" Y="5.25" Width="1.5" />
     <TypeIdentifier>
-      <FileName>ICommandCell.cs</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>ICommandCell.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IConfigurationCell" Collapsed="true">
-    <Position X="7.5" Y="5.5" Width="1.5" />
+    <Position X="9.25" Y="5.25" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>QAAAIAAAAAAAAAIAAQIUQAAAAAAAIAABAiBDBAAAAgA=</HashCode>
       <FileName>IConfigurationCell.cs</FileName>
-      <HashCode>QAAAIAAAAAAAAAIAAQIUQAAAAAAAIAABAiBDAAAAAgA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IDataCell" Collapsed="true">
-    <Position X="9.75" Y="5.5" Width="1.5" />
+    <Position X="11.5" Y="5.25" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>ABkAAAAAAgAIAAAAAQCASAAAABIAAEAAAAABBAAEAAA=</HashCode>
       <FileName>IDataCell.cs</FileName>
-      <HashCode>AAkAAAAAAAAIAAAAAQAAQAAAABIAAEAAAEABAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="5" Y="2.5" Width="1.75" />
+    <Position X="5.5" Y="2.75" Width="1.75" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

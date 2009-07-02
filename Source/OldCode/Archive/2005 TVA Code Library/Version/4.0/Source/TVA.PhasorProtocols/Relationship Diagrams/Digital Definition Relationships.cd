@@ -1,126 +1,102 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Digital Definition Relationships">
-    <Position X="6.208" Y="0.562" Height="0.267" Width="1.801" />
+  <Comment CommentText="  Digital Definition Relationships">
+    <Position X="6.208" Y="0.562" Height="0.263" Width="1.905" />
   </Comment>
-  <Comment CommentText="   PBA PDCStream&#xD;&#xA;">
-    <Position X="3.672" Y="5.469" Height="0.292" Width="1.21" />
+  <Comment CommentText="    BPA PDCstream">
+    <Position X="3.516" Y="5.477" Height="0.263" Width="1.21" />
   </Comment>
-  <Comment CommentText="IEEE 1344">
+  <Comment CommentText=" IEEE 1344">
     <Position X="5.867" Y="5.488" Height="0.274" Width="0.799" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="8" Y="5.5" Height="0.312" Width="0.886" />
+  <Comment CommentText="IEEE C37.118">
+    <Position X="8.042" Y="5.5" Height="0.263" Width="0.886" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.DigitalDefinitionBase">
     <Position X="3.5" Y="2.5" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAAAAAAAAAAAAAAAAAAIAAIAAAAAAgAA=</HashCode>
       <FileName>DigitalDefinitionBase.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAIAAAAAAAAAgAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelDefinitionBase">
     <Position X="0.5" Y="1" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AQAIAAAAEAAAACQhgIAIQAAwAAAAIIIgAIEABAAAgAE=</HashCode>
       <FileName>ChannelDefinitionBase.cs</FileName>
-      <HashCode>AQAAAAAAEAAAACQhgIAIQAgwAAAAIAIgAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
-    <Position X="0.5" Y="6.75" Width="2.25" />
+    <Position X="0.5" Y="7" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.DigitalDefinition">
     <Position X="3.25" Y="6" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAQAAgAAAABAAAAAA=</HashCode>
       <FileName>BpaPdcStream\DigitalDefinition.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAAIQAAAAAAAAACgAAAABAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.DigitalDefinitionBase" ManuallyRouted="true">
-      <Path>
-        <Point X="4.5" Y="4.312" />
-        <Point X="4.5" Y="4.87" />
-        <Point X="4.125" Y="4.87" />
-        <Point X="4.125" Y="6" />
-      </Path>
-    </InheritanceLine>
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.DigitalDefinition">
     <Position X="5.25" Y="6" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACCAAAAAAIYAAwAAAAwAAAAAAAIAAAAAA=</HashCode>
       <FileName>Ieee1344\DigitalDefinition.cs</FileName>
-      <HashCode>AAAAAACAAAACCAAAAAAIYAAwAQAAAACAAAAAIAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.DigitalDefinitionBase" ManuallyRouted="true">
-      <Path>
-        <Point X="4.5" Y="4.312" />
-        <Point X="4.5" Y="4.864" />
-        <Point X="6.25" Y="4.864" />
-        <Point X="6.25" Y="6" />
-      </Path>
-    </InheritanceLine>
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.DigitalDefinition">
     <Position X="7.5" Y="6" Width="2" />
     <TypeIdentifier>
+      <HashCode>AQAgAAAAEBACCAAhAAAIQAAwAAABwAABAAAAJAEIAAA=</HashCode>
       <FileName>IeeeC37_118\DigitalDefinition.cs</FileName>
-      <HashCode>AQAgAACAEBACCAAhAAAIQAAwAAAAgACBAAAAJAEIAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.DigitalDefinitionBase" ManuallyRouted="true">
-      <Path>
-        <Point X="4.5" Y="4.312" />
-        <Point X="4.5" Y="4.863" />
-        <Point X="8.5" Y="4.863" />
-        <Point X="8.5" Y="6" />
-      </Path>
-    </InheritanceLine>
   </Class>
   <Interface Name="TVA.PhasorProtocols.IDigitalDefinition">
-    <Position X="15" Y="3" Width="1.5" />
+    <Position X="13.25" Y="3.25" Width="1.5" />
     <TypeIdentifier>
-      <FileName>IDigitalDefinition.cs</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IDigitalDefinition.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelDefinition">
-    <Position X="12.75" Y="3" Width="2" />
+    <Position X="11" Y="3.25" Width="2" />
     <TypeIdentifier>
+      <HashCode>AQAIAAAAEAAAAAAAAIAAQAAAAAAAAAIAAIEABAAAgAE=</HashCode>
       <FileName>IChannelDefinition.cs</FileName>
-      <HashCode>AQAAAAAAEAAAAAAAAIAAQAgAAAAAIAIAAIEABAAAgAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="10.75" Y="3" Width="1.5" />
+    <Position X="9" Y="3.25" Width="1.5" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="8.25" Y="1.25" Width="1.5" />
+    <Position X="6.5" Y="1.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IEquatable&lt;T&gt;">
-    <Position X="10.5" Y="1.25" Width="1.5" />
+    <Position X="8.75" Y="1.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable&lt;T&gt;">
-    <Position X="13" Y="1.25" Width="1.5" />
+    <Position X="11.25" Y="1.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable">
-    <Position X="15" Y="1.25" Width="1.5" />
+    <Position X="13.25" Y="1.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="8.5" Y="3" Width="1.75" />
+    <Position X="6.75" Y="3.25" Width="1.75" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

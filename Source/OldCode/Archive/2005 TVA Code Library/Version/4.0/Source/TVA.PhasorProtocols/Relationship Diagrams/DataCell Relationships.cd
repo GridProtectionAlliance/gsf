@@ -1,128 +1,159 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
-  <Comment CommentText="Data Cell Relationships">
-    <Position X="6.064" Y="0.5" Height="0.263" Width="1.518" />
+  <Comment CommentText=" Data Cell Relationships">
+    <Position X="6.064" Y="0.5" Height="0.263" Width="1.445" />
   </Comment>
-  <Comment CommentText=" BPA PDC Stream">
-    <Position X="7.071" Y="6.709" Height="0.263" Width="1.096" />
+  <Comment CommentText="  BPA PDCstream">
+    <Position X="7.071" Y="6.959" Height="0.263" Width="1.096" />
   </Comment>
   <Comment CommentText="   IEEE 1344">
-    <Position X="9.466" Y="6.739" Height="0.263" Width="0.867" />
+    <Position X="9.466" Y="6.989" Height="0.263" Width="0.867" />
   </Comment>
-  <Comment CommentText="   IEEE C37 118">
-    <Position X="11.671" Y="6.715" Height="0.263" Width="1.023" />
+  <Comment CommentText="   IEEE C37.118">
+    <Position X="11.671" Y="6.965" Height="0.263" Width="1.023" />
   </Comment>
-  <Comment CommentText="  Virginia Tech FNET">
-    <Position X="13.75" Y="6.75" Height="0.263" Width="1.325" />
+  <Comment CommentText="   Virginia Tech FNET">
+    <Position X="13.75" Y="7" Height="0.263" Width="1.325" />
+  </Comment>
+  <Comment CommentText="    SEL Fast Message">
+    <Position X="15.698" Y="6.99" Height="0.263" Width="1.325" />
+  </Comment>
+  <Comment CommentText="         Macrodyne">
+    <Position X="17.708" Y="6.99" Height="0.263" Width="1.325" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.DataCellBase">
     <Position X="3.5" Y="1.25" Width="2.75" />
     <TypeIdentifier>
+      <HashCode>AJnQENAAAgAIQBABAQCYaQAwhpKAAFQgAQIBRAgEAAA=</HashCode>
       <FileName>DataCellBase.cs</FileName>
-      <HashCode>AClAANQAIAAIRAARCQAYYAAwBBZAAlQgAEABAAAGAgA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelCellBase">
-    <Position X="0.75" Y="7" Width="2.25" />
+    <Position X="0.75" Y="4.25" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAEAAAAAAAQAAwAAAAIAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelCellBase.cs</FileName>
-      <HashCode>AAAAAhAAAAAAEAAAAAAAQAAxAAAAIACAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <InheritanceLine Type="TVA.PhasorProtocols.ChannelBase" ManuallyRouted="true" FixedToPoint="true">
-      <Path>
-        <Point X="1.875" Y="5.624" />
-        <Point X="1.875" Y="6.876" />
-        <Point X="1.875" Y="6.876" />
-        <Point X="1.875" Y="7" />
-      </Path>
-    </InheritanceLine>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
     <Position X="0.5" Y="1.25" Width="2.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.DataCell">
-    <Position X="6.75" Y="7.25" Width="2" />
-    <TypeIdentifier>
-      <FileName>BpaPdcStream\DataCell.cs</FileName>
-      <HashCode>IAAAAQBgAEABIAFEkAYIQAIxAJIBAADIAAACAAAEAAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="6.75" Y="7.5" Width="2" />
     <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.25" Y="6.375" />
-        <Point X="7.583" Y="6.375" />
-        <Point X="7.583" Y="7.25" />
+        <Point X="6.25" Y="6.75" />
+        <Point X="7.583" Y="6.75" />
+        <Point X="7.583" Y="7.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>IAgAAAAAAgAAIRFUgAaIQAIxAJIBAAAIAAAGAAAkAAA=</HashCode>
+      <FileName>BpaPdcStream\DataCell.cs</FileName>
+    </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.DataCell">
-    <Position X="9" Y="7.25" Width="1.75" />
-    <TypeIdentifier>
-      <FileName>Ieee1344\DataCell.cs</FileName>
-      <HashCode>AAAAAQAAgAAAAAAAAAAAQAAQABIAAACAAAAAAAAEAAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="9" Y="7.5" Width="1.75" />
     <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" FixedFromPoint="true">
       <Path>
-        <Point X="6.25" Y="6.375" />
-        <Point X="9.875" Y="6.375" />
-        <Point X="9.875" Y="7.25" />
+        <Point X="6.25" Y="6.75" />
+        <Point X="9.875" Y="6.75" />
+        <Point X="9.875" Y="7.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAgAABAAggAAAAAAAACAQAAQABIAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Ieee1344\DataCell.cs</FileName>
+    </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.DataCell">
-    <Position X="11" Y="7.25" Width="2.25" />
-    <TypeIdentifier>
-      <FileName>IeeeC37_118\DataCell.cs</FileName>
-      <HashCode>IQAAAQEAAAAAAAABAAAAQAAQAhIAAECIAAAAAAAEAAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="11" Y="7.5" Width="2.25" />
     <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.25" Y="6.375" />
-        <Point X="12.125" Y="6.375" />
-        <Point X="12.125" Y="7.25" />
+        <Point X="6.25" Y="6.75" />
+        <Point X="12.125" Y="6.75" />
+        <Point X="12.125" Y="7.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AQgAAAkAAgAAAAABAACAQAAQABIAAEAAAAAAAAAEAAA=</HashCode>
+      <FileName>IeeeC37_118\DataCell.cs</FileName>
+    </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.FNet.DataCell">
-    <Position X="13.5" Y="7.25" Width="1.75" />
-    <TypeIdentifier>
-      <FileName>FNet\DataCell.cs</FileName>
-      <HashCode>AAgAIQAIABAAAAABAAAIQIAQABIBAACgAAAAAAAEAAA=</HashCode>
-    </TypeIdentifier>
+    <Position X="13.5" Y="7.5" Width="1.75" />
     <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" ManuallyRouted="true" FixedFromPoint="true">
       <Path>
-        <Point X="6.25" Y="6.375" />
-        <Point X="14.375" Y="6.375" />
-        <Point X="14.375" Y="7.25" />
+        <Point X="6.25" Y="6.75" />
+        <Point X="14.375" Y="6.75" />
+        <Point X="14.375" Y="7.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAgAIAAKAhAAAAABAACIQIAwABIAAAAgAAAAAAAEAAA=</HashCode>
+      <FileName>FNet\DataCell.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.SelFastMessage.DataCell">
+    <Position X="15.5" Y="7.5" Width="1.75" />
+    <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="6.25" Y="6.75" />
+        <Point X="16.375" Y="6.75" />
+        <Point X="16.375" Y="7.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAgAABAAAgAAAAABAACAQAAQABIAAEAAAAAAAAAEAAA=</HashCode>
+      <FileName>SelFastMessage\DataCell.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Macrodyne.DataCell">
+    <Position X="17.5" Y="7.5" Width="1.75" />
+    <InheritanceLine Type="TVA.PhasorProtocols.DataCellBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="6.25" Y="6.75" />
+        <Point X="18.375" Y="6.75" />
+        <Point X="18.375" Y="7.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AQoAABAAAgAgCAABAASAQAAwARIgBAAAAAAAAAAEAAA=</HashCode>
+      <FileName>Macrodyne\DataCell.cs</FileName>
+    </TypeIdentifier>
   </Class>
   <Interface Name="TVA.PhasorProtocols.IDataCell">
     <Position X="11.75" Y="2.75" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>ABkAAAAAAgAIAAAAAQCASAAAABIAAEAAAAABBAAEAAA=</HashCode>
       <FileName>IDataCell.cs</FileName>
-      <HashCode>AAkAAAAAAAAIAAAAAQAAQAAAABIAAEAAAEABAAAEAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelCell">
-    <Position X="9.5" Y="3" Width="1.75" />
+    <Position X="9.5" Y="3.25" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAABAAAAAAAAAAAAAAQAAAAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannelCell.cs</FileName>
-      <HashCode>AAAAAhAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="7.5" Y="3" Width="1.5" />
+    <Position X="7.5" Y="3.25" Width="1.5" />
+    <InheritanceLine Type="TVA.Parsing.ISupportBinaryImage" FixedFromPoint="true">
+      <Path>
+        <Point X="8.25" Y="2.777" />
+        <Point X="8.25" Y="3.25" />
+      </Path>
+    </InheritanceLine>
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
@@ -130,12 +161,11 @@
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="7.25" Y="1.5" Width="2" />
+    <Position X="7" Y="1.25" Width="2" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Measurements.IMeasurement" Collapsed="true">
     <Position X="11.5" Y="1.5" Width="2.25" />
-    <TypeIdentifier />
     <InheritanceLine Type="System.IEquatable&lt;T&gt;" FixedFromPoint="true" FixedToPoint="true">
       <Path>
         <Point X="9.5" Y="1.009" />
@@ -160,6 +190,7 @@
         <Point X="12.25" Y="1.5" />
       </Path>
     </InheritanceLine>
+    <TypeIdentifier />
   </Interface>
   <Interface Name="System.IEquatable&lt;T&gt;" Collapsed="true">
     <Position X="8.75" Y="0.5" Width="1.5" />
@@ -173,4 +204,5 @@
     <Position X="13.25" Y="0.5" Width="1.25" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

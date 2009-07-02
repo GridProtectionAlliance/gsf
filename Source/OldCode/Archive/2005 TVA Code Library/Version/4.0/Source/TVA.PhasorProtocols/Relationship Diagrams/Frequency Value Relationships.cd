@@ -1,107 +1,120 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Font Name="Tahoma" Size="8.25" />
   <Comment CommentText=" Frequency Value Relationships&#xD;&#xA;">
-    <Position X="6.029" Y="0.625" Height="0.332" Width="1.825" />
+    <Position X="6.029" Y="0.625" Height="0.263" Width="1.794" />
   </Comment>
-  <Comment CommentText="   BPA PDCStream">
-    <Position X="3.462" Y="6.943" Height="0.263" Width="1.169" />
+  <Comment CommentText="   BPA PDCstream">
+    <Position X="3.408" Y="6.734" Height="0.263" Width="1.169" />
   </Comment>
   <Comment CommentText="  Virginia Tech FNET">
-    <Position X="10.022" Y="6.928" Height="0.263" Width="1.263" />
+    <Position X="9.999" Y="6.751" Height="0.263" Width="1.263" />
   </Comment>
   <Comment CommentText="    IEEE 1344">
-    <Position X="5.701" Y="6.941" Height="0.263" Width="0.981" />
+    <Position X="5.761" Y="6.732" Height="0.263" Width="0.918" />
   </Comment>
-  <Comment CommentText="IEEE C37 118">
-    <Position X="8.023" Y="6.917" Height="0.263" Width="0.887" />
+  <Comment CommentText="IEEE C37.118">
+    <Position X="8.052" Y="6.76" Height="0.263" Width="0.887" />
+  </Comment>
+  <Comment CommentText="  SEL Fast Message">
+    <Position X="12" Y="6.729" Height="0.263" Width="1.263" />
+  </Comment>
+  <Comment CommentText="       Macrodyne">
+    <Position X="14" Y="6.74" Height="0.263" Width="1.263" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.FrequencyValueBase">
     <Position X="4.25" Y="1.75" Width="2.5" />
     <TypeIdentifier>
+      <HashCode>AEBAAIAAAAAAAAABIAAISAAyAJAAAAAgEAgAAAAAAAA=</HashCode>
       <FileName>FrequencyValueBase.cs</FileName>
-      <HashCode>AABAAIAAAAAAAAABIAAISAAwAJAgAAAgEAAAAAAAAAA=</HashCode>
     </TypeIdentifier>
-    <NestedTypes>
-      <Enum Name="TVA.PhasorProtocols.FrequencyValueBase.CompositeValueType" Collapsed="true">
-        <TypeIdentifier>
-          <NewMemberFileName>FrequencyValueBase.cs</NewMemberFileName>
-        </TypeIdentifier>
-      </Enum>
-    </NestedTypes>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelValueBase&lt;T&gt;">
     <Position X="0.5" Y="1" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAAIAIAAAgQAAAAAAA=</HashCode>
       <FileName>ChannelValueBase.cs</FileName>
-      <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.ChannelBase">
     <Position X="0.5" Y="5.25" Width="2.25" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAhAAAAAAAEAAAQAABAAAAAAAAABAAAAAA=</HashCode>
       <FileName>ChannelBase.cs</FileName>
-      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="TVA.PhasorProtocols.BpaPdcStream.FrequencyValue">
     <Position X="3" Y="7.25" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAABAAAIQAAAgAAAABAgAAAAAAAAAAA=</HashCode>
       <FileName>BpaPdcStream\FrequencyValue.cs</FileName>
-      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAgAAAAACAAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.Ieee1344.FrequencyValue">
     <Position X="5.25" Y="7.25" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAABAAAIQAAAAAAAABAgAAAAAAAAAAA=</HashCode>
       <FileName>Ieee1344\FrequencyValue.cs</FileName>
-      <HashCode>AAAAAAAAAAAACAABAAAIQAAAAAAAAACgAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.IeeeC37_118.FrequencyValue">
     <Position X="7.5" Y="7.25" Width="2" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAABAAAAAAAAAAAAA=</HashCode>
       <FileName>IeeeC37_118\FrequencyValue.cs</FileName>
-      <HashCode>AAAAAAAAAAAAAAAAAAAAQAAAAAAAAACAAAAAAACAAAA=</HashCode>
     </TypeIdentifier>
   </Class>
   <Class Name="TVA.PhasorProtocols.FNet.FrequencyValue">
     <Position X="9.75" Y="7.25" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>FNet\FrequencyValue.cs</FileName>
-      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.SelFastMessage.FrequencyValue">
+    <Position X="11.75" Y="7.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAABAAAIQAAAAAAAABAgAAAAAAAAAAA=</HashCode>
+      <FileName>SelFastMessage\FrequencyValue.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Macrodyne.FrequencyValue">
+    <Position X="13.75" Y="7.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Macrodyne\FrequencyValue.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Interface Name="TVA.PhasorProtocols.IFrequencyValue">
-    <Position X="11.75" Y="2.5" Width="2.25" />
+    <Position X="12.25" Y="2.5" Width="2.25" />
     <TypeIdentifier>
-      <FileName>IFrequencyValue.cs</FileName>
       <HashCode>AAAAAAAAAAAAAAAAAAAASAAAAJAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>IFrequencyValue.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelValue&lt;T&gt;">
-    <Position X="9.25" Y="2.5" Width="2" />
+    <Position X="9.75" Y="2.5" Width="2" />
     <TypeIdentifier>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAAAAIAAAgQAAAAAAA=</HashCode>
       <FileName>IChannelValue.cs</FileName>
-      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="7" Y="3" Width="1.75" />
+    <Position X="7.5" Y="3.25" Width="1.75" />
     <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
-      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
     </TypeIdentifier>
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="9.25" Y="5.25" Width="2" />
+    <Position X="9.75" Y="5.25" Width="2" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="7" Y="1.5" Width="1.75" />
+    <Position X="7.5" Y="1.25" Width="1.75" />
     <TypeIdentifier />
   </Interface>
+  <Font Name="Tahoma" Size="8.25" />
 </ClassDiagram>

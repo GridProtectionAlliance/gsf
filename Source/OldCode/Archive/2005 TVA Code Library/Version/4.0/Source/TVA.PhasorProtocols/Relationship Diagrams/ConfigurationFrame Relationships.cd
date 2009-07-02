@@ -1,19 +1,25 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ClassDiagram MajorVersion="1" MinorVersion="1">
-  <Comment CommentText=" Configuration Frame Relationships">
-    <Position X="8.116" Y="0.5" Height="0.281" Width="2.198" />
+  <Comment CommentText="  Configuration Frame Relationships">
+    <Position X="8.116" Y="0.5" Height="0.281" Width="2.094" />
   </Comment>
-  <Comment CommentText="  BPA PDC Stream">
-    <Position X="14.933" Y="1.671" Height="0.263" Width="1.19" />
+  <Comment CommentText="   BPA PDCstream">
+    <Position X="14.996" Y="1.671" Height="0.263" Width="1.19" />
   </Comment>
   <Comment CommentText="   IEEE 1344">
     <Position X="10.344" Y="1.701" Height="0.263" Width="0.887" />
   </Comment>
-  <Comment CommentText="  IEEE C37 118">
-    <Position X="12.696" Y="1.701" Height="0.263" Width="1.054" />
+  <Comment CommentText="  IEEE C37.118">
+    <Position X="12.717" Y="1.68" Height="0.263" Width="1.054" />
   </Comment>
   <Comment CommentText="  Virginia Tech FNET">
-    <Position X="8.25" Y="1.75" Height="0.263" Width="1.242" />
+    <Position X="8.25" Y="1.698" Height="0.263" Width="1.242" />
+  </Comment>
+  <Comment CommentText="  SEL Fast Message">
+    <Position X="17.25" Y="1.677" Height="0.263" Width="1.242" />
+  </Comment>
+  <Comment CommentText="       Macrodyne">
+    <Position X="17.344" Y="6.344" Height="0.263" Width="1.242" />
   </Comment>
   <Class Name="TVA.PhasorProtocols.ConfigurationFrameBase">
     <Position X="5.5" Y="1.25" Width="2.25" />
@@ -98,22 +104,52 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
+  <Class Name="TVA.PhasorProtocols.SelFastMessage.ConfigurationFrame">
+    <Position X="17" Y="2.5" Width="1.75" />
+    <InheritanceLine Type="TVA.PhasorProtocols.ConfigurationFrameBase" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="1.438" />
+        <Point X="17.875" Y="1.438" />
+        <Point X="17.875" Y="2.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AQEIABAAAAAAEAAAAAKCAAAwAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>SelFastMessage\ConfigurationFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Macrodyne.ConfigurationFrame">
+    <Position X="17" Y="7" Width="2" />
+    <InheritanceLine Type="TVA.PhasorProtocols.ConfigurationFrameBase" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="1.438" />
+        <Point X="19" Y="1.438" />
+        <Point X="19" Y="6.479" />
+        <Point X="17.938" Y="6.479" />
+        <Point X="17.938" Y="7" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAEIEAAIAAAABAAAAAIAAAAwAAAAgADAgAAAAAABAAA=</HashCode>
+      <FileName>Macrodyne\ConfigurationFrame.cs</FileName>
+    </TypeIdentifier>
+  </Class>
   <Interface Name="TVA.PhasorProtocols.IConfigurationFrame">
-    <Position X="12" Y="8.75" Width="1.75" />
+    <Position X="12" Y="9.25" Width="1.75" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAQAAAAAAIAAAAAAAAQAAAAACAABAAAAAA=</HashCode>
       <FileName>IConfigurationFrame.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannelFrame">
-    <Position X="9.75" Y="8.75" Width="1.5" />
+    <Position X="9.75" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
       <FileName>IChannelFrame.cs</FileName>
     </TypeIdentifier>
   </Interface>
   <Interface Name="TVA.PhasorProtocols.IChannel">
-    <Position X="7.5" Y="8.75" Width="1.5" />
+    <Position X="7.5" Y="9.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAgAAAAAAAAAAAQAAAAAAAAAAAABAAAAAA=</HashCode>
       <FileName>IChannel.cs</FileName>
@@ -124,15 +160,19 @@
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable">
-    <Position X="4.75" Y="7.25" Width="1.5" />
+    <Position X="4.5" Y="7.75" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.Runtime.Serialization.ISerializable">
-    <Position X="8.25" Y="7" Width="1.5" />
+    <Position X="8.25" Y="7.5" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Parsing.ISupportBinaryImage">
-    <Position X="5.25" Y="8.75" Width="1.75" />
+    <Position X="5.25" Y="9.25" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="TVA.Parsing.ISupportFrameImage&lt;TTypeIdentifier&gt;">
+    <Position X="2.5" Y="9.5" Width="2.25" />
     <TypeIdentifier />
   </Interface>
   <Font Name="Tahoma" Size="8.25" />
