@@ -2,8 +2,13 @@
   
   Copyright Notice:
   
-  The majority of this code came from the SharpZipLib - copyright notice below.
+  The majority of this compression code came from the SharpZipLib - copyright notice below.
+
   See http://www.icsharpcode.net/OpenSource/SharpZipLib/ for details.
+  
+  Changes to this code were primarily related to namespace changes for better integration within
+  TVA Code Library.
+  
   Note the critical following licensing exception as stated on web site above:
 
 \*******************************************************************************************************/
