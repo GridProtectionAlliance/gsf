@@ -11,7 +11,7 @@
     <RootNamespace>ConnectionTester</RootNamespace>
     <AssemblyName>PMUConnectionTester</AssemblyName>
     <MyType>WindowsForms</MyType>
-    <ApplicationIcon>TVAService.ico</ApplicationIcon>
+    <ApplicationIcon>PMUConnectionTester.ico</ApplicationIcon>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
     <SccAuxPath>SAK</SccAuxPath>
@@ -193,6 +193,7 @@
       <DependentUpon>SplashScreen.vb</DependentUpon>
     </EmbeddedResource>
     <None Include="CommandChannel.ico" />
+    <None Include="PMUConnectionTester.ico" />
     <Content Include="PMUConnectionTester.chm">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -202,7 +203,6 @@
     <Content Include="Sample1344.PmuCapture">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <None Include="TVAService.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
