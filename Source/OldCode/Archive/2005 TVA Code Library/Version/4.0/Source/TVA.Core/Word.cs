@@ -30,6 +30,16 @@ namespace TVA
         /// </summary>
         /// <param name="word">Word value to align.</param>
         /// <returns>Word value aligned to next 16-bit boundry.</returns>
+        public static short AlignWord(this short word)
+        {
+            return (short)(word + 1 - (word - 1) % 2);
+        }
+
+        /// <summary>
+        /// Aligns word value on a 16-bit boundry.
+        /// </summary>
+        /// <param name="word">Word value to align.</param>
+        /// <returns>Word value aligned to next 16-bit boundry.</returns>
         public static ushort AlignWord(this ushort word)
         {
             return (ushort)(word + 1 - (word - 1) % 2);
@@ -40,9 +50,29 @@ namespace TVA
         /// </summary>
         /// <param name="doubleWord">Double-word value to align.</param>
         /// <returns>Double-word value aligned to next 32-bit boundry.</returns>
+        public static int AlignDoubleWord(this int doubleWord)
+        {
+            return doubleWord + 3 - (doubleWord - 1) % 4;
+        }
+
+        /// <summary>
+        /// Aligns double-word value on a 32-bit boundry.
+        /// </summary>
+        /// <param name="doubleWord">Double-word value to align.</param>
+        /// <returns>Double-word value aligned to next 32-bit boundry.</returns>
         public static uint AlignDoubleWord(this uint doubleWord)
         {
             return doubleWord + 3 - (doubleWord - 1) % 4;
+        }
+
+        /// <summary>
+        /// Aligns quad-word value on a 64-bit boundry.
+        /// </summary>
+        /// <param name="quadWord">Quad-word value to align.</param>
+        /// <returns>Quad-word value aligned to next 64-bit boundry.</returns>
+        public static long AlignQuadWord(this long quadWord)
+        {
+            return quadWord + 7 - (quadWord - 1) % 8;
         }
 
         /// <summary>

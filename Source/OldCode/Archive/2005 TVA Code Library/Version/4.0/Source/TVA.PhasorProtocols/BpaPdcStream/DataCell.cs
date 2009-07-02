@@ -439,12 +439,8 @@ namespace TVA.PhasorProtocols.BpaPdcStream
         {
             get
             {
-                int length = base.BinaryLength;
-
                 // We align data cells on 32-bit word boundaries (accounts for phantom digital)
-                length += 3 - (length - 1) % 4;
-
-                return length;
+                return base.BinaryLength.AlignDoubleWord();
             }
         }
 
@@ -531,12 +527,8 @@ namespace TVA.PhasorProtocols.BpaPdcStream
         /// </remarks>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            int parsedLength = base.Initialize(binaryImage, startIndex, length);
-
             // We align data cells on 32-bit word boundaries (accounts for phantom digital)
-            parsedLength += 3 - (parsedLength - 1) % 4;
-
-            return parsedLength;
+            return base.Initialize(binaryImage, startIndex, length).AlignDoubleWord();
         }
 
         /// <summary>
