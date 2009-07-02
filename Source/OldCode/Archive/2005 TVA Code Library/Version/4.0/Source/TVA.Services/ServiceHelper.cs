@@ -24,7 +24,8 @@
 //  06/19/2009 - Pinal C. Patel
 //       Modified Initialize() method to just load settings from the config file.
 //  06/30/2009 - Pinal C. Patel
-//       Changed ServiceComponents to be a collection of object instead of ISupportLifecycle.
+//       Changed ServiceComponents to be a collection of object instead of ISupportLifecycle so it can
+//       host a wide range of object implementing various interfaces used by the ServiceHelper commands.
 //
 //*******************************************************************************************************
 
@@ -104,12 +105,7 @@ namespace TVA.Services
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
 		/// </summary>
 		public const int DefaultRequestHistoryLimit = 50;
-		
-		/// <summary>
-        /// Specifies the default value for the <see cref="QueryableSettingsCategories"/> property.
-		/// </summary>
-		public const string DefaultQueryableSettingsCategories = "ServiceHelper, StatusLog, ErrorLogger";
-		
+			
 		/// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
 		/// </summary>
@@ -212,7 +208,6 @@ namespace TVA.Services
 		private bool m_logStatusUpdates;
 		private bool m_monitorServiceHealth;
 		private int m_requestHistoryLimit;
-		private string m_queryableSettingsCategories;
 		private bool m_persistSettings;
 		private string m_settingsCategory;
 		private ServiceBase m_parentService;
@@ -247,7 +242,6 @@ namespace TVA.Services
 			m_logStatusUpdates = DefaultLogStatusUpdates;
 			m_monitorServiceHealth = DefaultMonitorServiceHealth;
 			m_requestHistoryLimit = DefaultRequestHistoryLimit;
-			m_queryableSettingsCategories = DefaultQueryableSettingsCategories;
 			m_persistSettings = DefaultPersistSettings;
 			m_settingsCategory = DefaultSettingsCategory;
 			m_processes = new List<ServiceProcess>();
@@ -348,29 +342,6 @@ namespace TVA.Services
 			}
 		}
 		
-        /// <summary>
-        /// Gets or sets a comma-seperated list of <see cref="ConfigurationFile.Settings"/> section names whose settings can 
-        /// be manupulated by the <see cref="ServiceHelper"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null empty string.</exception>
-        [Category("Settings"), 
-        DefaultValue(DefaultQueryableSettingsCategories), 
-        Description("Comma-seperated list of ConfigurationFile.Settings section names whose settings can be manupulated by the ServiceHelper.")]
-        public string QueryableSettingsCategories
-		{
-			get
-			{
-				return m_queryableSettingsCategories;
-			}
-			set
-			{
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("QueryableSettingsCategories");
-
-                m_queryableSettingsCategories = value;
-			}
-		}
-
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
         /// </summary>
@@ -773,8 +744,6 @@ namespace TVA.Services
                 element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
                 element = settings["RequestHistoryLimit"];
                 element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
-                element = settings["QueryableSettingsCategories"];
-                element.Update(m_queryableSettingsCategories, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -815,13 +784,11 @@ namespace TVA.Services
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
-                settings.Add("QueryableSettingsCategories", m_queryableSettingsCategories, "Category names under categorizedSettings section of the config file that can be managed by the service.");
                 if (settings["TelnetPassword"] != null)
                     m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
-                QueryableSettingsCategories = settings["QueryableSettingsCategories"].ValueAs(m_queryableSettingsCategories);
             }
         }
 
@@ -1666,7 +1633,7 @@ namespace TVA.Services
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Displays a list of queryable settings of the service from the config file.");
+                helpMessage.Append("Displays a list of service settings from the config file.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
@@ -1685,40 +1652,38 @@ namespace TVA.Services
             }
             else
             {
-                string[] settingsCategories = m_queryableSettingsCategories.Replace(" ", "").Split(',');
+                StringBuilder responseMessage = new StringBuilder();
+                responseMessage.AppendFormat("Settings for {0}:", Name);
+                responseMessage.AppendLine();
+                responseMessage.AppendLine();
+                responseMessage.Append("Category".PadRight(20));
+                responseMessage.Append(' ');
+                responseMessage.Append("Name".PadRight(25));
+                responseMessage.Append(' ');
+                responseMessage.Append("Value".PadRight(30));
+                responseMessage.AppendLine();
+                responseMessage.Append(new string('-', 20));
+                responseMessage.Append(' ');
+                responseMessage.Append(new string('-', 25));
+                responseMessage.Append(' ');
+                responseMessage.Append(new string('-', 30));
 
-                if (settingsCategories.Length > 0)
+                IPersistSettings typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    // Display info about all of the queryable settings defined in the service.
-                    StringBuilder responseMessage = new StringBuilder();
-
-                    responseMessage.AppendFormat("Queryable settings of {0}:", Name);
-                    responseMessage.AppendLine();
-                    responseMessage.AppendLine();
-                    responseMessage.Append("Category".PadRight(25));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Name".PadRight(20));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Value".PadRight(30));
-                    responseMessage.AppendLine();
-                    responseMessage.Append(new string('-', 25));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 20));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 30));
-
-                    foreach (string category in settingsCategories)
+                    typedComponent = component as IPersistSettings;
+                    if (typedComponent != null)
                     {
-                        foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[category])
+                        foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[typedComponent.SettingsCategory])
                         {
                             // Skip encrypted settings for security purpose.
                             if (setting.Encrypted)
-                                continue;   
+                                continue;
 
                             responseMessage.AppendLine();
-                            responseMessage.Append(category.PadRight(25));
+                            responseMessage.Append(typedComponent.SettingsCategory.PadRight(20));
                             responseMessage.Append(' ');
-                            responseMessage.Append(setting.Name.PadRight(20));
+                            responseMessage.Append(setting.Name.PadRight(25));
                             responseMessage.Append(' ');
 
                             if (!string.IsNullOrEmpty(setting.Value))
@@ -1727,16 +1692,11 @@ namespace TVA.Services
                                 responseMessage.Append("[Not Set]".PadRight(30));
                         }
                     }
-                    responseMessage.AppendLine();
-                    responseMessage.AppendLine();
+                }
+                responseMessage.AppendLine();
+                responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
-                }
-                else
-                {
-                    // No queryable settings are defined in the service.
-                    UpdateStatus(requestInfo.Sender.ClientID, "No queryable settings are defined in {0}.\r\n\r\n", Name);
-                }
+                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
             }
         }
 
@@ -2162,8 +2122,7 @@ namespace TVA.Services
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ");
-                helpMessage.Append("Also, category name is case sensitive so it must be the same case as it appears in the settings listing.");
+                helpMessage.Append("IMPORTANT: Only settings under the categories listed by the \"Settings\" command can be reloaded.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
@@ -2171,69 +2130,22 @@ namespace TVA.Services
             }
             else
             {
-                string settingsTarget = null;
                 string categoryName = requestInfo.Request.Arguments["orderedarg1"];
 
-                if (m_queryableSettingsCategories.IndexOf(categoryName) >= 0)
+                IPersistSettings typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    if (m_settingsCategory == categoryName)
+                    typedComponent = component as IPersistSettings;
+                    if (typedComponent != null && 
+                        string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                     {
-                        LoadSettings();
-                        settingsTarget = categoryName;
-                    }
-                    else
-                    {
-                        if (settingsTarget != null)
-                        {
-                            // Check service components
-                            foreach (ISupportLifecycle component in m_serviceComponents)
-                            {
-                                IPersistSettings reloadableComponent = component as IPersistSettings;
-                                if (reloadableComponent != null && reloadableComponent.SettingsCategory == categoryName)
-                                {
-                                    reloadableComponent.LoadSettings();
-
-                                    IProvideStatus statusProvider = component as IProvideStatus;
-                                    if (statusProvider != null)
-                                        settingsTarget = statusProvider.Name;
-
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (settingsTarget != null)
-                        {
-                            // Check containter components
-                            foreach (Component component in Container.Components)
-                            {
-                                IPersistSettings reloadableComponent = component as IPersistSettings;
-                                if (reloadableComponent != null && reloadableComponent.SettingsCategory == categoryName)
-                                {
-                                    reloadableComponent.LoadSettings();
-                                    settingsTarget = component.GetType().Name;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(settingsTarget))
-                    {
-                        if (settingsTarget == categoryName)
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings for category \"{0}\".\r\n\r\n", categoryName);
-                        else
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings for component \"{0}\" from category \"{1}\".\r\n\r\n", settingsTarget, categoryName);
-                    }
-                    else
-                    {
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to load component settings from category \"{0}\". No corresponding settings category name found.\r\n\r\n", categoryName);
+                        typedComponent.LoadSettings();
+                        UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
+                        return;
                     }
                 }
-                else
-                {
-                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to load component settings from category \"{0}\". Category is not one of the queryable settings categories.\r\n\r\n", categoryName);
-                }
+
+                UpdateStatus(requestInfo.Sender.ClientID, "Failed to load settings from category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
@@ -2271,8 +2183,7 @@ namespace TVA.Services
                 helpMessage.Append("Displays list all of the queryable settings");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
-                helpMessage.Append("IMPORTANT: Category name must be defined as one of the queryable settings categories in the QueryableSettingsCategories property of ServiceHelper. ");
-                helpMessage.Append("Also, category and setting names are case sensitive so they must be the same case as they appears in the settings listing.");
+                helpMessage.Append("IMPORTANT: Only settings under the categories listed by the \"Settings\" command can be updated.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
@@ -2288,51 +2199,62 @@ namespace TVA.Services
                 bool reloadSettings = requestInfo.Request.Arguments.Exists("reload");
                 bool listSettings = requestInfo.Request.Arguments.Exists("list");
 
-                if (m_queryableSettingsCategories.IndexOf(categoryName) >= 0)
+                IPersistSettings typedComponent;
+                foreach (object component in m_serviceComponents)
                 {
-                    CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[categoryName];
-                    CategorizedSettingsElement setting;
-
-                    if (settings != null)
+                    typedComponent = component as IPersistSettings;
+                    if (typedComponent != null && 
+                        string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                     {
-                        // The specified category is one of the defined queryable categories.
-                        if (true == addSetting)
+                        ConfigurationFile config = ConfigurationFile.Current;
+                        CategorizedSettingsElementCollection settings = config.Settings[categoryName];
+                        CategorizedSettingsElement setting = settings[settingName];
+                        if (addSetting)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                            settings.Add(settingName, settingValue);
-                            ConfigurationFile.Current.Save();
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                            // Add new setting.
+                            if (setting == null)
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                settings.Add(settingName, settingValue);
+                                config.Save();
+                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                            }
+                            else
+                            {
+                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
+                                return;
+                            }
                         }
-                        else if (true == deleteSetting)
+                        else if (deleteSetting)
                         {
-                            setting = settings[settingName];
+                            // Delete existing setting.
                             if (setting != null)
                             {
                                 UpdateStatus(requestInfo.Sender.ClientID, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 settings.Remove(setting);
-                                ConfigurationFile.Current.Save();
+                                config.Save();
                                 UpdateStatus(requestInfo.Sender.ClientID, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
-                            else
+                            else 
                             {
                                 UpdateStatus(requestInfo.Sender.ClientID, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                return;
                             }
                         }
                         else
                         {
-                            setting = settings[settingName];
+                            // Update existing setting.
                             if (setting != null)
                             {
-                                // The requested setting does exist under the specified category.
                                 UpdateStatus(requestInfo.Sender.ClientID, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 setting.Value = settingValue;
-                                ConfigurationFile.Current.Save();
+                                config.Save();
                                 UpdateStatus(requestInfo.Sender.ClientID, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
-                                // The requested setting does not exist under the specified category.
                                 UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                return;
                             }
                         }
 
@@ -2349,18 +2271,12 @@ namespace TVA.Services
                             requestInfo.Request = ClientRequest.Parse("Settings");
                             ShowSettings(requestInfo);
                         }
-                    }
-                    else
-                    {
-                        // The specified category does not exist.
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\". Category does not exist.\r\n\r\n", settingName, categoryName);
+
+                        return;
                     }
                 }
-                else
-                {
-                    // The specified category is not one of the defined queryable categories.
-                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\". Category is not one of the queryable categories.\r\n\r\n", settingName, categoryName);
-                }
+
+                UpdateStatus(requestInfo.Sender.ClientID, "Failed to update settings under category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
