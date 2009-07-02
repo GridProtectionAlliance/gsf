@@ -17,7 +17,7 @@
 
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of any kind of <see cref="IChannelFrame"/> cell.

@@ -20,9 +20,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 
-namespace PhasorProtocols.IeeeC37_118
+namespace TVA.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IConfigurationCell"/> that can be sent or received.

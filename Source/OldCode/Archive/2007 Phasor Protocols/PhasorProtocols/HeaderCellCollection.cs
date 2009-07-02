@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IHeaderCell"/> objects.

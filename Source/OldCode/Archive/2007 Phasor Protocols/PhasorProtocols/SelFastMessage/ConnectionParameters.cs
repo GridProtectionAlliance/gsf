@@ -20,7 +20,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the extra connection parameters required for a connection to a SEL device.

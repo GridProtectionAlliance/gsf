@@ -18,9 +18,8 @@
 using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="IDataFrame"/> that can be sent or received.

@@ -20,10 +20,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataFrame"/> that can be sent or received.

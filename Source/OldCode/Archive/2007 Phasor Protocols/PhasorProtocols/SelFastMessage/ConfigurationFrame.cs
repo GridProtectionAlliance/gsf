@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.

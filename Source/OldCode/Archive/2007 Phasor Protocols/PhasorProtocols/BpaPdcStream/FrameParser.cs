@@ -19,11 +19,10 @@ using System;
 using System.IO;
 using System.Security.Permissions;
 using System.Text;
-using TVA;
 using TVA.IO;
 using TVA.Parsing;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents a frame parser for a BPA PDCstream binary data stream and returns parsed data via events.

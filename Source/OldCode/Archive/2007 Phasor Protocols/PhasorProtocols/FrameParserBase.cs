@@ -20,11 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using TVA;
 using TVA.Collections;
 using TVA.Parsing;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a frame parser that defines the basic functionality for a protocol to parse a binary data stream and return the parsed data via events.

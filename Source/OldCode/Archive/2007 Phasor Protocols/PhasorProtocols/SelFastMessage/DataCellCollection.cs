@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents a SEL Fast Message implementation of a collection of <see cref="IDataCell"/> objects.

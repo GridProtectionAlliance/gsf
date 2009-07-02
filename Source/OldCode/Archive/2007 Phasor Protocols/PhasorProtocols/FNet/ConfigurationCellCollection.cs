@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents a F-NET implementation of a collection of <see cref="IConfigurationCell"/> objects.

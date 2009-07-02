@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of the parsing state used by any <see cref="IHeaderFrame"/>.

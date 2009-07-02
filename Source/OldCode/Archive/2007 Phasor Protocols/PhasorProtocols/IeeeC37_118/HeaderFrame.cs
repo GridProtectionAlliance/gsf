@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 using TVA.IO.Checksums;
 using TVA.Parsing;
 
-namespace PhasorProtocols.IeeeC37_118
+namespace TVA.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 implementation of a <see cref="IHeaderFrame"/> that can be sent or received.

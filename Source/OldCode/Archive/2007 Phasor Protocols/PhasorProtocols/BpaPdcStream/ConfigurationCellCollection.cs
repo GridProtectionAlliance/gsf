@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents a BPA PDCstream implementation of a collection of <see cref="IConfigurationCell"/> objects.

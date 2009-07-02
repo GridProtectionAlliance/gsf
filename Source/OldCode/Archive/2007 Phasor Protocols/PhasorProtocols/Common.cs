@@ -16,11 +16,10 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Measurements;
 using TVA.Parsing;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Common constants, functions and extensions for phasor classes.

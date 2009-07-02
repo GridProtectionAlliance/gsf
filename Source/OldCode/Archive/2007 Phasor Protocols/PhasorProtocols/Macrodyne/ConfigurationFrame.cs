@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PhasorProtocols.Macrodyne
+namespace TVA.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.

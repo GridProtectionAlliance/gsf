@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using TVA.Parsing;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of any kind

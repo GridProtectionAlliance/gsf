@@ -21,7 +21,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IChannelCell"/> objects.

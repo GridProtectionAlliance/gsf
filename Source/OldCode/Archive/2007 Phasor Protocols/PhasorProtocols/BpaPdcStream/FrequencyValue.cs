@@ -17,9 +17,8 @@
 
 using System;
 using System.Runtime.Serialization;
-using TVA;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IFrequencyValue"/>.

@@ -16,10 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.Macrodyne
+namespace TVA.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents a frame parser for a Macrodyne binary data stream that returns parsed data via events.

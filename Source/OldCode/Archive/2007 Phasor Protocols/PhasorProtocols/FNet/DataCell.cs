@@ -21,10 +21,9 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Text;
-using TVA;
 using TVA.Units;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IDataCell"/> that can be sent or received.

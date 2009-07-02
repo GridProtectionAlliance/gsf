@@ -18,7 +18,7 @@
 using System.Runtime.Serialization;
 using TVA.Measurements;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation any kind of <see cref="IChannel"/> data value.

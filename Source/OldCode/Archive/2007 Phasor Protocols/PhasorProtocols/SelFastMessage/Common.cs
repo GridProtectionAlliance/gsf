@@ -16,9 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     #region [ Enumerations ]
 

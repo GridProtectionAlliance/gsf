@@ -17,10 +17,9 @@
 
 using System;
 using System.Runtime.Serialization;
-using TVA;
 using TVA.Measurements;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     #region [ Enumerations ]
 

@@ -24,7 +24,7 @@ using System.Security.Permissions;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// INI file name browser used with BPA PDCstream <see cref="ConnectionParameters"/>.

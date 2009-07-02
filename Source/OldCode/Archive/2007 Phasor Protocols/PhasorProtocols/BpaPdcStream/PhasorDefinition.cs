@@ -21,7 +21,7 @@ using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IPhasorDefinition"/>.

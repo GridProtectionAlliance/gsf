@@ -16,9 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 
-namespace PhasorProtocols.Ieee1344
+namespace TVA.PhasorProtocols.Ieee1344
 {
     #region [ Enumerations ]
 

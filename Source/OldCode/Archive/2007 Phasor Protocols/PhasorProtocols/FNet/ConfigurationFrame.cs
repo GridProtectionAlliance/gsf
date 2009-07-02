@@ -17,9 +17,8 @@
 
 using System;
 using System.Runtime.Serialization;
-using TVA;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the F-NET implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.

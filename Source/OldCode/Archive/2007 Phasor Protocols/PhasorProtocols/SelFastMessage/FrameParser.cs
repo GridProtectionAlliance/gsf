@@ -17,10 +17,9 @@
 
 using System;
 using System.Text;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents a frame parser for a SEL Fast Message binary data stream that returns parsed data via events.

@@ -19,11 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 using TVA.IO.Checksums;
 using TVA.Parsing;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the SEL Fast Message implementation of a <see cref="ICommandFrame"/> that can be sent or received.

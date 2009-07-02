@@ -17,7 +17,7 @@
 
 using TVA.Units;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of a phasor value.

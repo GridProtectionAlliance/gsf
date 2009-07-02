@@ -19,9 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents the protocol independent common implementation of any <see cref="ICommandFrame"/> that can be sent or received.

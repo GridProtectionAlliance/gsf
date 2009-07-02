@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of a collection of any

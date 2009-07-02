@@ -19,9 +19,8 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 
-namespace PhasorProtocols.Ieee1344
+namespace TVA.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IDigitalDefinition"/>.

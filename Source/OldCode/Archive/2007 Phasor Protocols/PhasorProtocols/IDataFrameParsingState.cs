@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of the parsing state of a <see cref="IDataFrame"/>.

@@ -32,10 +32,10 @@
 //  12/14/2007 - J. Ritchie Carroll
 //       Implemented simulated timestamp injection for published frames to allow for real-time
 //       data simulations from archived sample data
-//  10/28/2008 - James R Carroll
+//  10/28/2008 - J. Ritchie Carroll
 //       Added support for SEL's UDP_T and UDP_U protocol implementations (UDP_S was already supported),
 //       implementation handled by allowing definition of a "CommandChannel" in the connection string
-//  04/27/2009 - James R Carroll
+//  04/27/2009 - J. Ritchie Carroll
 //       Added support for SEL Fast Message protocol
 //
 //*******************************************************************************************************
@@ -45,17 +45,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
-using TVA;
 using TVA.Communication;
 using TVA.IO;
 using TVA.Units;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     #region [ Enumerations ]
 

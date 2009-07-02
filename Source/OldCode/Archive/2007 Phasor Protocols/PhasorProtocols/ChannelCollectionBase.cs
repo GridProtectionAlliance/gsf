@@ -22,7 +22,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using TVA.Parsing;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IChannel"/> objects.<br/>

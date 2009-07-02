@@ -22,13 +22,12 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
 using System.Text;
-using TVA;
 using TVA.Interop;
 using TVA.IO.Checksums;
 using TVA.Parsing;
 using TVA.Reflection;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IConfigurationFrame"/> that can be sent or received.

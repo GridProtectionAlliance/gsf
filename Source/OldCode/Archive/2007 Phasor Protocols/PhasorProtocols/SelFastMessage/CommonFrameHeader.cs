@@ -18,10 +18,9 @@
 using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.SelFastMessage
+namespace TVA.PhasorProtocols.SelFastMessage
 {
     /// <summary>
     /// Represents the common header for all SEL Fast Message frames of data.

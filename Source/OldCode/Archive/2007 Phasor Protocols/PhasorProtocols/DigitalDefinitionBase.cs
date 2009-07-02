@@ -19,7 +19,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents the common implementation of the protocol independent definition of a <see cref="IDigitalValue"/>.

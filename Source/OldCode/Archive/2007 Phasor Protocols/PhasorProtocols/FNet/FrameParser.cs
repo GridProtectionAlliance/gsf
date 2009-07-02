@@ -17,10 +17,9 @@
 
 using System;
 using System.Text;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents a frame parser for a F-NET text based data stream that returns parsed data via events.

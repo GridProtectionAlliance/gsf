@@ -20,7 +20,7 @@ using System.Runtime.Serialization;
 using System.Security.Permissions;
 using TVA.Parsing;
 
-namespace PhasorProtocols.Macrodyne
+namespace TVA.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the common header for all Macrodyne frames of data.

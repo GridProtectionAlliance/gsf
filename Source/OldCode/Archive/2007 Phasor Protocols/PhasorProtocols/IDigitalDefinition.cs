@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of a definition of a <see cref="IDigitalValue"/>.

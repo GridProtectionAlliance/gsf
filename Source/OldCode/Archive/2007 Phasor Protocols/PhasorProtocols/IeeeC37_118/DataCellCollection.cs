@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols.IeeeC37_118
+namespace TVA.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents a IEEE C37.118 implementation of a collection of <see cref="IDataCell"/> objects.

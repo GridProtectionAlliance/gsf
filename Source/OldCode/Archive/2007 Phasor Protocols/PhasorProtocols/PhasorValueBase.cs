@@ -19,10 +19,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 using TVA.Units;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     #region [ Enumerations ]
 

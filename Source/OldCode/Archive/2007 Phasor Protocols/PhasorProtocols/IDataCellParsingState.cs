@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Defines function signature for creating new <see cref="IChannelValue{T}"/> objects.

@@ -18,10 +18,9 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.IeeeC37_118
+namespace TVA.PhasorProtocols.IeeeC37_118
 {
     /// <summary>
     /// Represents the IEEE C37.118 draft 6 implementation of a <see cref="IConfigurationFrame"/>, type 1, that can be sent or received.

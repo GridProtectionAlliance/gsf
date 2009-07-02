@@ -17,10 +17,9 @@
 
 using System;
 using System.ComponentModel;
-using TVA;
 using TVA.Measurements;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> implementation for composite values of a given <see cref="IChannelValue{T}"/>.

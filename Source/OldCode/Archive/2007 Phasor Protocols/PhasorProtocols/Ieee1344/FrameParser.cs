@@ -16,10 +16,9 @@
 //*******************************************************************************************************
 
 using System;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.Ieee1344
+namespace TVA.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents a frame parser for an IEEE 1344 binary data stream that returns parsed data via events.

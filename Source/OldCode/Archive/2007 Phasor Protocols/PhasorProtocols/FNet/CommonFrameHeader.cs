@@ -17,10 +17,9 @@
 
 using System;
 using System.Text;
-using TVA;
 using TVA.Parsing;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the common header for a F-NET frame of data.

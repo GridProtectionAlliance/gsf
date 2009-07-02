@@ -15,7 +15,7 @@
 //
 //*******************************************************************************************************
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream protocol implementation of the parsing state used by a <see cref="DataFrame"/>.

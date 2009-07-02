@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using TVA.Units;
 
-namespace PhasorProtocols.BpaPdcStream
+namespace TVA.PhasorProtocols.BpaPdcStream
 {
     /// <summary>
     /// Represents the BPA PDCstream implementation of a <see cref="IPhasorValue"/>.

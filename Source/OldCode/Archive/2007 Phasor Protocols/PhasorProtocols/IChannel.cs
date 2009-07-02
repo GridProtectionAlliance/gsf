@@ -18,7 +18,7 @@
 using System.Collections.Generic;
 using TVA.Parsing;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent interface representation of any data type that can

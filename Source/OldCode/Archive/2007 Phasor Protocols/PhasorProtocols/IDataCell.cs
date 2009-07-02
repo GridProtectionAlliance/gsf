@@ -18,7 +18,7 @@
 using System;
 using TVA.Measurements;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     #region [ Enumerations ]
 

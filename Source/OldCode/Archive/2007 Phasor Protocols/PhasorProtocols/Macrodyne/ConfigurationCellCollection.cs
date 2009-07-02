@@ -18,7 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace PhasorProtocols.Macrodyne
+namespace TVA.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents a Macrodyne implementation of a collection of <see cref="IConfigurationCell"/> objects.

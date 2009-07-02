@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{54CA98CC-2F0A-41F2-879D-0E42B17E8544}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>PhasorProtocols</RootNamespace>
-    <AssemblyName>PhasorProtocols</AssemblyName>
+    <RootNamespace>TVA.PhasorProtocols</RootNamespace>
+    <AssemblyName>TVA.PhasorProtocols</AssemblyName>
     <MyType>Windows</MyType>
     <OptionStrict>Off</OptionStrict>
     <SignAssembly>false</SignAssembly>
@@ -29,7 +29,7 @@
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <OutputPath>bin\Debug\</OutputPath>
-    <DocumentationFile>bin\Debug\PhasorProtocols.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\TVA.PhasorProtocols.xml</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
@@ -43,7 +43,7 @@
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DocumentationFile>bin\Release\PhasorProtocols.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\TVA.PhasorProtocols.xml</DocumentationFile>
     <NOWARN>
     </NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>

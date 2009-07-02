@@ -19,9 +19,8 @@ using System;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using TVA;
 
-namespace PhasorProtocols.FNet
+namespace TVA.PhasorProtocols.FNet
 {
     /// <summary>
     /// Represents the extra connection parameters required for a connection to a F-NET device.

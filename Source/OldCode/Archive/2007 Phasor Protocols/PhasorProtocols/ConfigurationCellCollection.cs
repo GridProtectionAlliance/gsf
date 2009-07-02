@@ -20,7 +20,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using TVA.Collections;
 
-namespace PhasorProtocols
+namespace TVA.PhasorProtocols
 {
     /// <summary>
     /// Represents a protocol independent collection of <see cref="IConfigurationCell"/> objects.

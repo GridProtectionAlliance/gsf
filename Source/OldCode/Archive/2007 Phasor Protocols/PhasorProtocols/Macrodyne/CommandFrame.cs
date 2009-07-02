@@ -22,7 +22,7 @@ using System.Security.Permissions;
 using TVA.IO.Checksums;
 using TVA.Parsing;
 
-namespace PhasorProtocols.Macrodyne
+namespace TVA.PhasorProtocols.Macrodyne
 {
     /// <summary>
     /// Represents the Macrodyne implementation of a <see cref="ICommandFrame"/> that can be sent or received.

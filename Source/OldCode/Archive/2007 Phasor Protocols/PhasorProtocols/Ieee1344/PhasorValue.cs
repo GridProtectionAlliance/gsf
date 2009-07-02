@@ -19,7 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using TVA.Units;
 
-namespace PhasorProtocols.Ieee1344
+namespace TVA.PhasorProtocols.Ieee1344
 {
     /// <summary>
     /// Represents the IEEE 1344 implementation of a <see cref="IPhasorValue"/>.
