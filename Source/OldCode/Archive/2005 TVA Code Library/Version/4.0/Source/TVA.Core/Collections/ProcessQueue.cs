@@ -14,8 +14,6 @@
 //       Generated original version of source code.
 //  02/12/2006 - J. Ritchie Carroll
 //       Added multi-item bulk processing functionality.
-//  04/10/2006 - J. Ritchie Carroll
-//       Added "DebugMode" property to disable "catch" so exceptions are debugged in originating source.
 //  03/21/2007 - J. Ritchie Carroll
 //       Added "ItemsBeingProcessed" property to return current total number of items being processed.
 //       Added "Flush" method to allow any remaining items in queue to be processed before shutdown.
@@ -290,7 +288,7 @@ namespace TVA.Collections
         private long m_itemsProcessed;
         private long m_startTime;
         private long m_stopTime;
-        //private bool m_debugMode;
+        private string m_name;
         private bool m_disposed;
 
 #if ThreadTracking
@@ -664,39 +662,6 @@ namespace TVA.Collections
             }
         }
 
-        // TODO: C# does not support filtered exceptions so the DebugMode won't be quite as useful here :-(
-        // Perhaps there is a way to "effectively" do this later (IL emittance, etc.), this article seemed
-        // promising and might work: http://blogs.msdn.com/greggm/archive/2006/03/23/559155.aspx, this might
-        // be best implemented as a shared code library class used for filtering exceptions.  It's critical that
-        // the code implemented actually creates an IL .try filter, you can always just check an expression and
-        // rethrow the Exception ex you just caught - but that's the issue - you don't want to "catch" it at all,
-        // rather when debugging you want the compiler to stop at the "source" location of the exception - not
-        // inside the compiled ProcessQueue... Perhaps there are ways around this anyway, a little testing may
-        // prove that this is "DebugMode" feature is not necessary anyway...  Ideally if an exception is thrown
-        // in the user function during testing, that's where you want the debugger to stop. Somebody add this as
-        // a task in TFS once the C# code is there... JRC.
-        ///// <summary>
-        ///// Gets or sets debug mode for the <see cref="ProcessQueue{T}"/> when handling exceptions.
-        ///// </summary>
-        ///// <value>True to enable debug mode.</value>
-        ///// <returns>True if debug mode is enabled. Otherwise, False.</returns>
-        ///// <remarks>
-        ///// When debug mode is True, all internal "Catch (Exception ex)" statements will be ignored, allowing the
-        ///// development environment to stop directly on the line of code that threw the exception (e.g., in user's
-        ///// process item function).
-        ///// </remarks>
-        //public virtual bool DebugMode
-        //{
-        //    get
-        //    {
-        //        return m_debugMode;
-        //    }
-        //    set
-        //    {
-        //        m_debugMode = value;
-        //    }
-        //}
-
         /// <summary>
         /// Gets or sets indicator that the <see cref="ProcessQueue{T}"/> is currently enabled.
         /// </summary>
@@ -813,18 +778,23 @@ namespace TVA.Collections
         }
 
         /// <summary>
-        /// Gets class name.
+        /// Gets or sets name for this <see cref="ProcessQueue{T}"/>.
         /// </summary>
         /// <remarks>
-        /// <para>This name is used for class identification in strings (e.g., used in error message).</para>
-        /// <para>Derived classes can override this method, if needed, with a proper class name - defaults to
-        /// Me.GetType().Name.</para>
+        /// This name is used for class identification in strings (e.g., used in error messages).
         /// </remarks>
         public virtual string Name
         {
             get
             {
-                return this.GetType().Name;
+                if (string.IsNullOrEmpty(m_name))
+                    m_name = this.GetType().Name;
+
+                return m_name;
+            }
+            set
+            {
+                m_name = value;
             }
         }
 
@@ -1329,7 +1299,7 @@ namespace TVA.Collections
                     // Rethrow thread abort so calling method can respond appropriately
                     throw ex;
                 }
-                catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
+                catch (Exception ex)
                 {
                     // Processing will not stop for any errors thrown by the user function, but errors will be reported.
                     OnProcessException(ex);
@@ -1426,7 +1396,7 @@ namespace TVA.Collections
                 // Rethrows thread abort, so calling method can respond appropriately.
                 throw ex;
             }
-            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
+            catch (Exception ex)
             {
                 // Requeues item on processing exception, if requested.
                 if (m_requeueOnException)
@@ -1454,7 +1424,7 @@ namespace TVA.Collections
                 // Rethrows thread abort, so calling method can respond appropriately.
                 throw ex;
             }
-            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
+            catch (Exception ex)
             {
                 // Requeues items on processing exception, if requested.
                 if (m_requeueOnException)
@@ -1583,7 +1553,7 @@ namespace TVA.Collections
                 // Rethrows thread abort, so calling method can respond appropriately.
                 throw ex;
             }
-            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
+            catch (Exception ex)
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
                 OnProcessException(ex);
@@ -1672,7 +1642,7 @@ namespace TVA.Collections
                 // Rethrows thread abort, so calling method can respond appropriately.
                 throw ex;
             }
-            catch (Exception ex) // When !m_debugMode - C# does not support filtered exceptions
+            catch (Exception ex)
             {
                 // Processing will not stop for any errors encountered here, but errors will be reported.
                 OnProcessException(ex);
