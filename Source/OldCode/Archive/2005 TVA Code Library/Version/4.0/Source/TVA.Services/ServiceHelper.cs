@@ -18,7 +18,7 @@
 //  12/14/2007 - Pinal C. Patel
 //       Made monitoring of service health optional via the MonitorServiceHealth property.
 //  09/30/2008 - James R Carroll
-//       Generated original version of source code.
+//       Converted to C#.
 //  03/06/2009 - Pinal C. Patel
 //       Edited code comments.
 //  06/19/2009 - Pinal C. Patel
