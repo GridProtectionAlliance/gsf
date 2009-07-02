@@ -222,7 +222,6 @@
     <Compile Include="Media\WaveFile.cs" />
     <Compile Include="Media\WaveFormatChunk.cs" />
     <Compile Include="Media\WaveFormatExtensible.cs" />
-    <Compile Include="Milliseconds.cs" />
     <Compile Include="Net\Ftp\FtpAsyncResult.cs" />
     <Compile Include="Net\Ftp\FtpClient.cs">
       <SubType>Component</SubType>
@@ -274,7 +273,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Scheduling\SchedulePart.cs" />
-    <Compile Include="Seconds.cs" />
     <Compile Include="Security\Cryptography\Cipher.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassic.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicCryptoBase.cs" />
