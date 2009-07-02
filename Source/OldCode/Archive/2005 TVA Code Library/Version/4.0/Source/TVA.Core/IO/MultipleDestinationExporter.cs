@@ -521,7 +521,7 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                if (settings.Count == 0) return;    // Don't proceed if export destination are not in config file.
+                if (settings.Count == 0) return;    // Don't proceed if export destinations don't exist in config file.
 
                 string entryRoot;
                 int count;
@@ -644,7 +644,7 @@ namespace TVA.IO
             {
                 // Cache a local copy of export destinations to reduce lock time,
                 // network share authentication may take some time
-                destinations = m_exportDestinations;
+                destinations = new List<ExportDestination>(m_exportDestinations);
             }
 
             for (int x = 0; x < destinations.Count; x++)
@@ -715,7 +715,7 @@ namespace TVA.IO
             {
                 // Cache a local copy of export destinations to reduce lock time,
                 // exports may take some time
-                destinations = m_exportDestinations;
+                destinations = new List<ExportDestination>(m_exportDestinations);
             }
 
             // Loop through each defined export file
