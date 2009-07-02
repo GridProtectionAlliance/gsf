@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="   Frame Parser Relationships">
+    <Position X="8.012" Y="0.5" Height="0.315" Width="1.782" />
+  </Comment>
+  <Comment CommentText="  BPA PDC Stream">
+    <Position X="1.5" Y="9.25" Height="0.302" Width="1.169" />
+  </Comment>
+  <Comment CommentText="   Virginia Tech FNET">
+    <Position X="4.396" Y="9.208" Height="0.312" Width="1.365" />
+  </Comment>
+  <Comment CommentText="  IEEE 1344">
+    <Position X="15.862" Y="1.459" Height="0.292" Width="0.887" />
+  </Comment>
+  <Comment CommentText="  IEEE C37.118">
+    <Position X="7.511" Y="9.198" Height="0.305" Width="1.075" />
+  </Comment>
+  <Class Name="TVA.PhasorProtocols.BpaPdcStream.FrameParser">
+    <Position X="0.75" Y="9.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>ggAAALAEACAAYAgAAAABAgAAAAAABBEIAkAAAAgBAQA=</HashCode>
+      <FileName>BpaPdcStream\FrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.FNet.FrameParser">
+    <Position X="3.75" Y="9.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAJIEACAAJAgAAQAAAgAAAAKAAAAJAGAAAAgAQQA=</HashCode>
+      <FileName>FNet\FrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.IeeeC37_118.FrameParser">
+    <Position X="6.75" Y="9.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAADAEADAAKAgAAAAAAgAAAAAEAAAIAEACAAgIAQg=</HashCode>
+      <FileName>IeeeC37_118\FrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.FrameParserBase&lt;TFrameIdentifier&gt;">
+    <Position X="8.25" Y="1.5" Width="4.25" />
+    <TypeIdentifier>
+      <HashCode>AgAMAKMEGCAAIEgAAABAAgADAoAAAFAAIEACAAkIBAg=</HashCode>
+      <FileName>FrameParserBase.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.Parsing.FrameImageParserBase&lt;TTypeIdentifier, TOutputType&gt;">
+    <Position X="3.5" Y="1.5" Width="3.75" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.Parsing.BinaryImageParserBase">
+    <Position X="0.5" Y="0.75" Width="2" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Ieee1344.FrameParser">
+    <Position X="14" Y="2" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAADAAACAAIAgAAAAAAgAAAIAAAAQIAEACAAgIAQg=</HashCode>
+      <FileName>Ieee1344\FrameParser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="TVA.PhasorProtocols.Ieee1344.FrameType">
+    <Position X="16.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAgAAAgAEAAQAAAAAAAAAAAAEAAAAAAAAAA=</HashCode>
+      <FileName>Ieee1344\Common.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>

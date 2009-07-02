@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="   Analog Value Relationships">
+    <Position X="5.459" Y="0.5" Height="0.305" Width="1.762" />
+  </Comment>
+  <Comment CommentText="  BPA PDCStream">
+    <Position X="5.302" Y="5.438" Height="0.263" Width="1.096" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="7.949" Y="5.427" Height="0.271" Width="0.898" />
+  </Comment>
+  <Class Name="TVA.PhasorProtocols.AnalogValueBase">
+    <Position X="5.75" Y="1.5" Width="2.25" />
+    <TypeIdentifier>
+      <FileName>AnalogValueBase.cs</FileName>
+      <HashCode>AABAAIAAAAAAAAABAAAIAAAwAAQgAAAgAAAgAAQAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.ChannelValueBase&lt;T&gt;">
+    <Position X="3.25" Y="1.25" Width="2" />
+    <TypeIdentifier>
+      <FileName>ChannelValueBase.cs</FileName>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAwABAgIAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.ChannelBase">
+    <Position X="0.5" Y="1.25" Width="2.25" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.cs</FileName>
+      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.BpaPdcStream.AnalogValue">
+    <Position X="5" Y="5.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\AnalogValue.cs</FileName>
+      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAEAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TVA.PhasorProtocols.IeeeC37_118.AnalogValue">
+    <Position X="7.5" Y="5.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\AnalogValue.cs</FileName>
+      <HashCode>AAAAAAAAAAAACAAAAAAAQAAAAAAAAACAAAAAAAAEAAA=</HashCode>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="TVA.PhasorProtocols.IChannelValue&lt;T&gt;">
+    <Position X="10.25" Y="2.75" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>IChannelValue.cs</FileName>
+      <HashCode>AABAAIAAEAAACAAAAAAAQAAAAAAgAAIAAAAQAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.PhasorProtocols.IChannel">
+    <Position X="10" Y="5.75" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.cs</FileName>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.PhasorProtocols.IAnalogValue">
+    <Position X="12.5" Y="2.75" Width="2" />
+    <TypeIdentifier>
+      <FileName>IAnalogValue.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAQAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.Parsing.ISupportBinaryImage">
+    <Position X="8.25" Y="3.25" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable">
+    <Position X="10.25" Y="1.5" Width="1.75" />
+    <TypeIdentifier />
+  </Interface>
+</ClassDiagram>

@@ -1,0 +1,4 @@
+This application and the information it displays is provided by the Tennessee Valley Authority (TVA - http://www.tva.gov/) as a free utility to help support ongoing efforts of the North American Synchrophasor Initiative (NASPI - formerly the EIPP). TVA does not warrant or assume any legal liability or responsibility for the accuracy, quality, performance, completeness, or usefulness of this application.
+
+Copyright © 2006-2008, TVA – James Ritchie Carroll
+mailto:jrcarrol@tva.gov

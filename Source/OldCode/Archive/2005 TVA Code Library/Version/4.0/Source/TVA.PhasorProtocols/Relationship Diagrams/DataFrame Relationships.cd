@@ -1,0 +1,149 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Font Name="Tahoma" Size="8.25" />
+  <Comment CommentText="   Data Frame Relationships">
+    <Position X="7.475" Y="0.5" Height="0.302" Width="1.617" />
+  </Comment>
+  <Comment CommentText="BPA PDC Stream">
+    <Position X="3.497" Y="4.729" Height="0.263" Width="1.033" />
+  </Comment>
+  <Comment CommentText="IEEE 1344">
+    <Position X="5.569" Y="4.743" Height="0.263" Width="0.721" />
+  </Comment>
+  <Comment CommentText="IEEE C37 118">
+    <Position X="7.51" Y="4.743" Height="0.263" Width="0.919" />
+  </Comment>
+  <Comment CommentText="Virginia Tech FNET">
+    <Position X="9.5" Y="4.75" Height="0.263" Width="1.231" />
+  </Comment>
+  <Class Name="TVA.PhasorProtocols.DataFrameBase">
+    <Position X="3" Y="1.5" Width="2" />
+    <TypeIdentifier>
+      <FileName>DataFrameBase.cs</FileName>
+      <HashCode>AAAAABAAAAAAAAgAACIAAAAgAAAAAAAAAAAAAAAAAQA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.ChannelFrameBase&lt;T&gt;">
+    <Position X="0.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <FileName>ChannelFrameBase.cs</FileName>
+      <HashCode>IAEIABAQgAAIEQQBCCIKAAAxQBAACAAgAIEQADAAIAA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="TVA.PhasorProtocols.ChannelBase" FixedToPoint="true">
+      <Path>
+        <Point X="1.625" Y="7.25" />
+        <Point X="1.625" Y="6.967" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.ChannelBase">
+    <Position X="0.5" Y="7.25" Width="2.25" />
+    <TypeIdentifier>
+      <FileName>ChannelBase.cs</FileName>
+      <HashCode>AAAAAAAAgAAoQAAFAAAMAAARQABAAACgEAkAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.BpaPdcStream.DataFrame">
+    <Position X="3" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>BpaPdcStream\DataFrame.cs</FileName>
+      <HashCode>iAEIAAAAAAAIAAhEACYYAAAxAAAABACAgAAABAAAAAI=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="TVA.PhasorProtocols.DataFrameBase" ManuallyRouted="true">
+      <Path>
+        <Point X="4" Y="4.022" />
+        <Point X="4" Y="4.627" />
+        <Point X="3.875" Y="4.627" />
+        <Point X="3.875" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.Ieee1344.DataFrame">
+    <Position X="5" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>Ieee1344\DataFrame.cs</FileName>
+      <HashCode>CAEAABAAQAAAAAgEQCICAAAxEAAAAACAAAAAAAAAIAA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="TVA.PhasorProtocols.DataFrameBase" ManuallyRouted="true">
+      <Path>
+        <Point X="4" Y="4.022" />
+        <Point X="4" Y="4.62" />
+        <Point X="5.875" Y="4.62" />
+        <Point X="5.875" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.IeeeC37_118.DataFrame">
+    <Position X="7" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <FileName>IeeeC37_118\DataFrame.cs</FileName>
+      <HashCode>LAAIABAAIAAAAAgEACJAAAgxAAAAAACAAABAAAgAAAA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="TVA.PhasorProtocols.DataFrameBase" ManuallyRouted="true">
+      <Path>
+        <Point X="4" Y="4.022" />
+        <Point X="4" Y="4.62" />
+        <Point X="8" Y="4.62" />
+        <Point X="8" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="TVA.PhasorProtocols.FNet.DataFrame">
+    <Position X="9.25" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <FileName>FNet\DataFrame.cs</FileName>
+      <HashCode>AgAIAAAAAAAAAAgAAAIAAAEwAAAAAACAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+    <InheritanceLine Type="TVA.PhasorProtocols.DataFrameBase" ManuallyRouted="true">
+      <Path>
+        <Point X="4" Y="4.022" />
+        <Point X="4" Y="4.623" />
+        <Point X="10.125" Y="4.623" />
+        <Point X="10.125" Y="5.25" />
+      </Path>
+    </InheritanceLine>
+  </Class>
+  <Interface Name="TVA.PhasorProtocols.IDataFrame">
+    <Position X="10" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IDataFrame.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAgAAAIAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.PhasorProtocols.IChannelFrame">
+    <Position X="8" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannelFrame.cs</FileName>
+      <HashCode>AAAAABAAAAAAAAAAAAIAAAAAAAAAAACgAAAAAAAAIAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.PhasorProtocols.IChannel">
+    <Position X="5.5" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <FileName>IChannel.cs</FileName>
+      <HashCode>AAAAAAAAAAAoAAAAAAAAAAARAAAAAACAAAEAAAAAAAA=</HashCode>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="TVA.Parsing.ISupportBinaryImage">
+    <Position X="5.25" Y="0.75" Width="2" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="TVA.Measurements.IFrame" Collapsed="true">
+    <Position X="10" Y="1.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IComparable" Collapsed="true">
+    <Position X="12.25" Y="1.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.Runtime.Serialization.ISerializable" Collapsed="true">
+    <Position X="8" Y="1.25" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+</ClassDiagram>
