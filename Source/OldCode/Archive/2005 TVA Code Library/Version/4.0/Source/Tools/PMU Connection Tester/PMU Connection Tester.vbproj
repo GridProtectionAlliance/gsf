@@ -47,7 +47,7 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Tools\PMUConnectionTester\</OutputPath>
     <DocumentationFile>PMUConnectionTester.xml</DocumentationFile>
     <NoWarn>42030,42104,42108,42109</NoWarn>
     <UseVSHostingProcess>true</UseVSHostingProcess>
@@ -58,7 +58,7 @@
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Tools\PMUConnectionTester\</OutputPath>
     <DocumentationFile>PMUConnectionTester.xml</DocumentationFile>
     <NoWarn>42030,42104,42108,42109</NoWarn>
     <WarningsAsErrors>41999,42016,42017,42018,42019,42020,42021,42022,42032,42036</WarningsAsErrors>
