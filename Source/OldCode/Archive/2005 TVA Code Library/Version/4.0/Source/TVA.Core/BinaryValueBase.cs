@@ -42,16 +42,8 @@ namespace TVA
         #region [ Members ]
 
         // Fields
-
-        /// <summary>
-        /// <see cref="TypeCode"/> that this binary data sample represents.
-        /// </summary>
-        protected TypeCode m_typeCode;
-
-        /// <summary>
-        /// Binary representation of this data sample.
-        /// </summary>
-        protected byte[] m_buffer;
+        private TypeCode m_typeCode;    // TypeCode that this binary data sample represents
+        private byte[] m_buffer;        // Binary representation of this data sample
 
         #endregion
 

@@ -109,7 +109,7 @@ namespace TVA
         /// <exception cref="InvalidOperationException">Unable to convert binary value to specified type.</exception>
         public BigBinaryValue ConvertToType(TypeCode typeCode)
         {
-            switch (m_typeCode)
+            switch (this.TypeCode)
             {
                 case TypeCode.Byte:
                     switch (typeCode)
@@ -328,14 +328,13 @@ namespace TVA
                             throw new InvalidOperationException("Unable to convert binary value to " + typeCode);
                     }
                 default:
-                    throw new InvalidOperationException("Unable to convert binary value from " + m_typeCode);
+                    throw new InvalidOperationException("Unable to convert binary value from " + this.TypeCode);
             }
         }
 
         #endregion
 
         #region [ Operators ]
-
 
         /// <summary>
         /// Implicitly converts <see cref="BigBinaryValue"/> to <see cref="Byte"/>.
@@ -344,7 +343,7 @@ namespace TVA
         /// <returns>A <see cref="Byte"/> representation of <see cref="BigBinaryValue"/>.</returns>
         public static implicit operator Byte(BigBinaryValue value)
         {
-            return value.m_buffer[0];
+            return value.ToByte();
         }
 
         /// <summary>
@@ -374,7 +373,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Int16"/>.</returns>
         public static implicit operator BigBinaryValue(Int16 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Int16, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -416,7 +415,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Int24"/>.</returns>
         public static implicit operator BigBinaryValue(Int24 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -438,7 +437,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt24 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -458,7 +457,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Int32"/>.</returns>
         public static implicit operator BigBinaryValue(Int32 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Int32, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -480,7 +479,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt32 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.UInt32, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -500,7 +499,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Int64"/>.</returns>
         public static implicit operator BigBinaryValue(Int64 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Int64, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -522,7 +521,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BigBinaryValue(UInt64 value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.UInt64, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -542,7 +541,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Single"/>.</returns>
         public static implicit operator BigBinaryValue(Single value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Single, m_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -562,7 +561,7 @@ namespace TVA
         /// <returns>A <see cref="BigBinaryValue"/> representation of <see cref="Double"/>.</returns>
         public static implicit operator BigBinaryValue(Double value)
         {
-            return new BigBinaryValue(value.GetTypeCode(), m_endianOrder.GetBytes(value));
+            return new BigBinaryValue(TypeCode.Double, m_endianOrder.GetBytes(value));
         }
 
         #endregion
