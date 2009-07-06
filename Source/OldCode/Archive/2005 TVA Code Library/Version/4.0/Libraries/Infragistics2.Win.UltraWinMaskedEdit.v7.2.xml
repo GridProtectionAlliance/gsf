@@ -1,0 +1,1850 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Infragistics2.Win.UltraWinMaskedEdit.v7.2</name>
+    </assembly>
+    <members>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraWinMaskedEditAssemblyStyleInfo">
+            <summary>
+            Class used by the app styling infrastructure that provides the role and 
+            component role defitions used by the assembly.
+            </summary>
+            <remarks>
+            <p class="note"><b>Note:</b> A parameterless constructor is required for all derived classes.</p>
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraWinMaskedEditAssemblyStyleInfo.GetRoles">
+            <summary>
+            Returns an array of objects that define the roles provided by an assembly.
+            </summary>
+            <returns></returns>
+            <seealso cref="T:Infragistics.Win.AppStyling.Definitions.UIRoleDefinition"/>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraWinMaskedEditAssemblyStyleInfo.GetComponents">
+            <summary>
+            Returns an array of objects that define the component roles provided by an assembly.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.StyleUtils.UltraMaskedEditUIRole">
+            <summary>
+            Role for mask text.
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.StyleUtils.UltraMaskedEditComponentRoleName">
+            <summary>
+            Component role name for the UltraMaskedEdit.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.EditAsType">
+            <summary>
+            common input masks
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.AutoSense">
+            <summary>
+            If the EditAs is set to AutoSense, then the masked edit will try
+            to autosense the mask from the type of data set on the Value property.
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.UseSpecifiedMask">
+            <summary>
+            Indicates that use the mask specified using InputMask property. If InputMask
+            property is set to null or empty string, this acts just like AutoSense
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Currency">
+            <summary>
+            currency type
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Date">
+            <summary>
+            date type (month, day, and year)
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.DateTime">
+            <summary>
+            data and time
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Integer">
+            <summary>
+            integer type
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.String">
+            <summary>
+            string type
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Double">
+            <summary>
+            double type
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Time">
+            <summary>
+            time ( hour, minute, second )
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EditAsType.Long">
+            <summary>
+            Long
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.EventManager">
+            <summary>
+            Class for managing an MaskedEdit's events. It maintains an
+            enabled flag for each event as well as a nested 'in progress' 
+            count and it exposes events for firing each event.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.#ctor(Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit)">
+            <summary>
+            contructor
+            </summary>
+            <param name="maskedEdit">maskedEdit that this event manager will be asociated with</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.InProgress(Infragistics.Win.UltraWinMaskedEdit.EventIds)">
+            <summary>
+            Returns true if the event is in progress (in progress count > 0
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.IsEnabled(Infragistics.Win.UltraWinMaskedEdit.EventIds)">
+            <summary>
+            Returns true if the event is enabled
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.SetEnabled(Infragistics.Win.UltraWinMaskedEdit.EventIds,System.Boolean)">
+            <summary>
+            Sets a specific event enabled or disabled
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.CanFireEvent(Infragistics.Win.UltraWinMaskedEdit.EventIds)">
+            <summary>
+            Returns true if the event can be fired
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.EventManager.MaskedEdit">
+            <summary>
+            The associated MaskedEdit control
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.EventIds">
+            <summary>
+            event ids for event managing
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.MaskChanged">
+            <summary>
+            MaskChanged event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.DataTypeChanged">
+            <summary>
+            DataTypeChanged event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.TextChanged">
+            <summary>
+            TextChanged event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.InvalidChar">
+            <summary>
+            InvalidChar event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.InvalidOperation">
+            <summary>
+            InvalidOperation event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.MaskValidationError">
+            <summary>
+            MaskValidationError event id.
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.ValueChanged">
+            <summary>
+            ValueChanged event id
+            </summary>
+        </member>
+        <member name="F:Infragistics.Win.UltraWinMaskedEdit.EventIds.LastEventId">
+            <summary>
+            keep the last event id used
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.MaskChangedEventArgs">
+            <summary>
+            Event args class used for InitializeMask event. This event is fired
+            after mask has been determined through autosense or by assigning
+            EditAs property. When handling this message, user can modify the
+            mask or EditAs properies on the control
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskChangedEventArgs.#ctor(System.String)">
+            <summary>
+            constructor
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskChangedEventArgs.InputMask">
+            <summary>
+            Input mask that is going to be used for editing.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs">
+            <summary>
+            InitializeDataTypeEventArgs class used for firing InitializeDataType event.	
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs.#ctor(System.Type,Infragistics.Win.UltraWinMaskedEdit.EditAsType,System.String)">
+            <summary>
+            constructor
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs.AutoSensedEditAsType">
+            <summary>
+            Gets the EditAsType of the MaskedEdit control.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs.AutoSenseObjectType">
+            <summary>
+            Type of the object that was used for autosensing the data type.		
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs.InputMask">
+            <summary>
+            Gets the input mask that is going to be used with the autosensed type.
+            You can set a new mask to this property. The set mask will be
+            used for editing.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs">
+            <summary>
+            MaskValidationErrorEventArgs class used for firing MaskValidationError event
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs.Revert">
+            <summary>
+            if you set this to true, the text in the MaskedEdit will be reverted
+            back to the original text.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs.Beep">
+            <summary>
+            you can set this property to false to prevent the masked edit from 
+            beeping.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs.RetainFocus">
+            <summary>
+            Set this to true to force the masked edit to retain the focus
+            when the user tries to change the focus to a different control
+            when the entered text does not satisify the mask. Set it to
+            false to alter this default behaviour.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs.Message">
+            <summary>
+            Returns a brief message indicating why the validation failed.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner">
+            <summary>
+            Designer functionality for UltraMaskedEdit control 
+            (mainly to prevent user from resizing vertically)
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.#ctor">
+            <summary>
+            constructor
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.GetTextBaseLine">
+            <summary>
+            GetTextBaseLine
+            Overrides UltraControlDesigner GetTextBaseLine
+            </summary>
+            <returns>DefaultableInteger</returns>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.SelectionRules">
+            <summary>
+            Overridden property
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.ActionLists">
+            <summary>
+            Gets the <see cref="T:System.ComponentModel.Design.DesignerActionListCollection"/> for this designer's control/component.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList">
+            <summary>
+            Provides DesignerActionItems for the SmartTag associated with the UltraMaskedEdit.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.#ctor(Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit)">
+            <summary>
+            Constructor
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.CreateActionItems(System.ComponentModel.Design.DesignerActionItemCollection)">
+            <summary>
+            Overrides CreateActionItems.
+            </summary>
+            <param name="actionItems">The list to populate.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.EditButtonsLeft">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.EditButtonsRight">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.DisplayMode">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.DisplayStyle">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.EditAs">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEditDesigner.UltraMaskedEditActionList.InputMask">
+            <summary>
+            Used by SmartTag Panel.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit">
+            <summary>
+            MaskedEdit class
+            </summary>	
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.#ctor">
+            <summary>
+            Constructor. Initializes a new instance of <see cref="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit"/>.
+            </summary>		
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.#ctor(System.Object)">
+            <summary>
+            Constructor. Initializes a new instance of <see cref="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit"/>.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Dispose(System.Boolean)">
+            <summary>
+            overridden method that properly disposes of allocated
+            resources
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnMaskValidationError(Infragistics.Win.UltraWinMaskedEdit.MaskValidationErrorEventArgs)">
+            <summary>
+            Called when an error occurs
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnValueChanged(System.EventArgs)">
+            <summary>
+            Fires ValueChanged event. This method gets called whenever the value
+            in the control changes.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnInvalidOperation(Infragistics.Win.UltraWinMaskedEdit.InvalidOperationEventArgs)">
+            <summary>
+            Fires InvalidOperation error. This method is usually called when 
+            user performs an action that does not apply to current
+            state of the masked edit control.
+            </summary>
+            <remarks>
+            For example, when user presses Left arrow key when the caret is 
+            already at the begining of the text, this method will be called
+            and InvalidOperation event will be fired.  You can override 
+            this method or hook into <see cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidOperation"/> 
+            to alter the default masked edit behavior which is to beep.
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidOperation"/>
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidChar"/>
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskValidationError"/>
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnInvalidChar(Infragistics.Win.UltraWinMaskedEdit.InvalidCharEventArgs)">
+            <summary>
+            Fires InvalidChar event. This method is usually called when the user
+            tries to enter a character and the character does not match the mask 
+            at the current input position.
+            </summary>
+            <remarks>
+            For example, when the input mask is "####" and the user types in 
+            a non-digit character, this method will be called and InvalidChar
+            event is fired. You can override this method or hook into 
+            <see cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidChar"/>
+            to alter the default masked edit behavior which is to beep.
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidChar"/>
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidOperation"/>
+            <seealso cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskValidationError"/>
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnMaskChanged(Infragistics.Win.UltraWinMaskedEdit.MaskChangedEventArgs)">
+            <summary>
+            Called when an error occurs
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnDataTypeChanged(Infragistics.Win.UltraWinMaskedEdit.DataTypeChangedEventArgs)">
+            <summary>
+            Called when an error occurs
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeMaskLiteralsAppearance">
+            <summary>
+            Returns true if the appearance has any non-default property values set.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetMaskLiteralsAppearance">
+            <summary>
+            Resets all appearance property values to their defaults
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializePromptCharacterAppearance">
+            <summary>
+            Returns true if the appearance has any non-default
+            property values set
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetPromptCharacterAppearance">
+            <summary>
+            Resets all appearance property values to their defaults
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeAppearance">
+            <summary>
+            Returns true if the appearance has any non-default
+            property values set
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetAppearance">
+            <summary>
+            Resets all appearance property values to their defaults
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerialize">
+            <summary>
+            Returns true if any properties should be serialized
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Reset">
+            <summary>
+            resets all the properties to their original values
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResolveAppearance(Infragistics.Win.AppearanceData@,Infragistics.Win.AppearancePropFlags@)">
+            <summary>
+            Resolves selected properties of the control's Appearance.
+            </summary>
+            <remarks>
+            <p class="body">Use this method to retrieve the actual values that are being used to format the control. This method returns a value for all Appearance properties or only for specified ones, tracing up the Appearance hierarchy if necessary. You can combine the bit flags for this method to specify which properties should be resolved.</p>
+            </remarks>
+            <param name="appData">The structure to contain the resolved apperance.</param>
+            <param name="requestedProps">Bit flags indictaing which properties to resolve.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeSpinButtonStyle">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetSpinButtonStyle">
+            <summary>
+            Reset border style
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeSpinButtonDisplayStyle">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetSpinButtonDisplayStyle">
+            <summary>
+            Reset spin button display style.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeDisplayStyle">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetDisplayStyle">
+            <summary>
+            Reset display style
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeBorderStyle">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetBorderStyle">
+            <summary>
+            Reset border style
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeEditAs">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetEditAs">
+            <summary>
+            Reset input mask type
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeInputMask">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetInputMask">
+            <summary>
+            Reset input mask type
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeFormatString">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetFormatString">
+            <summary>
+            Resets the FormatString property.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.GetText(Infragistics.Win.UltraWinMaskedEdit.MaskMode)">
+            <summary>
+            Returns the text for the object using the specified mask mode.
+            </summary>
+            <remarks>
+            <p class="body">There may be times when you need to work with the text of an object in a particular format, but do not wish to change the settings of any of the masking properties (<see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ClipMode"/>, <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DataMode"/>or <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DisplayMode"/>). For example, if you want to retrieve the text of an object with all literals and prompt characters intact, but don't want to change the way data will be sent to the the database and don't want to use the clipboard. This is the purpose of the <b>GetText</b> method.</p>
+            <p class="body"><b>GetText</b> returns a string value, containing the text of the object, in the format you specify. When you invoke the <b>GetText</b> method, you pass it a <i>maskmode</i> parameter that determines how the object's text will be returned. This gives you the ability to bypass the settings of the object's masking properties and determine on an ad hoc basis whether to use prompt characters, literals or just the raw text the user has entered.</p>
+            </remarks>
+            <param name="maskMode">The mode that determines how literals and prompt characters are accounted for.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeNullable">
+            <summary>
+            Returns true if Nullable property is set to non-default value.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetNullable">
+            <summary>
+            Resets the Nullable property to its default value (true).
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeNullText">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetNullText">
+            <summary>
+            Reset prompt char
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializePromptChar">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetPromptChar">
+            <summary>
+            Reset prompt char
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeSelectedTextBackColor">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetSelectedTextBackColor">
+            <summary>
+            Reset TextSlectionBackColor
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeSelectedTextForeColor">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetSelectedTextForeColor">
+            <summary>
+            Reset TextSlectionForeColor
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializePadding">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetPadding">
+            <summary>
+            Reset padding
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializePadChar">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetPadChar">
+            <summary>
+            Reset pad char
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeDisplayMode">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetDisplayMode">
+            <summary>
+            Reset display mode
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeDataMode">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetDataMode">
+            <summary>
+            Reset data mode
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeClipMode">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetClipMode">
+            <summary>
+            Reset data mode
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PerformAction(Infragistics.Win.UltraWinMaskedEdit.MaskedEditAction,System.Boolean,System.Boolean)">
+            <summary>
+            Simulates user interaction with the control.
+            </summary>
+            <remarks>
+            <p class="body">Invoke this method to simulate an action the user can perform.</p>
+            <p class="body">Many actions are only appropriate in certain situations; if an action is inappropriate, it will not be performed.</p>
+            <p class="body">You can use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.CurrentState"/> property to determine the state of the control when the action is about to be performed.</p>
+            <p>See <see cref="T:Infragistics.Win.UltraWinMaskedEdit.MaskedEditAction"/> for a list of actions that can be performed.</p>
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnVisibleChanged(System.EventArgs)">
+            <summary>
+            Overridden. Makes sure that the first display char
+            is at the left edge of the masked edit.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnEnter(System.EventArgs)">
+            <summary>
+            Overridden.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnLeave(System.EventArgs)">
+            <summary>
+            overridden method
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ToggleInsertMode">
+            <summary>
+            Toggles between insert and overstrike mode.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnCreateControl">
+            <summary>
+            Called after the control has been created
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnKeyDown(System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Overridden. Fires KeyDown events.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnKeyUp(System.Windows.Forms.KeyEventArgs)">
+            <summary>
+            Overridden. Fires KeyUp events.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnKeyPress(System.Windows.Forms.KeyPressEventArgs)">
+            <summary>
+            Overridden. Fires KeyPress events.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.IsInputChar(System.Char)">
+            <summary>
+            Returns true if the character should be sent directly to the control and not preprocessed, false otherwise.
+            </summary>
+            <param name="charCode"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.IsInputKey(System.Windows.Forms.Keys)">
+            <summary>
+            Returns true if the key is a valid input key for this
+            control
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Delete">
+            <summary>
+            Deletes currently selected text if possible and shifts characters accordingly.
+            </summary>
+            <remarks>
+            <p class="body">When you invoke this method, the control tries to delete the  currently selected text and shift characters. If nothing is selected, it tries to delete the character at the current input position.</p> 
+            <p class="body">This method returns True if the operation was successful. If the operation fails because characters after the selection could not be shifted, the method returns False.</p>
+            </remarks>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Cut">
+            <summary>
+            Performs a Cut edit operation on the currently selected text, removing it from the control and placing it on the clipboard.
+            </summary>
+            <remarks>
+            The <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ClipMode"/> property determines how the text appears on the clipboard.
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Paste">
+            <summary>
+            Performs a Paste edit operation.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectAll">
+            <summary>
+            Selects all the text in the control.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Select(System.Int32,System.Int32)">
+            <summary>
+            Selects range of text in the control, based on the specified starting position and selection length.
+            </summary>
+            <param name="start"></param>
+            <param name="length"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Copy">
+            <summary>
+            Performs a Copy edit operation on the currently selected text, placing it on the clipboard.
+            </summary>
+            <remarks>
+            The <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ClipMode"/> property determines how the text appears on the clipboard.
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeAutoSize">
+            <summary>
+            Checks to see if AutoSize needs serializing
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetAutoSize">
+            <summary>
+            Resets the AutoSize to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnFontChanged(System.EventArgs)">
+            <summary>
+            Overridden method. Sets the height of the masked edit
+            according to the newly assigned font
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnResize(System.EventArgs)">
+            <summary>
+            Called when the control is resized
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnValidating(System.ComponentModel.CancelEventArgs)">
+            <summary>
+            Overriden. Invoked when the control's Validating event is to be invoked.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeMinValue">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeMaxValue">
+            <summary>
+            Returns true if this property is not set to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetMinValue">
+            <summary>
+            Resets MinValue proeprty to its default value of null.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetMaxValue">
+            <summary>
+            Resets MaxValue proeprty to its default value of null.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnMouseDown(System.Windows.Forms.MouseEventArgs)">
+            <summary>
+            Overridden. Fires MouseDown event. 
+            </summary>
+            <param name="e"></param>
+            <remarks><seealso cref="M:System.Windows.Forms.Control.OnMouseDown(System.Windows.Forms.MouseEventArgs)"/></remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnLostFocus(System.EventArgs)">
+            <summary>
+            Overridden. Fires LostFocus event.
+            </summary>
+            <param name="e"></param>
+            <remarks><seealso cref="M:System.Windows.Forms.Control.OnLostFocus(System.EventArgs)"/></remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.OnGotFocus(System.EventArgs)">
+            <summary>
+            Overridden. Fires GotFocus event.
+            </summary>
+            <param name="e"></param>
+            <remarks><seealso cref="M:System.Windows.Forms.Control.OnGotFocus(System.EventArgs)"/></remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetTabNavigation">
+            <summary>
+            Resets the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/> property to its default value.
+            </summary>
+            <remarks>
+            <p class="body">Invoke this method to reset the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/> property to its default value.</p>
+            <p class="body">Once this method is invoked, the <see cref="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeTabNavigation"/> method will return False until the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/> property is set again.</p>
+            </remarks>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeTabNavigation">
+            <summary>
+            <p class="body">Returns a Boolean value that determines whether the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/> property is set to its default value.</p>
+            </summary>
+            <remarks>
+            <p class="body">Returns True if the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation"/> property is not set to its default value; otherwise, it returns False.</p>
+            <p class="body">Invoke the <see cref="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetTabNavigation"/> method to reset this property to its default value.</p>
+            </remarks> 
+            <returns>Boolean indicating whether the property should be serialized</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeSelectAllBehavior">
+            <summary>
+            Checks to see if AutoSize needs serializing
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetSelectAllBehavior">
+            <summary>
+            Resets the AutoSize to its default value
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.CreateComponentRole">
+            <summary>
+            Factory method used to create the component role that provides the style information for the control.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ShouldSerializeAutoFillDate">
+            <summary>
+            Returns true if the property is set to a non-default value.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ResetAutoFillDate">
+            <summary>
+            Resets the property to its default value.
+            </summary>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DataTypeChanged">
+            <summary>
+            Occurs when the control auto-senses a data type.
+            </summary>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskChanged">
+            <summary>
+            Occurs when the mask is initialized.
+            </summary>
+            <remarks>
+             You can use this event to programmatically modify the mask before it is used.
+             </remarks>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidOperation">
+            <summary>
+            Occurs when the user attempts to perform an operation that cannot be completed.
+            </summary>
+            <remarks>
+            <p class="body">Event that is fired when user performs an action that can not be executed because the state of the control (caret position, selection and other properties) does not allow it. For example, when the user presses left arrow key when caret is already at the first display character in the MaskedEdit, the left arrow key action (which is to move the caret to previous display character) can not be performed. In this case such an action is cosidered an invalid operation and this event is fired.</p>
+            </remarks>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidChar">
+            <summary>
+            Occurs when the user types a character that fails mask validation.
+            </summary>
+            <remarks>
+            The InvalidChar event is fired when user types a character that does not match the input mask associated with the current input position.
+            </remarks>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskValidationError">
+            <summary>
+            Occurs when the text of the control fails mask validation.
+            </summary>
+            <remarks>
+            When the control loses the input focus, it verifies whether the text in the control satisfies the input mask. If text input does not match the mask at any point, the <b>MaskValidationError</b> event will occur. This event can also occur after text has been pasted into the MaskedEdit control.
+            </remarks>
+        </member>
+        <member name="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ValueChanged">
+            <summary>
+            Occurs when the value changes.
+            </summary>
+            <remarks>
+            <seealso cref="E:System.Windows.Forms.Control.TextChanged"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.BackColor">
+            <summary>
+            BackColor property is not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead.
+            </summary>
+            <remarks>
+            <p class="body">
+            <b>BackColor</b>, <b>ForeColor</b> and <b>BackGroundImage</b> properties are 
+            not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead
+            to specify these settings.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ForeColor">
+            <summary>
+            ForeColor property is not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead.
+            </summary>
+            <remarks>
+            <remarks>
+            <p class="body">
+            <b>BackColor</b>, <b>ForeColor</b> and <b>BackGroundImage</b> properties are 
+            not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead
+            to specify these settings.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/>
+            </remarks>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.BackgroundImage">
+            <summary>
+            BackgroundImage property is not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead.
+            </summary>
+            <remarks>
+            <p class="body">
+            <b>BackColor</b>, <b>ForeColor</b> and <b>BackGroundImage</b> properties are 
+            not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead
+            to specify these settings.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Cursor">
+            <summary>
+            Overrides the control's property to hide it so that the appearance can be used instead.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Font">
+            <summary>
+            Font property is not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead.
+            </summary>
+            <remarks>
+            <p class="body">
+            The <b>Font</b>property is not supported. Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property instead
+            to specify the font.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Editor">
+            <summary>
+            The object that implements the IEmbeddableEditor interface (read-only)
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance">
+            <summary>
+            Gets or sets the appearance for the control.
+            </summary>
+            <remarks>
+            <p class="body">
+            <b>Appearance</b> property lets you specify appearance related attributes, things
+            like the background color, foreground color, font, text alignments etc...
+            See <see cref="T:Infragistics.Win.AppearanceBase"/> object for more information.
+            </p>
+            <seealso cref="T:Infragistics.Win.AppearanceBase"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskLiteralsAppearance">
+            <summary>
+            Returns the appearance that will be applied to the literal characters displayed in the prompt text.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.HasMaskLiteralsAppearance">
+            <summary>
+            Returns true if the Appearance object has been created.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PromptCharacterAppearance">
+            <summary>
+            Returns the appearance that will be applied to the prompt characters displayed in the prompt text.
+            </summary>
+            <remarks>
+            By default, the underscore character (_) is used as the prompt character.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.HasPromptCharacterAppearance">
+            <summary>
+            Returns true if the Appearance object has been created.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.HasAppearance">
+            <summary>
+            Returns true if the Appearance object has been created.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SpinButtonDisplayStyle">
+            <summary>
+            SpinButtonDisplay style dictates whether to show spin buttons and where to show them. Spin buttons are only useful for numeric data types. It will incremenet or decrement (depending on which button was pressed) the value in the current section. It will only work in number sections defined by 'n' mask character and month, day, year, am-pm sections.
+            </summary>
+            <remarks>
+            Spin buttons allow the user to increment and decrement values in current section (section where the caret is). This can be used for editing numbers or dates for example.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SpinButtonStyle">
+            <summary>
+            Specifies the style of spin buttons.
+            </summary>
+            <remarks>
+            <p class="body">
+            This property controls the look of the spin buttons. To enable spin buttons functionality, 
+            set the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SpinButtonDisplayStyle"/> property.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SpinButtonDisplayStyle"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SpinWrap">
+            <summary>
+            Returns or sets a value indicating whether the control's spin button should wrap its value.
+            </summary>
+            <remarks>
+            <p class="body">If true the spin button will wrap the value incremented/decremented based on its Min/Max value.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DisplayStyle">
+            <summary>
+            Gets/sets the display style.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.BorderStyle">
+            <summary>
+            Returns or sets the border style of the control.
+            </summary>
+            <remarks>
+            <p class="body">
+            You can use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/> property to specify the
+            border color among other appearance settings.
+            </p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Appearance"/>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.EditAs">
+            <summary>
+            Specifies whether the control should use a commonly-used data mask, should use a pre-specified data mask, or should auto-sense the type of data mask required.
+            </summary>
+            <remarks>
+            <p class="body">When this property is set to one of the pre-defined mask types, the input mask is set to appropriate string. Pre-defined mask types include Currency, Date, Time,  Date/Time, Double, Integer and String.</p>
+            <p class="body">If this property is set to AutoSense, an input mask will be derived from the type of the data field bound to the control. If this property is set to UseSpecifiedMask, the mask specified by the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask"/> property will be used.</p>
+            <p class="body">Note that if the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask"/> property is set to a valid mask string, this property will automatically be changed to UseSpecifiedMask.</p>
+            <p class="body">Note that this propery needs to be set on UltraMaskedEdit if <see cref="P:Infragistics.Win.UltraWinEditors.EditorButtonControlBase.DataFilter"/> is used for conversions between Owner and Editor. UltraMaskedEdit will use specified type to set default mask in editor constructor.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.EventManager">
+            <summary>
+            The object that enables, disables and controls firing of specific control events.
+            </summary>
+            <remarks>
+            <p class="body">The UltraMaskedEdit event manager gives you a high degree of control over how the control invokes event procedures. You can use it to selectively enable and disable event procedures depending on the context of your application. You can also use the event manager to return information about the state of the control's events.</p>
+            <p class="body">The event manager's methods are used to determine the enabled state of an event (<see cref="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.IsEnabled(Infragistics.Win.UltraWinMaskedEdit.EventIds)"/>), to selectively enable or disable events (<see cref="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.SetEnabled(Infragistics.Win.UltraWinMaskedEdit.EventIds,System.Boolean)"/>), and to tell whether an event procedure is currently being processed (<see cref="M:Infragistics.Win.UltraWinMaskedEdit.EventManager.InProgress(Infragistics.Win.UltraWinMaskedEdit.EventIds)"/>). There is also an <see cref="P:Infragistics.Shared.EventManagerBase.AllEventsEnabled"/> property that you can check to quickly determine whether any events have been disabled by the event manager.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask">
+            <summary>
+            Returns or sets the input mask associated with the masked edit control.
+            </summary>
+            <remarks>
+            <p class="body">When an input mask is defined, placeholders are defined by the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PromptChar"/> property. When inputting data, the user can only replace a placeholder with a character that is of the same type as the one specified in the input mask. If the user enters an invalid character, the control rejects the character and generates the <see cref="E:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidChar"/> event. The control can distinguish between numeric and alphabetic characters for validation, but cannot validate for valid content, such as the correct month or time of day.</p>
+            <p class="Body">The input mask can consist of the following characters:</p>
+            <p>
+            <table border="1" cellpadding="3" width="100%" class="FilteredItemListTable">
+            <thead>
+            <tr><td class="body" width="23%"><p>Character</p></td><td class="body" width="66%"><p>Description</p></td></tr></thead>
+            <tbody>
+            <tr><td class="body" width="23%"><p>#</p></td><td class="body" width="66%"><p>Digit placeholder. Character must be numeric (0-9) and entry is required. </p></td></tr>
+            <tr><td class="body" width="23%"><p>.</p></td><td class="body" width="66%"><p>Decimal placeholder. The actual character used is the one specified as the decimal placeholder by the system's international settings. This character is treated as a literal for masking purposes. </p></td></tr>
+            <tr><td class="body" width="23%"><p>,</p></td><td class="body" width="66%"><p>Thousands separator. The actual character used is the one specified as the thousands separator by the system's international settings. This character is treated as a literal for masking purposes.</p></td></tr>
+            <tr><td class="body" width="23%">:</td><td class="body" width="66%">Time separator. The actual character used is the one specified as the time separator by the system's international settings. This character is treated as a literal for masking purposes</td></tr>
+            <tr><td class="body" width="23%">/</td><td class="body" width="66%">Date separator. The actual character used is the one specified as the date separator by the system's international settings. This character is treated as a literal for masking purposes.</td></tr>
+            <tr><td class="body" width="23%">\</td><td class="body" width="66%">Treat the next character in the mask string as a literal. This allows you to include the '#', '&amp;', 'A', and '?' as well as other characters with special meanings in the mask. This character is treated as a literal for masking purposes.</td></tr>
+            <tr><td class="body" width="23%">&amp;</td><td class="body" width="66%">Character placeholder. Valid values for this placeholder are ANSI characters in the following ranges: 32-126 and 128-255 (keyboard and foreign symbol characters).</td></tr>
+            <tr><td class="body" width="23%">&gt;</td><td class="body" width="66%">Convert all the characters that follow to uppercase.</td></tr>
+            <tr><td class="body" width="23%">&lt;</td><td class="body" width="66%">Convert all the characters that follow to lowercase.</td></tr>
+            <tr><td class="body" width="23%">A</td><td class="body" width="66%">Alphanumeric character placeholder. For example: a-z, A-Z, or 0-9. Character entry is required.</td></tr>
+            <tr><td class="body" width="23%">a</td><td class="body" width="66%">Alphanumeric character placeholder. For example: a-z, A-Z, or 0-9. Character entry is not required.</td></tr>
+            <tr><td class="body" width="23%">9</td><td class="body" width="66%">Digit placeholder. Character must be numeric (0-9) but entry is not required.</td></tr>
+            <tr><td class="body" width="23%">-</td><td class="body" width="66%">Minus sign when followed by a number section defined by series of 'n's (like in "-nn,nnn.nn") indicates that negative numbers are allowed. When not followed by a series of 'n's, it's taken as a literal. Minus sign will only be shown when the number is actually negative.</td></tr>
+            <tr><td class="body" width="23%">+</td><td class="body" width="66%">Plus sign when followed by a number section defined by series of 'n's (like in "-nn,nnn.nn") indicates that negative numbers are allowed. However, it differs from '-' in the respect that it will always show a '+' or a '-' sign depending on whether the number is positive or negative.</td></tr>
+            <tr><td class="body" width="23%">C</td><td class="body" width="66%">Character or space placeholder. Character entry is not required. This operates exactly like the '&amp;' placeholder, and ensures compatibility with Microsoft Access.</td></tr>
+            <tr><td class="body" width="23%">?</td><td class="body" width="66%">Letter placeholder. For example: a-z or A-Z. Character entry is not required.</td></tr>		
+            <tr><td class="body" width="23%">n</td><td class="body" width="66%">Digit placeholder. A group of n's can be used to create a numeric section where numbers are entered from right to left. Character must be numeric (0-9) but entry is not required.</td></tr>
+            <tr><td class="body" width="23%">mm, dd, yy</td><td class="body" width="66%">Combination of these three special tokens can be used to define a date mask. mm for month, dd for day, yy for two digit year and yyyy for four digit year. Examples: mm/dd/yyyy, yyyy/mm/dd, mm/yy.</td></tr>
+            <tr><td class="body" width="23%">hh, mm, ss, tt</td><td class="body" width="66%">Combination of these three special tokens can be used to define a time mask. hh for hour, mm for minute, ss for second, and tt for AP/PM. Examples: hh:mm, hh:mm tt, hh:mm:ss.</td></tr>
+            <tr><td class="body" width="23%">{date}</td><td class="body" width="66%"><b>{date}</b> token is a place holder for short date input. The date mask is derived using the underlying culture settings.</td></tr>
+            <tr><td class="body" width="23%">{time}</td><td class="body" width="66%"><b>{time}</b> token is a place holder for short time input. Short time typically does not include the seconds portion. The time mask is derived using the underlying culture settings.</td></tr>
+            <tr><td class="body" width="23%">{longtime}</td><td class="body" width="66%"><b>{longtime}</b> token is a place holder for long time input. Long time typically includes the seconds portion. The long time mask is derived using the underlying culture settings.</td></tr>
+            <tr><td class="body" width="23%">{double:i.f:c}</td><td class="body" width="66%"><b>{double:i.f:c}</b> is a place holder for a mask that allows floating point input where <b>i</b> and <b>f</b> in <b>i.f</b> specify the number of digits in the integer and fraction portions respectively. The <b>:c</b> portion of the mask is optional and it specifies that the inputting of the value should be done continous across fraction and integer portions. For example, with <b>:c</b> in the mask, in order to enter 12.34 the user types in "1234". Notice that the decimal separator character is missing. This allevietes the user from having to type in the decimal separator.</td></tr>
+            <tr><td class="body" width="23%">{double:-i.f:c}</td><td class="body" width="66%">Same as <b>{double:i.f:c}</b> except this allows negative numbers.</td></tr>
+            <tr><td class="body" width="23%">{currency:i.f:c}</td><td class="body" width="66%">Same as <b>{double:i.f:c}</b> except the mask is constructed based on currency formatting information of the underlying format provider or the culture. It typically has the currency symbol and also displays the group characters.</td></tr>
+            <tr><td class="body" width="23%">{currency:-i.f:c}</td><td class="body" width="66%">Same as <b>{currency:i.f:c}</b> except this allows negative numbers.</td></tr>
+            <tr><td class="body" width="23%">Literal</td><td class="body" width="66%">All other symbols are displayed as literals; that is, they appear as themselves.</td></tr>
+            </tbody></table></p>
+            <p>You can also escape the mask with {LOC} character sequence to indicate that symbols in the following table should be mapped to the associated symbols in the underlying culture settings.</p>
+            <p><table border="1" cellpadding="3" width="100%" class="FilteredItemListTable">
+            <thead>
+            <tr><td class="body" width="23%"><p>Character</p></td><td class="body" width="66%"><p>Description</p></td></tr></thead>
+            <tbody>
+            <tr><td class="body" width="23%">$</td><td class="body" width="66%">Currency symbol.</td></tr>
+            <tr><td class="body" width="23%">/</td><td class="body" width="66%">Date seperator.</td></tr>
+            <tr><td class="body" width="23%">:</td><td class="body" width="66%">Time seperator.</td></tr>
+            <tr><td class="body" width="23%">,</td><td class="body" width="66%">Thousands seperator.</td></tr>
+            <tr><td class="body" width="23%">.</td><td class="body" width="66%">Decimal seperator.</td></tr>
+            <tr><td class="body" width="23%">+</td><td class="body" width="66%">Positive sign.</td></tr>
+            <tr><td class="body" width="23%">-</td><td class="body" width="66%">Negative sign.</td></tr>
+            </tbody></table></p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.CultureInfo">
+            <summary>
+            Returns or sets a <b>CultureInfo</b> object for determining the default masks for each different <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.EditAs"/> types.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.FormatString">
+            <summary>
+            Gets/sets the format string used by the control. This is only used when displaying 
+            the value when the control is not focused.
+            </summary>
+            <remarks>
+            <p class="body">
+            <b>FormatString</b> property is used to specify the format with which to format the
+            value for displaying purposes when the control doesn't have focus. When the control
+            has focus, <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask"/> is used. If this property is not specified then
+            <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask"/> is used as well.
+            </p>
+            </remarks>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DisplayMode"/>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Text">
+            <summary>
+            Overridden. Text property.
+            </summary>
+            <remarks>
+            Use the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Value"/> property for binding purposes.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Value">
+            <summary>
+            Gets or sets the data to be edited in the masked edit control.
+            </summary>
+            <remarks>
+            <p>Use this property for binding puproses.</p>
+            <p>If Nullable is true and user has not input any text, this property will return DBNull. If Nullable is false and user has not input any text, masked edit will consider it an invalid input.</p>
+            <p>
+            When EditAs property is set to AutoSense and no InputMask is specified, and this property is set to an object of supported type, masked edit will automatically use an appropriate default mask for that type. If an object of type that is not supported by the masked edit is assigned, it will throw an ArgumentException.
+            </p>
+            <p>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Nullable"/>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.EditAs"/>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InputMask"/>
+            </p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Nullable">
+            <summary>
+            Returns or sets a value that specifies how the control handles empty values. Default is true.
+            </summary>
+            <remarks>
+            This property controls how <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Value"/> property reacts to empty text in control. If <b>Nullable</b> is set to True, the <b>Value</b> property will return DBNull if the entered text is empty. If Nullable is False, the <b>Value</b> property will return the last valid value.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.NullText">
+            <summary>
+            Text that would get displayed when the value is DBNull. By default, the masked edit displays prompts and literals when the value is DBNull. Default value for this property is null.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PromptChar">
+            <summary>
+            Returns or sets the prompt character. The default prompt character is the underscore (_).
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectedTextBackColor">
+            <summary>
+            Returns or sets the backgroudn color of selected text.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectedTextForeColor">
+            <summary>
+            gets or sets the fore color of the selected text
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PadChar">
+            <summary>
+            Returns or sets the character that will be used as the pad character. Default is space character (' ').
+            </summary>
+            <remarks>
+            <p class="body">The pad character is the character that is used to replace the prompt characters when getting the data from the Masked Edit control with DataMode.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Padding">
+            <summary>
+            Gets or sets the padding around the text. Default is 1.
+            </summary>
+            <remarks>
+            Padding is the space between the text and the border of the control.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Sections">
+            <summary>
+            A collection of the edit sections in the edit portion of the control. Each edit section is usually seperated by literal
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DisplayChars">
+            <summary>
+            A collection of the display characters used in the control.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DesignMode">
+            <summary>
+            Just to allow access to DesignMode property to other classes.
+            (base.DesignMode is protected)
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ReadOnly">
+            <summary>
+            Determines whether the control will be read-only.
+            </summary>
+            <remarks>
+            Set this to True make the MaskedEdit control read-only.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DisplayMode">
+            <summary>
+            Returns or sets a value that determines how the control's contents will be displayed when the control is not in edit mode and data masking is enabled.
+            </summary>
+            <remarks>
+            <p class="body">This property is used to determine how mask literals and prompt characters are displayed when the control is not in edit mode. Based on the setting of this property, the text of the control will contain no prompt characters or literals (just the raw data), the data and just the literals, the data and just the prompt characters, or all the text including both prompt characters and literals. The formatted spacing of partially masked values can be preserved by indicating to include literals with padding, which includes data and literal characters, but replaces prompt characters with pad characters (usually spaces).</p>
+            <p class="body">Generally, prompt characters disappear when a cell is no longer in edit mode, as a visual cue to the user. In some cases, however, it may be appropriate in your application to display mask literals as well as data when a cell is no longer in edit mode.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DataMode">
+            <summary>
+            Returns or sets a value that determines how the control's contents will be stored by the data source when data masking is enabled.
+            </summary>
+            <remarks>
+            <p class="body">This property is used to determine how mask literals and prompt characters are handled when the control's contents are passed to the data source (or are retrieved using the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Text"/> property.) Based on the setting of this property, the text of the control will contain no prompt characters or literals (just the raw data), the data and just the literals, the data and just the prompt characters, or all the text including both prompt characters and literals. The formatted spacing of partially masked values can be preserved by indicating to include literals with padding, which includes data and literal characters, but replaces prompt characters with pad characters (usually spaces).</p>
+            <p class="body">Generally, simply the raw data is committed to the data source and data masking is used to format the data when it is displayed. In some cases, however, it may be appropriate in your application to store mask literals as well as data.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ClipMode">
+            <summary>
+            Returns or sets a value that determines how the control's contents will be copied to the clipboard when data masking is in enabled.
+            </summary>
+            <remarks>
+            <p class="body">This property is used to determine how mask literals and prompt characters are handled when the control's contents are copied to the clipboard. Based on the setting of this property, the text of the control will contain no prompt characters or literals (just the raw data), the data and just the literals, the data and just the prompt characters, or all the text including both prompt characters and literals. The formatted spacing of partially masked values can be preserved by indicating to include literals with padding, which includes data and literal characters, but replaces prompt characters with pad characters (usually spaces).</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.CurrentState">
+            <summary>
+            Returns bit flags that signify the current editing state of the control.
+            </summary>
+            <remarks>
+            The <b>CurrentState</b> property is used primarily in conjunction with the <see cref="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.KeyActionMappings"/> property and the <see cref="M:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.PerformAction(Infragistics.Win.UltraWinMaskedEdit.MaskedEditAction,System.Boolean,System.Boolean)"/> method to return information about the state of the control with regards to user interaction. The setting of the <b>CurrentState</b> property indicates which object has focus in the control, whether the user has placed the control into edit mode, and other information such as whether a combo box is dropped down or whether a row is expanded.
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.KeyActionMappings">
+            <summary>
+            Gives you the ability to reconfigure the way the control responds to user keystrokes.
+            </summary>
+            <remarks>
+            <p class="body">The <b>KeyActionMappings</b> property provides access to the control's mechanism for handling keyboard input from users. All keystrokes for actions such as selection, navigation and editing are stored in a table-based system that you can examine and modify using this property. Through the <b>KeyActionsMappings</b> property, you can customize the keyboard layout of the control to match your own standards for application interactivity.</p>
+            <p class="body">For example, if you wanted users to be able to navigate between cells by pressing the F8 key, you could add this behavior. You can specify the key code and any special modifier keys associated with an action, as well as determine whether a key mapping applies in a given context.</p>
+            <p class="body">The following table lists the default key mappings for the <see cref="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit"/> control:
+            <table border="1" cellpadding="3" width="100%" class="FilteredItemListTable">
+            <thead>
+            <tr>
+            <th>KeyCode</th>
+            <th>ActionCode</th>
+            <th>StateRequired</th>
+            <th>StateDisallowed</th>
+            <th>SpecialKeysRequired</th>
+            <th>SpecialKeysDisallowed</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td class="body">Right</td><td class="body">NextCharacter</td><td class="body">Character</td><td class="body"></td><td class="body"></td><td class="body">Ctrl</td></tr>
+            <tr><td class="body">Right</td><td class="body">NextSection</td><td class="body">Character</td><td class="body">LastSection</td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">Right</td><td class="body">AfterLastCharacter</td><td class="body">LastSection</td><td class="body"></td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">Right</td><td class="body">SetPivot</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Left</td><td class="body">PrevCharacter</td><td class="body"></td><td class="body">FirstCharacter</td><td class="body"></td><td class="body">Ctrl</td></tr>
+            <tr><td class="body">Left</td><td class="body">PrevSection</td><td class="body"></td><td class="body">FirstSection</td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">Left</td><td class="body">FirstCharacter</td><td class="body">FirstSection</td><td class="body">FirstCharacter</td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">Left</td><td class="body">SetPivot</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Home</td><td class="body">FirstCharacter</td><td class="body"></td><td class="body">FirstCharacter</td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">Home</td><td class="body">SetPivot</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">End</td><td class="body">AfterLastCharacter</td><td class="body"></td><td class="body">AfterLastCharacter</td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">End</td><td class="body">SetPivot</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Tab</td><td class="body">NextSection</td><td class="body">Character, TabBySections</td><td class="body">LastSection</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Tab</td><td class="body">SetPivot</td><td class="body">Character, TabBySections</td><td class="body">LastSection</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Tab</td><td class="body">SelectSection</td><td class="body">Character, TabBySections</td><td class="body">LastSection</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Tab</td><td class="body">PrevSection</td><td class="body">TabBySections</td><td class="body">FirstSection</td><td class="body">Shift</td><td class="body"></td></tr>
+            <tr><td class="body">Tab</td><td class="body">SetPivot</td><td class="body">TabBySections</td><td class="body">FirstSection</td><td class="body">Shift</td><td class="body"></td></tr>
+            <tr><td class="body">Tab</td><td class="body">SelectSection</td><td class="body">TabBySections</td><td class="body">FirstSection</td><td class="body">Shift</td><td class="body"></td></tr>
+            <tr><td class="body">Delete</td><td class="body">Delete</td><td class="body">Selected</td><td class="body"></td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Delete</td><td class="body">Delete</td><td class="body">Character</td><td class="body">Selected</td><td class="body"></td><td class="body">Shift</td></tr>
+            <tr><td class="body">Delete</td><td class="body">Backspace</td><td class="body"></td><td class="body">Selected</td><td class="body">Shift</td><td class="body">Ctrl</td></tr>
+            <tr><td class="body">Delete</td><td class="body">AfterLastCharacter</td><td class="body">Character</td><td class="body">Selected</td><td class="body">Ctrl</td><td class="body">Shift</td></tr>
+            <tr><td class="body">Delete</td><td class="body">Delete</td><td class="body">Character</td><td class="body">Selected</td><td class="body">Ctrl</td><td class="body">Shift</td></tr>
+            <tr><td class="body">Back</td><td class="body">Backspace</td><td class="body">Selected</td><td class="body"></td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">Back</td><td class="body">Backspace</td><td class="body"></td><td class="body">FirstCharacter, Selected</td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">C</td><td class="body">Copy</td><td class="body">Selected</td><td class="body"></td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">X</td><td class="body">Cut</td><td class="body">Selected</td><td class="body"></td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">V</td><td class="body">Paste</td><td class="body"></td><td class="body"></td><td class="body">Ctrl</td><td class="body"></td></tr>
+            <tr><td class="body">Insert</td><td class="body">ToggleInsertionMode</td><td class="body"></td><td class="body"></td><td class="body"></td><td class="body">ShiftCtrl</td></tr>
+            <tr><td class="body">Up</td><td class="body">UpKeyAction</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">Down</td><td class="body">DownKeyAction</td><td class="body"></td><td class="body">UnInitialized</td><td class="body"></td><td class="body"></td></tr>
+            <tr><td class="body">Insert</td><td class="body">Copy</td><td class="body">Selected</td><td class="body">UnInitialized</td><td class="body">Ctrl</td><td class="body">Shift</td></tr>
+            <tr><td class="body">Insert</td><td class="body">Paste</td><td class="body"></td><td class="body">UnInitialized</td><td class="body">Shift</td><td class="body">Ctrl</td></tr>
+            <tr><td class="body">Delete</td><td class="body">Cut</td><td class="body">Selected</td><td class="body">UnInitialized</td><td class="body">Shift</td><td class="body">Ctrl</td></tr>
+            </tbody>
+            </table>
+            </p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.AllowShiftingAcrossSections">
+            <summary>
+            Specifies whether to shift characters across section boundaries when inserting/deleting characters.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.IsFullyInput">
+            <summary>
+            Returns True if the current input satisifies the mask.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InsertMode">
+            <summary>
+            Returns or sets the editing mode (insert or overstrike) of the control.
+            </summary>
+            <remarks>
+            <p class="body">When this property is set to True, characters typed will be inserted at the current text caret position and any following characters will be moved. When set to false, typing at an insertion point that contains an existing character will replace that character. The value of this flag also affects how characters are deleted using either The Delete key or the Backspace key. When in insert mode, characters after the character being deleted will be shifted by one to the left within the section.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ControlUIElement">
+            <summary>
+            Associated Control UIElement object
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.UIElement">
+            <summary>
+            Associated Control UIElement object
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.IsInitialized">
+            <summary>
+            Specifies whether the control's mask has been intitialized.
+            </summary>
+            <remarks>
+            <p class="body">If the mask has been initialized, display characters are present and input can be processed.</p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectionStart">
+            <summary>
+            Returns or sets the position of the beginning of the text selection, if any.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectionLength">
+            <summary>
+            Returns or sets the length of the text selection (the number of characters selected.)
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectedText">
+            <summary>
+            Returns the currently selected text. If nothing is selected, it returns an empty string.
+            </summary>		
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DefaultSize">
+            <summary>
+            Overridden method returns the default size of the control
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.AutoSize">
+            <summary>
+            Determines whether the height of the control is automatically adjusted to the size of the font used for the text box.
+            </summary>
+            <remarks>
+            <p class="body">
+            If this property is set to True, the height of the control automatically adjusts when the font is changed. When False, the control's height remains the same until explicitly changed. The default is True.
+            </p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SubObjectPropChangeHandler">
+            <summary>
+            Returns the event handler that notifies OnSubObjectPropChanged
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.About">
+            <summary>
+            Display the about dialog
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.Infragistics#Shared#IUltraLicensedComponent#License">
+            <summary>
+            Return the license we cached inside the constructor
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MinValue">
+            <summary>
+            Minimum value user can enter in the control. Default is no minimum value. Values smaller than MinValue will be considered invalid values.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaxValue">
+            <summary>
+            Maximum value user can enter in the control. Default is no maximum value. Values bigger than MaxValue will be considered invalid values.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InternalEditor">
+            <summary>
+            Returns the control's editor
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.HasInternalEditor">
+            <summary>
+            Indicates if the internal editor has been created
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.ExternalEditor">
+            <summary>
+            Returns the editor provided to other controls
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.HasExternalEditor">
+            <summary>
+            Indicates if the internal editor has been created
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.EditorOwner">
+            <summary>
+            Returns the editor owner used by the control to provide information to the internal editor instance.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DefaultTabNavigation">
+            <summary>
+            Gets the default TabNavigation setting for the editor. 
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.TabNavigation">
+            <summary>
+            Determines whether the Tab key will tab between number sections in
+            a masked editor control. 
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SupportsEditorWithMask">
+            <summary>
+            This member supports the Infragistics infrastructure and is not meant to be invoked externally.
+            </summary>
+            <remarks>
+            <p class="body">Indicates whether the control can utilize an <see cref="T:Infragistics.Win.EditorWithMask"/></p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.SelectAllBehavior">
+            <summary>
+            Specifies whether to select only the entered characters or all the characters (including prompt
+            characters) when the editor performs the operation of select all text. The default value of
+            the property is <see cref="F:Infragistics.Win.UltraWinMaskedEdit.MaskSelectAllBehavior.SelectAllCharacters"/>.
+            </summary>
+            <remarks>
+            <p class="body">
+            When this property is set to <b>SelectEnteredCharacters</b>, the select-all-text operation will
+            select text starting from the first entered character to the last entered character, including
+            adjacent literals.
+            </p>
+            </remarks>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.AutoFillDate">
+            <summary>
+            Specifies whether to auto-fill empty date components when the user attempts to leave the editor.
+            The default is <b>None</b>.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.DataTypeChangedEventHandler">
+            <summary>
+            Delegate associated with the InitializeDataType event.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskChangedEventHandler">
+            <summary>
+            Delegate associated with the MaskChanged event.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidOperationEventHandler">
+            <summary>
+            Delegate associated with the InvalidOperation event.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.InvalidCharEventHandler">
+            <summary>
+            Delegate associated with the InvalidChar event.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit.MaskValidationErrorEventHandler">
+            <summary>
+            Delegate associated with the MaskValidationError event.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement">
+            <summary>
+            The main element for an MaskedEditControl (occupies the entire client area).
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.InitAppearance(Infragistics.Win.AppearanceData@,Infragistics.Win.AppearancePropFlags@)">
+            <summary>
+            override initappearance 
+            </summary>
+            <param name="appData"></param>
+            <param name="requestedProps"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.PositionChildElements">
+            <summary>
+            Creates the child elements for the grid
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.PerformKeyAction(System.Enum,System.Boolean,System.Boolean)">
+            <summary>
+            Performs the action and returns true if message was handled.
+            </summary>
+            <param name="actionCode"></param>
+            <param name="shift"> true if shift key down </param>
+            <param name="control"> true if control key down </param>
+            <returns></returns>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.BorderStyle">
+            <summary>
+            Overrides the BorderStyle to return the BorderStyle from the UIElement
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.Rect">
+            <summary>
+            Override the Rect property so we can call verifyChildElements on the set
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.ClipChildren">
+            <summary>
+            overridden method that returns true to indicate that the children 
+            are to be clipped
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.ClipRectChildren">
+            <summary>
+            Overridden method. Returns the clip rectangle for all it's child 
+            ui elements.
+            </summary>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.MaskedEditControlUIElement.UIRole">
+            <summary>
+            Returns the ui role for the element.
+            </summary>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner">
+            <summary>
+            Implementation of EmbeddableEditorOwnerBase that provides information to the editor.
+            </summary>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.#ctor(Infragistics.Win.UltraWinMaskedEdit.UltraMaskedEdit)">
+            <summary>
+            Constructor
+            </summary>
+            <param name="maskedEditControl"></param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetDataType(System.Object)">
+            <summary>
+            Returns the data type.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetFormatInfo(System.Object,System.String@,System.IFormatProvider@)">
+            <summary>
+            Returns information needed to format a string.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="format">Returns the format string or null.</param>
+            <param name="provider">Returns the IFormatProvider or null.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetPadding(System.Object,System.Drawing.Size@)">
+            <summary>
+            The padding to place around the value to display.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="padding">(out) The padding to place around the value to display.</param>
+            <returns>A boolean indicating whether a meaningful value was returned.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetValue(System.Object)">
+            <summary>
+            Returns the value that should be rendered.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.IsNullable(System.Object)">
+            <summary>
+            Returns whether the value can be set to null.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>True if the value can be set to null.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.ResolveAppearance(System.Object,Infragistics.Win.AppearanceData@,Infragistics.Win.AppearancePropFlags@,Infragistics.Win.EmbeddableEditorArea,System.Boolean,System.String)">
+            <summary>
+            Resolves the appearance for an element.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="appearance">The appearance structure to initialize.</param>
+            <param name="requestedProps">The appearance properties to resolve.</param>
+            <param name="area">Enumeration of type <see cref="T:Infragistics.Win.EmbeddableEditorArea"/> describing the area of the embeddable element to which the appearance will be applied</param>
+            <param name="hotTracking">Boolean indicating whether the owner should apply its 'HotTrackingAppearance'</param>
+            <param name="customArea">A string that denotes which appearance to resolve. Applicable only when the 'area' parameter is set to Custom.</param>
+            <returns>True if the owner recognizes and supports the named appearance.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.ShouldDrawFocus(System.Object)">
+            <summary>
+            Determines if a focus rect should be drawn. Returns false since
+            masked edut never draws any focus.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>Returns true if a focus rect should be drawn.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.IsKeyMapped(System.Windows.Forms.Keys,Infragistics.Win.EmbeddableUIElementBase)">
+            <summary>
+            Returns whether the key is used by the owner.
+            </summary>
+            <param name="keyData"></param>
+            <param name="element">The EmbeddableUIElementBase-derived element</param>
+            <returns>True if the key is used by the owner (e.g. an arrorw or tab key used for internal navigation).</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.OnEnterEditor(Infragistics.Win.EmbeddableEditorBase)">
+            <summary>
+            Called when focus is entering the editor. 
+            </summary>
+            <param name="editor">The editor who is getting focus.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.OnLeaveEditor(Infragistics.Win.EmbeddableEditorBase)">
+            <summary>
+            Called when focus is leaving the editor. 
+            </summary>
+            <param name="editor">The editor who is losing focus.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetImageTransparentColor(System.Object)">
+            <summary>
+            Returns the color that is used as the transparent color for images displayed by the editor
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>The color that is used as the transparent color for images displayed by the editor</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetImageList(System.Object)">
+            <summary>
+            Returns the image list to be used by the editor's ValueList, or null
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>An ImageList, or null if no ImageList exists</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetMaskInfo(System.Object,System.String@,Infragistics.Win.UltraWinMaskedEdit.MaskMode@,Infragistics.Win.UltraWinMaskedEdit.MaskMode@,Infragistics.Win.UltraWinMaskedEdit.MaskMode@)">
+            <summary>
+            Returns masking information. This is only of ibterest to a editor that supports masking.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="mask">The string used for masking the value or null if there is no mask.</param>
+            <param name="dataMode">Determines whether literals and prompt characters are included in Value property of the Editor.</param>
+            <param name="displayMode">Determines whether literals and prompt characters are displayed when not in edit mode.</param>
+            <param name="clipMode">Determines whether literals and prompt characters are included when the editor copyies text to the clipboard.</param>
+            <returns>True only if masking info is available.</returns>
+            <remarks>The default implementation returns false.</remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetNullText(System.Object,System.String@)">
+            <summary>
+            The string to display for a null value.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="nullText">(out) The string that should be used if the value is null or DB_Null.</param>
+            <returns>A boolean indicating whether a meaningful value was returned.</returns>
+            <remarks>The default implementation returns an empty string.</remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetPadChar(System.Object,System.Char@)">
+            <summary>
+            Returns character used as a substitute for spaces.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="padChar">Pad character.</param>
+            <returns>True only if pad character info is available.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetPromptChar(System.Object,System.Char@)">
+            <summary>
+            Returns the character used as prompt during editing (e.g. '_').
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="promptChar">Prompt character.</param>
+            <returns>True only if prompt character info is available.</returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.IsReadOnly(System.Object)">
+            <summary>
+            Returns true is the value is read-only
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>A boolean indicating whether the value is read only</returns>
+            <remarks>The default implementation returns false.</remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetDisplayStyle(System.Object)">
+            <summary>
+            Returns the DisplayStyle to be used by the embeddable element
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetBorderStyle(System.Object,Infragistics.Win.UIElementBorderStyle@)">
+            <summary>
+            Returns the BorderStyle to be used by the editor's embeddable element
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="borderStyle">The BorderStyle to be used by the editor's embeddable element</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.IsHotTrackingEnabled(System.Object)">
+            <summary>
+            Returns whether "hot tracking" effects should be enabled
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>The default implementation returns true</returns>
+            <remarks>
+            When one embeddable element is in edit mode, others might want to disable hot tracking effects; in that case, the owner should return false from this method.
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.DrawAsActive(System.Object)">
+            <summary>
+            Returns whether the element should be drawn as if it were in its "active" state. Only applicable if the return from the DisplayStyle property is not Standard.
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <returns>The default implementation returns DefaultableBoolean.Default</returns>
+            <remarks>
+            The default implementation returns DefaultableBoolean.Default, for which the element should follow the cursor position.
+            </remarks>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetButtonStyle(System.Object,Infragistics.Win.UIElementButtonStyle@)">
+            <summary>
+            Returns the ButtonStyle to be used by the embeddable element's button
+            </summary>
+            <param name="ownerContext">The context that was passed into the <see cref="M:Infragistics.Win.EmbeddableEditorBase.GetEmbeddableElement(Infragistics.Win.UIElement,Infragistics.Win.EmbeddableEditorOwnerBase,System.Object,Infragistics.Win.EmbeddableUIElementBase)"/> method.</param>
+            <param name="buttonStyle">The ButtonStyle to be used by the embeddable element's buttons</param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetMinValue(System.Object)">
+            <summary>
+            Gets the min value if any.
+            </summary>
+            <param name="ownerContext"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.MaskedEditEmbeddableEditorOwner.GetMaxValue(System.Object)">
+            <summary>
+            Gets the max value if any.
+            </summary>
+            <param name="ownerContext"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Infragistics.Win.UltraWinMaskedEdit.Resources">
+            <summary>
+            Exposes a <see cref="T:Infragistics.Shared.ResourceCustomizer"/> instance for this assembly. 
+            </summary>
+            <seealso cref="P:Infragistics.Win.UltraWinMaskedEdit.Resources.Customizer"/> 
+            <seealso cref="T:Infragistics.Shared.ResourceCustomizer"/> 
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.Resources.GetString(System.String,System.Object[])">
+            <summary>
+            Returns the resource string using the specified name and default culture.
+            </summary>
+            <param name="name">Name of the string resource to return.</param>
+            <param name="args">Arguments supplied to the string.Format method when formatting the string.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.Resources.GetString(System.String)">
+            <summary>
+            Returns the resource string using the specified resource name and default culture. The string is then formatted using the arguments specified.
+            </summary>
+            <param name="name">Name of the string resource to return.</param>
+        </member>
+        <member name="M:Infragistics.Win.UltraWinMaskedEdit.Resources.GetObject(System.String)">
+            <summary>
+            Returns the resource object using the specified name.
+            </summary>
+            <param name="name">Name of the resource item</param>
+            <returns>An object containing the specified resource</returns>
+        </member>
+        <member name="P:Infragistics.Win.UltraWinMaskedEdit.Resources.Customizer">
+            <summary>
+            Returns the <see cref="T:Infragistics.Shared.ResourceCustomizer"/> for this assembly.
+            </summary>
+            <seealso cref="T:Infragistics.Shared.ResourceCustomizer"/> 
+        </member>
+        <member name="M:Infragistics.Shared.LocalizedCategoryAttribute.GetLocalizedString(System.String)">
+            <summary>
+            Returns the localized category name
+            </summary>
+            <param name="value">Name of the category to retreive</param>
+            <returns>The localized string value</returns>
+        </member>
+        <member name="M:Infragistics.Shared.UltraLicenseAttribute.GetLicensedWithProducts">
+            <summary>
+            Return the list of products that this control can be licensed with
+            </summary>
+        </member>
+    </members>
+</doc>
