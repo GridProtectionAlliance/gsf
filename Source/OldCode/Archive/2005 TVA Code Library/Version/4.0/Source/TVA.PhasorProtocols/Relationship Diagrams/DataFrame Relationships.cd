@@ -165,7 +165,7 @@
     <TypeIdentifier />
   </Interface>
   <Interface Name="TVA.Measurements.IFrame" Collapsed="true">
-    <Position X="11.25" Y="1.25" Width="1.5" />
+    <Position X="11.25" Y="1" Width="1.5" />
     <TypeIdentifier />
   </Interface>
   <Interface Name="System.IComparable" Collapsed="true">
