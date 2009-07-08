@@ -172,9 +172,6 @@ namespace TVA.Historian.Notifiers
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the notifier is currently enabled.
         /// </summary>
-        /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
-        /// </remarks>
         public bool Enabled
         {
             get
