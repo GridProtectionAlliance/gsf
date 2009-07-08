@@ -56,10 +56,12 @@ namespace TVA.PhasorProtocols.IeeeC37_118
         /// Creates a new <see cref="CommonFrameHeader"/> from specified parameters.
         /// </summary>
         /// <param name="typeID">The IEEE C37.118 specific frame type of this frame.</param>
+        /// <param name="idCode">The ID code of this frame.</param>
         /// <param name="timestamp">The timestamp of this frame.</param>
-        public CommonFrameHeader(FrameType typeID, Ticks timestamp)
+        public CommonFrameHeader(FrameType typeID, ushort idCode, Ticks timestamp)
         {
             m_frameType = typeID;
+            m_idCode = idCode;
             m_timestamp = timestamp;
             m_version = 1;
             m_timebase = (UInt24)100000;

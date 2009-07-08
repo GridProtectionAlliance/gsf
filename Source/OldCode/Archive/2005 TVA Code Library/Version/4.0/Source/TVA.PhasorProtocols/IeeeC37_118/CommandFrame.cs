@@ -123,7 +123,7 @@ namespace TVA.PhasorProtocols.IeeeC37_118
             {
                 // Make sure frame header exists
                 if (m_frameHeader == null)
-                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.Timestamp);
+                    m_frameHeader = new CommonFrameHeader(IeeeC37_118.FrameType.CommandFrame, base.IDCode, base.Timestamp);
 
                 return m_frameHeader;
             }
