@@ -16,6 +16,8 @@
 //       Added bypass optimizations for high-speed serial port data access
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -217,43 +219,39 @@ namespace TVA.Communication
         /// Connects the <see cref="SerialClient"/> to the <see cref="SerialPort"/> asynchronously.
         /// </summary>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="SerialClient"/> when it is connected.</exception>
-        public override void ConnectAsync()
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
-            {
-                // Initialize if unitialized.
-                Initialize();
+            WaitHandle handle = base.ConnectAsync();
 
-                m_serialClient.ID = this.ClientID;
-                m_serialClient.Passphrase = this.HandshakePassphrase;
-                m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                m_serialClient.Provider = new SerialPort();
-                m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
-                m_serialClient.Provider.DataReceived += SerialPort_DataReceived;
-                m_serialClient.Provider.ErrorReceived += SerialPort_ErrorReceived;
-                m_serialClient.Provider.PortName = m_connectData["port"];
-                m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
-                m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
-                m_serialClient.Provider.Parity = (Parity)(Enum.Parse(typeof(Parity), m_connectData["parity"]));
-                m_serialClient.Provider.StopBits = (StopBits)(Enum.Parse(typeof(StopBits), m_connectData["stopbits"]));
+            m_serialClient.ID = this.ClientID;
+            m_serialClient.Passphrase = this.HandshakePassphrase;
+            m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_serialClient.Provider = new SerialPort();
+            m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
+            m_serialClient.Provider.DataReceived += SerialPort_DataReceived;
+            m_serialClient.Provider.ErrorReceived += SerialPort_ErrorReceived;
+            m_serialClient.Provider.PortName = m_connectData["port"];
+            m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
+            m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
+            m_serialClient.Provider.Parity = (Parity)(Enum.Parse(typeof(Parity), m_connectData["parity"]));
+            m_serialClient.Provider.StopBits = (StopBits)(Enum.Parse(typeof(StopBits), m_connectData["stopbits"]));
 
-                if (m_connectData.ContainsKey("dtrenable"))
-                    m_serialClient.Provider.DtrEnable = m_connectData["dtrenable"].ParseBoolean();
-                if (m_connectData.ContainsKey("rtsenable"))
-                    m_serialClient.Provider.RtsEnable = m_connectData["rtsenable"].ParseBoolean();
+            if (m_connectData.ContainsKey("dtrenable"))
+                m_serialClient.Provider.DtrEnable = m_connectData["dtrenable"].ParseBoolean();
+
+            if (m_connectData.ContainsKey("rtsenable"))
+                m_serialClient.Provider.RtsEnable = m_connectData["rtsenable"].ParseBoolean();
 
 #if ThreadTracking
-                m_connectionThread = new ManagedThread(OpenPort);
-                m_connectionThread.Name = "TVA.Communication.SerialClient.OpenPort()";
+            m_connectionThread = new ManagedThread(OpenPort);
+            m_connectionThread.Name = "TVA.Communication.SerialClient.OpenPort()";
 #else
-                m_connectionThread = new Thread(OpenPort);
+            m_connectionThread = new Thread(OpenPort);
 #endif
-                m_connectionThread.Start();
-            }
-            else
-            {
-                throw new InvalidOperationException("Client is currently not disconnected.");
-            }
+            m_connectionThread.Start();
+
+            return handle;
         }
 
         /// <summary>

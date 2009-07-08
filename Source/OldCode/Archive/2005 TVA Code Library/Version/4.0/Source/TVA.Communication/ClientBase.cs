@@ -24,7 +24,9 @@
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
-//       Modified state alterning properties to reconnect the client when changed.
+//       Modified state altering properties to reconnect the client when changed.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -225,7 +227,7 @@ namespace TVA.Communication
         private Ticks m_disconnectTime;
         private bool m_disposed;
         private bool m_initialized;
-        //private ManualResetEvent m_connectHandle;
+        private ManualResetEvent m_connectHandle;
 
         #endregion
 
@@ -789,11 +791,6 @@ namespace TVA.Communication
         public abstract void Disconnect();
 
         /// <summary>
-        /// When overridden in a derived class, connects client to the server asynchronously.
-        /// </summary>
-        public abstract void ConnectAsync();
-
-        /// <summary>
         /// When overridden in a derived class, validates the specified <paramref name="connectionString"/>.
         /// </summary>
         /// <param name="connectionString">The connection string to be validated.</param>
@@ -952,13 +949,35 @@ namespace TVA.Communication
         /// </summary>
         public virtual void Connect()
         {
-            // Start asynchronous connection attempt.
-            ConnectAsync();
-            // Block for connection process to complete.
-            do
+            // Start asynchronous connection attempt and block thread until complete.
+            ConnectAsync().WaitOne();
+        }
+
+        /// <summary>
+        /// Connects the client to the server asynchronously.
+        /// </summary>
+        /// <exception cref="FormatException">Server property in <see cref="ConnectionString"/> is invalid.</exception>
+        /// <exception cref="InvalidOperationException">Attempt is made to connect the client when it is not disconnected.</exception>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        /// <remarks>
+        /// Derived classes are expected to override this method with protocol specific connection operations. Call the base class
+        /// method to obtain an operational wait handle if protocol connection operation doesn't provide one already.
+        /// </remarks>
+        public virtual WaitHandle ConnectAsync()
+        {
+            if (CurrentState == ClientState.Disconnected)
             {
-                Thread.Sleep(1000);
-            } while (m_currentState == ClientState.Connecting);
+                // Initialize if unitialized.
+                Initialize();
+
+                // Set up connection event wait handle
+                m_connectHandle = new ManualResetEvent(false);
+                return m_connectHandle;
+            }
+            else
+            {
+                throw new InvalidOperationException("Client is currently not disconnected.");
+            }
         }
 
         /// <summary>
@@ -1069,6 +1088,10 @@ namespace TVA.Communication
             m_currentState = ClientState.Connected;
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
+            
+            // Signal threads waiting on connection event (if any)...
+            if (m_connectHandle != null)
+                m_connectHandle.Set();
 
             if (ConnectionEstablished != null)
                 ConnectionEstablished(this, EventArgs.Empty);

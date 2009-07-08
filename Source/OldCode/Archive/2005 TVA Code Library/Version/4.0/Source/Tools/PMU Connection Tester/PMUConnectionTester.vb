@@ -449,6 +449,7 @@ Public Class PMUConnectionTester
             .Title = "Open Capture File"
             .Filter = "Captured Files (*.PmuCapture)|*.PmuCapture|All Files|*.*"
             .FileName = ""
+            .CheckFileExists = True
             If .ShowDialog(Me) = OK Then
                 TextBoxFileCaptureName.Text = .FileName()
             End If
@@ -545,6 +546,7 @@ Public Class PMUConnectionTester
             .Title = "Load Connection Settings"
             .Filter = "Connection Files (*.PmuConnection)|*.PmuConnection|All Files (*.*)|*.*"
             .FileName = ""
+            .CheckFileExists = True
             If .ShowDialog(Me) = OK Then
                 LoadConnectionSettings(.FileName)
             End If
@@ -571,6 +573,7 @@ Public Class PMUConnectionTester
             .Title = "Load Configuration File"
             .Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*"
             .FileName = ""
+            .CheckFileExists = True
             If .ShowDialog(Me) = OK Then
                 Dim configFile As FileStream = File.Open(.FileName, FileMode.Open)
 
@@ -1162,6 +1165,7 @@ Public Class PMUConnectionTester
             Dim cell As IDataCell = frame.Cells(ComboBoxPmus.SelectedIndex)
             Dim frequency As Double = cell.FrequencyValue.Frequency
             Dim phasorCount As Integer = cell.PhasorValues.Count
+            Dim phasorIndex As Integer = ComboBoxPhasors.SelectedIndex
 
             ' Plot real-time frequency trend
             m_frequencyData.Rows.Add(New Object() {frequency})
@@ -1171,8 +1175,8 @@ Public Class PMUConnectionTester
             Loop
 
             ' Plot real-time phasor trends
-            If ComboBoxPhasors.SelectedIndex < phasorCount And phasorCount > 0 Then
-                Dim phasor As IPhasorValue = cell.PhasorValues(ComboBoxPhasors.SelectedIndex)
+            If phasorIndex < phasorCount AndAlso phasorIndex > -1 AndAlso phasorCount > 0 Then
+                Dim phasor As IPhasorValue = cell.PhasorValues(phasorIndex)
 
                 If Math.Abs((phasor.Angle - m_lastPhaseAngle).ToDegrees()) >= 0.5! OrElse m_phasorData.Rows.Count < 2 Then
                     Dim row As DataRow = m_phasorData.NewRow()
@@ -1337,10 +1341,11 @@ Public Class PMUConnectionTester
 
         If connectionAttempts = m_applicationSettings.MaximumConnectionAttempts Then
             MsgBox(ex.Message, MsgBoxStyle.Exclamation Or MsgBoxStyle.OkOnly, "Device Connection Error")
-            Disconnect()
         ElseIf connectionAttempts > 1 Then
             TabControlChart.Tabs(ChartTabs.Messages).Selected = True
         End If
+
+        Disconnect()
 
     End Sub
 

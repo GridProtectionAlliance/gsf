@@ -18,6 +18,8 @@
 //       Added disconnect timeout overload
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -127,6 +129,11 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpClient;
         private Dictionary<string, string> m_connectData;
         private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
+#if ThreadTracking
+        private ManagedThread m_connectionThread;
+#else
+        private Thread m_connectionThread;
+#endif
 
         #endregion
 
@@ -212,6 +219,11 @@ namespace TVA.Communication
                 }
 
                 m_udpClient.Provider.Close();
+
+                if (m_connectionThread != null)
+                    m_connectionThread.Abort();
+
+                OnConnectionTerminated();
             }
         }
 
@@ -220,116 +232,143 @@ namespace TVA.Communication
         /// </summary>
         /// <exception cref="FormatException">Server property in <see cref="ClientBase.ConnectionString"/> is invalid.</exception>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="UdpClient"/> when it is not disconnected.</exception>
-        public override void ConnectAsync()
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
+            WaitHandle handle = base.ConnectAsync();
+
+            m_udpClient = new TransportProvider<Socket>();
+            m_udpClient.ID = this.ClientID;
+            m_udpClient.Passphrase = HandshakePassphrase;
+            m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            
+            // Create a server endpoint.
+            if (m_connectData.ContainsKey("server"))
             {
-                // Initialize if unitialized.
-                Initialize();
-
-                m_udpClient = new TransportProvider<Socket>();
-                m_udpClient.ID = this.ClientID;
-                m_udpClient.Passphrase = HandshakePassphrase;
-                m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                
-                // Create a server endpoint.
-                if (m_connectData.ContainsKey("server"))
-                {
-                    // Client has a server endpoint specified.
-                    string[] parts = m_connectData["server"].Split(':');
-                    if (parts.Length == 2)
-                    {
-                        m_udpServer = Transport.CreateEndPoint(parts[0], int.Parse(parts[1]));
-                    }
-                    else
-                    {
-                        throw new FormatException(string.Format("Server property in ConnectionString is invalid. Example: {0}.", DefaultConnectionString));
-                    }
-                }
+                // Client has a server endpoint specified.
+                string[] parts = m_connectData["server"].Split(':');
+                if (parts.Length == 2)
+                    m_udpServer = Transport.CreateEndPoint(parts[0], int.Parse(parts[1]));
                 else
-                {
-                    if (Handshake)
-                        throw new InvalidOperationException("Handshake requires Server property in the ConnectionString.");
-
-                    // Create a random server endpoint since one is not specified.
-                    m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
-                }
-
+                    throw new FormatException(string.Format("Server property in ConnectionString is invalid. Example: {0}.", DefaultConnectionString));
+            }
+            else
+            {
                 if (Handshake)
+                    throw new InvalidOperationException("Handshake requires Server property in the ConnectionString.");
+
+                // Create a random server endpoint since one is not specified.
+                m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
+            }
+
+#if ThreadTracking
+            m_connectionThread = new ManagedThread(OpenPort);
+            m_connectionThread.Name = "TVA.Communication.UdpClient.OpenPort()";
+#else
+            m_connectionThread = new Thread(OpenPort);
+#endif
+            m_connectionThread.Start();
+                
+            return handle;
+        }
+
+        /// <summary>
+        /// Connects to the <see cref="UdpClient"/>.
+        /// </summary>
+        private void OpenPort()
+        {
+            int connectionAttempts = 0;
+
+            if (Handshake)
+            {
+                // Handshaking must be performed. 
+                m_receivedGoodbye = DoGoodbyeCheck;
+                HandshakeMessage handshake = new HandshakeMessage();
+                handshake.ID = this.ClientID;
+                handshake.Passphrase = this.HandshakePassphrase;
+
+                // Prepare binary image of handshake to be transmitted.
+                m_udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                m_udpClient.SendBuffer = handshake.BinaryImage;
+                m_udpClient.SendBufferOffset = 0;
+                m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
+                Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+
+                while (true)
                 {
-                    // Handshaking must be performed. 
-                    m_receivedGoodbye = DoGoodbyeCheck;
-                    HandshakeMessage handshake = new HandshakeMessage();
-                    handshake.ID = this.ClientID;
-                    handshake.Passphrase = this.HandshakePassphrase;
-
-                    // Prepare binary image of handshake to be transmitted.
-                    m_udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
-                    m_udpClient.SendBuffer = handshake.BinaryImage;
-                    m_udpClient.SendBufferOffset = 0;
-                    m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
-                    Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
-
-                    // Initialiate handshake process from a seperate thread.
-                    new Thread((ThreadStart)delegate()
+                    try
                     {
-                        int connectionAttempts = 0;
-                        while (true)
+                        connectionAttempts++;
+                        OnConnectionAttempt();
+
+                        // Transmit the prepared and processed handshake message.
+                        m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
+
+                        // Wait for the server's reponse to the handshake message.
+                        Thread.Sleep(1000);
+                        ReceiveHandshakeAsync(m_udpClient);
+                        break;
+                    }
+                    catch (SocketException ex)
+                    {
+                        OnConnectionException(ex);
+                        if (ex.SocketErrorCode == SocketError.ConnectionReset &&
+                            (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts))
                         {
-                            try
-                            {
-                                connectionAttempts++;
-                                OnConnectionAttempt();
-
-                                // Transmit the prepared and processed handshake message.
-                                m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
-
-                                // Wait for the server's reponse to the handshake message.
-                                Thread.Sleep(1000);
-                                ReceiveHandshakeAsync(m_udpClient);
-                                break;
-                            }
-                            catch (SocketException ex)
-                            {
-                                OnConnectionException(ex);
-                                if (ex.SocketErrorCode == SocketError.ConnectionReset && 
-                                    (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts))
-                                {
-                                    // Server is unavailable, so keep retrying connection to the server.                                  
-                                    continue;
-                                }
-                                else
-                                {
-                                    // For any other reason, clean-up as if the client was disconnected.
-                                    TerminateConnection(m_udpClient, false);
-                                    break;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                // This is highly unlikely, but we must handle this situation just-in-case.
-                                OnConnectionException(ex);
-                                TerminateConnection(m_udpClient, false);
-                                break;
-                            }
+                            // Server is unavailable, so keep retrying connection to the server.                                  
+                            continue;
                         }
-                    }).Start();
-                }
-                else
-                {
-                    // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
-                    m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
-                    m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
-
-                    OnConnectionAttempt();
-                    m_receivedGoodbye = NoGoodbyeCheck;
-                    OnConnectionEstablished();
-                    ReceivePayloadAsync(m_udpClient);
+                        else
+                        {
+                            // For any other reason, clean-up as if the client was disconnected.
+                            TerminateConnection(m_udpClient, false);
+                            break;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // This is highly unlikely, but we must handle this situation just-in-case.
+                        OnConnectionException(ex);
+                        TerminateConnection(m_udpClient, false);
+                        break;
+                    }
                 }
             }
             else
             {
-                throw new InvalidOperationException("Client is currently not disconnected.");
+                WaitHandle handle;
+
+                while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
+                {
+                    try
+                    {
+                        OnConnectionAttempt();
+
+                        // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
+                        m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
+                        m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+
+                        m_receivedGoodbye = NoGoodbyeCheck;
+                        OnConnectionEstablished();
+                        handle = ReceivePayloadAsync(m_udpClient);
+
+                        // We need to wait for payload results to keep data read loop going, otherwise
+                        // thread may terminate before data reception
+                        if (handle != null)
+                            handle.WaitOne();
+
+                        break;
+                    }
+                    catch (ThreadAbortException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        connectionAttempts++;
+                        OnConnectionException(ex);
+                    }
+                }
             }
         }
 
@@ -460,7 +499,7 @@ namespace TVA.Communication
                         udpClient.Passphrase = handshake.Passphrase;
 
                         // Client is now considered to be connected to the server.
-                        OnConnectionEstablished();
+                        OnConnectionEstablished();                        
                         ReceivePayloadAsync(udpClient);
                     }
                     else
@@ -482,18 +521,18 @@ namespace TVA.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private void ReceivePayloadAsync(TransportProvider<Socket> worker)
+        private WaitHandle ReceivePayloadAsync(TransportProvider<Socket> worker)
         {
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
-                worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                return worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                                  worker.ReceiveBufferOffset,
                                                  worker.ReceiveBuffer.Length,
                                                  SocketFlags.None,
                                                  ref m_udpServer,
                                                  ReceivePayloadAsyncCallback,
-                                                 worker);
+                                                 worker).AsyncWaitHandle;
             }
             else
             {
@@ -508,6 +547,8 @@ namespace TVA.Communication
                                                                   ReceivePayloadAsyncCallback,
                                                                   worker));
             }
+
+            return null;
         }
 
         /// <summary>
@@ -518,7 +559,7 @@ namespace TVA.Communication
             TransportProvider<Socket> udpClient = (TransportProvider<Socket>)asyncResult.AsyncState;
             if (!asyncResult.IsCompleted)
             {
-                // Timedout on reception of data so notify via event and continue waiting for data.
+                // Timed-out on reception of data so notify via event and continue waiting for data.
                 OnReceiveDataTimeout();
                 udpClient.WaitAsync(ReceiveTimeout, ReceivePayloadAsyncCallback, asyncResult);
             }

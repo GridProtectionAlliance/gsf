@@ -182,6 +182,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Embedded Resources\Disclaimer.txt" />
     <EmbeddedResource Include="Embedded Resources\TVATROLogo.jpg" />
+    <EmbeddedResource Include="My Project\licenses.licx" />
     <EmbeddedResource Include="My Project\Resources.resx">
       <CustomToolNamespace>My.Resources</CustomToolNamespace>
       <Generator>VbMyResourcesResXFileCodeGenerator</Generator>

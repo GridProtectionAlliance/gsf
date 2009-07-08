@@ -22,6 +22,8 @@
 //       Converted to C#.
 //  11/07/2008 - Pinal C. Patel
 //       Edited code comments.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -247,7 +249,7 @@ namespace TVA.Communication
         /// <summary>
         /// Connects client to the server asynchronously.
         /// </summary>
-        void ConnectAsync();
+        WaitHandle ConnectAsync();
 
         /// <summary>
         /// Disconnects client from the server synchronously.

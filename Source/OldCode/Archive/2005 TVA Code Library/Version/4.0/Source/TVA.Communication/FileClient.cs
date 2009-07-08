@@ -16,6 +16,8 @@
 //       Added bypass optimizations for high-speed file data access
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -471,28 +473,23 @@ namespace TVA.Communication
         /// Connects the <see cref="FileClient"/> to the <see cref="FileStream"/> asynchronously.
         /// </summary>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="FileClient"/> when it is not disconnected.</exception>
-        public override void ConnectAsync()
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public override WaitHandle ConnectAsync()
         {
-            if (CurrentState == ClientState.Disconnected)
-            {
-                // Initialize if unitialized.
-                Initialize();
+            WaitHandle handle = base.ConnectAsync();
 
-                m_fileClient.ID = this.ClientID;
-                m_fileClient.Passphrase = this.HandshakePassphrase;
-                m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
+            m_fileClient.ID = this.ClientID;
+            m_fileClient.Passphrase = this.HandshakePassphrase;
+            m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 #if ThreadTracking
-                m_connectionThread = new ManagedThread(OpenFile);
-                m_connectionThread.Name = "TVA.Communication.FileClient.OpenFile()";
+            m_connectionThread = new ManagedThread(OpenFile);
+            m_connectionThread.Name = "TVA.Communication.FileClient.OpenFile()";
 #else
-                m_connectionThread = new Thread(OpenFile);
+            m_connectionThread = new Thread(OpenFile);
 #endif
-                m_connectionThread.Start();
-            }
-            else
-            {
-                throw new InvalidOperationException("Client is currently not disconnected.");
-            }
+            m_connectionThread.Start();
+
+            return handle;
         }
 
         /// <summary>

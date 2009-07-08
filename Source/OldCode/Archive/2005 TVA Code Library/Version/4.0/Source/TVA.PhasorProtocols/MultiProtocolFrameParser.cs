@@ -1001,6 +1001,9 @@ namespace TVA.PhasorProtocols
                 Dictionary<string, string> settings = m_connectionString.ParseKeyValuePairs();
                 string setting;
 
+                // Reset connection attempt counter
+                m_connectionAttempts = 0;
+
                 // Establish protocol specific frame parser
                 InitializeFrameParser(settings);
 
@@ -1153,8 +1156,7 @@ namespace TVA.PhasorProtocols
             m_commandChannel.ReceiveBufferSize = m_bufferSize;
             m_commandChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
             m_commandChannel.Handshake = false;
-            m_commandChannel.Connect();
-            m_connectionAttempts = 0;
+            m_commandChannel.ConnectAsync();
         }
 
         /// <summary>
@@ -1219,8 +1221,7 @@ namespace TVA.PhasorProtocols
                 m_dataChannel.ConnectionString = m_connectionString;
                 m_dataChannel.MaxConnectionAttempts = m_maximumConnectionAttempts;
                 m_dataChannel.Handshake = false;
-                m_dataChannel.Connect();
-                m_connectionAttempts = 0;
+                m_dataChannel.ConnectAsync();
             }
             else if (m_serverBasedDataChannel != null)
             {
@@ -1322,6 +1323,8 @@ namespace TVA.PhasorProtocols
         /// </remarks>
         public virtual WaitHandle SendDeviceCommand(DeviceCommand command)
         {
+            WaitHandle handle = null;
+
             if (m_deviceSupportsCommands && (m_dataChannel != null || m_serverBasedDataChannel != null || m_commandChannel != null))
             {
                 ICommandFrame commandFrame;
@@ -1353,26 +1356,23 @@ namespace TVA.PhasorProtocols
 
                 if (commandFrame != null)
                 {
-                    WaitHandle handle;
                     byte[] buffer = commandFrame.BinaryImage;
 
                     // Send command over appropriate communications channel - command channel, if defined,
                     // will take precedence over other communications channels for command traffic...
-                    if (m_commandChannel != null)
+                    if (m_commandChannel != null && m_commandChannel.CurrentState == ClientState.Connected)
                         handle = m_commandChannel.SendAsync(buffer, 0, buffer.Length);
-                    else if (m_dataChannel != null)
+                    else if (m_dataChannel != null && m_dataChannel.CurrentState == ClientState.Connected)
                         handle = m_dataChannel.SendAsync(buffer, 0, buffer.Length);
-                    else
+                    else if (m_serverBasedDataChannel != null && m_serverBasedDataChannel.CurrentState == ServerState.Running)
                         handle = m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length)[0];
 
                     if (SentCommandFrame != null)
                         SentCommandFrame(this, new EventArgs<ICommandFrame>(commandFrame));
-
-                    return handle;
                 }
             }
 
-            return null;
+            return handle;
         }        
 
         /// <summary>

@@ -20,6 +20,8 @@
 //       Added disconnect timeout overload
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/08/2009 - James R Carroll
+//       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************
 
@@ -280,7 +282,8 @@ namespace TVA.Communication
         /// Connects the <see cref="TcpClient"/> to the server asynchronously.
         /// </summary>
         /// <exception cref="InvalidOperationException">Attempt is made to connect the <see cref="TcpClient"/> when it is not disconnected.</exception>
-        public override void ConnectAsync()
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
+        public override WaitHandle ConnectAsync()
         {
             if (CurrentState != ClientState.Connected)
             {
@@ -294,7 +297,7 @@ namespace TVA.Communication
 
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
                 string[] parts = m_connectData["server"].Split(':');
-                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(parts[0], int.Parse(parts[1])), ConnectAsyncCallback, m_tcpClient);
+                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(parts[0], int.Parse(parts[1])), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
             }
             else
             {
