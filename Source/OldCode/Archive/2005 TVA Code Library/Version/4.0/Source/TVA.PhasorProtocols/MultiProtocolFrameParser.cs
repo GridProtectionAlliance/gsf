@@ -1320,7 +1320,7 @@ namespace TVA.PhasorProtocols
         /// <remarks>
         /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
         /// </remarks>
-        public virtual void SendDeviceCommand(DeviceCommand command)
+        public virtual WaitHandle SendDeviceCommand(DeviceCommand command)
         {
             if (m_deviceSupportsCommands && (m_dataChannel != null || m_serverBasedDataChannel != null || m_commandChannel != null))
             {
@@ -1353,22 +1353,27 @@ namespace TVA.PhasorProtocols
 
                 if (commandFrame != null)
                 {
+                    WaitHandle handle;
                     byte[] buffer = commandFrame.BinaryImage;
 
                     // Send command over appropriate communications channel - command channel, if defined,
                     // will take precedence over other communications channels for command traffic...
                     if (m_commandChannel != null)
-                        m_commandChannel.SendAsync(buffer, 0, buffer.Length);
+                        handle = m_commandChannel.SendAsync(buffer, 0, buffer.Length);
                     else if (m_dataChannel != null)
-                        m_dataChannel.SendAsync(buffer, 0, buffer.Length);
+                        handle = m_dataChannel.SendAsync(buffer, 0, buffer.Length);
                     else
-                        m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length);
+                        handle = m_serverBasedDataChannel.MulticastAsync(buffer, 0, buffer.Length)[0];
 
                     if (SentCommandFrame != null)
                         SentCommandFrame(this, new EventArgs<ICommandFrame>(commandFrame));
+
+                    return handle;
                 }
             }
-        }
+
+            return null;
+        }        
 
         /// <summary>
         /// Writes data directly to the frame parsing engine buffer.
@@ -1474,8 +1479,12 @@ namespace TVA.PhasorProtocols
             try
             {
                 // Make sure data stream is disabled
-                SendDeviceCommand(DeviceCommand.DisableRealTimeData);
-                Thread.Sleep(300);
+                WaitHandle handle = SendDeviceCommand(DeviceCommand.DisableRealTimeData);
+                if (handle != null)
+                    handle.WaitOne();
+
+                // Allow device time to receive and process command before sending another
+                Thread.Sleep(1000);
 
                 // Wait for real-time data stream to cease for up to two seconds
                 while (m_initialBytesReceived > 0)
@@ -1549,7 +1558,7 @@ namespace TVA.PhasorProtocols
             m_lastFrameReceivedTime = DateTime.Now.Ticks;
         }
 
-        #region [ Communications Client Event Handlers ]
+        #region [ Data Channel Event Handlers ]
 
         private void m_dataChannel_ConnectionEstablished(object sender, EventArgs e)
         {
@@ -1578,7 +1587,7 @@ namespace TVA.PhasorProtocols
 
         #endregion
 
-        #region [ Communications Server Event Handlers ]
+        #region [ Server Based Data Channel Event Handlers ]
 
         private void m_serverBasedDataChannel_ClientConnected(object sender, EventArgs<Guid> e)
         {
