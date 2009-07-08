@@ -1161,6 +1161,7 @@ Public Class PMUConnectionTester
         If Not frame.IsPartial AndAlso m_selectedCell IsNot Nothing Then
             Dim cell As IDataCell = frame.Cells(ComboBoxPmus.SelectedIndex)
             Dim frequency As Double = cell.FrequencyValue.Frequency
+            Dim phasorCount As Integer = cell.PhasorValues.Count
 
             ' Plot real-time frequency trend
             m_frequencyData.Rows.Add(New Object() {frequency})
@@ -1170,7 +1171,7 @@ Public Class PMUConnectionTester
             Loop
 
             ' Plot real-time phasor trends
-            If ComboBoxPhasors.SelectedIndex < cell.PhasorValues.Count Then
+            If ComboBoxPhasors.SelectedIndex < phasorCount And phasorCount > 0 Then
                 Dim phasor As IPhasorValue = cell.PhasorValues(ComboBoxPhasors.SelectedIndex)
 
                 If Math.Abs((phasor.Angle - m_lastPhaseAngle).ToDegrees()) >= 0.5! OrElse m_phasorData.Rows.Count < 2 Then
@@ -1178,12 +1179,12 @@ Public Class PMUConnectionTester
 
                     If m_applicationSettings.PhaseAngleGraphStyle = ApplicationSettings.AngleGraphStyle.Raw Then
                         ' Plot raw phase angles
-                        For x As Integer = 0 To cell.PhasorValues.Count - 1
+                        For x As Integer = 0 To phasorCount - 1
                             If m_phasorData.Columns.Count > x Then row(x) = cell.PhasorValues(x).Angle.ToDegrees()
                         Next
                     Else
                         ' Plot relative phase angles
-                        For x As Integer = 0 To cell.PhasorValues.Count - 1
+                        For x As Integer = 0 To phasorCount - 1
                             If m_phasorData.Columns.Count > x Then row(x) = (phasor.Angle - cell.PhasorValues(x).Angle).ToDegrees()
                         Next
                     End If
@@ -1200,7 +1201,7 @@ Public Class PMUConnectionTester
                             Dim selectedVoltageIndex As Integer = Convert.ToInt32(ComboBoxVoltagePhasors.Items(ComboBoxVoltagePhasors.SelectedIndex).ToString.Split(":"c)(0))
                             Dim selectedCurrentIndex As Integer = Convert.ToInt32(ComboBoxCurrentPhasors.Items(ComboBoxCurrentPhasors.SelectedIndex).ToString.Split(":"c)(0))
 
-                            If selectedVoltageIndex < cell.PhasorValues.Count AndAlso selectedCurrentIndex < cell.PhasorValues.Count Then
+                            If selectedVoltageIndex < phasorCount AndAlso selectedCurrentIndex < phasorCount Then
                                 Dim voltagePhasor As IPhasorValue = cell.PhasorValues(selectedVoltageIndex)
                                 Dim currentPhasor As IPhasorValue = cell.PhasorValues(selectedCurrentIndex)
 
