@@ -19,16 +19,38 @@ using System;
 
 namespace TVA
 {
-    /// <summary>Defines a few common US timezones.</summary>
+    /// <summary>
+    /// Defines a few common United States time zones.
+    /// </summary>
     public static class USTimeZones
     {
         // We define a few common timezones for convenience.
+        private static TimeZoneInfo m_atlanticTimeZone;
         private static TimeZoneInfo m_easternTimeZone;
         private static TimeZoneInfo m_centralTimeZone;
         private static TimeZoneInfo m_mountainTimeZone;
         private static TimeZoneInfo m_pacificTimeZone;
+        private static TimeZoneInfo m_alaskanTimeZone;
+        private static TimeZoneInfo m_hawaiianTimeZone;
+        private static TimeZoneInfo m_westPacificTimeZone;
+        private static TimeZoneInfo m_samoaTimeZone;
 
-        /// <summary>Gets Eastern Time Zone.</summary>
+        /// <summary>
+        /// Gets the Atlantic Time Zone.
+        /// </summary>
+        /// <remarks>This time zone is used by the Commonwealth of Puerto Rico and the United States Virgin Islands.</remarks>
+        public static TimeZoneInfo Atlantic
+        {
+            get
+            {
+                if (m_atlanticTimeZone == null) m_atlanticTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Atlantic Standard Time");
+                return m_atlanticTimeZone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Eastern Time Zone.
+        /// </summary>
         public static TimeZoneInfo Eastern
         {
             get
@@ -38,7 +60,9 @@ namespace TVA
             }
         }
 
-        /// <summary>Gets Central Time Zone.</summary>
+        /// <summary>
+        /// Gets the Central Time Zone.
+        /// </summary>
         public static TimeZoneInfo Central
         {
             get
@@ -48,7 +72,9 @@ namespace TVA
             }
         }
 
-        /// <summary>Gets Mountain Time Zone.</summary>
+        /// <summary>
+        /// Gets the Mountain Time Zone.
+        /// </summary>
         public static TimeZoneInfo Mountain
         {
             get
@@ -58,13 +84,68 @@ namespace TVA
             }
         }
 
-        /// <summary>Gets Pacific Standard Time Zone.</summary>
+        /// <summary>
+        /// Gets the Pacific Standard Time Zone.
+        /// </summary>
         public static TimeZoneInfo Pacific
         {
             get
             {
                 if (m_pacificTimeZone == null) m_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
                 return m_pacificTimeZone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Alaskan Standard Time Zone.
+        /// </summary>
+        public static TimeZoneInfo Alaskan
+        {
+            get
+            {
+                if (m_alaskanTimeZone == null) m_alaskanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Alaskan Standard Time");
+                return m_alaskanTimeZone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Hawaiian Standard Time Zone.
+        /// </summary>
+        public static TimeZoneInfo Hawaiian
+        {
+            get
+            {
+                if (m_hawaiianTimeZone == null) m_hawaiianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Hawaiian Standard Time");
+                return m_hawaiianTimeZone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the West Pacific Standard Time Zone.
+        /// </summary>
+        /// <remarks>
+        /// <para>This time zone is used by Guam and the Commonwealth of the Northern Mariana Islands.</para>
+        /// <para>This is also known as the Chamorro time zone.</para>
+        /// </remarks>
+        public static TimeZoneInfo WestPacific
+        {
+            get
+            {
+                if (m_westPacificTimeZone == null) m_westPacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("West Pacific Standard Time");
+                return m_westPacificTimeZone;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Samoa Standard Time Zone.
+        /// </summary>
+        /// <remarks>This time zone is used by the American Samoa.</remarks>
+        public static TimeZoneInfo Samoa
+        {
+            get
+            {
+                if (m_samoaTimeZone == null) m_samoaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Samoa Standard Time");
+                return m_samoaTimeZone;
             }
         }
     }
