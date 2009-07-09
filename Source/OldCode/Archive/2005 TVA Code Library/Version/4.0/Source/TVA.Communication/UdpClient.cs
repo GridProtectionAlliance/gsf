@@ -20,6 +20,8 @@
 //       Converted to C#.
 //  07/08/2009 - James R Carroll
 //       Added WaitHandle return value from asynchronous connection.
+//  07/09/2009 - Pinal C. Patel
+//       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.
 //
 //*******************************************************************************************************
 
@@ -222,8 +224,6 @@ namespace TVA.Communication
 
                 if (m_connectionThread != null)
                     m_connectionThread.Abort();
-
-                OnConnectionTerminated();
             }
         }
 
@@ -336,8 +336,6 @@ namespace TVA.Communication
             }
             else
             {
-                WaitHandle handle;
-
                 while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
                 {
                     try
@@ -350,12 +348,7 @@ namespace TVA.Communication
 
                         m_receivedGoodbye = NoGoodbyeCheck;
                         OnConnectionEstablished();
-                        handle = ReceivePayloadAsync(m_udpClient);
-
-                        // We need to wait for payload results to keep data read loop going, otherwise
-                        // thread may terminate before data reception
-                        if (handle != null)
-                            handle.WaitOne();
+                        ReceivePayloadAsync(m_udpClient);
 
                         break;
                     }
@@ -573,7 +566,7 @@ namespace TVA.Communication
 
                     // Received a goodbye message from the server.
                     if (m_receivedGoodbye(udpClient))
-                        throw new SocketException((int)SocketError.Disconnecting);
+                        throw new SocketException((int)SocketError.ConnectionReset);
 
                     // Notify of received data and resume receive operation.
                     OnReceiveDataComplete(udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
@@ -587,11 +580,28 @@ namespace TVA.Communication
                 }
                 catch (SocketException ex)
                 {
-                    // Terminate the connection when a socket exception is encountered. The most likely socket exception that 
-                    // could be encountered is the SocketError.ConnectionReset when Handshake is turned on and the endpoint 
-                    // is not listening for data.
-                    OnReceiveDataException(ex);
-                    TerminateConnection(udpClient, true);
+                    if (Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
+                    {
+                        // Terminate the connection if:
+                        // 1) Handshake is enabled and the endpoint is not listening for data.
+                        // 2) Handshake is enabled and the endpoint has notified of shutdown via a "goodbye" message.
+                        OnReceiveDataException(ex);
+                        TerminateConnection(udpClient, true);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // For any other exception, notify and resume receive.
+                            OnReceiveDataException(ex);
+                            ReceivePayloadAsync(udpClient);
+                        }
+                        catch
+                        {
+                            // Terminate connection if resuming receiving fails.
+                            TerminateConnection(udpClient, true);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {

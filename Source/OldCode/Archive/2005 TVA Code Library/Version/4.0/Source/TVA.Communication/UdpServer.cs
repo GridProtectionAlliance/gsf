@@ -16,6 +16,8 @@
 //       Added bypass optimizations for high-speed socket access
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/09/2009 - Pinal C. Patel
+//       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.
 //
 //*******************************************************************************************************
 
@@ -597,7 +599,7 @@ namespace TVA.Communication
 
                     // Received a goodbye message from the client.
                     if (m_receivedGoodbye(udpClient))
-                        throw new SocketException((int)SocketError.Disconnecting);
+                        throw new SocketException((int)SocketError.ConnectionReset);
 
                     // Notify of received data and resume receive operation.
                     OnReceiveClientDataComplete(udpClient.ID, udpClient.ReceiveBuffer, udpClient.ReceiveBufferLength);
@@ -611,11 +613,28 @@ namespace TVA.Communication
                 }
                 catch (SocketException ex)
                 {
-                    // Terminate the connection when a socket exception is encountered. The most likely socket exception that 
-                    // could be encountered is the SocketError.ConnectionReset when Handshake is turned on and the endpoint 
-                    // is not listening for data.
-                    OnReceiveClientDataException(udpClient.ID, ex);
-                    TerminateConnection(udpClient, true);
+                    if (Handshake && ex.SocketErrorCode == SocketError.ConnectionReset)
+                    {
+                        // Terminate the connection if:
+                        // 1) Handshake is enabled and the endpoint is not listening for data.
+                        // 2) Handshake is enabled and the endpoint has notified of shutdown via a "goodbye" message.
+                        OnReceiveClientDataException(udpClient.ID, ex);
+                        TerminateConnection(udpClient, true);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // For any other exception, notify and resume receive.
+                            OnReceiveClientDataException(udpClient.ID, ex);
+                            ReceivePayloadOneAsync(udpClient);
+                        }
+                        catch
+                        {
+                            // Terminate connection if resuming receiving fails.
+                            TerminateConnection(udpClient, true);
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
