@@ -1089,9 +1089,8 @@ namespace TVA.Communication
             m_disconnectTime = 0;
             m_connectTime = DateTime.Now.Ticks;     // Save the time when the client connected to the server.
             
-            // Signal threads waiting on connection event (if any)...
             if (m_connectHandle != null)
-                m_connectHandle.Set();
+                m_connectHandle.Set();              // Signal any waiting threads about successful connection.
 
             if (ConnectionEstablished != null)
                 ConnectionEstablished(this, EventArgs.Empty);
