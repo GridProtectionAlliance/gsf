@@ -26,7 +26,6 @@ Partial Class SplashScreen
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(SplashScreen))
         Me.MainLayoutPanel = New System.Windows.Forms.TableLayoutPanel
         Me.DetailsLayoutPanel = New System.Windows.Forms.TableLayoutPanel
         Me.Version = New System.Windows.Forms.Label
@@ -38,7 +37,6 @@ Partial Class SplashScreen
         '
         'MainLayoutPanel
         '
-        Me.MainLayoutPanel.BackgroundImage = CType(resources.GetObject("MainLayoutPanel.BackgroundImage"), System.Drawing.Image)
         Me.MainLayoutPanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
         Me.MainLayoutPanel.ColumnCount = 2
         Me.MainLayoutPanel.ColumnStyles.Add(New System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 219.0!))
