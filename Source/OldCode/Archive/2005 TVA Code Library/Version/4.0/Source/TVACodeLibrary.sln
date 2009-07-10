@@ -31,9 +31,13 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Tools\Component In
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "Tools\Component Installer\PackageSetup\PackageSetup.vdproj", "{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PMU Connection Tester", "PMU Connection Tester", "{29E2997D-F2D6-486C-8D08-DE2F72752C89}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Tools\PMU Connection Tester\Setup\Setup.vdproj", "{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 14
+		SccNumberOfProjects = 15
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = TVA.Core\\TVA.Core.csproj
 		SccLocalPath1 = .
@@ -79,6 +83,10 @@ Global
 		SccProjectTopLevelParentUniqueName13 = TVACodeLibrary.sln
 		SccLocalPath13 = .
 		SccProjectFilePathRelativizedFromConnection13 = Tools\\Component\u0020Installer\\Setup\\
+		SccProjectUniqueName14 = Tools\\PMU\u0020Connection\u0020Tester\\Setup\\Setup.vdproj
+		SccProjectTopLevelParentUniqueName14 = TVACodeLibrary.sln
+		SccLocalPath14 = .
+		SccProjectFilePathRelativizedFromConnection14 = Tools\\PMU\u0020Connection\u0020Tester\\Setup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,16 +145,22 @@ Global
 		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Debug|Any CPU.Build.0 = Debug
 		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Release|Any CPU.ActiveCfg = Release
 		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Release|Any CPU.Build.0 = Release
+		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Debug|Any CPU.ActiveCfg = Debug
+		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Debug|Any CPU.Build.0 = Debug
+		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Release|Any CPU.ActiveCfg = Release
+		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{7A935648-6D27-432A-8520-52563E824CCE} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{29E2997D-F2D6-486C-8D08-DE2F72752C89} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{2FA2B53D-8140-4EA0-93FF-043A89233051} = {7A935648-6D27-432A-8520-52563E824CCE}
 		{2F96DB77-9B2D-4859-85D9-474FEEF9892C} = {7A935648-6D27-432A-8520-52563E824CCE}
 		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422} = {7A935648-6D27-432A-8520-52563E824CCE}
+		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
+		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
 	EndGlobalSection
 EndGlobal
