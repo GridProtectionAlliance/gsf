@@ -23,9 +23,17 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PMU Connection Tester", "To
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.PhasorProtocols", "TVA.PhasorProtocols\TVA.PhasorProtocols.csproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Component Installer", "Component Installer", "{7A935648-6D27-432A-8520-52563E824CCE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Component Installer", "Tools\Component Installer\Component Installer.csproj", "{2FA2B53D-8140-4EA0-93FF-043A89233051}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Tools\Component Installer\Setup\Setup.vbproj", "{2F96DB77-9B2D-4859-85D9-474FEEF9892C}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "Tools\Component Installer\PackageSetup\PackageSetup.vdproj", "{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}"
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 11
+		SccNumberOfProjects = 14
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = TVA.Core\\TVA.Core.csproj
 		SccLocalPath1 = .
@@ -59,6 +67,18 @@ Global
 		SccProjectTopLevelParentUniqueName10 = TVACodeLibrary.sln
 		SccLocalPath10 = .
 		SccProjectFilePathRelativizedFromConnection10 = Tools\\PMU\u0020Connection\u0020Tester\\
+		SccProjectUniqueName11 = Tools\\Component\u0020Installer\\Component\u0020Installer.csproj
+		SccProjectTopLevelParentUniqueName11 = TVACodeLibrary.sln
+		SccLocalPath11 = .
+		SccProjectFilePathRelativizedFromConnection11 = Tools\\Component\u0020Installer\\
+		SccProjectUniqueName12 = Tools\\Component\u0020Installer\\PackageSetup\\PackageSetup.vdproj
+		SccProjectTopLevelParentUniqueName12 = TVACodeLibrary.sln
+		SccLocalPath12 = .
+		SccProjectFilePathRelativizedFromConnection12 = Tools\\Component\u0020Installer\\PackageSetup\\
+		SccProjectUniqueName13 = Tools\\Component\u0020Installer\\Setup\\Setup.vbproj
+		SccProjectTopLevelParentUniqueName13 = TVACodeLibrary.sln
+		SccLocalPath13 = .
+		SccProjectFilePathRelativizedFromConnection13 = Tools\\Component\u0020Installer\\Setup\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +125,18 @@ Global
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Debug|Any CPU.ActiveCfg = Debug
+		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Debug|Any CPU.Build.0 = Debug
+		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Release|Any CPU.ActiveCfg = Release
+		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -112,5 +144,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{7A935648-6D27-432A-8520-52563E824CCE} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{2FA2B53D-8140-4EA0-93FF-043A89233051} = {7A935648-6D27-432A-8520-52563E824CCE}
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C} = {7A935648-6D27-432A-8520-52563E824CCE}
+		{E3F5202C-10D1-49FE-8BD0-4195B1FE8422} = {7A935648-6D27-432A-8520-52563E824CCE}
 	EndGlobalSection
 EndGlobal
