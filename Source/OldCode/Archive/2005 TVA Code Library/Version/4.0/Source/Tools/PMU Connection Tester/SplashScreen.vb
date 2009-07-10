@@ -14,19 +14,6 @@ Public NotInheritable Class SplashScreen
 
         Copyright.Text = My.Application.Info.Copyright
 
-        '' Attempt to delete old-style configuration file (prevents configuration errors)
-        'Try
-        '    Dim configFile As String = ConfigurationManager.OpenExeConfiguration("").FilePath
-
-        '    If File.Exists(configFile) Then
-        '        If File.ReadAllText(configFile).Contains("Tva.Core") Then
-        '            File.Delete(configFile)
-        '        End If
-        '    End If
-        'Catch
-        '    ' We'll just keep going if there's an error here...
-        'End Try
-
     End Sub
 
 End Class
