@@ -104,6 +104,8 @@
     <Compile Include="Files\StateRecordSummary.cs" />
     <Compile Include="IArchive.cs" />
     <Compile Include="IDataPoint.cs" />
+    <Compile Include="MetadataProviders\IMetadataProvider.cs" />
+    <Compile Include="MetadataProviders\MetadataProviderBase.cs" />
     <Compile Include="Notifiers\EmailNotifier.cs" />
     <Compile Include="Notifiers\INotifier.cs" />
     <Compile Include="Notifiers\NotificationDispatcher.cs" />

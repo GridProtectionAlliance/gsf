@@ -514,18 +514,18 @@ namespace TVA.Communication
         /// <summary>
         /// Initiate method for asynchronous receive operation of payload data.
         /// </summary>
-        private WaitHandle ReceivePayloadAsync(TransportProvider<Socket> worker)
+        private void ReceivePayloadAsync(TransportProvider<Socket> worker)
         {
             if (ReceiveTimeout == -1)
             {
                 // Wait for data indefinitely.
-                return worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
+                worker.Provider.BeginReceiveFrom(worker.ReceiveBuffer,
                                                  worker.ReceiveBufferOffset,
                                                  worker.ReceiveBuffer.Length,
                                                  SocketFlags.None,
                                                  ref m_udpServer,
                                                  ReceivePayloadAsyncCallback,
-                                                 worker).AsyncWaitHandle;
+                                                 worker);
             }
             else
             {
@@ -540,8 +540,6 @@ namespace TVA.Communication
                                                                   ReceivePayloadAsyncCallback,
                                                                   worker));
             }
-
-            return null;
         }
 
         /// <summary>
