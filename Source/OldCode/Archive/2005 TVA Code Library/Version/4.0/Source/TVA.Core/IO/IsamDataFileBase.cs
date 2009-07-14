@@ -841,19 +841,19 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName"];
+                element = settings["FileName", true];
                 element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileAccessMode"];
+                element = settings["FileAccessMode", true];
                 element.Update(m_fileAccessMode, element.Description, element.Encrypted);
-                element = settings["AutoSaveInterval"];
+                element = settings["AutoSaveInterval", true];
                 element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
-                element = settings["MinimumRecordCount"];
+                element = settings["MinimumRecordCount", true];
                 element.Update(m_minimumRecordCount, element.Description, element.Encrypted);
-                element = settings["LoadOnOpen"];
+                element = settings["LoadOnOpen", true];
                 element.Update(m_loadOnOpen, element.Description, element.Encrypted);
-                element = settings["SaveOnClose"];
+                element = settings["SaveOnClose", true];
                 element.Update(m_saveOnClose, element.Description, element.Encrypted);
-                element = settings["ReloadOnModify"];
+                element = settings["ReloadOnModify", true];
                 element.Update(m_reloadOnModify, element.Description, element.Encrypted);
                 config.Save();
             }

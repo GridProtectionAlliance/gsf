@@ -467,11 +467,11 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName"];
+                element = settings["FileName", true];
                 element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileSize"];
+                element = settings["FileSize", true];
                 element.Update(m_fileSize, element.Description, element.Encrypted);
-                element = settings["FileFullOperation"];
+                element = settings["FileFullOperation", true];
                 element.Update(m_fileFullOperation, element.Description, element.Encrypted);
                 config.Save();
             }

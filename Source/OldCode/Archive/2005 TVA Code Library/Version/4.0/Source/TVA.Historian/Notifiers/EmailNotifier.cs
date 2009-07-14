@@ -130,11 +130,11 @@ namespace TVA.Historian.Notifiers
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["EmailServer"];
+                element = settings["EmailServer", true];
                 element.Update(m_emailServer, element.Description, element.Encrypted);
-                element = settings["EmailSender"];
+                element = settings["EmailSender", true];
                 element.Update(m_emailSender, element.Description, element.Encrypted);
-                element = settings["EmailRecipients"];
+                element = settings["EmailRecipients", true];
                 element.Update(m_emailRecipients, element.Description, element.Encrypted);
                 config.Save();
             }

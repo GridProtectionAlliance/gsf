@@ -672,19 +672,19 @@ namespace TVA.Historian
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ID"];
+                element = settings["ID", true];
                 element.Update(m_id, element.Description, element.Encrypted);
-                element = settings["Server"];
+                element = settings["Server", true];
                 element.Update(m_server, element.Description, element.Encrypted);
-                element = settings["Port"];
+                element = settings["Port", true];
                 element.Update(m_port, element.Description, element.Encrypted);
-                element = settings["Protocol"];
+                element = settings["Protocol", true];
                 element.Update(m_protocol, element.Description, element.Encrypted);
-                element = settings["ConnectToServer"];
+                element = settings["ConnectToServer", true];
                 element.Update(m_connectToServer, element.Description, element.Encrypted);
-                element = settings["InitializeData"];
+                element = settings["InitializeData", true];
                 element.Update(m_initializeData, element.Description, element.Encrypted);
-                element = settings["InitializeDataTimeout"];
+                element = settings["InitializeDataTimeout", true];
                 element.Update(m_initializeDataTimeout, element.Description, element.Encrypted);
                 config.Save();
             }

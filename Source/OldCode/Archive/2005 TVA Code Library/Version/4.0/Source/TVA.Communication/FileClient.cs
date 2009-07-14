@@ -504,19 +504,19 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["AutoRepeat"];
+                element = settings["AutoRepeat", true];
                 element.Update(m_autoRepeat, element.Description, element.Encrypted);
-                element = settings["ReceiveOnDemand"];
+                element = settings["ReceiveOnDemand", true];
                 element.Update(m_receiveOnDemand, element.Description, element.Encrypted);
-                element = settings["ReceiveInterval"];
+                element = settings["ReceiveInterval", true];
                 element.Update(m_receiveInterval, element.Description, element.Encrypted);
-                element = settings["StartingOffset"];
+                element = settings["StartingOffset", true];
                 element.Update(m_startingOffset, element.Description, element.Encrypted);
-                element = settings["FileOpenMode"];
+                element = settings["FileOpenMode", true];
                 element.Update(m_fileOpenMode, element.Description, element.Encrypted);
-                element = settings["FileShareMode"];
+                element = settings["FileShareMode", true];
                 element.Update(m_fileShareMode, element.Description, element.Encrypted);
-                element = settings["FileAccessMode"];
+                element = settings["FileAccessMode", true];
                 element.Update(m_fileAccessMode, element.Description, element.Encrypted);
                 config.Save();
             }

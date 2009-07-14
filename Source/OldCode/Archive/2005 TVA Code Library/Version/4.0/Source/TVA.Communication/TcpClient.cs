@@ -245,7 +245,7 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["PayloadAware"];
+                element = settings["PayloadAware", true];
                 element.Update(m_payloadAware, element.Description, element.Encrypted);
                 config.Save();
             }

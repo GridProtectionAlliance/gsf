@@ -481,11 +481,11 @@ namespace TVA.Identity
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["PrevilegedDomain"];
+                element = settings["PrevilegedDomain", true];
                 element.Update(m_previlegedDomain, element.Description, element.Encrypted);
-                element = settings["PrevilegedUserName"];
+                element = settings["PrevilegedUserName", true];
                 element.Update(m_previlegedUserName, element.Description, element.Encrypted);
-                element = settings["PrevilegedPassword"];
+                element = settings["PrevilegedPassword", true];
                 element.Update(m_previlegedPassword, element.Description, element.Encrypted);
                 config.Save();
             }

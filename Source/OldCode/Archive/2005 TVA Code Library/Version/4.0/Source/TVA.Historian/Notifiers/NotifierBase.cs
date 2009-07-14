@@ -264,13 +264,13 @@ namespace TVA.Historian.Notifiers
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["NotifiesAlarms"];
+                element = settings["NotifiesAlarms", true];
                 element.Update(m_notifiesAlarms, element.Description, element.Encrypted);
-                element = settings["NotifiesWarnings"];
+                element = settings["NotifiesWarnings", true];
                 element.Update(m_notifiesWarnings, element.Description, element.Encrypted);
-                element = settings["NotifiesInformation"];
+                element = settings["NotifiesInformation", true];
                 element.Update(m_notifiesInformation, element.Description, element.Encrypted);
-                element = settings["NotifiesHeartbeat"];
+                element = settings["NotifiesHeartbeat", true];
                 element.Update(m_notifiesHeartbeat, element.Description, element.Encrypted);
                 config.Save();
             }
