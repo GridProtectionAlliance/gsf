@@ -32,6 +32,9 @@
 //      Added static properties RemoteUserID and RemoteUserInfo.
 //  06/18/2009 - Pinal C. Patel
 //      Modified GetUserProperty() to quit if Enabled is false.
+//  07/14/2009 - Pinal C. Patel
+//      Modified GetUserProperty() to allow information to be retrieved from the logged-on domain only
+//      in order to prevent timeout issues when trying to retrieve information for a non-domain user.
 //
 //*******************************************************************************************************
 
@@ -577,6 +580,10 @@ namespace TVA.Identity
             {
                 // Quit if disabled.
                 if (!m_enabled)
+                    return string.Empty;
+
+                // Query to logged-on domain only to prevent timeouts.
+                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0)
                     return string.Empty;
 
                 // Initialize if uninitialized.
