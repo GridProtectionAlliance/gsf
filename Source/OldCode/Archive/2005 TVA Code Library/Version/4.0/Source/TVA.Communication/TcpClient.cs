@@ -276,7 +276,8 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                m_tcpClient.Reset();
+                if (m_tcpClient.Provider != null)
+                    m_tcpClient.Provider.Close();
             }
         }
 
@@ -419,7 +420,14 @@ namespace TVA.Communication
                     (MaxConnectionAttempts == -1 || m_connectionAttempts < MaxConnectionAttempts))
                 {
                     // Server is unavailable, so keep retrying connection to the server.
-                    ConnectAsync();
+                    try
+                    {
+                        ConnectAsync();
+                    }
+                    catch
+                    {
+                        TerminateConnection(tcpClient, false);
+                    }
                 }
                 else
                 {

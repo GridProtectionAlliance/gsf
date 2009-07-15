@@ -27,6 +27,8 @@
 //       Modified state altering properties to reconnect the client when changed.
 //  07/08/2009 - James R Carroll
 //       Added WaitHandle return value from asynchronous connection.
+//  07/15/2009 - Pinal C. Patel
+//       Modified Connect() to wait for post-connection processing to complete.
 //
 //*******************************************************************************************************
 
@@ -949,8 +951,13 @@ namespace TVA.Communication
         /// </summary>
         public virtual void Connect()
         {
-            // Start asynchronous connection attempt and block thread until complete.
+            // Start asynchronous connection attempt and block.
             ConnectAsync().WaitOne();
+            // Block for any post-connection process to complete.
+            do
+            {
+                Thread.Sleep(100);
+            } while (m_currentState == ClientState.Connecting);
         }
 
         /// <summary>
