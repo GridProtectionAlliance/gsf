@@ -18,6 +18,8 @@
 //       Converted to C#.
 //  07/08/2009 - James R Carroll
 //       Added WaitHandle return value from asynchronous connection.
+//  07/15/2009 - Pinal C. Patel
+//       Modified Disconnect() to add error checking.
 //
 //*******************************************************************************************************
 
@@ -204,8 +206,12 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
-                m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
+                if (m_serialClient.Provider != null)
+                {
+                    m_serialClient.Provider.DataReceived -= SerialPort_DataReceived;
+                    m_serialClient.Provider.ErrorReceived -= SerialPort_ErrorReceived;
+                }
+
                 m_serialClient.Reset();
 
                 if (m_connectionThread != null)

@@ -22,6 +22,8 @@
 //       Converted to C#.
 //  07/08/2009 - James R Carroll
 //       Added WaitHandle return value from asynchronous connection.
+//  07/15/2009 - Pinal C. Patel
+//       Modified Disconnect() to add error checking.
 //
 //*******************************************************************************************************
 
@@ -274,7 +276,7 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                m_tcpClient.Provider.Close();
+                m_tcpClient.Reset();
             }
         }
 

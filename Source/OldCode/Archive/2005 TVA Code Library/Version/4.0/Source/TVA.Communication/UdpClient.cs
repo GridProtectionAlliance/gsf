@@ -22,6 +22,8 @@
 //       Added WaitHandle return value from asynchronous connection.
 //  07/09/2009 - Pinal C. Patel
 //       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.
+//  07/15/2009 - Pinal C. Patel
+//       Modified Disconnect() to add error checking.
 //
 //*******************************************************************************************************
 
@@ -209,7 +211,7 @@ namespace TVA.Communication
         {
             if (CurrentState != ClientState.Disconnected)
             {
-                if (Handshake)
+                if (Handshake && m_udpClient.Provider != null)
                 {
                     // Handshake is enabled so we'll notify the client.
                     m_udpClient.SendBuffer = new GoodbyeMessage(m_udpClient.ID).BinaryImage;
@@ -220,7 +222,7 @@ namespace TVA.Communication
                     m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
                 }
 
-                m_udpClient.Provider.Close();
+                m_udpClient.Reset();
 
                 if (m_connectionThread != null)
                     m_connectionThread.Abort();

@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2008 - Pinal C. Patel
 //       Generated original version of source code.
+//  07/15/2009 - Pinal C. Patel
+//       Added error checking to Reset().
 //
 //*******************************************************************************************************
 
@@ -116,7 +118,8 @@ namespace TVA.Communication
             // Cleanup the provider.
             try
             {
-                ((IDisposable)Provider).Dispose();
+                if (Provider != null)
+                    ((IDisposable)Provider).Dispose();
             }
             catch
             {
