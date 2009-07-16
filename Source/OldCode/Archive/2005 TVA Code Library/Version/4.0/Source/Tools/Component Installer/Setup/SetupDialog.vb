@@ -19,8 +19,8 @@ Public NotInheritable Class SetupDialog
 
             InstallationStep.Text = "Registering package component into Visual Studio..."
 
-            ' Get install location of VS 2005
-            Dim installDir As String = CType(Registry.GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\8.0", "InstallDir", ""), String)
+            ' Get install location of VS 2008
+            Dim installDir As String = CType(Registry.GetValue("HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\VisualStudio\9.0", "InstallDir", ""), String)
 
             ' Run devenv.exe /setup
             RunInstallation(installDir & "devenv.exe", "/setup")
@@ -82,10 +82,6 @@ Public NotInheritable Class SetupDialog
                     End With
                 End If
             End If
-        Catch
-            ' Just rethrow any exceptions - only catching so that we can reset processing
-            ' flag in finally clause
-            Throw
         Finally
             m_processComplete = True
         End Try
