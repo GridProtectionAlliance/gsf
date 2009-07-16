@@ -253,6 +253,18 @@ namespace TVA.Identity
         }
 
         /// <summary>
+        /// Gets the Display Name the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "displayName" active directory property.</remarks>
+        public string DisplayName
+        {
+            get
+            {
+                return GetUserProperty("displayName");
+            }
+        }
+
+        /// <summary>
         /// Gets the Middle Initial of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "initials" active directory property.</remarks>
@@ -299,6 +311,30 @@ namespace TVA.Identity
             get
             {
                 return GetUserProperty("mail");
+            }
+        }
+
+        /// <summary>
+        /// Gets the web page address of the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "wWWHomePage" active directory property.</remarks>
+        public string Webpage
+        {
+            get
+            {
+                return GetUserProperty("wWWHomePage");
+            }
+        }
+
+        /// <summary>
+        /// Gets the description specified for the user.
+        /// </summary>
+        /// <remarks>Returns the value retrieved for the "description" active directory property.</remarks>
+        public string Description
+        {
+            get
+            {
+                return GetUserProperty("description");
             }
         }
 
