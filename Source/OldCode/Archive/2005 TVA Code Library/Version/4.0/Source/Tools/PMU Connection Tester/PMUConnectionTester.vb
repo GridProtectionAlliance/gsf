@@ -975,7 +975,7 @@ Public Class PMUConnectionTester
 
         If m_frameSampleStream IsNot Nothing Then CaptureFrameImage(frameType, binaryImage, offset, length)
 
-        ' Note that we exclude command frames from capture stream that are typically "sent", not "received", to make sure frame aligment
+        ' Note that we exclude command frames from capture stream that are typically "sent", not "received", to make sure frame alignment
         ' stays in-tact - this fixes a bug with IEEE1344 play-back of captured streams that does not include a synchronization-byte
         If m_frameCaptureStream IsNot Nothing AndAlso frameType <> FundamentalFrameType.CommandFrame Then m_frameCaptureStream.Write(binaryImage, offset, length)
 
@@ -1091,7 +1091,7 @@ Public Class PMUConnectionTester
             m_attributeFrames(frame.FrameType) = frame
         End SyncLock
 
-        If Not frame.IsPartial AndAlso m_configurationFrame Is Nothing Then
+        If m_configurationFrame Is Nothing Then
             ' Cache config frame reference for future use...
             m_configurationFrame = frame
 
@@ -1161,7 +1161,7 @@ Public Class PMUConnectionTester
             m_attributeFrames(frame.FrameType) = frame
         End SyncLock
 
-        If Not frame.IsPartial AndAlso m_selectedCell IsNot Nothing Then
+        If m_selectedCell IsNot Nothing Then
             Dim cell As IDataCell = frame.Cells(ComboBoxPmus.SelectedIndex)
             Dim frequency As Double = cell.FrequencyValue.Frequency
             Dim phasorCount As Integer = cell.PhasorValues.Count
@@ -1282,10 +1282,8 @@ Public Class PMUConnectionTester
             m_attributeFrames(frame.FrameType) = frame
         End SyncLock
 
-        If Not frame.IsPartial Then
-            TextBoxHeaderFrame.Text = frame.HeaderData
-            GroupBoxHeaderFrame.Expanded = True
-        End If
+        TextBoxHeaderFrame.Text = frame.HeaderData
+        GroupBoxHeaderFrame.Expanded = True
 
     End Sub
 
@@ -1841,58 +1839,56 @@ Public Class PMUConnectionTester
             lastNodeID = AddChannelNode(attributeTable, frame.FrameType + 1, currentNodeID, frame, CDate(frame.Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"), associatedFrame)
 
             ' We add extra detail for non partial cofiguration and data frames...
-            If Not frame.IsPartial Then
-                Select Case frame.FrameType
-                    Case FundamentalFrameType.ConfigurationFrame
-                        Dim configFrame As IConfigurationFrame = DirectCast(frame, IConfigurationFrame)
+            Select Case frame.FrameType
+                Case FundamentalFrameType.ConfigurationFrame
+                    Dim configFrame As IConfigurationFrame = DirectCast(frame, IConfigurationFrame)
 
-                        ' Add frame cells collection object to frame item
-                        lastNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, configFrame.Cells, Nothing, Nothing)
+                    ' Add frame cells collection object to frame item
+                    lastNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, configFrame.Cells, Nothing, Nothing)
 
-                        ' Add each frame cell item to the list
-                        For Each cellNode As IConfigurationCell In configFrame.Cells
-                            lastCellNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, cellNode, cellNode.StationName, Nothing)
+                    ' Add each frame cell item to the list
+                    For Each cellNode As IConfigurationCell In configFrame.Cells
+                        lastCellNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, cellNode, cellNode.StationName, Nothing)
 
-                            For Each phasorDefinition As IPhasorDefinition In cellNode.PhasorDefinitions
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, phasorDefinition, phasorDefinition.Label, Nothing)
-                            Next
-
-                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, cellNode.FrequencyDefinition, Nothing, Nothing)
-
-                            For Each analogDefinition As IAnalogDefinition In cellNode.AnalogDefinitions
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, analogDefinition, analogDefinition.Label, Nothing)
-                            Next
-
-                            For Each digitalDefinition As IDigitalDefinition In cellNode.DigitalDefinitions
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, digitalDefinition, digitalDefinition.Label, Nothing)
-                            Next
+                        For Each phasorDefinition As IPhasorDefinition In cellNode.PhasorDefinitions
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, phasorDefinition, phasorDefinition.Label, Nothing)
                         Next
-                    Case FundamentalFrameType.DataFrame
-                        Dim dataFrame As IDataFrame = DirectCast(frame, IDataFrame)
 
-                        ' Add frame cells collection object to frame item
-                        lastNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, dataFrame.Cells, Nothing, dataFrame.ConfigurationFrame.Cells)
+                        AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, cellNode.FrequencyDefinition, Nothing, Nothing)
 
-                        ' Add each frame cell item to the list
-                        For Each cellNode As IDataCell In dataFrame.Cells
-                            lastCellNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, cellNode, cellNode.StationName, cellNode.ConfigurationCell)
-
-                            For Each phasorValue As IPhasorValue In cellNode.PhasorValues
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, phasorValue, phasorValue.Label, phasorValue.Definition)
-                            Next
-
-                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, cellNode.FrequencyValue, Nothing, cellNode.FrequencyValue.Definition)
-
-                            For Each analogValue As IAnalogValue In cellNode.AnalogValues
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, analogValue, analogValue.Label, analogValue.Definition)
-                            Next
-
-                            For Each digitalValue As IDigitalValue In cellNode.DigitalValues
-                                AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, digitalValue, digitalValue.Label, digitalValue.Definition)
-                            Next
+                        For Each analogDefinition As IAnalogDefinition In cellNode.AnalogDefinitions
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, analogDefinition, analogDefinition.Label, Nothing)
                         Next
-                End Select
-            End If
+
+                        For Each digitalDefinition As IDigitalDefinition In cellNode.DigitalDefinitions
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, digitalDefinition, digitalDefinition.Label, Nothing)
+                        Next
+                    Next
+                Case FundamentalFrameType.DataFrame
+                    Dim dataFrame As IDataFrame = DirectCast(frame, IDataFrame)
+
+                    ' Add frame cells collection object to frame item
+                    lastNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, dataFrame.Cells, Nothing, dataFrame.ConfigurationFrame.Cells)
+
+                    ' Add each frame cell item to the list
+                    For Each cellNode As IDataCell In dataFrame.Cells
+                        lastCellNodeID = AddChannelNode(attributeTable, lastNodeID, currentNodeID, cellNode, cellNode.StationName, cellNode.ConfigurationCell)
+
+                        For Each phasorValue As IPhasorValue In cellNode.PhasorValues
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, phasorValue, phasorValue.Label, phasorValue.Definition)
+                        Next
+
+                        AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, cellNode.FrequencyValue, Nothing, cellNode.FrequencyValue.Definition)
+
+                        For Each analogValue As IAnalogValue In cellNode.AnalogValues
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, analogValue, analogValue.Label, analogValue.Definition)
+                        Next
+
+                        For Each digitalValue As IDigitalValue In cellNode.DigitalValues
+                            AddChannelNode(attributeTable, lastCellNodeID, currentNodeID, digitalValue, digitalValue.Label, digitalValue.Definition)
+                        Next
+                    Next
+            End Select
         Next
 
     End Sub

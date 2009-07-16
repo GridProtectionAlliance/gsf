@@ -92,7 +92,7 @@ namespace TVA.PhasorProtocols
             : base(parent, phasorDefinition)
         {
             m_phasor.Angle = angle;
-            m_phasor.AbsoluteValue = magnitude;
+            m_phasor.Magnitude = magnitude;
         }
 
         /// <summary>
@@ -156,11 +156,11 @@ namespace TVA.PhasorProtocols
         {
             get
             {
-                return m_phasor.AbsoluteValue;
+                return m_phasor.Magnitude;
             }
             set
             {
-                m_phasor.AbsoluteValue = value;
+                m_phasor.Magnitude = value;
             }
         }
 
@@ -248,7 +248,7 @@ namespace TVA.PhasorProtocols
         {
             get
             {
-                return !m_phasor.CompositesAssigned;
+                return m_phasor.NoneAssigned;
             }
         }
 
@@ -313,12 +313,12 @@ namespace TVA.PhasorProtocols
                     {
                         if (DataFormat == PhasorProtocols.DataFormat.FixedInteger)
                         {
-                            EndianOrder.BigEndian.CopyBytes((ushort)m_phasor.AbsoluteValue, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((ushort)m_phasor.Magnitude, buffer, 0);
                             EndianOrder.BigEndian.CopyBytes((short)(m_phasor.Angle * 10000.0D), buffer, 2);
                         }
                         else
                         {
-                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.AbsoluteValue, buffer, 0);
+                            EndianOrder.BigEndian.CopyBytes((float)m_phasor.Magnitude, buffer, 0);
                             EndianOrder.BigEndian.CopyBytes((float)m_phasor.Angle, buffer, 4);
                         }
                     }
@@ -367,7 +367,7 @@ namespace TVA.PhasorProtocols
                 case (int)CompositePhasorValue.Angle:
                     return m_phasor.Angle.ToDegrees();
                 case (int)CompositePhasorValue.Magnitude:
-                    return m_phasor.AbsoluteValue;
+                    return m_phasor.Magnitude;
                 default:
                     throw new ArgumentOutOfRangeException("index", "Invalid composite index requested");
             }
@@ -401,7 +401,7 @@ namespace TVA.PhasorProtocols
                 else
                 {
                     // Parse from fixed-integer, polar
-                    m_phasor.AbsoluteValue = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
+                    m_phasor.Magnitude = EndianOrder.BigEndian.ToUInt16(binaryImage, startIndex);
                     m_phasor.Angle = EndianOrder.BigEndian.ToInt16(binaryImage, startIndex + 2) / 10000.0D;
                 }
 
@@ -418,7 +418,7 @@ namespace TVA.PhasorProtocols
                 else
                 {
                     // Parse from single-precision floating-point, polar
-                    m_phasor.AbsoluteValue = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
+                    m_phasor.Magnitude = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex);
                     m_phasor.Angle = EndianOrder.BigEndian.ToSingle(binaryImage, startIndex + 4);
                 }
 

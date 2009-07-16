@@ -237,17 +237,6 @@ namespace TVA.PhasorProtocols
         }
 
         /// <summary>
-        /// Determines if <see cref="ChannelFrameBase{T}"/> is only partially parsed.
-        /// </summary>
-        public virtual bool IsPartial
-        {
-            get
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
         /// Gets the length of the <see cref="BinaryImage"/>.
         /// </summary>
         /// <remarks>
@@ -331,7 +320,6 @@ namespace TVA.PhasorProtocols
                 baseAttributes.Add("Total Cells", Cells.Count.ToString());
                 baseAttributes.Add("Fundamental Frame Type", (int)FrameType + ": " + FrameType);
                 baseAttributes.Add("ID Code", IDCode.ToString());
-                baseAttributes.Add("Is Partial Frame", IsPartial.ToString());
                 baseAttributes.Add("Published", Published.ToString());
                 baseAttributes.Add("Ticks", ((long)Timestamp).ToString());
                 baseAttributes.Add("Timestamp", ((DateTime)Timestamp).ToString("yyyy-MM-dd HH:mm:ss.fff"));

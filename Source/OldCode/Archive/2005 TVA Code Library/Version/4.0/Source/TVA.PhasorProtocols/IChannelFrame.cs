@@ -94,11 +94,6 @@ namespace TVA.PhasorProtocols
         /// Gets UNIX based time representation of the ticks of this <see cref="IChannelFrame"/>.
         /// </summary>
         UnixTimeTag TimeTag { get; }
-
-        /// <summary>
-        /// Determines if <see cref="IChannelFrame"/> is only partially parsed.
-        /// </summary>
-        bool IsPartial { get; }
     }
 
     /// <summary>

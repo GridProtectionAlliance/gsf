@@ -585,9 +585,9 @@ namespace TVA
         /// <summary>Handles encoding and decoding of a byte buffer into a big-endian binary (i.e., 0 and 1's) based
         /// presentation format.</summary>
         /// <remarks>
-        /// Although endianness is typically used in the context of byte order (see PCS.Interop.EndianOrder to handle byte
-        /// order swapping), this property allows you visualize "bits" in big-endian order, right-to-left (Note that bits
-        /// are normally stored in the same order as their bytes.).
+        /// Although endianness is typically used in the context of byte order (see <see cref="TVA.EndianOrder"/> to handle byte
+        /// order swapping), this property allows you visualize "bits" in big-endian order, right-to-left. Note that bits are
+        /// normally stored in the same order as their bytes.).
         /// </remarks>
         public static ByteEncoding BigEndianBinary
         {
@@ -601,9 +601,9 @@ namespace TVA
         /// <summary>Handles encoding and decoding of a byte buffer into a little-endian binary (i.e., 0 and 1's) based
         /// presentation format.</summary>
         /// <remarks>
-        /// Although endianness is typically used in the context of byte order (see PCS.Interop.EndianOrder to handle byte
-        /// order swapping), this property allows you visualize "bits" in little-endian order, left-to-right (Note that bits
-        /// are normally stored in the same order as their bytes.).
+        /// Although endianness is typically used in the context of byte order (see <see cref="TVA.EndianOrder"/> to handle byte
+        /// order swapping), this property allows you visualize "bits" in little-endian order, left-to-right. Note that bits are
+        /// normally stored in the same order as their bytes.
         /// </remarks>
         public static ByteEncoding LittleEndianBinary
         {

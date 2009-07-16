@@ -41,22 +41,14 @@ namespace TVA
     {
         #region [ Members ]
 
-        // Constants
-        private const int RealComponent = 0;                // Index of real component within rectangular based compound value
-        private const int ImaginaryComponent = 1;           // Index of imaginary component within rectangular based compound value
-        
-        private const int AngleComponent = 0;               // Index of angle component within polar based compound value
-        private const int MagnitudeComponent = 1;           // Index of magnitude component within polar based compound value
-
         // Fields
+        private double? m_real;         // Real value of complex number
+        private double? m_imaginary;    // Imaginary value of complex number
 
-        // Access to rectangular values field should be handled through RectangularValues property to
-        // ensure that value has been instantiated
-        private CompoundValue<double> m_rectangularValues;  // Compound value containing the real and imaginary components of this complex number
-
-        // Polar values field will only exist long enough to create equivalent rectangular properties,
-        // do not assume field has been instantiated
-        private CompoundValue<double> m_polarValues;        // Compound value containing the angle and magnitude components of this complex number
+        // Polar value fields will only cache values until both exist in order
+        // to create equivalent rectangular values
+        private double? m_angle;        // Temporary angle value of complex number
+        private double? m_magnitude;    // Temporary magnitude value of complex number
         
         #endregion
 
@@ -70,19 +62,21 @@ namespace TVA
         public ComplexNumber(double real, double imaginary)
             : this()
         {
-            RectangularValues[RealComponent] = real;
-            RectangularValues[ImaginaryComponent] = imaginary;
+            m_real = real;
+            m_imaginary = imaginary;
         }
 
         /// <summary>
         /// Creates a <see cref="ComplexNumber"/> from the given polar values.
         /// </summary>
         /// <param name="angle">The angle component, in radians, of the <see cref="ComplexNumber"/>.</param>
-        /// <param name="absoluteValue">The absolute value component of the <see cref="ComplexNumber"/>.</param>
-        public ComplexNumber(Angle angle, double absoluteValue)
+        /// <param name="magnitude">The magnitude (or absolute value) component of the <see cref="ComplexNumber"/>.</param>
+        public ComplexNumber(Angle angle, double magnitude)
             : this()
         {
-            m_polarValues = new CompoundValue<double>(new double[] {angle, absoluteValue});
+            m_angle = angle;
+            m_magnitude = magnitude;
+
             CalculateRectangularFromPolar();
         }
 
@@ -94,11 +88,11 @@ namespace TVA
             : this()
         {
             // Make sure state of source complex number is replicated extactly
-            RectangularValues[RealComponent] = z.RectangularValues[RealComponent];
-            RectangularValues[ImaginaryComponent] = z.RectangularValues[ImaginaryComponent];
-
-            if (z.m_polarValues != null)
-                m_polarValues = new CompoundValue<double>(z.m_polarValues);
+            m_real = z.m_real;
+            m_imaginary = z.m_imaginary;
+            
+            m_angle = z.m_angle;
+            m_magnitude = z.m_magnitude;
         }
 
         #endregion
@@ -112,11 +106,11 @@ namespace TVA
         {
             get
             {
-                return RectangularValues[RealComponent].GetValueOrDefault();
+                return m_real.GetValueOrDefault();
             }
             set
             {
-                RectangularValues[RealComponent] = value;
+                m_real = value;
             }
         }
 
@@ -127,49 +121,45 @@ namespace TVA
         {
             get
             {
-                return RectangularValues[ImaginaryComponent].GetValueOrDefault();
+                return m_imaginary.GetValueOrDefault();
             }
             set
             {
-                RectangularValues[ImaginaryComponent] = value;
+                m_imaginary = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the absolute value (a.k.a. the modulus or magnitude) of this <see cref="ComplexNumber"/>.
+        /// Gets or sets the magnitude (a.k.a. the modulus or absolute value) of this <see cref="ComplexNumber"/>.
         /// </summary>
-        public double AbsoluteValue
+        public double Magnitude
         {
             get
             {
-                if (RectangularValues.AllAssigned)
+                if (AllAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates, so we return calculated magnitude
-                    double real = RectangularValues[RealComponent].Value;
-                    double imaginary = RectangularValues[ImaginaryComponent].Value;
+                    double real = m_real.Value;
+                    double imaginary = m_imaginary.Value;
 
                     return Math.Sqrt(real * real + imaginary * imaginary);
                 }
-                else if (m_polarValues != null)
+                else if (m_magnitude.HasValue)
                 {
                     // Return any assigned value if magnitude can't be calculated
-                    return m_polarValues[MagnitudeComponent].GetValueOrDefault();
+                    return m_magnitude.Value;
                 }
                 else
                     return double.NaN;
             }
             set
             {
-                if (RectangularValues.NoneAssigned)
+                if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
                     // Complex number is internally represented in rectangluar coordinates but these values have yet to be
-                    // assigned so we cache magnitude so we can calculate the real and imaginary components once we also
-                    // receive the angle value
-                    if (m_polarValues == null)
-                        m_polarValues = new CompoundValue<double>(2);
-
-                    // Assign absolute value component of compound value
-                    m_polarValues[MagnitudeComponent] = value;
+                    // fully assigned so we cache magnitude so we can calculate the real and imaginary components once we
+                    // also receive the angle value
+                    m_magnitude = value;
 
                     // If all composite polar values have been received, we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
@@ -181,8 +171,8 @@ namespace TVA
                     // coordinates and then update the real and imaginary components
                     ComplexNumber updatedValue = new ComplexNumber(Angle, value);
 
-                    RectangularValues[RealComponent] = updatedValue.Real;
-                    RectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
+                    m_real = updatedValue.m_real;
+                    m_imaginary = updatedValue.m_imaginary;
                 }
             }
         }
@@ -194,31 +184,27 @@ namespace TVA
         {
             get
             {
-                if (RectangularValues.AllAssigned)
+                if (AllAssigned)
                 {
                     // Complex number is internally represented in rectangluar coordinates, so we return calculated angle
-                    return Math.Atan2(Imaginary, Real);
+                    return Math.Atan2(m_imaginary.Value, m_real.Value);
                 }
-                else if (m_polarValues != null)
+                else if (m_angle.HasValue)
                 {
                     // Return any assigned value if angle can't be calculated
-                    return m_polarValues[AngleComponent].GetValueOrDefault();
+                    return m_angle.Value;
                 }
                 else
                     return double.NaN;
             }
             set
             {
-                if (RectangularValues.NoneAssigned)
+                if (!m_real.HasValue || !m_imaginary.HasValue)
                 {
                     // Complex number is internally represented in rectangluar coordinates but these values have yet to be
-                    // assigned so we cache angle so we can calculate the real and imaginary components once we also
+                    // fully assigned so we cache angle so we can calculate the real and imaginary components once we also
                     // receive the magnitude value
-                    if (m_polarValues == null)
-                        m_polarValues = new CompoundValue<double>(2);
-
-                    // Assign angle component of compound value
-                    m_polarValues[AngleComponent] = value;
+                    m_angle = value;
 
                     // If all composite polar values have been received, we can calculate real and imaginary values
                     CalculateRectangularFromPolar();
@@ -228,10 +214,10 @@ namespace TVA
                     // Rectangular values have already been assigned, user is simply requesting to change complex number
                     // by updating its angle value so we calculate a new complex number based on the updated polar
                     // coordinates and then update the real and imaginary components
-                    ComplexNumber updatedValue = new ComplexNumber(value, AbsoluteValue);
+                    ComplexNumber updatedValue = new ComplexNumber(value, Magnitude);
 
-                    RectangularValues[RealComponent] = updatedValue.Real;
-                    RectangularValues[ImaginaryComponent] = updatedValue.Imaginary;
+                    m_real = updatedValue.m_real;
+                    m_imaginary = updatedValue.m_imaginary;
                 }
             }
         }
@@ -251,23 +237,23 @@ namespace TVA
         /// Gets a boolean value indicating if each composite value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has been assigned a value.
         /// </summary>
         /// <returns>True, if all composite values have been assigned a value; otherwise, false.</returns>
-        public bool CompositesAssigned
+        public bool AllAssigned
         {
             get
             {
-                return RectangularValues.AllAssigned;
+                return m_real.HasValue && m_imaginary.HasValue;
             }
         }
 
-        // Gets private m_rectangularValues, creating it if it hasn't been instantiated
-        private CompoundValue<double> RectangularValues
+        /// <summary>
+        /// Gets a boolean value indicating if each composite value of the <see cref="ComplexNumber"/> (i.e., real and imaginary) has not been assigned a value.
+        /// </summary>
+        /// <returns>True, if none of the composite values have been assigned a value; otherwise, false.</returns>
+        public bool NoneAssigned
         {
             get
             {
-                if (m_rectangularValues == null)
-                    m_rectangularValues = new CompoundValue<double>(2);
-
-                return m_rectangularValues;
+                return !m_real.HasValue && !m_imaginary.HasValue;
             }
         }
 
@@ -337,17 +323,18 @@ namespace TVA
         // Calculate real and imaginary components from angle and magnitude
         private void CalculateRectangularFromPolar()
         {
-            if (m_polarValues.AllAssigned)
+            if (m_angle.HasValue && m_magnitude.HasValue)
             {
                 // All values assigned, calculate a new rectangular based complex number from its polar composite values
-                double angle = (double)m_polarValues[AngleComponent];
-                double magnitude = (double)m_polarValues[MagnitudeComponent];
+                double angle = m_angle.Value;
+                double magnitude = m_magnitude.Value;
 
-                Real = magnitude * Math.Cos(angle);
-                Imaginary = magnitude * Math.Sin(angle);
+                m_real = magnitude * Math.Cos(angle);
+                m_imaginary = magnitude * Math.Sin(angle);
 
                 // Once rectangular values are available, polar values are no longer needed
-                m_polarValues = null;
+                m_angle = null;
+                m_magnitude = null;
             }
         }
 
@@ -433,7 +420,7 @@ namespace TVA
         ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
         public static ComplexNumber Pow(ComplexNumber z, double y)
         {
-            return new ComplexNumber(z.Angle * y, Math.Pow(z.AbsoluteValue, y));
+            return new ComplexNumber(z.Angle * y, Math.Pow(z.Magnitude, y));
         }
 
         #endregion

@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using TVA.Collections;
@@ -424,7 +425,7 @@ namespace TVA.IO
             ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
             thread.Name = "TVA.IO.MultipleDestinationExporter.Initialize()";
 #else
-            ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations);
+            ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
 #endif
         }
 

@@ -296,7 +296,7 @@ namespace TVA
         /// <summary>
         /// Returns a Unicode character converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A character formed by two bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -313,7 +313,7 @@ namespace TVA
         /// <summary>
         /// Returns a double-precision floating point number converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A double-precision floating point number formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -330,7 +330,7 @@ namespace TVA
         /// <summary>
         /// Returns a 16-bit signed integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 16-bit signed integer formed by two bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -347,7 +347,7 @@ namespace TVA
         /// <summary>
         /// Returns a 24-bit signed integer converted from three bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 24-bit signed integer formed by three bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -364,7 +364,7 @@ namespace TVA
         /// <summary>
         /// Returns a 32-bit signed integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 32-bit signed integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -381,7 +381,7 @@ namespace TVA
         /// <summary>
         /// Returns a 64-bit signed integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 64-bit signed integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -398,7 +398,7 @@ namespace TVA
         /// <summary>
         /// Returns a single-precision floating point number converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A single-precision floating point number formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -415,7 +415,7 @@ namespace TVA
         /// <summary>
         /// Returns a 16-bit unsigned integer converted from two bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 16-bit unsigned integer formed by two bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -433,7 +433,7 @@ namespace TVA
         /// <summary>
         /// Returns a 24-bit unsigned integer converted from three bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 24-bit unsigned integer formed by three bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -451,7 +451,7 @@ namespace TVA
         /// <summary>
         /// Returns a 32-bit unsigned integer converted from four bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 32-bit unsigned integer formed by four bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -469,7 +469,7 @@ namespace TVA
         /// <summary>
         /// Returns a 64-bit unsigned integer converted from eight bytes, accounting for target endian-order, at a specified position in a byte array.
         /// </summary>
-        /// <param name="value">An array.</param>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
         /// <param name="startIndex">The starting position within value.</param>
         /// <returns>A 64-bit unsigned integer formed by eight bytes beginning at startIndex.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
@@ -482,6 +482,23 @@ namespace TVA
             m_copyBuffer(value, startIndex, buffer, 0, 8);
 
             return BitConverter.ToUInt64(buffer, 0);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="Guid"/> converted from sixteen bytes, accounting for target endian-order, at a specified position in a byte array.
+        /// </summary>
+        /// <param name="value">An array of bytes (i.e., buffer containing binary image of value).</param>
+        /// <param name="startIndex">The starting position within value.</param>
+        /// <returns>A <see cref="Guid"/> formed by sixteen bytes beginning at startIndex.</returns>
+        /// <exception cref="ArgumentNullException">value is null.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+        public Guid ToGuid(byte[] value, int startIndex)
+        {
+            byte[] buffer = new byte[16];
+
+            m_copyBuffer(value, startIndex, buffer, 0, 16);
+
+            return new Guid(buffer);
         }
 
         /// <summary>
@@ -607,6 +624,16 @@ namespace TVA
         public byte[] GetBytes(ulong value)
         {
             return m_coerceByteOrder(BitConverter.GetBytes(value));
+        }
+
+        /// <summary>
+        /// Returns the specified <see cref="Guid"/> value as an array of bytes.
+        /// </summary>
+        /// <param name="value">The number to convert.</param>
+        /// <returns>An array of bytes with length 16.</returns>
+        public byte[] GetBytes(Guid value)
+        {
+            return m_coerceByteOrder(value.ToByteArray());
         }
 
         /// <summary>
@@ -743,6 +770,17 @@ namespace TVA
         public void CopyBytes(ulong value, byte[] destinationArray, int destinationIndex)
         {
             m_copyBuffer(BitConverter.GetBytes(value), 0, destinationArray, destinationIndex, 8);
+        }
+
+        /// <summary>
+        /// Copies the specified <see cref="Guid"/> value as an array of 16 bytes in the target endian-order to the destination array.
+        /// </summary>
+        /// <param name="value">The <see cref="Guid"/> to convert and copy.</param>
+        /// <param name="destinationArray">The destination buffer.</param>
+        /// <param name="destinationIndex">The byte offset into <paramref name="destinationArray"/>.</param>
+        public void CopyBytes(Guid value, byte[] destinationArray, int destinationIndex)
+        {
+            m_copyBuffer(value.ToByteArray(), 0, destinationArray, destinationIndex, 16);
         }
 
         #endregion
