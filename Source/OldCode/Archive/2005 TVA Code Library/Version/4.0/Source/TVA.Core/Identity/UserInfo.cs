@@ -583,7 +583,8 @@ namespace TVA.Identity
                     return string.Empty;
 
                 // Query to logged-on domain only to prevent timeouts.
-                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0)
+                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0 ||
+                    string.Compare(Environment.MachineName, Environment.UserDomainName, true) == 0)
                     return string.Empty;
 
                 // Initialize if uninitialized.
