@@ -24,12 +24,16 @@ using System.Security.Cryptography;
 
 namespace TVA.Security.Cryptography
 {
-    /// <summary>Generates cryptographically strong random numbers.</summary>
+    /// <summary>
+    /// Generates cryptographically strong random numbers.
+    /// </summary>
     public static class Random
     {
         private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
 
-        /// <summary>Generates a cryptographically strong double-precision floating-point random number between zero and one.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong double-precision floating-point random number between zero and one.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static double Number
         {
@@ -42,7 +46,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong random decimal between zero and one.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong random decimal between zero and one.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static decimal Decimal
         {
@@ -55,7 +61,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong random integer between specified values.
+        /// </summary>
         /// <param name="startNumber">A <see cref="double"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="double"/> that is the high end of our range.</param>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
@@ -83,7 +91,9 @@ namespace TVA.Security.Cryptography
             m_randomNumberGenerator.GetBytes(buffer);
         }
 
-        /// <summary>Generates a cryptographically strong random boolean (i.e., a coin toss).</summary>
+        /// <summary>
+        /// Generates a cryptographically strong random boolean (i.e., a coin toss).
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static bool Boolean
         {
@@ -97,7 +107,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 8-bit random integer.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 8-bit random integer.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static byte Byte
         {
@@ -111,7 +123,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 8-bit random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 8-bit random integer between specified values.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="byte"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="byte"/> that is the high end of our range.</param>
@@ -124,7 +138,9 @@ namespace TVA.Security.Cryptography
             return (byte)(Number * (stopNumber - startNumber) + startNumber);
         }
 
-        /// <summary>Generates a cryptographically strong 16-bit random integer.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 16-bit random integer.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static short Int16
         {
@@ -138,7 +154,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 16-bit random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 16-bit random integer between specified values.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="short"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="short"/> that is the high end of our range.</param>
@@ -151,7 +169,9 @@ namespace TVA.Security.Cryptography
             return (short)(Number * (stopNumber - startNumber) + startNumber);
         }
 
-        /// <summary>Generates a cryptographically strong 24-bit random integer.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 24-bit random integer.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static Int24 Int24
         {
@@ -165,7 +185,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 24-bit random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 24-bit random integer between specified values.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="Int24"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="Int24"/> that is the high end of our range.</param>
@@ -178,7 +200,9 @@ namespace TVA.Security.Cryptography
             return (Int24)(Number * (stopNumber - startNumber) + startNumber);
         }
 
-        /// <summary>Generates a cryptographically strong 32-bit random integer.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 32-bit random integer.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static int Int32
         {
@@ -192,7 +216,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 32-bit random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 32-bit random integer between specified values.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="int"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="int"/> that is the high end of our range.</param>
@@ -205,7 +231,9 @@ namespace TVA.Security.Cryptography
             return (int)(Number * (stopNumber - startNumber) + startNumber);
         }
 
-        /// <summary>Generates a cryptographically strong 64-bit random integer.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 64-bit random integer.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         public static long Int64
         {
@@ -219,7 +247,9 @@ namespace TVA.Security.Cryptography
             }
         }
 
-        /// <summary>Generates a cryptographically strong 64-bit random integer between specified values.</summary>
+        /// <summary>
+        /// Generates a cryptographically strong 64-bit random integer between specified values.
+        /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
         /// <param name="startNumber">A <see cref="long"/> that is the low end of our range.</param>
         /// <param name="stopNumber">A <see cref="long"/> that is the high end of our range.</param>
