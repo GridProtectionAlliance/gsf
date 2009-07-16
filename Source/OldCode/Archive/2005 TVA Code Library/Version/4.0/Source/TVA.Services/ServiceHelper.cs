@@ -26,6 +26,8 @@
 //  06/30/2009 - Pinal C. Patel
 //       Changed ServiceComponents to be a collection of object instead of ISupportLifecycle so it can
 //       host a wide range of object implementing various interfaces used by the ServiceHelper commands.
+//  07/15/2009 - Pinal C. Patel
+//       Added AllowedRemoteUsers and ImpersonateRemoteUser properties as part of security.
 //
 //*******************************************************************************************************
 
@@ -34,6 +36,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Security;
+using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using TVA.Communication;
@@ -42,6 +47,7 @@ using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
 using TVA.Scheduling;
+using TVA.Identity;
 
 namespace TVA.Services
 {
@@ -105,6 +111,16 @@ namespace TVA.Services
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
 		/// </summary>
 		public const int DefaultRequestHistoryLimit = 50;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowedRemoteUsers"/> property.
+        /// </summary>
+        public const string DefaultAllowedRemoteUsers = "*";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ImpersonateRemoteUser"/> property.
+        /// </summary>
+        public const bool DefaultImpersonateRemoteUser = false;
 			
 		/// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -208,6 +224,8 @@ namespace TVA.Services
 		private bool m_logStatusUpdates;
 		private bool m_monitorServiceHealth;
 		private int m_requestHistoryLimit;
+        private string m_allowedRemoteUsers;
+        private bool m_impersonateRemoteUser;
 		private bool m_persistSettings;
 		private string m_settingsCategory;
 		private ServiceBase m_parentService;
@@ -242,6 +260,8 @@ namespace TVA.Services
 			m_logStatusUpdates = DefaultLogStatusUpdates;
 			m_monitorServiceHealth = DefaultMonitorServiceHealth;
 			m_requestHistoryLimit = DefaultRequestHistoryLimit;
+            m_allowedRemoteUsers = DefaultAllowedRemoteUsers;
+            m_impersonateRemoteUser = DefaultImpersonateRemoteUser;
 			m_persistSettings = DefaultPersistSettings;
 			m_settingsCategory = DefaultSettingsCategory;
 			m_processes = new List<ServiceProcess>();
@@ -341,6 +361,47 @@ namespace TVA.Services
                 m_requestHistoryLimit = value;
 			}
 		}
+
+        /// <summary>
+        /// Gets or sets a comma or semicolon delimited list of user logins allowed to connect to the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <remarks>Use '*' to allow access to any remote user.</remarks>
+        /// <exception cref="ArgumentException">The value being assigned is a null or empty string.</exception>
+        [Category("Security"),
+        DefaultValue(DefaultAllowedRemoteUsers),
+        Description("Comma or semicolon delimited list of user logins allowed to connect to the ServiceHelper.")]
+        public string AllowedRemoteUsers
+        {
+            get
+            {
+                return m_allowedRemoteUsers;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentException();
+
+                m_allowedRemoteUsers = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether remote commands are to be executed under the identity of the remote user.
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultImpersonateRemoteUser),
+        Description("Indicates whether remote commands are to be executed under the identity of the remote user.")]
+        public bool ImpersonateRemoteUser
+        {
+            get
+            {
+                return m_impersonateRemoteUser;
+            }
+            set
+            {
+                m_impersonateRemoteUser = value;
+            }
+        }
 		
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
@@ -738,12 +799,16 @@ namespace TVA.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["LogStatusUpdates"];
+                element = settings["LogStatusUpdates", true];
                 element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
-                element = settings["MonitorServiceHealth"];
+                element = settings["MonitorServiceHealth", true];
                 element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
-                element = settings["RequestHistoryLimit"];
+                element = settings["RequestHistoryLimit", true];
                 element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
+                element = settings["AllowedRemoteUsers", true];
+                element.Update(m_allowedRemoteUsers, element.Description, element.Encrypted);
+                element = settings["ImpersonateRemoteUser", true];
+                element.Update(m_impersonateRemoteUser, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -784,11 +849,15 @@ namespace TVA.Services
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+                settings.Add("AllowedRemoteUsers", m_allowedRemoteUsers, "Comma or semicolon delimited list of user logins allowed to connect to the service remotely.");
+                settings.Add("ImpersonateRemoteUser", m_impersonateRemoteUser, "True to execute remote commands under the identity of the remote user; otherwise False.");
                 if (settings["TelnetPassword"] != null)
                     m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+                AllowedRemoteUsers = settings["AllowedRemoteUsers"].ValueAs(m_allowedRemoteUsers);
+                ImpersonateRemoteUser = settings["ImpersonateRemoteUser"].ValueAs(m_impersonateRemoteUser);
             }
         }
 
@@ -1453,35 +1522,60 @@ namespace TVA.Services
         private void m_remotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientInfo requestSender = GetConnectedClient(e.Argument1);
-
             if (requestSender == null)
             {
                 // First message from a remote client should be its info.
                 ClientInfo client = null;
                 Serialization.TryGetObject<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3), out client);
-                if (client != null)
+                try
                 {
-                    client.ClientID = e.Argument1;
-                    client.ConnectedAt = DateTime.Now;
-                    m_remoteClients.Add(client);
-                    UpdateStatus("Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                    if (client != null)
+                    {
+                        // Check remote user against valid user list.
+                        string[] allowedRemoteUsers = m_allowedRemoteUsers.Split(';', ',');
+                        if (m_allowedRemoteUsers == "*" ||
+                            (client.DeserializedIdentityToken != null &&
+                             client.DeserializedIdentityToken.Identity.IsAuthenticated &&
+                             allowedRemoteUsers.FirstOrDefault(user => string.Compare(user.Trim(), client.DeserializedIdentityToken.Identity.Name, true) == 0) != null))
+                        {
+                            // Authentication successful.
+                            client.ClientID = e.Argument1;
+                            client.ConnectedAt = DateTime.Now;
+                            m_remoteClients.Add(client);
+                            SendResponse(e.Argument1, new ServiceResponse("AuthenticationSuccess"));
+                            UpdateStatus("Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                        }
+                        else
+                        {
+                            // Authentication failed.
+                            throw new SecurityException("Remote client failed authentication");
+                        }
+                    }
+                    else
+                    {
+                        // Required client information is missing.
+                        throw new SecurityException("Remote client failed to transmit required information");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
                     try
                     {
+                        SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"));
+                        UpdateStatus("Remote client connection rejected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                        m_errorLogger.Log(ex);
                         m_remotingServer.DisconnectOne(e.Argument1);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        m_errorLogger.Log(ex);
                     }
-                }               
+                }
             }
             else
-            { 
+            {
                 // All subsequest messages from a remote client would be requests.
                 ClientRequest request = null;
+                WindowsImpersonationContext context = null;
                 Serialization.TryGetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), out request);
                 if (request != null)
                 {
@@ -1502,9 +1596,27 @@ namespace TVA.Services
 
                             ClientRequestHandler requestHandler = GetClientRequestHandler(request.Command);
                             if (requestHandler != null)
+                            {
+                                // Request handler exists.
+                                if (m_impersonateRemoteUser)
+                                {
+                                    if (requestInfo.Sender.DeserializedIdentityToken == null ||
+                                        ((WindowsIdentity)requestInfo.Sender.DeserializedIdentityToken.Identity).ImpersonationLevel != TokenImpersonationLevel.Impersonation)
+                                    {
+                                        throw new InvalidOperationException("Impersonation could not be performed");
+                                    }
+
+                                    context = ((WindowsIdentity)requestInfo.Sender.DeserializedIdentityToken.Identity).Impersonate();
+                                    UpdateStatus("\"{0}\" request is being processed under the identity of {1}.\r\n\r\n", request.Command, UserInfo.CurrentUserID);
+                                }
+
                                 requestHandler.HandlerMethod(requestInfo);
+                            }
                             else
-                                UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - Request is not supported.\r\n\r\n", request.Command);
+                            {
+                                // No request handler exists.
+                                throw new InvalidOperationException("Request is not supported");
+                            }
                         }
                         else if (requestSender.ClientID == m_remoteCommandClientID)
                         {
@@ -1514,13 +1626,18 @@ namespace TVA.Services
                         else
                         {
                             // Reject all request from other clients since remote command session is in progress.
-                            UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - Remote command session is in progress.\r\n\r\n", request.Command);
+                            throw new InvalidOperationException("Remote telnet session is in progress");
                         }
                     }
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
                         UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
+                    }
+                    finally
+                    {
+                        if (context != null)
+                            context.Undo();
                     }
                 }
                 else
