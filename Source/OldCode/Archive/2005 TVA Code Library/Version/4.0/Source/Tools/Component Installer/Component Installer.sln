@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Component Installer", "Component Installer.csproj", "{2FA2B53D-8140-4EA0-93FF-043A89233051}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Setup\Setup.vbproj", "{2F96DB77-9B2D-4859-85D9-474FEEF9892C}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "PackageSetup\PackageSetup.vdproj", "{B6ED3313-36ED-4631-B9FE-06B229CDA275}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2FA2B53D-8140-4EA0-93FF-043A89233051}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F96DB77-9B2D-4859-85D9-474FEEF9892C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6ED3313-36ED-4631-B9FE-06B229CDA275}.Debug|Any CPU.ActiveCfg = Debug
+		{B6ED3313-36ED-4631-B9FE-06B229CDA275}.Debug|Any CPU.Build.0 = Debug
+		{B6ED3313-36ED-4631-B9FE-06B229CDA275}.Release|Any CPU.ActiveCfg = Release
+		{B6ED3313-36ED-4631-B9FE-06B229CDA275}.Release|Any CPU.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
