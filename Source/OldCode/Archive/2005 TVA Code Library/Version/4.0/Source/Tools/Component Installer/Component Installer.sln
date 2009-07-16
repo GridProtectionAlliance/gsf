@@ -4,10 +4,26 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Component Installer", "Component Installer.csproj", "{2FA2B53D-8140-4EA0-93FF-043A89233051}"
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Setup\Setup.vbproj", "{2F96DB77-9B2D-4859-85D9-474FEEF9892C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B6ED3313-36ED-4631-B9FE-06B229CDA275} = {B6ED3313-36ED-4631-B9FE-06B229CDA275}
+		{2FA2B53D-8140-4EA0-93FF-043A89233051} = {2FA2B53D-8140-4EA0-93FF-043A89233051}
+	EndProjectSection
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "PackageSetup\PackageSetup.vdproj", "{B6ED3313-36ED-4631-B9FE-06B229CDA275}"
 EndProject
 Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 4
+		SccProjectUniqueName0 = Component\u0020Installer.csproj
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Setup\\Setup.vbproj
+		SccProjectName1 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/Setup\u0022,\u0020NRABAAAA
+		SccLocalPath1 = Setup
+		SccProjectUniqueName2 = PackageSetup\\PackageSetup.vdproj
+		SccProjectName2 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/PackageSetup\u0022,\u0020KRABAAAA
+		SccLocalPath2 = PackageSetup
+		SccLocalPath3 = .
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU

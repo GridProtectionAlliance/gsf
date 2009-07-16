@@ -27,7 +27,7 @@
     <DebugType>full</DebugType>
     <DefineDebug>true</DefineDebug>
     <DefineTrace>true</DefineTrace>
-    <OutputPath>..\..\..\..\Build\Output\Debug\Tools\Component Installer\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Debug\Setups\Component Installer\</OutputPath>
     <DocumentationFile>Setup.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
@@ -36,7 +36,7 @@
     <DefineDebug>false</DefineDebug>
     <DefineTrace>true</DefineTrace>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Build\Output\Release\Tools\Component Installer\</OutputPath>
+    <OutputPath>..\..\..\..\Build\Output\Release\Setups\Component Installer\</OutputPath>
     <DocumentationFile>Setup.xml</DocumentationFile>
     <NoWarn>42016,41999,42017,42018,42019,42032,42036,42020,42021,42022</NoWarn>
   </PropertyGroup>
