@@ -293,7 +293,7 @@ namespace TVA.Identity
                         return fName + " " + lName;
 
                     else
-                        return fName + " " + mInitial + " " + lName;
+                        return fName + " " + mInitial + ". " + lName;
                 }
                 else
                 {
