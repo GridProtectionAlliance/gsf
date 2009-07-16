@@ -279,6 +279,8 @@
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicDecryptCryptoTransform.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicEncryptCryptoTransform.cs" />
     <Compile Include="Security\Cryptography\Pkzip\PkzipClassicManaged.cs" />
+    <Compile Include="Security\Cryptography\StandardKey.cs" />
+    <Compile Include="Security\Cryptography\SymmetricAlgorithmExtensions.cs" />
     <Compile Include="Serialization.cs" />
     <Compile Include="StringExtensions.cs" />
     <Compile Include="Threading\ManagedThread.cs" />

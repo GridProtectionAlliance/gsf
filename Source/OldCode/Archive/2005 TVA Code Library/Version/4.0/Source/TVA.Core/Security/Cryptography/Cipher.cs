@@ -23,7 +23,7 @@
 //  12/13/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/19/2008 - James R Carroll
-//       Converted to C# - basic encryption/decryption extend string, byte[], and Stream.
+//       Converted to C# - basic encryption/decryption extends string, byte[], and Stream.
 //
 //*******************************************************************************************************
 
@@ -44,7 +44,7 @@ namespace TVA.Security.Cryptography
     /// <remarks>
     /// <para>
     /// Encryption algorithms are cumulative. The levels represent tradeoffs on speed vs. cipher strength. Level 1
-    /// will have the fastest encryption speed with the simplest encryption strength, and level 6 will have the
+    /// will have the fastest encryption speed with the weakest encryption strength; level 6 will have the
     /// strongest cumulative encryption strength with the slowest encryption speed.
     /// </para>
     /// </remarks>
@@ -68,28 +68,29 @@ namespace TVA.Security.Cryptography
         /// <remarks>This is a proprietary encryption algorithm.</remarks>
         Level5,
         /// <summary>Adds classic pkzip based encryption.</summary>
-        /// <remarks>This is a standard encryption algorithm.</remarks>
+        /// <remarks>This is a common encryption algorithm.</remarks>
         Level6
     }
 
     #endregion
 
     /// <summary>
-    /// Performs common cryptographic functions.
+    /// Provides general use cryptographic functions.
     /// </summary>
+    /// <remarks>
+    /// This class exists to simplify usage of basic cryptography functionality. It uses a combination of standard and
+    /// proprietary encryption algorithms to produce decent obfuscations of strings, buffers and streams of data.
+    /// </remarks>
     public static class Cipher
     {
-        // IMPORTANT! Never change the following constants, or you will break cross-application crypto operability:
-        private const string StandardKey = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
-        private const int BufferSize = 262144; // 256K
-
-        private static byte[] m_standardKey = GetBinaryKeyFromString(StandardKey);
         private static List<int> m_excludedCharacters;
 
         /// <summary>
         /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameter, using the standard encryption key and encryption level 1.
         /// </summary>
+        /// <param name="source">Source string to encrypt.</param>
+        /// <returns>An encrypted version of the source string.</returns>
         public static string Encrypt(this string source)
         {
             return source.Encrypt(null, CipherStrength.Level1);
@@ -99,6 +100,9 @@ namespace TVA.Security.Cryptography
         /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters using standard encryption.
         /// </summary>
+        /// <param name="source">Source string to encrypt.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting string.</param>
+        /// <returns>An encrypted version of the source string.</returns>
         public static string Encrypt(this string source, CipherStrength strength)
         {
             return source.Encrypt(null, strength);
@@ -108,22 +112,30 @@ namespace TVA.Security.Cryptography
         /// Returns a Base64 encoded string of the returned binary array of the encrypted data, generated with
         /// the given parameters.
         /// </summary>
-        public static string Encrypt(this string source, string encryptionKey, CipherStrength strength)
+        /// <param name="source">Source string to encrypt.</param>
+        /// <param name="key">Encryption key to use to encrypt string.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting string.</param>
+        /// <returns>An encrypted version of the source string.</returns>
+        public static string Encrypt(this string source, string key, CipherStrength strength)
         {
             if (string.IsNullOrEmpty(source))
                 return null;
 
-            if (string.IsNullOrEmpty(encryptionKey))
-                encryptionKey = StandardKey;
+            if (string.IsNullOrEmpty(key))
+                key = StandardKey.Source;
 
-            byte[] key = GetBinaryKeyFromString(encryptionKey);
+            byte[] rgbKey = GetBinaryKeyFromString(key);
 
-            return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(key, key, strength));
+            return Convert.ToBase64String(Encoding.Unicode.GetBytes(source).Encrypt(rgbKey, rgbKey, strength));
         }
 
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Binary array of data to encrypt.</param>
+        /// <param name="key">Encryption key to use to encrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
+        /// <returns>An encrypted version of the source data.</returns>
         public static byte[] Encrypt(this byte[] source, byte[] key, CipherStrength strength)
         {
             return source.Encrypt(0, source.Length, key, key, strength);
@@ -132,14 +144,25 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
         /// </summary>
-        public static byte[] Encrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
+        /// <param name="source">Binary array of data to encrypt.</param>
+        /// <param name="key">Encryption key to use to encrypt data.</param>
+        /// <param name="iv">Initialization vector to use to encrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
+        /// <returns>An encrypted version of the source data.</returns>
+        public static byte[] Encrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength)
         {
-            return source.Encrypt(0, source.Length, key, IV, strength);
+            return source.Encrypt(0, source.Length, key, iv, strength);
         }
 
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Binary array of data to encrypt.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to encrypt starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="key">Encryption key to use to encrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
+        /// <returns>An encrypted version of the source data.</returns>
         public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
         {
             return source.Encrypt(startIndex, length, key, key, strength);
@@ -148,7 +171,14 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns a binary array of encrypted data for the given parameters.
         /// </summary>
-        public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] IV, CipherStrength strength)
+        /// <param name="source">Binary array of data to encrypt.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to encrypt starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="key">Encryption key to use to encrypt data.</param>
+        /// <param name="iv">Initialization vector to use to encrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting data.</param>
+        /// <returns>An encrypted version of the source data.</returns>
+        public static byte[] Encrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] iv, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return source;
@@ -157,19 +187,19 @@ namespace TVA.Security.Cryptography
             source = Crypt(source, startIndex, length, key);
             if (strength >= CipherStrength.Level2)
             {
-                source = new TripleDESCryptoServiceProvider().Encrypt(source, 0, source.Length, key, IV);
+                source = LegalKeyEncrypt(new TripleDESCryptoServiceProvider(), source, 0, source.Length, key, iv);
                 if (strength >= CipherStrength.Level3)
                 {
-                    source = new RC2CryptoServiceProvider().Encrypt(source, 0, source.Length, key, IV);
+                    source = LegalKeyEncrypt(new RC2CryptoServiceProvider(), source, 0, source.Length, key, iv);
                     if (strength >= CipherStrength.Level4)
                     {
-                        source = new RijndaelManaged().Encrypt(source, 0, source.Length, key, IV);
+                        source = LegalKeyEncrypt(new RijndaelManaged(), source, 0, source.Length, key, iv);
                         if (strength >= CipherStrength.Level5)
                         {
                             source = Obfuscate(source, 0, source.Length, key);
                             if (strength >= CipherStrength.Level6)
                             {
-                                source = new Pkzip.PkzipClassicManaged().Encrypt(source, 0, source.Length, key, IV);
+                                source = LegalKeyEncrypt(new Pkzip.PkzipClassicManaged(), source, 0, source.Length, key, iv);
                             }
                         }
                     }
@@ -179,56 +209,32 @@ namespace TVA.Security.Cryptography
             return source;
         }
 
-        #region [ Old Code ]
-
-        // The following pure stream encryption implementation is incompatible with the one that implements a progress handler
-        // since it embeds original stream lengths into the encrypted stream - so this method was removed to prevent possible
-        // confusion/errors during decryption cycle. 
-
-        ///// <summary>Returns a stream of encrypted data for the given parameters.</summary>
-        //public static Stream Encrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
-        //{
-        //    if (strength == CipherStrength.None)
-        //        return inStream;
-
-        //    // Performs requested levels of encryption.
-        //    inStream = Crypt(inStream, key);
-
-        //    if (strength >= CipherStrength.Level2)
-        //    {
-        //        inStream = Encrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-        //        if (strength >= CipherStrength.Level3)
-        //        {
-        //            inStream = Encrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-        //            if (strength >= CipherStrength.Level4)
-        //            {
-        //                inStream = Encrypt(new RijndaelManaged(), inStream, key, IV);
-        //                if (strength >= CipherStrength.Level5)
-        //                {
-        //                    inStream = Obfuscate(inStream, key);
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //    return inStream;
-        //}
-
-        #endregion
+        // Coerce key and iv into legal format for specificed algorithm then encrypt
+        private static byte[] LegalKeyEncrypt(SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] iv)
+        {
+            byte[] rgbKey = algorithm.GetLegalKey(key);
+            byte[] rgbIV = algorithm.GetLegalIV(iv);
+            return algorithm.Encrypt(data, startIndex, length, rgbKey, rgbIV);
+        }
 
         /// <summary>
         /// Returns a stream of encrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Source stream that contains data to encrypt.</param>
+        /// <param name="key">Encryption key to use to encrypt stream.</param>
+        /// <param name="iv">Initialization vector to use to encrypt stream.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting stream.</param>
+        /// <returns>An encrypted version of the source stream.</returns>
         /// <remarks>
         /// This returns a memory stream of the encrypted results, if the incoming stream is
-        /// very large this will consume a large amount memory.  In this case use the overload
+        /// very large this will consume a large amount of memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
-        public static MemoryStream Encrypt(this Stream source, byte[] key, byte[] IV, CipherStrength strength)
+        public static MemoryStream Encrypt(this Stream source, byte[] key, byte[] iv, CipherStrength strength)
         {
             MemoryStream destination = new MemoryStream();
 
-            source.Encrypt(destination, key, IV, strength, null);
+            source.Encrypt(destination, key, iv, strength, null);
             destination.Position = 0;
 
             return destination;
@@ -237,10 +243,16 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Encrypts input stream onto output stream for the given parameters.
         /// </summary>
-        public static void Encrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        /// <param name="source">Source stream that contains data to encrypt.</param>
+        /// <param name="destination">Destination stream used to hold encrypted data.</param>
+        /// <param name="key">Encryption key to use to encrypt stream.</param>
+        /// <param name="iv">Initialization vector to use to encrypt stream.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting stream.</param>
+        /// <param name="progressHandler">Optional delegate to handle progress updates for encrypting large streams.</param>
+        public static void Encrypt(this Stream source, Stream destination, byte[] key, byte[] iv, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
-            byte[] inBuffer = new byte[BufferSize];
+            byte[] inBuffer = new byte[StandardKey.BufferSize];
             byte[] outBuffer, lengthBuffer;
             long total = 0;
             long length = -1;
@@ -265,12 +277,12 @@ namespace TVA.Security.Cryptography
             }
 
             // Reads initial buffer.
-            read = source.Read(inBuffer, 0, BufferSize);
+            read = source.Read(inBuffer, 0, StandardKey.BufferSize);
 
             while (read > 0)
             {
                 // Encrypts buffer.
-                outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, IV, strength);
+                outBuffer = inBuffer.BlockCopy(0, read).Encrypt(key, iv, strength);
 
                 // The destination encryption stream length does not have to be same as the input stream length, so we
                 // prepend the final size of each encrypted buffer onto the destination ouput stream so that we can
@@ -287,52 +299,16 @@ namespace TVA.Security.Cryptography
                 }
 
                 // Reads next buffer.
-                read = source.Read(inBuffer, 0, BufferSize);
+                read = source.Read(inBuffer, 0, StandardKey.BufferSize);
             }
-        }
-
-        /// <summary>
-        /// Returns a binary array of encrypted data for the given parameters.
-        /// </summary>
-        public static byte[] Encrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] IV)
-        {
-            MemoryStream inStream = new MemoryStream(data, startIndex, length);
-            MemoryStream outStream = new MemoryStream();
-
-            algorithm.Encrypt(inStream, outStream, key, IV);
-            outStream.Position = 0;
-
-            return outStream.ToArray();
-        }
-
-        /// <summary>
-        /// Encrypts input stream onto output stream for the given parameters.
-        /// </summary>
-        public static void Encrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
-        {
-            // This is the root encryption function. Eventually, all the symmetric algorithm based encryption
-            // functions perform their actual encryption here.
-            byte[] rgbKey = algorithm.GetLegalKey(key);
-            byte[] rgbIV = algorithm.GetLegalIV(IV);
-            byte[] buffer = new byte[BufferSize];
-            CryptoStream encodeStream = new CryptoStream(outStream, algorithm.CreateEncryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
-            int read;
-
-            // Encrypts data onto output stream.
-            read = inStream.Read(buffer, 0, BufferSize);
-
-            while (read > 0)
-            {
-                encodeStream.Write(buffer, 0, read);
-                read = inStream.Read(buffer, 0, BufferSize);
-            }
-
-            encodeStream.FlushFinalBlock();
         }
 
         /// <summary>
         /// Creates an encrypted file from source file data.
         /// </summary>
+        /// <param name="sourceFilename">Source file name.</param>
+        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting file.</param>
         public static void EncryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
         {
             EncryptFile(sourceFilename, destinationFilename, null, strength, null);
@@ -341,13 +317,22 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Creates an encrypted file from source file data.
         /// </summary>
-        public static void EncryptFile(string sourceFilename, string destinationFilename, string encryptionKey, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        /// <param name="sourceFilename">Source file name.</param>
+        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="key">Encryption key to use to encrypt file.</param>
+        /// <param name="strength">Cryptographic strength to use when encrypting file.</param>
+        /// <param name="progressHandler">Optional delegate to handle progress updates for encrypting large files.</param>
+        public static void EncryptFile(string sourceFilename, string destinationFilename, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
-            sourceFileStream.Encrypt(destFileStream, key, key, strength, progressHandler);
+            if (string.IsNullOrEmpty(key))
+                key = StandardKey.Source;
+
+            byte[] rgbKey = GetBinaryKeyFromString(key);
+
+            sourceFileStream.Encrypt(destFileStream, rgbKey, rgbKey, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -358,6 +343,8 @@ namespace TVA.Security.Cryptography
         /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameter using the standard encryption key and encryption level 1.
         /// </summary>
+        /// <param name="source">Source string to decrypt.</param>
+        /// <returns>A decrypted version of the source string.</returns>
         public static string Decrypt(this string source)
         {
             return source.Decrypt(null, CipherStrength.Level1);
@@ -367,6 +354,9 @@ namespace TVA.Security.Cryptography
         /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters using the standard encryption key.
         /// </summary>
+        /// <param name="source">Source string to decrypt.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting string.</param>
+        /// <returns>A decrypted version of the source string.</returns>
         public static string Decrypt(this string source, CipherStrength strength)
         {
             return source.Decrypt(null, strength);
@@ -376,19 +366,30 @@ namespace TVA.Security.Cryptography
         /// Returns a decrypted string from a Base64 encoded string of binary encrypted data from the given
         /// parameters.
         /// </summary>
-        public static string Decrypt(this string source, string encryptionKey, CipherStrength strength)
+        /// <param name="source">Source string to decrypt.</param>
+        /// <param name="key">Encryption key to use to decrypt string.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting string.</param>
+        /// <returns>A decrypted version of the source string.</returns>
+        public static string Decrypt(this string source, string key, CipherStrength strength)
         {
             if (string.IsNullOrEmpty(source))
                 return null;
 
-            byte[] key = GetBinaryKeyFromString(encryptionKey);
+            if (string.IsNullOrEmpty(key))
+                key = StandardKey.Source;
 
-            return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(key, key, strength));
+            byte[] rgbKey = GetBinaryKeyFromString(key);
+
+            return Encoding.Unicode.GetString(Convert.FromBase64String(source).Decrypt(rgbKey, rgbKey, strength));
         }
 
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Binary array of data to decrypt.</param>
+        /// <param name="key">Encryption key to use to decrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
+        /// <returns>A decrypted version of the source data.</returns>
         public static byte[] Decrypt(this byte[] source, byte[] key, CipherStrength strength)
         {
             return source.Decrypt(0, source.Length, key, key, strength);
@@ -397,14 +398,25 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
         /// </summary>
-        public static byte[] Decrypt(this byte[] source, byte[] key, byte[] IV, CipherStrength strength)
+        /// <param name="source">Binary array of data to decrypt.</param>
+        /// <param name="key">Encryption key to use to decrypt data.</param>
+        /// <param name="iv">Initialization vector to use to decrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
+        /// <returns>A decrypted version of the source data.</returns>
+        public static byte[] Decrypt(this byte[] source, byte[] key, byte[] iv, CipherStrength strength)
         {
-            return source.Decrypt(0, source.Length, key, IV, strength);
+            return source.Decrypt(0, source.Length, key, iv, strength);
         }
 
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Binary array of data to decrypt.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to decrypt starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="key">Encryption key to use to decrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
+        /// <returns>A decrypted version of the source data.</returns>
         public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, CipherStrength strength)
         {
             return source.Decrypt(startIndex, length, key, key, strength);
@@ -413,7 +425,14 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns a binary array of decrypted data for the given parameters.
         /// </summary>
-        public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] IV, CipherStrength strength)
+        /// <param name="source">Binary array of data to decrypt.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to decrypt starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="key">Encryption key to use to decrypt data.</param>
+        /// <param name="iv">Initialization vector to use to decrypt data.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting data.</param>
+        /// <returns>A decrypted version of the source data.</returns>
+        public static byte[] Decrypt(this byte[] source, int startIndex, int length, byte[] key, byte[] iv, CipherStrength strength)
         {
             if (strength == CipherStrength.None)
                 return source;
@@ -421,7 +440,7 @@ namespace TVA.Security.Cryptography
             // Performs requested levels of decryption.
             if (strength >= CipherStrength.Level6)
             {
-                source = new Pkzip.PkzipClassicManaged().Decrypt(source, startIndex, length, key, IV);
+                source = LegalKeyDecrypt(new Pkzip.PkzipClassicManaged(), source, startIndex, length, key, iv);
                 startIndex = 0;
                 length = source.Length;
             }
@@ -435,21 +454,21 @@ namespace TVA.Security.Cryptography
 
             if (strength >= CipherStrength.Level4)
             {
-                source = new RijndaelManaged().Decrypt(source, startIndex, length, key, IV);
+                source = LegalKeyDecrypt(new RijndaelManaged(), source, startIndex, length, key, iv);
                 startIndex = 0;
                 length = source.Length;
             }
 
             if (strength >= CipherStrength.Level3)
             {
-                source = new RC2CryptoServiceProvider().Decrypt(source, startIndex, length, key, IV);
+                source = LegalKeyDecrypt(new RC2CryptoServiceProvider(), source, startIndex, length, key, iv);
                 startIndex = 0;
                 length = source.Length;
             }
 
             if (strength >= CipherStrength.Level2)
             {
-                source = new TripleDESCryptoServiceProvider().Decrypt(source, startIndex, length, key, IV);
+                source = LegalKeyDecrypt(new TripleDESCryptoServiceProvider(), source, startIndex, length, key, iv);
                 startIndex = 0;
                 length = source.Length;
             }
@@ -457,49 +476,32 @@ namespace TVA.Security.Cryptography
             return Crypt(source, startIndex, length, key);
         }
 
-        #region [ Old Code ]
-
-        // The following pure stream decryption implementation is incompatible with the one that implements a progress handler
-        // since it uses embedded stream lengths from the original encrypted stream - so this method was removed to prevent possible
-        // confusion/errors during decryption cycle. 
-
-        ///// <summary>Returns a stream of decrypted data for the given parameters.</summary>
-        //public static Stream Decrypt(Stream inStream, byte[] key, byte[] IV, CipherStrength strength)
-        //{
-        //    if (strength == CipherStrength.None)
-        //        return inStream;
-
-        //    // Performs requested levels of decryption.
-        //    if (strength >= CipherStrength.Level5)
-        //        inStream = Deobfuscate(inStream, key);
-
-        //    if (strength >= CipherStrength.Level4)
-        //        inStream = Decrypt(new RijndaelManaged(), inStream, key, IV);
-
-        //    if (strength >= CipherStrength.Level3)
-        //        inStream = Decrypt(new RC2CryptoServiceProvider(), inStream, key, IV);
-
-        //    if (strength >= CipherStrength.Level2)
-        //        inStream = Decrypt(new TripleDESCryptoServiceProvider(), inStream, key, IV);
-
-        //    return Crypt(inStream, key);
-        //}
-
-        #endregion
+        // Coerce key and iv into legal format for specificed algorithm then decrypt
+        private static byte[] LegalKeyDecrypt(SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] iv)
+        {
+            byte[] rgbKey = algorithm.GetLegalKey(key);
+            byte[] rgbIV = algorithm.GetLegalIV(iv);
+            return algorithm.Decrypt(data, startIndex, length, rgbKey, rgbIV);
+        }
 
         /// <summary>
         /// Returns a stream of decrypted data for the given parameters.
         /// </summary>
+        /// <param name="source">Source stream that contains data to decrypt.</param>
+        /// <param name="key">Encryption key to use to decrypt stream.</param>
+        /// <param name="iv">Initialization vector to use to decrypt stream.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting stream.</param>
+        /// <returns>A decrypted version of the source stream.</returns>
         /// <remarks>
         /// This returns a memory stream of the decrypted results, if the incoming stream is
-        /// very large this will consume a large amount memory.  In this case use the overload
+        /// very large this will consume a large amount of memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
-        public static MemoryStream Decrypt(this Stream source, byte[] key, byte[] IV, CipherStrength strength)
+        public static MemoryStream Decrypt(this Stream source, byte[] key, byte[] iv, CipherStrength strength)
         {
             MemoryStream destination = new MemoryStream();
 
-            source.Decrypt(destination, key, IV, strength, null);
+            source.Decrypt(destination, key, iv, strength, null);
             destination.Position = 0;
 
             return destination;
@@ -508,11 +510,17 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Decrypts input stream onto output stream for the given parameters.
         /// </summary>
-        public static void Decrypt(this Stream source, Stream destination, byte[] key, byte[] IV, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        /// <param name="source">Source stream that contains data to decrypt.</param>
+        /// <param name="destination">Destination stream used to hold decrypted data.</param>
+        /// <param name="key">Encryption key to use to decrypt stream.</param>
+        /// <param name="iv">Initialization vector to use to decrypt stream.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting stream.</param>
+        /// <param name="progressHandler">Optional delegate to handle progress updates for decrypting large streams.</param>
+        public static void Decrypt(this Stream source, Stream destination, byte[] key, byte[] iv, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
             byte[] inBuffer, outBuffer;
-            byte[] lengthBuffer = BitConverter.GetBytes(0);
+            byte[] lengthBuffer = BitConverter.GetBytes((int)0);
             long total = 0;
             long length = -1;
             int size, read;
@@ -557,7 +565,7 @@ namespace TVA.Security.Cryptography
                     if (read > 0)
                     {
                         // Decrypts buffer.
-                        outBuffer = inBuffer.Decrypt(key, IV, strength);
+                        outBuffer = inBuffer.Decrypt(key, iv, strength);
                         destination.Write(outBuffer, 0, outBuffer.Length);
 
                         // Updates decryption progress.
@@ -575,47 +583,11 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Returns a binary array of decrypted data for the given parameters.
-        /// </summary>
-        public static byte[] Decrypt(this SymmetricAlgorithm algorithm, byte[] data, int startIndex, int length, byte[] key, byte[] IV)
-        {
-            MemoryStream inStream = new MemoryStream(data, startIndex, length);
-            MemoryStream outStream = new MemoryStream();
-
-            algorithm.Decrypt(inStream, outStream, key, IV);
-            outStream.Position = 0;
-
-            return outStream.ToArray();
-        }
-
-        /// <summary>
-        /// Decrypts input stream onto output stream for the given parameters.
-        /// </summary>
-        public static void Decrypt(this SymmetricAlgorithm algorithm, Stream inStream, Stream outStream, byte[] key, byte[] IV)
-        {
-            // This is the root decryption function. Eventually, all the symmetric algorithm based decryption
-            // functions perform their actual decryption here.
-            byte[] rgbKey = algorithm.GetLegalKey(key);
-            byte[] rgbIV = algorithm.GetLegalIV(IV);
-            byte[] buffer = new byte[BufferSize];
-            CryptoStream decodeStream = new CryptoStream(outStream, algorithm.CreateDecryptor(rgbKey, rgbIV), CryptoStreamMode.Write);
-            int read;
-
-            // Decrypts data onto output stream.
-            read = inStream.Read(buffer, 0, BufferSize);
-
-            while (read > 0)
-            {
-                decodeStream.Write(buffer, 0, read);
-                read = inStream.Read(buffer, 0, BufferSize);
-            }
-
-            decodeStream.FlushFinalBlock();
-        }
-
-        /// <summary>
         /// Creates a decrypted file from source file data.
         /// </summary>
+        /// <param name="sourceFilename">Source file name.</param>
+        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting file.</param>
         public static void DecryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
         {
             DecryptFile(sourceFilename, destinationFilename, null, strength, null);
@@ -624,13 +596,22 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Creates a decrypted file from source file data.
         /// </summary>
-        public static void DecryptFile(string sourceFilename, string destinationFilename, string encryptionKey, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        /// <param name="sourceFilename">Source file name.</param>
+        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="key">Encryption key to use to decrypt file.</param>
+        /// <param name="strength">Cryptographic strength to use when decrypting file.</param>
+        /// <param name="progressHandler">Optional delegate to handle progress updates for decrypting large files.</param>
+        public static void DecryptFile(string sourceFilename, string destinationFilename, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
             FileStream destFileStream = File.Create(destinationFilename);
-            byte[] key = GetBinaryKeyFromString(encryptionKey);
 
-            sourceFileStream.Decrypt(destFileStream, key, key, strength, progressHandler);
+            if (string.IsNullOrEmpty(key))
+                key = StandardKey.Source;
+
+            byte[] rgbKey = GetBinaryKeyFromString(key);
+
+            sourceFileStream.Decrypt(destFileStream, rgbKey, rgbKey, strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -638,56 +619,138 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Coerces key to maximum legal bit length for given encryption algorithm.
+        /// Generates a binary encryption key from given string.
         /// </summary>
-        public static byte[] GetLegalKey(this SymmetricAlgorithm algorithm, byte[] key)
+        /// <param name="encryptionKey">String based sequence to convert to an encryption key.</param>
+        /// <returns>Binary encryption key from given string.</returns>
+        public static byte[] GetBinaryKeyFromString(string encryptionKey)
         {
-            List<byte> rgbKey = new List<byte>();
-            int length = algorithm.LegalKeySizes[0].MaxSize / 8;
+            if (string.IsNullOrEmpty(encryptionKey))
+                throw new ArgumentException("Argument is null or empty.", "encryptionKey");
 
-            // See http://en.wikipedia.org/wiki/Salt_(cryptography)
-            for (int x = 0; x < length; x++)
+            List<byte> key = new List<byte>();
+            ushort keyValue;
+
+            for (int i = 0; i < encryptionKey.Length; i++)
             {
-                if (x < key.Length)
-                    rgbKey.Add(key[x]);
+                keyValue = (ushort)encryptionKey[i];
+
+                // Get all the relevant bytes from the Unicode character
+                if (keyValue < 256)
+                    key.Add((byte)keyValue);
                 else
-                    rgbKey.Add(m_standardKey[x % m_standardKey.Length]);
+                {
+                    key.Add(keyValue.LowByte());
+                    key.Add(keyValue.HighByte());
+                }
             }
 
-            rgbKey.Scramble(rgbKey[0]);
+            // Perform repeatable scramble on key sequence
+            key.Scramble((int)encryptionKey[0]);
 
-            return rgbKey.ToArray();
+            return key.ToArray();
         }
 
         /// <summary>
-        /// Coerces initialization vector to legal block size for given encryption algorithm.
+        /// Generates a random key useful for cryptographic functions.
         /// </summary>
-        public static byte[] GetLegalIV(this SymmetricAlgorithm algorithm, byte[] IV)
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateKey(int size)
         {
-            List<byte> rgbIV = new List<byte>();
-            int length = algorithm.LegalBlockSizes[0].MinSize / 8;
+            // Generates a character array of unique values.
+            List<char> keyChars = new List<char>();
 
-            // See http://en.wikipedia.org/wiki/Salt_(cryptography)
-            for (int x = 0; x < length; x++)
+            for (int x = 0; x < size; x++)
             {
-                if (x < IV.Length)
-                    rgbIV.Add(IV[IV.Length - 1 - x]);
-                else
-                    rgbIV.Add(m_standardKey[x % m_standardKey.Length]);
+                keyChars.Add((char)Random.Int32Between(1, 255));
             }
 
-            rgbIV.Scramble(rgbIV[0]);
+            return new string(keyChars.ToArray());
+        }
 
-            return rgbIV.ToArray();
+        /// <summary>
+        /// Generates a text based random key with no control characters useful for cryptographic functions.
+        /// </summary>
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateTextFriendlyKey(int size)
+        {
+            // Initialize excluded characters
+            if (m_excludedCharacters == null)
+            {
+                m_excludedCharacters = new List<int>();
+
+                m_excludedCharacters.Add(0x7F);
+
+                for (int i = 0x81; i < 0xA0; i++)
+                {
+                    m_excludedCharacters.Add(i);
+                }
+            }
+
+            // Generates a character array of unique text friendly values.
+            List<char> keyChars = new List<char>();
+            int character;
+
+            for (int x = 0; x < size; x++)
+            {
+                do
+                {
+                    character = Random.Int32Between(33, 255);
+                }
+                while (m_excludedCharacters.BinarySearch(character) >= 0);
+
+                keyChars.Add((char)character);
+            }
+
+            return new string(keyChars.ToArray());
+        }
+
+        /// <summary>
+        /// Generates a text based random key that can be easily typed useful for cryptographic functions.
+        /// </summary>
+        /// <param name="size">Length of key to generate.</param>
+        public static string GenerateKeyboardFriendlyKey(int size)
+        {
+            // Generates a character array of unique easily typeable values.
+            List<char> keyChars = new List<char>();
+            char character;
+
+            for (int x = 0; x < size / 2; x++)
+            {
+                // Add a number (0 - 9)
+                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
+
+                // Add a letter (A - Z)
+                character = (char)Random.Int32Between(0x41, 0x5A);
+
+                // Make every other letter lower case
+                if (x % 2 == 0)
+                    keyChars.Add(character);
+                else
+                    keyChars.Add(char.ToLower(character));
+            }
+
+            // Make sure length comes out as specified
+            if (size % 2 != 0)
+                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
+
+
+            // Mix up letters and numbers randomly
+            keyChars.Scramble();
+
+            return new string(keyChars.ToArray());
         }
 
         /// <summary>
         /// Returns an encrypted or decrypted stream using XOR based algorithms. Call once to
         /// encrypt, call again with same key to decrypt.
         /// </summary>
+        /// <param name="source">Source stream to encrypt or decrypt.</param>
+        /// <param name="encryptionKey">Encryption key to use to encrypt or decrypt stream.</param>
+        /// <returns>An encrypted or decrypted version of source stream.</returns>
         /// <remarks>
         /// This returns a memory stream of the encrypted or decrypted results, if the incoming
-        /// stream is very large this will consume a large amount memory.  In this case use the
+        /// stream is very large this will consume a large amount of memory.  In this case use the
         /// overload that takes the destination stream as a parameter instead.
         /// </remarks>
         public static MemoryStream Crypt(Stream source, byte[] encryptionKey)
@@ -704,22 +767,30 @@ namespace TVA.Security.Cryptography
         /// Encrypts or decrypts input stream onto output stream using XOR based algorithms. Call once to
         /// encrypt, call again with same key to decrypt.
         /// </summary>
+        /// <param name="source">Source stream to encrypt or decrypt.</param>
+        /// <param name="destination">Destination stream to hold results..</param>
+        /// <param name="encryptionKey">Encryption key to use to encrypt or decrypt stream.</param>
         public static void Crypt(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, BufferSize);
+            byte[] buffer = new byte[StandardKey.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Crypt(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, BufferSize);
+                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
             }
         }
 
         /// <summary>
         /// Encrypts or decrypts data using XOR based algorithms. Call once to encrypt; call again with same key to decrypt.
         /// </summary>
+        /// <param name="source">Binary array of data to encrypt or decrypt.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to encrypt or decrypt starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="encryptionKey">Encryption key to use to encrypt or decrypt data.</param>
+        /// <returns>An encrypted or decrypted version of the source data.</returns>
         public static byte[] Crypt(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -803,9 +874,12 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns an obfuscated stream using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Source stream to obfuscate.</param>
+        /// <param name="encryptionKey">Encryption key to use to obfuscate stream.</param>
+        /// <returns>An obfuscated version of the source stream.</returns>
         /// <remarks>
         /// This returns a memory stream of the encrypted results, if the incoming stream is
-        /// very large this will consume a large amount memory.  In this case use the overload
+        /// very large this will consume a large amount of memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
         public static MemoryStream Obfuscate(Stream source, byte[] encryptionKey)
@@ -821,22 +895,30 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Obfuscates input stream onto output stream using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Source stream to obfuscate.</param>
+        /// <param name="destination">Destination stream used to hold obfuscated data.</param>
+        /// <param name="encryptionKey">Encryption key to use to obfuscate stream.</param>
         public static void Obfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, BufferSize);
+            byte[] buffer = new byte[StandardKey.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Obfuscate(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, BufferSize);
+                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
             }
         }
 
         /// <summary>
         /// Obfuscates data using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Binary array of data to obfuscate.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to obfuscate starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="encryptionKey">Encryption key to use to obfuscate data.</param>
+        /// <returns>An obfuscated version of the source data.</returns>
         public static byte[] Obfuscate(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -888,9 +970,12 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns a deobfuscated stream using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Source stream to deobfuscate.</param>
+        /// <param name="encryptionKey">Encryption key to use to deobfuscate stream.</param>
+        /// <returns>A deobfuscated version of the source stream.</returns>
         /// <remarks>
         /// This returns a memory stream of the decrypted results, if the incoming stream is
-        /// very large this will consume a large amount memory.  In this case use the overload
+        /// very large this will consume a large amount of memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
         public static MemoryStream Deobfuscate(Stream source, byte[] encryptionKey)
@@ -906,22 +991,30 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Deobfuscates input stream onto output stream using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Source stream to deobfuscate.</param>
+        /// <param name="destination">Destination stream used to hold deobfuscated data.</param>
+        /// <param name="encryptionKey">Encryption key to use to deobfuscate stream.</param>
         public static void Deobfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, BufferSize);
+            byte[] buffer = new byte[StandardKey.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Deobfuscate(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, BufferSize);
+                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
             }
         }
 
         /// <summary>
         /// Deobfuscates data using bit-rotation algorithms.
         /// </summary>
+        /// <param name="source">Binary array of data to deobfuscate.</param>
+        /// <param name="startIndex">Offset into <paramref name="source"/> buffer.</param>
+        /// <param name="length">Number of bytes in <paramref name="source"/> buffer to deobfuscate starting from <paramref name="startIndex"/> offset.</param>
+        /// <param name="encryptionKey">Encryption key to use to deobfuscate data.</param>
+        /// <returns>A deobfuscated version of the source data.</returns>
         public static byte[] Deobfuscate(byte[] source, int startIndex, int length, byte[] encryptionKey)
         {
             if (source == null)
@@ -971,132 +1064,10 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Generates a binary encryption key from given string.
-        /// </summary>
-        /// <param name="encryptionKey">String based sequence to convert to an encryption key.</param>
-        /// <returns>Binary encryption key from given string.</returns>
-        public static byte[] GetBinaryKeyFromString(string encryptionKey)
-        {
-            if (string.IsNullOrEmpty(encryptionKey))
-                return m_standardKey;
-
-            List<byte> key = new List<byte>();
-            ushort keyValue;
-
-            for (int i = 0; i < encryptionKey.Length; i++)
-            {
-                keyValue = (ushort)encryptionKey[i];
-
-                // Get all the relevant bytes from the Unicode character
-                if (keyValue < 256)
-                    key.Add((byte)keyValue);
-                else
-                {
-                    key.Add(keyValue.LowByte());
-                    key.Add(keyValue.HighByte());
-                }
-            }
-
-            // Perform repeatable scramble on key sequence
-            key.Scramble((int)encryptionKey[0]);
-           
-            return key.ToArray();
-        }
-
-        /// <summary>
-        /// Generates a random key useful for cryptographic functions.
-        /// </summary>
-        /// <param name="size">Length of key to generate.</param>
-        public static string GenerateKey(int size)
-        {
-            // Generates a character array of unique values.
-            List<char> keyChars = new List<char>();
-
-            for (int x = 0; x < size; x++)
-            {
-                keyChars.Add((char)Random.Int32Between(1, 255));
-            }
-
-            return new string(keyChars.ToArray());
-        }
-
-        /// <summary>
-        /// Generates a text based random key with no control characters useful for cryptographic functions.
-        /// </summary>
-        /// <param name="size">Length of key to generate.</param>
-        public static string GenerateTextFriendlyKey(int size)
-        {
-            // Initialize excluded characters
-            if (m_excludedCharacters == null)
-            {
-                m_excludedCharacters = new List<int>();
-
-                m_excludedCharacters.Add(0x7F);
-
-                for (int i = 0x81; i < 0xA0; i++)
-                {
-                    m_excludedCharacters.Add(i);
-                }
-            }
-            
-            // Generates a character array of unique text friendly values.
-            List<char> keyChars = new List<char>();
-            int character;
-
-            for (int x = 0; x < size; x++)
-            {
-                do
-                {
-                    character = Random.Int32Between(33, 255);
-                }
-                while (m_excludedCharacters.BinarySearch(character) >= 0);
-
-                keyChars.Add((char)character);
-            }
-
-            return new string(keyChars.ToArray());
-        }
-
-        /// <summary>
-        /// Generates a text based random key that could be easily typed useful for cryptographic functions.
-        /// </summary>
-        /// <param name="size">Length of key to generate.</param>
-        public static string GenerateHumanReadableKey(int size)
-        {
-            // Generates a character array of unique human readable/typeable values.
-            List<char> keyChars = new List<char>();
-            char character;
-
-            for (int x = 0; x < size / 2; x++)
-            {
-                // Add a number (0 - 9)
-                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
-
-                // Add a letter (A - Z)
-                character = (char)Random.Int32Between(0x41, 0x5A);
-
-                // Make every other letter lower case
-                if (x % 2 == 0)
-                    keyChars.Add(character);
-                else
-                    keyChars.Add(char.ToLower(character));
-            }
-
-            // Make sure length comes out as specified
-            if (size % 2 != 0)
-                keyChars.Add((char)Random.Int32Between(0x30, 0x39));
-
-
-            // Mix up letters and numbers randomly
-            keyChars.Scramble();
-
-            return new string(keyChars.ToArray());
-        }
-
-        /// <summary>
         /// Returns a simple encoded string representing a number which can later be decoded with <see cref="GetSeedFromKey"/>.
         /// </summary>
-        /// <remarks>This function was designed for 24-bit values.</remarks>
+        /// <param name="seed"><see cref="Int24"/> seed to encode.</param>
+        /// <returns>An encoded version of source seed.</returns>
         public static string GetKeyFromSeed(Int24 seed)
         {
             if (seed < 0)
@@ -1124,6 +1095,8 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Returns the number from a string encoded with <see cref="GetKeyFromSeed" />.
         /// </summary>
+        /// <param name="key">Key to decode to a seed.</param>
+        /// <returns>Seed decoded from source key.</returns>
         public static Int24 GetSeedFromKey(string key)
         {
             if (string.IsNullOrEmpty(key))
