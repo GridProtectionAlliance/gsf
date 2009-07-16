@@ -11,18 +11,23 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Setup", "Setup\Setup.vbproj
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PackageSetup", "PackageSetup\PackageSetup.vdproj", "{B6ED3313-36ED-4631-B9FE-06B229CDA275}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A4E5161E-3D7C-46C8-8DD3-C95F85FE17B8}"
+	ProjectSection(SolutionItems) = preProject
+		BuildNotes.txt = BuildNotes.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 4
-		SccProjectUniqueName0 = Component\u0020Installer.csproj
 		SccLocalPath0 = .
-		SccProjectUniqueName1 = Setup\\Setup.vbproj
-		SccProjectName1 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/Setup\u0022,\u0020NRABAAAA
-		SccLocalPath1 = Setup
-		SccProjectUniqueName2 = PackageSetup\\PackageSetup.vdproj
-		SccProjectName2 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/PackageSetup\u0022,\u0020KRABAAAA
-		SccLocalPath2 = PackageSetup
-		SccLocalPath3 = .
+		SccProjectUniqueName1 = Component\u0020Installer.csproj
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = Setup\\Setup.vbproj
+		SccProjectName2 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/Setup\u0022,\u0020NRABAAAA
+		SccLocalPath2 = Setup
+		SccProjectUniqueName3 = PackageSetup\\PackageSetup.vdproj
+		SccProjectName3 = \u0022$/TVA\u0020Code\u0020Library/Version/4.0/Source/Tools/Component\u0020Installer/PackageSetup\u0022,\u0020KRABAAAA
+		SccLocalPath3 = PackageSetup
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

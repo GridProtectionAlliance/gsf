@@ -1,0 +1,7 @@
+This solution builds a Visual Studio Package that will create and maintain the TVA Code Library components toolbox tab.
+
+In order to build this code you will need to install the Visual Studio 2008 SDK:
+
+http://msdn.microsoft.com/en-us/library/bb166441.aspx
+
+The project called "Setup" is the key project to build, it specifies the other projects as dependencies.

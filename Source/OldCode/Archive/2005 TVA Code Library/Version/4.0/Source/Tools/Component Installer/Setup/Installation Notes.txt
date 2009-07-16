@@ -1,0 +1,5 @@
+﻿Be sure to run "Setup.exe" to make sure all components get installed correctly (i.e., do not run the MSI files directly).
+
+Visual Studio should not be running during installation of the component installer.
+
+Click on "Tools / Refresh Code Library Components Tab" after installation in order to create the toolbox tab.
