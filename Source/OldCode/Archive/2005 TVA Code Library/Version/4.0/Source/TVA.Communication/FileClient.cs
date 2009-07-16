@@ -479,7 +479,7 @@ namespace TVA.Communication
             WaitHandle handle = base.ConnectAsync();
 
             m_fileClient.ID = this.ClientID;
-            m_fileClient.Passphrase = this.HandshakePassphrase;
+            m_fileClient.Secretkey = this.SharedSecret;
             m_fileClient.ReceiveBuffer = new byte[ReceiveBufferSize];
 #if ThreadTracking
             m_connectionThread = new ManagedThread(OpenFile);
@@ -564,12 +564,12 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <returns>Cipher passphrase.</returns>
-        protected override string GetSessionPassphrase()
+        /// <returns>Cipher secret key.</returns>
+        protected override string GetSessionSecret()
         {
-            return m_fileClient.Passphrase;
+            return m_fileClient.Secretkey;
         }
 
         /// <summary>

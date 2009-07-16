@@ -241,7 +241,7 @@ namespace TVA.Communication
                             if (clientStringSegments.Length == 2)
                             {
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
-                                udpClient.Passphrase = HandshakePassphrase;
+                                udpClient.Secretkey = SharedSecret;
                                 udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                                 udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
                                 // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
@@ -285,7 +285,7 @@ namespace TVA.Communication
                 udpClient.SendBuffer = new GoodbyeMessage(udpClient.ID).BinaryImage;
                 udpClient.SendBufferOffset = 0;
                 udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Passphrase, Compression);
+                Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, udpClient.Secretkey, Compression);
 
                 udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
             }
@@ -329,13 +329,13 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <param name="clientID">ID of the client whose passphrase is to be retrieved.</param>
-        /// <returns>Cipher passphrase of the client with the specified <paramref name="clientID"/>.</returns>
-        protected override string GetSessionPassphrase(Guid clientID)
+        /// <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
+        /// <returns>Cipher secret key of the client with the specified <paramref name="clientID"/>.</returns>
+        protected override string GetSessionSecret(Guid clientID)
         {
-            return Client(clientID).Passphrase;
+            return Client(clientID).Secretkey;
         }
 
         /// <summary>
@@ -414,18 +414,18 @@ namespace TVA.Communication
                 udpServer.ReceiveBufferLength = udpServer.Statistics.LastBytesReceived;
 
                 // Process the received handshake message.
-                Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+                Payload.ProcessReceived(ref udpServer.ReceiveBuffer, ref udpServer.ReceiveBufferOffset, ref udpServer.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                 HandshakeMessage handshake = new HandshakeMessage();
                 if (handshake.Initialize(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
                 {
                     // Received handshake message could be parsed successfully.
-                    if (handshake.ID != Guid.Empty && handshake.Passphrase == HandshakePassphrase)
+                    if (handshake.ID != Guid.Empty)
                     {
                         // Create a random socket and connect it to the client.
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                         udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                        udpClient.Passphrase = HandshakePassphrase;
+                        udpClient.Secretkey = SharedSecret;
                         udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
                         udpClient.Provider.Connect(client);
 
@@ -435,15 +435,15 @@ namespace TVA.Communication
                         if (SecureSession)
                         {
                             // Create a secret key for ciphering client data.
-                            udpClient.Passphrase = Cipher.GenerateKey(260);
-                            handshake.Passphrase = udpClient.Passphrase;
+                            udpClient.Secretkey = Cipher.GenerateKey(260);
+                            handshake.Secretkey = udpClient.Secretkey;
                         }
 
                         // Prepare binary image of handshake response to be transmitted.
                         udpClient.SendBuffer = handshake.BinaryImage;
                         udpClient.SendBufferOffset = 0;
                         udpClient.SendBufferLength = udpClient.SendBuffer.Length;
-                        Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+                        Payload.ProcessTransmit(ref udpClient.SendBuffer, ref udpClient.SendBufferOffset, ref udpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
                         // Transmit the prepared and processed handshake response message.
                         udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
@@ -670,7 +670,7 @@ namespace TVA.Communication
             int offset = client.ReceiveBufferOffset;
             int length = client.ReceiveBufferLength;
             byte[] buffer = client.ReceiveBuffer.BlockCopy(0, length);
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Passphrase, Compression);
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Secretkey, Compression);
 
             // Check if data is for goodbye message.
             return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);

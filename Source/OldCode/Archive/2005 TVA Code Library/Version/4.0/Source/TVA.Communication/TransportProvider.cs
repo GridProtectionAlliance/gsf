@@ -43,9 +43,9 @@ namespace TVA.Communication
         public T Provider;
 
         /// <summary>
-        /// Passphrase used for encryption of data.
+        /// Key used for the ciphering of data.
         /// </summary>
-        public string Passphrase;
+        public string Secretkey;
 
         /// <summary>
         /// Buffer used for sending data.
@@ -104,7 +104,7 @@ namespace TVA.Communication
         /// </summary>
         public void Reset()
         {
-            Passphrase = string.Empty;
+            Secretkey = string.Empty;
             SendBuffer = null;
             SendBufferOffset = 0;
             SendBufferLength = -1;

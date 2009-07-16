@@ -231,7 +231,7 @@ namespace TVA.Communication
             WaitHandle handle = base.ConnectAsync();
 
             m_serialClient.ID = this.ClientID;
-            m_serialClient.Passphrase = this.HandshakePassphrase;
+            m_serialClient.Secretkey = this.SharedSecret;
             m_serialClient.ReceiveBuffer = new byte[ReceiveBufferSize];
             m_serialClient.Provider = new SerialPort();
             m_serialClient.Provider.ReceivedBytesThreshold = m_receivedBytesThreshold;
@@ -290,12 +290,12 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <returns>Cipher passphrase.</returns>
-        protected override string GetSessionPassphrase()
+        /// <returns>Cipher secret key.</returns>
+        protected override string GetSessionSecret()
         {
-            return m_serialClient.Passphrase;
+            return m_serialClient.Secretkey;
         }
 
         /// <summary>

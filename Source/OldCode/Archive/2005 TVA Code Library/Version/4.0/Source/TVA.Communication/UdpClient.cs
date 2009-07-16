@@ -217,7 +217,7 @@ namespace TVA.Communication
                     m_udpClient.SendBuffer = new GoodbyeMessage(m_udpClient.ID).BinaryImage;
                     m_udpClient.SendBufferOffset = 0;
                     m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
-                    Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, m_udpClient.Passphrase, Compression);
+                    Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, m_udpClient.Secretkey, Compression);
 
                     m_udpClient.Provider.SendTo(m_udpClient.SendBuffer, m_udpServer);
                 }
@@ -241,7 +241,7 @@ namespace TVA.Communication
 
             m_udpClient = new TransportProvider<Socket>();
             m_udpClient.ID = this.ClientID;
-            m_udpClient.Passphrase = HandshakePassphrase;
+            m_udpClient.Secretkey = SharedSecret;
             m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
             
             // Create a server endpoint.
@@ -287,14 +287,14 @@ namespace TVA.Communication
                 m_receivedGoodbye = DoGoodbyeCheck;
                 HandshakeMessage handshake = new HandshakeMessage();
                 handshake.ID = this.ClientID;
-                handshake.Passphrase = this.HandshakePassphrase;
+                handshake.Secretkey = this.SharedSecret;
 
                 // Prepare binary image of handshake to be transmitted.
                 m_udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
                 m_udpClient.SendBuffer = handshake.BinaryImage;
                 m_udpClient.SendBufferOffset = 0;
                 m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
-                Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+                Payload.ProcessTransmit(ref m_udpClient.SendBuffer, ref m_udpClient.SendBufferOffset, ref m_udpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
                 while (true)
                 {
@@ -394,12 +394,12 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <returns>Cipher passphrase.</returns>
-        protected override string GetSessionPassphrase()
+        /// <returns>Cipher secret key.</returns>
+        protected override string GetSessionSecret()
         {
-            return m_udpClient.Passphrase;
+            return m_udpClient.Secretkey;
         }
 
         /// <summary>
@@ -484,14 +484,14 @@ namespace TVA.Communication
                     udpClient.ReceiveBufferLength = udpClient.Statistics.LastBytesReceived;
 
                     // Process the received handshake response message.
-                    Payload.ProcessReceived(ref udpClient.ReceiveBuffer, ref udpClient.ReceiveBufferOffset, ref udpClient.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+                    Payload.ProcessReceived(ref udpClient.ReceiveBuffer, ref udpClient.ReceiveBufferOffset, ref udpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
                     if (handshake.Initialize(udpClient.ReceiveBuffer, udpClient.ReceiveBufferOffset, udpClient.ReceiveBufferLength) != -1)
                     {
                         // Received handshake response message could be parsed.
                         this.ServerID = handshake.ID;
-                        udpClient.Passphrase = handshake.Passphrase;
+                        udpClient.Secretkey = handshake.Secretkey;
 
                         // Client is now considered to be connected to the server.
                         OnConnectionEstablished();                        
@@ -637,7 +637,7 @@ namespace TVA.Communication
             int offset = client.ReceiveBufferOffset;
             int length = client.ReceiveBufferLength;
             byte[] buffer = client.ReceiveBuffer.BlockCopy(0, length);
-            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Passphrase, Compression);
+            Payload.ProcessReceived(ref buffer, ref offset, ref length, Encryption, client.Secretkey, Compression);
 
             // Check if data is for goodbye message.
             return (new GoodbyeMessage().Initialize(buffer, offset, length) != -1);

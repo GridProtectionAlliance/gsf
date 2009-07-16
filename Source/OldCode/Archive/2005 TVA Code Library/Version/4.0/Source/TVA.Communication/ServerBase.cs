@@ -67,9 +67,14 @@ namespace TVA.Communication
         public const int DefaultHandshakeTimeout = 3000;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="HandshakePassphrase"/> property.
+        /// Specifies the default value for the <see cref="SharedSecret"/> property.
         /// </summary>
-        public const string DefaultHandshakePassphrase = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+        public const string DefaultSharedSecret = "6572a33d-826f-4d96-8c28-8be66bbc700e";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Encryption"/> property.
+        /// </summary>
+        public const CipherStrength DefaultEncryption = CipherStrength.None;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SecureSession"/> property.
@@ -85,11 +90,6 @@ namespace TVA.Communication
         /// Specifies the default value for the <see cref="ReceiveBufferSize"/> property.
         /// </summary>
         public const int DefaultReceiveBufferSize = 8192;
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="Encryption"/> property.
-        /// </summary>
-        public const CipherStrength DefaultEncryption = CipherStrength.None;
 
         /// <summary>
         /// Specifies the default value for the <see cref="Compression"/> property.
@@ -222,11 +222,11 @@ namespace TVA.Communication
         private int m_maxClientConnections;
         private bool m_handshake;
         private int m_handshakeTimeout;
-        private string m_handshakePassphrase;
+        private string m_sharedSecret;
+        private CipherStrength m_encryption;
         private bool m_secureSession;
         private int m_receiveTimeout;
         private int m_receiveBufferSize;
-        private CipherStrength m_encryption;
         private CompressionStrength m_compression;
         private bool m_persistSettings;
         private string m_settingsCategory;
@@ -258,11 +258,11 @@ namespace TVA.Communication
             m_maxClientConnections = DefaultMaxClientConnections;
             m_handshake = DefaultHandshake;
             m_handshakeTimeout = DefaultHandshakeTimeout;
-            m_handshakePassphrase = DefaultHandshakePassphrase;
+            m_sharedSecret = DefaultSharedSecret;
+            m_encryption = DefaultEncryption;
             m_secureSession = DefaultSecureSession;
             m_receiveTimeout = DefaultReceiveTimeout;
             m_receiveBufferSize = DefaultReceiveBufferSize;
-            m_encryption = DefaultEncryption;
             m_compression = DefaultCompression;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -379,23 +379,63 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets or sets the passpharse that the clients must provide for authentication during the <see cref="Handshake"/> process.
+        /// Gets or sets the key to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
         [Category("Security"),
-        DefaultValue(DefaultHandshakePassphrase),
-        Description("The passpharse that the clients must provide for authentication during the Handshake process.")]
-        public virtual string HandshakePassphrase
+        DefaultValue(DefaultSharedSecret),
+        Description("The key to be used for ciphering the data exchanged between the server and clients.")]
+        public virtual string SharedSecret
         {
             get
             {
-                return m_handshakePassphrase;
+                return m_sharedSecret;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
-                    m_handshakePassphrase = value;
+                    m_sharedSecret = value;
                 else
-                    m_handshakePassphrase = DefaultHandshakePassphrase;
+                    m_sharedSecret = DefaultSharedSecret;
+                ReStart();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="Encryption"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
+        /// <remarks>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term><see cref="SecureSession"/></term>
+        ///         <description>Key used for <see cref="Encryption"/></description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Disabled</term>
+        ///         <description><see cref="SharedSecret"/> is used.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Enabled</term>
+        ///         <description>A private key exchanged between the server and client during the <see cref="Handshake"/> process is used.</description>
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        [Category("Security"),
+        DefaultValue(DefaultEncryption),
+        Description("The CipherStrength to be used for ciphering the data exchanged between the server and clients.")]
+        public virtual CipherStrength Encryption
+        {
+            get
+            {
+                return m_encryption;
+            }
+            set
+            {
+                // Can't disable encryption when secure session is enabled.
+                if (value == CipherStrength.None && m_secureSession)
+                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
+
+                m_encryption = value;
                 ReStart();
             }
         }
@@ -474,46 +514,6 @@ namespace TVA.Communication
                     throw new ArgumentException("Value cannot be zero or negative.");
 
                 m_receiveBufferSize = value;
-                ReStart();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        /// <exception cref="InvalidOperationException"><see cref="Encryption"/> is being disabled while <see cref="SecureSession"/> is enabled.</exception>
-        /// <remarks>
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term><see cref="SecureSession"/></term>
-        ///         <description>Key used for <see cref="Encryption"/></description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>Disabled</term>
-        ///         <description><see cref="HandshakePassphrase"/> is used.</description>
-        ///     </item>
-        ///     <item>
-        ///         <term>Enabled</term>
-        ///         <description>A private key exchanged between the server and client during the <see cref="Handshake"/> process is used.</description>
-        ///     </item>
-        /// </list>
-        /// </remarks>
-        [Category("Data"),
-        DefaultValue(DefaultEncryption),
-        Description("The CipherStrength to be used for ciphering the data exchanged between the server and clients.")]
-        public virtual CipherStrength Encryption
-        {
-            get
-            {
-                return m_encryption;
-            }
-            set
-            {
-                // Can't disable encryption when secure session is enabled.
-                if (value == CipherStrength.None && m_secureSession)
-                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
-
-                m_encryption = value;
                 ReStart();
             }
         }
@@ -811,11 +811,11 @@ namespace TVA.Communication
         protected abstract void ValidateConfigurationString(string configurationString);
 
         /// <summary>
-        /// When overridden in a derived class, returns the passphrase used for ciphering client data.
+        /// When overridden in a derived class, returns the secret key used for ciphering client data.
         /// </summary>
-        /// <param name="clientID">ID of the client whose passphrase is to be retrieved.</param>
-        /// <returns>Passphrase of the specified client.</returns>
-        protected abstract string GetSessionPassphrase(Guid clientID);
+        /// <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
+        /// <returns>Secret key of the specified client.</returns>
+        protected abstract string GetSessionSecret(Guid clientID);
 
         /// <summary>
         /// When overridden in a derived class, sends data to the specified client asynchronously.
@@ -910,16 +910,16 @@ namespace TVA.Communication
                 element.Update(m_handshake, element.Description, element.Encrypted);
                 element = settings["HandshakeTimeout", true];
                 element.Update(m_handshakeTimeout, element.Description, element.Encrypted);
-                element = settings["HandshakePassphrase", true];
-                element.Update(m_handshakePassphrase, element.Description, element.Encrypted);
+                element = settings["SharedSecret", true];
+                element.Update(m_sharedSecret, element.Description, element.Encrypted);
+                element = settings["Encryption", true];
+                element.Update(m_encryption, element.Description, element.Encrypted);
                 element = settings["SecureSession", true];
                 element.Update(m_secureSession, element.Description, element.Encrypted);
                 element = settings["ReceiveTimeout", true];
                 element.Update(m_receiveTimeout, element.Description, element.Encrypted);
                 element = settings["ReceiveBufferSize", true];
                 element.Update(m_receiveBufferSize, element.Description, element.Encrypted);
-                element = settings["Encryption", true];
-                element.Update(m_encryption, element.Description, element.Encrypted);
                 element = settings["Compression", true];
                 element.Update(m_compression, element.Description, element.Encrypted);
                 config.Save();
@@ -944,22 +944,22 @@ namespace TVA.Communication
                 settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
                 settings.Add("Handshake", m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
                 settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
-                settings.Add("HandshakePassphrase", m_handshakePassphrase, "Passpharse that the clients must provide for authentication during the Handshake process.");
+                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the server and clients.");
+                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the server for receiving data from the clients.");
-                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
                 settings.Add("Compression", m_compression, "Compression strength (NoCompression; DefaultCompression; BestSpeed; BestCompression; MultiPass) to be used for compressing the data exchanged between the server and clients.");
                 ConfigurationString = settings["ConfigurationString"].ValueAs(m_configurationString);
                 MaxClientConnections = settings["MaxClientConnections"].ValueAs(m_maxClientConnections);
                 Handshake = settings["Handshake"].ValueAs(m_handshake);
                 HandshakeTimeout = settings["HandshakeTimeout"].ValueAs(m_handshakeTimeout);
-                HandshakePassphrase = settings["HandshakePassphrase"].ValueAs(m_handshakePassphrase);
+                SharedSecret = settings["SharedSecret"].ValueAs(m_sharedSecret);
+                Encryption = settings["Encryption"].ValueAs(m_encryption);
+                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
                 ReceiveTimeout = settings["ReceiveTimeout"].ValueAs(m_receiveTimeout);
                 ReceiveBufferSize = settings["ReceiveBufferSize"].ValueAs(m_receiveBufferSize);
-                Encryption = settings["Encryption"].ValueAs(m_encryption);
                 Compression = settings["Compression"].ValueAs(m_compression);
-                SecureSession = settings["SecureSession"].ValueAs(m_secureSession);
             }
         }
 
@@ -1105,7 +1105,7 @@ namespace TVA.Communication
             if (m_currentState == ServerState.Running)
             {
                 // Pre-condition data as needed and then send it.
-                Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionPassphrase(clientID), m_compression);
+                Payload.ProcessTransmit(ref data, ref offset, ref length, m_encryption, GetSessionSecret(clientID), m_compression);
                 return SendDataToAsync(clientID, data, offset, length);
             }
             else
@@ -1295,7 +1295,7 @@ namespace TVA.Communication
                     try
                     {
                         int offset = 0; // Received buffer will always have valid data starting at offset zero.
-                        Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionPassphrase(clientID), m_compression);
+                        Payload.ProcessReceived(ref data, ref offset, ref size, m_encryption, GetSessionSecret(clientID), m_compression);
                     }
                     catch
                     {

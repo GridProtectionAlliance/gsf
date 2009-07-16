@@ -341,13 +341,13 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <param name="clientID">ID of the client whose passphrase is to be retrieved.</param>
-        /// <returns>Cipher passphrase of the client with the specified <paramref name="clientID"/>.</returns>
-        protected override string GetSessionPassphrase(Guid clientID)
+        /// <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
+        /// <returns>Cipher secret key of the client with the specified <paramref name="clientID"/>.</returns>
+        protected override string GetSessionSecret(Guid clientID)
         {
-            return Client(clientID).Passphrase;
+            return Client(clientID).Secretkey;
         }
 
         /// <summary>
@@ -391,7 +391,7 @@ namespace TVA.Communication
                 // Return to accepting new connections.
                 m_tcpServer.BeginAccept(AcceptAsyncCallback, null);
                 // Process the newly connected client.
-                tcpClient.Passphrase = HandshakePassphrase;
+                tcpClient.Secretkey = SharedSecret;
                 tcpClient.Provider = m_tcpServer.EndAccept(asyncResult);
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
@@ -491,29 +491,29 @@ namespace TVA.Communication
                         throw new SocketException((int)SocketError.Disconnecting);
 
                     // Process the received handshake message.
-                    Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+                    Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
                     if (handshake.Initialize(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
                     {
                         // Received handshake message could be parsed successfully.
-                        if (handshake.ID != Guid.Empty && handshake.Passphrase == HandshakePassphrase)
+                        if (handshake.ID != Guid.Empty)
                         {
-                            // Authentication is successful; respond to the handshake.
+                            // Send respond to the handshake message.
                             tcpClient.ID = handshake.ID;
                             handshake.ID = this.ServerID;
                             if (SecureSession)
                             {
                                 // Create a secret key for ciphering client data.
-                                tcpClient.Passphrase = Cipher.GenerateKey(260);
-                                handshake.Passphrase = tcpClient.Passphrase;
+                                tcpClient.Secretkey = Cipher.GenerateKey(260);
+                                handshake.Secretkey = tcpClient.Secretkey;
                             }
 
                             // Prepare binary image of handshake response to be transmitted.
                             tcpClient.SendBuffer = handshake.BinaryImage;
                             tcpClient.SendBufferOffset = 0;
                             tcpClient.SendBufferLength = tcpClient.SendBuffer.Length;
-                            Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+                            Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
                             // Transmit the prepared and processed handshake response message.
                             tcpClient.Provider.Send(tcpClient.SendBuffer);

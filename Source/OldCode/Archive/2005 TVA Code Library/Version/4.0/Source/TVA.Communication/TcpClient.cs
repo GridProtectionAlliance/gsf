@@ -336,12 +336,12 @@ namespace TVA.Communication
         }
 
         /// <summary>
-        /// Gets the passphrase to be used for ciphering client data.
+        /// Gets the secret key to be used for ciphering client data.
         /// </summary>
-        /// <returns>Cipher passphrase.</returns>
-        protected override string GetSessionPassphrase()
+        /// <returns>Cipher secret key.</returns>
+        protected override string GetSessionSecret()
         {
-            return m_tcpClient.Passphrase;
+            return m_tcpClient.Secretkey;
         }
 
         /// <summary>
@@ -384,7 +384,7 @@ namespace TVA.Communication
                 m_connectionAttempts++;
                 tcpClient.Provider.EndConnect(asyncResult);
                 tcpClient.ID = this.ClientID;
-                tcpClient.Passphrase = HandshakePassphrase;
+                tcpClient.Secretkey = SharedSecret;
 
                 // We can proceed further with receiving data from the client.
                 if (Handshake)
@@ -392,13 +392,13 @@ namespace TVA.Communication
                     // Handshaking must be performed. 
                     HandshakeMessage handshake = new HandshakeMessage();
                     handshake.ID = this.ClientID;
-                    handshake.Passphrase = this.HandshakePassphrase;
+                    handshake.Secretkey = this.SharedSecret;
 
                     // Prepare binary image of handshake to be transmitted.
                     tcpClient.SendBuffer = handshake.BinaryImage;
                     tcpClient.SendBufferOffset = 0;
                     tcpClient.SendBufferLength = tcpClient.SendBuffer.Length;
-                    Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, HandshakePassphrase, Compression);
+                    Payload.ProcessTransmit(ref tcpClient.SendBuffer, ref tcpClient.SendBufferOffset, ref tcpClient.SendBufferLength, Encryption, SharedSecret, Compression);
 
                     // Transmit the prepared and processed handshake message.
                     tcpClient.Provider.Send(tcpClient.SendBuffer);
@@ -508,14 +508,14 @@ namespace TVA.Communication
                         throw new SocketException((int)SocketError.Disconnecting);
 
                     // Process the received handshake response message.
-                    Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, HandshakePassphrase, Compression);
+                    Payload.ProcessReceived(ref tcpClient.ReceiveBuffer, ref tcpClient.ReceiveBufferOffset, ref tcpClient.ReceiveBufferLength, Encryption, SharedSecret, Compression);
 
                     HandshakeMessage handshake = new HandshakeMessage();
                     if (handshake.Initialize(tcpClient.ReceiveBuffer, tcpClient.ReceiveBufferOffset, tcpClient.ReceiveBufferLength) != -1)
                     {
                         // Received handshake response message could be parsed.
                         this.ServerID = handshake.ID;
-                        tcpClient.Passphrase = handshake.Passphrase;
+                        tcpClient.Secretkey = handshake.Secretkey;
 
                         // Client is now considered to be connected to the server.
                         OnConnectionEstablished();

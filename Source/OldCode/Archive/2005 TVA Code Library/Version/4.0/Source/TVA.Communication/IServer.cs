@@ -168,9 +168,14 @@ namespace TVA.Communication
         int HandshakeTimeout { get; set; }
 
         /// <summary>
-        /// Gets or sets the passpharse that the clients must provide for authentication during the <see cref="Handshake"/> process.
+        /// Gets or sets the key to be used for ciphering the data exchanged between the server and clients.
         /// </summary>
-        string HandshakePassphrase { get; set; }
+        string SharedSecret { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
+        /// </summary>
+        CipherStrength Encryption { get; set; }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the data exchanged between the server and clients will be encrypted using a private session passphrase.
@@ -186,11 +191,6 @@ namespace TVA.Communication
         /// Gets or sets the size of the buffer used by the server for receiving data from the clients.
         /// </summary>
         int ReceiveBufferSize { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="CipherStrength"/> to be used for ciphering the data exchanged between the server and clients.
-        /// </summary>
-        CipherStrength Encryption { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="CompressionStrength"/> to be used for compressing the data exchanged between the server and clients.

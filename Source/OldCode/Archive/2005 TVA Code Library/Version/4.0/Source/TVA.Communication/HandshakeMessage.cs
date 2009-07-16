@@ -38,10 +38,10 @@ namespace TVA.Communication
         public Guid ID;
 
         /// <summary>
-        /// Gets or sets the passphrase for authentication/ciphering.
+        /// Gets or sets the key for ciphering.
         /// </summary>
         /// <remarks>Max size is 260.</remarks>
-        public string Passphrase;
+        public string Secretkey;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HandshakeMessage"/> class.
@@ -54,10 +54,10 @@ namespace TVA.Communication
         /// <summary>
         /// Initializes a new instance of the <see cref="HandshakeMessage"/> class.
         /// </summary>
-        public HandshakeMessage(Guid id, string passphrase)
+        public HandshakeMessage(Guid id, string secretkey)
         {
             ID = id;
-            Passphrase = passphrase;
+            Secretkey = secretkey;
         }
 
         /// <summary>
@@ -78,10 +78,10 @@ namespace TVA.Communication
                 // Create the image.
                 byte[] image = new byte[BinaryLength];
                 // Populate the image.
-                Passphrase = Passphrase.PadRight(260).TruncateRight(260);
+                Secretkey = Secretkey.PadRight(260).TruncateRight(260);
                 Buffer.BlockCopy(MessageIdentifier, 0, image, 0, MessageIdentifier.Length);
                 Buffer.BlockCopy(ID.ToByteArray(), 0, image, MessageIdentifier.Length, 16);
-                Buffer.BlockCopy(Encoding.ASCII.GetBytes(Passphrase), 0, image, MessageIdentifier.Length + 16, 260);
+                Buffer.BlockCopy(Encoding.ASCII.GetBytes(Secretkey), 0, image, MessageIdentifier.Length + 16, 260);
                 // Return the image.
                 return image;
             }
@@ -102,7 +102,7 @@ namespace TVA.Communication
                 {
                     // Binary image has sufficient data.
                     ID = new Guid(binaryImage.BlockCopy(startIndex + MessageIdentifier.Length, 16));
-                    Passphrase = Encoding.ASCII.GetString(binaryImage, startIndex + MessageIdentifier.Length + 16, 260).Trim();
+                    Secretkey = Encoding.ASCII.GetString(binaryImage, startIndex + MessageIdentifier.Length + 16, 260).Trim();
 
                     return BinaryLength;
                 }
