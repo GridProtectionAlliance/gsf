@@ -28,6 +28,8 @@
 //       host a wide range of object implementing various interfaces used by the ServiceHelper commands.
 //  07/15/2009 - Pinal C. Patel
 //       Added AllowedRemoteUsers and ImpersonateRemoteUser properties as part of security.
+//  07/16/2009 - Pinal C. Patel
+//       Added SupportTelnetSessions property so that telnet support can be optionally turned-on.
 //
 //*******************************************************************************************************
 
@@ -111,6 +113,11 @@ namespace TVA.Services
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
 		/// </summary>
 		public const int DefaultRequestHistoryLimit = 50;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SupportTelnetSessions"/> property.
+        /// </summary>
+        public const bool DefaultSupportTelnetSessions = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowedRemoteUsers"/> property.
@@ -220,10 +227,11 @@ namespace TVA.Services
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         // Fields
-        private string m_telnetPassword;
 		private bool m_logStatusUpdates;
 		private bool m_monitorServiceHealth;
 		private int m_requestHistoryLimit;
+        private bool m_supportTelnetSessions;
+        private string m_telnetSessionPassword;
         private string m_allowedRemoteUsers;
         private bool m_impersonateRemoteUser;
 		private bool m_persistSettings;
@@ -260,6 +268,7 @@ namespace TVA.Services
 			m_logStatusUpdates = DefaultLogStatusUpdates;
 			m_monitorServiceHealth = DefaultMonitorServiceHealth;
 			m_requestHistoryLimit = DefaultRequestHistoryLimit;
+            m_supportTelnetSessions = DefaultSupportTelnetSessions;
             m_allowedRemoteUsers = DefaultAllowedRemoteUsers;
             m_impersonateRemoteUser = DefaultImpersonateRemoteUser;
 			m_persistSettings = DefaultPersistSettings;
@@ -270,7 +279,7 @@ namespace TVA.Services
 			m_serviceComponents = new List<object>();
 			m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
-			m_telnetPassword = "s3cur3";
+			m_telnetSessionPassword = "s3cur3";
 
 			// Components
 			m_statusLog = new LogFile();
@@ -361,6 +370,24 @@ namespace TVA.Services
                 m_requestHistoryLimit = value;
 			}
 		}
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for remote telnet-like sessions.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultSupportTelnetSessions),
+        Description("Indicates whether the ServiceHelper will have support for remote telnet-like sessions.")]
+        public bool SupportTelnetSessions
+        {
+            get 
+            {
+                return m_supportTelnetSessions;
+            }
+            set
+            {
+                m_supportTelnetSessions = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a comma or semicolon delimited list of user logins allowed to connect to the <see cref="ServiceHelper"/>.
@@ -805,6 +832,8 @@ namespace TVA.Services
                 element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
                 element = settings["RequestHistoryLimit", true];
                 element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
+                element = settings["SupportTelnetSessions", true];
+                element.Update(m_supportTelnetSessions, element.Description, element.Encrypted);
                 element = settings["AllowedRemoteUsers", true];
                 element.Update(m_allowedRemoteUsers, element.Description, element.Encrypted);
                 element = settings["ImpersonateRemoteUser", true];
@@ -849,13 +878,15 @@ namespace TVA.Services
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
+                settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
                 settings.Add("AllowedRemoteUsers", m_allowedRemoteUsers, "Comma or semicolon delimited list of user logins allowed to connect to the service remotely.");
                 settings.Add("ImpersonateRemoteUser", m_impersonateRemoteUser, "True to execute remote commands under the identity of the remote user; otherwise False.");
-                if (settings["TelnetPassword"] != null)
-                    m_telnetPassword = settings["TelnetPassword"].ValueAs(m_telnetPassword);
+                if (settings["TelnetSessionPassword"] != null)
+                    m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
+                SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
                 AllowedRemoteUsers = settings["AllowedRemoteUsers"].ValueAs(m_allowedRemoteUsers);
                 ImpersonateRemoteUser = settings["ImpersonateRemoteUser"].ValueAs(m_impersonateRemoteUser);
             }
@@ -910,13 +941,16 @@ namespace TVA.Services
             m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
             m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
             m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
-
-            // Define "Health" command only if monitoring service health is enabled.
+            // Enable telnet support if requested.
+            if (m_supportTelnetSessions)
+            {
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
+            }
+            // Enable health monitoring if requested.
             if (m_monitorServiceHealth)
             {
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
                 m_performanceMonitor = new PerformanceMonitor();
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
             }
 
             // Add internal components as service components by default.
@@ -2935,7 +2969,7 @@ namespace TVA.Services
                     // User wants to establish a remote command session.
                     string password = requestinfo.Request.Arguments["connect"];
 
-                    if (password == m_telnetPassword)
+                    if (password == m_telnetSessionPassword)
                     {
                         // Establish remote command session
                         m_remoteCommandProcess = new Process();
