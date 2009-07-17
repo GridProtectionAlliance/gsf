@@ -27,6 +27,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PMU Connection Tester", "PM
 EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Tools\PMU Connection Tester\Setup\Setup.vdproj", "{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{3D5336D4-E14B-48A6-8F2D-172921D025BC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{5FC30A85-A8D5-47EC-96C7-FF02ABB72493}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
+		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
 		SccNumberOfProjects = 12
@@ -126,5 +134,6 @@ Global
 		{29E2997D-F2D6-486C-8D08-DE2F72752C89} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
 		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
+		{5FC30A85-A8D5-47EC-96C7-FF02ABB72493} = {3D5336D4-E14B-48A6-8F2D-172921D025BC}
 	EndGlobalSection
 EndGlobal
