@@ -18,6 +18,8 @@
 //       Converted to C#.
 //  07/09/2009 - Pinal C. Patel
 //       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.
+//  07/17/2009 - Pinal C. Patel
+//       Added support to specify a specific interface address on a multiple interface machine.
 //
 //*******************************************************************************************************
 

@@ -20,6 +20,8 @@
 //       Placed accepted TCP socket connections on their own threads instead of thread pool
 //  09/29/2008 - James R Carroll
 //       Converted to C#.
+//  07/17/2009 - Pinal C. Patel
+//       Added support to specify a specific interface address on a multiple interface machine.
 //
 //*******************************************************************************************************
 

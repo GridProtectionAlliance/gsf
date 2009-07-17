@@ -24,6 +24,8 @@
 //       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.
 //  07/15/2009 - Pinal C. Patel
 //       Modified Disconnect() to add error checking.
+//  07/17/2009 - Pinal C. Patel
+//       Added support to specify a specific interface address on a multiple interface machine.
 //
 //*******************************************************************************************************
 
