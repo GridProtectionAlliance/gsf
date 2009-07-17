@@ -22,6 +22,9 @@
 //       provision for the authentication process as part of security.
 //       Added ISupportLifecycle, ISupportInitialize and IPersistSettings interface implementations
 //       to support the persistance and retrieval of settings from the config file.
+//  07/17/2009 - Pinal C. Patel
+//       Added static PretendRequest() method that can be used to create pretend request for manually
+//       invoking request handlers registered with the ServiceHelper.
 //
 //*******************************************************************************************************
 
@@ -735,5 +738,23 @@ namespace TVA.Services
         }
 
         #endregion
-	}
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Returns an <see cref="ClientRequestInfo"/> object for the specified <paramref name="requestCommand"/> that can be used 
+        /// to invoke <see cref="ServiceHelper.ClientRequestHandlers"/> manually as if the request was sent by a <see cref="ClientHelper"/> remotely.
+        /// </summary>
+        /// <param name="requestCommand">Command for which an <see cref="ClientRequestInfo"/> object is to be created.</param>
+        /// <returns>An <see cref="ClientRequestInfo"/> object.</returns>
+        public static ClientRequestInfo PretendRequest(string requestCommand)
+        {
+            ClientRequest request = ClientRequest.Parse(requestCommand);
+            ClientRequestInfo requestInfo = new ClientRequestInfo(new ClientInfo(), request);
+
+            return requestInfo;
+        }
+
+        #endregion
+    }
 }
