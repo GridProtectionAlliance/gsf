@@ -29,6 +29,8 @@
 //       Added WaitHandle return value from asynchronous connection.
 //  07/15/2009 - Pinal C. Patel
 //       Modified Connect() to wait for post-connection processing to complete.
+//  07/17/2009 - Pinal C. Patel
+//       Modified SharedSecret to be persisted as an encrypted value.
 //
 //*******************************************************************************************************
 
@@ -927,7 +929,7 @@ namespace TVA.Communication
                 settings.Add("MaxConnectionAttempts", m_maxConnectionAttempts, "Maximum number of times the client will attempt to connect to the server.");
                 settings.Add("Handshake", m_handshake, "True if the client will do a handshake with the server after the connection has been established; otherwise False.");
                 settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the client will wait for the server's response to the Handshake.");
-                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the client and server.");
+                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the client and server.", true);
                 settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the client and server.");
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");

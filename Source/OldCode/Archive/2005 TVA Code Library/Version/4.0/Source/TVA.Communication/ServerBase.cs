@@ -25,6 +25,8 @@
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
 //       Modified state alterning properties to restart the server when changed.
+//  07/17/2009 - Pinal C. Patel
+//       Modified SharedSecret to be persisted as an encrypted value.
 //
 //*******************************************************************************************************
 
@@ -944,7 +946,7 @@ namespace TVA.Communication
                 settings.Add("MaxClientConnections", m_maxClientConnections, "Maximum number of clients that can connect to the server.");
                 settings.Add("Handshake", m_handshake, "True if the server will do a handshake with the client after the connection has been established; otherwise False.");
                 settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the server will wait for the clients to initiate the Handshake process.");
-                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the server and clients.");
+                settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the server and clients.", true);
                 settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the server and clients.");
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the server and clients will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the server will wait for data to be received from the clients.");
