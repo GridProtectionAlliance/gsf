@@ -39,6 +39,10 @@ namespace TVA.Communication
     /// <summary>
     /// Represents a TCP-based communication client.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="TcpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+    /// specifying the interface in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Interface=127.0.0.1")
+    /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="TcpClient"/> component:
     /// <code>
@@ -296,7 +300,7 @@ namespace TVA.Communication
                 OnConnectionAttempt();
                 if (m_tcpClient.Provider == null)
                     // Create client socket to establish presence.
-                    m_tcpClient.Provider = Transport.CreateSocket(0, ProtocolType.Tcp);
+                    m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp);
 
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
                 string[] parts = m_connectData["server"].Split(':');
@@ -318,6 +322,9 @@ namespace TVA.Communication
         protected override void ValidateConnectionString(string connectionString)
         {
             m_connectData = connectionString.ParseKeyValuePairs();
+
+            if (!m_connectData.ContainsKey("interface"))
+                m_connectData.Add("interface", string.Empty);
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888

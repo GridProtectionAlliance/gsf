@@ -39,31 +39,6 @@ namespace TVA.Communication
         public const int PortRangeHigh = 65535;
 
         /// <summary>
-        /// Creates a <see cref="Socket"/> for the specified <paramref name="port"/> and <paramref name="protocol"/>.
-        /// </summary>
-        /// <param name="port">The port number at which the <see cref="Socket"/> will be bound.</param>
-        /// <param name="protocol">One of the <see cref="ProtocolType"/> values.</param>
-        /// <returns>An <see cref="Socket"/> object.</returns>
-        public static Socket CreateSocket(int port, ProtocolType protocol)
-        {
-            Socket socket = null;
-            switch (protocol)
-            {
-                case ProtocolType.Tcp:
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    socket.Bind(Transport.CreateEndPoint(string.Empty, port));
-                    break;
-                case ProtocolType.Udp:
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.Bind(Transport.CreateEndPoint(string.Empty, port));
-                    break;
-                default:
-                    throw new NotSupportedException(string.Format("{0} is not supported.", protocol));
-            }
-            return socket;
-        }
-
-        /// <summary>
         /// Creates an <see cref="IPEndPoint"/> for the specified host name and port number.
         /// </summary>
         /// <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
@@ -76,7 +51,7 @@ namespace TVA.Communication
                 // We use one of the local IP.
                 return new IPEndPoint(IPAddress.Any, port);
             }
-            else 
+            else
             {
                 try
                 {
@@ -88,6 +63,32 @@ namespace TVA.Communication
                     return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Socket"/> for the specified <paramref name="port"/> and <paramref name="protocol"/>.
+        /// </summary>
+        /// <param name="address">The local address where the <see cref="Socket"/> will be bound.</param>
+        /// <param name="port">The port number at which the <see cref="Socket"/> will be bound.</param>
+        /// <param name="protocol">One of the <see cref="ProtocolType"/> values.</param>
+        /// <returns>An <see cref="Socket"/> object.</returns>
+        public static Socket CreateSocket(string address, int port, ProtocolType protocol)
+        {
+            Socket socket = null;
+            switch (protocol)
+            {
+                case ProtocolType.Tcp:
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    socket.Bind(Transport.CreateEndPoint(address, port));
+                    break;
+                case ProtocolType.Udp:
+                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket.Bind(Transport.CreateEndPoint(address, port));
+                    break;
+                default:
+                    throw new NotSupportedException(string.Format("{0} is not supported.", protocol));
+            }
+            return socket;
         }
 
         /// <summary>

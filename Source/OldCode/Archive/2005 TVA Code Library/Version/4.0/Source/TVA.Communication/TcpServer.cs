@@ -36,6 +36,10 @@ namespace TVA.Communication
     /// <summary>
     /// Represents a TCP-based communication server.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="TcpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+    /// specifying the interface in the <see cref="ServerBase.ConfigurationString"/> (Example: "Port=8888; Interface=127.0.0.1")
+    /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="TcpServer"/> component:
     /// <code>
@@ -282,7 +286,7 @@ namespace TVA.Communication
                 // Initialize if unitialized.
                 Initialize();
                 // Bind server socket to local end-point and listen.
-                m_tcpServer = Transport.CreateSocket(int.Parse(m_configData["port"]), ProtocolType.Tcp);
+                m_tcpServer = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Tcp);
                 m_tcpServer.Listen(1);
                 // Begin accepting incoming connection asynchronously.
                 m_tcpServer.BeginAccept(AcceptAsyncCallback, null);
@@ -332,6 +336,9 @@ namespace TVA.Communication
         protected override void ValidateConfigurationString(string configurationString)
         {
             m_configData = configurationString.ParseKeyValuePairs();
+
+            if (!m_configData.ContainsKey("interface"))
+                m_configData.Add("interface", string.Empty);
 
             if (!m_configData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConfigurationString));

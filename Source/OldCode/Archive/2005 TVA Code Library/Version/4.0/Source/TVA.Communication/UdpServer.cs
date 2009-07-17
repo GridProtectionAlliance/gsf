@@ -35,7 +35,13 @@ namespace TVA.Communication
     /// Represents a UDP-based communication server.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Use <see cref="UdpServer"/> when the primary purpose is to transmit data.
+    /// </para>
+    /// <para>
+    /// The <see cref="UdpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+    /// specifying the interface in the <see cref="ServerBase.ConfigurationString"/> (Example: "Port=8888; Clients=localhost:8989; Interface=127.0.0.1")
+    /// </para>
     /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="UdpServer"/> component:
@@ -217,7 +223,7 @@ namespace TVA.Communication
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
                 m_udpServer.ReceiveBuffer = new byte[ReceiveBufferSize];
-                m_udpServer.Provider = Transport.CreateSocket(int.Parse(m_configData["port"]), ProtocolType.Udp);
+                m_udpServer.Provider = Transport.CreateSocket(m_configData["interface"], int.Parse(m_configData["port"]), ProtocolType.Udp);
                 // Notify that the server has been started successfully.
                 OnServerStarted();
 
@@ -243,7 +249,7 @@ namespace TVA.Communication
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                                 udpClient.Secretkey = SharedSecret;
                                 udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-                                udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                                udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp);
                                 // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
                                 udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
                                 // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint.
@@ -320,6 +326,9 @@ namespace TVA.Communication
         protected override void ValidateConfigurationString(string configurationString)
         {
             m_configData = configurationString.ParseKeyValuePairs();
+
+            if (!m_configData.ContainsKey("interface"))
+                m_configData.Add("interface", string.Empty);
 
             if (!m_configData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
@@ -426,7 +435,7 @@ namespace TVA.Communication
                         TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                         udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
                         udpClient.Secretkey = SharedSecret;
-                        udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                        udpClient.Provider = Transport.CreateSocket(m_configData["interface"], 0, ProtocolType.Udp);
                         udpClient.Provider.Connect(client);
 
                         // Authentication is successful; respond to the handshake.

@@ -40,7 +40,13 @@ namespace TVA.Communication
     /// Represents a UDP-based communication server.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Use <see cref="UdpClient"/> when the primary purpose is to receive data.
+    /// </para>
+    /// <para>
+    /// The <see cref="UdpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+    /// specifying the interface in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=8989; Interface=127.0.0.1")
+    /// </para>
     /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="UdpClient"/> component:
@@ -290,7 +296,7 @@ namespace TVA.Communication
                 handshake.Secretkey = this.SharedSecret;
 
                 // Prepare binary image of handshake to be transmitted.
-                m_udpClient.Provider = Transport.CreateSocket(0, ProtocolType.Udp);
+                m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Udp);
                 m_udpClient.SendBuffer = handshake.BinaryImage;
                 m_udpClient.SendBufferOffset = 0;
                 m_udpClient.SendBufferLength = m_udpClient.SendBuffer.Length;
@@ -345,7 +351,7 @@ namespace TVA.Communication
                         OnConnectionAttempt();
 
                         // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
-                        m_udpClient.Provider = Transport.CreateSocket(int.Parse(m_connectData["port"]), ProtocolType.Udp);
+                        m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp);
                         m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
                         m_receivedGoodbye = NoGoodbyeCheck;
@@ -376,6 +382,9 @@ namespace TVA.Communication
         protected override void ValidateConnectionString(string connectionString)
         {
             m_connectData = connectionString.ParseKeyValuePairs();
+
+            if (!m_connectData.ContainsKey("interface"))
+                m_connectData.Add("interface", string.Empty);
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888; Port=8989
