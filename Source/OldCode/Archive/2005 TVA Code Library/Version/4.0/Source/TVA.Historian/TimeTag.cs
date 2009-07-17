@@ -10,9 +10,9 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/03/2006 - J. Ritchie Carroll
+//  05/03/2006 - James R. Carroll
 //       Initial version of source imported from 1.1 code library
-//  07/12/2006 - J. Ritchie Carroll
+//  07/12/2006 - James R. Carroll
 //       Modified class to be derived from new "TimeTagBase" class
 //  04/20/2009 - Pinal C. Patel
 //       Converted to C#.

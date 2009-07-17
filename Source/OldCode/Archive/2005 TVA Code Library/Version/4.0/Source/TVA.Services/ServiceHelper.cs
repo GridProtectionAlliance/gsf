@@ -17,7 +17,7 @@
 //       instead of DesignMode property as the former is more accurate than the latter.
 //  12/14/2007 - Pinal C. Patel
 //       Made monitoring of service health optional via the MonitorServiceHealth property.
-//  09/30/2008 - James R Carroll
+//  09/30/2008 - James R. Carroll
 //       Converted to C#.
 //  03/06/2009 - Pinal C. Patel
 //       Edited code comments.

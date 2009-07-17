@@ -12,9 +12,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/26/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
 //  11/07/2008 - Pinal C. Patel
 //       Edited code comments.

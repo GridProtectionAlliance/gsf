@@ -12,17 +12,17 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/26/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added ReceiveRawDataFunction delegate to allow bypass optimizations for high-speed data access
 //  05/01/2007 - Pinal C. Patel
 //       Made WaitForConnection() functions that returns a boolean value indicating success or failure
-//  09/27/2007 - J. Ritchie Carroll
+//  09/27/2007 - James R. Carroll
 //       Added disconnect timeout overload
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
 //  11/07/2008 - Pinal C. Patel
 //       Edited code comments.
-//  07/08/2009 - James R Carroll
+//  07/08/2009 - James R. Carroll
 //       Added WaitHandle return value from asynchronous connection.
 //
 //*******************************************************************************************************

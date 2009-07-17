@@ -23,7 +23,7 @@
 //       instead of DesignMode property as the former is more accurate than the latter.
 //       Modified the Stop() method to avoid a  null reference exception that was most likely causing
 //       the IDE of the component's consumer to crash in design-mode.
-//  09/19/2008 - James R Carroll
+//  09/19/2008 - James R. Carroll
 //       Convert to C#.
 //  11/04/2008 - Pinal C. Patel
 //       Edited code comments.

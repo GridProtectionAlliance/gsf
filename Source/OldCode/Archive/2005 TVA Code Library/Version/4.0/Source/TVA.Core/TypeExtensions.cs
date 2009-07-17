@@ -3,18 +3,18 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/18/2008 - James R Carroll
+//  09/18/2008 - James R. Carroll
 //       Generated original version of source code.
 //  10/28/2008 - Pinal C. Patel
 //      Edited code comments.
-//  01/30/2009 - James R Carroll
+//  01/30/2009 - James R. Carroll
 //      Added TryGetAttribute extension.
 //  06/30/2009 - Pinal C. Patel
 //      Fixed LoadImplementations() to correctly use FilePath.GetFileList().

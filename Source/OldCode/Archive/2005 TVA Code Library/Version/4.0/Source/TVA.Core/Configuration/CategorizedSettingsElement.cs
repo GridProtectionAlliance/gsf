@@ -12,15 +12,15 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/11/2006 - Pinal C. Patel
 //       Generated original version of source code.
-//  05/25/2006 - J. Ritchie Carroll
+//  05/25/2006 - James R. Carroll
 //       Added Try/Catch safety wrapper around GetTypedValue implementation.
-//  06/01/2006 - J. Ritchie Carroll
+//  06/01/2006 - James R. Carroll
 //       Added GetTypedValue overload to handle boolean types as a special case.
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
 //  09/17/2008 - Pinal C. Patel
 //       Converted code to C#.
-//  09/22/2008 - J. Ritchie Carroll
+//  09/22/2008 - James R. Carroll
 //       Made boolean types a special case (i.e., using ParseBoolean extension).
 //  09/29/2008 - Pinal C. Patel
 //       Reviewed code comments.

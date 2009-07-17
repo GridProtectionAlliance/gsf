@@ -3,24 +3,24 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/25/2004 - J. Ritchie Carroll
+//  04/25/2004 - James R. Carroll
 //       Original version of source code generated
 //  05/04/2006 - Pinal C. Patel
 //       2.0 version of source code migrated from 1.1 source (TVA.Forms.Common)
-//  10/30/2006 - J. Ritchie Carroll
+//  10/30/2006 - James R. Carroll
 //       Added left-most, right-most, top-most and bottom-most screen bound functions
 //       Fixed an issue with forms showing up off the screen (esp. when switching primary monitor)
 //  09/11/2007 - Pinal C. Patel
 //       Saving and retrieving setting by instantiating local config file variable in order to avoid the
 //       the "Config file has been modified" exception that is thrown when using shortcut methods
-//  10/01/2008 - James R Carroll
+//  10/01/2008 - James R. Carroll
 //       Converted to C# extensions.
 //
 //*******************************************************************************************************

@@ -3,16 +3,16 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/25/2008 - J. Ritchie Carroll
+//  01/25/2008 - James R. Carroll
 //       Initial version of source generated.
-//  09/11/2008 - J. Ritchie Carroll
+//  09/11/2008 - James R. Carroll
 //      Converted to C#.
 //
 //*******************************************************************************************************

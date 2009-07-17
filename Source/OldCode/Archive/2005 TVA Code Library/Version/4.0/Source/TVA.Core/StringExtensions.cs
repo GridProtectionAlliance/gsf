@@ -3,34 +3,34 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/23/2003 - J. Ritchie Carroll
+//  02/23/2003 - James R. Carroll
 //       Generated original version of source code.
-//  01/24/2006 - J. Ritchie Carroll
+//  01/24/2006 - James R. Carroll
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.String).
-//  06/01/2006 - J. Ritchie Carroll
+//  06/01/2006 - James R. Carroll
 //       Added ParseBoolean function to parse strings representing booleans that may be numeric.
-//  07/07/2006 - J. Ritchie Carroll
+//  07/07/2006 - James R. Carroll
 //       Added GetStringSegments function to break a string up into smaller chunks for parsing
 //       and/or displaying.
-//  08/02/2007 - J. Ritchie Carroll
+//  08/02/2007 - James R. Carroll
 //       Added a CenterText method for centering strings in console applications or fixed width fonts.
 //  08/03/2007 - Pinal C. Patel
 //       Modified the CenterText method to handle multiple lines.
 //  08/21/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/25/2007 - J. Ritchie Carroll
+//  09/25/2007 - James R. Carroll
 //       Added TitleCase function to format a string with the first letter of each word capitalized
 //  04/16/2008 - Pinal C. Patel
 //       Made the keys of the string dictionary returned by ParseKeyValuePairs function case-insensitive.
 //       Added JoinKeyValuePairs overloads that does the exact opposite of ParseKeyValuePairs.
-//  09/19/2008 - J. Ritchie Carroll
+//  09/19/2008 - James R. Carroll
 //       Converted to C# extensions.
 //  12/13/2008 - F. Russell Roberson
 //       Generalized ParseBoolean to include "Y", and "T"
@@ -41,7 +41,7 @@
 //       Added IsNumeric - Test to see if a string only includes characters that can be interpreted as a number.
 //       Added TrimWithEllipsisMiddle - Adds an ellipsis in the middle of a string as it is reduced to a specified length
 //       Added TrimWithEllipsisEnd - Trims a string to not exceed a fixed length and adds a ellipsis to string end
-//  02/10/2009 - J. Ritchie Carroll
+//  02/10/2009 - James R. Carroll
 //       Added ConvertToType overloaded extensions.
 //  02/17/2009 - Josh Patterson
 //      Edited Code Comments

@@ -12,13 +12,13 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/02/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added bypass optimizations for high-speed socket access
 //  12/01/2006 - Pinal C. Patel
 //       Modified code for handling "PayloadAware" transmissions
-//  01/28/3008 - J. Ritchie Carroll
+//  01/28/3008 - James R. Carroll
 //       Placed accepted TCP socket connections on their own threads instead of thread pool
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
 //  07/17/2009 - Pinal C. Patel
 //       Added support to specify a specific interface address on a multiple interface machine.

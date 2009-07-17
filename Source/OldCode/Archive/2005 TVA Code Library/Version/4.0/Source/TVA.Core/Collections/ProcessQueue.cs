@@ -3,39 +3,39 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/07/2006 - J. Ritchie Carroll
+//  01/07/2006 - James R. Carroll
 //       Generated original version of source code.
-//  02/12/2006 - J. Ritchie Carroll
+//  02/12/2006 - James R. Carroll
 //       Added multi-item bulk processing functionality.
-//  03/21/2007 - J. Ritchie Carroll
+//  03/21/2007 - James R. Carroll
 //       Added "ItemsBeingProcessed" property to return current total number of items being processed.
 //       Added "Flush" method to allow any remaining items in queue to be processed before shutdown.
-//  04/05/2007 - J. Ritchie Carroll
+//  04/05/2007 - James R. Carroll
 //       Added "RequeueMode" properties to allow users to specify how data gets reinserted back into
 //       the list (prefix or suffix) after processing timeouts or exceptions.
 //  07/12/2007 - Pinal C. Patel
 //       Modified the code for "Flush" method to correctly implement IDisposable interface.
-//  08/01/2007 - J. Ritchie Carroll
+//  08/01/2007 - James R. Carroll
 //       Added some minor optimizations where practical.
-//  08/17/2007 - J. Ritchie Carroll
+//  08/17/2007 - James R. Carroll
 //       Removed IDisposable implementation because of continued flushing errors.
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
-//  11/05/2007 - J. Ritchie Carroll
+//  11/05/2007 - James R. Carroll
 //       Modified flush to complete tasks on calling thread - this avoids errors when timer
 //       gets disposed before flush call.
-//  02/20/2008 - J. Ritchie Carroll
+//  02/20/2008 - James R. Carroll
 //       Implemented standard IDisposable pattern.
-//  09/11/2008 - J. Ritchie Carroll
+//  09/11/2008 - James R. Carroll
 //      Converted to C#
-//  11/06/2008 - J. Ritchie Carroll
+//  11/06/2008 - James R. Carroll
 //      Added CurrentStatistics property to return run-time statistics as a group.
 //  02/23/2009 - Josh Patterson
 //      Edited Code Comments

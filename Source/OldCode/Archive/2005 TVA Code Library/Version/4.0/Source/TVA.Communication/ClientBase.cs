@@ -12,20 +12,20 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/01/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added bypass optimizations for high-speed client data access
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter
 //  02/19/2008 - Pinal C. Patel
 //       Added code to detect and avoid redundant calls to Dispose().
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
 //  06/18/2009 - Pinal C. Patel
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
 //       Modified state altering properties to reconnect the client when changed.
-//  07/08/2009 - James R Carroll
+//  07/08/2009 - James R. Carroll
 //       Added WaitHandle return value from asynchronous connection.
 //  07/15/2009 - Pinal C. Patel
 //       Modified Connect() to wait for post-connection processing to complete.

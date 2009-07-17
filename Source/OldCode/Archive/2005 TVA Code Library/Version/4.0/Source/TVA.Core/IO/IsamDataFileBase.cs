@@ -15,11 +15,11 @@
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter
-//  09/19/2008 - James R Carroll
+//  09/19/2008 - James R. Carroll
 //       Converted to C#.
 //  10/28/2008 - Pinal C. Patel
 //       Edited code comments.
-//  12/04/2008 - J. Ritchie Carroll
+//  12/04/2008 - James R. Carroll
 //       Modified class an example to use new ISupportBinaryImage
 //  05/12/2009 - Pinal C. Patel
 //       Optimized Read() for better memory management by using "yield return".

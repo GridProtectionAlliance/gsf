@@ -3,26 +3,26 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/23/2003 - J. Ritchie Carroll
+//  02/23/2003 - James R. Carroll
 //       Generated original version of source code.
-//  01/23/2005 - J. Ritchie Carroll
+//  01/23/2005 - James R. Carroll
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
 //  08/17/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/11/2008 - J. Ritchie Carroll
+//  09/11/2008 - James R. Carroll
 //       Converted to C# extension functions.
 //  02/17/2009 - Josh Patterson
 //       Edited Code Comments.
-//  02/20/2009 - J. Ritchie Carroll
+//  02/20/2009 - James R. Carroll
 //       Added predicate based IndexOf that extends IList<T>.
-//  04/02/2009 - J. Ritchie Carroll
+//  04/02/2009 - James R. Carroll
 //       Added seed based scramble and unscramble IList<T> extensions.
 //  06/05/2009 - Pinal C. Patel
 //       Added generic AddRange() extension method for IList<T>.

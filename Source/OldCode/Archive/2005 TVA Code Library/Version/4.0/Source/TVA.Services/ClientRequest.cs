@@ -14,7 +14,7 @@
 //       Original version of source code generated
 //  04/27/2007 - Pinal C. Patel
 //       Added Attachments property for clients to send serializable objects as part of the request
-//  09/30/2008 - James R Carroll
+//  09/30/2008 - James R. Carroll
 //       Converted to C#.
 //  03/09/2009 - Pinal C. Patel
 //       Edited code comments.

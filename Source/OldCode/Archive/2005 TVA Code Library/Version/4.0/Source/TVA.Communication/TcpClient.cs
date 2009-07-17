@@ -12,15 +12,15 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/02/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added bypass optimizations for high-speed socket access
 //  12/01/2006 - Pinal C. Patel
 //       Modified code for handling "PayloadAware" transmissions
-//  09/27/2007 - J. Ritchie Carroll
+//  09/27/2007 - James R. Carroll
 //       Added disconnect timeout overload
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
-//  07/08/2009 - James R Carroll
+//  07/08/2009 - James R. Carroll
 //       Added WaitHandle return value from asynchronous connection.
 //  07/15/2009 - Pinal C. Patel
 //       Modified Disconnect() to add error checking.

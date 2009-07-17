@@ -70,7 +70,7 @@
         Original version of source code for Multimedia.Timer class.
    04/10/2008 - James Brock
         Original version of source code for DateTimePrecise class.
-   08/21/2008 - J. Ritchie Carroll
+   08/21/2008 - James R. Carroll
         Integrated, merged and adapted for general use as PrecisionTimer.
 
 \**********************************************************************************/

@@ -3,7 +3,7 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
@@ -12,7 +12,7 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/28/2007 - Pinal C. Patel
 //       Original version of source code generated
-//  11/20/2008 - James R Carroll
+//  11/20/2008 - James R. Carroll
 //       Adapted for more generalized use via the following related base classes:
 //          BinaryImageParserBase => FrameImageParserBase => MultiSourceFrameImageParserBase.
 //

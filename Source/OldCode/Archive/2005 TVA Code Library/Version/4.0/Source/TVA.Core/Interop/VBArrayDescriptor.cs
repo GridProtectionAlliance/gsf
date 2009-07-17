@@ -13,7 +13,7 @@
 //  03/07/2007 - Pinal C. Patel
 //       Original version of source code generated.
 //       Generated original version of source code.
-//  09/10/2008 - J. Ritchie Carroll
+//  09/10/2008 - James R. Carroll
 //       Converted to C#.
 //  11/04/2008 - Pinal C. Patel
 //       Edited code comments.

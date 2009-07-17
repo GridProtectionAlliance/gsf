@@ -12,11 +12,11 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/01/2007 - Pinal C. Patel
 //       Generated original version of source code.
-//  08/08/2007 - James R Carroll
+//  08/08/2007 - James R. Carroll
 //       Added lock contention rate and datagram / sec performance counters.
 //  09/04/2007 - Pinal C. Patel
 //       Added Status property.
-//  09/22/2008 - James R Carroll
+//  09/22/2008 - James R. Carroll
 //       Converted to C#.
 //  10/01/2008 - Pinal C. Patel
 //       Entered code comments.

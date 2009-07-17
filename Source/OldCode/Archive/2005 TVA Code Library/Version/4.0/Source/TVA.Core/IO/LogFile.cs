@@ -15,7 +15,7 @@
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter
-//  09/19/2008 - James R Carroll
+//  09/19/2008 - James R. Carroll
 //       Converted to C#.
 //  10/21/2008 - Pinal C. Patel
 //       Edited code comments.

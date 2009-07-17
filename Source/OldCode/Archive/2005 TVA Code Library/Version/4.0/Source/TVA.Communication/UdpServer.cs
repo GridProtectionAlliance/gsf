@@ -12,9 +12,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/06/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/06/2006 - J. Ritchie Carroll
+//  09/06/2006 - James R. Carroll
 //       Added bypass optimizations for high-speed socket access
-//  09/29/2008 - James R Carroll
+//  09/29/2008 - James R. Carroll
 //       Converted to C#.
 //  07/09/2009 - Pinal C. Patel
 //       Modified to attempt resuming reception on SocketException for non-Handshake enabled connection.

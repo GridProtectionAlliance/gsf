@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyProduct("Synchrophasor Projects")]
 [assembly: AssemblyCopyright("Copyright © 2009, TVA")]
-[assembly: AssemblyTrademark("Author: J. Ritchie Carroll, Gbtc")]
+[assembly: AssemblyTrademark("Author: James R. Carroll, Gbtc")]
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug Build")]
 #else

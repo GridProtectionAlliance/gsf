@@ -3,32 +3,32 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
+//  11/12/2004 - James R. Carroll
 //       Generated initial version of source for Super Phasor Data Concentrator.
-//  02/23/2006 - J. Ritchie Carroll
+//  02/23/2006 - James R. Carroll
 //       Abstracted classes for general use, and added to TVA code library.
-//  04/23/2007 - J. Ritchie Carroll
+//  04/23/2007 - James R. Carroll
 //       Migrated concentrator to use a base class model instead of using delegates.
-//  08/01/2007 - J. Ritchie Carroll
+//  08/01/2007 - James R. Carroll
 //       Completed extensive threading optimizations to ensure performance.
 //  08/27/2007 - Darrell Zuercher
 //       Edited code comments.
-//  11/02/2007 - J. Ritchie Carroll
+//  11/02/2007 - James R. Carroll
 //       Changed code to use new FrameQueue class instead of KeyedProcessQueue to
 //       allow more finite control of locking to reduce thread contention.
-//  02/19/2008 - J. Ritchie Carroll
+//  02/19/2008 - James R. Carroll
 //       Added code to detect and avoid redundant calls to Dispose().
-//  08/22/2008 - J. Ritchie Carroll, Jian Zuo
+//  08/22/2008 - James R. Carroll, Jian Zuo
 //       Replaced timing code using PrecisionTimer.
 //       Added code to evenly distribute integer based millisecond wait times across a second.
-//  09/16/2008 - J. Ritchie Carroll
+//  09/16/2008 - James R. Carroll
 //      Converted to C#.
 //
 //*******************************************************************************************************

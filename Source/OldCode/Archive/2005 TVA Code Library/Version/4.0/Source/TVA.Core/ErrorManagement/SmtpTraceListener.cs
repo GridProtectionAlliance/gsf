@@ -16,7 +16,7 @@
 //       Migrated 2.0 version of source code from 1.1 source (TVA.ErrorManagement.SmtpTraceListener).
 //  09/13/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/23/2008 - James R Carroll
+//  09/23/2008 - James R. Carroll
 //       Converted to C#.
 //  10/17/2008 - Pinal C. Patel
 //       Edited code comments.

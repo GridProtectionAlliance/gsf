@@ -3,22 +3,22 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/23/2003 - J. Ritchie Carroll
+//  02/23/2003 - James R. Carroll
 //       Generated original version of source code.
-//  01/23/2006 - J. Ritchie Carroll
+//  01/23/2006 - James R. Carroll
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Common).
-//  01/24/2007 - J. Ritchie Carroll
+//  01/24/2007 - James R. Carroll
 //       Added GetDataSet method to convert an XML string of data into a DataSet object.
 //  12/13/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/12/2008 - J. Ritchie Carroll
+//  09/12/2008 - James R. Carroll
 //      Converted to C# extension functions.
 //
 //*******************************************************************************************************

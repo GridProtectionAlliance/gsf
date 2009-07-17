@@ -16,7 +16,7 @@
 //      Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Assembly).
 //  12/12/2007 - Darrell Zuercher
 //      Edited Code Comments.
-//  09/08/2008 - J. Ritchie Carroll
+//  09/08/2008 - James R. Carroll
 //      Converted to C# as AssemblyInformation.
 //
 //*******************************************************************************************************

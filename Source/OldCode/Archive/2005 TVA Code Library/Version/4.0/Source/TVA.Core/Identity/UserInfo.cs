@@ -3,14 +3,14 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/10/2004 - J. Ritchie Carroll
+//  01/10/2004 - James R. Carroll
 //       Original version of source code generated
 //  01/03/2006 - Pinal C. Patel
 //       2.0 version of source code migrated from 1.1 source (TVA.Shared.Identity)
@@ -21,10 +21,10 @@
 //  11/06/2007 - Pinal C. Patel
 //       Modified the logic of Authenticate method to use the user's DirectoryEntry instance
 //       Modified UserEntry property to impersonate privileged user if configured for the instance
-//  11/08/2007 - J. Ritchie Carroll
+//  11/08/2007 - James R. Carroll
 //       Corrected spelling of "Previleged" - this was a breaking change.
 //       Also, implemented user customizable implementation of previleged account credentials.
-//  09/15/2008 - J. Ritchie Carroll
+//  09/15/2008 - James R. Carroll
 //      Converted to C#.
 //  10/06/2008 - Pinal C. Patel
 //      Edited code comments.

@@ -15,7 +15,7 @@
 //  11/30/2007 - Pinal C. Patel
 //       Modified the "design time" check in EndInit() method to use LicenseManager.UsageMode property
 //       instead of DesignMode property as the former is more accurate than the latter
-//  09/30/2008 - James R Carroll
+//  09/30/2008 - James R. Carroll
 //       Convert to C#.
 //  07/15/2009 - Pinal C. Patel
 //       Added AuthenticationMethod, AuthenticationUsername and AuthenticationPassword properties to

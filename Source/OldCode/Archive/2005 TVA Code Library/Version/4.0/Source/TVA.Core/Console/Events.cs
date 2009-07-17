@@ -14,7 +14,7 @@
 //       Generated original version of source code.
 //  08/31/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/15/2008 - J. Ritchie Carroll
+//  09/15/2008 - James R. Carroll
 //      Converted to C#.
 //  09/29/2008 - Pinal C. Patel
 //      Entered code comments.

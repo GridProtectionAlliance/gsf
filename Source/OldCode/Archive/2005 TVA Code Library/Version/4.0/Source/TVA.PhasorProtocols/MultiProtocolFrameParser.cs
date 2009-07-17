@@ -3,39 +3,39 @@
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/16/2006 - J. Ritchie Carroll
+//  03/16/2006 - James R. Carroll
 //       Initial version of source generated
 //  06/26/2006 - Pinal C. Patel
 //       Changed out the socket code with TcpClient and UdpClient components from TVA.Communication
-//  01/31/2007 - J. Ritchie Carroll
+//  01/31/2007 - James R. Carroll
 //       Added TCP "server" support to allow listening connections from devices that act as data
 //       clients, e.g., F-NET devices
 //  05/23/2007 - Pinal C. Patel
 //       Added member variable 'm_clientConnectionAttempts' to track the number of attempts made for
 //       connecting to the server since this information is no longer provided by the event raised by
 //       any of the Communication Client components
-//  07/05/2007 - J. Ritchie Carroll
+//  07/05/2007 - James R. Carroll
 //       Wrapped all event raising for frame parsing in Try/Catch so that any exceptions thrown in
 //       consumer event handlers won't have a negative effect on continuous data parsing - exceptions
 //       in consumer event handlers are duly noted and raised through the ParsingException event
-//  09/28/2007 - J. Ritchie Carroll
+//  09/28/2007 - James R. Carroll
 //       Implemented new disconnect overload on communications client that allows timeout on socket
 //       close to fix an issue related non-responsive threads that "lock-up" after sending connection
 //       commands that attempt to close the socket for remotely connected devices
-//  12/14/2007 - J. Ritchie Carroll
+//  12/14/2007 - James R. Carroll
 //       Implemented simulated timestamp injection for published frames to allow for real-time
 //       data simulations from archived sample data
-//  10/28/2008 - J. Ritchie Carroll
+//  10/28/2008 - James R. Carroll
 //       Added support for SEL's UDP_T and UDP_U protocol implementations (UDP_S was already supported),
 //       implementation handled by allowing definition of a "CommandChannel" in the connection string
-//  04/27/2009 - J. Ritchie Carroll
+//  04/27/2009 - James R. Carroll
 //       Added support for SEL Fast Message protocol
 //
 //*******************************************************************************************************

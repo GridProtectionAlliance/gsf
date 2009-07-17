@@ -3,26 +3,26 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2003 - J. Ritchie Carroll
+//  11/12/2003 - James R. Carroll
 //       Generated original version of source code.
-//  01/04/2006 - J. Ritchie Carroll
+//  01/04/2006 - James R. Carroll
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Shared.Crypto).
-//  02/28/2007 - J. Ritchie Carroll
+//  02/28/2007 - James R. Carroll
 //       Changed string-based encrypt and decrypt functions to return null if
 //       input string to be encrypted or decrypted was null or empty.
-//  10/11/2007 - J. Ritchie Carroll
+//  10/11/2007 - James R. Carroll
 //       Added Obfuscate and Deobfuscate functions that perform data obfuscation
 //       based upon simple bit-rotation algorithms.
 //  12/13/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/19/2008 - James R Carroll
+//  09/19/2008 - James R. Carroll
 //       Converted to C# - basic encryption/decryption extends string, byte[], and Stream.
 //
 //*******************************************************************************************************

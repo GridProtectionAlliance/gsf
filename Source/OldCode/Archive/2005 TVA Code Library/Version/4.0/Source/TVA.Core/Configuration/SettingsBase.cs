@@ -3,19 +3,19 @@
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  01/30/2009 - James R Carroll
+//  01/30/2009 - James R. Carroll
 //       Generated original version of source code.
-//  03/31/2009 - James R Carroll
+//  03/31/2009 - James R. Carroll
 //       Added code to allow override of name used to serialize field or property to configuration file
 //          by applying a SettingNameAttribute to the member.
-//  04/01/2009 - James R Carroll
+//  04/01/2009 - James R. Carroll
 //       Added code to optionally encrypt settings based on EncryptSettingAttribute and to pickup
 //          DefaultValueAttribute value if provided and current value was uninitialized.
 //

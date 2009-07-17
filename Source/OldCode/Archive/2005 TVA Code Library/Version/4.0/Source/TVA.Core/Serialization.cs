@@ -12,9 +12,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/08/2006 - Pinal C. Patel
 //       Original version of source code generated
-//  09/09/2008 - J. Ritchie Carroll
+//  09/09/2008 - James R. Carroll
 //      Converted to C#
-//  09/09/2008 - J. Ritchie Carroll
+//  09/09/2008 - James R. Carroll
 //      Added TryGetObject overloads
 //  02/16/2009 - Josh Patterson
 //      Edited Code Comments

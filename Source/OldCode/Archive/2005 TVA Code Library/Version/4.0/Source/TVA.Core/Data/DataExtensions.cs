@@ -3,18 +3,18 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  02/05/2003 - J. Ritchie Carroll
+//  02/05/2003 - James R. Carroll
 //       Generated original version of source code.
-//  05/25/2004 - J. Ritchie Carroll
+//  05/25/2004 - James R. Carroll
 //       Added "with parameters" overloads to all basic query functions.
-//  06/21/2004 - J. Ritchie Carroll
+//  06/21/2004 - James R. Carroll
 //       Added support for Oracle native .NET client since ESO systems can now work with this.
 //  12/10/2004 - Tim M Shults
 //       Added several new WithParameters overloads that allow a programmer to send just the
@@ -25,7 +25,7 @@
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Database.Common).
 //  08/21/2007 - Darrell Zuercher
 //       Edited code comments.
-//  09/15/2008 - J. Ritchie Carroll
+//  09/15/2008 - James R. Carroll
 //      Converted to C# extensions.
 //  09/29/2008 - Pinal C. Patel
 //      Reviewed code comments.

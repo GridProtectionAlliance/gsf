@@ -3,23 +3,23 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR BK-C
 //       Phone: 423/751-4165
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  11/12/2004 - J. Ritchie Carroll
+//  11/12/2004 - James R. Carroll
 //       Initial version of source generated
-//  01/05/2006 - J. Ritchie Carroll
+//  01/05/2006 - James R. Carroll
 //       2.0 version of source code migrated from 1.1 source (TVA.Interop.Windows.IniFile)
-//  01/05/2007 - J. Ritchie Carroll
+//  01/05/2007 - James R. Carroll
 //       Breaking change: Renamed "IniFileName" property to "FileName"
 //       Updated "SectionNames" to use List(Of String) instead of ArrayList
-//  09/10/2008 - J. Ritchie Carroll
+//  09/10/2008 - James R. Carroll
 //       Converted to C#
-//  04/01/2009 - J. Ritchie Carroll
+//  04/01/2009 - James R. Carroll
 //       Added "GetSectionKeys" to enumerate keys of a specified section.
 //
 //*******************************************************************************************************

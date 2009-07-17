@@ -3,20 +3,20 @@
 //  Copyright © 2008 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: James R Carroll
+//  Primary Developer: James R. Carroll
 //      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/12/2004 - J. Ritchie Carroll
+//  09/12/2004 - James R. Carroll
 //       Generated original version of source code.
 //  03/28/2006 - Pinal C. Patel
 //       Migrated 2.0 version of source code from 1.1 source (TVA.Console)
-//  10/09/2007 - J. Ritchie Carroll / Pinal C. Patel
+//  10/09/2007 - James R. Carroll / Pinal C. Patel
 //       Fixed stand-alone argument bug at end of line and changed class to use generic Dictionary class
-//  09/15/2008 - J. Ritchie Carroll
+//  09/15/2008 - James R. Carroll
 //      Converted to C#.
 //  09/26/2008 - Pinal C. Patel
 //      Entered code comments.
