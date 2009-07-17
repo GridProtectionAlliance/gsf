@@ -245,7 +245,7 @@ namespace TVA.Services
         private List<ServiceProcess> m_processes;
         private List<object> m_serviceComponents;
 		private List<ClientInfo> m_remoteClients;
-		private List<ClientRequest.Info> m_clientRequestHistory;
+		private List<ClientRequestInfo> m_clientRequestHistory;
 		private List<ClientRequestHandler> m_clientRequestHandlers;
         private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
         private bool m_enabled;
@@ -275,7 +275,7 @@ namespace TVA.Services
 			m_settingsCategory = DefaultSettingsCategory;
 			m_processes = new List<ServiceProcess>();
 			m_remoteClients = new List<ClientInfo>();
-			m_clientRequestHistory = new List<ClientRequest.Info>();
+			m_clientRequestHistory = new List<ClientRequestInfo>();
 			m_serviceComponents = new List<object>();
 			m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
@@ -655,11 +655,11 @@ namespace TVA.Services
 		}
 
         /// <summary>
-        /// Gets a list of <see cref="ClientRequest.Info"/> for requests made by <see cref="RemoteClients"/>.
+        /// Gets a list of <see cref="ClientRequestInfo"/> for requests made by <see cref="RemoteClients"/>.
         /// </summary>
 		[Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ClientRequest.Info> ClientRequestHistory
+        public List<ClientRequestInfo> ClientRequestHistory
 		{
 			get
 			{
@@ -1538,7 +1538,7 @@ namespace TVA.Services
                 {
                     try
                     {
-                        RemoteTelnetSession(new ClientRequest.Info(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
+                        RemoteTelnetSession(new ClientRequestInfo(disconnectedClient, ClientRequest.Parse("Telnet -disconnect")));
                     }
                     catch (Exception ex)
                     {
@@ -1615,7 +1615,7 @@ namespace TVA.Services
                 {
                     try
                     {
-                        ClientRequest.Info requestInfo = new ClientRequest.Info(requestSender, request);
+                        ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
                         if (m_remoteCommandClientID == Guid.Empty)
                         {
                             // Process all incoming requests when remote command session is not in progress.
@@ -1693,7 +1693,7 @@ namespace TVA.Services
 
         #region [ Client Request Handlers ]
 
-        private void ShowClients(ClientRequest.Info requestInfo)
+        private void ShowClients(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1778,7 +1778,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowSettings(ClientRequest.Info requestInfo)
+        private void ShowSettings(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -1851,7 +1851,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowProcesses(ClientRequest.Info requestInfo)
+        private void ShowProcesses(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2007,7 +2007,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowSchedules(ClientRequest.Info requestInfo)
+        private void ShowSchedules(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2077,7 +2077,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowRequestHistory(ClientRequest.Info requestInfo)
+        private void ShowRequestHistory(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2119,7 +2119,7 @@ namespace TVA.Services
                 responseMessage.Append(' ');
                 responseMessage.Append(new string('-', 30));
 
-                foreach (ClientRequest.Info historicRequest in m_clientRequestHistory)
+                foreach (ClientRequestInfo historicRequest in m_clientRequestHistory)
                 {
                     responseMessage.AppendLine();
                     responseMessage.Append(historicRequest.Request.Command.PadRight(20));
@@ -2135,7 +2135,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowRequestHelp(ClientRequest.Info requestInfo)
+        private void ShowRequestHelp(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2192,7 +2192,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowHealthReport(ClientRequest.Info requestInfo)
+        private void ShowHealthReport(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2224,7 +2224,7 @@ namespace TVA.Services
             }
         }
 
-        private void ShowServiceStatus(ClientRequest.Info requestInfo)
+        private void ShowServiceStatus(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2253,7 +2253,7 @@ namespace TVA.Services
             }
         }
 
-        private void ReloadSettings(ClientRequest.Info requestInfo)
+        private void ReloadSettings(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2300,7 +2300,7 @@ namespace TVA.Services
             }
         }
 
-        private void UpdateSettings(ClientRequest.Info requestInfo)
+        private void UpdateSettings(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 3)
             {
@@ -2431,7 +2431,7 @@ namespace TVA.Services
             }
         }
 
-        private void StartProcess(ClientRequest.Info requestInfo)
+        private void StartProcess(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2546,7 +2546,7 @@ namespace TVA.Services
             }
         }
 
-        private void AbortProcess(ClientRequest.Info requestInfo)
+        private void AbortProcess(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2674,7 +2674,7 @@ namespace TVA.Services
             }
         }
 
-        private void RescheduleProcess(ClientRequest.Info requestInfo)
+        private void RescheduleProcess(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 2)
             {
@@ -2784,7 +2784,7 @@ namespace TVA.Services
             }
         }
 
-        private void UnscheduleProcess(ClientRequest.Info requestInfo)
+        private void UnscheduleProcess(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest || requestInfo.Request.Arguments.OrderedArgCount < 1)
             {
@@ -2846,7 +2846,7 @@ namespace TVA.Services
             }
         }
 
-        private void SaveSchedules(ClientRequest.Info requestInfo)
+        private void SaveSchedules(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2888,7 +2888,7 @@ namespace TVA.Services
             }
         }
 
-        private void LoadSchedules(ClientRequest.Info requestInfo)
+        private void LoadSchedules(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
             {
@@ -2930,7 +2930,7 @@ namespace TVA.Services
             }
         }
 
-        private void RemoteTelnetSession(ClientRequest.Info requestinfo)
+        private void RemoteTelnetSession(ClientRequestInfo requestinfo)
         {
             if (m_remoteCommandProcess == null && requestinfo.Request.Arguments.ContainsHelpRequest)
             {

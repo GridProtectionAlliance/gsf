@@ -39,7 +39,7 @@ namespace TVA.Services
         /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
         /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
         /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="command"/>.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequest.Info> handlerMethod)
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod)
             : this(requestCommand, requestDescription, handlerMethod, true)
         {
         }
@@ -51,7 +51,7 @@ namespace TVA.Services
         /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
         /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="command"/>.</param>
         /// <param name="isAdvertised">true if the <see cref="ClientRequestHandler"/> is to be published by the <see cref="ServiceHelper"/>; otherwise false.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequest.Info> handlerMethod, bool isAdvertised)
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, bool isAdvertised)
         {
             Command = requestCommand;
             CommandDescription = requestDescription;
@@ -76,7 +76,7 @@ namespace TVA.Services
         /// <summary>
         /// Gets the <see cref="Delegate"/> method that gets invoked for processing the <see cref="Command"/>.
         /// </summary>
-        public Action<ClientRequest.Info> HandlerMethod { get; private set; }
+        public Action<ClientRequestInfo> HandlerMethod { get; private set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="ClientRequestHandler"/> will be published by the <see cref="ServiceHelper"/>.

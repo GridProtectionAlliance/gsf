@@ -65,6 +65,14 @@ namespace TVA.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientInfo"/> class.
         /// </summary>
+        public ClientInfo()
+            : this(null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientInfo"/> class.
+        /// </summary>
         /// <param name="parent">An <see cref="ClientHelper"/> object.</param>
         public ClientInfo(ClientHelper parent)
         {
@@ -86,7 +94,7 @@ namespace TVA.Services
 
             // Initialize the serialized identity token.
             m_serializedIdentityToken = string.Empty;
-            if (parent.AuthenticationMethod != IdentityToken.None)
+            if (parent != null && parent.AuthenticationMethod != IdentityToken.None)
             {
                 SecurityToken token = null;
                 StringWriter stringWriter = new StringWriter();
@@ -136,67 +144,67 @@ namespace TVA.Services
         /// <summary>
         /// Gets the ID of the remote client application.
         /// </summary>
-        public Guid ClientID 
+        public Guid ClientID
         {
             get { return m_clientID; }
-            set { m_clientID = value; } 
+            set { m_clientID = value; }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="DateTime"/> when the remote client application connected to the <see cref="ServiceHelper"/>.
         /// </summary>
-        public DateTime ConnectedAt 
+        public DateTime ConnectedAt
         {
             get { return m_connectedAt; }
-            set { m_connectedAt = value; } 
+            set { m_connectedAt = value; }
         }
 
         /// <summary>
         /// Gets the <see cref="ApplicationType"/> of the remote client application.
         /// </summary>
-        public ApplicationType ClientType 
+        public ApplicationType ClientType
         {
-            get { return m_clientType; } 
+            get { return m_clientType; }
         }
 
         /// <summary>
         /// Gets the name of the remote client application.
         /// </summary>
-        public string ClientName 
+        public string ClientName
         {
-            get { return m_clientName; } 
+            get { return m_clientName; }
         }
 
         /// <summary>
         /// Gets the name of the user running the remote client application.
         /// </summary>
-        public string UserName 
+        public string UserName
         {
-            get { return m_userName; } 
+            get { return m_userName; }
         }
 
         /// <summary>
         /// Gets the name of the machine running the remote client application.
         /// </summary>
-        public string MachineName 
+        public string MachineName
         {
-            get { return m_machineName; } 
+            get { return m_machineName; }
         }
 
         /// <summary>
         /// Gets the serialized identity token used for authenticating the remote client user.
         /// </summary>
-        public string SerializedIdentityToken 
+        public string SerializedIdentityToken
         {
-            get { return m_serializedIdentityToken; } 
+            get { return m_serializedIdentityToken; }
         }
 
         /// <summary>
         /// Gets the deserialized identity token used for authenticating the remote client user.
         /// </summary>
-        public SecurityToken DeserializedIdentityToken 
+        public SecurityToken DeserializedIdentityToken
         {
-            get { return m_deserializedIdentityToken; } 
+            get { return m_deserializedIdentityToken; }
         }
 
         #endregion
@@ -218,7 +226,7 @@ namespace TVA.Services
                     m_deserializedIdentityToken = deserializer.ReadToken(xmlTextReader);
                 }
                 catch
-                {                    
+                {
                     // Exception may be encountered when deserializing if authentication fails.
                 }
             }
