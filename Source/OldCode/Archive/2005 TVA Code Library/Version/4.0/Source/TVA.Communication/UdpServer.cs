@@ -336,7 +336,7 @@ namespace TVA.Communication
                 throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>
