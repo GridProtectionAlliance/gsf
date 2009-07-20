@@ -341,6 +341,14 @@ namespace TVA.Parsing
             }
         }
 
+        /// <summary>
+        /// When overridden in a derived class, clears all buffers for this stream and causes any buffered data
+        /// to be written to the underlying device.
+        /// </summary>
+        public override void Flush()
+        {
+        }
+
         #region [ Unimplemented Stream Overrides ]
 
         // The parser is designed as a write only stream - so the following methods do not apply
