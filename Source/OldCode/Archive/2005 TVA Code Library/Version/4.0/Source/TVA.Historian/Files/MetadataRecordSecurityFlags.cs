@@ -42,7 +42,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the access level required for a user to edit the <see cref="MetadataRecord"/>.
         /// </summary>
-        public int RecordSecurity
+        public int ChangeSecurity
         {
             get
             {
