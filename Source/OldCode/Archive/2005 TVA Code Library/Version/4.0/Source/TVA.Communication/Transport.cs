@@ -83,7 +83,9 @@ namespace TVA.Communication
                     break;
                 case ProtocolType.Udp:
                     socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    socket.Bind(Transport.CreateEndPoint(address, port));
+                    // Don't bind to an interface if specified by using negative port number.
+                    if (port >= 0)
+                        socket.Bind(Transport.CreateEndPoint(address, port));
                     break;
                 default:
                     throw new NotSupportedException(string.Format("{0} is not supported.", protocol));

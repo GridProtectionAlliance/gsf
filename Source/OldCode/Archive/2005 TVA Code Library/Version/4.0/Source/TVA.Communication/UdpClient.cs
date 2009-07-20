@@ -26,6 +26,8 @@
 //       Modified Disconnect() to add error checking.
 //  07/17/2009 - Pinal C. Patel
 //       Added support to specify a specific interface address on a multiple interface machine.
+//  07/20/2009 - Pinal C. Patel
+//       Allowed for UDP endpoint to not be bound to a local interface by specifying -1 for port number.
 //
 //*******************************************************************************************************
 
@@ -48,6 +50,10 @@ namespace TVA.Communication
     /// <para>
     /// The <see cref="UdpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
     /// specifying the interface in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=8989; Interface=127.0.0.1")
+    /// </para>
+    /// <para>
+    /// The <see cref="UdpClient.Client"/> socket can be used just for transmitting data without being bound to a local interface 
+    /// by specifying -1 for the local port number in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=-1")
     /// </para>
     /// </remarks>
     /// <example>
@@ -356,10 +362,13 @@ namespace TVA.Communication
                         m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp);
                         m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
 
-                        m_receivedGoodbye = NoGoodbyeCheck;
                         OnConnectionEstablished();
-                        ReceivePayloadAsync(m_udpClient);
-
+                        // Listen for incoming data only if endpoint is bound to a local interface.
+                        if (m_udpClient.Provider.LocalEndPoint != null)
+                        {
+                            m_receivedGoodbye = NoGoodbyeCheck;
+                            ReceivePayloadAsync(m_udpClient);
+                        }
                         break;
                     }
                     catch (ThreadAbortException)
@@ -400,8 +409,8 @@ namespace TVA.Communication
             if (!m_connectData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
 
-            if (!Transport.IsPortNumberValid(m_connectData["port"]))
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
+            if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
+                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}.", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>
