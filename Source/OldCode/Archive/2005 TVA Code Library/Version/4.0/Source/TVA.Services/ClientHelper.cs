@@ -25,6 +25,9 @@
 //  07/17/2009 - Pinal C. Patel
 //       Added static PretendRequest() method that can be used to create pretend request for manually
 //       invoking request handlers registered with the ServiceHelper.
+//  07/21/2009 - Pinal C. Patel
+//       Replace AuthenticationUsername and AuthenticationPassword properties with AuthenticationInput
+//       to allow for input text to be specified for any AuthenticationMethod instead of just Ntml.
 //
 //*******************************************************************************************************
 
@@ -77,14 +80,9 @@ namespace TVA.Services
         public const IdentityToken DefaultAuthenticationMethod = IdentityToken.None;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="AuthenticationUsername"/> property.
+        /// Specifies the default value for the <see cref="AuthenticationInput"/> property.
         /// </summary>
-        public const string DefaultAuthenticationUsername = "";
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="AuthenticationPassword"/> property.
-        /// </summary>
-        public const string DefaultAuthenticationPassword = "";
+        public const string DefaultAuthenticationInput = "";
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -137,8 +135,8 @@ namespace TVA.Services
         /// Occurs when the <see cref="ServiceHelper"/> fails to authenticate the <see cref="ClientHelper"/>.
         /// </summary>
         /// <remarks>
-        /// Set <see cref="CancelEventArgs.Cancel"/> to <b>true</b> to continue with connection attempts even after authentication fails. This can be useful 
-        /// for capturing new <see cref="AuthenticationUsername"/> and <see cref="AuthenticationPassword"/> to retry authentication with different credentials.
+        /// Set <see cref="CancelEventArgs.Cancel"/> to <b>true</b> to continue with connection attempts even after authentication fails. 
+        /// This can be useful for re-authenticating using different <see cref="AuthenticationMethod"/> and <see cref="AuthenticationInput"/>.
         /// </remarks>
         [Category("Security"),
         Description("Occurs when the ServiceHelper fails to authenticate the ClientHelper.")]
@@ -161,8 +159,7 @@ namespace TVA.Services
         // Fields
         private ClientBase m_remotingClient;
         private IdentityToken m_authenticationMethod;
-        private string m_authenticationUsername;
-        private string m_authenticationPassword;
+        private string m_authenticationInput;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_attemptReconnection;
@@ -181,8 +178,7 @@ namespace TVA.Services
             : base()
         {
             m_authenticationMethod = DefaultAuthenticationMethod;
-            m_authenticationUsername = DefaultAuthenticationUsername;
-            m_authenticationPassword = DefaultAuthenticationPassword;
+            m_authenticationInput = DefaultAuthenticationInput;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
@@ -256,46 +252,24 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets or sets the username for the current <see cref="AuthenticationMethod"/>.
+        /// Gets or sets input text for the current <see cref="AuthenticationMethod"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        [Category("Security"), 
-        DefaultValue(DefaultAuthenticationUsername),
-        Description("Username for the current AuthenticationMethod.")]
-        public string AuthenticationUsername
+        [Category("Security"),
+        DefaultValue(DefaultAuthenticationInput),
+        Description("Input text for the current AuthenticationMethod.")]
+        public string AuthenticationInput
         {
             get
             {
-                return m_authenticationUsername;
+                return m_authenticationInput;
             }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException();
 
-                m_authenticationUsername = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the password for the current <see cref="AuthenticationMethod"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        [Category("Security"), 
-        DefaultValue(DefaultAuthenticationPassword),
-        Description("Password for the current AuthenticationMethod.")]
-        public string AuthenticationPassword
-        {
-            get
-            {
-                return m_authenticationPassword;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException();
-
-                m_authenticationPassword = value;
+                m_authenticationInput = value;
             }
         }
 
@@ -444,10 +418,8 @@ namespace TVA.Services
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 element = settings["AuthenticationMethod", true];
                 element.Update(m_authenticationMethod, element.Description, element.Encrypted);
-                element = settings["AuthenticationUsername", true];
-                element.Update(m_authenticationUsername, element.Description, element.Encrypted);
-                element = settings["AuthenticationPassword", true];
-                element.Update(m_authenticationPassword, element.Description, element.Encrypted);
+                element = settings["AuthenticationInput", true];
+                element.Update(m_authenticationInput, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -467,11 +439,9 @@ namespace TVA.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("AuthenticationMethod", m_authenticationMethod, "Authentication method (None; Ntlm; Kerberos) used for security.");
-                settings.Add("AuthenticationUsername", m_authenticationUsername, "Username for the current AuthenticationMethod.");
-                settings.Add("AuthenticationPassword", m_authenticationPassword, "Password for the current AuthenticationMethod.", true);
+                settings.Add("AuthenticationInput", m_authenticationInput, "Input text for the current AuthenticationMethod.", true);
                 AuthenticationMethod = settings["AuthenticationMethod"].ValueAs(m_authenticationMethod);
-                AuthenticationUsername = settings["AuthenticationUsername"].ValueAs(m_authenticationUsername);
-                AuthenticationPassword = settings["AuthenticationPassword"].ValueAs(m_authenticationPassword);
+                AuthenticationInput = settings["AuthenticationInput"].ValueAs(m_authenticationInput);
             }
         }
 

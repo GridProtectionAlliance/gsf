@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  07/10/2009 - Pinal C. Patel
 //       Modified to transmit serialized identity token used for authentication by the ServiceHelper.
+//  07/21/2009 - Pinal C. Patel
+//       Modified identity token generation to use the new ClientHelper.AuthenticationInput property.
 //
 //*******************************************************************************************************
 
@@ -106,20 +108,21 @@ namespace TVA.Services
                     // Create a token based on the selected method.
                     if (parent.AuthenticationMethod == IdentityToken.Ntlm)
                     {
-                        token = new UsernameToken(parent.AuthenticationUsername, parent.AuthenticationPassword, PasswordOption.SendPlainText);
+                        if (!string.IsNullOrEmpty(parent.AuthenticationInput) && 
+                            parent.AuthenticationInput.Contains(":"))
+                        {
+                            // Input format: <username>:<password>
+                            string[] loginParts = parent.AuthenticationInput.Split(':');
+                            token = new UsernameToken(loginParts[0], loginParts[1], PasswordOption.SendPlainText);
+                        }
                     }
                     else if (parent.AuthenticationMethod == IdentityToken.Kerberos)
                     {
-                        Dictionary<string, string> remoteConfig = parent.RemotingClient.ConnectionString.ParseKeyValuePairs();
-                        if (remoteConfig.ContainsKey("server"))
+                        if (!string.IsNullOrEmpty(parent.AuthenticationInput) &&
+                            parent.AuthenticationInput.Contains("/"))
                         {
-                            // Remote server name or ip is specified.
-                            if (!remoteConfig["server"].Contains(":"))
-                                // No port is specified.
-                                token = new KerberosToken("host/" + Dns.GetHostEntry(remoteConfig["server"]).HostName, ImpersonationLevel.Impersonation);
-                            else
-                                // Port is specified, so remove the port.
-                                token = new KerberosToken("host/" + Dns.GetHostEntry(remoteConfig["server"].Split(':')[0]).HostName, ImpersonationLevel.Impersonation);
+                            // Input format: host/<machine name>
+                            token = new KerberosToken(parent.AuthenticationInput, ImpersonationLevel.Impersonation);
                         }
                     }
 
