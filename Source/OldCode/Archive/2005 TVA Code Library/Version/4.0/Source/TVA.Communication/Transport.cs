@@ -14,6 +14,8 @@
 //       Original version of source created.
 //  09/29/2008 - James R. Carroll
 //       Converted to C#.
+//  09/22/2009 - Pinal C. Patel
+//       Modified CreateEndPoint() to try parsing IP address first before doing a DNS lookup.
 //
 //*******************************************************************************************************
 
@@ -48,20 +50,18 @@ namespace TVA.Communication
         {
             if (string.IsNullOrEmpty(hostNameOrAddress))
             {
-                // We use one of the local IP.
+                // Use all of the local IPs.
                 return new IPEndPoint(IPAddress.Any, port);
             }
             else
             {
-                try
-                {
+                IPAddress address;
+                if (IPAddress.TryParse(hostNameOrAddress, out address))
+                    // Use the provided IP address.
+                    return new IPEndPoint(address, port);
+                else
+                    // Exception will occur if DNS lookup fails.
                     return new IPEndPoint(Dns.GetHostEntry(hostNameOrAddress).AddressList[0], port);
-                }
-                catch (SocketException)
-                {
-                    // SocketException will be thrown if the host is not found, so we'll try manual IP
-                    return new IPEndPoint(IPAddress.Parse(hostNameOrAddress), port);
-                }
             }
         }
 
