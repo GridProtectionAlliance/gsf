@@ -28,6 +28,8 @@
 //  07/21/2009 - Pinal C. Patel
 //       Replace AuthenticationUsername and AuthenticationPassword properties with AuthenticationInput
 //       to allow for input text to be specified for any AuthenticationMethod instead of just Ntml.
+//  07/23/2009 - Pinal C. Patel
+//       ReceivedServiceResponse is now raised only for custom service responses instead of all.
 //
 //*******************************************************************************************************
 
@@ -104,7 +106,7 @@ namespace TVA.Services
         public event EventHandler<EventArgs<string>> ReceivedServiceUpdate;
 				
 		/// <summary>
-		/// Occurs when a <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
+		/// Occurs when a custom <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
 		/// </summary>
         [Category("Service"), 
         Description("Occurs when a ServiceResponse is received from the ServiceHelper.")]
@@ -650,9 +652,7 @@ namespace TVA.Services
             Serialization.TryGetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), out response);
 
             if (response != null)
-            {
-                OnReceivedServiceResponse(response);
-
+            {              
                 switch (response.Type)
                 {
                     case "UPDATECLIENTSTATUS":
@@ -702,6 +702,9 @@ namespace TVA.Services
                                 OnTelnetSessionTerminated();
                                 break;
                         }
+                        break;
+                    default:
+                        OnReceivedServiceResponse(response);
                         break;
                 }
             }
