@@ -77,6 +77,9 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the text description of the data value for the <see cref="MetadataRecord"/> when it is 1.
         /// </summary>
+        /// <remarks>
+        /// Maximum length for <see cref="SetDescription"/> is 24 characters.
+        /// </remarks>
         public string SetDescription
         {
             get
@@ -92,6 +95,9 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets the text description of the data value for the <see cref="MetadataRecord"/> when it is 0.
         /// </summary>
+        /// <remarks>
+        /// Maximum length for <see cref="ClearDescription"/> is 24 characters.
+        /// </remarks>
         public string ClearDescription
         {
             get
