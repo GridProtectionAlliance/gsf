@@ -304,18 +304,6 @@ namespace TVA.PhasorProtocols
         }
 
         /// <summary>
-        /// Creates a new <see cref="MultiProtocolFrameParser"/> using the specified <see cref="PhasorProtocol"/> and <see cref="TransportProtocol"/>.
-        /// </summary>
-        /// <param name="phasorProtocol">Phasor protocol to use for this frame parser.</param>
-        /// <param name="transportProtocol">Transport protocol to use for this frame parser.</param>
-        public MultiProtocolFrameParser(PhasorProtocol phasorProtocol, TransportProtocol transportProtocol)
-            : this()
-        {
-            m_phasorProtocol = phasorProtocol;
-            m_transportProtocol = transportProtocol;
-        }
-
-        /// <summary>
         /// Releases the unmanaged resources before the <see cref="MultiProtocolFrameParser"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
         ~MultiProtocolFrameParser()
