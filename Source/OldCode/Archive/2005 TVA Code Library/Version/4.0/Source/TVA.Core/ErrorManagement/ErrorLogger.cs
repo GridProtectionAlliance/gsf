@@ -21,6 +21,8 @@
 //       Edited code comments.
 //  06/18/2009 - Pinal C. Patel
 //      Modified Log() to quit if Enabled is false.
+//  07/27/2009 - Pinal C. Patel
+//      Made logging user information along with exception information optional via LogUserInfo property.
 //
 //*******************************************************************************************************
 
@@ -133,6 +135,11 @@ namespace TVA.ErrorManagement
         /// Specifies the default value for the <see cref="LogToScreenshot"/> property.
         /// </summary>
         public const bool DefaultLogToScreenshot = false;
+       
+        /// <summary>
+        /// Specifies the default value for the <see cref="LogUserInfo"/> property.
+        /// </summary>
+        public const bool DefaultLogUserInfo = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SmtpServer"/> property.
@@ -180,6 +187,7 @@ namespace TVA.ErrorManagement
         private bool m_logToEmail;
         private bool m_logToEventLog;
         private bool m_logToScreenshot;
+        private bool m_logUserInfo;
         private string m_smtpServer;
         private string m_contactName;
         private string m_contactEmail;
@@ -221,6 +229,7 @@ namespace TVA.ErrorManagement
             m_logToEmail = DefaultLogToEmail;
             m_logToEventLog = DefaultLogToEventLog;
             m_logToScreenshot = DefaultLogToScreenshot;
+            m_logUserInfo = DefaultLogUserInfo;
             m_smtpServer = DefaultSmtpServer;
             m_contactName = DefaultContactName;
             m_contactEmail = DefaultContactEmail;
@@ -359,6 +368,25 @@ namespace TVA.ErrorManagement
             set
             {
                 m_logToScreenshot = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether information about local user (for windows applications) 
+        /// or remote user (for web applications) is to be logged when logging an <see cref="Exception"/>.
+        /// </summary>
+        [Category("Logging"),
+        DefaultValue(DefaultLogUserInfo),
+        Description("Indicates whether information about a local user (for windows application) or remote user (for web application) is to be logged when logging an Exception.")]
+        public bool LogUserInfo
+        {
+            get
+            {
+                return m_logUserInfo;
+            }
+            set
+            {
+                m_logUserInfo = value;
             }
         }
 
@@ -872,6 +900,8 @@ namespace TVA.ErrorManagement
                 element.Update(m_logToEventLog, element.Description, element.Encrypted);
                 element = settings["LogToScreenshot", true];
                 element.Update(m_logToScreenshot, element.Description, element.Encrypted);
+                element = settings["LogUserInfo", true];
+                element.Update(m_logUserInfo, element.Description, element.Encrypted);
                 element = settings["SmtpServer", true];
                 element.Update(m_smtpServer, element.Description, element.Encrypted);
                 element = settings["ContactName", true];
@@ -908,6 +938,7 @@ namespace TVA.ErrorManagement
                 settings.Add("LogToEmail", m_logToEmail, "True if an email is to be sent to ContactEmail with the details of an encountered exception; otherwise False.");
                 settings.Add("LogToEventLog", m_logToEventLog, "True if an encountered exception is to be logged to the Event Log; otherwise False.");
                 settings.Add("LogToScreenshot", m_logToScreenshot, "True if a screenshot is to be taken when an exception is encountered; otherwise False.");
+                settings.Add("LogUserInfo", m_logUserInfo, "True if user information is to be logged along with exception information; otherwise False.");
                 settings.Add("SmtpServer", m_smtpServer, "Name of the SMTP server to be used for sending the email messages.");
                 settings.Add("ContactName", m_contactName, "Name of the person that the end-user can contact when an exception is encountered.");
                 settings.Add("ContactEmail", m_contactEmail, "Comma-seperated list of recipient email addresses for the email message.");
@@ -919,6 +950,7 @@ namespace TVA.ErrorManagement
                 LogToEmail = settings["LogToEmail"].ValueAs(m_logToEmail);
                 LogToEventLog = settings["LogToEventLog"].ValueAs(m_logToEventLog);
                 LogToScreenshot = settings["LogToScreenshot"].ValueAs(m_logToScreenshot);
+                LogUserInfo = settings["LogUserInfo"].ValueAs(m_logUserInfo);
                 SmtpServer = settings["SmtpServer"].ValueAs(m_smtpServer);
                 ContactEmail = settings["ContactEmail"].ValueAs(m_contactEmail);
                 ContactName = settings["ContactName"].ValueAs(m_contactName);
@@ -1213,7 +1245,7 @@ namespace TVA.ErrorManagement
                 m_logToFileOK = false;
                 if (!m_errorLog.IsOpen)
                     m_errorLog.Open();
-                m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception));
+                m_errorLog.WriteTimestampedLine(GetExceptionInfo(exception, m_logUserInfo));
                 m_logToFileOK = true;
             }
         }
@@ -1230,7 +1262,7 @@ namespace TVA.ErrorManagement
                 m_logToEmailOK = false;
                 Mail email = new Mail(m_contactEmail, m_contactEmail);
                 email.Subject = string.Format("Exception in {0} at {1}", ApplicationName, DateTime.Now.ToString());
-                email.Body = GetExceptionInfo(exception);
+                email.Body = GetExceptionInfo(exception, m_logUserInfo);
                 email.Attachments = GetScreenshotFileName();
                 email.SmtpServer = m_smtpServer;
                 email.Send();
@@ -1248,7 +1280,7 @@ namespace TVA.ErrorManagement
             if (m_logToEventLog)
             {
                 m_logToEventLogOK = false;
-                EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception), EventLogEntryType.Error);
+                EventLog.WriteEntry(ApplicationName, GetExceptionInfo(exception, m_logUserInfo), EventLogEntryType.Error);
                 m_logToEventLogOK = true;
             }
         }
@@ -1462,7 +1494,7 @@ namespace TVA.ErrorManagement
             moreInfoText.Append("Detailed error information follows:");
             moreInfoText.AppendLine();
             moreInfoText.AppendLine();
-            moreInfoText.Append(GetExceptionInfo(m_lastException));
+            moreInfoText.Append(GetExceptionInfo(m_lastException, m_logUserInfo));
 
             return moreInfoText.ToString();
         }
@@ -1494,10 +1526,51 @@ namespace TVA.ErrorManagement
         #region [ Static ]
 
         /// <summary>
+        /// Gets information about an <see cref="Exception"/> complete with system and application information.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> whose information is to be retrieved.</param>
+        /// <param name="includeUserInfo">true if user information is to be include; otherwise false.</param>
+        /// <returns><see cref="Exception"/> information in text.</returns>
+        public static string GetExceptionInfo(Exception ex, bool includeUserInfo)
+        {
+            StringBuilder info = new StringBuilder();
+            if (ex.InnerException != null)
+            {
+                // Sometimes the original exception is wrapped in a more relevant outer exception
+                // the detail exception is the "inner" exception
+                // See: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
+                info.Append("(Inner Exception)");
+                info.AppendLine();
+                info.Append(GetExceptionInfo(ex.InnerException, includeUserInfo));
+                info.AppendLine();
+                info.Append("(Outer Exception)");
+                info.AppendLine();
+            }
+
+            // Get general system information.
+            info.Append(GetSystemInfo(includeUserInfo));
+            info.AppendLine();
+            // Get general application information.
+            info.Append(GetApplicationInfo());
+            info.AppendLine();
+            // Get general exception information.
+            info.Append(GetExceptionGeneralInfo(ex));
+            info.AppendLine();
+            // Get the stack trace for the exception.
+            info.Append("---- Stack Trace ----");
+            info.AppendLine();
+            info.Append(GetExceptionStackTrace(ex));
+            info.AppendLine();
+
+            return info.ToString();
+        }
+
+        /// <summary>
         /// Gets information about the system where current application is executing.
         /// </summary>
+        /// <param name="includeUserInfo">true if user information is to be include; otherwise false.</param>
         /// <returns>System information in text.</returns>
-        public static string GetSystemInfo()
+        private static string GetSystemInfo(bool includeUserInfo)
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Date and Time:         {0}", DateTime.Now);
@@ -1505,37 +1578,44 @@ namespace TVA.ErrorManagement
             switch (Common.GetApplicationType())
             {
                 case ApplicationType.WindowsCui:
-                case ApplicationType.WindowsGui:
-                    UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
+                case ApplicationType.WindowsGui:                    
                     info.AppendFormat("Machine Name:          {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
                     info.AppendLine();
-                    info.AppendFormat("Current User ID:       {0}", currentUserInfo.LoginID);
-                    info.AppendLine();
-                    info.AppendFormat("Current User Name:     {0}", currentUserInfo.FullName);
-                    info.AppendLine();
-                    info.AppendFormat("Current User Phone:    {0}", currentUserInfo.Telephone);
-                    info.AppendLine();
-                    info.AppendFormat("Current User Email:    {0}", currentUserInfo.Email);
-                    info.AppendLine();
+                    if (includeUserInfo)
+                    {
+                        UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
+                        info.AppendFormat("Current User ID:       {0}", currentUserInfo.LoginID);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Name:     {0}", currentUserInfo.FullName);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Phone:    {0}", currentUserInfo.Telephone);
+                        info.AppendLine();
+                        info.AppendFormat("Current User Email:    {0}", currentUserInfo.Email);
+                        info.AppendLine();
+                    }
                     break;
                 case ApplicationType.Web:
-                    UserInfo remoteUserInfo = UserInfo.RemoteUserInfo;
+                    
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
                     info.AppendLine();
-                    info.AppendFormat("Process User:          {0}", UserInfo.CurrentUserID);
-                    info.AppendLine();
-                    info.AppendFormat("Remote User ID:        {0}", remoteUserInfo.LoginID);
-                    info.AppendLine();
-                    info.AppendFormat("Remote User Name:      {0}", remoteUserInfo.FullName);
-                    info.AppendLine();
-                    info.AppendFormat("Remote User Phone:     {0}", remoteUserInfo.Telephone);
-                    info.AppendLine();
-                    info.AppendFormat("Remote User Email:     {0}", remoteUserInfo.Email);
-                    info.AppendLine();
+                    if (includeUserInfo)
+                    {
+                        UserInfo remoteUserInfo = UserInfo.RemoteUserInfo;
+                        info.AppendFormat("Process User:          {0}", UserInfo.CurrentUserID);
+                        info.AppendLine();
+                        info.AppendFormat("Remote User ID:        {0}", remoteUserInfo.LoginID);
+                        info.AppendLine();
+                        info.AppendFormat("Remote User Name:      {0}", remoteUserInfo.FullName);
+                        info.AppendLine();
+                        info.AppendFormat("Remote User Phone:     {0}", remoteUserInfo.Telephone);
+                        info.AppendLine();
+                        info.AppendFormat("Remote User Email:     {0}", remoteUserInfo.Email);
+                        info.AppendLine();
+                    }
                     info.AppendFormat("Remote Host:           {0}", HttpContext.Current.Request.ServerVariables["REMOTE_HOST"]);
                     info.AppendLine();
                     info.AppendFormat("Remote Address:        {0}", HttpContext.Current.Request.ServerVariables["REMOTE_ADDR"]);
@@ -1556,7 +1636,7 @@ namespace TVA.ErrorManagement
         /// Gets information about the current application.
         /// </summary>
         /// <returns>Application information in text.</returns>
-        public static string GetApplicationInfo()
+        private static string GetApplicationInfo()
         {
             Assembly parentAssembly = null;
             switch (Common.GetApplicationType())
@@ -1593,50 +1673,11 @@ namespace TVA.ErrorManagement
         }
 
         /// <summary>
-        /// Gets information about an <see cref="Exception"/> complete with system and application information.
-        /// </summary>
-        /// <param name="ex"><see cref="Exception"/> whose information is to be retrieved.</param>
-        /// <returns><see cref="Exception"/> information in text.</returns>
-        public static string GetExceptionInfo(Exception ex)
-        {
-            StringBuilder info = new StringBuilder();
-            if (ex.InnerException != null)
-            {
-                // Sometimes the original exception is wrapped in a more relevant outer exception
-                // the detail exception is the "inner" exception
-                // See: http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnbda/html/exceptdotnet.asp
-                info.Append("(Inner Exception)");
-                info.AppendLine();
-                info.Append(GetExceptionInfo(ex.InnerException));
-                info.AppendLine();
-                info.Append("(Outer Exception)");
-                info.AppendLine();
-            }
-
-            // Get general system information.
-            info.Append(GetSystemInfo());
-            info.AppendLine();
-            // Get general application information.
-            info.Append(GetApplicationInfo());
-            info.AppendLine();
-            // Get general exception information.
-            info.Append(GetExceptionGeneralInfo(ex));
-            info.AppendLine();
-            // Get the stack trace for the exception.
-            info.Append("---- Stack Trace ----");
-            info.AppendLine();
-            info.Append(GetExceptionStackTrace(ex));
-            info.AppendLine();
-
-            return info.ToString();
-        }
-
-        /// <summary>
         /// Gets common information about an <see cref="Exception"/>.
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose common information is to be retrieved.</param>
         /// <returns>Common <see cref="Exception"/> information in text.</returns>
-        public static string GetExceptionGeneralInfo(Exception ex)
+        private static string GetExceptionGeneralInfo(Exception ex)
         {
             StringBuilder info = new StringBuilder();
             info.AppendFormat("Exception Source:      {0}", ex.Source);
@@ -1659,7 +1700,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         /// <param name="ex"><see cref="Exception"/> whose stack trace information is to be retrieved.</param>
         /// <returns><see cref="Exception"/> stack trace in text.</returns>
-        public static string GetExceptionStackTrace(Exception ex)
+        private static string GetExceptionStackTrace(Exception ex)
         {
             StringBuilder trace = new StringBuilder();
             StackTrace stack = new StackTrace(ex, true);
