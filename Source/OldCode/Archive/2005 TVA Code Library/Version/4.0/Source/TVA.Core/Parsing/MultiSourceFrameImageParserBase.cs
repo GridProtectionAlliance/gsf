@@ -213,7 +213,7 @@ namespace TVA.Parsing
         /// </summary>
         /// <param name="source">ID of the data source.</param>
         /// <param name="buffer">An array of bytes to queue for parsing</param>
-        public void Parse(TSourceIdentifier source, byte[] buffer)
+        public virtual void Parse(TSourceIdentifier source, byte[] buffer)
         {
             m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer));
         }
@@ -225,7 +225,7 @@ namespace TVA.Parsing
         /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the queue.</param>
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
-        public void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
+        public virtual void Parse(TSourceIdentifier source, byte[] buffer, int offset, int count)
         {
             m_bufferQueue.Add(new IdentifiableItem<TSourceIdentifier, byte[]>(source, buffer.BlockCopy(offset, count)));
         }
@@ -238,7 +238,7 @@ namespace TVA.Parsing
         /// <remarks>
         /// This method takes the binary image from <see cref="ISupportBinaryImage"/> and writes the buffer to the <see cref="BinaryImageParserBase"/> stream for parsing.
         /// </remarks>
-        public void Parse(TSourceIdentifier source, ISupportBinaryImage image)
+        public virtual void Parse(TSourceIdentifier source, ISupportBinaryImage image)
         {
             Parse(source, image.BinaryImage);
         }
@@ -250,7 +250,7 @@ namespace TVA.Parsing
         /// <remarks>
         /// This method can be used to ensure that partial data received from the <paramref name="source"/> is not kept in memory indefinitely.
         /// </remarks>
-        public void PurgeBuffer(TSourceIdentifier source)
+        public virtual void PurgeBuffer(TSourceIdentifier source)
         {
             lock (m_unparsedBuffers)
             {
@@ -332,7 +332,7 @@ namespace TVA.Parsing
         /// <remarks>
         /// This is the item processing delegate to use when overriding the <see cref="CreateBufferQueue"/> method.
         /// </remarks>
-        protected void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
+        protected virtual void ParseQueuedBuffers(IdentifiableItem<TSourceIdentifier, byte[]>[] buffers)
         {
             byte[] buffer;
 
@@ -376,7 +376,7 @@ namespace TVA.Parsing
         /// </summary>
         /// <param name="sourceID">Data source ID.</param>
         /// <param name="parsedData">List of parsed events.</param>
-        protected void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
+        protected virtual void OnDataParsed(TSourceIdentifier sourceID, List<TOutputType> parsedData)
         {            
             if (DataParsed != null)
                 DataParsed(this, new EventArgs<TSourceIdentifier, IList<TOutputType>>(sourceID, parsedData));
