@@ -30,6 +30,8 @@
 //       Added AllowedRemoteUsers and ImpersonateRemoteUser properties as part of security.
 //  07/16/2009 - Pinal C. Patel
 //       Added SupportTelnetSessions property so that telnet support can be optionally turned-on.
+//  07/16/2009 - Pinal C. Patel
+//       Modified MonitorServiceHealth to default to false as it is not always needed.
 //
 //*******************************************************************************************************
 
@@ -107,7 +109,7 @@ namespace TVA.Services
 		/// <summary>
         /// Specifies the default value for the <see cref="MonitorServiceHealth"/> property.
 		/// </summary>
-		public const bool DefaultMonitorServiceHealth = true;
+		public const bool DefaultMonitorServiceHealth = false;
 		
 		/// <summary>
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
