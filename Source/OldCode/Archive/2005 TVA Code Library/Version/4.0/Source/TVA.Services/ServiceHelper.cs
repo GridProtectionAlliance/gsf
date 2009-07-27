@@ -285,12 +285,12 @@ namespace TVA.Services
 
 			// Components
 			m_statusLog = new LogFile();
-			m_statusLog.LogException += m_statusLog_LogException;
+			m_statusLog.LogException += StatusLog_LogException;
 			m_statusLog.FileName = "StatusLog.txt";
 			m_statusLog.SettingsCategory = "StatusLog";
 
             m_processScheduler = new ScheduleManager();
-			m_processScheduler.ScheduleDue += m_scheduler_ScheduleDue;
+			m_processScheduler.ScheduleDue += Scheduler_ScheduleDue;
 			m_processScheduler.SettingsCategory = "ProcessScheduler";
 
 			m_errorLogger = new ErrorLogger();
@@ -506,8 +506,8 @@ namespace TVA.Services
                 if (m_remotingServer != null)
                 {
                     // Detach events from any existing instance
-				    m_remotingServer.ClientDisconnected -= m_remotingServer_ClientDisconnected;
-				    m_remotingServer.ReceiveClientDataComplete -= m_remotingServer_ReceiveClientDataComplete;
+				    m_remotingServer.ClientDisconnected -= RemotingServer_ClientDisconnected;
+				    m_remotingServer.ReceiveClientDataComplete -= RemotingServer_ReceiveClientDataComplete;
                 }
 
 				m_remotingServer = value;
@@ -515,8 +515,8 @@ namespace TVA.Services
                 if (m_remotingServer != null)
                 {
                     // Attach events to new instance
-				    m_remotingServer.ClientDisconnected += m_remotingServer_ClientDisconnected;
-				    m_remotingServer.ReceiveClientDataComplete += m_remotingServer_ReceiveClientDataComplete;
+				    m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
+				    m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
                 }
 			}
 		}
@@ -1059,7 +1059,7 @@ namespace TVA.Services
             if (GetProcess(processName) == null)
             {
                 ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
-                process.StateChanged += process_StateChanged;
+                process.StateChanged += Process_StateChanged;
 
                 m_processes.Add(process);
             }
@@ -1419,14 +1419,14 @@ namespace TVA.Services
 
                         if (m_statusLog != null)
                         {
-                            m_statusLog.LogException -= m_statusLog_LogException;
+                            m_statusLog.LogException -= StatusLog_LogException;
                             m_statusLog.Dispose();
                         }
                         m_statusLog = null;
 
                         if (m_processScheduler != null)
                         {
-                            m_processScheduler.ScheduleDue -= m_scheduler_ScheduleDue;
+                            m_processScheduler.ScheduleDue -= Scheduler_ScheduleDue;
                             m_processScheduler.Dispose();
                         }
                         m_processScheduler = null;
@@ -1445,8 +1445,8 @@ namespace TVA.Services
 
                         if (m_remoteCommandProcess != null)
                         {
-                            m_remoteCommandProcess.ErrorDataReceived -= m_remoteCommandProcess_ErrorDataReceived;
-                            m_remoteCommandProcess.OutputDataReceived -= m_remoteCommandProcess_OutputDataReceived;
+                            m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
+                            m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
 
                             if (!m_remoteCommandProcess.HasExited)
                                 m_remoteCommandProcess.Kill();
@@ -1460,7 +1460,7 @@ namespace TVA.Services
                         {
                             foreach (ServiceProcess process in m_processes)
                             {
-                                process.StateChanged -= process_StateChanged;
+                                process.StateChanged -= Process_StateChanged;
                                 process.Dispose();
                             }
 
@@ -1507,13 +1507,13 @@ namespace TVA.Services
             SendResponse(serviceResponse);
         }
 
-        private void process_StateChanged(object sender, EventArgs e)
+        private void Process_StateChanged(object sender, EventArgs e)
         {
             ServiceProcess process = sender as ServiceProcess;
             OnProcessStateChanged(process.Name, process.CurrentState);
         }
 
-        private void m_statusLog_LogException(object sender, EventArgs<System.Exception> e)
+        private void StatusLog_LogException(object sender, EventArgs<System.Exception> e)
         {
             // We'll let the connected clients know that we encountered an exception while logging the status update.
             m_logStatusUpdates = false;
@@ -1521,7 +1521,7 @@ namespace TVA.Services
             m_logStatusUpdates = true;
         }
 
-        private void m_scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
+        private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
             ServiceProcess scheduledProcess = GetProcess(e.Argument.Name);
 
@@ -1530,7 +1530,7 @@ namespace TVA.Services
                 scheduledProcess.Start();
         }
 
-        private void m_remotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
+        private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
             ClientInfo disconnectedClient = GetConnectedClient(e.Argument);
 
@@ -1555,7 +1555,7 @@ namespace TVA.Services
             }
         }
 
-        private void m_remotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
+        private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
             ClientInfo requestSender = GetConnectedClient(e.Argument1);
             if (requestSender == null)
@@ -1683,12 +1683,12 @@ namespace TVA.Services
             }
         }
 
-        private void m_remoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
+        private void RemoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
             UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
         }
 
-        private void m_remoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
+        private void RemoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
             UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
         }
@@ -2975,8 +2975,8 @@ namespace TVA.Services
                     {
                         // Establish remote command session
                         m_remoteCommandProcess = new Process();
-                        m_remoteCommandProcess.ErrorDataReceived += m_remoteCommandProcess_ErrorDataReceived;
-                        m_remoteCommandProcess.OutputDataReceived += m_remoteCommandProcess_OutputDataReceived;
+                        m_remoteCommandProcess.ErrorDataReceived += RemoteCommandProcess_ErrorDataReceived;
+                        m_remoteCommandProcess.OutputDataReceived += RemoteCommandProcess_OutputDataReceived;
                         m_remoteCommandProcess.StartInfo.FileName = "cmd.exe";
                         m_remoteCommandProcess.StartInfo.UseShellExecute = false;
                         m_remoteCommandProcess.StartInfo.RedirectStandardInput = true;
@@ -2999,8 +2999,8 @@ namespace TVA.Services
                 else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
                 {
                     // User wants to terminate an established remote command session.                   
-                    m_remoteCommandProcess.ErrorDataReceived -= m_remoteCommandProcess_ErrorDataReceived;
-                    m_remoteCommandProcess.OutputDataReceived -= m_remoteCommandProcess_OutputDataReceived;
+                    m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
+                    m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
                     
                     if (!m_remoteCommandProcess.HasExited)
                         m_remoteCommandProcess.Kill();

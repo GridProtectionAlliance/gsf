@@ -216,10 +216,10 @@ namespace TVA.Services
                 if (m_remotingClient != null)
                 {
                     // Detach events from any existing instance
-                    m_remotingClient.ConnectionEstablished -= m_remotingClient_ConnectionEstablished;
-                    m_remotingClient.ConnectionAttempt -= m_remotingClient_ConnectionAttempt;
-                    m_remotingClient.ConnectionTerminated -= m_remotingClient_ConnectionTerminated;
-                    m_remotingClient.ReceiveDataComplete -= m_remotingClient_ReceiveDataComplete;
+                    m_remotingClient.ConnectionEstablished -= RemotingClient_ConnectionEstablished;
+                    m_remotingClient.ConnectionAttempt -= RemotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionTerminated -= RemotingClient_ConnectionTerminated;
+                    m_remotingClient.ReceiveDataComplete -= RemotingClient_ReceiveDataComplete;
                 }
 
                 m_remotingClient = value;
@@ -227,10 +227,10 @@ namespace TVA.Services
                 if (m_remotingClient != null)
                 {
                     // Attach events to new instance
-                    m_remotingClient.ConnectionEstablished += m_remotingClient_ConnectionEstablished;
-                    m_remotingClient.ConnectionAttempt += m_remotingClient_ConnectionAttempt;
-                    m_remotingClient.ConnectionTerminated += m_remotingClient_ConnectionTerminated;
-                    m_remotingClient.ReceiveDataComplete += m_remotingClient_ReceiveDataComplete;
+                    m_remotingClient.ConnectionEstablished += RemotingClient_ConnectionEstablished;
+                    m_remotingClient.ConnectionAttempt += RemotingClient_ConnectionAttempt;
+                    m_remotingClient.ConnectionTerminated += RemotingClient_ConnectionTerminated;
+                    m_remotingClient.ReceiveDataComplete += RemotingClient_ReceiveDataComplete;
                 }
             }
         }
@@ -611,12 +611,12 @@ namespace TVA.Services
             OnReceivedServiceUpdate(string.Format(message, args));
         }
 
-        private void m_remotingClient_ConnectionAttempt(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionAttempt(object sender, System.EventArgs e)
         {
             UpdateStatus("Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
         }
 
-        private void m_remotingClient_ConnectionEstablished(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionEstablished(object sender, System.EventArgs e)
         {
             // Upon establishing connection with the service's communication client, we'll send our information to the
             // service so the service can keep track of all the client that are connected to its communication server.
@@ -631,7 +631,7 @@ namespace TVA.Services
             UpdateStatus(status.ToString());
         }
 
-        private void m_remotingClient_ConnectionTerminated(object sender, System.EventArgs e)
+        private void RemotingClient_ConnectionTerminated(object sender, System.EventArgs e)
         {
             StringBuilder status = new StringBuilder();
             status.AppendFormat("Disconnected from {0}:", m_remotingClient.ServerUri);
@@ -646,7 +646,7 @@ namespace TVA.Services
                 new Thread((ThreadStart)delegate(){ Connect(); }).Start();
         }
 
-        private void m_remotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
+        private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             ServiceResponse response = null;
             Serialization.TryGetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), out response);
