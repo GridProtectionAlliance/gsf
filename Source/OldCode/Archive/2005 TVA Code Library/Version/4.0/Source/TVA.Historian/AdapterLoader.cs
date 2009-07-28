@@ -35,14 +35,6 @@ namespace TVA.Historian
 
         // Events
 
-        ///// <summary>
-        ///// Occurs when a new adapter is loaded.
-        ///// </summary>
-        ///// <remarks>
-        ///// <see cref="EventArgs{T}.Argument"/> is the adapter that was loaded.
-        ///// </remarks>
-        //public event EventHandler<EventArgs<T>> AdapterLoaded;
-
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered when loading an adapter.
         /// </summary>
@@ -155,16 +147,6 @@ namespace TVA.Historian
             GC.SuppressFinalize(this);
         }
 
-        ///// <summary>
-        ///// Raises the <see cref="AdapterLoaded"/> event.
-        ///// </summary>
-        ///// <param name="adapter">Adapter to send to <see cref="AdapterLoaded"/> event.</param>
-        //protected virtual void OnAdapterLoaded(T adapter)
-        //{
-        //    if (AdapterLoaded != null)
-        //        AdapterLoaded(this, new EventArgs<T>(adapter));
-        //}
-
         /// <summary>
         /// Raises the <see cref="AdapterLoadException"/> event.
         /// </summary>
@@ -226,7 +208,6 @@ namespace TVA.Historian
                 {
                     m_adapters.Add(adapterInstance);
                 }
-                //OnAdapterLoaded(adapterInstance);
             }
             catch (Exception ex)
             {
