@@ -77,6 +77,30 @@ namespace TVA.Historian
 
         #region [ Properties ]
 
+        private string m_adapterDirectory;
+
+        /// <summary>
+        /// Gets or sets the directory where adapters are located.
+        /// </summary>
+        /// <remarks>
+        /// When an empty string is assigned to <see cref="AdapterDirectory"/>, adapters will be loaded from the directory where application is executing.
+        /// </remarks>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
+        public string AdapterDirectory
+        {
+            get
+            {
+                return m_adapterDirectory;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException();
+
+                m_adapterDirectory = value;
+            }
+        }
+
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="AdapterLoader{T}"/> is currently enabled.
         /// </summary>
@@ -110,6 +134,17 @@ namespace TVA.Historian
             get
             {
                 return m_adapters;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="FileSystemWatcher"/> object watching for new adapter assemblies.
+        /// </summary>
+        protected FileSystemWatcher AdapterWatcher
+        {
+            get 
+            {
+                return m_adapterWatcher;
             }
         }
 
