@@ -406,7 +406,9 @@ namespace TVA.Media
 
         #region [ Constructors ]
 
-        /// <summary>Creates a new empty in-memory wave file using standard CD quality settings</summary>
+        /// <summary>
+        /// Creates a new empty in-memory wave file using standard CD quality settings.
+        /// </summary>
         public WaveFile()
         {
             m_waveHeader = new RiffHeaderChunk("WAVE");
@@ -414,20 +416,24 @@ namespace TVA.Media
             m_waveData = new WaveDataChunk(m_waveFormat);
         }
 
-        /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
-        /// <param name="sampleRate">Desired sample rate</param>
-        /// <param name="bitsPerSample">Desired bits-per-sample</param>
-        /// <param name="channels">Desired data channels</param>
+        /// <summary>
+        /// Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format.
+        /// </summary>
+        /// <param name="sampleRate">Desired sample rate.</param>
+        /// <param name="bitsPerSample">Desired bits-per-sample.</param>
+        /// <param name="channels">Desired data channels.</param>
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels)
             : this((int)sampleRate, (short)bitsPerSample, (short)channels, (ushort)WaveFormat.PCM)
         {
         }
 
-        /// <summary>Creates a new empty in-memory wave file in specified audio format</summary>
-        /// <param name="sampleRate">Desired sample rate</param>
-        /// <param name="bitsPerSample">Desired bits-per-sample</param>
-        /// <param name="channels">Desired data channels</param>
-        /// <param name="audioFormat">Desired audio format</param>
+        /// <summary>
+        /// Creates a new empty in-memory wave file in specified audio format.
+        /// </summary>
+        /// <param name="sampleRate">Desired sample rate.</param>
+        /// <param name="bitsPerSample">Desired bits-per-sample.</param>
+        /// <param name="channels">Desired data channels.</param>
+        /// <param name="audioFormat">Desired audio format.</param>
         /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
         [CLSCompliant(false)]
         public WaveFile(SampleRate sampleRate, BitsPerSample bitsPerSample, DataChannels channels, WaveFormat audioFormat)
@@ -435,21 +441,27 @@ namespace TVA.Media
         {
         }
 
-        /// <summary>Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format</summary>
-        /// <param name="sampleRate">Desired sample rate (e.g., 44100)</param>
-        /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
-        /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
+        /// <summary>
+        /// Creates a new empty in-memory wave file in Pulse Code Modulation (PCM) audio format.
+        /// </summary>
+        /// <param name="sampleRate">Desired sample rate (e.g., 44100).</param>
+        /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16).</param>
+        /// <param name="channels">Desired data channels (e.g., 2 for stereo).</param>
         public WaveFile(int sampleRate, short bitsPerSample, short channels)
             : this(sampleRate, bitsPerSample, channels, (ushort)WaveFormat.PCM)
         {
         }
 
-        /// <summary>Creates a new empty in-memory wave file in specified audio format</summary>
-        /// <param name="sampleRate">Desired sample rate (e.g., 44100)</param>
-        /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16)</param>
-        /// <param name="channels">Desired data channels (e.g., 2 for stereo)</param>
-        /// <param name="audioFormat">Desired audio format (e.g., 0x1 for Pulse Code Modulation)</param>
-        /// <remarks>Consumer will need to apply appropriate data compression for non-PCM data formats.</remarks>
+        /// <summary>
+        /// Creates a new empty in-memory wave file in specified audio format.
+        /// </summary>
+        /// <param name="sampleRate">Desired sample rate (e.g., 44100).</param>
+        /// <param name="bitsPerSample">Desired bits-per-sample (e.g., 16).</param>
+        /// <param name="channels">Desired data channels (e.g., 2 for stereo).</param>
+        /// <param name="audioFormat">Desired audio format (e.g., 0x1 for Pulse Code Modulation).</param>
+        /// <remarks>
+        /// Consumer will need to apply appropriate data compression for non-PCM data formats.
+        /// </remarks>
         [CLSCompliant(false)]
         public WaveFile(int sampleRate, short bitsPerSample, short channels, ushort audioFormat)
         {
@@ -458,7 +470,9 @@ namespace TVA.Media
             m_waveData = new WaveDataChunk(m_waveFormat);
         }
 
-        /// <summary>Creates a new empty in-memory wave file using existing constituent chunks</summary>
+        /// <summary>
+        /// Creates a new empty in-memory wave file using existing constituent chunks.
+        /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
         {
@@ -906,7 +920,9 @@ namespace TVA.Media
 
         #region [ Static ]
 
-        /// <summary>Creates a new in-memory wave loaded from an existing wave file.</summary>
+        /// <summary>
+        /// Creates a new in-memory wave loaded from an existing wave file.
+        /// </summary>
         /// <param name="waveFileName">File name of WAV file to load.</param>
         /// <returns>In-memory representation of wave file.</returns>
         public static WaveFile Load(string waveFileName)
@@ -917,7 +933,9 @@ namespace TVA.Media
             return waveFile;
         }
 
-        /// <summary>Creates a new in-memory wave loaded from an existing wave audio stream.</summary>
+        /// <summary>
+        /// Creates a new in-memory wave loaded from an existing wave audio stream.
+        /// </summary>
         /// <param name="source">Stream of WAV formatted audio data to load.</param>
         /// <returns>In-memory representation of wave file.</returns>
         public static WaveFile Load(Stream source)
