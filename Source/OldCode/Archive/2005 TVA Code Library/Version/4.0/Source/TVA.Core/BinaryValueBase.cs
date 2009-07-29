@@ -33,8 +33,7 @@ using System;
 namespace TVA
 {
     /// <summary>
-    /// Represents a binary data sample stored as a byte array, 
-    /// but implicitly castable to most common native types.
+    /// Represents the base class for a binary data sample stored as a byte array, but implicitly castable to most common native types.
     /// </summary>
     /// <typeparam name="TEndianOrder">Type of <see cref="EndianOrder"/> class used to transpose byte order of derived implementation of <see cref="BinaryValueBase{TEndianOrder}"/>.</typeparam>
     public abstract class BinaryValueBase<TEndianOrder> where TEndianOrder : EndianOrder
