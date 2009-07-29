@@ -29,6 +29,7 @@
 \**************************************************************************/
 
 using System;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
@@ -143,7 +144,7 @@ namespace TVA.Media
     ///         // Generate the EBS Alert noise
     ///         DTMF.Generate(waveFile, DTMF.EmergencyBroadcastSystemAlert, 0.25D);
     ///
-    ///         // Play all the generated tones
+    ///         // Save the generated tone
     ///         waveFile.Save("ExtensibleTest.wav");
     ///
     ///         Console.Write("File available to be played from Windows Media Player...");
@@ -152,12 +153,11 @@ namespace TVA.Media
     /// }
     /// </code>
     /// </example>
-    public class WaveFormatExtensible
+    public class WaveFormatExtensible : ISupportBinaryImage
     {
         #region [ Members ]
 
         // Fields
-        private WaveFormatChunk m_waveFormat;
         private ushort m_sampleValue;
         private Speakers m_channelMask;
         private Guid m_subFormat;
@@ -167,21 +167,27 @@ namespace TVA.Media
         #region [ Constructors ]
 
         /// <summary>
-        /// Generate a basic extensible object based on the <see cref="WaveFormatChunk"/> settings.
+        /// Creates a new <see cref="WaveFormatExtensible"/>.
+        /// </summary>
+        public WaveFormatExtensible()
+        {
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="WaveFormatExtensible"/> object based on the <see cref="WaveFormatChunk"/> settings.
         /// </summary>
         public WaveFormatExtensible(WaveFormatChunk waveFormat)
         {
-            m_waveFormat = waveFormat;
-            m_sampleValue = (ushort)m_waveFormat.BitsPerSample;
+            m_sampleValue = (ushort)waveFormat.BitsPerSample;
             m_channelMask = Speakers.All;
             m_subFormat = DataFormatSubType.PCM;
         }
 
         /// <summary>
-        /// Generate an extensible object based on the given settings.
+        /// Creates a new <see cref="WaveFormatExtensible"/> object based on the given settings.
         /// </summary>
         [CLSCompliant(false)]
-        public WaveFormatExtensible(WaveFormatChunk waveFormat, ushort sampleValue, Speakers channelMask, Guid subFormat)
+        public WaveFormatExtensible(ushort sampleValue, Speakers channelMask, Guid subFormat)
         {
             m_sampleValue = sampleValue;
             m_channelMask = channelMask;
@@ -192,7 +198,9 @@ namespace TVA.Media
 
         #region [ Properties ]
 
-        /// <summary>Gets or sets sample value.</summary>
+        /// <summary>
+        /// Gets or sets sample value.
+        /// </summary>
         [CLSCompliant(false)]
         public ushort SampleValue
         {
@@ -206,7 +214,9 @@ namespace TVA.Media
             }
         }
 
-        /// <summary>Gets or sets flags representing spatial locations of data channels (i.e., speaker locations).</summary>
+        /// <summary>
+        /// Gets or sets flags representing spatial locations of data channels (i.e., speaker locations).
+        /// </summary>
         public Speakers ChannelMask
         {
             get
@@ -219,7 +229,9 @@ namespace TVA.Media
             }
         }
 
-        /// <summary>Gets or sets GUID for sub-format type of extensible WaveFile.</summary>
+        /// <summary>
+        /// Gets or sets <see cref="Guid"/> for sub-format type of extensible WaveFile.
+        /// </summary>
         public Guid SubFormat
         {
             get
@@ -241,9 +253,9 @@ namespace TVA.Media
             {
                 byte[] binaryImage = new byte[BinaryLength];
 
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sampleValue), 0, binaryImage, 0, 2);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes((int)m_channelMask), 0, binaryImage, 2, 4);
-                Buffer.BlockCopy(m_subFormat.ToByteArray(), 0, binaryImage, 6, 16);               
+                EndianOrder.LittleEndian.CopyBytes(m_sampleValue, binaryImage, 0);
+                EndianOrder.LittleEndian.CopyBytes((int)m_channelMask, binaryImage, 2);
+                EndianOrder.LittleEndian.CopyBytes(m_subFormat, binaryImage, 6);               
 
                 return binaryImage;
             }
@@ -258,6 +270,30 @@ namespace TVA.Media
             {
                 return 22;
             }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Parses <see cref="WaveFormatExtensible"/> object from <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initialization.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
+        /// <param name="length">Valid number of bytes within binary image.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
+        /// <exception cref="InvalidOperationException">Not enough length in binary image to parse WaveFormatExtensible object.</exception>
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            if (length < BinaryLength)
+                throw new InvalidOperationException("Not enough length in binary image to parse WaveFormatExtensible object");
+
+            m_sampleValue = EndianOrder.LittleEndian.ToUInt16(binaryImage, startIndex);
+            m_channelMask = (Speakers)EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
+            m_subFormat = EndianOrder.LittleEndian.ToGuid(binaryImage, startIndex + 6);
+
+            return BinaryLength;
         }
 
         #endregion
