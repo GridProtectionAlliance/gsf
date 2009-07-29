@@ -36,7 +36,7 @@ namespace TVA
         private static TimeZoneInfo m_samoaTimeZone;
 
         /// <summary>
-        /// Gets the Atlantic Time Zone.
+        /// Gets the Atlantic time zone.
         /// </summary>
         /// <remarks>This time zone is used by the Commonwealth of Puerto Rico and the United States Virgin Islands.</remarks>
         public static TimeZoneInfo Atlantic
@@ -49,7 +49,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Eastern Time Zone.
+        /// Gets the Eastern time zone.
         /// </summary>
         public static TimeZoneInfo Eastern
         {
@@ -61,7 +61,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Central Time Zone.
+        /// Gets the Central time zone.
         /// </summary>
         public static TimeZoneInfo Central
         {
@@ -73,7 +73,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Mountain Time Zone.
+        /// Gets the Mountain time zone.
         /// </summary>
         public static TimeZoneInfo Mountain
         {
@@ -85,7 +85,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Pacific Standard Time Zone.
+        /// Gets the Pacific time zone.
         /// </summary>
         public static TimeZoneInfo Pacific
         {
@@ -97,7 +97,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Alaskan Standard Time Zone.
+        /// Gets the Alaskan time zone.
         /// </summary>
         public static TimeZoneInfo Alaskan
         {
@@ -109,7 +109,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Hawaiian Standard Time Zone.
+        /// Gets the Hawaiian time zone.
         /// </summary>
         public static TimeZoneInfo Hawaiian
         {
@@ -121,7 +121,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the West Pacific Standard Time Zone.
+        /// Gets the West Pacific time zone.
         /// </summary>
         /// <remarks>
         /// <para>This time zone is used by Guam and the Commonwealth of the Northern Mariana Islands.</para>
@@ -137,7 +137,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Gets the Samoa Standard Time Zone.
+        /// Gets the Samoa time zone.
         /// </summary>
         /// <remarks>This time zone is used by the American Samoa.</remarks>
         public static TimeZoneInfo Samoa
