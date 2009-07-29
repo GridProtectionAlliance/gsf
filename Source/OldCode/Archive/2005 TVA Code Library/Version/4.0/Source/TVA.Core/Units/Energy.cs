@@ -40,7 +40,7 @@ namespace TVA.Units
     /// This class behaves just like a <see cref="Double"/> representing an energy in joules; it is implictly
     /// castable to and from a <see cref="Double"/> and therefore can be generally used "as" a double, but it
     /// has the advantage of handling conversions to and from other energy representations, specifically
-    /// watt-hours, BTU, Celsius heat unit, liter-atmosphere, calorie, horsepower-hour, barrel of oil and ton of coal
+    /// watt-hours, BTU, Celsius heat unit, liter-atmosphere, calorie, horsepower-hour, barrel of oil and ton of coal.
     /// Metric conversions are handled simply by applying the needed <see cref="SI"/> conversion factor, for example:
     /// <example>
     /// Convert energy in joules to megajoules:
