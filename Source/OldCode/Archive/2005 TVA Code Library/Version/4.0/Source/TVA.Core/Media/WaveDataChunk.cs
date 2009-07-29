@@ -31,13 +31,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
     /// <summary>
     /// Represents the data chunk in a WAVE media format file.
     /// </summary>
-    public class WaveDataChunk : RiffChunk
+    public class WaveDataChunk : RiffChunk, ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -207,6 +208,12 @@ namespace TVA.Media
             }
     
             return waveDataChunk;
+        }
+
+        // Data chunk is usually too large to parsed from a single binary image
+        int ISupportBinaryImage.Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

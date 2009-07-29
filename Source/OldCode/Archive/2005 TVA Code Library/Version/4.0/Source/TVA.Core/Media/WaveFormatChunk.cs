@@ -30,13 +30,14 @@
 
 using System;
 using System.IO;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
     /// <summary>
     /// Represents the format chunk in a WAVE media format file.
     /// </summary>
-    public class WaveFormatChunk : RiffChunk
+    public class WaveFormatChunk : RiffChunk, ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -98,33 +99,18 @@ namespace TVA.Media
 
             int bytesRead = source.Read(buffer, 0, length);
 
-            if (bytesRead < length)
-                throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
+            // Initialize class from buffer
+            Initialize(buffer, 0, bytesRead);
 
-            m_audioFormat = EndianOrder.LittleEndian.ToUInt16(buffer, 0);
-            m_channels = EndianOrder.LittleEndian.ToInt16(buffer, 2);
-            m_sampleRate = EndianOrder.LittleEndian.ToInt32(buffer, 4);
-            m_byteRate = EndianOrder.LittleEndian.ToInt32(buffer, 8);
-            m_blockAlignment = EndianOrder.LittleEndian.ToInt16(buffer, 12);
-            m_bitsPerSample = EndianOrder.LittleEndian.ToInt16(buffer, 14);
-
-            if (m_bitsPerSample % 8 != 0)
-                throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
-
-            if (length > 16)
+            // Read extra parameters, if any
+            if (m_extraParametersSize > 0)
             {
-                m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(buffer, 16);
+                m_extraParameters = new byte[m_extraParametersSize];
 
-                // Read extra parameters, if any
-                if (m_extraParametersSize > 0)
-                {
-                    m_extraParameters = new byte[m_extraParametersSize];
+                bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
 
-                    bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
-
-                    if (bytesRead < m_extraParametersSize)
-                        throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted.");
-                }
+                if (bytesRead < m_extraParametersSize)
+                    throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted.");
             }
         }
 
@@ -165,16 +151,16 @@ namespace TVA.Media
                 int startIndex = base.BinaryLength;
 
                 Buffer.BlockCopy(base.BinaryImage, 0, binaryImage, 0, startIndex);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_audioFormat), 0, binaryImage, startIndex, 2);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_channels), 0, binaryImage, startIndex + 2, 2);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_sampleRate), 0, binaryImage, startIndex + 4, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_byteRate), 0, binaryImage, startIndex + 8, 4);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_blockAlignment), 0, binaryImage, startIndex + 12, 2);
-                Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_bitsPerSample), 0, binaryImage, startIndex + 14, 2);
+                EndianOrder.LittleEndian.CopyBytes(m_audioFormat, binaryImage, startIndex);
+                EndianOrder.LittleEndian.CopyBytes(m_channels, binaryImage, startIndex + 2);
+                EndianOrder.LittleEndian.CopyBytes(m_sampleRate, binaryImage, startIndex + 4);
+                EndianOrder.LittleEndian.CopyBytes(m_byteRate, binaryImage, startIndex + 8);
+                EndianOrder.LittleEndian.CopyBytes(m_blockAlignment, binaryImage, startIndex + 12);
+                EndianOrder.LittleEndian.CopyBytes(m_bitsPerSample, binaryImage, startIndex + 14);
 
                 if (m_extraParametersSize > 0)
                 {
-                    Buffer.BlockCopy(EndianOrder.LittleEndian.GetBytes(m_extraParametersSize), 0, binaryImage, startIndex + 16, 2);
+                    EndianOrder.LittleEndian.CopyBytes(m_extraParametersSize, binaryImage, startIndex + 16);
 
                     if (m_extraParametersSize > 0 && m_extraParameters != null)
                         Buffer.BlockCopy(m_extraParameters, 0, binaryImage, startIndex + 18, m_extraParametersSize);
@@ -369,6 +355,39 @@ namespace TVA.Media
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Parses <see cref="WaveFormatChunk"/> object from <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initialization.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
+        /// <param name="length">Valid number of bytes within binary image.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
+        /// <exception cref="InvalidOperationException">WAVE format section too small, wave file corrupted.</exception>
+        /// <exception cref="InvalidDataException">Invalid bit rate encountered - wave file bit rates must be a multiple of 8.</exception>
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            if (length < ChunkSize)
+                throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
+
+            m_audioFormat = EndianOrder.LittleEndian.ToUInt16(binaryImage, 0);
+            m_channels = EndianOrder.LittleEndian.ToInt16(binaryImage, 2);
+            m_sampleRate = EndianOrder.LittleEndian.ToInt32(binaryImage, 4);
+            m_byteRate = EndianOrder.LittleEndian.ToInt32(binaryImage, 8);
+            m_blockAlignment = EndianOrder.LittleEndian.ToInt16(binaryImage, 12);
+            m_bitsPerSample = EndianOrder.LittleEndian.ToInt16(binaryImage, 14);
+
+            if (m_bitsPerSample % 8 != 0)
+                throw new InvalidDataException("Invalid bit rate encountered - wave file bit rates must be a multiple of 8");
+
+            if (length > 16)
+            {
+                m_extraParametersSize = EndianOrder.LittleEndian.ToInt16(binaryImage, 16);
+                return 18;
+            }
+
+            return 16;
+        }
 
         /// <summary>
         /// Creates a copy of the <see cref="WaveFormatChunk"/>.

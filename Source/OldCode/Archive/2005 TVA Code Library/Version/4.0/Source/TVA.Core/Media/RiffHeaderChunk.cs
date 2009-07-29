@@ -31,13 +31,14 @@
 using System;
 using System.IO;
 using System.Text;
+using TVA.Parsing;
 
 namespace TVA.Media
 {
     /// <summary>
     /// Represents the header chunk in a RIFF media format file.
     /// </summary>
-    public class RiffHeaderChunk : RiffChunk
+    public class RiffHeaderChunk : RiffChunk, ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -85,12 +86,10 @@ namespace TVA.Media
                 throw new InvalidOperationException("RIFF format section too small, media file corrupted.");
 
             // Read and validate format stored in RIFF section
-            format = Encoding.ASCII.GetString(buffer, 0, 4);
+            Initialize(buffer, 0, bytesRead);
 
-            if (format != Format)
+            if (Format != Format)
                 throw new InvalidDataException(string.Format("{0} format expected but got {1}, this does not appear to be a valid {0} file", Format, format));
-
-            m_format = format;
         }
 
         #endregion
@@ -149,6 +148,25 @@ namespace TVA.Media
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Parses <see cref="RiffHeaderChunk"/> object from <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initialization.</param>
+        /// <param name="startIndex">0-based starting index in the <paramref name="binaryImage"/> to be used for initialization.</param>
+        /// <param name="length">Valid number of bytes within binary image.</param>
+        /// <returns>The number of bytes used for initialization in the <paramref name="binaryImage"/> (i.e., the number of bytes parsed).</returns>
+        /// <exception cref="InvalidOperationException">Not enough buffer length provided to read RIFF format section ID.</exception>
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            if (length < 4)
+                throw new InvalidOperationException("Not enough buffer length provided to read RIFF format section ID");
+
+            // Read format ID stored in RIFF section
+            m_format = Encoding.ASCII.GetString(binaryImage, 0, 4);
+
+            return 4;
+        }
 
         /// <summary>
         /// Returns a cloned instance of this RIFF header chunk.
