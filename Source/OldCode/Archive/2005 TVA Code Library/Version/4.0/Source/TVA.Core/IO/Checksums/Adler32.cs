@@ -107,7 +107,7 @@ namespace TVA.IO.Checksums
 		/// <summary>
 		/// largest prime smaller than 65536
 		/// </summary>
-		const uint BASE = 65521;
+        private const uint BASE = 65521;
 		
 		/// <summary>
 		/// Returns the Adler32 data checksum computed so far.
@@ -258,7 +258,7 @@ namespace TVA.IO.Checksums
 		}
 		
 		#region Instance Fields
-		uint checksum;
+        private uint checksum;
 		#endregion
 	}
 }

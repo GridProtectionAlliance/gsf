@@ -25,7 +25,7 @@ namespace TVA.IO.Checksums
         #region [ Members ]
 
         // Fields
-        byte m_checksum;
+        private byte m_checksum;
 
         #endregion
 

@@ -26,7 +26,7 @@ namespace TVA.IO.Checksums
         #region [ Members ]
 
         // Fields
-        ulong m_checksum;
+        private ulong m_checksum;
 
         #endregion
 
