@@ -30,8 +30,11 @@
 //       Added AllowedRemoteUsers and ImpersonateRemoteUser properties as part of security.
 //  07/16/2009 - Pinal C. Patel
 //       Added SupportTelnetSessions property so that telnet support can be optionally turned-on.
-//  07/16/2009 - Pinal C. Patel
+//  07/17/2009 - Pinal C. Patel
 //       Modified MonitorServiceHealth to default to false as it is not always needed.
+//  07/30/2009 - Pinal C. Patel
+//       Modified to set the principal of the thread where client request are handled to that of the the 
+//       process or remote client (if transmitted by the remote client upon connection).
 //
 //*******************************************************************************************************
 
@@ -45,13 +48,13 @@ using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
+using System.Threading;
 using TVA.Communication;
 using TVA.Configuration;
 using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
 using TVA.Scheduling;
-using TVA.Identity;
 
 namespace TVA.Services
 {
@@ -1557,6 +1560,9 @@ namespace TVA.Services
 
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
+            // Set the thread's principal to the current principal.
+            Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
             ClientInfo requestSender = GetConnectedClient(e.Argument1);
             if (requestSender == null)
             {
@@ -1618,34 +1624,36 @@ namespace TVA.Services
                     try
                     {
                         ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
+
+                        if (requestInfo.Sender.DeserializedIdentityToken != null)
+                            // Set the thread's principal to the remote user's principal.
+                            Thread.CurrentPrincipal = requestInfo.Sender.DeserializedIdentityToken.Principal;
+
                         if (m_remoteCommandClientID == Guid.Empty)
                         {
-                            // Process all incoming requests when remote command session is not in progress.
+                            // Process incoming requests when remote command session is not in progress.
                             m_clientRequestHistory.Add(requestInfo);
 
-                            // We'll remove old request entries if we've exceeded the limit for request history.
+                            // Remove old request entries if we've exceeded the limit for request history.
                             if (m_clientRequestHistory.Count > m_requestHistoryLimit)
                                 m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
+
+                            // Impersonate remote user for increased security when impersonation is enabled.
+                            if (m_impersonateRemoteUser)
+                            {
+                                if (((WindowsIdentity)Thread.CurrentPrincipal.Identity).ImpersonationLevel != TokenImpersonationLevel.Impersonation)
+                                    throw new InvalidOperationException("Impersonation is not supported");
+
+                                context = ((WindowsIdentity)Thread.CurrentPrincipal.Identity).Impersonate();
+                            }
 
                             // Notify the consumer about the incoming request from client.
                             OnReceivedClientRequest(request, requestSender);
 
                             ClientRequestHandler requestHandler = GetClientRequestHandler(request.Command);
                             if (requestHandler != null)
-                            {
+                            {                              
                                 // Request handler exists.
-                                if (m_impersonateRemoteUser)
-                                {
-                                    if (requestInfo.Sender.DeserializedIdentityToken == null ||
-                                        ((WindowsIdentity)requestInfo.Sender.DeserializedIdentityToken.Identity).ImpersonationLevel != TokenImpersonationLevel.Impersonation)
-                                    {
-                                        throw new InvalidOperationException("Impersonation could not be performed");
-                                    }
-
-                                    context = ((WindowsIdentity)requestInfo.Sender.DeserializedIdentityToken.Identity).Impersonate();
-                                    UpdateStatus("\"{0}\" request is being processed under the identity of {1}.\r\n\r\n", request.Command, UserInfo.CurrentUserID);
-                                }
-
                                 requestHandler.HandlerMethod(requestInfo);
                             }
                             else
