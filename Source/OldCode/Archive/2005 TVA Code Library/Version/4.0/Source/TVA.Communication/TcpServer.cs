@@ -209,7 +209,7 @@ namespace TVA.Communication
             set
             {
                 if (value == null || value.Length == 0)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_payloadMarker = value;
             }

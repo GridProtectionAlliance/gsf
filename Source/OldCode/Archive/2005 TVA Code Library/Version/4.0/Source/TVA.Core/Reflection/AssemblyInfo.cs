@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 using TVA.IO;
+using System.Security.Permissions;
 
 namespace TVA.Reflection
 {
@@ -527,6 +528,7 @@ namespace TVA.Reflection
         /// <summary>Loads the specified assembly that is embedded as a resource in the assembly.</summary>
         /// <param name="assemblyName">Name of the assembly to load.</param>
         /// <remarks>This cannot be used to load TVA.Core itself.</remarks>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.ControlAppDomain)]
         public static void LoadAssemblyFromResource(string assemblyName)
         {
             // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource.

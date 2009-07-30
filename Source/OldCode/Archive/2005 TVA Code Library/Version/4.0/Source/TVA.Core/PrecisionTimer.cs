@@ -98,7 +98,8 @@ namespace TVA
     /// <summary>
     /// Represents an exception that is thrown when a <see cref="PrecisionTimer"/> fails to start.
     /// </summary>
-    public class TimerStartException : ApplicationException
+    [Serializable()]
+    public class TimerStartException : Exception
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="TimerStartException"/> class.
@@ -147,9 +148,9 @@ namespace TVA
             }
 
             private Stopwatch m_stopwatch;
+            private ImmutableTimeState m_timeState;
             private long m_synchronizePeriodStopwatchTicks;
             private long m_synchronizePeriodClockTicks;
-            private ImmutableTimeState m_timeState;
 
             /// <summary>Creates a new instance of DateTimePrecise.</summary>
             /// <remarks>
@@ -281,7 +282,7 @@ namespace TVA
                     throw new ObjectDisposedException("PrecisionTimer");
 
                 if (value < Capabilities.PeriodMinimum || value > Capabilities.PeriodMaximum)
-                    throw new ArgumentOutOfRangeException("Period", value, "Multimedia Timer period out of range.");
+                    throw new ArgumentOutOfRangeException("value", value, "Multimedia Timer period out of range.");
 
                 m_period = value;
 
@@ -320,7 +321,7 @@ namespace TVA
                     throw new ObjectDisposedException("PrecisionTimer");
 
                 if (value < 0)
-                    throw new ArgumentOutOfRangeException("Resolution", value, "Multimedia timer resolution out of range.");
+                    throw new ArgumentOutOfRangeException("value", value, "Multimedia timer resolution out of range.");
 
                 m_resolution = value;
 
@@ -450,7 +451,7 @@ namespace TVA
             m_eventArgs = userArgs;
 
             // Create and start timer.
-            m_timerID = timeSetEvent(m_period, m_resolution, m_timeProc, 0, m_mode);
+            m_timerID = timeSetEvent(m_period, m_resolution, m_timeProc, IntPtr.Zero, m_mode);
 
             // If the timer was created successfully.
             if (m_timerID != 0)
@@ -607,7 +608,7 @@ namespace TVA
 
         // Creates and starts the timer.
         [DllImport("winmm.dll")]
-        private static extern int timeSetEvent(int delay, int resolution, TimerProc proc, int user, TimerMode mode);
+        private static extern int timeSetEvent(int delay, int resolution, TimerProc proc, IntPtr user, TimerMode mode);
 
         // Stops and destroys the timer.
         [DllImport("winmm.dll")]

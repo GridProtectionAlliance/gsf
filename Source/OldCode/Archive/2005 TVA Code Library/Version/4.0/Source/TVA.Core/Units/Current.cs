@@ -583,17 +583,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Current"/>. This field is constant.</summary>
-        public static readonly Current MaxValue;
+        public static readonly Current MaxValue = (Current)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Current"/>. This field is constant.</summary>
-        public static readonly Current MinValue;
-
-        // Static Constructor
-        static Current()
-        {
-            MaxValue = (Current)double.MaxValue;
-            MinValue = (Current)double.MinValue;
-        }
+        public static readonly Current MinValue = (Current)double.MinValue;
 
         // Static Methods
         

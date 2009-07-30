@@ -43,6 +43,7 @@ using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
 using TVA.Windows.Forms;
+using System.Security.Permissions;
 
 namespace TVA.ErrorManagement
 {
@@ -500,7 +501,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw (new ArgumentNullException("value"));
 
                 m_settingsCategory = value;
             }
@@ -602,7 +603,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_errorTextMethod = value;
             }
@@ -628,7 +629,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_scopeTextMethod = value;
             }
@@ -654,7 +655,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_actionTextMethod = value;
             }
@@ -676,7 +677,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_moreInfoTextMethod = value;
             }

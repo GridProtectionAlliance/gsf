@@ -129,7 +129,7 @@ namespace TVA.Historian.Exporters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_name = value;
             }
@@ -178,7 +178,7 @@ namespace TVA.Historian.Exporters
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_exporter = value;
             }

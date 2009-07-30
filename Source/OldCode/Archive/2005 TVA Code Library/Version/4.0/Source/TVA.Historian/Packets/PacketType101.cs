@@ -68,7 +68,7 @@ namespace TVA.Historian.Packets
             : this()
         {
             if (dataPoints == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("value");
 
             foreach (IDataPoint dataPoint in dataPoints)
             {
@@ -84,7 +84,7 @@ namespace TVA.Historian.Packets
             : this()
         {
             if (measurements == null)
-                throw new ArgumentNullException();
+                throw new ArgumentNullException("value");
 
             foreach (IMeasurement measurement in measurements)
             {

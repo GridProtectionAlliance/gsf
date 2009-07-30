@@ -722,17 +722,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Volume"/>. This field is constant.</summary>
-        public static readonly Volume MaxValue;
+        public static readonly Volume MaxValue = (Volume)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Volume"/>. This field is constant.</summary>
-        public static readonly Volume MinValue;
-
-        // Static Constructor
-        static Volume()
-        {
-            MaxValue = (Volume)double.MaxValue;
-            MinValue = (Volume)double.MinValue;
-        }
+        public static readonly Volume MinValue = (Volume)double.MinValue;
 
         // Static Methods
 

@@ -38,6 +38,7 @@ using System.Text;
 using System.Threading;
 using TVA.Configuration;
 using TVA.Parsing;
+using System.Security.Permissions;
 
 namespace TVA.IO
 {
@@ -334,7 +335,7 @@ namespace TVA.IO
         /// <summary>
         /// Initializes a new instance of the <see cref="IsamDataFileBase{T}"/> class.
         /// </summary>
-        public IsamDataFileBase()
+        protected IsamDataFileBase()
         {
             m_fileName = DefaultFileName;
             m_fileAccessMode = DefaultFileAccessMode;
@@ -376,7 +377,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_fileName = value;
                 ReOpen();
@@ -546,7 +547,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw (new ArgumentNullException("value"));
 
                 m_settingsCategory = value;
             }

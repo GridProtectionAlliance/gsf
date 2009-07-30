@@ -956,7 +956,7 @@ namespace TVA
                 line = lines[i];
                 
                 // Skips the last empty line as a result of split if original text had multiple lines.
-                if (i == lastLineIndex && line.Trim() == string.Empty)
+                if (i == lastLineIndex && line.Trim().Length == 0)
                     continue;
 
                 if (line.Length >= maxLength)

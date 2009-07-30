@@ -112,7 +112,7 @@ namespace TVA.Collections
         public static T[] Copy<T>(this T[] source, int startIndex, int length)
         {
             if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
+                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
 
             if (length < 0)
                 throw new ArgumentOutOfRangeException("length", "cannot be negative");

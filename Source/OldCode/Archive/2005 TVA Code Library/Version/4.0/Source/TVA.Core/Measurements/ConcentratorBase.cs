@@ -329,7 +329,7 @@ namespace TVA.Measurements
             set
             {
                 if (value < 1 || value > 1000)
-                    throw new ArgumentOutOfRangeException("FramesPerSecond", "Frames per second must be between 1 and 1000");
+                    throw new ArgumentOutOfRangeException("value", "Frames per second must be between 1 and 1000");
 
                 m_framesPerSecond = value;
                 m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
@@ -1286,11 +1286,10 @@ namespace TVA.Measurements
             return millisecondsWaitTime;
         }
 
-        private double mod_dis(int framesIndex, double interval)
+        private static double mod_dis(int framesIndex, double interval)
         {
             double dis2 = (framesIndex + 1) % interval;
             double dis1 = interval - dis2;
-
             return (dis1 < dis2 ? dis1 : dis2);
         }
 

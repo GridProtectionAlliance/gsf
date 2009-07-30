@@ -636,17 +636,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Mass"/>. This field is constant.</summary>
-        public static readonly Mass MaxValue;
+        public static readonly Mass MaxValue = (Mass)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Mass"/>. This field is constant.</summary>
-        public static readonly Mass MinValue;
-
-        // Static Constructor
-        static Mass()
-        {
-            MaxValue = (Mass)double.MaxValue;
-            MinValue = (Mass)double.MinValue;
-        }
+        public static readonly Mass MinValue = (Mass)double.MinValue;
 
         // Static Methods
 

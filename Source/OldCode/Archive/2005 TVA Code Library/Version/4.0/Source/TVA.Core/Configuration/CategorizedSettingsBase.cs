@@ -101,7 +101,7 @@ namespace TVA.Configuration
         /// Creates a new instance of the <see cref="CategorizedSettingsBase"/> class for the application's configuration file.
         /// </summary>
         /// <param name="categoryName">Name of default category to use to get and set settings from configuration file.</param>
-        public CategorizedSettingsBase(string categoryName)
+        protected CategorizedSettingsBase(string categoryName)
             : this(ConfigurationFile.Current, categoryName, true, false, true)
         {
         }
@@ -122,7 +122,7 @@ namespace TVA.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="categoryName"/> value.
         /// </remarks>
-        public CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
+        protected CategorizedSettingsBase(string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
             : this(ConfigurationFile.Current, categoryName, useCategoryAttributes, requireSerializeSettingAttribute, true)
         {
         }
@@ -153,7 +153,7 @@ namespace TVA.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        protected CategorizedSettingsBase(ConfigurationFile configFile, string categoryName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             m_configFile = configFile;

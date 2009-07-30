@@ -679,7 +679,7 @@ namespace TVA.IO.Compression.Tar
 			bool asciiTrans = false;
 			
 			string tempFileName = null;
-			string entryFilename   = sourceEntry.File;
+			string entryFileName   = sourceEntry.File;
 			
 			TarEntry entry = (TarEntry)sourceEntry.Clone();
 
@@ -693,12 +693,12 @@ namespace TVA.IO.Compression.Tar
 			OnProgressMessageEvent(entry, null);
 			
 			if (this.asciiTranslate && !entry.IsDirectory) {
-				asciiTrans = !IsBinary(entryFilename);
+				asciiTrans = !IsBinary(entryFileName);
 
 				if (asciiTrans) {
 					tempFileName = Path.GetTempFileName();
 					
-					using (StreamReader inStream  = File.OpenText(entryFilename)) {
+					using (StreamReader inStream  = File.OpenText(entryFileName)) {
 						using (Stream outStream = File.Create(tempFileName)) {
 						
 							while (true) {
@@ -716,7 +716,7 @@ namespace TVA.IO.Compression.Tar
 					}
 					
 					entry.Size = new FileInfo(tempFileName).Length;
-					entryFilename = tempFileName;
+					entryFileName = tempFileName;
 				}
 			}
 			
@@ -747,7 +747,7 @@ namespace TVA.IO.Compression.Tar
 				}
 			}
 			else {
-				using (Stream inputStream = File.OpenRead(entryFilename)) {
+				using (Stream inputStream = File.OpenRead(entryFileName)) {
 					int numWritten = 0;
 					byte[] localBuffer = new byte[32 * 1024];
 					while (true) {

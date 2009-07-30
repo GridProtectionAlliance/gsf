@@ -71,10 +71,6 @@ namespace TVA.Configuration
             {
                 return m_encrypt;
             }
-            set
-            {
-                m_encrypt = value;
-            }
         }
 
         /// <summary>

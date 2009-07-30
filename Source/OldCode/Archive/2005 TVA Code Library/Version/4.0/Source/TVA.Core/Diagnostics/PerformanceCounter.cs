@@ -168,7 +168,7 @@ namespace TVA.Diagnostics
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
                 m_aliasName = value;
             }
         }
@@ -187,7 +187,8 @@ namespace TVA.Diagnostics
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
+
                 m_valueUnit = value;
             }
         }
@@ -206,7 +207,7 @@ namespace TVA.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("ValueDivisor", "Value must be greater than 0.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0.");
                 m_valueDivisor = value;
             }
         }
@@ -225,7 +226,7 @@ namespace TVA.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("SamplingWindow", "Value must be greater than 0.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0.");
                 m_samplingWindow = value;
             }
         }

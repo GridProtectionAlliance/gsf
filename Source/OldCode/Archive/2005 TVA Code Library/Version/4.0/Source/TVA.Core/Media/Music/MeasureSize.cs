@@ -150,7 +150,7 @@ namespace TVA.Media.Music
         public void ValidateNoteValueAtBeat(double noteValue, int beat)
         {
             if (beat < 0 || beat > m_beats - 1)
-                throw new ArgumentOutOfRangeException("beats", "Beat must range from 0 to Measure.Beats - 1");
+                throw new ArgumentOutOfRangeException("beat", "Beat must range from 0 to Measure.Beats - 1");
 
             if (noteValue > (m_beats - beat) * m_noteValue)
                 throw new ArgumentOutOfRangeException("noteValue", "NoteValue is too large to fit within remaining measure");

@@ -850,7 +850,7 @@ namespace TVA.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("Dynamic", "Value must be expressed as a fractional percentage between zero and one.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one.");
 
                 m_dynamic = value;
             }
@@ -1104,7 +1104,7 @@ namespace TVA.Media.Music
                 throw new ArgumentOutOfRangeException("note", "Note must be A - G");
 
             if (octave < 0 || octave > 8)
-                throw new ArgumentOutOfRangeException("ocatve", "Octave must be between 0 and 8");
+                throw new ArgumentOutOfRangeException("octave", "Octave must be between 0 and 8");
 
             if (octave == 8 && (note < 'C' || note > 'D'))
                 throw new ArgumentOutOfRangeException("note", "Maximum note defined for octave 8 is \'D#\'");

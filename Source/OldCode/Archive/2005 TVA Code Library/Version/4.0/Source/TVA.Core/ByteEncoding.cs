@@ -339,7 +339,7 @@ namespace TVA
 
                 StringBuilder binaryImage = new StringBuilder();
 
-                for (int x = 0; x <= length - 1; x++)
+                for (int x = 0; x < length; x++)
                 {
                     if (spacingCharacter != NoSpacing && x > 0) binaryImage.Append(spacingCharacter);
                     binaryImage.Append(m_byteImages[bytes[offset + x]]);
@@ -528,28 +528,6 @@ namespace TVA
         /// <returns>Decoded bytes</returns>
         public abstract byte[] GetBytes(string value, char spacingCharacter);
 
-        /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
-        /// <param name="bytes">Encoded string to decode.</param>
-        /// <param name="offset">Offset into byte array to begin decoding straing at.</param>
-        /// <param name="length">Number of bytes to decode starting at <paramref name="offset"/></param>
-        /// <param name="spacingCharacter">Character to insert between each byte</param>
-        /// <param name="format">String decoding format.</param>
-        /// <returns>Decoded string</returns>
-        protected string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
-        {
-            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
-
-            StringBuilder byteString = new StringBuilder();
-
-            for (int x = 0; x <= length - 1; x++)
-            {
-                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
-                byteString.Append(bytes[x + offset].ToString(format));
-            }
-
-            return byteString.ToString();
-        }
-
         #endregion
 
         #region [ Static ]
@@ -632,6 +610,28 @@ namespace TVA
                 if (m_asciiEncoding == null) m_asciiEncoding = new ASCIIEncoding();
                 return m_asciiEncoding;
             }
+        }
+
+        /// <summary>Handles byte to string conversions for implementations that are available from Byte.ToString.</summary>
+        /// <param name="bytes">Encoded string to decode.</param>
+        /// <param name="offset">Offset into byte array to begin decoding straing at.</param>
+        /// <param name="length">Number of bytes to decode starting at <paramref name="offset"/></param>
+        /// <param name="spacingCharacter">Character to insert between each byte</param>
+        /// <param name="format">String decoding format.</param>
+        /// <returns>Decoded string</returns>
+        internal static string BytesToString(byte[] bytes, int offset, int length, char spacingCharacter, string format)
+        {
+            if (bytes == null) throw new ArgumentNullException("bytes", "Input buffer cannot be null");
+
+            StringBuilder byteString = new StringBuilder();
+
+            for (int x = 0; x <= length - 1; x++)
+            {
+                if (spacingCharacter != NoSpacing && x > 0) byteString.Append(spacingCharacter);
+                byteString.Append(bytes[x + offset].ToString(format));
+            }
+
+            return byteString.ToString();
         }
 
         #endregion

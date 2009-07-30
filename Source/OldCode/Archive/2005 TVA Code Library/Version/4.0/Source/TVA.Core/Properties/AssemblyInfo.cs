@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
+using System.Resources;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
@@ -17,6 +18,7 @@ using System.Security.Permissions;
 
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(true)]
+[assembly: NeutralResourcesLanguageAttribute("en")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM

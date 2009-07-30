@@ -29,6 +29,7 @@
 \**************************************************************************/
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TVA
 {
@@ -288,6 +289,7 @@ namespace TVA
         /// <returns>true if the byte at startIndex in value is nonzero; otherwise, false.</returns>
         /// <exception cref="ArgumentNullException">value is null.</exception>
         /// <exception cref="ArgumentOutOfRangeException">startIndex is less than zero or greater than the length of value minus 1.</exception>
+        [SuppressMessage("Microsoft.Performance", "CA1822")]
         public bool ToBoolean(byte[] value, int startIndex)
         {
             return BitConverter.ToBoolean(value, startIndex);
@@ -506,6 +508,7 @@ namespace TVA
         /// </summary>
         /// <param name="value">The <see cref="Boolean"/> value to convert.</param>
         /// <returns>An array of bytes with length 1.</returns>
+        [SuppressMessage("Microsoft.Performance", "CA1822")]
         public byte[] GetBytes(bool value)
         {
             // No need to reverse buffer for one byte:

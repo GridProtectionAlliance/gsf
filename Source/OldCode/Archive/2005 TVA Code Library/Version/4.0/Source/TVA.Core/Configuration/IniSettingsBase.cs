@@ -99,7 +99,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="iniFileName">Name of INI file to use for accessing settings.</param>
         /// <param name="sectionName">Name of default section to use to get and set settings from INI file.</param>
-        public IniSettingsBase(string iniFileName, string sectionName)
+        protected IniSettingsBase(string iniFileName, string sectionName)
             : this(new IniFile(iniFileName), sectionName, true, false, true)
         {
         }
@@ -121,7 +121,7 @@ namespace TVA.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <paramref name="sectionName"/> value.
         /// </remarks>
-        public IniSettingsBase(string iniFileName, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
+        protected IniSettingsBase(string iniFileName, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute)
             : this(new IniFile(iniFileName), sectionName, useCategoryAttributes, requireSerializeSettingAttribute, true)
         {
         }
@@ -152,7 +152,7 @@ namespace TVA.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public IniSettingsBase(IniFile iniFile, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        protected IniSettingsBase(IniFile iniFile, string sectionName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             m_iniFile = iniFile;

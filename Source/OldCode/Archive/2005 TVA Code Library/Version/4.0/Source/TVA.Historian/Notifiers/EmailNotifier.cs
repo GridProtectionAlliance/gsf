@@ -66,7 +66,7 @@ namespace TVA.Historian.Notifiers
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_emailServer = value;
             }
@@ -85,7 +85,7 @@ namespace TVA.Historian.Notifiers
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_emailSender = value;
             }

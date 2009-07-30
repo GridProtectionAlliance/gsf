@@ -221,7 +221,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_engineeringUnits = value.TruncateRight(24);
             }
@@ -240,7 +240,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_equation = value.TruncateRight(256);
             }

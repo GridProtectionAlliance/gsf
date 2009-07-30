@@ -41,6 +41,7 @@ namespace TVA
     /// are reckoned from 6h 28m 16s UTC on 7 February 2036. This gives the <see cref="NtpTimeTag"/>
     /// class a functioning range of 1968-01-20 03:14:08 to 2104-02-26 09:42:23.
     /// </remarks>
+    [Serializable()]
     public class NtpTimeTag : TimeTagBase
     {
         #region [ Constructors ]

@@ -22,6 +22,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP exception base class.
     /// </summary>
+    [Serializable()]
     public abstract class FtpExceptionBase : Exception
     {
         private FtpResponse m_ftpResponse = null;
@@ -60,6 +61,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// Invalid FTP response exception.
     /// </summary>
+    [Serializable()]
     public class FtpInvalidResponseException : FtpExceptionBase
     {
         internal FtpInvalidResponseException(string message, FtpResponse ftpResponse)
@@ -71,6 +73,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP authentication exception.
     /// </summary>
+    [Serializable()]
     public class FtpAuthenticationException : FtpExceptionBase
     {
         internal FtpAuthenticationException(string message, FtpResponse ftpResponse)
@@ -82,6 +85,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP file not found exception.
     /// </summary>
+    [Serializable()]
     public class FtpFileNotFoundException : FtpExceptionBase
     {
         internal FtpFileNotFoundException(string remoteFile)
@@ -93,6 +97,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP server down exception.
     /// </summary>
+    [Serializable()]
     public class FtpServerDownException : FtpExceptionBase
     {
         internal FtpServerDownException(FtpResponse ftpResponse)
@@ -109,6 +114,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP command exception.
     /// </summary>
+    [Serializable()]
     public class FtpCommandException : FtpExceptionBase
     {
 
@@ -121,6 +127,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP data transfer exception.
     /// </summary>
+    [Serializable()]
     public class FtpDataTransferException : FtpExceptionBase
     {
         internal FtpDataTransferException()
@@ -137,6 +144,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP user abort exception.
     /// </summary>
+    [Serializable()]
     public class FtpUserAbortException : FtpExceptionBase
     {
         internal FtpUserAbortException()
@@ -148,6 +156,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP resume not supported exception.
     /// </summary>
+    [Serializable()]
     public class FtpResumeNotSupportedException : FtpExceptionBase
     {
         internal FtpResumeNotSupportedException(FtpResponse ftpResponse)

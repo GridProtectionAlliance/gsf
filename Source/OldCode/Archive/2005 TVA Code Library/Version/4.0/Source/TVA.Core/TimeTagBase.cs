@@ -37,6 +37,7 @@ namespace TVA
     /// <summary>
     /// Represents tha base class for alternate timetag implementations.
     /// </summary>
+    [Serializable()]
     public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>
     {
         #region [ Members ]
@@ -181,8 +182,10 @@ namespace TVA
         /// <exception cref="ArgumentException"><see cref="Object"/> is not an <see cref="TimeTagBase"/> or a <see cref="DateTime"/>.</exception>
         public virtual int CompareTo(object obj)
         {
-            if (obj is TimeTagBase)
-                return CompareTo(obj as TimeTagBase);
+            TimeTagBase other = obj as TimeTagBase;
+
+            if (other != null)
+                return CompareTo(other);
 
             if (obj is DateTime)
                 return CompareTo((DateTime)obj);

@@ -1182,17 +1182,15 @@ namespace TVA
 
         #region [ Static ]
         
-        /// <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
-        public static readonly UInt24 MaxValue;
+        /// <summary>
+        /// Represents the largest possible value of an Int24. This field is constant.
+        /// </summary>
+        public static readonly UInt24 MaxValue = (UInt24)MaxValue32;
 
-        /// <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
-        public static readonly UInt24 MinValue;
-
-        static UInt24()
-        {
-            MaxValue = (UInt24)MaxValue32;
-            MinValue = (UInt24)MinValue32;
-        }
+        /// <summary>
+        /// Represents the smallest possible value of an Int24. This field is constant.
+        /// </summary>
+        public static readonly UInt24 MinValue = (UInt24)MinValue32;
 
         /// <summary>Returns the specified UInt24 value as an array of three bytes.</summary>
         /// <param name="value">UInt24 value to convert to bytes.</param>

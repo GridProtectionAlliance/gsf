@@ -99,7 +99,7 @@ namespace TVA.Configuration
         /// </summary>
         /// <param name="rootPath">Defines the root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").</param>
         /// <param name="keyName">Defines the name of default key used to access settings in the registry (e.g., "General Settings").</param>
-        public RegistrySettingsBase(string rootPath, string keyName)
+        protected RegistrySettingsBase(string rootPath, string keyName)
             : this(rootPath, keyName, true, false, true)
         {
         }
@@ -130,7 +130,7 @@ namespace TVA.Configuration
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </para>
         /// </remarks>
-        public RegistrySettingsBase(string rootPath, string keyName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
+        protected RegistrySettingsBase(string rootPath, string keyName, bool useCategoryAttributes, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             m_rootPath = rootPath;

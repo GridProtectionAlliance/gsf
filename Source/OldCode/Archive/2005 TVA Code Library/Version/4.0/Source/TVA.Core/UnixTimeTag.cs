@@ -36,6 +36,7 @@ namespace TVA
     /// <summary>
     /// Represents a standard Unix timetag.
     /// </summary>
+    [Serializable()]
     public class UnixTimeTag : TimeTagBase
     {
         #region [ Constructors ]

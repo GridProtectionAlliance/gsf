@@ -569,7 +569,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 if (string.Compare(FilePath.GetExtension(value), FileExtension, true) != 0 &&
                     string.Compare(FilePath.GetExtension(value), StandbyFileExtension, true) != 0)
@@ -979,7 +979,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }

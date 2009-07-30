@@ -25,6 +25,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using TVA.Reflection;
@@ -40,7 +41,7 @@ namespace TVA.Configuration
     /// See <a href="http://msdn.microsoft.com/en-us/library/ayybcxe5.aspx">MSDN</a> for details.
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public abstract class SettingsBase : IDisposable, IEnumerable
+    public abstract class SettingsBase : IDisposable, IEnumerable<string>, IEnumerable
     {
         #region [ Members ]
 
@@ -452,7 +453,7 @@ namespace TVA.Configuration
         /// that are targeted for serialization to the configuration file.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> object that can be used to iterate through the collection.</returns>
-        public IEnumerator GetEnumerator()
+        public IEnumerator<string> GetEnumerator()
         {
             List<string> members = new List<string>();
 
@@ -462,7 +463,12 @@ namespace TVA.Configuration
             // Get names of properties
             ExecuteActionForProperties(property => members.Add(property.Name), BindingFlags.GetProperty);
 
-            return members.ToArray().GetEnumerator();
+            return members.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         /// <summary>

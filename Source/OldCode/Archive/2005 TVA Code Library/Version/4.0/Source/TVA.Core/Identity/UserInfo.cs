@@ -210,7 +210,7 @@ namespace TVA.Identity
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw (new ArgumentNullException("value"));
 
                 m_settingsCategory = value;
             }
@@ -594,7 +594,7 @@ namespace TVA.Identity
             if (string.IsNullOrEmpty(domain))
                 throw new ArgumentNullException("domain");
             if (string.IsNullOrEmpty(username))
-                throw new ArgumentNullException("userName");
+                throw new ArgumentNullException("username");
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
@@ -685,13 +685,16 @@ namespace TVA.Identity
         // Static Fields
         private static UserInfo m_currentUserInfo;
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
 
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CloseHandle(IntPtr handle);
 
-        [DllImport("advapi32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
 
         // Static Properties

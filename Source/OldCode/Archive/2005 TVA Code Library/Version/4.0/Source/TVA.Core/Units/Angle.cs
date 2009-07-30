@@ -616,17 +616,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MaxValue;
+        public static readonly Angle MaxValue = (Angle)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Angle"/>. This field is constant.</summary>
-        public static readonly Angle MinValue;
-
-        // Static Constructor
-        static Angle()
-        {
-            MaxValue = (Angle)double.MaxValue;
-            MinValue = (Angle)double.MinValue;
-        }
+        public static readonly Angle MinValue = (Angle)double.MinValue;
 
         // Static Methods
         

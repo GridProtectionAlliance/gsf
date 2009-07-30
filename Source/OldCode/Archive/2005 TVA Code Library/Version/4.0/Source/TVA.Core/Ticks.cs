@@ -33,6 +33,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TVA
 {
@@ -91,18 +92,18 @@ namespace TVA
         {
             // Note that this is a structure so that elements may be used as an
             // index into a string array without having to cast as (int)
-            static readonly public int Year = 0;
-            static readonly public int Years = 1;
-            static readonly public int Day = 2;
-            static readonly public int Days = 3;
-            static readonly public int Hour = 4;
-            static readonly public int Hours = 5;
-            static readonly public int Minute = 6;
-            static readonly public int Minutes = 7;
-            static readonly public int Second = 8;
-            static readonly public int Seconds = 9;
-            static readonly public int LessThan60Seconds = 10;
-            static readonly public int NoSeconds = 11;
+            public const int Year = 0;
+            public const int Years = 1;
+            public const int Day = 2;
+            public const int Days = 3;
+            public const int Hour = 4;
+            public const int Hours = 5;
+            public const int Minute = 6;
+            public const int Minutes = 7;
+            public const int Second = 8;
+            public const int Seconds = 9;
+            public const int LessThan60Seconds = 10;
+            public const int NoSeconds = 11;
         }
 
         // Constants
@@ -1096,17 +1097,10 @@ namespace TVA
         // Static Fields
 
         /// <summary>Represents the largest possible value of a <see cref="Ticks"/>. This field is constant.</summary>
-        public static readonly Ticks MaxValue;
+        public static readonly Ticks MaxValue = (Ticks)long.MaxValue;
 
         /// <summary>Represents the smallest possible value of a <see cref="Ticks"/>. This field is constant.</summary>
-        public static readonly Ticks MinValue;
-
-        // Static Constructor
-        static Ticks()
-        {
-            MaxValue = (Ticks)long.MaxValue;
-            MinValue = (Ticks)long.MinValue;
-        }
+        public static readonly Ticks MinValue = (Ticks)long.MinValue;
 
         // Static Methods
 

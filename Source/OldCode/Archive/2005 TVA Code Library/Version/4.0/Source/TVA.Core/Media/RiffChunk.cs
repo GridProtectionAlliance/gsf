@@ -133,10 +133,10 @@ namespace TVA.Media
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("TypeID");
+                    throw new ArgumentNullException("value");
 
                 if (value.Length != 4)
-                    throw new ArgumentOutOfRangeException("TypeID", "TypeID must be exactly 4 characters in length");
+                    throw new ArgumentOutOfRangeException("value", "TypeID must be exactly 4 characters in length");
 
                 m_typeID = value;
             }

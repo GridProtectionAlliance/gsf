@@ -352,16 +352,16 @@ namespace TVA.Net.Ftp
                 CommandSent(this, new EventArgs<string>(command));
         }
 
-        internal void OnBeginFileTransfer(string localFilename, string remoteFilename, TransferDirection transferDirection)
+        internal void OnBeginFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
             if (BeginFileTransfer != null)
-                BeginFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFilename, remoteFilename, transferDirection));
+                BeginFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
-        internal void OnEndFileTransfer(string localFilename, string remoteFilename, TransferDirection transferDirection)
+        internal void OnEndFileTransfer(string localFileName, string remoteFileName, TransferDirection transferDirection)
         {
             if (EndFileTransfer != null)
-                EndFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFilename, remoteFilename, transferDirection));
+                EndFileTransfer(this, new EventArgs<string,string,TransferDirection>(localFileName, remoteFileName, transferDirection));
         }
 
         internal void OnFileTransferProgress(ProcessProgress<long> fileTransferProgress, TransferDirection transferDirection)

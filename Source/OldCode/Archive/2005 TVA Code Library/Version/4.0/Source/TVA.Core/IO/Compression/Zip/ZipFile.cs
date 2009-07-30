@@ -729,7 +729,7 @@ namespace TVA.IO.Compression.Zip
 			
 			// TODO: This will be slow as the next ice age for huge archives!
 			for (int i = 0; i < entries_.Length; i++) {
-				if (string.Compare(name, entries_[i].Name, ignoreCase, CultureInfo.InvariantCulture) == 0) {
+				if (string.Compare(name, entries_[i].Name, ignoreCase) == 0) {
 					return i;
 				}
 			}
@@ -2418,7 +2418,7 @@ namespace TVA.IO.Compression.Zip
 				source = update.GetSource();
 				
 				if ( source == null ) {
-					source = updateDataSource_.GetSource(update.Entry, update.Filename);
+					source = updateDataSource_.GetSource(update.Entry, update.FileName);
 				}
 			}
 
@@ -2466,7 +2466,7 @@ namespace TVA.IO.Compression.Zip
 			long dataStart = workFile.baseStream_.Position;
 
 			// TODO: This is slow if the changes don't effect the data!!
-			if ( update.Entry.IsFile && (update.Filename != null) ) {
+			if ( update.Entry.IsFile && (update.FileName != null) ) {
 				using ( Stream output = workFile.GetOutputStream(update.OutEntry) ) {
 					using ( Stream source = this.GetInputStream(update.Entry) ) {
 						CopyBytes(update, output, source, source.Length, true);
@@ -2937,7 +2937,7 @@ namespace TVA.IO.Compression.Zip
 			/// <summary>
 			/// Get the filename if any for this update.  Null if none exists.
 			/// </summary>
-			public string Filename
+			public string FileName
 			{
 				get { return filename_; }
 			}

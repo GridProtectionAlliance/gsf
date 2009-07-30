@@ -330,18 +330,18 @@ namespace TVA.Console
         /// Returns an <see cref="IEnumerator"/> for iterating through all the comman-line command arguments.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> for the command-line command arguments.</returns>
-        IEnumerator IEnumerable.GetEnumerator()
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
-            return ((IEnumerable)m_arguments).GetEnumerator();
+            return m_arguments.GetEnumerator();
         }
 
         /// <summary>
         /// Returns an <see cref="IEnumerator"/> for iterating through all the comman-line command arguments.
         /// </summary>
         /// <returns>An <see cref="IEnumerator"/> for the command-line command arguments.</returns>
-        IEnumerator<KeyValuePair<string, string>> IEnumerable<KeyValuePair<string, string>>.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return m_arguments.GetEnumerator();
+            return ((IEnumerable)m_arguments).GetEnumerator();
         }
 
         #endregion

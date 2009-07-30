@@ -677,17 +677,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Energy"/>. This field is constant.</summary>
-        public static readonly Energy MaxValue;
+        public static readonly Energy MaxValue = (Energy)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Energy"/>. This field is constant.</summary>
-        public static readonly Energy MinValue;
-
-        // Static Constructor
-        static Energy()
-        {
-            MaxValue = (Energy)double.MaxValue;
-            MinValue = (Energy)double.MinValue;
-        }
+        public static readonly Energy MinValue = (Energy)double.MinValue;
 
         // Static Methods
 

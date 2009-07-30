@@ -787,17 +787,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of a <see cref="Time"/>. This field is constant.</summary>
-        public static readonly Time MaxValue;
+        public static readonly Time MaxValue = (Time)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of a <see cref="Time"/>. This field is constant.</summary>
-        public static readonly Time MinValue;
-
-        // Static Constructor
-        static Time()
-        {
-            MaxValue = (Time)long.MaxValue;
-            MinValue = (Time)long.MinValue;
-        }
+        public static readonly Time MinValue = (Time)double.MinValue;
 
         // Static Methods
 

@@ -1166,17 +1166,15 @@ namespace TVA
 
         #region [ Static ]
 
-        /// <summary>Represents the largest possible value of an Int24. This field is constant.</summary>
-        public static readonly Int24 MaxValue;
+        /// <summary>
+        /// Represents the largest possible value of an Int24. This field is constant.
+        /// </summary>
+        public static readonly Int24 MaxValue = (Int24)MaxValue32;
 
-        /// <summary>Represents the smallest possible value of an Int24. This field is constant.</summary>
-        public static readonly Int24 MinValue;
-
-        static Int24()
-        {
-            MaxValue = (Int24)MaxValue32;
-            MinValue = (Int24)MinValue32;
-        }
+        /// <summary>
+        /// Represents the smallest possible value of an Int24. This field is constant.
+        /// </summary>
+        public static readonly Int24 MinValue = (Int24)MinValue32;
 
         /// <summary>Returns the specified Int24 value as an array of three bytes.</summary>
         /// <param name="value">Int24 value to convert to bytes.</param>

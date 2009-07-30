@@ -118,7 +118,7 @@ namespace TVA.Net.Smtp
             {
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_from = value;
             }
@@ -137,7 +137,7 @@ namespace TVA.Net.Smtp
             {
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_toRecipients = value;
             }
@@ -216,7 +216,7 @@ namespace TVA.Net.Smtp
             {
                 // This is a required field.
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_smtpServer = value;
             }

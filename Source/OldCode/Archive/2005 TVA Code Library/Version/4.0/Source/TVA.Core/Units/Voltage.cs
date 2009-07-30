@@ -583,17 +583,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Voltage"/>. This field is constant.</summary>
-        public static readonly Voltage MaxValue;
+        public static readonly Voltage MaxValue = (Voltage)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Voltage"/>. This field is constant.</summary>
-        public static readonly Voltage MinValue;
-
-        // Static Constructor
-        static Voltage()
-        {
-            MaxValue = (Voltage)double.MaxValue;
-            MinValue = (Voltage)double.MinValue;
-        }
+        public static readonly Voltage MinValue = (Voltage)double.MinValue;
 
         // Static Methods
         

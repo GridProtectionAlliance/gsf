@@ -108,10 +108,10 @@ namespace TVA.Media
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException("Format");
+                    throw new ArgumentNullException("value");
 
                 if (value.Length != 4)
-                    throw new ArgumentOutOfRangeException("Format", "Format must be exactly 4 characters in length");
+                    throw new ArgumentOutOfRangeException("value", "Format must be exactly 4 characters in length");
 
                 m_format = value;
             }

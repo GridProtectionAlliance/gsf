@@ -201,7 +201,7 @@ namespace TVA.IO.Compression.Zip.Algorithms
 			/// </summary>
 			public void BuildCodes() 
 			{
-				int numSymbols = freqs.Length;
+				//int numSymbols = freqs.Length;
 				int[] nextCode = new int[maxLength];
 				int code = 0;
 

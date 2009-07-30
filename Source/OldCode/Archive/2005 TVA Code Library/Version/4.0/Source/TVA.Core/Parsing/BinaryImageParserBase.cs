@@ -392,7 +392,7 @@ namespace TVA.Parsing
         {
             get
             {
-                throw new NotImplementedException("WriteOnly stream has no length.");
+                return -1;
             }
         }
 
@@ -405,11 +405,10 @@ namespace TVA.Parsing
         {
             get
             {
-                throw new NotImplementedException("WriteOnly stream has no position.");
+                return -1;
             }
             set
             {
-                throw new NotImplementedException("WriteOnly stream has no position.");
             }
         }
 

@@ -62,7 +62,7 @@ This is the ustar (Posix 1003.1) header.
 
 struct header 
 {
-	char t_name[100];          //   0 Filename
+	char t_name[100];          //   0 FileName
 	char t_mode[8];            // 100 Permissions
 	char t_uid[8];             // 108 Numerical User ID
 	char t_gid[8];             // 116 Numerical Group ID

@@ -87,11 +87,11 @@ namespace TVA
         /// <paramref name="type"/> either through class inheritance or interface implementation.
         /// </summary>
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
-        /// <param name="excludeAbsractTypes">true to exclude public types that are abstract; otherwise false.</param>
+        /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, bool excludeAbsractTypes)
+        public static List<Type> LoadImplementations(this Type type, bool excludeAbstractTypes)
         {
-            return LoadImplementations(type, string.Empty, excludeAbsractTypes);
+            return LoadImplementations(type, string.Empty, excludeAbstractTypes);
         }
 
         /// <summary>
@@ -112,9 +112,9 @@ namespace TVA
         /// </summary>
         /// <param name="type">The <see cref="Type"/> that must be implemented by the public types.</param>
         /// <param name="binariesDirectory">The directory containing the assemblies to be processed.</param>
-        /// <param name="excludeAbsractTypes">true to exclude public types that are abstract; otherwise false.</param>
+        /// <param name="excludeAbstractTypes">true to exclude public types that are abstract; otherwise false.</param>
         /// <returns>Public types that implement the specified <paramref name="type"/>.</returns>
-        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbsractTypes)
+        public static List<Type> LoadImplementations(this Type type, string binariesDirectory, bool excludeAbstractTypes)
         {
             Assembly asm = null;
             List<Type> types = new List<Type>();
@@ -154,7 +154,7 @@ namespace TVA
                     // Process only the public types in the assembly.
                     foreach (Type asmType in asm.GetExportedTypes())
                     {
-                        if (!excludeAbsractTypes || !asmType.IsAbstract)
+                        if (!excludeAbstractTypes || !asmType.IsAbstract)
                         {
                             // Either the current type is not abstract or it's OK to include abstract types.
                             if (type.IsClass && asmType.IsSubclassOf(type))

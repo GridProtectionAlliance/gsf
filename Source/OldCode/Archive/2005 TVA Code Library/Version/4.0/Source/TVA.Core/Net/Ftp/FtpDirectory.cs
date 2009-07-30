@@ -316,7 +316,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Finds matching file name in directory.
         /// </summary>
-        /// <param name="fileName">Filename to find in directory.</param>
+        /// <param name="fileName">FileName to find in directory.</param>
         /// <returns>File reference, if found, otherwise null if file is not found.</returns>
         public FtpFile FindFile(string fileName)
         {

@@ -178,7 +178,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_remarks = value.TruncateRight(512);
             }
@@ -200,7 +200,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_hardwareInfo = value.TruncateRight(512);
             }
@@ -223,7 +223,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_emailAddresses = value.TruncateRight(512);
             }
@@ -245,7 +245,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_description = value.TruncateRight(80);
             }
@@ -267,7 +267,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_currentData = value.TruncateRight(80);
             }
@@ -289,7 +289,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_name = value.TruncateRight(40);
             }
@@ -311,7 +311,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_synonym1 = value.TruncateRight(40);
             }
@@ -333,7 +333,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_synonym2 = value.TruncateRight(40);
             }
@@ -355,7 +355,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_synonym3 = value.TruncateRight(40);
             }
@@ -378,7 +378,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_pagerNumbers = value.TruncateRight(40);
             }
@@ -401,7 +401,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_phoneNumbers = value.TruncateRight(40);
             }
@@ -423,7 +423,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_plantCode = value.TruncateRight(24);
             }
@@ -445,7 +445,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_system = value.TruncateRight(24);
             }
@@ -516,7 +516,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_securityFlags = value;
             }
@@ -535,7 +535,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_generalFlags = value;
             }
@@ -554,7 +554,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_alarmFlags = value;
             }
@@ -634,7 +634,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_analogFields = value;
             }
@@ -653,7 +653,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_digitalFields = value;
             }
@@ -672,7 +672,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_composedFields = value;
             }
@@ -691,7 +691,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_constantFields = value;
             }

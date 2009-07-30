@@ -658,17 +658,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MaxValue;
+        public static readonly Length MaxValue = (Length)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Length"/>. This field is constant.</summary>
-        public static readonly Length MinValue;
-
-        // Static Constructor
-        static Length()
-        {
-            MaxValue = (Length)double.MaxValue;
-            MinValue = (Length)double.MinValue;
-        }
+        public static readonly Length MinValue = (Length)double.MinValue;
 
         // Static Methods
         

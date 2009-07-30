@@ -1784,7 +1784,7 @@ namespace TVA.Collections
 
                     // Validates start and stop index.
                     if (startIndex < 0 || count < 0 || stopIndex > m_processQueue.Count - 1)
-                        throw new ArgumentOutOfRangeException("startIndex", "startIndex and/or count is outside the range of valid indexes for the queue");
+                        throw new ArgumentOutOfRangeException("index", "index and/or count is outside the range of valid indexes for the queue");
 
                     if (comparer == null) comparer = Comparer<T>.Default;
 

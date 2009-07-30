@@ -616,17 +616,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Charge"/>. This field is constant.</summary>
-        public static readonly Charge MaxValue;
+        public static readonly Charge MaxValue = (Charge)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Charge"/>. This field is constant.</summary>
-        public static readonly Charge MinValue;
-
-        // Static Constructor
-        static Charge()
-        {
-            MaxValue = (Charge)double.MaxValue;
-            MinValue = (Charge)double.MinValue;
-        }
+        public static readonly Charge MinValue = (Charge)double.MinValue;
 
         // Static Methods
 

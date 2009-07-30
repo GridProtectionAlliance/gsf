@@ -161,7 +161,7 @@ namespace TVA.Scheduling
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_name = value;
             }
@@ -181,7 +181,7 @@ namespace TVA.Scheduling
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
 

@@ -626,17 +626,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Speed"/>. This field is constant.</summary>
-        public static readonly Speed MaxValue;
+        public static readonly Speed MaxValue = (Speed)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Speed"/>. This field is constant.</summary>
-        public static readonly Speed MinValue;
-
-        // Static Constructor
-        static Speed()
-        {
-            MaxValue = (Speed)double.MaxValue;
-            MinValue = (Speed)double.MinValue;
-        }
+        public static readonly Speed MinValue = (Speed)double.MinValue;
 
         // Static Methods
         

@@ -1097,7 +1097,7 @@ namespace TVA.Data
                 string commandText = command.CommandText;
 
                 if (string.IsNullOrEmpty(commandText))
-                    throw new ArgumentNullException("CommandText", "CommandText is null");
+                    throw new ArgumentNullException("command", "command.CommandText is null");
 
                 if (commandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) ||
                     commandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) ||

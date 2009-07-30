@@ -657,17 +657,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
-        public static readonly Temperature MaxValue;
+        public static readonly Temperature MaxValue = (Temperature)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of a <see cref="Temperature"/>. This field is constant.</summary>
-        public static readonly Temperature MinValue;
-
-        // Static Constructor
-        static Temperature()
-        {
-            MaxValue = (Temperature)double.MaxValue;
-            MinValue = (Temperature)double.MinValue;
-        }
+        public static readonly Temperature MinValue = (Temperature)double.MinValue;
 
         // Static Methods
         

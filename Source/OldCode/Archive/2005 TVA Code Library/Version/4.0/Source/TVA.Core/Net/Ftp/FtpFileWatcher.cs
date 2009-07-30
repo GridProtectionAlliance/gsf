@@ -515,8 +515,8 @@ namespace TVA.Net.Ftp
             {
                 if (m_session.IsConnected)
                 {
+                    //Dictionary<string, FtpFile>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
                     FtpFile newFile;
-                    Dictionary<string, FtpFile>.ValueCollection.Enumerator currentFiles = m_session.CurrentDirectory.Files.GetEnumerator();
                     List<int> removedFiles = new List<int>();
                     int x, index;
 

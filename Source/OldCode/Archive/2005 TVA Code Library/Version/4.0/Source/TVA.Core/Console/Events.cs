@@ -76,7 +76,8 @@ namespace TVA.Console
         private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
 
         [DllImport("kernel32.dll", EntryPoint = "SetConsoleCtrlHandler")]
-        private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, bool enable);
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetConsoleWindowEventRaising(ConsoleWindowEventHandler handler, [MarshalAs(UnmanagedType.Bool)] bool enable);
 
         /// <summary>
         /// Occurs when CTRL+C signal is received from keyboard input.

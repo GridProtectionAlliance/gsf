@@ -97,7 +97,7 @@ namespace TVA.Net.Ftp
             set
             {
                 if (value.Length == 0)
-                    throw new ArgumentNullException("Server", "Server property must not be blank.");
+                    throw new ArgumentNullException("value", "Server property must not be blank.");
 
                 m_server = value;
             }

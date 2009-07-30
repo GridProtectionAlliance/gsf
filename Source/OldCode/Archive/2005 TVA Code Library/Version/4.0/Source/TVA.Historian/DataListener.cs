@@ -286,7 +286,7 @@ namespace TVA.Historian
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_id = value;
             }
@@ -308,7 +308,7 @@ namespace TVA.Historian
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_server = value;
             }

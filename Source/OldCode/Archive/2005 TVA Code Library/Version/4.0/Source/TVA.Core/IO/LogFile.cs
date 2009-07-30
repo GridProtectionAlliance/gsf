@@ -208,7 +208,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_fileName = value;
                 ReOpen();
@@ -231,7 +231,7 @@ namespace TVA.IO
             set
             {
                 if (value < MinFileSize || value > MaxFileSize)
-                    throw new ArgumentOutOfRangeException("FileSize", string.Format("Value must be between {0} and {1}.", MinFileSize, MaxFileSize));
+                    throw new ArgumentOutOfRangeException("value", string.Format("Value must be between {0} and {1}.", MinFileSize, MaxFileSize));
 
                 m_fileSize = value;
             }
@@ -291,7 +291,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw (new ArgumentNullException("value"));
 
                 m_settingsCategory = value;
             }

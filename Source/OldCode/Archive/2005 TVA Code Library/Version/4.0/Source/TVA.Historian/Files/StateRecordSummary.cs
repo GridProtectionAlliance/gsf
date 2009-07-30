@@ -113,7 +113,7 @@ namespace TVA.Historian.Files
             private set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_currentData = value;
             }

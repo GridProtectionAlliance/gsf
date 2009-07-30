@@ -95,25 +95,25 @@ namespace TVA.IO.Compression.Zip
 		#endregion
 	}
 
-	class EntryPatchData
-	{
-		public long SizePatchOffset
-		{
-			get { return sizePatchOffset_; }
-			set { sizePatchOffset_ = value; }
-		}
+    class EntryPatchData
+    {
+        public long SizePatchOffset
+        {
+            get { return sizePatchOffset_; }
+            set { sizePatchOffset_ = value; }
+        }
 
-		public long CrcPatchOffset
-		{
-			get { return crcPatchOffset_; }
-			set { crcPatchOffset_ = value; }
-		}
-		
-		#region Instance Fields
-		long sizePatchOffset_;
-		long crcPatchOffset_;
-		#endregion
-	}
+        public long CrcPatchOffset
+        {
+            get { return crcPatchOffset_; }
+            set { crcPatchOffset_ = value; }
+        }
+
+        #region Instance Fields
+        long sizePatchOffset_;
+        long crcPatchOffset_;
+        #endregion
+    }
 	
 	/// <summary>
 	/// This class assists with writing/reading from Zip files.

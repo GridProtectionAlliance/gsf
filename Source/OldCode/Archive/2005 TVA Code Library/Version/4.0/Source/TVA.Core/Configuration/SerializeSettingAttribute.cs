@@ -70,10 +70,6 @@ namespace TVA.Configuration
             {
                 return m_serialize;
             }
-            set
-            {
-                m_serialize = value;
-            }
         }
 
         #endregion

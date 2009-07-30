@@ -268,7 +268,7 @@ namespace TVA.Configuration
 
             if (configFilePath != null)
             {
-                if (configFilePath == "" || FilePath.GetExtension(configFilePath) == ".config")
+                if (string.IsNullOrEmpty(configFilePath) || FilePath.GetExtension(configFilePath) == ".config")
                 {
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())
@@ -280,10 +280,8 @@ namespace TVA.Configuration
                             configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config"));
                             break;
                         case ApplicationType.Web:
-                            if (configFilePath == "")
-                            {
+                            if (string.IsNullOrEmpty(configFilePath))
                                 configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath;
-                            }
                             configuration = WebConfigurationManager.OpenWebConfiguration(TrimEnd(configFilePath, "web.config"));
                             break;
                     }
@@ -324,7 +322,41 @@ namespace TVA.Configuration
             }
         }
 
-        private void ValidateConfigurationFile(string configFilePath)
+        #endregion
+
+        #region [ Static ]
+
+        private static ConfigurationFile m_current;
+
+        /// <summary>
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently 
+        /// executing Windows or Web application.
+        /// </summary>
+        public static ConfigurationFile Current
+        {
+            get 
+            {
+                if (m_current == null)
+                {
+                    m_current = new ConfigurationFile();
+                }
+                return m_current;
+            }
+        }
+
+        // Trim suffix from end of string
+        private static string TrimEnd(string stringToTrim, string textToTrim)
+        {
+            int trimEndIndex = stringToTrim.LastIndexOf(textToTrim);
+
+            if (trimEndIndex == -1)
+                trimEndIndex = stringToTrim.Length;
+
+            return stringToTrim.Substring(0, trimEndIndex);
+        }
+
+        // Validate configuration file
+        private static void ValidateConfigurationFile(string configFilePath)
         {
             if (!string.IsNullOrEmpty(configFilePath))
             {
@@ -365,39 +397,6 @@ namespace TVA.Configuration
             else
             {
                 throw (new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null"));
-            }
-        }
-
-        private string TrimEnd(string stringToTrim, string textToTrim)
-        {
-            int trimEndIndex = stringToTrim.LastIndexOf(textToTrim);
-            if (trimEndIndex == -1)
-            {
-                trimEndIndex = stringToTrim.Length;
-            }
-
-            return stringToTrim.Substring(0, trimEndIndex);
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        private static ConfigurationFile m_current;
-
-        /// <summary>
-        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently 
-        /// executing Windows or Web application.
-        /// </summary>
-        public static ConfigurationFile Current
-        {
-            get 
-            {
-                if (m_current == null)
-                {
-                    m_current = new ConfigurationFile();
-                }
-                return m_current;
             }
         }
 

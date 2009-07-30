@@ -637,17 +637,10 @@ namespace TVA.Units
         // Static Fields
 
         /// <summary>Represents the largest possible value of an <see cref="Power"/>. This field is constant.</summary>
-        public static readonly Power MaxValue;
+        public static readonly Power MaxValue = (Power)double.MaxValue;
 
         /// <summary>Represents the smallest possible value of an <see cref="Power"/>. This field is constant.</summary>
-        public static readonly Power MinValue;
-
-        // Static Constructor
-        static Power()
-        {
-            MaxValue = (Power)double.MaxValue;
-            MinValue = (Power)double.MinValue;
-        }
+        public static readonly Power MinValue = (Power)double.MinValue;
 
         // Static Methods
         

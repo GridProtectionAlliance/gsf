@@ -109,7 +109,7 @@ namespace TVA.ErrorManagement
             }
         }
 
-        private void SizeBox(System.Windows.Forms.RichTextBox ctl)
+        private static void SizeBox(System.Windows.Forms.RichTextBox ctl)
         {
             Graphics g = null;
             try

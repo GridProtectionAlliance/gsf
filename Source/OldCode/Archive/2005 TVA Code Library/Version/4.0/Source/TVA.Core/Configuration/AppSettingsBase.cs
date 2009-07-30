@@ -95,7 +95,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Creates a new instance of the <see cref="AppSettingsBase"/> class for the application's configuration file.
         /// </summary>
-        public AppSettingsBase()
+        protected AppSettingsBase()
             : this(ConfigurationFile.Current, false, true)
         {
         }
@@ -115,7 +115,7 @@ namespace TVA.Configuration
         /// method should be called manually after all properties have been initialized. Alternately, consider using the
         /// <see cref="DefaultValueAttribute"/> on the fields or properties and this will be used to initialize the values.
         /// </remarks>
-        public AppSettingsBase(ConfigurationFile configFile, bool requireSerializeSettingAttribute, bool initialize)
+        protected AppSettingsBase(ConfigurationFile configFile, bool requireSerializeSettingAttribute, bool initialize)
             : base(requireSerializeSettingAttribute)
         {
             m_configFile = configFile;

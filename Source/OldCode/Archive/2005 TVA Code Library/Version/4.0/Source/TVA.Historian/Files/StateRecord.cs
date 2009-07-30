@@ -112,7 +112,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_archivedData = value;
             }
@@ -131,7 +131,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_previousData = value;
             }
@@ -150,7 +150,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value == null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException("value");
 
                 m_currentData = value;
             }

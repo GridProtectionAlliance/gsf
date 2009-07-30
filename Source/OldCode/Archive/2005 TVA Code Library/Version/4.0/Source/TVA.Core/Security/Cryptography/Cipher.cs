@@ -306,26 +306,26 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Creates an encrypted file from source file data.
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="strength">Cryptographic strength to use when encrypting file.</param>
-        public static void EncryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
+        public static void EncryptFile(string sourceFileName, string destinationFileName, CipherStrength strength)
         {
-            EncryptFile(sourceFilename, destinationFilename, null, strength, null);
+            EncryptFile(sourceFileName, destinationFileName, null, strength, null);
         }
 
         /// <summary>
         /// Creates an encrypted file from source file data.
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="key">Encryption key to use to encrypt file.</param>
         /// <param name="strength">Cryptographic strength to use when encrypting file.</param>
         /// <param name="progressHandler">Optional delegate to handle progress updates for encrypting large files.</param>
-        public static void EncryptFile(string sourceFilename, string destinationFilename, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        public static void EncryptFile(string sourceFileName, string destinationFileName, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFilename);
+            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
                 key = StandardKey.Source;
@@ -585,26 +585,26 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Creates a decrypted file from source file data.
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="strength">Cryptographic strength to use when decrypting file.</param>
-        public static void DecryptFile(string sourceFilename, string destinationFilename, CipherStrength strength)
+        public static void DecryptFile(string sourceFileName, string destinationFileName, CipherStrength strength)
         {
-            DecryptFile(sourceFilename, destinationFilename, null, strength, null);
+            DecryptFile(sourceFileName, destinationFileName, null, strength, null);
         }
 
         /// <summary>
         /// Creates a decrypted file from source file data.
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="key">Encryption key to use to decrypt file.</param>
         /// <param name="strength">Cryptographic strength to use when decrypting file.</param>
         /// <param name="progressHandler">Optional delegate to handle progress updates for decrypting large files.</param>
-        public static void DecryptFile(string sourceFilename, string destinationFilename, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
+        public static void DecryptFile(string sourceFileName, string destinationFileName, string key, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFilename);
+            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
                 key = StandardKey.Source;

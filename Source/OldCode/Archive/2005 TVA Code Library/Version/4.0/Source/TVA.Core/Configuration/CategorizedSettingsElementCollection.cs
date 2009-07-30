@@ -52,19 +52,18 @@ namespace TVA.Configuration
             get
             {
                 if (index >= base.Count)
-                {
-                    throw (new IndexOutOfRangeException());
-                }
+                    throw new IndexOutOfRangeException();
+
                 CategorizedSettingsElement setting = (CategorizedSettingsElement)base.BaseGet(index);
                 setting.SetCryptoKey(m_cryptoKey);
+
                 return setting;
             }
             set
             {
                 if (base.BaseGet(index) != null)
-                {
                     base.BaseRemoveAt(index);
-                }
+
                 base.BaseAdd(index, value);
             }
         }

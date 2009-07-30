@@ -26,35 +26,35 @@ namespace TVA.IO.Compression
         /// <summary>
         /// Compress a file using default compression strength (not PKZip compatible...)
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
-        public static void Compress(String sourceFilename, String destinationFilename)
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
+        public static void Compress(String sourceFileName, String destinationFileName)
         {
-            Compress(sourceFilename, destinationFilename, CompressionStrength.DefaultCompression);
+            Compress(sourceFileName, destinationFileName, CompressionStrength.DefaultCompression);
         }
 
         /// <summary>
         /// Compress a file using specified compression strength (not PKZip compatible...)
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="strength">Stength of compression to apply.</param>
-        public static void Compress(String sourceFilename, String destinationFilename, CompressionStrength strength)
+        public static void Compress(String sourceFileName, String destinationFileName, CompressionStrength strength)
         {
-            Compress(sourceFilename, destinationFilename, strength, null);
+            Compress(sourceFileName, destinationFileName, strength, null);
         }
 
         /// <summary>
         /// Compress a file using specified compression strength (not PKZip compatible...)
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="strength">Stength of compression to apply.</param>
         /// <param name="progressHandler">User function to call with compression progress updates.</param>
-        public static void Compress(String sourceFilename, String destinationFilename, CompressionStrength strength, Action<ProcessProgress<long>> progressHandler)
+        public static void Compress(String sourceFileName, String destinationFileName, CompressionStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFilename);
+            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream destFileStream = File.Create(destinationFileName);
 
             sourceFileStream.Compress(destFileStream, strength, progressHandler);
 
@@ -66,23 +66,23 @@ namespace TVA.IO.Compression
         /// <summary>
         /// Uncompress a file compressed with CompressFile (not PKZip compatible...)
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
-        public static void Decompress(String sourceFilename, String destinationFilename)
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
+        public static void Decompress(String sourceFileName, String destinationFileName)
         {
-            Decompress(sourceFilename, destinationFilename, null);
+            Decompress(sourceFileName, destinationFileName, null);
         }
 
         /// <summary>
         /// Uncompress a file compressed with CompressFile given progress event handler (not PKZip compatible...)
         /// </summary>
-        /// <param name="sourceFilename">Source file name.</param>
-        /// <param name="destinationFilename">Destination file name.</param>
+        /// <param name="sourceFileName">Source file name.</param>
+        /// <param name="destinationFileName">Destination file name.</param>
         /// <param name="progressHandler">User function to call with decompression progress updates.</param>
-        public static void Decompress(String sourceFilename, String destinationFilename, Action<ProcessProgress<long>> progressHandler)
+        public static void Decompress(String sourceFileName, String destinationFileName, Action<ProcessProgress<long>> progressHandler)
         {
-            FileStream sourceFileStream = File.Open(sourceFilename, FileMode.Open, FileAccess.Read, FileShare.Read);
-            FileStream destFileStream = File.Create(destinationFilename);
+            FileStream sourceFileStream = File.Open(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream destFileStream = File.Create(destinationFileName);
 
             sourceFileStream.Decompress(destFileStream, progressHandler);
 
