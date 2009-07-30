@@ -16,6 +16,8 @@
 //*******************************************************************************************************
 
 using System;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace TVA.Net.Ftp
 {
@@ -55,6 +57,17 @@ namespace TVA.Net.Ftp
                 else
                     return "";
             }
+        }
+
+        /// <summary>
+        /// Derserializes the <see cref="FtpExceptionBase"/>.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> to populate with data.</param>
+        /// <param name="context">The destination <see cref="StreamingContext"/> for this serialization.</param>
+        [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.SerializationFormatter)]
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
         }
     }
 

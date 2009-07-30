@@ -224,15 +224,10 @@ namespace TVA.Net.Ftp
         /// </returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            try
-            {
-                return m_stream.Read(buffer, offset, count);
-            }
-            finally
-            {
-                if (m_userAbort)
-                    throw new FtpUserAbortException();
-            }
+            if (m_userAbort)
+                throw new FtpUserAbortException();
+
+            return m_stream.Read(buffer, offset, count);
         }
 
         /// <summary>
@@ -253,15 +248,10 @@ namespace TVA.Net.Ftp
         /// </param>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            try
-            {
-                m_stream.Write(buffer, offset, count);
-            }
-            finally
-            {
-                if (m_userAbort)
-                    throw new FtpUserAbortException();
-            }
+            if (m_userAbort)
+                throw new FtpUserAbortException();
+            
+            m_stream.Write(buffer, offset, count);
         }
 
         /// <summary>
@@ -273,15 +263,10 @@ namespace TVA.Net.Ftp
         /// </returns>
         public override int ReadByte()
         {
-            try
-            {
-                return m_stream.ReadByte();
-            }
-            finally
-            {
-                if (m_userAbort)
-                    throw new FtpUserAbortException();
-            }
+            if (m_userAbort)
+                throw new FtpUserAbortException();
+
+            return m_stream.ReadByte();
         }
 
         /// <summary>
@@ -291,15 +276,10 @@ namespace TVA.Net.Ftp
         /// <param name="b">The byte to write to the stream.</param>
         public override void WriteByte(byte b)
         {
-            try
-            {
-                m_stream.WriteByte(b);
-            }
-            finally
-            {
-                if (m_userAbort)
-                    throw new FtpUserAbortException();
-            }
+            if (m_userAbort)
+                throw new FtpUserAbortException();
+
+            m_stream.WriteByte(b);
         }
 
         /// <summary>

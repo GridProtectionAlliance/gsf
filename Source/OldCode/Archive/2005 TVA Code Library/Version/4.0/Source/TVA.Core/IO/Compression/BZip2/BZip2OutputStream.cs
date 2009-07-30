@@ -52,7 +52,6 @@
 
 using System;
 using System.IO;
-
 using TVA.IO.Checksums;
 
 namespace TVA.IO.Compression.BZip2 

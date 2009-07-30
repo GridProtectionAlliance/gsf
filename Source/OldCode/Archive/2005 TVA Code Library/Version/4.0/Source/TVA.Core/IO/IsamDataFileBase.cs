@@ -38,7 +38,6 @@ using System.Text;
 using System.Threading;
 using TVA.Configuration;
 using TVA.Parsing;
-using System.Security.Permissions;
 
 namespace TVA.IO
 {

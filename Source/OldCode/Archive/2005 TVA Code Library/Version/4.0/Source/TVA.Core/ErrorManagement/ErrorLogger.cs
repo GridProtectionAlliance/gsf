@@ -43,7 +43,6 @@ using TVA.IO;
 using TVA.Net.Smtp;
 using TVA.Reflection;
 using TVA.Windows.Forms;
-using System.Security.Permissions;
 
 namespace TVA.ErrorManagement
 {

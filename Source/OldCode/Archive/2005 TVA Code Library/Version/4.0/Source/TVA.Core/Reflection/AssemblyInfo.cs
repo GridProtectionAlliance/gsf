@@ -29,8 +29,8 @@ using System.IO;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
-using TVA.IO;
 using System.Security.Permissions;
+using TVA.IO;
 
 namespace TVA.Reflection
 {
