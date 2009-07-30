@@ -49,7 +49,7 @@ namespace TVA.Net.Ftp
     /// <summary>
     /// FTP control channel.
     /// </summary>
-    public class FtpControlChannel
+    public class FtpControlChannel : IDisposable
     {
         #region [ Members ]
 
@@ -61,6 +61,7 @@ namespace TVA.Net.Ftp
         private int m_port;
         private TransferMode m_currentTransferMode;
         private FtpResponse m_lastResponse;
+        private bool m_disposed;
 
         #endregion
 
@@ -80,8 +81,7 @@ namespace TVA.Net.Ftp
         /// </summary>
         ~FtpControlChannel()
         {
-            if (m_connection != null)
-                m_connection.Close();
+            Dispose(false);
         }
 
         #endregion
@@ -142,7 +142,52 @@ namespace TVA.Net.Ftp
 
         #region [ Methods ]
 
-        internal void Connect()
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FtpControlChannel"/> object.
+        /// </summary>
+        public void Close()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        void IDisposable.Dispose()
+        {
+            Close();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FtpControlChannel"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        m_lastResponse = null;
+
+                        if (m_connection != null)
+                            m_connection.Close();
+                        m_connection = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Connects the <see cref="FtpControlChannel"/>.
+        /// </summary>
+        public void Connect()
         {
             m_connection.Connect(m_server, m_port);
 
@@ -159,21 +204,6 @@ namespace TVA.Net.Ftp
                 throw;
             }
         }
-
-        internal void Close()
-        {
-            try
-            {
-                m_connection.Close();
-            }
-            catch
-            {
-                // We keep going even if we can't close the connection
-            }
-
-            m_connection = null;
-        }
-
 
         /// <summary>
         /// Send FTP command to control channel.

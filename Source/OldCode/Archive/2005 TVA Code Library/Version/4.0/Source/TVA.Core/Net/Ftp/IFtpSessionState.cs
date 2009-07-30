@@ -15,12 +15,14 @@
 //
 //*******************************************************************************************************
 
+using System;
+
 namespace TVA.Net.Ftp
 {
     /// <summary>
     /// Abstract representation of a FTP session state (e.g., connected or disconnected).
     /// </summary>
-    internal interface IFtpSessionState
+    internal interface IFtpSessionState : IDisposable
     {
         /// <summary>
         /// Gets or sets FTP server name (DNS name or IP).

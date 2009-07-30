@@ -28,6 +28,7 @@ namespace TVA.Net.Ftp
         private string m_server;
         private int m_port;
         private bool m_caseInsensitive;
+        private bool m_disposed;
 
         #endregion
 
@@ -38,6 +39,14 @@ namespace TVA.Net.Ftp
             m_port = 21;
             m_host = h;
             m_caseInsensitive = caseInsensitive;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="FtpSessionDisconnected"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~FtpSessionDisconnected()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -107,6 +116,35 @@ namespace TVA.Net.Ftp
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FtpSessionDisconnected"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FtpSessionDisconnected"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                        m_host = null;
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
 
         public void Connect(string userName, string password)
         {

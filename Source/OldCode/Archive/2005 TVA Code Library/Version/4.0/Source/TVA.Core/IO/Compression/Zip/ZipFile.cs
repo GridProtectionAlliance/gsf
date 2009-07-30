@@ -4032,7 +4032,7 @@ namespace TVA.IO.Compression.Zip
 	/// <summary>
 	/// Defines facilities for data storage when updating Zip Archives.
 	/// </summary>
-	public interface IArchiveStorage
+    public interface IArchiveStorage : IDisposable
 	{
 		/// <summary>
 		/// Get the <see cref="FileUpdateMode"/> to apply during updates.
@@ -4067,11 +4067,6 @@ namespace TVA.IO.Compression.Zip
 		/// <returns>Returns a stream suitable for direct updating.</returns>
 		/// <remarks>This may be the current stream passed.</remarks>
 		Stream OpenForDirectUpdate(Stream stream);
-
-		/// <summary>
-		/// Dispose of this instance.
-		/// </summary>
-		void Dispose();
 	}
 
 	/// <summary>
@@ -4451,6 +4446,10 @@ namespace TVA.IO.Compression.Zip
 			if ( temporaryStream_ != null ) {
 				temporaryStream_.Close();
 			}
+
+            if ( finalStream_ != null ) {
+                finalStream_.Close();
+            }
 		}
 
 		#endregion

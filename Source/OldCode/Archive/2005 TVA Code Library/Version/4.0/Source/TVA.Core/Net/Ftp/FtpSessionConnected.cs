@@ -31,6 +31,7 @@ namespace TVA.Net.Ftp
         private FtpDirectory m_current;
         private FtpDataStream m_dataStream;
         private bool m_caseInsensitive;
+        private bool m_disposed;
 
         #endregion
 
@@ -42,6 +43,14 @@ namespace TVA.Net.Ftp
             m_ctrlChannel = ctrl;
             m_ctrlChannel.Session = this;
             m_caseInsensitive = caseInsensitive;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="FtpSessionConnected"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~FtpSessionConnected()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -121,6 +130,51 @@ namespace TVA.Net.Ftp
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="FtpSessionConnected"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FtpSessionConnected"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        m_host = null;
+                        m_root = null;
+                        m_current = null;
+
+                        if (m_ctrlChannel != null)
+                            m_ctrlChannel.Close();
+
+                        m_ctrlChannel = null;
+
+                        if (m_dataStream != null)
+                            m_dataStream.Dispose();
+
+                        m_dataStream = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
 
         internal void InitRootDirectory()
         {

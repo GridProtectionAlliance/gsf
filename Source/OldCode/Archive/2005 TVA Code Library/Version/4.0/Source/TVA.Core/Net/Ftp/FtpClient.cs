@@ -105,6 +105,7 @@ namespace TVA.Net.Ftp
         private bool m_caseInsensitive;
         private IFtpSessionState m_currentState;
         private int m_waitLockTimeOut;
+        private bool m_disposed;
 
         #endregion
 
@@ -313,6 +314,32 @@ namespace TVA.Net.Ftp
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FtpClient"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_currentState != null)
+                            m_currentState.Dispose();
+
+                        m_currentState = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Aborts current file transfer.
