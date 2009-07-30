@@ -688,6 +688,30 @@ namespace TVA.Net.Ftp
             return null;
         }
 
+        /// <summary>
+        /// Determines if the two <see cref="FtpDirectory"/> objects are equal.
+        /// </summary>
+        /// <param name="obj">Other object to compare.</param>
+        /// <returns><c>true</c> if both objects are equal.</returns>
+        public override bool Equals(object obj)
+        {
+            FtpDirectory other = obj as FtpDirectory;
+
+            if (other != null)
+                return (CompareTo(other) == 0);
+
+            return false;
+        }
+
+        /// <summary>
+        /// Generates hash code for this <see cref="FtpDirectory"/>.
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode()
+        {
+            return m_name.GetHashCode();
+        }
+
         int IComparable<FtpDirectory>.CompareTo(FtpDirectory other)
         {
             // Directories are sorted by name
@@ -711,6 +735,58 @@ namespace TVA.Net.Ftp
                 return CompareTo(file);
             else
                 throw new ArgumentException("File can only be compared to other Files or Directories");
+        }
+
+        #endregion
+
+        #region [ Operators ]
+
+        /// <summary>
+        /// Compares the two values for equality.
+        /// </summary>
+        public static bool operator ==(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) == 0);
+        }
+
+        /// <summary>
+        /// Compares the two values for inequality.
+        /// </summary>
+        public static bool operator !=(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) != 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is less than right value.
+        /// </summary>
+        public static bool operator <(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) < 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
+        public static bool operator <=(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) <= 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is greater than right value.
+        /// </summary>
+        public static bool operator >(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) > 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is greater than or equal to right value.
+        /// </summary>
+        public static bool operator >=(FtpDirectory value1, FtpDirectory value2)
+        {
+            return (value1.CompareTo(value2) >= 0);
         }
 
         #endregion

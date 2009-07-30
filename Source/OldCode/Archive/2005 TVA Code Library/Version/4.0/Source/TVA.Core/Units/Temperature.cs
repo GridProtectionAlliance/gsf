@@ -574,6 +574,58 @@ namespace TVA.Units
 
         #region [ Operators ]
 
+        #region [ Comparison Operators ]
+
+        /// <summary>
+        /// Compares the two values for equality.
+        /// </summary>
+        public static bool operator ==(Temperature value1, Temperature value2)
+        {
+            return value1.Equals(value2);
+        }
+
+        /// <summary>
+        /// Compares the two values for inequality.
+        /// </summary>
+        public static bool operator !=(Temperature value1, Temperature value2)
+        {
+            return !value1.Equals(value2);
+        }
+
+        /// <summary>
+        /// Returns true if left value is less than right value.
+        /// </summary>
+        public static bool operator <(Temperature value1, Temperature value2)
+        {
+            return (value1.CompareTo(value2) < 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
+        public static bool operator <=(Temperature value1, Temperature value2)
+        {
+            return (value1.CompareTo(value2) <= 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is greater than right value.
+        /// </summary>
+        public static bool operator >(Temperature value1, Temperature value2)
+        {
+            return (value1.CompareTo(value2) > 0);
+        }
+
+        /// <summary>
+        /// Returns true if left value is greater than or equal to right value.
+        /// </summary>
+        public static bool operator >=(Temperature value1, Temperature value2)
+        {
+            return (value1.CompareTo(value2) >= 0);
+        }
+
+        #endregion
+
         #region [ Type Conversion Operators ]
 
         /// <summary>
