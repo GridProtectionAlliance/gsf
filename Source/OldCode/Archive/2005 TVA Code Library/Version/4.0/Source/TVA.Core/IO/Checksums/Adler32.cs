@@ -55,8 +55,7 @@
 using System;
 
 namespace TVA.IO.Checksums 
-{
-	
+{	
 	/// <summary>
 	/// Computes Adler32 checksum for a stream of data. An Adler32
 	/// checksum is not as reliable as a CRC32 checksum, but a lot faster to

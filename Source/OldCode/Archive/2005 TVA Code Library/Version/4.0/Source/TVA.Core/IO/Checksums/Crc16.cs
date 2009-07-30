@@ -21,7 +21,6 @@ using System;
 
 namespace TVA.IO.Checksums 
 {
-
 	#region [ Enumerations ]
 
 	/// <summary>
