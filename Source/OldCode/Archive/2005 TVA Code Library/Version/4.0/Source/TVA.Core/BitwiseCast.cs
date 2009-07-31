@@ -44,6 +44,8 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToInt16 will throw an OverflowException for values greater than Int16.MaxValue.</para>
         /// <para>For example, this function correctly converts unsigned 16-bit integer 65535 (i.e., UInt16.MaxValue) to signed 16-bit integer -1.</para>
+        /// <param name="unsignedInt">Unsigned short that is passed in to be converted to a signed short by a bitwise conversion.</param>
+        /// <returns>The converted short value.</returns>
         /// </remarks>
         [CLSCompliant(false)]
         public static short ToInt16(ushort unsignedInt)
