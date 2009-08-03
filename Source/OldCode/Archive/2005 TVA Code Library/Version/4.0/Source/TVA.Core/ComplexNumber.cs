@@ -28,6 +28,14 @@
   
 \**************************************************************************/
 
+//*******************************************************************************************************
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  8/3/2009 - Josh Patterson
+//      Updated comments
+//
+//*******************************************************************************************************
+
 using System;
 using System.Text;
 using TVA.Units;
@@ -345,6 +353,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts a <see cref="Double"/> to a <see cref="ComplexNumber"/>.
         /// </summary>
+        /// <param name="value">Operand.</param>
+        /// <returns>ComplexNumber representing the result of the operation.</returns>
         public static implicit operator ComplexNumber(double value)
         {
             return new ComplexNumber(value, 0.0D);
@@ -353,6 +363,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean representing the result of the addition operation.</returns>
         public static bool operator ==(ComplexNumber value1, ComplexNumber value2)
         {
             return (value1.Real == value2.Real && value1.Imaginary == value2.Imaginary);
@@ -361,6 +374,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean representing the result of the inequality operation.</returns>
         public static bool operator !=(ComplexNumber value1, ComplexNumber value2)
         {
             return !(value1 == value2);
@@ -369,6 +385,8 @@ namespace TVA
         /// <summary>
         /// Returns the negated value.
         /// </summary>
+        /// <param name="z">Left hand operand.</param>
+        /// <returns>ComplexNumber representing the result of the unary negation operation.</returns>
         public static ComplexNumber operator -(ComplexNumber z)
         {
             return new ComplexNumber(-z.Real, -z.Imaginary);
@@ -377,6 +395,9 @@ namespace TVA
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>ComplexNumber representing the result of the addition operation.</returns>
         public static ComplexNumber operator +(ComplexNumber value1, ComplexNumber value2)
         {
             return new ComplexNumber(value1.Real + value2.Real, value1.Imaginary + value2.Imaginary);
@@ -385,6 +406,9 @@ namespace TVA
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>ComplexNumber representing the result of the subtraction operation.</returns>
         public static ComplexNumber operator -(ComplexNumber value1, ComplexNumber value2)
         {
             return new ComplexNumber(value1.Real - value2.Real, value1.Imaginary - value2.Imaginary);
@@ -393,6 +417,9 @@ namespace TVA
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>ComplexNumber representing the result of the multiplication operation.</returns>
         public static ComplexNumber operator *(ComplexNumber value1, ComplexNumber value2)
         {
             double real = value1.Real * value2.Real - value1.Imaginary * value2.Imaginary;
@@ -404,6 +431,9 @@ namespace TVA
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>ComplexNumber representing the result of the division operation.</returns>
         public static ComplexNumber operator /(ComplexNumber value1, ComplexNumber value2)
         {
             double divisor = Math.Pow(value2.Real, 2) + Math.Pow(value2.Imaginary, 2);
@@ -418,6 +448,7 @@ namespace TVA
         ///</summary>
         ///<param name="z">Complex number to be raised to power <paramref name="y"/>.</param>
         ///<param name="y">Power to raise <see cref="ComplexNumber"/> <paramref name="z"/>.</param>
+        /// <returns>ComplexNumber representing the result of the operation.</returns>
         public static ComplexNumber Pow(ComplexNumber z, double y)
         {
             return new ComplexNumber(z.Angle * y, Math.Pow(z.Magnitude, y));
