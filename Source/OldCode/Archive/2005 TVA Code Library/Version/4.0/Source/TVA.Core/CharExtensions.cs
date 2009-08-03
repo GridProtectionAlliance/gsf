@@ -13,6 +13,9 @@
 //  12/13/2008 - F. Russell Robertson
 //       Generated original version of source code.
 //
+//  8/3/2009 - Josh Patterson
+//      Updated comments
+//
 //*******************************************************************************************************
 
 using System;
@@ -81,7 +84,7 @@ namespace TVA
         /// </summary>
         /// <param name="value">The character to check.</param>
         /// <param name="testChars">The array of characters to test.</param>
-        /// <returns></returns>
+        /// <returns>Boolean value indicating a that the character is in the array.</returns>
         public static bool IsAny(this char value, IEnumerable<char> testChars)
         {
             foreach (char c in testChars)
