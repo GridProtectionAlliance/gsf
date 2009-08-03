@@ -28,6 +28,16 @@
   
 \**************************************************************************/
 
+
+//*******************************************************************************************************
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  8/3/2009 - Josh Patterson
+//      Updated comments
+//
+//*******************************************************************************************************
+
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -174,6 +184,7 @@ namespace TVA
         /// <summary>
         /// Constructs a new instance of the <see cref="EndianOrder"/> class.
         /// </summary>
+        /// <param name="targetEndianness">Endianness parameter.</param>
         protected EndianOrder(Endianness targetEndianness)
         {
             m_targetEndianness = targetEndianness;
@@ -276,6 +287,8 @@ namespace TVA
         /// <summary>
         /// Changes the order of a buffer (reverse or pass-through) based on the target endian-order of this <see cref="EndianOrder"/> representation.
         /// </summary>
+        /// <param name="buffer">Byte buffer to be coerced.</param>
+        /// <returns>Coerced byte array.</returns>
         public byte[] CoerceByteOrder(byte[] buffer)
         {
             return m_coerceByteOrder(buffer);
