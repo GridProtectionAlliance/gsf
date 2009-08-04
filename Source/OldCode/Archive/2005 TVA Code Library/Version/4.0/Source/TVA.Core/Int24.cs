@@ -28,6 +28,17 @@
   
 \**************************************************************************/
 
+
+//*******************************************************************************************************
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  8/3/2009 - Josh Patterson
+//      Updated comments
+//
+//*******************************************************************************************************
+
+
+
 using System;
 using System.ComponentModel;
 using System.Globalization;
@@ -77,6 +88,7 @@ namespace TVA
         #region [ Constructors ]
 
         /// <summary>Creates 24-bit signed integer from an existing 24-bit signed integer.</summary>
+        /// <param name="value">24-but signed integer to create new Int24 from.</param>
         public Int24(Int24 value)
         {
             m_value = ApplyBitMask((int)value);
@@ -548,6 +560,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean value indicating equality.</returns>
         public static bool operator ==(Int24 value1, Int24 value2)
         {
             return value1.Equals(value2);
@@ -556,6 +571,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean value indicating equality.</returns>
         public static bool operator ==(int value1, Int24 value2)
         {
             return value1.Equals((int)value2);
@@ -564,6 +582,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean value indicating equality.</returns>
         public static bool operator ==(Int24 value1, int value2)
         {
             return ((int)value1).Equals(value2);
@@ -572,6 +593,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating the result of the inequality.</returns>
         public static bool operator !=(Int24 value1, Int24 value2)
         {
             return !value1.Equals(value2);
@@ -580,6 +604,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating the result of the inequality.</returns>
         public static bool operator !=(int value1, Int24 value2)
         {
             return !value1.Equals((int)value2);
@@ -588,6 +615,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating the result of the inequality.</returns>
         public static bool operator !=(Int24 value1, int value2)
         {
             return !((int)value1).Equals(value2);
@@ -596,6 +626,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) < 0);
@@ -604,6 +637,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) < 0);
@@ -612,6 +648,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) < 0);
@@ -620,6 +659,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <=(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) <= 0);
@@ -628,6 +670,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <=(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) <= 0);
@@ -636,6 +681,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was less than the right value.</returns>
         public static bool operator <=(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) <= 0);
@@ -644,6 +692,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than the right value.</returns>
         public static bool operator >(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) > 0);
@@ -652,6 +703,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than the right value.</returns>
         public static bool operator >(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) > 0);
@@ -660,6 +714,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than the right value.</returns>
         public static bool operator >(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) > 0);
@@ -668,6 +725,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than or equal to the right value.</returns>
         public static bool operator >=(Int24 value1, Int24 value2)
         {
             return (value1.CompareTo(value2) >= 0);
@@ -676,6 +736,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than or equal to the right value.</returns>
         public static bool operator >=(int value1, Int24 value2)
         {
             return (value1.CompareTo((int)value2) >= 0);
@@ -684,6 +747,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Boolean indicating whether the left value was greater than or equal to the right value.</returns>
         public static bool operator >=(Int24 value1, int value2)
         {
             return (value1.CompareTo(value2) >= 0);
@@ -698,6 +764,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Enum value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(Enum value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -706,6 +774,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">String value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(string value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -714,6 +784,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Decimal value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(decimal value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -722,6 +794,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Double value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(double value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -730,6 +804,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Float value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(float value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -738,6 +814,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Long value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(long value)
         {
             return new Int24(Convert.ToInt32(value));
@@ -746,6 +824,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Integer value that is converted.</param>
+        /// <returns>Int24</returns>
         public static explicit operator Int24(int value)
         {
             return new Int24(value);
@@ -754,6 +834,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts <see cref="Int24"/> to <see cref="Int16"/>.
         /// </summary>
+        /// <param name="value">Int24 value that is converted.</param>
+        /// <returns>Short</returns>
         public static explicit operator short(Int24 value)
         {
             return (short)((int)value);
@@ -762,6 +844,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts <see cref="Int24"/> to <see cref="UInt16"/>.
         /// </summary>
+        /// <param name="value">Int24 value that is converted.</param>
+        /// <returns>Unsigned Short</returns>
         [CLSCompliant(false)]
         public static explicit operator ushort(Int24 value)
         {
@@ -771,6 +855,8 @@ namespace TVA
         /// <summary>
         /// Explicitly converts <see cref="Int24"/> to <see cref="Byte"/>.
         /// </summary>
+        /// <param name="value">Int24 value that is converted.</param>
+        /// <returns>Byte</returns>
         public static explicit operator byte(Int24 value)
         {
             return (byte)((int)value);
@@ -783,6 +869,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Byte value that is converted to an <see cref="Int24"/>.</param>
+        /// <returns><see cref="Int24"/></returns>
         public static implicit operator Int24(byte value)
         {
             return new Int24((int)value);
@@ -791,6 +879,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Char value that is converted to an <see cref="Int24"/>.</param>
+        /// <returns><see cref="Int24"/></returns>
         public static implicit operator Int24(char value)
         {
             return new Int24((int)value);
@@ -799,6 +889,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
+        /// <param name="value">Short value that is converted to an <see cref="Int24"/>.</param>
+        /// <returns><see cref="Int24"/></returns>
         public static implicit operator Int24(short value)
         {
             return new Int24((int)value);
@@ -807,6 +899,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="Int32"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Int32"/>.</param>
+        /// <returns><see cref="Int32"/></returns>
         public static implicit operator int(Int24 value)
         {
             return ((IConvertible)value).ToInt32(null);
@@ -815,6 +909,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="UInt32"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an unsigned integer.</param>
+        /// <returns>Unsigned integer</returns>
         [CLSCompliant(false)]
         public static implicit operator uint(Int24 value)
         {
@@ -824,6 +920,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="Int64"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Int64"/>.</param>
+        /// <returns><see cref="Int64"/></returns>
         public static implicit operator long(Int24 value)
         {
             return ((IConvertible)value).ToInt64(null);
@@ -832,6 +930,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="UInt64"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="UInt64"/>.</param>
+        /// <returns><see cref="UInt64"/></returns>
         [CLSCompliant(false)]
         public static implicit operator ulong(Int24 value)
         {
@@ -841,6 +941,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="Double"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Double"/>.</param>
+        /// <returns><see cref="Double"/></returns>
         public static implicit operator double(Int24 value)
         {
             return ((IConvertible)value).ToDouble(null);
@@ -849,6 +951,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="Single"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Single"/>.</param>
+        /// <returns><see cref="Single"/></returns>
         public static implicit operator float(Int24 value)
         {
             return ((IConvertible)value).ToSingle(null);
@@ -857,6 +961,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="Decimal"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Decimal"/>.</param>
+        /// <returns><see cref="Decimal"/></returns>
         public static implicit operator decimal(Int24 value)
         {
             return ((IConvertible)value).ToDecimal(null);
@@ -865,6 +971,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Int24"/> to <see cref="String"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="String"/>.</param>
+        /// <returns><see cref="String"/></returns>
         public static implicit operator string(Int24 value)
         {
             return value.ToString();
@@ -879,6 +987,8 @@ namespace TVA
         /// <summary>
         /// Returns true if value is not zero.
         /// </summary>
+        /// <param name="value">Int24 value to test.</param>
+        /// <returns>Boolean to indicate whether the value was not equal to zero.</returns>
         public static bool operator true(Int24 value)
         {
             return (value != 0);
@@ -887,6 +997,8 @@ namespace TVA
         /// <summary>
         /// Returns true if value is equal to zero.
         /// </summary>
+        /// <param name="value">Int24 value to test.</param>
+        /// <returns>Boolean to indicate whether the value was equal to zero.</returns>
         public static bool operator false(Int24 value)
         {
             return (value == 0);
@@ -895,6 +1007,8 @@ namespace TVA
         /// <summary>
         /// Returns bitwise complement of value.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value as operand.</param>
+        /// <returns><see cref="Int24"/> as result.</returns>
         public static Int24 operator ~(Int24 value)
         {
             return (Int24)ApplyBitMask(~(int)value);
@@ -903,6 +1017,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise AND of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Int24 as result of operation.</returns>
         public static Int24 operator &(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 & (int)value2);
@@ -911,6 +1028,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise AND of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer as result of operation.</returns>
         public static int operator &(int value1, Int24 value2)
         {
             return (value1 & (int)value2);
@@ -919,6 +1039,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise AND of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer as result of operation.</returns>
         public static int operator &(Int24 value1, int value2)
         {
             return ((int)value1 & value2);
@@ -927,6 +1050,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Int24 as result of operation.</returns>
         public static Int24 operator |(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 | (int)value2);
@@ -935,6 +1061,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer as result of operation.</returns>
         public static int operator |(int value1, Int24 value2)
         {
             return (value1 | (int)value2);
@@ -943,6 +1072,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer as result of operation.</returns>
         public static int operator |(Int24 value1, int value2)
         {
             return ((int)value1 | value2);
@@ -951,6 +1083,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise exclusive-OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer value of the resulting exclusive-OR operation.</returns>
         public static Int24 operator ^(Int24 value1, Int24 value2)
         {
             return (Int24)ApplyBitMask((int)value1 ^ (int)value2);
@@ -959,6 +1094,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise exclusive-OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer value of the resulting exclusive-OR operation.</returns>
         public static int operator ^(int value1, Int24 value2)
         {
             return (value1 ^ (int)value2);
@@ -967,6 +1105,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise exclusive-OR of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer value of the resulting exclusive-OR operation.</returns>
         public static int operator ^(Int24 value1, int value2)
         {
             return ((int)value1 ^ value2);
@@ -975,6 +1116,9 @@ namespace TVA
         /// <summary>
         /// Returns value after right shifts of first value by the number of bits specified by second value.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value to shift.</param>
+        /// <param name="shifts"><see cref="Int32"/> shifts indicates how many places to shift.</param>
+        /// <returns><see cref="Int24"/></returns>
         public static Int24 operator >>(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value >> shifts));
@@ -983,6 +1127,9 @@ namespace TVA
         /// <summary>
         /// Returns value after left shifts of first value by the number of bits specified by second value.
         /// </summary>
+        /// <param name="value"><see cref="Int24"/> value to shift.</param>
+        /// <param name="shifts"><see cref="Int32"/> shifts indicates how many places to shift.</param>
+        /// <returns><see cref="Int24"/></returns>
         public static Int24 operator <<(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value << shifts));
@@ -995,6 +1142,9 @@ namespace TVA
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
+        /// <param name="value1"><see cref="Int24"/> value as numerator.</param>
+        /// <param name="value2"><see cref="Int24"/> value as denominator.</param>
+        /// <returns><see cref="Int24"/> as remainder</returns>
         public static Int24 operator %(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 % (int)value2);
@@ -1003,6 +1153,9 @@ namespace TVA
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
+        /// <param name="value1"><see cref="Int32"/> value as numerator.</param>
+        /// <param name="value2"><see cref="Int24"/> value as denominator.</param>
+        /// <returns><see cref="Int32"/> as remainder</returns>
         public static int operator %(int value1, Int24 value2)
         {
             return (value1 % (int)value2);
@@ -1011,6 +1164,9 @@ namespace TVA
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
+        /// <param name="value1"><see cref="Int24"/> value as numerator.</param>
+        /// <param name="value2"><see cref="Int32"/> value as denominator.</param>
+        /// <returns><see cref="Int32"/> as remainder</returns>
         public static int operator %(Int24 value1, int value2)
         {
             return ((int)value1 % value2);
@@ -1019,6 +1175,9 @@ namespace TVA
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Int24 result of addition.</returns>
         public static Int24 operator +(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 + (int)value2);
@@ -1027,6 +1186,9 @@ namespace TVA
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of addition.</returns>
         public static int operator +(int value1, Int24 value2)
         {
             return (value1 + (int)value2);
@@ -1035,6 +1197,9 @@ namespace TVA
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of addition.</returns>
         public static int operator +(Int24 value1, int value2)
         {
             return ((int)value1 + value2);
@@ -1043,6 +1208,9 @@ namespace TVA
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Int24 result of subtraction.</returns>
         public static Int24 operator -(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 - (int)value2);
@@ -1051,6 +1219,9 @@ namespace TVA
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of subtraction.</returns>
         public static int operator -(int value1, Int24 value2)
         {
             return (value1 - (int)value2);
@@ -1059,6 +1230,9 @@ namespace TVA
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of subtraction.</returns>
         public static int operator -(Int24 value1, int value2)
         {
             return ((int)value1 - value2);
@@ -1067,6 +1241,9 @@ namespace TVA
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
+        /// <param name="value1"><see cref="Int24"/> value as left hand operand.</param>
+        /// <param name="value2"><see cref="Int24"/> value as right hand operand.</param>
+        /// <returns><see cref="Int24"/> as result</returns>
         public static Int24 operator *(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 * (int)value2);
@@ -1075,6 +1252,9 @@ namespace TVA
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
+        /// <param name="value1"><see cref="Int32"/> value as left hand operand.</param>
+        /// <param name="value2"><see cref="Int24"/> value as right hand operand.</param>
+        /// <returns><see cref="Int32"/> as result</returns>
         public static int operator *(int value1, Int24 value2)
         {
             return (value1 * (int)value2);
@@ -1083,6 +1263,9 @@ namespace TVA
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
+        /// <param name="value1"><see cref="Int24"/> value as left hand operand.</param>
+        /// <param name="value2"><see cref="Int32"/> value as right hand operand.</param>
+        /// <returns><see cref="Int32"/> as result</returns>
         public static int operator *(Int24 value1, int value2)
         {
             return ((int)value1 * value2);
@@ -1093,6 +1276,9 @@ namespace TVA
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Int24 result of operation.</returns>
         public static Int24 operator /(Int24 value1, Int24 value2)
         {
             return (Int24)((int)value1 / (int)value2);
@@ -1101,6 +1287,9 @@ namespace TVA
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of operation.</returns>
         public static int operator /(int value1, Int24 value2)
         {
             return (value1 / (int)value2);
@@ -1109,6 +1298,9 @@ namespace TVA
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Integer result of operation.</returns>
         public static int operator /(Int24 value1, int value2)
         {
             return ((int)value1 / value2);
@@ -1136,6 +1328,9 @@ namespace TVA
         /// <summary>
         /// Returns result of first value raised to power of second value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Double that is the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Int24 value1, Int24 value2)
         {
@@ -1145,6 +1340,9 @@ namespace TVA
         /// <summary>
         /// Returns result of first value raised to power of second value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Double that is the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(int value1, Int24 value2)
         {
@@ -1154,6 +1352,9 @@ namespace TVA
         /// <summary>
         /// Returns result of first value raised to power of second value.
         /// </summary>
+        /// <param name="value1">Left hand operand.</param>
+        /// <param name="value2">Right hand operand.</param>
+        /// <returns>Double that is the result of the operation.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Int24 value1, int value2)
         {
