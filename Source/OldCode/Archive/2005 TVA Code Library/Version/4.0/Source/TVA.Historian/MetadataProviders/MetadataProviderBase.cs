@@ -182,7 +182,7 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Gets or sets the category under which the metadata provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value specified is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string SettingsCategory
         {
             get
