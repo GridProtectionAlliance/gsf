@@ -27,6 +27,13 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
  \**************************************************************************/
+//*******************************************************************************************************
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/4/2009 - Josh Patterson
+//      Edited Code Comments
+//
+//*******************************************************************************************************
 
 using System;
 using System.ComponentModel;
@@ -892,6 +899,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator ==(Ticks value1, Ticks value2)
         {
             return value1.Equals(value2);
@@ -900,6 +910,9 @@ namespace TVA
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator !=(Ticks value1, Ticks value2)
         {
             return !value1.Equals(value2);
@@ -908,6 +921,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less than right value.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <(Ticks value1, Ticks value2)
         {
             return (value1.CompareTo(value2) < 0);
@@ -916,6 +932,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator <=(Ticks value1, Ticks value2)
         {
             return (value1.CompareTo(value2) <= 0);
@@ -924,6 +943,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than right value.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >(Ticks value1, Ticks value2)
         {
             return (value1.CompareTo(value2) > 0);
@@ -932,6 +954,9 @@ namespace TVA
         /// <summary>
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator >=(Ticks value1, Ticks value2)
         {
             return (value1.CompareTo(value2) >= 0);
@@ -944,6 +969,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value, represented in ticks, to a <see cref="Ticks"/>.
         /// </summary>
+        /// <param name="value"><see cref="Int64"/> value to convert.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static implicit operator Ticks(Int64 value)
         {
             return new Ticks(value);
@@ -952,6 +979,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value, represented as a <see cref="DateTime"/>, to a <see cref="Ticks"/>.
         /// </summary>
+        /// <param name="value"><see cref="DateTime"/> value to convert.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static implicit operator Ticks(DateTime value)
         {
             return new Ticks(value);
@@ -960,6 +989,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value, represented as a <see cref="TimeSpan"/>, to a <see cref="Ticks"/>.
         /// </summary>
+        /// <param name="value"><see cref="TimeSpan"/> value to convert.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static implicit operator Ticks(TimeSpan value)
         {
             return new Ticks(value);
@@ -968,6 +999,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts value, represented as a <see cref="TimeTagBase"/>, to a <see cref="Ticks"/>.
         /// </summary>
+        /// <param name="value"><see cref="TimeTagBase"/> value to convert.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static implicit operator Ticks(TimeTagBase value)
         {
             return new Ticks(value.ToDateTime());
@@ -976,6 +1009,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to an <see cref="Int64"/>.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to convert.</param>
+        /// <returns><see cref="Int64"/> value representing the result.</returns>
         public static implicit operator Int64(Ticks value)
         {
             return value.m_value;
@@ -984,6 +1019,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to a <see cref="DateTime"/>.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to convert.</param>
+        /// <returns><see cref="DateTime"/> value representing the result.</returns>
         public static implicit operator DateTime(Ticks value)
         {
             return new DateTime(value.m_value);
@@ -992,6 +1029,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to a <see cref="TimeSpan"/>.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to convert.</param>
+        /// <returns><see cref="TimeSpan"/> value representing the result.</returns>
         public static implicit operator TimeSpan(Ticks value)
         {
             return new TimeSpan(value.m_value);
@@ -1000,6 +1039,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to an <see cref="NtpTimeTag"/>.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to convert.</param>
+        /// <returns><see cref="NtpTimeTag"/> value representing the result.</returns>
         public static implicit operator NtpTimeTag(Ticks value)
         {
             return new NtpTimeTag(new DateTime(value.m_value));
@@ -1008,6 +1049,8 @@ namespace TVA
         /// <summary>
         /// Implicitly converts <see cref="Ticks"/>, represented in ticks, to a <see cref="UnixTimeTag"/>.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to convert.</param>
+        /// <returns><see cref="UnixTimeTag"/> value representing the result.</returns>
         public static implicit operator UnixTimeTag(Ticks value)
         {
             return new UnixTimeTag(new DateTime(value.m_value));
@@ -1020,6 +1063,8 @@ namespace TVA
         /// <summary>
         /// Returns true if value is not zero.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to evaluate.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator true(Ticks value)
         {
             return (value.m_value != 0);
@@ -1028,6 +1073,8 @@ namespace TVA
         /// <summary>
         /// Returns true if value is equal to zero.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to evaluate.</param>
+        /// <returns><see cref="bool"/> value representing the result.</returns>
         public static bool operator false(Ticks value)
         {
             return (value.m_value == 0);
@@ -1036,6 +1083,8 @@ namespace TVA
         /// <summary>
         /// Returns bitwise complement of value.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to evaluate.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ~(Ticks value)
         {
             return ~value.m_value;
@@ -1044,6 +1093,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise AND of values.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator &(Ticks value1, Ticks value2)
         {
             return value1.m_value & value2.m_value;
@@ -1052,6 +1104,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise OR of values.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator |(Ticks value1, Ticks value2)
         {
             return value1.m_value | value2.m_value;
@@ -1060,6 +1115,9 @@ namespace TVA
         /// <summary>
         /// Returns logical bitwise exclusive-OR of values.
         /// </summary>
+        /// <param name="value1"><see cref="Ticks"/> left hand operand.</param>
+        /// <param name="value2"><see cref="Ticks"/> right hand operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator ^(Ticks value1, Ticks value2)
         {
             return value1.m_value ^ value2.m_value;
@@ -1068,6 +1126,9 @@ namespace TVA
         /// <summary>
         /// Returns value after right shifts of first value by the number of bits specified by second value.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to shift.</param>
+        /// <param name="shifts"><see cref="int"/> number of bits to shift.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator >>(Ticks value, int shifts)
         {
             return (Ticks)(value.m_value >> shifts);
@@ -1076,6 +1137,9 @@ namespace TVA
         /// <summary>
         /// Returns value after left shifts of first value by the number of bits specified by second value.
         /// </summary>
+        /// <param name="value"><see cref="Ticks"/> value to shift.</param>
+        /// <param name="shifts"><see cref="int"/> number of bits to shift.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator <<(Ticks value, int shifts)
         {
             return (Ticks)(value.m_value << shifts);
@@ -1088,6 +1152,9 @@ namespace TVA
         /// <summary>
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator %(Ticks value1, Ticks value2)
         {
             return value1.m_value % value2.m_value;
@@ -1096,6 +1163,9 @@ namespace TVA
         /// <summary>
         /// Returns computed sum of values.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator +(Ticks value1, Ticks value2)
         {
             return value1.m_value + value2.m_value;
@@ -1104,6 +1174,9 @@ namespace TVA
         /// <summary>
         /// Returns computed difference of values.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator -(Ticks value1, Ticks value2)
         {
             return value1.m_value - value2.m_value;
@@ -1112,6 +1185,9 @@ namespace TVA
         /// <summary>
         /// Returns computed product of values.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator *(Ticks value1, Ticks value2)
         {
             return value1.m_value * value2.m_value;
@@ -1122,6 +1198,9 @@ namespace TVA
         /// <summary>
         /// Returns computed division of values.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="Ticks"/> value representing the result.</returns>
         public static Ticks operator /(Ticks value1, Ticks value2)
         {
             return value1.m_value / value2.m_value;
@@ -1133,6 +1212,9 @@ namespace TVA
         /// <summary>
         /// Returns result of first value raised to power of second value.
         /// </summary>
+        /// <param name="value1">Left hand <see cref="Ticks"/> operand.</param>
+        /// <param name="value2">Right hand <see cref="Ticks"/> operand.</param>
+        /// <returns><see cref="double"/> value representing the result.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Ticks value1, Ticks value2)
         {
