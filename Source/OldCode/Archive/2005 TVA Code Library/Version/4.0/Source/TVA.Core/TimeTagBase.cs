@@ -28,6 +28,16 @@
   
 \**************************************************************************/
 
+
+//*******************************************************************************************************
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/4/2009 - Josh Patterson
+//      Edited Code Comments
+//
+//*******************************************************************************************************
+
+
 using System;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
@@ -122,6 +132,7 @@ namespace TVA
         /// <summary>
         /// Returns standard .NET <see cref="DateTime"/> representation for timetag.
         /// </summary>
+        /// <returns>A <see cref="DateTime"/>.</returns>
         public virtual DateTime ToDateTime()
         {
             // Converts m_seconds to 100-nanosecond ticks and add the base time offset.
@@ -135,6 +146,7 @@ namespace TVA
         /// Format is "yyyy-MM-dd HH:mm:ss.fff" so that textual representation can be sorted in the
         /// correct chronological order.
         /// </remarks>
+        /// <returns>A <see cref="string"/> value representing the timetag.</returns>
         public override string ToString()
         {
             return ToString("yyyy-MM-dd HH:mm:ss.fff");
