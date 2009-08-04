@@ -23,7 +23,7 @@ using System.IO;
 using TVA.Collections;
 using TVA.IO;
 
-namespace TVA.Historian
+namespace TVA
 {
     /// <summary>
     /// Represents a generic loader of adapters.
