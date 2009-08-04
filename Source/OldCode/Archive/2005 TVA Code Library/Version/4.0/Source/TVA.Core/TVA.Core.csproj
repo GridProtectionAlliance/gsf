@@ -64,6 +64,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdapterLoader.cs" />
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BinaryCodedDecimal.cs" />
     <Compile Include="BinaryValue.cs" />
