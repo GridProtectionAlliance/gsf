@@ -18,6 +18,8 @@
 //      Added TryGetObject overloads
 //  02/16/2009 - Josh Patterson
 //      Edited Code Comments
+//  08/4/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -95,6 +97,7 @@ namespace TVA
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
         /// <typeparam name="T">The type of the object to create from the serialized byte array <paramref name="serializedObject"/>.</typeparam>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
+        /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
         public static T GetObject<T>(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -106,6 +109,7 @@ namespace TVA
         /// </summary>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <param name="deserializedObject">A byref type T that is passed in to be hold the de-serialized object.</param>
+        /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
         /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
         public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
         {
