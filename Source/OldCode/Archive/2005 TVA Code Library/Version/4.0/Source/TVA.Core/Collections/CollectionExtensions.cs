@@ -28,6 +28,8 @@
 //       Added generic AddRange() extension method for IList<T>.
 //  06/09/2009 - Pinal C. Patel
 //       Added generic GetRange() extension method for IList<T>.
+//  08/05/2009 - Josh Patterson
+//       Update comments
 //
 //*******************************************************************************************************
 
@@ -402,6 +404,7 @@ namespace TVA.Collections
         /// <param name="array1">The first type array to compare to.</param>
         /// <param name="array2">The second type array to compare against.</param>
         /// <returns>An <see cref="int"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
+        /// <typeparam name="TSource">The generic type of the list.</typeparam>
         public static int CompareTo<TSource>(this TSource[] array1, TSource[] array2)
         {
             return CompareTo(array1, array2, Comparer<TSource>.Default);
