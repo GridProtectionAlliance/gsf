@@ -14,6 +14,8 @@
 //       Initial version of source generated
 //  09/16/2008 - James R. Carroll
 //      Converted to C#.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -161,6 +163,7 @@ namespace TVA.Measurements
         /// <remarks>
         /// The measurement dictionary of this <see cref="Frame"/> is synclocked during copy.
         /// </remarks>
+        /// <returns>A cloned <see cref="Frame"/>.</returns>
         public virtual Frame Clone()
         {
             IDictionary<MeasurementKey, IMeasurement> measurements = Measurements;
@@ -248,6 +251,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="Frame"/> timestamps for equality.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator ==(Frame frame1, Frame frame2)
         {
             return frame1.Equals(frame2);
@@ -256,6 +262,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="Frame"/> timestamps for inequality.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator !=(Frame frame1, Frame frame2)
         {
             return !frame1.Equals(frame2);
@@ -264,6 +273,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Frame"/> timestamp is greater than right <see cref="Frame"/> timestamp.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) > 0;
@@ -272,6 +284,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Frame"/> timestamp is greater than or equal to right <see cref="Frame"/> timestamp.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >=(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) >= 0;
@@ -280,6 +295,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Frame"/> timestamp is less than right <see cref="Frame"/> timestamp.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) < 0;
@@ -288,6 +306,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Frame"/> timestamp is less than or equal to right <see cref="Frame"/> timestamp.
         /// </summary>
+        /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
+        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <=(Frame frame1, Frame frame2)
         {
             return frame1.CompareTo(frame2) <= 0;

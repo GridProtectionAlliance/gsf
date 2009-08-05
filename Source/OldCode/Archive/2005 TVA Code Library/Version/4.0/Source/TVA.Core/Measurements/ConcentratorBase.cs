@@ -30,6 +30,8 @@
 //       Added code to evenly distribute integer based millisecond wait times across a second.
 //  09/16/2008 - James R. Carroll
 //      Converted to C#.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -840,6 +842,7 @@ namespace TVA.Measurements
         /// Returns the deviation, in seconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTime"/>).
         /// </summary>
         /// <param name="timestamp">Timestamp to calculate distance from real-time.</param>
+        /// <returns>A <see cref="Double"/> value indicating the deviation, in seconds, from real-time.</returns>
         public double SecondsFromRealTime(Ticks timestamp)
         {
             return (RealTime - timestamp).ToSeconds();
@@ -849,6 +852,7 @@ namespace TVA.Measurements
         /// Returns the deviation, in milliseconds, that the given number of ticks is from real-time (i.e., <see cref="ConcentratorBase.RealTime"/>).
         /// </summary>
         /// <param name="timestamp">Timestamp to calculate distance from real-time.</param>
+        /// <returns>A <see cref="Double"/> value indicating the deviation in milliseconds.</returns>
         public double MillisecondsFromRealTime(Ticks timestamp)
         {
             return (RealTime - timestamp).ToMilliseconds();
@@ -1099,6 +1103,8 @@ namespace TVA.Measurements
         /// <see cref="IFrame.Measurements"/> dictionary you must implement a locking scheme similar to the sample
         /// code to prevent changes to the measurement dictionary during frame publication.
         /// </para>
+        /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
+        /// <param name="measurement">The type of <see cref="IMeasurement"/> to use."/></param>
         /// </remarks>
         protected virtual bool AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
         {
