@@ -94,7 +94,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Updates the checksum with the int bval.
         /// </summary>
-        /// <param name="value">The <see cref="Byte"/> value to update.</param>
+        /// <param name="value">The <see cref="Byte"/> value to use for the update.</param>
         public void Update(byte value)
         {
             crc = (ushort)((crc << 8) ^ CrcTable[((crc >> 8) ^ value) & 0xff]);
