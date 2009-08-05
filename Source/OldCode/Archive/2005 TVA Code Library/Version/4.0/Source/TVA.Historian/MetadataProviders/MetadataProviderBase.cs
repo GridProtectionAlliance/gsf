@@ -51,6 +51,9 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered during <see cref="Refresh()"/> of <see cref="Metadata"/>.
         /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered during <see cref="Refresh()"/>.
+        /// </remarks>
         public event EventHandler<EventArgs<Exception>> MetadataRefreshException;
 
         // Fields
@@ -75,7 +78,7 @@ namespace TVA.Historian.MetadataProviders
         {
             m_enabled = false;
             m_refreshInterval = -1;
-            m_refreshTimeout = -1;
+            m_refreshTimeout = 60;
             m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
         }
@@ -295,32 +298,58 @@ namespace TVA.Historian.MetadataProviders
         /// <returns>true if the <see cref="Metadata"/> is refreshed; otherwise false.</returns>
         public bool Refresh()
         {
-            if (Enabled)
+            if (!m_enabled)
+                return false;
+
+            Thread refreshThread = new Thread(RefreshInternal);
+            refreshThread.Start();
+            if (m_refreshTimeout < 1)
             {
-                Thread refreshThread = new Thread(RefreshInternal);
-                refreshThread.Start();
-                if (m_refreshTimeout < 1)
-                {
-                    // Wait indefinetely on the refresh.
-                    refreshThread.Join(Timeout.Infinite);
-                }
-                else
-                {
-                    // Wait for the specified time on refresh.
-                    if (!refreshThread.Join(m_refreshTimeout * 1000))
-                    {
-                        refreshThread.Abort();
-                        OnMetadataRefreshTimeout();
-
-                        return false;
-                    }
-                }
-
-                return true;
+                // Wait indefinetely on the refresh.
+                refreshThread.Join(Timeout.Infinite);
             }
             else
             {
-                return false;
+                // Wait for the specified time on refresh.
+                if (!refreshThread.Join(m_refreshTimeout * 1000))
+                {
+                    refreshThread.Abort();
+                    OnMetadataRefreshTimeout();
+
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the metadata provider and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.				
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
+                        if (m_refreshTimer != null)
+                        {
+                            m_refreshTimer.Elapsed -= RefreshTimer_Elapsed;
+                            m_refreshTimer.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
             }
         }
 
@@ -359,36 +388,6 @@ namespace TVA.Historian.MetadataProviders
         {
             if (MetadataRefreshException != null)
                 MetadataRefreshException(this, new EventArgs<Exception>(ex));
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the metadata provider and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.				
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        if (m_refreshTimer != null)
-                        {
-                            m_refreshTimer.Elapsed -= RefreshTimer_Elapsed;
-                            m_refreshTimer.Dispose();
-                        }
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
-            }
         }
 
         /// <summary>

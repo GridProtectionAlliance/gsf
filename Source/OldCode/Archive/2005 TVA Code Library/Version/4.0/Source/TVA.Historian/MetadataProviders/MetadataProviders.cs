@@ -27,7 +27,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Methods ]
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterProvider{T}.Adapters"/>.
+        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshAll()
         {
@@ -35,7 +35,7 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using the first of all loaded metadata provider <see cref="AdapterProvider{T}.Adapters"/>.
+        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using the first of all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshOne()
         {
