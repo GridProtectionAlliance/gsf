@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/26/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -61,18 +63,28 @@ namespace TVA.IO.Compression
 
 
         /// <summary>Compress a byte array using default compression strength.</summary>
+        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
+        /// <returns>A <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source)
         {
 	        return source.Compress(CompressionStrength.DefaultCompression);
         }
 
         /// <summary>Compress a byte array using specified compression strength.</summary>
+        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
+        /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
+        /// <returns>A <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, CompressionStrength strength)
         {
             return source.Compress(0, source.Length, strength, 0);
         }
 
         /// <summary>Compress a byte array using specified compression strength.</summary>
+        /// <param name="source">The <see cref="Byte"/> array to compress.</param>
+        /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
+        /// <param name="length">The number of bytes to read into the byte array for compression.</param>
+        /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
+        /// <returns>A <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength)
         {
 	        return source.Compress(startIndex, length, strength, 0);
@@ -120,6 +132,9 @@ namespace TVA.IO.Compression
         /// very large this will consume a large amount memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
+        /// <param name="source">The <see cref="Stream"/> to compress.</param>
+        /// <param name="strength">The <see cref="CompressionStrength"/> of the compression.</param>
+        /// <returns>Returns a <see cref="MemoryStream"/> of the compressed <see cref="Stream"/>.</returns>
         public static MemoryStream Compress(this Stream source, CompressionStrength strength)
         {
 	        MemoryStream destination = new MemoryStream();
@@ -128,6 +143,10 @@ namespace TVA.IO.Compression
         }
 
         /// <summary>Compress a stream onto given output stream using specified compression strength.</summary>
+        /// <param name="source">The <see cref="Stream"/> to compress.</param>
+        /// <param name="strength">The <see cref="CompressionStrength"/> of the compression.</param>
+        /// <param name="destination">The <see cref="Stream"/> destination.</param>
+        /// <param name="progressHandler">The progress handler to check progress.</param>
         public static void Compress(this Stream source, Stream destination, CompressionStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
@@ -199,6 +218,9 @@ namespace TVA.IO.Compression
         /// making it unnecessary to track this value for large buffers.  You can simply use <c>new MemoryStream(byte[])</c> to
         /// take advantage of this functionality when compressing and decompressing buffers.
         /// </para>
+        /// <param name="source">The <see cref="Byte"/> array of the source.</param>
+        /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
+        /// <returns>A decompressed <see cref="Byte"/> array.</returns>
         /// </remarks>
         public static byte[] Decompress(this byte[] source, int uncompressedSize)
         {
@@ -227,6 +249,8 @@ namespace TVA.IO.Compression
         /// very large this will consume a large amount memory.  In this case use the overload
         /// that takes the destination stream as a parameter instead.
         /// </remarks>
+        /// <param name="source">A <see cref="Stream"/> source to decompress.</param>
+        /// <returns>A <see cref="MemoryStream"/> representing the decompressed source.</returns>
         public static MemoryStream Decompress(this Stream source)
         {
 	        MemoryStream destination = new MemoryStream();
@@ -235,6 +259,9 @@ namespace TVA.IO.Compression
         }
 
         /// <summary>Uncompress a stream onto given output stream.</summary>
+        /// <param name="source">A source <see cref="Stream"/> to decompress.</param>
+        /// <param name="destination">The destination <see cref="Stream"/> to decompress to.</param>
+        /// <param name="progressHandler">A <see cref="Action"/> handler to monitor the action's progress.</param>
         public static void Decompress(this Stream source, Stream destination, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
