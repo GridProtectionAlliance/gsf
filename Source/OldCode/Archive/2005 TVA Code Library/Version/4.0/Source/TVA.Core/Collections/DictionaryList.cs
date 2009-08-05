@@ -16,6 +16,8 @@
 //      Converted to C#
 //  02/19/2009 - Josh Patterson
 //      Edited Code Comments
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -66,6 +68,8 @@ namespace TVA.Collections
     /// but instead is a generic class allowing use with any strongly typed key or value. 
     /// </para>
     /// </remarks>
+    /// <typeparam name="TKey">Generic key type.</typeparam>
+    /// <typeparam name="TValue">Genervic value type.</typeparam>
     public class DictionaryList<TKey, TValue> : IList<KeyValuePair<TKey, TValue>>, IDictionary<TKey, TValue>
     {
         #region [ Members ]
