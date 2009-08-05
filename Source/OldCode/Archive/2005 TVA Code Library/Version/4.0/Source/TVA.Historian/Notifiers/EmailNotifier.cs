@@ -43,7 +43,7 @@ namespace TVA.Historian.Notifiers
         /// Initializes a new instance of the <see cref="EmailNotifier"/> class.
         /// </summary>
         public EmailNotifier()
-            : base(true, true, true, false)
+            : base(NotificationTypes.Information | NotificationTypes.Warning | NotificationTypes.Alarm)
         {
             m_emailServer = Mail.DefaultSmtpServer;
             m_emailSender = string.Format("{0}@{1}.local", Environment.UserName, Environment.UserDomainName);
@@ -165,60 +165,53 @@ namespace TVA.Historian.Notifiers
         }
 
         /// <summary>
-        /// Processes a <see cref="NotificationType.Alarm"/> notification.
+        /// Processes a <see cref="NotificationTypes.Alarm"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected override bool NotifyAlarm(string subject, string message, string details)
+        protected override void NotifyAlarm(string subject, string message, string details)
         {
-            subject = "ALARM: " + subject;
-            return SendEmail(subject, message, details);
+            SendEmail("ALRM: " + subject, message, details);
         }
 
         /// <summary>
-        /// Processes a <see cref="NotificationType.Warning"/> notification.
+        /// Processes a <see cref="NotificationTypes.Warning"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected override bool NotifyWarning(string subject, string message, string details)
+        protected override void NotifyWarning(string subject, string message, string details)
         {
-            subject = "WARNING: " + subject;
-            return SendEmail(subject, message, details);
+            SendEmail("WARN: " + subject, message, details);
         }
 
         /// <summary>
-        /// Processes a <see cref="NotificationType.Information"/> notification.
+        /// Processes a <see cref="NotificationTypes.Information"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected override bool NotifyInformation(string subject, string message, string details)
+        protected override void NotifyInformation(string subject, string message, string details)
         {
-            subject = "INFO: " + subject;
-            return SendEmail(subject, message, details);
+            SendEmail("INFO: " + subject, message, details);
         }
 
         /// <summary>
-        /// Processes a <see cref="NotificationType.Heartbeat"/> notification.
+        /// Processes a <see cref="NotificationTypes.Heartbeat"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected override bool NotifyHeartbeat(string subject, string message, string details)
+        protected override void NotifyHeartbeat(string subject, string message, string details)
         {
             throw new NotSupportedException();
         }
 
-        private bool SendEmail(string subject, string message, string details)
+        private void SendEmail(string subject, string message, string details)
         {
             if (string.IsNullOrEmpty(m_emailRecipients))
-                return false;
+                throw new ArgumentNullException("EmailRecipients");
 
             Mail briefMessage = new Mail(m_emailSender, m_emailSender, m_emailServer);
             Mail detailedMessage = new Mail(m_emailSender, m_emailSender, m_emailServer);
@@ -245,8 +238,6 @@ namespace TVA.Historian.Notifiers
                     detailedMessage.Send();
                 }
             }
-
-            return true;
         }
 
         #endregion

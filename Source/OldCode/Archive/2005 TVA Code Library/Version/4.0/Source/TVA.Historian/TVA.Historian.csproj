@@ -113,6 +113,7 @@
     <Compile Include="Notifiers\INotifier.cs" />
     <Compile Include="Notifiers\NotificationDispatcher.cs" />
     <Compile Include="Notifiers\NotifierBase.cs" />
+    <Compile Include="Notifiers\Notifiers.cs" />
     <Compile Include="Packets\IPacket.cs" />
     <Compile Include="Packets\PacketBase.cs" />
     <Compile Include="Packets\PacketCommonHeader.cs" />

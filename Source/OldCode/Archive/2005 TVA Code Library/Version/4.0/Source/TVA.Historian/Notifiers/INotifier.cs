@@ -17,6 +17,7 @@
 //
 //*******************************************************************************************************
 
+using System;
 using TVA.Configuration;
 
 namespace TVA.Historian.Notifiers
@@ -26,24 +27,29 @@ namespace TVA.Historian.Notifiers
     /// <summary>
     /// Indicates the type of notification being sent using a <see cref="INotifier">Notifier</see>.
     /// </summary>
-    public enum NotificationType
+    [Flags()]
+    public enum NotificationTypes
     {
+        /// <summary>
+        /// Notification is of unknown type.
+        /// </summary>
+        Unknown = 0,
         /// <summary>
         /// Notification is informational in nature.
         /// </summary>
-        Information,
+        Information = 1,
         /// <summary>
         /// Notification is being sent to report a warning.
         /// </summary>
-        Warning,
+        Warning = 2,
         /// <summary>
         /// Notification is being sent to report an alarm.
         /// </summary>
-        Alarm,
+        Alarm = 4,
         /// <summary>
         /// Notification is being sent to report activity.
         /// </summary>
-        Heartbeat
+        Heartbeat = 8
     }
 
     #endregion
@@ -51,30 +57,46 @@ namespace TVA.Historian.Notifiers
     /// <summary>
     /// Defines a notifier that can process notification messages.
     /// </summary>
-    /// <seealso cref="NotificationType"/>
+    /// <seealso cref="NotificationTypes"/>
     public interface INotifier : ISupportLifecycle, IPersistSettings
     {
+        #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Occurs when a notification is being sent.
+        /// </summary>
+        event EventHandler NotificationSendStart;
+
+        /// <summary>
+        /// Occurs when a notification has been sent.
+        /// </summary>
+        event EventHandler NotificationSendComplete;
+
+        /// <summary>
+        /// Occurs when a timeout is encountered while sending a notification.
+        /// </summary>
+        event EventHandler NotificationSendTimeout;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while sending a notification.
+        /// </summary>
+        event EventHandler<EventArgs<Exception>> NotificationSendException;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Alarm"/> notifications will be processed.
+        /// Gets or sets the number of seconds to wait for <see cref="Notify"/> to complete.
         /// </summary>
-        bool NotifiesAlarms { get; set; }
+        int NotifyTimeout { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Warning"/> notifications will be processed.
+        /// Gets or set <see cref="NotificationTypes"/> that can be processed by the notifier.
         /// </summary>
-        bool NotifiesWarnings { get; set; }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Information"/> notifications will be processed.
-        /// </summary>
-        bool NotifiesInformation { get; set; }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Heartbeat"/> notifications will be processed.
-        /// </summary>
-        bool NotifiesHeartbeat { get; set; }
+        NotificationTypes NotifyOptions { get; set;}
 
         #endregion
 
@@ -86,9 +108,9 @@ namespace TVA.Historian.Notifiers
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationTypes"/> values.</param>
         /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        bool Notify(string subject, string message, string details, NotificationType notificationType);
+        bool Notify(string subject, string message, string details, NotificationTypes notificationType);
 
         #endregion
     }

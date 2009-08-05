@@ -18,6 +18,7 @@
 //*******************************************************************************************************
 
 using System;
+using System.Threading;
 using TVA.Configuration;
 
 namespace TVA.Historian.Notifiers
@@ -25,16 +26,39 @@ namespace TVA.Historian.Notifiers
     /// <summary>
     /// A base class for a notifier that can process notification messages.
     /// </summary>
-    /// <see cref="NotificationType"/>
+    /// <see cref="NotificationTypes"/>
     public abstract class NotifierBase : INotifier
     {
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Occurs when a notification is being sent.
+        /// </summary>
+        public event EventHandler NotificationSendStart;
+
+        /// <summary>
+        /// Occurs when a notification has been sent.
+        /// </summary>
+        public event EventHandler NotificationSendComplete;
+
+        /// <summary>
+        /// Occurs when a timeout is encountered while sending a notification.
+        /// </summary>
+        public event EventHandler NotificationSendTimeout;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while sending a notification.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception encountered while sending a notification.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> NotificationSendException;
+
         // Fields
-        private bool m_notifiesAlarms;
-        private bool m_notifiesWarnings;
-        private bool m_notifiesInformation;
-        private bool m_notifiesHeartbeat;
+        private int m_notifyTimeout;
+        private NotificationTypes m_notifyOptions;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_enabled;
@@ -48,17 +72,12 @@ namespace TVA.Historian.Notifiers
         /// <summary>
         /// Initializes a new instance of the notifier.
         /// </summary>
-        /// <param name="notifiesInformation">true if <see cref="NotificationType.Information"/> notification will be processed; otherwise false.</param>
-        /// <param name="notifiesWarnings">true if <see cref="NotificationType.Warning"/> notification will be processed; otherwise false.</param>
-        /// <param name="notifiesAlarms">true if <see cref="NotificationType.Alarm"/> notification will be processed; otherwise false.</param>
-        /// <param name="notifiesHeartbeat">true if <see cref="NotificationType.Heartbeat"/> notification will be processed; otherwise false.</param>
-        public NotifierBase(bool notifiesInformation, bool notifiesWarnings, bool notifiesAlarms, bool notifiesHeartbeat)
+        /// <param name="notifyOptions"><see cref="NotificationTypes"/> that can be processed by the notifier.</param>
+        public NotifierBase(NotificationTypes notifyOptions)
         {
-            m_notifiesInformation = notifiesInformation;
-            m_notifiesWarnings = notifiesWarnings;
-            m_notifiesAlarms = notifiesAlarms;
-            m_notifiesHeartbeat = notifiesHeartbeat;
-            m_enabled = true;
+            m_notifyOptions = notifyOptions;
+            m_notifyTimeout = 30;
+            m_enabled = false;
             m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
         }
@@ -76,62 +95,53 @@ namespace TVA.Historian.Notifiers
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Alarm"/> notifications will be processed.
+        /// Gets or sets the number of seconds to wait for <see cref="Notify"/> to complete.
         /// </summary>
-        public bool NotifiesAlarms
+        /// <remarks>
+        /// Set <see cref="NotifyTimeout"/> to -1 to wait indefinitely on <see cref="Notify"/>.
+        /// </remarks>
+        public int NotifyTimeout
         {
             get
             {
-                return m_notifiesAlarms;
+                return m_notifyTimeout;
             }
             set
             {
-                m_notifiesAlarms = value;
+                if (value < 1)
+                    m_notifyTimeout = -1;
+                else
+                    m_notifyTimeout = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Warning"/> notifications will be processed.
+        /// Gets or set <see cref="NotificationTypes"/> that can be processed by the notifier.
         /// </summary>
-        public bool NotifiesWarnings
+        public NotificationTypes NotifyOptions
         {
             get
             {
-                return m_notifiesWarnings;
+                return m_notifyOptions;
             }
             set
             {
-                m_notifiesWarnings = value;
+                m_notifyOptions = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Information"/> notifications will be processed.
+        /// Gets or sets a boolean value that indicates whether the notifier is currently enabled.
         /// </summary>
-        public bool NotifiesInformation
+        public bool Enabled
         {
             get
             {
-                return m_notifiesInformation;
+                return m_enabled;
             }
             set
             {
-                m_notifiesInformation = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="NotificationType.Heartbeat"/> notifications will be processed.
-        /// </summary>
-        public bool NotifiesHeartbeat
-        {
-            get
-            {
-                return m_notifiesHeartbeat;
-            }
-            set
-            {
-                m_notifiesHeartbeat = value;
+                m_enabled = value;
             }
         }
 
@@ -169,21 +179,6 @@ namespace TVA.Historian.Notifiers
             }
         }
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the notifier is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -191,43 +186,39 @@ namespace TVA.Historian.Notifiers
         #region [ Abstract ]
 
         /// <summary>
-        /// When overridden in a derived class, processes a <see cref="NotificationType.Alarm"/> notification.
+        /// When overridden in a derived class, processes a <see cref="NotificationTypes.Alarm"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected abstract bool NotifyAlarm(string subject, string message, string details);
+        protected abstract void NotifyAlarm(string subject, string message, string details);
 
         /// <summary>
-        /// When overridden in a derived class, processes a <see cref="NotificationType.Warning"/> notification.
+        /// When overridden in a derived class, processes a <see cref="NotificationTypes.Warning"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected abstract bool NotifyWarning(string subject, string message, string details);
+        protected abstract void NotifyWarning(string subject, string message, string details);
 
         /// <summary>
-        /// When overridden in a derived class, processes a <see cref="NotificationType.Information"/> notification.
+        /// When overridden in a derived class, processes a <see cref="NotificationTypes.Information"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected abstract bool NotifyInformation(string subject, string message, string details);
+        protected abstract void NotifyInformation(string subject, string message, string details);
 
         /// <summary>
-        /// When overridden in a derived class, processes a <see cref="NotificationType.Heartbeat"/> notification.
+        /// When overridden in a derived class, processes a <see cref="NotificationTypes.Heartbeat"/> notification.
         /// </summary>
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        protected abstract bool NotifyHeartbeat(string subject, string message, string details);
+        protected abstract void NotifyHeartbeat(string subject, string message, string details);
 
         #endregion
-               
+
         /// <summary>
         /// Releases all the resources used by the notifier.
         /// </summary>
@@ -264,14 +255,12 @@ namespace TVA.Historian.Notifiers
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["NotifiesAlarms", true];
-                element.Update(m_notifiesAlarms, element.Description, element.Encrypted);
-                element = settings["NotifiesWarnings", true];
-                element.Update(m_notifiesWarnings, element.Description, element.Encrypted);
-                element = settings["NotifiesInformation", true];
-                element.Update(m_notifiesInformation, element.Description, element.Encrypted);
-                element = settings["NotifiesHeartbeat", true];
-                element.Update(m_notifiesHeartbeat, element.Description, element.Encrypted);
+                element = settings["Enabled", true];
+                element.Update(m_enabled, element.Description, element.Encrypted);
+                element = settings["NotifyTimeout", true];
+                element.Update(m_notifyTimeout, element.Description, element.Encrypted);
+                element = settings["NotifyOptions", true];
+                element.Update(m_notifyOptions, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -290,14 +279,12 @@ namespace TVA.Historian.Notifiers
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("NotifiesAlarms", m_notifiesAlarms, "True if alarm notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesWarnings", m_notifiesWarnings, "True if warning notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesInformation", m_notifiesInformation, "True if information notifications are to be processed; otherwise False.");
-                settings.Add("NotifiesHeartbeat", m_notifiesHeartbeat, "True if heartbeat notifications are to be processed; otherwise False.");
-                NotifiesAlarms = settings["NotifiesAlarms"].ValueAs(m_notifiesAlarms);
-                NotifiesWarnings = settings["NotifiesWarnings"].ValueAs(m_notifiesWarnings);
-                NotifiesInformation = settings["NotifiesInformation"].ValueAs(m_notifiesInformation);
-                NotifiesHeartbeat = settings["NotifiesHeartbeat"].ValueAs(m_notifiesHeartbeat);
+                settings.Add("Enabled", m_enabled, "True if this notifier is enabled; otherwise False.");
+                settings.Add("NotifyTimeout", m_notifyTimeout, "Number of seconds to wait for notification processing to complete.");
+                settings.Add("NotifyOptions", m_notifyOptions, "Types of notifications (Information; Warning; Alarm; Heartbeat) to be processed by this notifier.");
+                Enabled = settings["Enabled"].ValueAs(m_enabled);
+                NotifyTimeout = settings["NotifyTimeout"].ValueAs(m_notifyTimeout);
+                NotifyOptions = settings["NotifyOptions"].ValueAs(m_notifyOptions);
             }
         }
 
@@ -307,23 +294,52 @@ namespace TVA.Historian.Notifiers
         /// <param name="subject">Subject matter for the notification.</param>
         /// <param name="message">Brief message for the notification.</param>
         /// <param name="details">Detailed message for the notification.</param>
-        /// <param name="notificationType">One of the <see cref="NotificationType"/> values.</param>
+        /// <param name="notificationType">One of the <see cref="NotificationTypes"/> values.</param>
         /// <returns>true if notification is processed successfully; otherwise false.</returns>
-        public bool Notify(string subject, string message, string details, NotificationType notificationType)
+        public bool Notify(string subject, string message, string details, NotificationTypes notificationType)
         {
             if (!m_enabled)
                 return false;
 
-            if (notificationType == Notifiers.NotificationType.Alarm && m_notifiesAlarms)
-                return NotifyAlarm(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Warning && m_notifiesWarnings)
-                return NotifyWarning(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Information && m_notifiesInformation)
-                return NotifyInformation(subject, message, details);
-            else if (notificationType == Notifiers.NotificationType.Heartbeat && m_notifiesHeartbeat)
-                return NotifyHeartbeat(subject, message, details);
+            // Start notification thread with appropriate parameters.
+            Thread notifyThread = new Thread(NotifyInternal);
+            if ((notificationType & NotificationTypes.Alarm) == NotificationTypes.Alarm &&
+                (m_notifyOptions & NotificationTypes.Alarm) == NotificationTypes.Alarm)
+                // Alarm notifications are supported.
+                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyAlarm) , subject, message, details});
+            else if ((notificationType & NotificationTypes.Warning) == NotificationTypes.Warning && 
+                     (m_notifyOptions & NotificationTypes.Warning) == NotificationTypes.Warning)
+                // Warning notifications are supported.
+                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyWarning), subject, message, details });
+            else if ((notificationType & NotificationTypes.Information) == NotificationTypes.Information && 
+                     (m_notifyOptions & NotificationTypes.Information) == NotificationTypes.Information)
+                // Information notifications are supported.
+                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyInformation), subject, message, details });
+            else if ((notificationType & NotificationTypes.Heartbeat) == NotificationTypes.Heartbeat && 
+                     (m_notifyOptions & NotificationTypes.Heartbeat) == NotificationTypes.Heartbeat)
+                // Heartbeat notifications are supported.
+                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyHeartbeat), subject, message, details });
             else
+                // Specified notification type is not supported.
                 return false;
+
+            if (m_notifyTimeout < 1)
+            {
+                // Wait indefinetely on the refresh.
+                notifyThread.Join(Timeout.Infinite);
+            }
+            else
+            {
+                // Wait for the specified time on refresh.
+                if (!notifyThread.Join(m_notifyTimeout * 1000))
+                {
+                    notifyThread.Abort();
+
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -348,6 +364,68 @@ namespace TVA.Historian.Notifiers
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="NotificationSendStart"/> event.
+        /// </summary>
+        protected virtual void OnNotificationSendStart()
+        {
+            if (NotificationSendStart != null)
+                NotificationSendStart(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="NotificationSendComplete"/> event.
+        /// </summary>
+        protected virtual void OnNotificationSendComplete()
+        {
+            if (NotificationSendComplete != null)
+                NotificationSendComplete(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="NotificationSendTimeout"/> event.
+        /// </summary>
+        protected virtual void OnNotificationSendTimeout()
+        {
+            if (NotificationSendTimeout != null)
+                NotificationSendTimeout(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="NotificationSendException"/> event.
+        /// </summary>
+        /// <param name="exception"><see cref="Exception"/> to send to <see cref="NotificationSendException"/> event.</param>
+        protected virtual void OnNotificationSendException(Exception exception)
+        {
+            if (NotificationSendException != null)
+                NotificationSendException(this, new EventArgs<Exception>(exception));
+        }
+
+        private void NotifyInternal(object state)
+        {
+            try
+            {
+                // Unpackage the parameters.
+                object[] args = (object[])state;
+                string subject = args[1].ToString();
+                string message = args[2].ToString();
+                string details = args[3].ToString();
+                Action<string, string, string> target = (Action<string, string, string>)args[0];
+
+                OnNotificationSendStart();
+                target(subject, message, details);
+                OnNotificationSendComplete();
+            }
+            catch (ThreadAbortException)
+            {
+                OnNotificationSendTimeout();
+            }
+            catch (Exception ex)
+            {
+                OnNotificationSendException(ex);
             }
         }
 
