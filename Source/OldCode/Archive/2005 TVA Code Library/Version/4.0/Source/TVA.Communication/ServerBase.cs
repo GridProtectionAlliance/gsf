@@ -27,6 +27,8 @@
 //       Modified state alterning properties to restart the server when changed.
 //  07/17/2009 - Pinal C. Patel
 //       Modified SharedSecret to be persisted as an encrypted value.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -1374,6 +1376,8 @@ namespace TVA.Communication
         /// <remarks>
         /// Note that typical configuration string should be prefixed with a "protocol=tcp" or a "protocol=udp"
         /// </remarks>
+        /// <param name="configurationString">The configuration string for the server.</param>
+        /// <returns>A communications server.</returns>
         public static IServer Create(string configurationString)
         {
             Dictionary<string, string> configurationData = configurationString.ParseKeyValuePairs();

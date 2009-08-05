@@ -31,6 +31,8 @@
 //       Modified Connect() to wait for post-connection processing to complete.
 //  07/17/2009 - Pinal C. Patel
 //       Modified SharedSecret to be persisted as an encrypted value.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -803,6 +805,7 @@ namespace TVA.Communication
         /// <summary>
         /// When overridden in a derived class, returns the secret key used for ciphering data.
         /// </summary>
+        /// <returns>The secret key used for ciphering data.</returns>
         protected abstract string GetSessionSecret();
 
         /// <summary>
@@ -1283,6 +1286,8 @@ namespace TVA.Communication
         /// <remarks>
         /// Note that typical connection string should be prefixed with a "protocol=tcp", "protocol=udp", "protocol=serial" or "protocol=file"
         /// </remarks>
+        /// <returns>A communications client.</returns>
+        /// <param name="connectionString">Connection string for the client.</param>
         public static IClient Create(string connectionString)
         {
             Dictionary<string, string> connectionData = connectionString.ParseKeyValuePairs();

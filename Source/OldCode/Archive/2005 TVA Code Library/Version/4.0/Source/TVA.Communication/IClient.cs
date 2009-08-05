@@ -24,6 +24,8 @@
 //       Edited code comments.
 //  07/08/2009 - James R. Carroll
 //       Added WaitHandle return value from asynchronous connection.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -249,6 +251,7 @@ namespace TVA.Communication
         /// <summary>
         /// Connects client to the server asynchronously.
         /// </summary>
+        /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         WaitHandle ConnectAsync();
 
         /// <summary>
