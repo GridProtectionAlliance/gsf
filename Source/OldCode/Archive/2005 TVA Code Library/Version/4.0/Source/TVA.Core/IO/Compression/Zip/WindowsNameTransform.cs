@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/25/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -66,7 +68,7 @@ namespace TVA.IO.Compression.Zip
 		/// <summary>
 		/// Initializes a new instance of <see cref="WindowsNameTransform"/>
 		/// </summary>
-		/// <param name="baseDirectory"></param>
+		/// <param name="baseDirectory">The name of the base directory to use.</param>
 		public WindowsNameTransform(string baseDirectory)
 		{
 			if ( baseDirectory == null ) {
