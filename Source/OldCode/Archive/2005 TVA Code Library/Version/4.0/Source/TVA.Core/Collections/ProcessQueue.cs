@@ -39,6 +39,8 @@
 //      Added CurrentStatistics property to return run-time statistics as a group.
 //  02/23/2009 - Josh Patterson
 //      Edited Code Comments
+//  08/05/2009 - Josh Patterson
+//      Edited Code Comments
 //
 //*******************************************************************************************************
 
@@ -1367,6 +1369,8 @@ namespace TVA.Collections
         /// <summary>
         /// Requeues items into <see cref="ProcessQueue{T}"/> according to specified requeue mode.
         /// </summary>
+        /// <param name="items">Array of type T.</param>
+        /// <param name="mode">The method in which to requeue the object.</param>
         protected virtual void RequeueItems(T[] items, RequeueMode mode)
         {
             if (mode == RequeueMode.Prefix)
@@ -1379,7 +1383,11 @@ namespace TVA.Collections
             }
         }
 
-        // Handles standard processing of a single item.
+      
+        /// <summary>
+        /// Handles standard processing of a single item. 
+        /// </summary>
+        /// <param name="item">A generic item of type T to be processed.</param>
         private void ProcessItem(T item)
         {
             try
@@ -1407,7 +1415,11 @@ namespace TVA.Collections
             }
         }
 
-        // Handles standard processing of multiple items.
+        
+        /// <summary>
+        /// Handles standard processing of multiple items.
+        /// </summary>
+        /// <param name="items">Array of type T.</param>
         private void ProcessItems(T[] items)
         {
             try
@@ -1435,7 +1447,10 @@ namespace TVA.Collections
             }
         }
 
-        // Creates a real-time thread for processing items.
+        
+        /// <summary>
+        /// Creates a real-time thread for processing items. 
+        /// </summary>
         private void RealTimeThreadProc()
         {
             // Creates a real-time processing loop that will process items as quickly as possible.
@@ -1457,7 +1472,12 @@ namespace TVA.Collections
             }
         }
 
-        // Processes queued items on an interval.
+        
+        /// <summary>
+        /// Processes queued items on an interval.
+        /// </summary>
+        /// <param name="sender">The sender object of the item.</param>
+        /// <param name="e">Arguments for the elapsed event.</param>
         private void ProcessTimerThreadProc(object sender, System.Timers.ElapsedEventArgs e)
         {
             // The system timer creates an intervaled processing loop that distributes item processing across multiple threads if needed
@@ -1480,7 +1500,10 @@ namespace TVA.Collections
             }
         }
 
-        // Processes next item in queue, one at a time (i.e., ProcessingStyle = OneAtATime).
+      
+        /// <summary>
+        /// Processes next item in queue, one at a time (i.e., ProcessingStyle = OneAtATime). 
+        /// </summary>
         private void ProcessNextItem()
         {
             T nextItem = default(T);
@@ -1569,7 +1592,10 @@ namespace TVA.Collections
             }
         }
 
-        // Processes next items in an array of items as a group (i.e., ProcessingStyle = ManyAtOnce).
+        
+        /// <summary>
+        /// Processes next items in an array of items as a group (i.e., ProcessingStyle = ManyAtOnce).
+        /// </summary>
         private void ProcessNextItems()
         {
             T[] nextItems = null;
