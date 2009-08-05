@@ -313,8 +313,7 @@ namespace TVA.Historian.MetadataProviders
                 // Wait for the specified time on refresh.
                 if (!refreshThread.Join(m_refreshTimeout * 1000))
                 {
-                    refreshThread.Abort();
-                    OnMetadataRefreshTimeout();
+                    refreshThread.Abort();                  
 
                     return false;
                 }
@@ -516,6 +515,10 @@ namespace TVA.Historian.MetadataProviders
                 OnMetadataRefreshStart();
                 RefreshMetadata();
                 OnMetadataRefreshComplete();
+            }
+            catch (ThreadAbortException)
+            {
+                OnMetadataRefreshTimeout();
             }
             catch (Exception ex)
             {
