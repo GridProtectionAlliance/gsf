@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/24/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -79,6 +81,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ulong value.
         /// </summary>
+        /// <param name="value">The <see cref="UInt64"/> value to use for the update.</param>
         public void Update(ulong value)
         {
             m_checksum ^= value;
