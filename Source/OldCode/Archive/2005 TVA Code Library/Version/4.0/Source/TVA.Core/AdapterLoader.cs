@@ -276,8 +276,9 @@ namespace TVA
                 T adapter = (T)(Activator.CreateInstance(adapterType));
 
                 // Initialize adapter if supported.
-                if (adapter is ISupportLifecycle)
-                    ((ISupportLifecycle)adapter).Initialize();
+                ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
+                if (initializableAdapter != null)
+                    initializableAdapter.Initialize();
 
                 // Add adapter and notify via event.
                 lock (m_adapters)
@@ -324,10 +325,13 @@ namespace TVA
 
                         lock (m_adapters)
                         {
+                            IDisposable disposableAdapter;
                             foreach (T adapter in m_adapters)
                             {
-                                if (adapter is IDisposable)
-                                    ((IDisposable)adapter).Dispose();
+                                disposableAdapter = adapter as IDisposable;
+                                if (disposableAdapter != null)
+                                    disposableAdapter.Dispose();
+
                                 m_adapters.Remove(adapter);
                             }
                         }
