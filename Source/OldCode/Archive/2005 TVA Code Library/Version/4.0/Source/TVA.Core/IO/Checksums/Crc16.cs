@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  06/10/2009 - Mehul Thakkar
 //       Modified code to calculate either standard CRC-16 or ModBus CRC.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -139,6 +141,7 @@ namespace TVA.IO.Checksums
 		/// <summary>
 		/// Updates the checksum with the int bval.
 		/// </summary>
+        /// <param name="value">The <see cref="Byte"/> value to update.</param>
 		public void Update(byte value)
 		{
 			ushort temp;

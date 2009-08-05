@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/24/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -79,6 +81,7 @@ namespace TVA.IO.Checksums
         /// <summary>
         /// Updates the checksum with a ushort value.
         /// </summary>
+        /// <param name="value">The <see cref="UInt16"/> value to update.</param>
         public void Update(ushort value)
         {
             m_checksum ^= value;
