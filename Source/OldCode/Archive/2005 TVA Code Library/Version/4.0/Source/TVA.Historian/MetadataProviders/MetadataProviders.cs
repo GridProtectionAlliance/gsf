@@ -20,14 +20,15 @@ using System;
 namespace TVA.Historian.MetadataProviders
 {
     /// <summary>
-    /// A class that loads all providers of data for <see cref="TVA.Historian.Files.MetadataFile"/> and enables the execution of a manual refresh using the loaded providers.
+    /// A class that loads all <see cref="IMetadataProvider">Metadata Provider</see> adapters.
     /// </summary>
+    /// <seealso cref="IMetadataProvider"/>
     public class MetadataProviders : AdapterLoader<IMetadataProvider>
     {
         #region [ Methods ]
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
+        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> for all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshAll()
         {
@@ -35,7 +36,7 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es <see cref="IMetadataProvider.Metadata"/> using the first of all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
+        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> for the first of all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshOne()
         {
@@ -53,10 +54,10 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Executes <see cref="IMetadataProvider.Refresh()"/> on the specified metadata provider.
+        /// Executes <see cref="IMetadataProvider.Refresh()"/> on the specified metadata provider <paramref name="adapter"/>.
         /// </summary>
-        /// <param name="adapter">Metadata provider on which the refresh is to be executed.</param>
-        /// <param name="data">Data to be used when executing the refresh.</param>
+        /// <param name="adapter">An <see cref="IMetadataProvider"/> object.</param>
+        /// <param name="data"><see cref="System.Reflection.MemberInfo.Name"/> of the <paramref name="adapter"/>.</param>
         protected override void ExecuteAdapterOperation(IMetadataProvider adapter, object data)
         {
             if (string.IsNullOrEmpty(Convert.ToString(data)) ||
