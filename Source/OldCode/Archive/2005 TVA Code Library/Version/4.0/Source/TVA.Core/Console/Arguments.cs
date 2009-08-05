@@ -20,6 +20,8 @@
 //      Converted to C#.
 //  09/26/2008 - Pinal C. Patel
 //      Entered code comments.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -321,6 +323,7 @@ namespace TVA.Console
         /// <summary>
         /// Gets a string representation of the <see cref="Arguments"/> object.
         /// </summary>
+        /// <returns>A string representation of the <see cref="Arguments"/> object.</returns>
         public override string ToString()
         {
             return m_commandLine;

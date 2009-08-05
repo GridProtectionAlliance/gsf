@@ -17,6 +17,8 @@
 //       Added new properties LastProcessResult, LastProcessError and LastProcessTimestamp.
 //  04/17/2009 - Pinal C. Patel
 //       Converted to C#.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -314,6 +316,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// Determines if it is time to process the <see cref="Export"/> if its <see cref="Type"/> is <see cref="ExportType.Intervaled"/>.
         /// </summary>
+        /// <returns><see cref="Boolean"/> indicating whether it is time to process the <see cref="Export"/>.</returns>
         public bool ShouldProcess()
         {
             DateTime currentTime = DateTime.Now;

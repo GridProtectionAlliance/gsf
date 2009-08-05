@@ -19,6 +19,8 @@
 //       Added slope-based data elimination algorithm that can be used to eliminated spikes in data.
 //  04/17/2009 - Pinal C. Patel
 //       Converted to C#.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -254,6 +256,7 @@ namespace TVA.Historian.Exporters
         /// Returns the calculated <see cref="Statistics"/> from buffered data of the specified <paramref name="export"/>.
         /// </summary>
         /// <param name="export"><see cref="Export"/> for which statistical values are to be calculated.</param>
+        /// <returns>The calculated <see cref="Statistics"/> from buffered data of the specified <paramref name="export"/>.</returns>
         protected virtual Statistics GetStatistics(Export export)
         {
             Statistics stats = new Statistics();

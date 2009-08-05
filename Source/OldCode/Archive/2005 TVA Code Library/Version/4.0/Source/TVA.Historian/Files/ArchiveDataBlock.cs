@@ -19,6 +19,8 @@
 //       Removed IDisposable interface implementation and Size property.
 //  04/20/2009 - Pinal C. Patel
 //       Converted to C#.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -162,6 +164,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Reads existing <see cref="ArchiveData"/> points from the <see cref="ArchiveDataBlock"/>.
         /// </summary>
+        /// <returns>Returns <see cref="ArchiveData"/> points from the <see cref="ArchiveDataBlock"/>.</returns>
         public IEnumerable<ArchiveData> Read()
         {
             lock (m_parent.FileData)

@@ -18,6 +18,8 @@
 //       Converted code to C#.
 //  10/17/2008 - Pinal C. Patel
 //       Edited code comments.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -94,7 +96,7 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Initializes the <see cref="ErrorModule"/> and prepares it to handle requests.
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The <see cref="HttpApplication"/> to use for initialization.</param>
         public void Init(HttpApplication context)
         {
             if (Logger.HandleUnhandledException && !Debugger.IsAttached)

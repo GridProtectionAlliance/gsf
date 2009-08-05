@@ -14,6 +14,8 @@
 //       Initial version of source created
 //  09/10/2008 - James R. Carroll
 //      Converted to C#
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,8 @@ namespace TVA.Interop
         /// <summary>
         /// Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code.
         /// </summary>
+        /// <param name="errorCode">An <see cref="Int32"/> value corresponding to the specified error code.</param>
+        /// <returns>A formatted error message corresponding to the specified error code.</returns>
         public static string GetErrorMessage(int errorCode)
         {
             const int FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100;
@@ -55,6 +59,7 @@ namespace TVA.Interop
         /// <summary>
         /// Formats and returns a .NET string containing the Windows API level error message from the last Win32 call.
         /// </summary>
+        /// <returns>A formatted error message corresponding to the last Win32 call error code.</returns>
         public static string GetLastErrorMessage()
         {
             return GetErrorMessage(Marshal.GetLastWin32Error());

@@ -18,6 +18,8 @@
 //  04/01/2009 - James R. Carroll
 //       Added code to optionally encrypt settings based on EncryptSettingAttribute and to pickup
 //          DefaultValueAttribute value if provided and current value was uninitialized.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -432,6 +434,7 @@ namespace TVA.Configuration
         /// <remarks>
         /// If <paramref name="value"/> is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
         /// </remarks>
+        /// <returns>The object that is the best default value.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected object DeriveDefaultValue(string name, object value)
         {

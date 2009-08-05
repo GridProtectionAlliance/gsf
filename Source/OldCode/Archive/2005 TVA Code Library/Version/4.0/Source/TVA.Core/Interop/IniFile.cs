@@ -21,6 +21,8 @@
 //       Converted to C#
 //  04/01/2009 - James R. Carroll
 //       Added "GetSectionKeys" to enumerate keys of a specified section.
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -60,6 +62,7 @@ namespace TVA.Interop
         /// <summary>
         /// Creates a new <see cref="IniFile"/> using the specified INI file name.
         /// </summary>
+        /// <param name="fileName">Specified INI file name to use.</param>
         public IniFile(string fileName)
         {
             m_fileName = fileName;
@@ -170,6 +173,7 @@ namespace TVA.Interop
         /// Gets an array of keys from the specified section in the INI file.
         /// </summary>
         /// <param name="section">Section to retrieve keys from.</param>
+        /// <returns>Array of <see cref="String"/> keys from the specified section of the INI file.</returns>
         public string[] GetSectionKeys(string section)
         {
             List<string> keys = new List<string>();
@@ -204,6 +208,7 @@ namespace TVA.Interop
         /// <summary>
         /// Gets an array of that section names that exist in the INI file.
         /// </summary>
+        /// <returns>Array of <see cref="String"/> section names from the INI file.</returns>
         public string[] GetSectionNames()
         {
             List<string> sections = new List<string>();
