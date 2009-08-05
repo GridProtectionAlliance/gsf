@@ -18,6 +18,8 @@
 //      Converted to C#
 //  02/19/2009 - Josh Patterson
 //      Edited Code Comments
+//  08/05/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -478,11 +480,9 @@ namespace TVA.Collections
         /// <see cref="KeyedProcessQueue{TKey,TValue}.IndexOfKey"/> so that it returns a value that at least makes sense
         /// in case it gets called.
         /// </summary>
-        /// <remarks>
         ///	<param name="item">The object to locate. The value can be null for reference types.</param>
         /// <param name="comparer">The Generic.IComparer implementation to use when comparing elements -or-
         /// null to use the default comparer: Generic.Comparer(Of T).Default</param>
-        /// </remarks>
         ///	<returns>This method returns an <see cref="Int32"/> that is the index of the item.Key.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int BinarySearch(KeyValuePair<TKey, TValue> item, IComparer<KeyValuePair<TKey, TValue>> comparer)
