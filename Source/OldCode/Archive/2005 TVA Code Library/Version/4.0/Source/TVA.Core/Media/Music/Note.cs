@@ -27,6 +27,12 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
+//
+//*******************************************************************************************************
 
 using System;
 using System.ComponentModel;
@@ -924,6 +930,7 @@ namespace TVA.Media.Music
         /// <summary>
         /// Returns a string representation for the note.
         /// </summary>
+        /// <returns>A <see cref="String"/> value representation for the note.</returns>
         public override string ToString()
         {
             if (m_ID == null && m_frequency > 0.0D)
@@ -948,12 +955,16 @@ namespace TVA.Media.Music
         }
 
         /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
+        /// <param name="other">The other <see cref="Note"/> to compare against.</param>
+        /// <returns>A <see cref="Boolean"/> indicating the result.</returns>
         public bool Equals(Note other)
         {
             return (CompareTo(other) == 0);
         }
 
         /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
+        /// <param name="other">The other <see cref="Object"/> to compare against.</param>
+        /// <returns>A <see cref="Boolean"/> indicating the result.</returns>
         public override bool Equals(object obj)
         {
             Note other = obj as Note;
@@ -962,6 +973,8 @@ namespace TVA.Media.Music
         }
 
         /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
+        /// <param name="other">A <see cref="Note" /> that is compared against.</param>
+        /// <returns>An <see cref="Int32"/> that indicates: this object is greater than if 1, equal to if 0, or less than if -1.</returns>
         public int CompareTo(Note other)
         {
             int result = m_frequency.CompareTo(other.Frequency);
@@ -973,6 +986,8 @@ namespace TVA.Media.Music
         }
 
         /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
+        /// <param name="other">An <see cref="Object" /> that is compared against.</param>
+        /// <returns>An <see cref="Int32"/> that indicates: this object is greater than if 1, equal to if 0, or less than if -1.</returns>
         public int CompareTo(object obj)
         {
             Note other = obj as Note;
@@ -996,6 +1011,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Compares two <see cref="Note"/> frequencies and values for equality.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator ==(Note note1, Note note2)
         {
             return note1.Equals(note2);
@@ -1004,6 +1022,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Compares two <see cref="Note"/> frequencies and values for inequality.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator !=(Note note1, Note note2)
         {
             return !note1.Equals(note2);
@@ -1012,6 +1033,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Returns true if left <see cref="Note"/> timestamp is greater than right <see cref="Note"/>.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator >(Note note1, Note note2)
         {
             return note1.CompareTo(note2) > 0;
@@ -1020,6 +1044,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Returns true if left <see cref="Note"/> timestamp is greater than or equal to right <see cref="Note"/>.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator >=(Note note1, Note note2)
         {
             return note1.CompareTo(note2) >= 0;
@@ -1028,6 +1055,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Returns true if left <see cref="Note"/> timestamp is less than right <see cref="Note"/>.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator <(Note note1, Note note2)
         {
             return note1.CompareTo(note2) < 0;
@@ -1036,6 +1066,9 @@ namespace TVA.Media.Music
         /// <summary>
         /// Returns true if left <see cref="Note"/> timestamp is less than or equal to right <see cref="Note"/>.
         /// </summary>
+        /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
+        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator <=(Note note1, Note note2)
         {
             return note1.CompareTo(note2) <= 0;
