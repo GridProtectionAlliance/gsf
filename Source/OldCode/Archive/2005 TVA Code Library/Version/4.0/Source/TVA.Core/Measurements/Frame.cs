@@ -252,7 +252,7 @@ namespace TVA.Measurements
         /// Compares two <see cref="Frame"/> timestamps for equality.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator ==(Frame frame1, Frame frame2)
         {
@@ -263,7 +263,7 @@ namespace TVA.Measurements
         /// Compares two <see cref="Frame"/> timestamps for inequality.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator !=(Frame frame1, Frame frame2)
         {
@@ -274,7 +274,7 @@ namespace TVA.Measurements
         /// Returns true if left <see cref="Frame"/> timestamp is greater than right <see cref="Frame"/> timestamp.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >(Frame frame1, Frame frame2)
         {
@@ -285,7 +285,7 @@ namespace TVA.Measurements
         /// Returns true if left <see cref="Frame"/> timestamp is greater than or equal to right <see cref="Frame"/> timestamp.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator >=(Frame frame1, Frame frame2)
         {
@@ -296,7 +296,7 @@ namespace TVA.Measurements
         /// Returns true if left <see cref="Frame"/> timestamp is less than right <see cref="Frame"/> timestamp.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <(Frame frame1, Frame frame2)
         {
@@ -307,7 +307,7 @@ namespace TVA.Measurements
         /// Returns true if left <see cref="Frame"/> timestamp is less than or equal to right <see cref="Frame"/> timestamp.
         /// </summary>
         /// <param name="frame1">The <see cref="Frame"/> left hand operand.</param>
-        /// <param name="frame1">The <see cref="Frame"/> right hand operand.</param>
+        /// <param name="frame2">The <see cref="Frame"/> right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> representing the result of the operation.</returns>
         public static bool operator <=(Frame frame1, Frame frame2)
         {
