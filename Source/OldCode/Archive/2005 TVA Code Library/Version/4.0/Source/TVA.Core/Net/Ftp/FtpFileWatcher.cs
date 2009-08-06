@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/22/2003 - James R. Carroll
 //       Generated original version of source code.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -357,8 +359,8 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Connects to FTP server and enables file watching if <see cref="Enabled"/> is true.
         /// </summary>
-        /// <param name="userName"></param>
-        /// <param name="password"></param>
+        /// <param name="userName">A <see cref="String"/> value as the username.</param>
+        /// <param name="password">A <see cref="String"/> value as the password.</param>
         public virtual void Connect(string userName, string password)
         {
             if (!string.IsNullOrEmpty(userName))
@@ -429,6 +431,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Raises <see cref="Status"/> event.
         /// </summary>
+        /// <param name="status">A <see cref="String"/> status message.</param>
         protected void OnStatus(string status)
         {
             if (Status != null)
@@ -438,6 +441,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Raises <see cref="FileAdded"/> event.
         /// </summary>
+        /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileAdded(FtpFile file)
         {
             if (FileAdded != null)
@@ -447,6 +451,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Raises <see cref="FileDeleted"/> event.
         /// </summary>
+        /// <param name="file">A <see cref="FtpFile"/> file.</param>
         protected void OnFileDeleted(FtpFile file)
         {
             if (FileDeleted != null)
@@ -456,6 +461,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Raises <see cref="CommandSent"/> event.
         /// </summary>
+        /// <param name="command">A <see cref="String"/> command.</param>
         protected void OnCommandSent(string command)
         {
             if (CommandSent != null)
@@ -470,6 +476,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Raises <see cref="ResponseReceived"/> event.
         /// </summary>
+        /// <param name="response">A <see cref="String"/> response.</param>
         protected void OnResponseReceived(string response)
         {
             if (ResponseReceived != null)
