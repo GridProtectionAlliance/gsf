@@ -14,6 +14,8 @@
 //       Initial version of source generated
 //  09/16/2008 - James R. Carroll
 //      Converted to C#.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -390,6 +392,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="Measurement"/> values for equality.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator ==(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.Equals(measurement2);
@@ -398,6 +403,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="Measurement"/> values for inequality.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator !=(Measurement measurement1, Measurement measurement2)
         {
             return !measurement1.Equals(measurement2);
@@ -406,6 +414,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is greater than right <see cref="Measurement"/> value.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator >(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.CompareTo(measurement2) > 0;
@@ -414,6 +425,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is greater than or equal to right <see cref="Measurement"/> value.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator >=(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.CompareTo(measurement2) >= 0;
@@ -422,6 +436,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is less than right <see cref="Measurement"/> value.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator <(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.CompareTo(measurement2) < 0;
@@ -430,6 +447,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="Measurement"/> value is less than or equal to right <see cref="Measurement"/> value.
         /// </summary>
+        /// <param name="measurement1">A <see cref="Measurement"/> left hand operand.</param>
+        /// <param name="measurement2">A <see cref="Measurement"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator <=(Measurement measurement1, Measurement measurement2)
         {
             return measurement1.CompareTo(measurement2) <= 0;
@@ -443,6 +463,7 @@ namespace TVA.Measurements
         /// Creates a copy of the specified measurement.
         /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
@@ -453,6 +474,7 @@ namespace TVA.Measurements
         /// </summary>
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
@@ -464,6 +486,7 @@ namespace TVA.Measurements
         /// <param name="measurementToClone">Specified measurement to clone.</param>
         /// <param name="value">New value for cloned measurement.</param>
         /// <param name="timestamp">New timestamp, in ticks, for cloned measurement.</param>
+        /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
         {
             return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
