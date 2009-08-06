@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/22/2003 - James R. Carroll
 //       Generated original version of source code.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -706,7 +708,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Generates hash code for this <see cref="FtpDirectory"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An <see cref="Int32"/> value as the result.</returns>
         public override int GetHashCode()
         {
             return m_name.GetHashCode();
@@ -727,6 +729,8 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Compares directory or file to another.
         /// </summary>
+        /// <param name="obj">An <see cref="Object"/> to compare against.</param>
+        /// <returns>An <see cref="Int32"/> value representing the result. 1 - obj is greater than, 0 - obj is equal to, -1 - obj is less than.</returns>
         public int CompareTo(object obj)
         {
             IFtpFile file = obj as IFtpFile;
@@ -744,6 +748,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Compares the two values for equality.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator ==(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) == 0);
@@ -752,6 +759,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Compares the two values for inequality.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator !=(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) != 0);
@@ -760,6 +770,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Returns true if left value is less than right value.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator <(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) < 0);
@@ -768,6 +781,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator <=(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) <= 0);
@@ -776,6 +792,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Returns true if left value is greater than right value.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator >(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) > 0);
@@ -784,6 +803,9 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator >=(FtpDirectory value1, FtpDirectory value2)
         {
             return (value1.CompareTo(value2) >= 0);
