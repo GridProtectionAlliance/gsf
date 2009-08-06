@@ -27,6 +27,12 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
+//
+//*******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
@@ -473,6 +479,9 @@ namespace TVA.Media
         /// <summary>
         /// Creates a new empty in-memory wave file using existing constituent chunks.
         /// </summary>
+        /// <param name="waveData">A <see cref="RiffHeaderChunk"/> header object.</param>
+        /// <param name="waveFormat">A <see cref="WaveFormatChunk"/> format object.</param>
+        /// <param name="waveHeader">A <see cref="WaveDataChunk"/> data object</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public WaveFile(RiffHeaderChunk waveHeader, WaveFormatChunk waveFormat, WaveDataChunk waveData)
         {
