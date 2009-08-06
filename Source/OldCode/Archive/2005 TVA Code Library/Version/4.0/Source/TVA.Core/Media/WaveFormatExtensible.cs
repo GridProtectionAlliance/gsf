@@ -27,6 +27,12 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
+//
+//*******************************************************************************************************
 
 using System;
 using TVA.Parsing;
@@ -176,6 +182,7 @@ namespace TVA.Media
         /// <summary>
         /// Creates a new <see cref="WaveFormatExtensible"/> object based on the <see cref="WaveFormatChunk"/> settings.
         /// </summary>
+        /// <param name="waveFormat">A <see cref="WaveFormatChunk"/> format.</param>
         public WaveFormatExtensible(WaveFormatChunk waveFormat)
         {
             m_sampleValue = (ushort)waveFormat.BitsPerSample;
@@ -186,6 +193,9 @@ namespace TVA.Media
         /// <summary>
         /// Creates a new <see cref="WaveFormatExtensible"/> object based on the given settings.
         /// </summary>
+        /// <param name="sampleValue">An <see cref="UInt16"/> value representing the sample value.</param>
+        /// <param name="channelMask">A <see cref="Speakers"/> object.</param>
+        /// <param name="subFormat">A <see cref="Guid"/> value.</param>
         [CLSCompliant(false)]
         public WaveFormatExtensible(ushort sampleValue, Speakers channelMask, Guid subFormat)
         {
