@@ -843,13 +843,16 @@ namespace TVA.Communication
         /// </remarks>
         public void BeginInit()
         {
-            try
+            if (!DesignMode)
             {
-                // Nothing needs to be done before component is initialized.
-            }
-            catch (Exception)
-            {
-                // Prevent the IDE from crashing when component is in design mode.
+                try
+                {
+                    // Nothing needs to be done before component is initialized.
+                }
+                catch (Exception)
+                {
+                    // Prevent the IDE from crashing when component is in design mode.
+                }
             }
         }
 
