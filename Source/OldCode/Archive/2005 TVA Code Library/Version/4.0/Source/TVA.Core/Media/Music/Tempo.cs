@@ -27,6 +27,12 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
+//
+//*******************************************************************************************************
 
 namespace TVA.Media.Music
 {
@@ -77,7 +83,7 @@ namespace TVA.Media.Music
         /// <summary>
         /// Contructs a new <see cref="Tempo"/> object.
         /// </summary>
-        /// <param name="totalNoteValues"></param>
+        /// <param name="totalNoteValues">A <see cref="Int32"/> indicating the total note values.</param>
         /// <param name="noteValue">Named note value used for <see cref="Tempo"/>.</param>
         public Tempo(int totalNoteValues, NoteValueBritish noteValue)
         {
