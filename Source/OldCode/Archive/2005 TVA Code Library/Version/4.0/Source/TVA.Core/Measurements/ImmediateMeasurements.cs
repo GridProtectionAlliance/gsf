@@ -16,6 +16,8 @@
 //       Classes abstracted for general use and added to TVA code library.
 //  09/17/2008 - James R. Carroll
 //       Converted to C#.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -66,6 +68,9 @@ namespace TVA.Measurements
         #region [ Properties ]
 
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
+        /// <param name="measurementID">An <see cref="UInt32"/> representing the measurement id.</param>
+        /// <param name="source">A <see cref="String"/> indicating the source.</param>
+        /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
         public double this[uint measurementID, string source]
         {
             get
@@ -75,6 +80,8 @@ namespace TVA.Measurements
         }
 
         /// <summary>We retrieve adjusted measurement values within time tolerance of concentrator real-time.</summary>
+        /// <param name="key">An <see cref="MeasurementKey"/> representing the measurement key.</param>
+        /// <returns>A <see cref="Double"/> representing the adjusted measurement value.</returns>
         public double this[MeasurementKey key]
         {
             get
@@ -210,6 +217,8 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns measurement key list of specified tag, if it exists.</summary>
+        /// <param name="tag">A <see cref="String"/> that indicates the tag to use.</param>
+        /// <returns>A collection of measurement keys.</returns>
         public ReadOnlyCollection<MeasurementKey> TaggedMeasurementKeys(string tag)
         {
             return new ReadOnlyCollection<MeasurementKey>(m_taggedMeasurements[tag]);
@@ -222,12 +231,17 @@ namespace TVA.Measurements
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
+        /// <param name="measurementID">An <see cref="UInt32"/> representing the measurement id.</param>
+        /// <param name="source">A <see cref="String"/> indicating the source.</param>
+        /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
         public TemporalMeasurement Measurement(uint measurementID, string source)
         {
             return Measurement(new MeasurementKey(measurementID, source));
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
+        /// <param name="key">A <see cref="MeasurementKey"/> object indicating the key to use.</param>
+        /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
         public TemporalMeasurement Measurement(MeasurementKey key)
         {
             lock (m_measurements)
@@ -247,6 +261,7 @@ namespace TVA.Measurements
 
         /// <summary>Defines tagged measurements from a data table.</summary>
         /// <remarks>Expects tag field to be aliased as "Tag", measurement ID field to be aliased as "ID" and source field to be aliased as "Source".</remarks>
+        /// <param name="taggedMeasurements">A <see cref="DataTable"/> to use for defining the tagged measurements.</param>
         public void DefineTaggedMeasurements(DataTable taggedMeasurements)
         {
             foreach (DataRow row in taggedMeasurements.Rows)
@@ -257,6 +272,8 @@ namespace TVA.Measurements
 
         /// <summary>Associates a new measurement ID with a tag, creating the new tag if needed.</summary>
         /// <remarks>Allows you to define "grouped" points so you can aggregate certain measurements.</remarks>
+        /// <param name="key">A <see cref="MeasurementKey"/> to associate with the tag.</param>
+        /// <param name="tag">A <see cref="String"/> to represent the key.</param>
         public void AddTaggedMeasurement(string tag, MeasurementKey key)
         {
             // Check for new tag
@@ -275,6 +292,8 @@ namespace TVA.Measurements
 
         /// <summary>Calculates an average of all measurements.</summary>
         /// <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
+        /// <param name="count">An <see cref="Int32"/> value to get the count of values averaged.</param>
+        /// <returns>A <see cref="Double"/> value representing the average of the measurements.</returns>
         public double CalculateAverage(ref int count)
         {
             double measurement;
@@ -297,6 +316,9 @@ namespace TVA.Measurements
         }
 
         /// <summary>Calculates an average of all measurements associated with the specified tag.</summary>
+        /// <param name="count">An <see cref="Int32"/> value to get the count of values averaged.</param>
+        /// <param name="tag">The type of measurements to average.</param>
+        /// <returns>A <see cref="Double"/> value representing the average of the tags.</returns>
         public double CalculateTagAverage(string tag, ref int count)
         {
             double measurement;
@@ -316,6 +338,8 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns the minimum value of all measurements associated with the specified tag.</summary>
+        /// <returns>A <see cref="Double"/> value representing the tag minimum.</returns>
+        /// <param name="tag">The tag group to evaluate.</param>
         public double TagMinimum(string tag)
         {
             double minValue = double.MaxValue;
@@ -337,6 +361,8 @@ namespace TVA.Measurements
         }
 
         /// <summary>Returns the maximum value of all measurements associated with the specified tag.</summary>
+        /// <returns>A <see cref="Double"/> value representing the tag maximum.</returns>
+        /// <param name="tag">The tag group to evaluate.</param>
         public double TagMaximum(string tag)
         {
             double maxValue = double.MinValue;
