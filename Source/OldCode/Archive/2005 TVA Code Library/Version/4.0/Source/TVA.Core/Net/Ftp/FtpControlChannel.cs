@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/22/2003 - James R. Carroll
 //       Generated original version of source code.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -208,7 +210,7 @@ namespace TVA.Net.Ftp
         /// <summary>
         /// Send FTP command to control channel.
         /// </summary>
-        /// <param name="cmd"></param>
+        /// <param name="cmd">A <see cref="String"/> representing the command to send.</param>
         public void Command(string cmd)
         {
             byte[] buff = System.Text.Encoding.Default.GetBytes(cmd + Environment.NewLine);
