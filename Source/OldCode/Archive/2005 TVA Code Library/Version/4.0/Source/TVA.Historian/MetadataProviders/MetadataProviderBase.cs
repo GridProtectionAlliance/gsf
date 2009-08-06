@@ -78,7 +78,6 @@ namespace TVA.Historian.MetadataProviders
         /// </summary>
         protected MetadataProviderBase()
         {
-            m_enabled = false;
             m_refreshInterval = -1;
             m_refreshTimeout = 60;
             m_persistSettings = true;

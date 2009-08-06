@@ -79,7 +79,6 @@ namespace TVA.Historian.Notifiers
         {
             m_notifyOptions = notifyOptions;
             m_notifyTimeout = 30;
-            m_enabled = false;
             m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
         }
