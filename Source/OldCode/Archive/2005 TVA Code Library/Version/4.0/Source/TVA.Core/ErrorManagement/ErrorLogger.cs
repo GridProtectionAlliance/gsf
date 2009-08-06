@@ -23,6 +23,8 @@
 //      Modified Log() to quit if Enabled is false.
 //  07/27/2009 - Pinal C. Patel
 //      Made logging user information along with exception information optional via LogUserInfo property.
+//  08/06/2009 - Pinal C. Patel
+//      Enabled upon initialization rather than instantiation.
 //
 //*******************************************************************************************************
 
@@ -222,8 +224,7 @@ namespace TVA.ErrorManagement
         /// </summary>
         public ErrorLogger()
             : base()
-        {
-            m_enabled = true;
+        {            
             m_logToUI = DefaultLogToUI;
             m_logToFile = DefaultLogToFile;
             m_logToEmail = DefaultLogToEmail;
@@ -827,6 +828,7 @@ namespace TVA.ErrorManagement
             {
                 LoadSettings();                                     // Load settings from the config file.
                 Register();                                         // Register the logger for unhandled exceptions.
+                m_enabled = true;                                   // Mark as enabled.
                 m_initialized = true;                               // Initialize only once.
             }
         }
@@ -1329,6 +1331,7 @@ namespace TVA.ErrorManagement
                 finally
                 {
                     base.Dispose(disposing);    // Call base class Dispose().
+                    m_enabled = false;          // Mark as disabled.
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
             }

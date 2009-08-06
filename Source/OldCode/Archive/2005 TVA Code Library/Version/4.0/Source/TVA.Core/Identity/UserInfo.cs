@@ -35,6 +35,8 @@
 //  07/14/2009 - Pinal C. Patel
 //      Modified GetUserProperty() to allow information to be retrieved from the logged-on domain only
 //      in order to prevent timeout issues when trying to retrieve information for a non-domain user.
+//  08/06/2009 - Pinal C. Patel
+//      Enabled upon initialization rather than instantiation.
 //
 //*******************************************************************************************************
 
@@ -143,7 +145,6 @@ namespace TVA.Identity
         /// </summary>
         private UserInfo()
         {
-            m_enabled = true;
             m_settingsCategory = this.GetType().Name;
         }
 
@@ -497,6 +498,7 @@ namespace TVA.Identity
                     EndImpersonation(currentContext);   // Undo impersonation if it was performed.
                 }
 
+                m_enabled = true;       // Mark as enabled.
                 m_initialized = true;   // Initialize only once.
             }
         }
@@ -673,6 +675,7 @@ namespace TVA.Identity
                 }
                 finally
                 {
+                    m_enabled = false;  // Mark as disabled.
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
