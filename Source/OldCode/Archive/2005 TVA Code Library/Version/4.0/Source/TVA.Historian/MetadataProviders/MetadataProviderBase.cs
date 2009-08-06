@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/07/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  08/06/2009 - Pinal C. Patel
+//       Made Initialize() virtual so inheriting classes can override the default behavior.
 //
 //*******************************************************************************************************
 
@@ -226,7 +228,7 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Initializes the metadata provider.
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (!m_initialized)
             {

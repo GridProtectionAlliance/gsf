@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
+//  08/06/2009 - Pinal C. Patel
+//       Made Initialize() virtual so inheriting classes can override the default behavior.
 //
 //*******************************************************************************************************
 
@@ -231,7 +233,7 @@ namespace TVA.Historian.Notifiers
         /// <summary>
         /// Initializes the notifier.
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (!m_initialized)
             {
