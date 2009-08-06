@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/20/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  08/06/2009 - Pinal C. Patel
+//       Modified Dispose(boolean) to iterate through the adapter collection correctly.
 //
 //*******************************************************************************************************
 
@@ -325,9 +327,11 @@ namespace TVA
 
                         lock (m_adapters)
                         {
+                            T adapter;
                             IDisposable disposableAdapter;
-                            foreach (T adapter in m_adapters)
+                            while (m_adapters.GetEnumerator().MoveNext())
                             {
+                                adapter = m_adapters[0];
                                 disposableAdapter = adapter as IDisposable;
                                 if (disposableAdapter != null)
                                     disposableAdapter.Dispose();
