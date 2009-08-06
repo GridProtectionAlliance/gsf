@@ -14,6 +14,8 @@
 //      Initial version of source generated.
 //  09/16/2008 - James R. Carroll
 //      Converted to C#.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -197,6 +199,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="MeasurementKey"/> values for equality.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator ==(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.Equals(key2);
@@ -205,6 +210,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Compares two <see cref="MeasurementKey"/> values for inequality.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator !=(MeasurementKey key1, MeasurementKey key2)
         {
             return !key1.Equals(key2);
@@ -213,6 +221,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="MeasurementKey"/> value is greater than right <see cref="MeasurementKey"/> value.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator >(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) > 0;
@@ -221,6 +232,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="MeasurementKey"/> value is greater than or equal to right <see cref="MeasurementKey"/> value.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator >=(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) >= 0;
@@ -229,6 +243,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="MeasurementKey"/> value is less than right <see cref="MeasurementKey"/> value.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator <(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) < 0;
@@ -237,6 +254,9 @@ namespace TVA.Measurements
         /// <summary>
         /// Returns true if left <see cref="MeasurementKey"/> value is less than or equal to right <see cref="MeasurementKey"/> value.
         /// </summary>
+        /// <param name="key1">A <see cref="MeasurementKey"/> left hand operand.</param>
+        /// <param name="key2">A <see cref="MeasurementKey"/> right hand operand.</param>
+        /// <returns>A boolean representing the result.</returns>
         public static bool operator <=(MeasurementKey key1, MeasurementKey key2)
         {
             return key1.CompareTo(key2) <= 0;
