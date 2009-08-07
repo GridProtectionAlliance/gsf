@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/12/2007 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -357,6 +359,9 @@ namespace TVA.Parsing
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">Cannnot read from WriteOnly stream.</exception>
+        /// <param name="buffer">Array of <see cref="Byte"/>s.</param>
+        /// <param name="count">An <see cref="Int32"/> value for the offset.</param>
+        /// <param name="offset">An <see cref="Int32"/> value for the count.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Read(byte[] buffer, int offset, int count)
         {
@@ -367,6 +372,9 @@ namespace TVA.Parsing
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">WriteOnly stream has no position.</exception>
+        /// <param name="offset">A <see cref="Int64"/> value for the offset.</param>
+        /// <param name="origin">A <see cref="SeekOrigin"/.></param>
+        /// <returns>Returns a <see cref="Int64"/> value indicating the point that was seeked to.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Seek(long offset, System.IO.SeekOrigin origin)
         {
@@ -377,6 +385,7 @@ namespace TVA.Parsing
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">WriteOnly stream has no length.</exception>
+        /// <param name="value">A <see cref="Int64"/ value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void SetLength(long value)
         {

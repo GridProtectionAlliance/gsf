@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  06/19/2009 - Pinal C. Patel
 //       Parsed output is now being delivered in a new collection instead of reusing a single collection.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 #pragma warning disable 0809
@@ -263,6 +265,7 @@ namespace TVA.Parsing
         /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,ISupportBinaryImage)"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
+        /// <param name="image">A <see cref="ISupportBinaryImage"/>.</param>
         [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
         public override void Parse(ISupportBinaryImage image)
         {
@@ -273,6 +276,9 @@ namespace TVA.Parsing
         /// Not implemented. Consumers should call the <see cref="Parse(TSourceIdentifier,byte[],int,int)"/> method instead to make sure data source ID gets tracked with data buffer.
         /// </summary>
         /// <exception cref="NotImplementedException">This method should not be called directly.</exception>
+        /// <param name="buffer">A <see cref="Byte"/> array.</param>
+        /// <param name="count">An <see cref="Int32"/> for the offset.</param>
+        /// <param name="offset">An <see cref="Int32"/> for the count.</param>
         [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
         public override void Write(byte[] buffer, int offset, int count)
         {
