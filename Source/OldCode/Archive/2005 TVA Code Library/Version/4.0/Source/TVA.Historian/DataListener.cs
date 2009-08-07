@@ -1002,19 +1002,42 @@ namespace TVA.Historian
                             m_data.Clear();
 
                         if (m_parser != null)
+                        {
+                            m_parser.DataParsed -= PacketParser_DataParsed;
                             m_parser.Dispose();
+                        }
 
                         if (m_tcpServer != null)
+                        {
+                            m_tcpServer.ServerStarted -= ServerSocket_ServerStarted;
+                            m_tcpServer.ServerStopped -= ServerSocket_ServerStopped;
+                            m_tcpServer.ReceiveClientDataComplete -= ServerSocket_ReceiveClientDataComplete;
                             m_tcpServer.Dispose();
+                        }
 
                         if (m_tcpClient != null)
+                        {
+                            m_tcpClient.ConnectionAttempt -= ClientSocket_ConnectionAttempt;
+                            m_tcpClient.ConnectionEstablished -= ClientSocket_ConnectionEstablished;
+                            m_tcpClient.ConnectionTerminated -= ClientSocket_ConnectionTerminated;
+                            m_tcpClient.ReceiveDataComplete -= ClientSocket_ReceiveDataComplete;
                             m_tcpClient.Dispose();
+                        }
 
                         if (m_udpClient != null)
+                        {
+                            m_udpClient.ConnectionAttempt -= ClientSocket_ConnectionAttempt;
+                            m_udpClient.ConnectionEstablished -= ClientSocket_ConnectionEstablished;
+                            m_udpClient.ConnectionTerminated -= ClientSocket_ConnectionTerminated;
+                            m_udpClient.ReceiveDataComplete -= ClientSocket_ReceiveDataComplete;
                             m_udpClient.Dispose();
+                        }
 
                         if (m_dataInitClient != null)
+                        {
+                            m_dataInitClient.ReceiveDataComplete -= DataInitClient_ReceiveDataComplete;
                             m_dataInitClient.Dispose();
+                        }
 
                         if (m_initializeWaitHandle != null)
                             m_initializeWaitHandle.Close();
