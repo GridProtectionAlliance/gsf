@@ -689,11 +689,14 @@ namespace TVA.Scheduling
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_timer != null)
-                            m_timer.Dispose();
-
                         if (m_startTimerThread != null)
                             m_startTimerThread.Abort();
+
+                        if (m_timer != null)
+                        {
+                            m_timer.Elapsed -= m_timer_Elapsed;
+                            m_timer.Dispose();
+                        }
                     }
                 }
                 finally
