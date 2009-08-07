@@ -35,6 +35,8 @@
 //  07/30/2009 - Pinal C. Patel
 //       Modified to set the principal of the thread where client request are handled to that of the the 
 //       process or remote client (if transmitted by the remote client upon connection).
+//  08/07/2009 - Pinal C. Patel
+//       Subscribed to ErrorLogger.LoggingException event.
 //
 //*******************************************************************************************************
 
@@ -297,6 +299,7 @@ namespace TVA.Services
 			m_processScheduler.SettingsCategory = "ProcessScheduler";
 
 			m_errorLogger = new ErrorLogger();
+            m_errorLogger.LoggingException += ErrorLogger_LoggingException;
 			m_errorLogger.ExitOnUnhandledException = false;
 			m_errorLogger.SettingsCategory = "ErrorLogger";
             m_errorLogger.ErrorLog.SettingsCategory = "ErrorLog";
@@ -1428,26 +1431,23 @@ namespace TVA.Services
                             m_statusLog.LogException -= StatusLog_LogException;
                             m_statusLog.Dispose();
                         }
-                        m_statusLog = null;
 
                         if (m_processScheduler != null)
                         {
                             m_processScheduler.ScheduleDue -= Scheduler_ScheduleDue;
                             m_processScheduler.Dispose();
                         }
-                        m_processScheduler = null;
 
                         if (m_errorLogger != null)
                         {
+                            m_errorLogger.LoggingException -= ErrorLogger_LoggingException;
                             m_errorLogger.Dispose();
                         }
-                        m_errorLogger = null;
 
                         if (m_performanceMonitor != null)
                         {
                             m_performanceMonitor.Dispose();
                         }
-                        m_performanceMonitor = null;
 
                         if (m_remoteCommandProcess != null)
                         {
@@ -1459,7 +1459,6 @@ namespace TVA.Services
 
                             m_remoteCommandProcess.Dispose();
                         }
-                        m_remoteCommandProcess = null;
 
                         // Service processes are created and owned by remoting server, so we dispose them
                         if (m_processes != null)
@@ -1472,7 +1471,6 @@ namespace TVA.Services
 
                             m_processes.Clear();
                         }
-                        m_processes = null;
 
                         // Detach any remoting server events, we don't own this component so we don't dispose it
                         RemotingServer = null;
@@ -1519,14 +1517,6 @@ namespace TVA.Services
             OnProcessStateChanged(process.Name, process.CurrentState);
         }
 
-        private void StatusLog_LogException(object sender, EventArgs<System.Exception> e)
-        {
-            // We'll let the connected clients know that we encountered an exception while logging the status update.
-            m_logStatusUpdates = false;
-            UpdateStatus("Error occurred while logging status update - {0}\r\n\r\n", e.Argument);
-            m_logStatusUpdates = true;
-        }
-
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
             ServiceProcess scheduledProcess = GetProcess(e.Argument.Name);
@@ -1534,6 +1524,19 @@ namespace TVA.Services
             // Start the process execution if it exists.
             if (scheduledProcess != null)
                 scheduledProcess.Start();
+        }
+
+        private void StatusLog_LogException(object sender, EventArgs<System.Exception> e)
+        {
+            // We'll let the connected clients know that we encountered an exception while logging the status update.
+            m_logStatusUpdates = false;
+            UpdateStatus("Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
+            m_logStatusUpdates = true;
+        }
+
+        private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
+        {
+            UpdateStatus("Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
         }
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
