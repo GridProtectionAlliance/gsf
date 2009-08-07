@@ -37,6 +37,8 @@
 //       implementation handled by allowing definition of a "CommandChannel" in the connection string
 //  04/27/2009 - James R. Carroll
 //       Added support for SEL Fast Message protocol
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -1309,6 +1311,7 @@ namespace TVA.PhasorProtocols
         /// <remarks>
         /// Command will only be sent if <see cref="DeviceSupportsCommands"/> is <c>true</c> and <see cref="MultiProtocolFrameParser"/>.
         /// </remarks>
+        /// <returns>A <see cref="WaitHandle"/>.</returns>
         public virtual WaitHandle SendDeviceCommand(DeviceCommand command)
         {
             WaitHandle handle = null;

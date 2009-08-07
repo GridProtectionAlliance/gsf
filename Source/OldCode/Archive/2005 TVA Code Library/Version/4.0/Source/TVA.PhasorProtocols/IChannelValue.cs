@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/18/2005 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -71,6 +73,7 @@ namespace TVA.PhasorProtocols
         /// Gets the specified composite value of this <see cref="IChannelValue{T}"/>.
         /// </summary>
         /// <param name="index">Index of composite value to retrieve.</param>
+        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
         double GetCompositeValue(int index);
     }
 }

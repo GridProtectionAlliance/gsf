@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/18/2005 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -20,6 +22,7 @@ namespace TVA.PhasorProtocols
     /// <summary>
     /// Represents a protocol independent interface representation of a collection of <see cref="IChannelCell"/> objects.
     /// </summary>
+    /// <typeparam name="T">Generic type used.</typeparam>
     public interface IChannelCellCollection<T> : IChannelCollection<T> where T : IChannelCell
     {
         /// <summary>
