@@ -616,7 +616,10 @@ namespace TVA.IO
                         SaveSettings();
 
                         if (m_exportQueue != null)
+                        {
                             m_exportQueue.ProcessException -= ProcessExceptionHandler;
+                            m_exportQueue.Dispose();
+                        }
                     }
                 }
                 finally
