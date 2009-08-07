@@ -319,25 +319,32 @@ namespace TVA
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_adapterWatcher != null)
-                            m_adapterWatcher.Dispose();
-
                         if (m_operationQueue != null)
                             m_operationQueue.Dispose();
 
-                        lock (m_adapters)
+                        if (m_adapterWatcher != null)
                         {
-                            T adapter;
-                            IDisposable disposableAdapter;
-                            while (m_adapters.GetEnumerator().MoveNext())
-                            {
-                                adapter = m_adapters[0];
-                                disposableAdapter = adapter as IDisposable;
-                                if (disposableAdapter != null)
-                                    disposableAdapter.Dispose();
+                            m_adapterWatcher.Created -= AdapterWatcher_Created;
+                            m_adapterWatcher.Dispose();
+                        }
 
-                                m_adapters.Remove(adapter);
+                        if (m_adapters != null)
+                        {
+                            lock (m_adapters)
+                            {
+                                T adapter;
+                                IDisposable disposableAdapter;
+                                while (m_adapters.GetEnumerator().MoveNext())
+                                {
+                                    adapter = m_adapters[0];
+                                    disposableAdapter = adapter as IDisposable;
+                                    if (disposableAdapter != null)
+                                        disposableAdapter.Dispose();
+
+                                    m_adapters.Remove(adapter);
+                                }
                             }
+                            m_adapters.CollectionChanged -= Adapters_CollectionChanged;
                         }
                     }
                 }
