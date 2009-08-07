@@ -2446,17 +2446,39 @@ namespace TVA.Historian.Files
                         if (m_rolloverWaitHandle != null)
                             m_rolloverWaitHandle.Close();
 
+                        if (m_conserveMemoryTimer != null)
+                        {
+                            m_conserveMemoryTimer.Elapsed -= ConserveMemoryTimer_Elapsed;
+                            m_conserveMemoryTimer.Dispose();
+                        }
+
                         if (m_historicDataQueue != null)
+                        {
+                            m_historicDataQueue.ProcessException -= HistoricDataQueue_ProcessException;
                             m_historicDataQueue.Dispose();
+                        }
 
                         if (m_outOfSequenceDataQueue != null)
+                        {
+                            m_outOfSequenceDataQueue.ProcessException -= OutOfSequenceDataQueue_ProcessException;
                             m_outOfSequenceDataQueue.Dispose();
+                        }
 
                         if (m_currentLocationFileWatcher != null)
+                        {
+                            m_currentLocationFileWatcher.Renamed -= FileWatcher_Renamed;
+                            m_currentLocationFileWatcher.Deleted -= FileWatcher_Deleted;
+                            m_currentLocationFileWatcher.Created -= FileWatcher_Created;
                             m_currentLocationFileWatcher.Dispose();
+                        }
 
                         if (m_offloadLocationFileWatcher != null)
+                        {
+                            m_offloadLocationFileWatcher.Renamed -= FileWatcher_Renamed;
+                            m_offloadLocationFileWatcher.Deleted -= FileWatcher_Deleted;
+                            m_offloadLocationFileWatcher.Created -= FileWatcher_Created;
                             m_offloadLocationFileWatcher.Dispose();
+                        }
 
                         // Detach from all of the dependency files.
                         StateFile = null;
