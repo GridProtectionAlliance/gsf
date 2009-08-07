@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/18/2005 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -41,6 +43,8 @@ namespace TVA.PhasorProtocols
         /// <summary>
         /// Creates a new <see cref="AnalogValueBase"/>.
         /// </summary>
+        /// <param name="parent">The <see cref="IDataCell"/> parent of this <see cref="AnalogValueBase"/>.</param>
+        /// <param name="analogDefinition">The <see cref="IAnalogDefinition"/> associated with this <see cref="AnalogValueBase"/>.</param>
         protected AnalogValueBase(IDataCell parent, IAnalogDefinition analogDefinition)
             : base(parent, analogDefinition)
         {
@@ -214,6 +218,7 @@ namespace TVA.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
+        /// <returns>A composite value as <see cref="Double"/>.</returns>
         public override double GetCompositeValue(int index)
         {
             if (index == 0)
