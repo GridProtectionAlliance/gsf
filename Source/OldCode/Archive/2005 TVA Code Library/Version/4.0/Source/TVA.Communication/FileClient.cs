@@ -203,6 +203,7 @@ namespace TVA.Communication
 #else
         private Thread m_connectionThread;
 #endif
+        private bool m_disposed;
 
         #endregion
 
@@ -547,6 +548,35 @@ namespace TVA.Communication
                 FileOpenMode = settings["FileOpenMode"].ValueAs(m_fileOpenMode);
                 FileShareMode = settings["FileShareMode"].ValueAs(m_fileShareMode);
                 FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
+            }
+        }
+       
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="FileClient"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_receiveDataTimer != null)
+                        {
+                            m_receiveDataTimer.Elapsed -= m_receiveDataTimer_Elapsed;
+                            m_receiveDataTimer.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
             }
         }
 
