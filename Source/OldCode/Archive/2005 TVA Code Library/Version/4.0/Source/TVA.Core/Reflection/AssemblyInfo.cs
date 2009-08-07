@@ -534,7 +534,7 @@ namespace TVA.Reflection
             // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource.
             if (!m_addedResolver)
             {
-                AppDomain.CurrentDomain.AssemblyResolve += new System.ResolveEventHandler(ResolveAssemblyFromResource);
+                AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyFromResource;
                 m_addedResolver = true;
             }
 
