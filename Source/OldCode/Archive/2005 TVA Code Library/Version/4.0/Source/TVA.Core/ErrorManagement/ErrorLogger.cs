@@ -25,6 +25,8 @@
 //      Made logging user information along with exception information optional via LogUserInfo property.
 //  08/06/2009 - Pinal C. Patel
 //      Enabled upon initialization rather than instantiation.
+//  08/07/2009 - Pinal C. Patel
+//      Added LoggingException event to notify about exceptions encountered when logging exceptions.
 //
 //*******************************************************************************************************
 
@@ -113,6 +115,8 @@ namespace TVA.ErrorManagement
     {
         #region [ Members ]
 
+        // Constants
+
         /// <summary>
         /// Specifies the default value for the <see cref="LogToUI"/> property.
         /// </summary>
@@ -182,6 +186,16 @@ namespace TVA.ErrorManagement
         /// Specifies the default value for the <see cref="ExitOnUnhandledException"/> property.
         /// </summary>
         public const bool DefaultExitOnUnhandledException = false;
+
+        // Events
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while logging an <see cref="Exception"/>.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> that was encountered while logging an <see cref="Exception"/>.
+        /// </remarks>
+        public event EventHandler<EventArgs<Exception>> LoggingException;
 
         // Fields
         private bool m_logToUI;
@@ -968,18 +982,18 @@ namespace TVA.ErrorManagement
         /// <summary>
         /// Logs information about the encountered <see cref="Exception"/>.
         /// </summary>
-        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
-        public void Log(Exception ex)
+        /// <param name="exception">Encountered <see cref="Exception"/> whose information is to be logged.</param>
+        public void Log(Exception exception)
         {
-            Log(ex, false);
+            Log(exception, false);
         }
 
         /// <summary>
         /// Logs information about the encountered <see cref="Exception"/>.
         /// </summary>
-        /// <param name="ex">Encountered <see cref="Exception"/> whose information is to be logged.</param>
+        /// <param name="exception">Encountered <see cref="Exception"/> whose information is to be logged.</param>
         /// <param name="exitApplication">true to exit the application; otherwise false.</param>
-        public void Log(Exception ex, bool exitApplication)
+        public void Log(Exception exception, bool exitApplication)
         {
             // Quit if disabled.
             if (!m_enabled)
@@ -989,18 +1003,18 @@ namespace TVA.ErrorManagement
             Initialize();           
 
             // Save the encountered exception.
-            m_lastException = ex;   
+            m_lastException = exception;   
 
             // Iterate through all of the registered logger methods and invoke them for processing the exception.
             foreach (Action<Exception> logger in m_loggers)
             {
                 try
                 {
-                    logger(ex);
+                    logger(exception);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Absorb any exception.
+                    OnLoggingException(ex);
                 }
             }
             m_suppressInteractiveLogging = false;   // Enable interactive logging if disabled.
@@ -1307,6 +1321,16 @@ namespace TVA.ErrorManagement
                 }
                 m_logToScreenshotOK = true;
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="LoggingException"/> event.
+        /// </summary>
+        /// <param name="exception"><see cref="Exception"/> to send to <see cref="LoggingException"/> event.</param>
+        protected virtual void OnLoggingException(Exception exception)
+        {
+            if (LoggingException != null)
+                LoggingException(this, new EventArgs<Exception>(exception));
         }
 
         /// <summary>
