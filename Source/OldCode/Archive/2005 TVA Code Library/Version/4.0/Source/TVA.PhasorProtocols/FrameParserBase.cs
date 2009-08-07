@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  12/16/2008 - James R. Carroll
 //      Converted class to inherit from FrameImageParserBase.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -284,6 +286,7 @@ namespace TVA.PhasorProtocols
         /// <summary>
         /// Starts the frame parser given the specified type implementations.
         /// </summary>
+        /// <param name="implementations">An implementation type paramater.</param>
         public override void Start(IEnumerable<Type> implementations)
         {
             base.Start(implementations);

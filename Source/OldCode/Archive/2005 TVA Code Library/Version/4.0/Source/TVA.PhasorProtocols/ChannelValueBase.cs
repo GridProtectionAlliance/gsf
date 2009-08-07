@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/07/2005 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -26,6 +28,7 @@ namespace TVA.PhasorProtocols
     /// <summary>
     /// Represents the common implementation of the protocol independent representation of any kind of data value.
     /// </summary>
+    /// <typeparam name="T">Generic type.</typeparam>
     [Serializable()]
     public abstract class ChannelValueBase<T> : ChannelBase, IChannelValue<T> where T : IChannelDefinition
     {
@@ -188,6 +191,7 @@ namespace TVA.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
+        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
         public abstract double GetCompositeValue(int index);
 
         /// <summary>

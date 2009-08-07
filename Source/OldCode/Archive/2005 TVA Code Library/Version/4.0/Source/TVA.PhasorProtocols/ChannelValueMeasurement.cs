@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/07/2005 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -24,6 +26,7 @@ namespace TVA.PhasorProtocols
     /// <summary>
     /// Represents a <see cref="IMeasurement"/> implementation for composite values of a given <see cref="IChannelValue{T}"/>.
     /// </summary>
+    /// <typeparam name="T">Generic type T.</typeparam>
     [EditorBrowsable(EditorBrowsableState.Advanced)]
     public class ChannelValueMeasurement<T> : IMeasurement where T : IChannelDefinition
     {
