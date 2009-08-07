@@ -1278,10 +1278,16 @@ namespace TVA.IO
                             m_saveWaitHandle.Close();
 
                         if (m_autoSaveTimer != null)
+                        {
+                            m_autoSaveTimer.Elapsed -= m_autoSaveTimer_Elapsed;
                             m_autoSaveTimer.Dispose();
+                        }
 
                         if (m_fileWatcher != null)
+                        {
+                            m_fileWatcher.Changed -= m_fileWatcher_Changed;
                             m_fileWatcher.Dispose();
+                        }
                     }
                 }
                 finally
