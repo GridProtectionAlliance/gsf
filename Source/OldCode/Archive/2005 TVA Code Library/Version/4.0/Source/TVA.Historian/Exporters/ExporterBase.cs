@@ -372,26 +372,42 @@ namespace TVA.Historian.Exporters
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        m_exportTimer.Dispose();
-                        m_realTimeQueue.Dispose();
-                        m_nonRealTimeQueue.Dispose();
+                        if (m_realTimeQueue != null)
+                            m_realTimeQueue.Dispose();
+
+                        if (m_nonRealTimeQueue != null)
+                            m_nonRealTimeQueue.Dispose();
+
+                        if (m_exportTimer != null)
+                        {
+                            m_exportTimer.Elapsed -= ExportTimer_Elapsed;
+                            m_exportTimer.Dispose();
+                        }
 
                         // Remove all associated exports.
-                        lock (m_exports)
+                        if (m_exports != null)
                         {
-                            while (m_exports.GetEnumerator().MoveNext())
+                            lock (m_exports)
                             {
-                                m_exports.RemoveAt(0);
+                                while (m_exports.GetEnumerator().MoveNext())
+                                {
+                                    m_exports.RemoveAt(0);
+                                }
                             }
+                            m_exports.CollectionChanged -= Exports_CollectionChanged;
                         }
 
                         // Remove all associated listeners.
-                        lock (m_listeners)
+                        if (m_listeners != null)
                         {
-                            while (m_listeners.GetEnumerator().MoveNext())
+                            lock (m_listeners)
                             {
-                                m_listeners.RemoveAt(0);
+                                while (m_listeners.GetEnumerator().MoveNext())
+                                {
+                                    m_listeners.RemoveAt(0);
+                                }
                             }
+                            m_listeners.CollectionChanged -= Listeners_CollectionChanged;
                         }
                     }
                 }
