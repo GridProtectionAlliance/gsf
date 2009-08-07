@@ -693,6 +693,11 @@ namespace TVA.IO
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
+                        this.FileFull -= LogFile_FileFull;
+
+                        if (m_operationWaitHandle != null)
+                            m_operationWaitHandle.Close();
+
                         if (m_fileStream != null)
                             m_fileStream.Dispose();
 
@@ -701,9 +706,6 @@ namespace TVA.IO
                             m_logEntryQueue.ProcessException -= ProcessExceptionHandler;
                             m_logEntryQueue.Dispose();
                         }
-
-                        if (m_operationWaitHandle != null)
-                            m_operationWaitHandle.Close();
                     }
                 }
                 finally
