@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/23/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/06/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -34,6 +36,10 @@ namespace TVA.Net.Ftp
         /// Cannot read from output stream, method is not supported.
         /// </summary>
         /// <exception cref="NotSupportedException">Cannot read from output stream.</exception>
+        /// <param name="buffer">A <see cref="Byte"/> array buffer.</param>
+        /// <param name="count">An <see cref="Int32"/> offset into the stream to read from.</param>
+        /// <param name="offset">An <see cref="Int32"/> number of bytes to read.</param>
+        /// <returns>An <see cref="Int32"/> number of bytes read.</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
@@ -43,6 +49,7 @@ namespace TVA.Net.Ftp
         /// Cannot read from output stream, method is not supported.
         /// </summary>
         /// <exception cref="NotSupportedException">Cannot read from output stream.</exception>
+        /// <returns>An <see cref="Int32"/> number of bytes read.</returns>
         public override int ReadByte()
         {
             throw new NotSupportedException();
