@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/30/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -95,6 +97,9 @@ namespace TVA.PhasorProtocols.Ieee1344
         /// <summary>
         /// Appends the current frame image to the frame image collection.
         /// </summary>
+        /// <param name="binaryImage">A <see cref="Byte"/> array to append to the collection.</param>
+        /// <param name="length">An <see cref="Int32"/> value indicating the number of bytes to read from the <paramref name="binaryImage"/>.</param>
+        /// <param name="offset">An <see cref="Int32"/> value indicating the offset to read from.</param>
         public void AppendFrameImage(byte[] binaryImage, int offset, int length)
         {
             // Validate CRC of frame image being appended
