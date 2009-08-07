@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/08/2007 - James R. Carroll & Jian (Ryan) Zuo
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -32,6 +34,7 @@ namespace TVA.PhasorProtocols.SelFastMessage
         /// <summary>
         /// Creates a new <see cref="ConfigurationCell"/> from specified parameters.
         /// </summary>
+        /// <param name="parent">The parent <see cref="ConfigurationFrame"/>.</param>
         public ConfigurationCell(ConfigurationFrame parent)
             : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {

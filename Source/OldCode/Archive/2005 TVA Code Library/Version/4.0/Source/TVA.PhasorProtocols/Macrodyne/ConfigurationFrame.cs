@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/30/2009 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -240,6 +242,10 @@ namespace TVA.PhasorProtocols.Macrodyne
         /// Method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">Macrodyne doesn't define a binary configuration frame - so no checksum is defined.</exception>
+        /// <returns>An <see cref="UInt16"/> value of the checksum.</returns>
+        /// <param name="buffer">A <see cref="Byte"/> array.</param>
+        /// <param name="length">A <see cref="Int32"/> number of bytes to read from the buffer.</param>
+        /// <param name="offset">A <see cref="Int32"/> offset to read from.</param>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             throw new NotImplementedException();

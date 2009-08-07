@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/24/2004 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -271,6 +273,7 @@ namespace TVA.PhasorProtocols.IeeeC37_118
         /// <para>In the final version of the protocol each digital bit can be labeled, but we read them out as one big string in the "Label" property so this property allows individual access to each label.</para>
         /// <para>Note that the draft 6 implementation of the protocol supports one label for all 16-bits, however draft 7 (i.e., version 1) supports a label for each of the 16 bits.</para>
         /// </remarks>
+        /// <returns>A <see cref="String"/> value of the label corresponding to the parameter.</returns>
         public string GetLabel(int index)
         {
             if (index < 0 || index >= LabelCount)

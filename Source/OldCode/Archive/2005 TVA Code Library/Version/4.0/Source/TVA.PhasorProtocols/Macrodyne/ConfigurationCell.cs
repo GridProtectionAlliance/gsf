@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/30/2009 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -33,6 +35,7 @@ namespace TVA.PhasorProtocols.Macrodyne
         /// <summary>
         /// Creates a new <see cref="ConfigurationCell"/> from specified parameters.
         /// </summary>
+        /// <param name="parent">The parent <see cref="ConfigurationFrame"/> reference to use.</param>
         public ConfigurationCell(ConfigurationFrame parent)
             : base(parent, 0, Common.MaximumPhasorValues, Common.MaximumAnalogValues, Common.MaximumDigitalValues)
         {
