@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  02/08/2007 - James R. Carroll & Jian (Ryan) Zuo
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -197,6 +199,10 @@ namespace TVA.PhasorProtocols.FNet
         /// Method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">F-NET doesn't use checksums.</exception>
+        /// <returns>An <see cref="UInt16"/>.</returns>
+        /// <param name="buffer">A <see cref="Byte"/> array.</param>
+        /// <param name="length">An <see cref="Int32"/> for the offset.</param>
+        /// <param name="offset">An <see cref="Int32"/> for the length.</param>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             throw new NotImplementedException();
