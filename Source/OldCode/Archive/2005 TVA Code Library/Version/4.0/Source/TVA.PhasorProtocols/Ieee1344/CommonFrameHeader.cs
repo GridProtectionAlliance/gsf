@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2004 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -405,6 +407,10 @@ namespace TVA.PhasorProtocols.Ieee1344
         /// <summary>
         /// Validates the CRC-CCITT for the specified IEEE 1344 buffer.
         /// </summary>
+        /// <returns>A <see cref="Boolean"/> indicating whether the checksum is valid.</returns>
+        /// <param name="buffer">A <see cref="Byte"/> array buffer.</param>
+        /// <param name="length">An <see cref="Int32"/> value as the number of bytes to read for the checksum.</param>
+        /// <param name="startIndex">An <see cref="Int32"/> value as the start index into being reading the value at.</param>
         public static bool ChecksumIsValid(byte[] buffer, int startIndex, int length)
         {
             int sumLength = length - 2;
