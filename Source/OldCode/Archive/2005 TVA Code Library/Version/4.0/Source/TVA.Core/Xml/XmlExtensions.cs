@@ -51,8 +51,8 @@ namespace TVA.Xml
         /// the tree.</para>
         /// </remarks>
         /// <param name="xmlDoc">An <see cref="XmlDocument"/> to query.</param>
-        /// <param name="xpath">A <see cref="String"/> xpath query.</param>
-        /// <param name="isDirty">A <see cref="Boolean"/> value indicating if items were added to the tree.</param>
+        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="isDirty">A <see cref="System.Boolean"/> value indicating if items were added to the tree.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
         public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath, out bool isDirty)
         {
@@ -61,7 +61,7 @@ namespace TVA.Xml
 
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <param name="parentNode">An <see cref="XmlNode"/> parent node to query.</param>
-        /// <param name="xpath">A <see cref="String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
         public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath)
         {
@@ -73,8 +73,8 @@ namespace TVA.Xml
         /// <remarks>Note that the <paramref name="isDirty" /> parameter will be set to True if any items were added to
         /// the tree.</remarks>
         /// <param name="parentNode">An <see cref="XmlNode"/> parent node to query.</param>
-        /// <param name="xpath">A <see cref="String"/> xpath query.</param>
-        /// <param name="isDirty">A <see cref="Boolean"/> value indicating if items were added to the tree.</param>
+        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
+        /// <param name="isDirty">A <see cref="System.Boolean"/> value indicating if items were added to the tree.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
         public static XmlNode GetXmlNode(this XmlNode parentNode, string xpath, out bool isDirty)
         {
@@ -120,9 +120,9 @@ namespace TVA.Xml
 
         /// <summary>Safely gets or sets an XML node's attribute.</summary>
         /// <remarks>If you get an attribute that does not exist, null will be returned.</remarks>
-        /// <param name="name">A <see cref="String"/> name of the value to get.</param>
+        /// <param name="name">A <see cref="System.String"/> name of the value to get.</param>
         /// <param name="node">A <see cref="XmlNode"/> to query.</param>
-        /// <returns>A <see cref="String"/> value returned for the attribute's value.</returns>
+        /// <returns>A <see cref="System.String"/> value returned for the attribute's value.</returns>
         public static string GetAttributeValue(this XmlNode node, string name)
         {
             XmlAttribute attr = node.Attributes[name];
@@ -139,9 +139,9 @@ namespace TVA.Xml
 
         /// <summary>Safely sets an XML node's attribute.</summary>
         /// <remarks>If you assign a value to an attribute that does not exist, the attribute will be created.</remarks>
-        /// <param name="name">A <see cref="String"/> indicating the node name to use.</param>
+        /// <param name="name">A <see cref="System.String"/> indicating the node name to use.</param>
         /// <param name="node">An <see cref="XmlNode"/> node to operate on.</param>
-        /// <param name="value">A <see cref="String"/> value to set the node attribute's value to.</param>
+        /// <param name="value">A <see cref="System.String"/> value to set the node attribute's value to.</param>
         public static void SetAttributeValue(this XmlNode node, string name, string value)
         {
             XmlAttribute attr = node.Attributes[name];
