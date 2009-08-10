@@ -373,7 +373,7 @@ namespace TVA.Parsing
         /// </summary>
         /// <exception cref="NotImplementedException">WriteOnly stream has no position.</exception>
         /// <param name="offset">A <see cref="Int64"/> value for the offset.</param>
-        /// <param name="origin">A <see cref="SeekOrigin"/.></param>
+        /// <param name="origin">A <see cref="SeekOrigin"/>.</param>
         /// <returns>Returns a <see cref="Int64"/> value indicating the point that was seeked to.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Seek(long offset, System.IO.SeekOrigin origin)
@@ -385,7 +385,7 @@ namespace TVA.Parsing
         /// The parser is designed as a write only stream, so this method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">WriteOnly stream has no length.</exception>
-        /// <param name="value">A <see cref="Int64"/ value.</param>
+        /// <param name="value">A <see cref="Int64"/> value.</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void SetLength(long value)
         {

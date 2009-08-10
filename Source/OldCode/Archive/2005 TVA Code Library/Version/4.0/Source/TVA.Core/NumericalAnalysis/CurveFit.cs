@@ -47,7 +47,7 @@ namespace TVA.NumericalAnalysis
         /// </summary>
         /// <param name="polynomialOrder">An <see cref="Int32"/> for the polynomial order.</param>
         /// <param name="xValues">A list of <see cref="Double"/> x-values.</param>
-        /// <param name="xValues">A list of <see cref="Double"/> y-values.</param>
+        /// <param name="yValues">A list of <see cref="Double"/> y-values.</param>
         /// <returns>An array of <see cref="Double"/> values.</returns>
         public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
         {
