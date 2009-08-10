@@ -963,7 +963,7 @@ namespace TVA.Media.Music
         }
 
         /// <summary>Returns True if the frequency and value of this note equals the frequency and value of the specified other note.</summary>
-        /// <param name="other">The other <see cref="Object"/> to compare against.</param>
+        /// <param name="obj">The other <see cref="Object"/> to compare against.</param>
         /// <returns>A <see cref="Boolean"/> indicating the result.</returns>
         public override bool Equals(object obj)
         {
@@ -986,7 +986,7 @@ namespace TVA.Media.Music
         }
 
         /// <summary>Notes are compared by frequency, then by value (i.e., duration).</summary>
-        /// <param name="other">An <see cref="Object" /> that is compared against.</param>
+        /// <param name="obj">An <see cref="Object" /> that is compared against.</param>
         /// <returns>An <see cref="Int32"/> that indicates: this object is greater than if 1, equal to if 0, or less than if -1.</returns>
         public int CompareTo(object obj)
         {
@@ -1012,7 +1012,7 @@ namespace TVA.Media.Music
         /// Compares two <see cref="Note"/> frequencies and values for equality.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator ==(Note note1, Note note2)
         {
@@ -1023,7 +1023,7 @@ namespace TVA.Media.Music
         /// Compares two <see cref="Note"/> frequencies and values for inequality.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator !=(Note note1, Note note2)
         {
@@ -1034,7 +1034,7 @@ namespace TVA.Media.Music
         /// Returns true if left <see cref="Note"/> timestamp is greater than right <see cref="Note"/>.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator >(Note note1, Note note2)
         {
@@ -1045,7 +1045,7 @@ namespace TVA.Media.Music
         /// Returns true if left <see cref="Note"/> timestamp is greater than or equal to right <see cref="Note"/>.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator >=(Note note1, Note note2)
         {
@@ -1056,7 +1056,7 @@ namespace TVA.Media.Music
         /// Returns true if left <see cref="Note"/> timestamp is less than right <see cref="Note"/>.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator <(Note note1, Note note2)
         {
@@ -1067,7 +1067,7 @@ namespace TVA.Media.Music
         /// Returns true if left <see cref="Note"/> timestamp is less than or equal to right <see cref="Note"/>.
         /// </summary>
         /// <param name="note1">A <see cref="Note"/> left hand operand.</param>
-        /// <param name="note1">A <see cref="Note"/> right hand operand.</param>
+        /// <param name="note2">A <see cref="Note"/> right hand operand.</param>
         /// <returns>A boolean indicating the result of the comparison.</returns>
         public static bool operator <=(Note note1, Note note2)
         {
