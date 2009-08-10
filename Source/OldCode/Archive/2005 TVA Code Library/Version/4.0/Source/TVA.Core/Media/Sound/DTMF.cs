@@ -120,7 +120,7 @@ namespace TVA.Media.Sound
         /// <summary>
         /// Constructs a new <see cref="DTMF"/> using specified parameters.
         /// </summary>
-        /// <param name="duration">A <see cref="Double"/> low frequency value.</param>
+        /// <param name="lowFrequency">A <see cref="Double"/> low frequency value.</param>
         /// <param name="highFrequency">A <see cref="Double"/> high frequency value.</param>
         /// <param name="duration">A <see cref="Double"/> duration value.</param>
         public DTMF(double lowFrequency, double highFrequency, double duration)
