@@ -27,6 +27,9 @@
 //       Implemented the IProvideStatus interface.
 //  07/02/2009 - Pinal C. Patel
 //       Modified state alterning properties to reopen the file when changed.
+//  08/10/2009 - Pinal C. Patel
+//       Modified Write() to write empty intermediate records that are missing to avoid garbage data 
+//       for the missing intermediate records when records are being written to disk directly.
 //
 //*******************************************************************************************************
 
@@ -711,7 +714,7 @@ namespace TVA.IO
                 status.Append(IsCorrupt ? "Invalid" : "Valid");
                 status.AppendLine();
                 status.Append("            Auto-save data: ");
-                if (LoadOnOpen && AutoSaveInterval > 0 && !SaveOnClose)                   
+                if (LoadOnOpen && AutoSaveInterval > 0 && !SaveOnClose)
                     status.AppendFormat("Every {0}ms", AutoSaveInterval);
                 if (LoadOnOpen && AutoSaveInterval > 0 && SaveOnClose)
                     status.AppendFormat("Every {0}ms & File Close", AutoSaveInterval);
@@ -1099,34 +1102,36 @@ namespace TVA.IO
             {
                 if (record != null)
                 {
+                    int lastRecordIndex = m_fileRecords == null ? RecordsOnDisk : RecordsInMemory;
+                    if (recordIndex > lastRecordIndex + 1)
+                    {
+                        // Write missing intermediate records.
+                        for (int i = lastRecordIndex + 1; i < recordIndex; i++)
+                        {
+                            Write(i, CreateNewRecord(i));
+                        }
+                    }
+
                     if (m_fileRecords == null)
                     {
-                        // We're writing directly to the file.
+                        // Write directly to the file.
                         WriteToDisk(recordIndex, record);
                     }
                     else
-                    {
-                        // We're updating the in-memory record list.
-                        int lastRecordIndex = RecordsInMemory;
-
-                        if (recordIndex > lastRecordIndex)
+                    { 
+                        // Update in-memory record list.
+                        lastRecordIndex = RecordsInMemory;
+                        if (recordIndex == lastRecordIndex + 1)
                         {
-                            if (recordIndex > lastRecordIndex + 1)
-                            {
-                                for (int i = lastRecordIndex + 1; i < recordIndex; i++)
-                                {
-                                    Write(i, CreateNewRecord(i));
-                                }
-                            }
-
+                            // Add new record.
                             lock (m_fileRecords)
                             {
                                 m_fileRecords.Add(record);
                             }
                         }
-                        else
+                        else if (recordIndex <= lastRecordIndex)
                         {
-                            // Updates the existing record with the new one.
+                            // Update existing record.
                             lock (m_fileRecords)
                             {
                                 m_fileRecords[recordIndex - 1] = record;
