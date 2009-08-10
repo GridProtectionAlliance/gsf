@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/12/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -26,6 +28,8 @@ namespace TVA.Reflection
     public static class AssemblyExtensions
     {
         /// <summary>Returns only assembly name and version from full assembly name.</summary>
+        /// <param name="assemblyInstance">An <see cref="Assembly"/> to get the short name of.</param>
+        /// <returns>The assembly name and version from the full assembly name.</returns>
         public static string ShortName(this Assembly assemblyInstance)
         {
             return assemblyInstance.FullName.Split(',')[0];

@@ -14,6 +14,8 @@
 //       Initial version of source generated.
 //  09/11/2008 - James R. Carroll
 //      Converted to C#.
+//  08/10/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -90,6 +92,7 @@ namespace TVA.Threading
         /// <summary>
         /// Initializes a new instance of the ManagedThread class.
         /// </summary>
+        /// <param name="callback">A <see cref="ThreadStart"/> object.</param>
         public ManagedThread(ThreadStart callback)
             : this(ThreadType.StandardThread, callback, null, null)
         {
@@ -99,6 +102,7 @@ namespace TVA.Threading
         /// <summary>
         /// Initializes a new instance of the ManagedThread class, specifying a delegate that allows an object to be passed to the thread when the thread is started.
         /// </summary>
+        /// <param name="callback">A <see cref="ParameterizedThreadStart"/> object.</param>
         public ManagedThread(ParameterizedThreadStart callback)
             : this(ThreadType.StandardThread, callback, null, null)
         {
@@ -109,6 +113,8 @@ namespace TVA.Threading
         /// Initializes a new instance of the ManagedThread class, specifying a delegate that allows an object to be passed to the thread when the thread is started
         /// and allowing the user to specify an alternate execution context for the thread.
         /// </summary>
+        /// <param name="callback">A <see cref="ContextCallback"/> delgate to execute.</param>
+        /// <param name="ctx">An <see cref="ExecutionContext"/>.</param>
         public ManagedThread(ContextCallback callback, ExecutionContext ctx)
             : this(ThreadType.StandardThread, callback, null, ctx)
         {

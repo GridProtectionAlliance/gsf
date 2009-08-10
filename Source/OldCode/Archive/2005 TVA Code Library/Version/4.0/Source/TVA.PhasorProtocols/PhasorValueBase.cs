@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2004 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -360,6 +362,7 @@ namespace TVA.PhasorProtocols
         /// <remarks>
         /// Some <see cref="ChannelValueBase{T}"/> implementations can contain more than one value, this method is used to abstractly expose each value.
         /// </remarks>
+        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
         public override double GetCompositeValue(int index)
         {
             switch (index)

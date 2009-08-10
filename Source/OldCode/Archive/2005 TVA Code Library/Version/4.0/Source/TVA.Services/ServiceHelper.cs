@@ -37,6 +37,8 @@
 //       process or remote client (if transmitted by the remote client upon connection).
 //  08/07/2009 - Pinal C. Patel
 //       Subscribed to ErrorLogger.LoggingException event.
+//  08/10/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -925,6 +927,7 @@ namespace TVA.Services
         /// <summary>
         /// To be called from the <see cref="ServiceBase.OnStart(string[])"/> method of <see cref="ParentService"/>.
         /// </summary>
+        /// <param name="args">Array of type <see cref="String"/>.</param>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public void OnStart(string[] args)
         {

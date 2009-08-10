@@ -24,6 +24,8 @@
 //       Edited code comments.
 //  09/19/2008 - James R. Carroll
 //       Converted to C# - basic encryption/decryption extends string, byte[], and Stream.
+//  08/10/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -655,6 +657,7 @@ namespace TVA.Security.Cryptography
         /// Generates a random key useful for cryptographic functions.
         /// </summary>
         /// <param name="size">Length of key to generate.</param>
+        /// <returns>A <see cref="String"/> random key.</returns>
         public static string GenerateKey(int size)
         {
             // Generates a character array of unique values.
@@ -672,6 +675,7 @@ namespace TVA.Security.Cryptography
         /// Generates a text based random key with no control characters useful for cryptographic functions.
         /// </summary>
         /// <param name="size">Length of key to generate.</param>
+        /// <returns>A <see cref="String"/> based random key.</returns>
         public static string GenerateTextFriendlyKey(int size)
         {
             // Initialize excluded characters
@@ -709,6 +713,7 @@ namespace TVA.Security.Cryptography
         /// Generates a text based random key that can be easily typed useful for cryptographic functions.
         /// </summary>
         /// <param name="size">Length of key to generate.</param>
+        /// <returns>A <see cref="String"/> based random key.</returns>
         public static string GenerateKeyboardFriendlyKey(int size)
         {
             // Generates a character array of unique easily typeable values.

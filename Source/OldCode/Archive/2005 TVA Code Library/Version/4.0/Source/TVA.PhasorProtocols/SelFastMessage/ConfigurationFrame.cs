@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/26/2009 - James R. Carroll
 //       Generated original version of source code.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -45,6 +47,9 @@ namespace TVA.PhasorProtocols.SelFastMessage
         /// <remarks>
         /// This constructor is used by a consumer to generate a SEL Fast Message configuration frame.
         /// </remarks>
+        /// <param name="frameSize">A <see cref="FrameSize"/> object.</param>
+        /// <param name="idCode">An <see cref="UInt32"/> as the id code.</param>
+        /// <param name="messagePeriod">A <see cref="MessagePeriod"/> object.</param>
         public ConfigurationFrame(FrameSize frameSize, MessagePeriod messagePeriod, uint idCode)
             : base(0, new ConfigurationCellCollection(), 0, 0)
         {
@@ -225,6 +230,10 @@ namespace TVA.PhasorProtocols.SelFastMessage
         /// Method is not implemented.
         /// </summary>
         /// <exception cref="NotImplementedException">SEL Fast Message doesn't define a binary configuration frame - so no checksum is defined.</exception>
+        /// <returns>An <see cref="UInt16"/> value for the checksum.</returns>
+        /// <param name="buffer">A <see cref="Byte"/> buffer to read data from.</param>
+        /// <param name="length">An <see cref="Int32"/> number of bytes to read.</param>
+        /// <param name="offset">An <see cref="Int32"/> offset to read from.</param>
         protected override ushort CalculateChecksum(byte[] buffer, int offset, int length)
         {
             throw new NotImplementedException();

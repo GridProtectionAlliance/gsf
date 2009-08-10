@@ -354,7 +354,7 @@ namespace TVA.Scheduling
         /// <summary>
         /// Gets a hash code for the <see cref="Schedule"/>.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>An <see cref="Int32"/> based hashcode.</returns>
         public override int GetHashCode()
         {
             return Rule.GetHashCode();
