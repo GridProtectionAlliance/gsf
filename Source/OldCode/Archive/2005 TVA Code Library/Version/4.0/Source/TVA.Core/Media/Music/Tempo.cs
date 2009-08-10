@@ -83,7 +83,7 @@ namespace TVA.Media.Music
         /// <summary>
         /// Contructs a new <see cref="Tempo"/> object.
         /// </summary>
-        /// <param name="totalNoteValues">A <see cref="Int32"/> indicating the total note values.</param>
+        /// <param name="totalNoteValues">A <see cref="System.Int32"/> indicating the total note values.</param>
         /// <param name="noteValue">Named note value used for <see cref="Tempo"/>.</param>
         public Tempo(int totalNoteValues, NoteValueBritish noteValue)
         {
