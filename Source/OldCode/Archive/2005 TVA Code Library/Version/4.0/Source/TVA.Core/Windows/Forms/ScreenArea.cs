@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/01/2008 - James R. Carroll
 //       Generated original version of source code.
+//  08/10/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -247,6 +249,7 @@ namespace TVA.Windows.Forms
         /// <summary>
         /// Performs screen capture for given <see cref="Screen"/>.
         /// </summary>
+        /// <param name="captureScreen">A <see cref="Screen"/> object to capture.</param>
         /// <returns>Captured screen image for given <see cref="Screen"/>.</returns>
         public static Bitmap Capture(Screen captureScreen)
         {

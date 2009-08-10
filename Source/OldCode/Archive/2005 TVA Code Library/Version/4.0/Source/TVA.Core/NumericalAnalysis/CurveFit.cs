@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  09/17/2008 - James R. Carroll
 //      Converted to C#.
+//  08/07/2009 - Josh Patterson
+//      Edited Comments
 //
 //*******************************************************************************************************
 
@@ -32,6 +34,9 @@ namespace TVA.NumericalAnalysis
         /// <summary>
         /// Computes linear regression over given values.
         /// </summary>
+        /// <param name="polynomialOrder">An <see cref="Int32"/> for the polynomial order.</param>
+        /// <param name="values">A list of values.</param>
+        /// <returns>An array of <see cref="Double"/> values.</returns>
         public static double[] Compute(int polynomialOrder, IEnumerable<Point> values)
         {
             return Compute(polynomialOrder, values.Select(point => point.X).ToList(), values.Select(point => point.Y).ToList());
@@ -40,6 +45,10 @@ namespace TVA.NumericalAnalysis
         /// <summary>
         /// Computes linear regression over given values.
         /// </summary>
+        /// <param name="polynomialOrder">An <see cref="Int32"/> for the polynomial order.</param>
+        /// <param name="xValues">A list of <see cref="Double"/> x-values.</param>
+        /// <param name="xValues">A list of <see cref="Double"/> y-values.</param>
+        /// <returns>An array of <see cref="Double"/> values.</returns>
         public static double[] Compute(int polynomialOrder, IList<double> xValues, IList<double> yValues)
         {
             if (xValues == null)
