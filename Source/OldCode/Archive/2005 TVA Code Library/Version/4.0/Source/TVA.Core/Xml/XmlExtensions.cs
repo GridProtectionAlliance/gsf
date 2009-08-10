@@ -36,7 +36,7 @@ namespace TVA.Xml
         /// <summary>Gets an XML node from given path, creating the entire path if it does not exist.</summary>
         /// <remarks>This overload just allows the start of the given XML document by using its root element.</remarks>
         /// <param name="xmlDoc">An <see cref="XmlDocument"/> to query.</param>
-        /// <param name="xpath">A <see cref="String"/> xpath query.</param>
+        /// <param name="xpath">A <see cref="System.String"/> xpath query.</param>
         /// <returns>An <see cref="XmlNode"/> corresponding to the xpath query.</returns>
         public static XmlNode GetXmlNode(this XmlDocument xmlDoc, string xpath)
         {
