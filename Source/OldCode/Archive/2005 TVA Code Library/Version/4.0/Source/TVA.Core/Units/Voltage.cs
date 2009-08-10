@@ -516,7 +516,7 @@ namespace TVA.Units
         /// Compares the two values for equality.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator ==(Voltage value1, Voltage value2)
         {
@@ -527,7 +527,7 @@ namespace TVA.Units
         /// Compares the two values for inequality.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator !=(Voltage value1, Voltage value2)
         {
@@ -538,7 +538,7 @@ namespace TVA.Units
         /// Returns true if left value is less than right value.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <(Voltage value1, Voltage value2)
         {
@@ -549,7 +549,7 @@ namespace TVA.Units
         /// Returns true if left value is less or equal to than right value.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator <=(Voltage value1, Voltage value2)
         {
@@ -560,7 +560,7 @@ namespace TVA.Units
         /// Returns true if left value is greater than right value.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >(Voltage value1, Voltage value2)
         {
@@ -571,7 +571,7 @@ namespace TVA.Units
         /// Returns true if left value is greater than or equal to right value.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Boolean"/> value as the result.</returns>
         public static bool operator >=(Voltage value1, Voltage value2)
         {
@@ -610,7 +610,7 @@ namespace TVA.Units
         /// Returns computed remainder after dividing first value by the second.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Voltage"/> as the result.</returns>
         public static Voltage operator %(Voltage value1, Voltage value2)
         {
@@ -621,7 +621,7 @@ namespace TVA.Units
         /// Returns computed sum of values.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Voltage"/> as the result.</returns>
         public static Voltage operator +(Voltage value1, Voltage value2)
         {
@@ -632,7 +632,7 @@ namespace TVA.Units
         /// Returns computed difference of values.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Voltage"/> as the result.</returns>
         public static Voltage operator -(Voltage value1, Voltage value2)
         {
@@ -643,7 +643,7 @@ namespace TVA.Units
         /// Returns computed product of values.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Voltage"/> as the result.</returns>
         public static Voltage operator *(Voltage value1, Voltage value2)
         {
@@ -654,7 +654,7 @@ namespace TVA.Units
         /// Returns computed division of values.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Voltage"/> as the result.</returns>
         public static Voltage operator /(Voltage value1, Voltage value2)
         {
@@ -668,7 +668,7 @@ namespace TVA.Units
         /// Returns result of first value raised to voltage of second value.
         /// </summary>
         /// <param name="value1">A <see cref="Voltage"/> object as the left hand operand.</param>
-        /// <param name="value1">A <see cref="Voltage"/> object as the right hand operand.</param>
+        /// <param name="value2">A <see cref="Voltage"/> object as the right hand operand.</param>
         /// <returns>A <see cref="Double"/> value as the result.</returns>
         [EditorBrowsable(EditorBrowsableState.Advanced), SpecialName()]
         public static double op_Exponent(Voltage value1, Voltage value2)
