@@ -27,6 +27,17 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+//  Code Modification History:
+//  -----------------------------------------------------------------------------------------------------
+//  01/25/2008 - James R. Carroll
+//       Initial version of source generated.
+//  09/11/2008 - James R. Carroll
+//      Converted to C#.
+//  08/10/2009 - Josh Patterson
+//      Edited Comments
+//
+//*******************************************************************************************************
+
 
 using System;
 using System.Text;
@@ -189,6 +200,7 @@ namespace TVA.Units
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/> and
         /// three decimal places are used for displayed <paramref name="totalUnits"/> precision.
         /// </remarks>
+        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string unitName)
         {
             return ToScaledString(totalUnits, 3, unitName);
@@ -203,6 +215,7 @@ namespace TVA.Units
         /// <remarks>
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
+        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string format, string unitName)
         {
             return ToScaledString(totalUnits, format, unitName, m_symbols);
@@ -218,6 +231,7 @@ namespace TVA.Units
         /// <see cref="Symbols"/> array is used for displaying SI symbol prefix for <paramref name="unitName"/>.
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="decimalPlaces"/> cannot be negative.</exception>
+        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, int decimalPlaces, string unitName)
         {
             if (decimalPlaces < 0)
@@ -246,6 +260,7 @@ namespace TVA.Units
         /// least (<see cref="Yocto"/>) to greatest (<see cref="Yotta"/>), see <see cref="Names"/> or <see cref="Symbols"/>
         /// arrays for examples.
         /// </remarks>
+        /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string format, string unitName, string[] symbolNames)
         {
             StringBuilder bytesImage = new StringBuilder();
