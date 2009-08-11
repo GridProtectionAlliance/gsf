@@ -33,6 +33,8 @@
   
   8/3/2009 Comments update by Josh Patterson
   
+  8/11/2009 Comments update by Josh Patterson
+  
   
  */
 
@@ -52,9 +54,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToInt16 will throw an OverflowException for values greater than Int16.MaxValue.</para>
         /// <para>For example, this function correctly converts unsigned 16-bit integer 65535 (i.e., UInt16.MaxValue) to signed 16-bit integer -1.</para>
+        /// </remarks>
         /// <param name="unsignedInt">Unsigned short that is passed in to be converted to a signed short.</param>
         /// <returns>The converted short value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static short ToInt16(ushort unsignedInt)
         {
@@ -69,9 +71,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because CType(n, Int24) will throw an OverflowException for values greater than Int24.MaxValue.</para>
         /// <para>For example, this function correctly converts unsigned 24-bit integer 16777215 (i.e., UInt24.MaxValue) to signed 24-bit integer -1.</para>
+        /// </remarks>
         /// <param name="unsignedInt">Unsigned UInt24 that is passed in to be converted to a signed Int24.</param>
         /// <returns>The Int24 value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static Int24 ToInt24(UInt24 unsignedInt)
         {
@@ -82,9 +84,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToInt32 will throw an OverflowException for values greater than Int32.MaxValue.</para>
         /// <para>For example, this function correctly converts unsigned 32-bit integer 4294967295 (i.e., UInt32.MaxValue) to signed 32-bit integer -1.</para>
+        /// </remarks>
         /// <param name="unsignedInt">Unsigned integer that is passed in to be converted to a signed Int32.</param>
         /// <returns>The int value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static int ToInt32(uint unsignedInt)
         {
@@ -99,9 +101,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToInt64 will throw an OverflowException for values greater than Int64.MaxValue.</para>
         /// <para>For example, this function correctly converts unsigned 64-bit integer 18446744073709551615 (i.e., UInt64.MaxValue) to signed 64-bit integer -1.</para>
+        /// </remarks>
         /// <param name="unsignedInt">Unsigned integer that is passed in to be converted to a long.</param>
         /// <returns>The long value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static long ToInt64(ulong unsignedInt)
         {
@@ -116,9 +118,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToUInt16 will throw an OverflowException for values less than zero.</para>
         /// <para>For example, this function correctly converts signed 16-bit integer -32768 (i.e., Int16.MinValue) to unsigned 16-bit integer 32768.</para>
+        /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned short.</param>
         /// <returns>The unsigned short value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static ushort ToUInt16(short signedInt)
         {
@@ -133,9 +135,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because CType(n, UInt24) will throw an OverflowException for values less than zero.</para>
         /// <para>For example, this function correctly converts signed 24-bit integer -8388608 (i.e., Int24.MinValue) to unsigned 24-bit integer 8388608.</para>
+        /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned integer.</param>
         /// <returns>The unsigned integer value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static UInt24 ToUInt24(Int24 signedInt)
         {
@@ -146,9 +148,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToUInt32 will throw an OverflowException for values less than zero.</para>
         /// <para>For example, this function correctly converts signed 32-bit integer -2147483648 (i.e., Int32.MinValue) to unsigned 32-bit integer 2147483648.</para>
+        /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned integer.</param>
         /// <returns>The unsigned integer value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static uint ToUInt32(int signedInt)
         {
@@ -163,9 +165,9 @@ namespace TVA
         /// <remarks>
         /// <para>This function is useful because Convert.ToUInt64 will throw an OverflowException for values less than zero.</para>
         /// <para>For example, this function correctly converts signed 64-bit integer -9223372036854775808 (i.e., Int64.MinValue) to unsigned 64-bit integer 9223372036854775808.</para>
+        /// </remarks>
         /// <param name="signedInt">Signed integer that is passed in to be converted to an unsigned long.</param>
         /// <returns>The unsigned long value.</returns>
-        /// </remarks>
         [CLSCompliant(false)]
         public static ulong ToUInt64(long signedInt)
         {

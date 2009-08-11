@@ -1103,9 +1103,9 @@ namespace TVA.Measurements
         /// <see cref="IFrame.Measurements"/> dictionary you must implement a locking scheme similar to the sample
         /// code to prevent changes to the measurement dictionary during frame publication.
         /// </para>
+        /// </remarks>
         /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
         /// <param name="measurement">The type of <see cref="IMeasurement"/> to use."/></param>
-        /// </remarks>
         protected virtual bool AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
         {
             IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;

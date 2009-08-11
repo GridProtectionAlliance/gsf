@@ -218,10 +218,10 @@ namespace TVA.IO.Compression
         /// making it unnecessary to track this value for large buffers.  You can simply use <c>new MemoryStream(byte[])</c> to
         /// take advantage of this functionality when compressing and decompressing buffers.
         /// </para>
+        /// </remarks>
         /// <param name="source">The <see cref="Byte"/> array of the source.</param>
         /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
         /// <returns>A decompressed <see cref="Byte"/> array.</returns>
-        /// </remarks>
         public static byte[] Decompress(this byte[] source, int uncompressedSize)
         {
             int destinationLength;

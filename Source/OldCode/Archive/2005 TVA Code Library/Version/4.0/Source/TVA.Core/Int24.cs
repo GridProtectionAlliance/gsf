@@ -34,6 +34,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  8/3/2009 - Josh Patterson
 //      Updated comments
+//  8/11/2009 - Josh Patterson
+//      Updated comments
 //
 //*******************************************************************************************************
 
@@ -870,7 +872,7 @@ namespace TVA
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
         /// <param name="value">Byte value that is converted to an <see cref="Int24"/>.</param>
-        /// <returns><see cref="Int24"/></returns>
+        /// <returns>An <see cref="Int24"/> value.</returns>
         public static implicit operator Int24(byte value)
         {
             return new Int24((int)value);
@@ -880,7 +882,7 @@ namespace TVA
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
         /// <param name="value">Char value that is converted to an <see cref="Int24"/>.</param>
-        /// <returns><see cref="Int24"/></returns>
+        /// <returns>An <see cref="Int24"/> value.</returns>
         public static implicit operator Int24(char value)
         {
             return new Int24((int)value);
@@ -890,7 +892,7 @@ namespace TVA
         /// Implicitly converts value to an <see cref="Int24"/>.
         /// </summary>
         /// <param name="value">Short value that is converted to an <see cref="Int24"/>.</param>
-        /// <returns><see cref="Int24"/></returns>
+        /// <returns>An <see cref="Int24"/> value.</returns>
         public static implicit operator Int24(short value)
         {
             return new Int24((int)value);
@@ -900,7 +902,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="Int32"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Int32"/>.</param>
-        /// <returns><see cref="Int32"/></returns>
+        /// <returns>An <see cref="Int32"/> value.</returns>
         public static implicit operator int(Int24 value)
         {
             return ((IConvertible)value).ToInt32(null);
@@ -921,7 +923,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="Int64"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Int64"/>.</param>
-        /// <returns><see cref="Int64"/></returns>
+        /// <returns>An <see cref="Int64"/> value.</returns>
         public static implicit operator long(Int24 value)
         {
             return ((IConvertible)value).ToInt64(null);
@@ -931,7 +933,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="UInt64"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="UInt64"/>.</param>
-        /// <returns><see cref="UInt64"/></returns>
+        /// <returns>An <see cref="UInt64"/> value.</returns>
         [CLSCompliant(false)]
         public static implicit operator ulong(Int24 value)
         {
@@ -942,7 +944,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="Double"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Double"/>.</param>
-        /// <returns><see cref="Double"/></returns>
+        /// <returns>A <see cref="Double"/> value.</returns>
         public static implicit operator double(Int24 value)
         {
             return ((IConvertible)value).ToDouble(null);
@@ -952,7 +954,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="Single"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Single"/>.</param>
-        /// <returns><see cref="Single"/></returns>
+        /// <returns>A <see cref="Single"/> value.</returns>
         public static implicit operator float(Int24 value)
         {
             return ((IConvertible)value).ToSingle(null);
@@ -962,7 +964,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="Decimal"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="Decimal"/>.</param>
-        /// <returns><see cref="Decimal"/></returns>
+        /// <returns>A <see cref="Decimal"/> value.</returns>
         public static implicit operator decimal(Int24 value)
         {
             return ((IConvertible)value).ToDecimal(null);
@@ -972,7 +974,7 @@ namespace TVA
         /// Implicitly converts <see cref="Int24"/> to <see cref="String"/>.
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value that is converted to an <see cref="String"/>.</param>
-        /// <returns><see cref="String"/></returns>
+        /// <returns>A <see cref="String"/> value.</returns>
         public static implicit operator string(Int24 value)
         {
             return value.ToString();
@@ -1118,7 +1120,7 @@ namespace TVA
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value to shift.</param>
         /// <param name="shifts"><see cref="Int32"/> shifts indicates how many places to shift.</param>
-        /// <returns><see cref="Int24"/></returns>
+        /// <returns>An <see cref="Int24"/> value.</returns>
         public static Int24 operator >>(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value >> shifts));
@@ -1129,7 +1131,7 @@ namespace TVA
         /// </summary>
         /// <param name="value"><see cref="Int24"/> value to shift.</param>
         /// <param name="shifts"><see cref="Int32"/> shifts indicates how many places to shift.</param>
-        /// <returns><see cref="Int24"/></returns>
+        /// <returns>An <see cref="Int24"/> value.</returns>
         public static Int24 operator <<(Int24 value, int shifts)
         {
             return (Int24)(ApplyBitMask((int)value << shifts));

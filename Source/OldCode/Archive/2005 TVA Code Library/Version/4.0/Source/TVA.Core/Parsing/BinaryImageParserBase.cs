@@ -362,6 +362,7 @@ namespace TVA.Parsing
         /// <param name="buffer">Array of <see cref="Byte"/>s.</param>
         /// <param name="count">An <see cref="Int32"/> value for the offset.</param>
         /// <param name="offset">An <see cref="Int32"/> value for the count.</param>
+        /// <returns>An <see cref="Int32"/> as the number of bytes read. Well. It would, if implemented.</returns>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Read(byte[] buffer, int offset, int count)
         {
