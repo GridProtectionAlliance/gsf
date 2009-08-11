@@ -211,10 +211,10 @@ namespace TVA.Historian.Files
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// Maximum length for <see cref="EmailAddresses"/> is 512 characters.
+        /// Maximum length for <see cref="AlarmEmails"/> is 512 characters.
         /// </remarks>
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        public string EmailAddresses
+        public string AlarmEmails
         {
             get
             {
@@ -366,10 +366,10 @@ namespace TVA.Historian.Files
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// Maximum length for <see cref="PagerNumbers"/> is 40 characters.
+        /// Maximum length for <see cref="AlarmPagers"/> is 40 characters.
         /// </remarks>
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        public string PagerNumbers
+        public string AlarmPagers
         {
             get
             {
@@ -389,10 +389,10 @@ namespace TVA.Historian.Files
         /// on the <see cref="AlarmFlags"/> settings for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// Maximum length for <see cref="PhoneNumbers"/> is 40 characters.
+        /// Maximum length for <see cref="AlarmPhones"/> is 40 characters.
         /// </remarks>
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        public string PhoneNumbers
+        public string AlarmPhones
         {
             get
             {
@@ -433,10 +433,10 @@ namespace TVA.Historian.Files
         /// Gets or sets the alpha-numeric system identifier for the <see cref="HistorianID"/>.
         /// </summary>
         /// <remarks>
-        /// Maximum length for <see cref="System"/> is 24 characters.
+        /// Maximum length for <see cref="SystemName"/> is 24 characters.
         /// </remarks>
         /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        public string System
+        public string SystemName
         {
             get
             {
@@ -800,17 +800,17 @@ namespace TVA.Historian.Files
                 // Binary image has sufficient data.
                 Remarks = Encoding.ASCII.GetString(binaryImage, startIndex, 512).Trim();
                 HardwareInfo = Encoding.ASCII.GetString(binaryImage, startIndex + 512, 512).Trim();
-                EmailAddresses = Encoding.ASCII.GetString(binaryImage, startIndex + 1024, 512).Trim();
+                AlarmEmails = Encoding.ASCII.GetString(binaryImage, startIndex + 1024, 512).Trim();
                 Description = Encoding.ASCII.GetString(binaryImage, startIndex + 1536, 80).Trim();
                 CurrentData = Encoding.ASCII.GetString(binaryImage, startIndex + 1616, 80).Trim();
                 Name = Encoding.ASCII.GetString(binaryImage, startIndex + 1696, 40).Trim();
                 Synonym1 = Encoding.ASCII.GetString(binaryImage, startIndex + 1736, 40).Trim();
                 Synonym2 = Encoding.ASCII.GetString(binaryImage, startIndex + 1776, 40).Trim();
                 Synonym3 = Encoding.ASCII.GetString(binaryImage, startIndex + 1816, 40).Trim();
-                PagerNumbers = Encoding.ASCII.GetString(binaryImage, startIndex + 1856, 40).Trim();
-                PhoneNumbers = Encoding.ASCII.GetString(binaryImage, startIndex + 1896, 40).Trim();
+                AlarmPagers = Encoding.ASCII.GetString(binaryImage, startIndex + 1856, 40).Trim();
+                AlarmPhones = Encoding.ASCII.GetString(binaryImage, startIndex + 1896, 40).Trim();
                 PlantCode = Encoding.ASCII.GetString(binaryImage, startIndex + 1936, 24).Trim();
-                System = Encoding.ASCII.GetString(binaryImage, startIndex + 1960, 24).Trim();
+                SystemName = Encoding.ASCII.GetString(binaryImage, startIndex + 1960, 24).Trim();
                 EmailTime = Encoding.ASCII.GetString(binaryImage, startIndex + 1984, 40).Trim();
                 ScanRate = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 2104);
                 UnitNumber = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2108);

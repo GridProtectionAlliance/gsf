@@ -138,7 +138,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets a boolean value that indicates whether email alarm notifications are to be sent for the <see cref="MetadataRecord"/>.
         /// </summary>
-        public bool NotifyByEmail
+        public bool AlarmByEmail
         {
             get
             {
@@ -153,7 +153,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets a boolean value that indicates whether text alarm notifications are to be sent for the <see cref="MetadataRecord"/>.
         /// </summary>
-        public bool NotifyByPager
+        public bool AlarmByPager
         {
             get
             {
@@ -168,7 +168,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets a boolean value that indicates whether voice alarm notifications are to be sent for the <see cref="MetadataRecord"/>.
         /// </summary>
-        public bool NotifyByPhone
+        public bool AlarmByPhone
         {
             get
             {
@@ -183,7 +183,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets or sets a boolean value that indicates whether alarm notifications for the <see cref="MetadataRecord"/> are to be logged to a text file.
         /// </summary>
-        public bool LogToFile
+        public bool AlarmToFile
         {
             get
             {
