@@ -995,12 +995,12 @@ namespace TVA.ErrorManagement
         /// <param name="exitApplication">true to exit the application; otherwise false.</param>
         public void Log(Exception exception, bool exitApplication)
         {
+            // Initialize if uninitialized.
+            Initialize();
+
             // Quit if disabled.
             if (!m_enabled)
                 return;
-
-            // Initialize if uninitialized.
-            Initialize();           
 
             // Save the encountered exception.
             m_lastException = exception;   
