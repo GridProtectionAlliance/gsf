@@ -23,8 +23,119 @@ using TVA.Historian.Files;
 namespace TVA.Historian.Services
 {
     /// <summary>
-    /// Represents a flattened <see cref="MetadataRecord"/> that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>..
+    /// Represents a flattened <see cref="MetadataRecord"/> that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
     /// </summary>
+    /// <example>
+    /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="XmlSerializer"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0" encoding="utf-8" ?> 
+    /// <MetadataRecord HistorianID="1" DataType="0" Name="TVA_CORD-BUS2:ABBV" Synonym1="4-PM1" Synonym2="VPHM" Synonym3="" Description="Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude" HardwareInfo="ABB RES521" 
+    ///   Remarks="" PlantCode="P1" UnitNumber="1" SystemName="CORD" SourceID="3" Enabled="true" ScanRate="0.0333333351" CompressionMinTime="0" CompressionMaxTime="0" EngineeringUnits="Volts" LowWarning="475000" HighWarning="525000" 
+    ///   LowAlarm="450000" HighAlarm="550000" LowRange="475000" HighRange="525000" CompressionLimit="0" ExceptionLimit="0" DisplayDigits="7" SetDescription="" ClearDescription="" AlarmState="0" ChangeSecurity="5" AccessSecurity="0" 
+    ///   StepCheck="false" AlarmEnabled="false" AlarmFlags="0" AlarmDelay="0" AlarmToFile="false" AlarmByEmail="false" AlarmByPager="false" AlarmByPhone="false" AlarmEmails="" AlarmPagers="" AlarmPhones="" 
+    ///   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" /> 
+    /// ]]>
+    /// </code>
+    /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="DataContractSerializer"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <MetadataRecord xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    ///   <AccessSecurity>0</AccessSecurity> 
+    ///   <AlarmByEmail>false</AlarmByEmail> 
+    ///   <AlarmByPager>false</AlarmByPager> 
+    ///   <AlarmByPhone>false</AlarmByPhone> 
+    ///   <AlarmDelay>0</AlarmDelay> 
+    ///   <AlarmEmails /> 
+    ///   <AlarmEnabled>false</AlarmEnabled> 
+    ///   <AlarmFlags>0</AlarmFlags> 
+    ///   <AlarmPagers /> 
+    ///   <AlarmPhones /> 
+    ///   <AlarmState>0</AlarmState> 
+    ///   <AlarmToFile>false</AlarmToFile> 
+    ///   <ChangeSecurity>5</ChangeSecurity> 
+    ///   <ClearDescription /> 
+    ///   <CompressionLimit>0</CompressionLimit> 
+    ///   <CompressionMaxTime>0</CompressionMaxTime> 
+    ///   <CompressionMinTime>0</CompressionMinTime> 
+    ///   <DataType>0</DataType> 
+    ///   <Description>Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude</Description> 
+    ///   <DisplayDigits>7</DisplayDigits> 
+    ///   <Enabled>true</Enabled> 
+    ///   <EngineeringUnits>Volts</EngineeringUnits> 
+    ///   <ExceptionLimit>0</ExceptionLimit> 
+    ///   <HardwareInfo>ABB RES521</HardwareInfo> 
+    ///   <HighAlarm>550000</HighAlarm> 
+    ///   <HighRange>525000</HighRange> 
+    ///   <HighWarning>525000</HighWarning> 
+    ///   <HistorianID>1</HistorianID> 
+    ///   <LowAlarm>450000</LowAlarm> 
+    ///   <LowRange>475000</LowRange> 
+    ///   <LowWarning>475000</LowWarning> 
+    ///   <Name>TVA_CORD-BUS2:ABBV</Name> 
+    ///   <PlantCode>P1</PlantCode> 
+    ///   <Remarks /> 
+    ///   <ScanRate>0.0333333351</ScanRate> 
+    ///   <SetDescription /> 
+    ///   <SourceID>3</SourceID> 
+    ///   <StepCheck>false</StepCheck> 
+    ///   <Synonym1>4-PM1</Synonym1> 
+    ///   <Synonym2>VPHM</Synonym2> 
+    ///   <Synonym3 /> 
+    ///   <SystemName>CORD</SystemName> 
+    ///   <UnitNumber>1</UnitNumber> 
+    /// </MetadataRecord>
+    /// ]]>
+    /// </code>
+    /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
+    /// <code>
+    /// {
+    ///   "AccessSecurity":0,
+    ///   "AlarmByEmail":false,
+    ///   "AlarmByPager":false,
+    ///   "AlarmByPhone":false,
+    ///   "AlarmDelay":0,
+    ///   "AlarmEmails":"",
+    ///   "AlarmEnabled":false,
+    ///   "AlarmFlags":0,
+    ///   "AlarmPagers":"",
+    ///   "AlarmPhones":"",
+    ///   "AlarmState":0,
+    ///   "AlarmToFile":false,
+    ///   "ChangeSecurity":5,
+    ///   "ClearDescription":"",
+    ///   "CompressionLimit":0,
+    ///   "CompressionMaxTime":0,
+    ///   "CompressionMinTime":0,
+    ///   "DataType":0,
+    ///   "Description":"Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude",
+    ///   "DisplayDigits":7,
+    ///   "Enabled":true,
+    ///   "EngineeringUnits":"Volts",
+    ///   "ExceptionLimit":0,
+    ///   "HardwareInfo":"ABB RES521",
+    ///   "HighAlarm":550000,
+    ///   "HighRange":525000,
+    ///   "HighWarning":525000,
+    ///   "HistorianID":1,
+    ///   "LowAlarm":450000,
+    ///   "LowRange":475000,
+    ///   "LowWarning":475000,
+    ///   "Name":"TVA_CORD-BUS2:ABBV",
+    ///   "PlantCode":"P1",
+    ///   "Remarks":"",
+    ///   "ScanRate":0.0333333351,
+    ///   "SetDescription":"",
+    ///   "SourceID":3,
+    ///   "StepCheck":false,
+    ///   "Synonym1":"4-PM1",
+    ///   "Synonym2":"VPHM",
+    ///   "Synonym3":"",
+    ///   "SystemName":"CORD",
+    ///   "UnitNumber":1
+    /// }
+    /// </code>
+    /// </example>
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
@@ -125,262 +236,262 @@ namespace TVA.Historian.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.HistorianID"/>.
+        /// Gets or sets the <see cref="MetadataRecord.HistorianID"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int HistorianID { get; private set; }
+        public int HistorianID { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.DataType"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.DataType"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int DataType { get; private set; }
+        public int DataType { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Name"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Name"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Synonym1"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Synonym1"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Synonym1 { get; private set; }
+        public string Synonym1 { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Synonym2"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Synonym2"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Synonym2 { get; private set; }
+        public string Synonym2 { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Synonym3"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Synonym3"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Synonym3 { get; private set; }
+        public string Synonym3 { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Description"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Description"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Description { get; private set; }
+        public string Description { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.HardwareInfo"/>.
+        /// Gets or sets the <see cref="MetadataRecord.HardwareInfo"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string HardwareInfo { get; private set; }
+        public string HardwareInfo { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.Remarks"/>.
+        /// Gets or sets the <see cref="MetadataRecord.Remarks"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string Remarks { get; private set; }
+        public string Remarks { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.PlantCode"/>.
+        /// Gets or sets the <see cref="MetadataRecord.PlantCode"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string PlantCode { get; private set; }
+        public string PlantCode { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.UnitNumber"/>.
+        /// Gets or sets the <see cref="MetadataRecord.UnitNumber"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int UnitNumber { get; private set; }
+        public int UnitNumber { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.SystemName"/>.
+        /// Gets or sets the <see cref="MetadataRecord.SystemName"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string SystemName { get; private set; }
+        public string SystemName { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.SourceID"/>.
+        /// Gets or sets the <see cref="MetadataRecord.SourceID"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int SourceID { get; private set; }
+        public int SourceID { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.Enabled"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.Enabled"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool Enabled { get; private set; }
+        public bool Enabled { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.ScanRate"/>.
+        /// Gets or sets the <see cref="MetadataRecord.ScanRate"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float ScanRate { get; private set; }
+        public float ScanRate { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.CompressionMinTime"/>.
+        /// Gets or sets the <see cref="MetadataRecord.CompressionMinTime"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int CompressionMinTime { get; private set; }
+        public int CompressionMinTime { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.CompressionMaxTime"/>.
+        /// Gets or sets the <see cref="MetadataRecord.CompressionMaxTime"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int CompressionMaxTime { get; private set; }
+        public int CompressionMaxTime { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.EngineeringUnits"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.EngineeringUnits"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string EngineeringUnits { get; private set; }
+        public string EngineeringUnits { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.LowWarning"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowWarning"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float LowWarning { get; private set; }
+        public float LowWarning { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.HighWarning"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighWarning"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float HighWarning { get; private set; }
+        public float HighWarning { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.LowAlarm"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowAlarm"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float LowAlarm { get; private set; }
+        public float LowAlarm { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.HighAlarm"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighAlarm"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float HighAlarm { get; private set; }
+        public float HighAlarm { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.LowRange"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.LowRange"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float LowRange { get; private set; }
+        public float LowRange { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.HighRange"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.HighRange"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float HighRange { get; private set; }
+        public float HighRange { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.CompressionLimit"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.CompressionLimit"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float CompressionLimit { get; private set; }
+        public float CompressionLimit { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.ExceptionLimit"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.ExceptionLimit"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float ExceptionLimit { get; private set; }
+        public float ExceptionLimit { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.DisplayDigits"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.DisplayDigits"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int DisplayDigits { get; private set; }
+        public int DisplayDigits { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordDigitalFields.SetDescription"/>.
+        /// Gets or sets the <see cref="MetadataRecordDigitalFields.SetDescription"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string SetDescription { get; private set; }
+        public string SetDescription { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordDigitalFields.ClearDescription"/>.
+        /// Gets or sets the <see cref="MetadataRecordDigitalFields.ClearDescription"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string ClearDescription { get; private set; }
+        public string ClearDescription { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordDigitalFields.AlarmState"/>.
+        /// Gets or sets the <see cref="MetadataRecordDigitalFields.AlarmState"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int AlarmState { get; private set; }
+        public int AlarmState { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordSecurityFlags.ChangeSecurity"/>.
+        /// Gets or sets the <see cref="MetadataRecordSecurityFlags.ChangeSecurity"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int ChangeSecurity { get; private set; }
+        public int ChangeSecurity { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordSecurityFlags.AccessSecurity"/>.
+        /// Gets or sets the <see cref="MetadataRecordSecurityFlags.AccessSecurity"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int AccessSecurity { get; private set; }
+        public int AccessSecurity { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.StepCheck"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.StepCheck"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool StepCheck { get; private set; }
+        public bool StepCheck { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.AlarmEnabled"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmEnabled"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool AlarmEnabled { get; private set; }
+        public bool AlarmEnabled { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAlarmFlags.Value"/>.
+        /// Gets or sets the <see cref="MetadataRecordAlarmFlags.Value"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public int AlarmFlags { get; private set; }
+        public int AlarmFlags { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordAnalogFields.AlarmDelay"/> or <see cref="MetadataRecordDigitalFields.AlarmDelay"/>.
+        /// Gets or sets the <see cref="MetadataRecordAnalogFields.AlarmDelay"/> or <see cref="MetadataRecordDigitalFields.AlarmDelay"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public float AlarmDelay { get; private set; }
+        public float AlarmDelay { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.AlarmToFile"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmToFile"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool AlarmToFile { get; private set; }
+        public bool AlarmToFile { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.AlarmByEmail"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByEmail"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool AlarmByEmail { get; private set; }
+        public bool AlarmByEmail { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.AlarmByPager"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByPager"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool AlarmByPager { get; private set; }
+        public bool AlarmByPager { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecordGeneralFlags.AlarmByPhone"/>.
+        /// Gets or sets the <see cref="MetadataRecordGeneralFlags.AlarmByPhone"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public bool AlarmByPhone { get; private set; }
+        public bool AlarmByPhone { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.AlarmEmails"/>.
+        /// Gets or sets the <see cref="MetadataRecord.AlarmEmails"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string AlarmEmails { get; private set; }
+        public string AlarmEmails { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.AlarmPagers"/>.
+        /// Gets or sets the <see cref="MetadataRecord.AlarmPagers"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string AlarmPagers { get; private set; }
+        public string AlarmPagers { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="MetadataRecord.AlarmPhones"/>.
+        /// Gets or sets the <see cref="MetadataRecord.AlarmPhones"/>.
         /// </summary>
         [XmlAttribute(), DataMember()]
-        public string AlarmPhones { get; private set; }
+        public string AlarmPhones { get; set; }
 
         #endregion
 
