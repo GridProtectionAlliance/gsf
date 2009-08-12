@@ -88,8 +88,6 @@ namespace TVA.Communication
     ///     }
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example shows how to use <see cref="FileClient"/> for reading data to a file:
     /// <code>
     /// using System;
