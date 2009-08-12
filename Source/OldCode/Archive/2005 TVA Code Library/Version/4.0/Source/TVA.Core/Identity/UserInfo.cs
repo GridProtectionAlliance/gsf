@@ -37,6 +37,8 @@
 //      in order to prevent timeout issues when trying to retrieve information for a non-domain user.
 //  08/06/2009 - Pinal C. Patel
 //      Enabled upon initialization rather than instantiation.
+//  08/12/2009 - Pinal C. Patel
+//      Fixed bug introduced by marking the type as enabled upon initialization (Initialize()).
 //
 //*******************************************************************************************************
 
@@ -616,17 +618,17 @@ namespace TVA.Identity
             WindowsImpersonationContext currentContext = null;
             try
             {
-                // Quit if disabled.
-                if (!m_enabled)
-                    return string.Empty;
-
-                // Query to logged-on domain only to prevent timeouts.
+                // Allow lookup to logged-on domain only to prevent timeouts.
                 if (string.Compare(m_domain, Environment.UserDomainName, true) != 0 ||
                     string.Compare(Environment.MachineName, Environment.UserDomainName, true) == 0)
                     return string.Empty;
 
                 // Initialize if uninitialized.
                 Initialize();
+
+                // Quit if disabled.
+                if (!m_enabled)
+                    return string.Empty;
 
                 // Impersonate to the privileged account if specified.
                 if (!string.IsNullOrEmpty(m_previlegedDomain) &&
