@@ -44,6 +44,12 @@
     </Reference>
     <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.ServiceModel.Web">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -108,7 +114,11 @@
     <Compile Include="MetadataProviders\IMetadataProvider.cs" />
     <Compile Include="MetadataProviders\MetadataProviderBase.cs" />
     <Compile Include="MetadataProviders\MetadataProviders.cs" />
+    <Compile Include="MetadataProviders\MetadataUpdater.cs" />
     <Compile Include="MetadataProviders\OleDbMetadataProvider.cs" />
+    <Compile Include="MetadataProviders\RestWebServiceMetadataProvider.cs" />
+    <Compile Include="Services\SerializableMetadata.cs" />
+    <Compile Include="Services\SerializableMetadataRecord.cs" />
     <Compile Include="Notifiers\EmailNotifier.cs" />
     <Compile Include="Notifiers\INotifier.cs" />
     <Compile Include="Notifiers\NotifierBase.cs" />

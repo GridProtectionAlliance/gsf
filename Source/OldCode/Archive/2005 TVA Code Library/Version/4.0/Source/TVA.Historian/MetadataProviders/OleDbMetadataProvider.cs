@@ -44,6 +44,8 @@ namespace TVA.Historian.MetadataProviders
         public OleDbMetadataProvider()
             : base()
         {
+            m_connectString = string.Empty;
+            m_selectString = string.Empty;
         }
 
         #endregion
@@ -130,10 +132,10 @@ namespace TVA.Historian.MetadataProviders
             }
         }
 
-
         /// <summary>
         /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from an OLE DB data store.
         /// </summary>
+        /// <exception cref="ArgumentNullException"><see cref="ConnectString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
         protected override void RefreshMetadata()
         {
             if (string.IsNullOrEmpty(m_connectString))
@@ -142,6 +144,7 @@ namespace TVA.Historian.MetadataProviders
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
 
+            // Retrieve new metadata.
             DataTable data;
             using (OleDbConnection connection = new OleDbConnection(m_connectString))
             {
@@ -149,7 +152,9 @@ namespace TVA.Historian.MetadataProviders
                 data = connection.RetrieveData(m_selectString);
             }
 
-            RefreshMetadata(data);
+            // Update existing metadata.
+            MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
+            metadataUpdater.UpdateMetadata(data);
         }
 
         #endregion
