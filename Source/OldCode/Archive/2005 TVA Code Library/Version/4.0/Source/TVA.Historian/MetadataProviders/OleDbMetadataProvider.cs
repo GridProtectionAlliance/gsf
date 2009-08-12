@@ -144,17 +144,30 @@ namespace TVA.Historian.MetadataProviders
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
 
-            // Retrieve new metadata.
-            DataTable data;
-            using (OleDbConnection connection = new OleDbConnection(m_connectString))
+
+            // Update existing metadata with retrieved metadata.
+            OleDbDataReader reader = null;
+            OleDbConnection connection = new OleDbConnection(m_connectString);
+            OleDbCommand command = new OleDbCommand(m_selectString, connection);
+            try
             {
                 connection.Open();
-                data = connection.RetrieveData(m_selectString);
-            }
+                reader = command.ExecuteReader();
 
-            // Update existing metadata.
-            MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
-            metadataUpdater.UpdateMetadata(data);
+                MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
+                metadataUpdater.UpdateMetadata(reader);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+
+                if (command != null)
+                    command.Dispose();
+
+                if (connection != null)
+                    connection.Dispose();
+            }
         }
 
         #endregion

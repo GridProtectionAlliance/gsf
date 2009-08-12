@@ -45,8 +45,12 @@ namespace TVA.Historian.MetadataProviders
         /// Initializes a new instance of the <see cref="MetadataUpdater"/> class.
         /// </summary>
         /// <param name="metadata"><see cref="MetadataFile"/> that is to be updated.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="metadata"/> is null</exception>
         public MetadataUpdater(MetadataFile metadata)
         {
+            if (metadata == null)
+                throw new ArgumentNullException("metadata");
+
             m_metadata = metadata;
         }
 
@@ -73,16 +77,12 @@ namespace TVA.Historian.MetadataProviders
         /// Updates the <see cref="Metadata"/> from <paramref name="tableData"/>
         /// </summary>
         /// <param name="tableData"><see cref="DataTable"/> containing the new metadata.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="tableData"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="tableData"/> does not contain 43 columns.</exception>
         public void UpdateMetadata(DataTable tableData)
         {
-            if (m_metadata == null)
-                throw new ArgumentNullException("Metadata");
-
             if (tableData == null)
                 throw new ArgumentNullException("tableData");
-
-            if (tableData.Rows.Count == 0)
-                throw new ArgumentException("tableData must contain data.");
 
             if (tableData.Rows[0].ItemArray.Length != 43)
                 throw new ArgumentException("tableData must contain 43 columns.");
@@ -189,13 +189,89 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
+        /// Updates the <see cref="Metadata"/> from <paramref name="readerData"/>
+        /// </summary>
+        /// <param name="readerData"><see cref="IDataReader"/> providing the new metadata.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="readerData"/> is null.</exception>
+        /// <exception cref="ArgumentException"><paramref name="readerData"/> does not contain 43 columns.</exception>
+        public void UpdateMetadata(IDataReader readerData)
+        {
+            if (readerData == null)
+                throw new ArgumentNullException("readerData");
+
+            if (readerData.FieldCount != 43)
+                throw new ArgumentException("readerData must contain 43 columns.");
+
+            MetadataRecord metadataRecord;
+            while (readerData.Read())
+            {
+                metadataRecord = new MetadataRecord(Convert.ToInt32(readerData[0]));
+                metadataRecord.GeneralFlags.DataType = (DataType)Convert.ToInt32(readerData[1]);
+                metadataRecord.Name = Convert.ToString(readerData[2]);
+                metadataRecord.Synonym1 = Convert.ToString(readerData[3]);
+                metadataRecord.Synonym2 = Convert.ToString(readerData[4]);
+                metadataRecord.Synonym3 = Convert.ToString(readerData[5]);
+                metadataRecord.Description = Convert.ToString(readerData[6]);
+                metadataRecord.HardwareInfo = Convert.ToString(readerData[7]);
+                metadataRecord.Remarks = Convert.ToString(readerData[8]);
+                metadataRecord.PlantCode = Convert.ToString(readerData[9]);
+                metadataRecord.UnitNumber = Convert.ToInt32(readerData[10]);
+                metadataRecord.SystemName = Convert.ToString(readerData[11]);
+                metadataRecord.SourceID = Convert.ToInt32(readerData[12]);
+                metadataRecord.GeneralFlags.Enabled = Convert.ToBoolean(readerData[13]);
+                metadataRecord.ScanRate = Convert.ToSingle(readerData[14]);
+                metadataRecord.CompressionMinTime = Convert.ToInt32(readerData[15]);
+                metadataRecord.CompressionMaxTime = Convert.ToInt32(readerData[16]);
+                metadataRecord.SecurityFlags.ChangeSecurity = Convert.ToInt32(readerData[30]);
+                metadataRecord.SecurityFlags.AccessSecurity = Convert.ToInt32(readerData[31]);
+                metadataRecord.GeneralFlags.StepCheck = Convert.ToBoolean(readerData[32]);
+                metadataRecord.GeneralFlags.AlarmEnabled = Convert.ToBoolean(readerData[33]);
+                metadataRecord.AlarmFlags.Value = Convert.ToInt32(readerData[34]);
+                metadataRecord.GeneralFlags.AlarmToFile = Convert.ToBoolean(readerData[36]);
+                metadataRecord.GeneralFlags.AlarmByEmail = Convert.ToBoolean(readerData[37]);
+                metadataRecord.GeneralFlags.AlarmByPager = Convert.ToBoolean(readerData[38]);
+                metadataRecord.GeneralFlags.AlarmByPhone = Convert.ToBoolean(readerData[39]);
+                metadataRecord.AlarmEmails = Convert.ToString(readerData[40]);
+                metadataRecord.AlarmPagers = Convert.ToString(readerData[41]);
+                metadataRecord.AlarmPhones = Convert.ToString(readerData[42]);
+                if (metadataRecord.GeneralFlags.DataType == DataType.Analog)
+                {
+                    metadataRecord.AnalogFields.EngineeringUnits = Convert.ToString(readerData[17]);
+                    metadataRecord.AnalogFields.LowWarning = Convert.ToSingle(readerData[18]);
+                    metadataRecord.AnalogFields.HighWarning = Convert.ToSingle(readerData[19]);
+                    metadataRecord.AnalogFields.LowAlarm = Convert.ToSingle(readerData[20]);
+                    metadataRecord.AnalogFields.HighAlarm = Convert.ToSingle(readerData[21]);
+                    metadataRecord.AnalogFields.LowRange = Convert.ToSingle(readerData[22]);
+                    metadataRecord.AnalogFields.HighRange = Convert.ToSingle(readerData[23]);
+                    metadataRecord.AnalogFields.CompressionLimit = Convert.ToSingle(readerData[24]);
+                    metadataRecord.AnalogFields.ExceptionLimit = Convert.ToSingle(readerData[25]);
+                    metadataRecord.AnalogFields.DisplayDigits = Convert.ToInt32(readerData[26]);
+                    metadataRecord.AnalogFields.AlarmDelay = Convert.ToSingle(readerData[35]);
+                }
+                else if (metadataRecord.GeneralFlags.DataType == DataType.Digital)
+                {
+                    metadataRecord.DigitalFields.SetDescription = Convert.ToString(readerData[27]);
+                    metadataRecord.DigitalFields.ClearDescription = Convert.ToString(readerData[28]);
+                    metadataRecord.DigitalFields.AlarmState = Convert.ToInt32(readerData[29]);
+                    metadataRecord.DigitalFields.AlarmDelay = Convert.ToSingle(readerData[35]);
+                }
+
+                m_metadata.Write(metadataRecord.HistorianID, metadataRecord);
+            }
+        }
+
+        /// <summary>
         /// Updates the <see cref="Metadata"/> from <paramref name="streamData"/>
         /// </summary>
         /// <param name="streamData"><see cref="Stream"/> containing serialized <see cref="SerializableMetadata"/>.</param>
         /// <param name="dataFormat"><see cref="RestDataFormat"/> in which the <see cref="SerializableMetadata"/> is serialized.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="streamData"/> is null.</exception>
         /// <exception cref="NotSupportedException">Specified <paramref name="dataFormat"/> is not supported.</exception>
         public void UpdateMetadata(Stream streamData, RestDataFormat dataFormat)
         {
+            if (streamData == null)
+                throw new ArgumentNullException("streamData");
+
             // Deserialize serialized metadata.
             SerializableMetadata deserializedMetadata = null;
             if (dataFormat == RestDataFormat.AsmxXml)
@@ -234,9 +310,13 @@ namespace TVA.Historian.MetadataProviders
         /// </summary>
         /// <param name="outputStream"><see cref="Stream"/> where serialized <see cref="Metadata"/> is to be outputted.</param>
         /// <param name="dataFormat"><see cref="RestDataFormat"/> in which the <see cref="Metadata"/> is to be serialized.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="outputStream"/> is null.</exception>
         /// <exception cref="NotSupportedException">Specified <paramref name="dataFormat"/> is not supported.</exception>
         public void ExtractMetadata(ref Stream outputStream, RestDataFormat dataFormat)
         {
+            if (outputStream == null)
+                throw new ArgumentNullException("outputStream");
+
             // Serialize data to the provided stream.
             if (dataFormat == RestDataFormat.AsmxXml)
             {

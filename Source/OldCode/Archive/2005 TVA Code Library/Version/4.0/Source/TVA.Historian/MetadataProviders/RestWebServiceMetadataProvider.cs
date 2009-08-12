@@ -162,7 +162,7 @@ namespace TVA.Historian.MetadataProviders
             if (string.IsNullOrEmpty(m_serviceUri))
                 throw new ArgumentNullException("ServiceUri");
 
-            // Update existing metadata.
+            // Update existing metadata with retrieved metadata.
             using (WebResponse serviceResponse = WebRequest.Create(m_serviceUri).GetResponse())
             {
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
