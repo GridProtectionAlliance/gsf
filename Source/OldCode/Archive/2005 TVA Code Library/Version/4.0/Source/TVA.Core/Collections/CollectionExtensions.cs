@@ -418,6 +418,9 @@ namespace TVA.Collections
         /// <remarks>This is a default comparer to make arrays comparable.</remarks>
         public static int CompareTo(this Array array1, Array array2, IComparer comparer)
         {
+            if (comparer == null)
+                throw new ArgumentNullException("comparer");
+
             if (array1 == null && array2 == null)
             {
                 return 0;
@@ -440,10 +443,7 @@ namespace TVA.Collections
 
                         for (int x = 0; x < array1.Length; x++)
                         {
-                            if (comparer == null)
-                                comparison = Common.CompareObjects(array1.GetValue(x), array2.GetValue(x));
-                            else
-                                comparison = comparer.Compare(array1.GetValue(x), array2.GetValue(x));
+                            comparison = comparer.Compare(array1.GetValue(x), array2.GetValue(x));
 
                             if (comparison != 0)
                                 break;

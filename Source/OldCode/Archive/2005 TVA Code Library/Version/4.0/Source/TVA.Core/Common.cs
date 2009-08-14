@@ -211,7 +211,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Converts value to string, null objects will be return specified <paramref name="nonNullValue"/>.
+        /// Converts value to string, null objects will return specified <paramref name="nonNullValue"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
@@ -408,39 +408,38 @@ namespace TVA
             return itemList.Max<T>();
         }
 
-        /// <summary>Returns the smallest item from a list of parameters.</summary>
-        /// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
-        /// <returns>Result is the minimum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
-        public static object Min(params object[] itemList)
-        {
-            return itemList.Min<object>(CompareObjects);
-        }
-
-        /// <summary>Returns the largest item from a list of parameters.</summary>
-        /// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
-        /// <returns>Result is the maximum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
-        public static object Max(params object[] itemList)
-        {
-            return itemList.Max<object>(CompareObjects);
-        }
-
-        /// <summary>Compares two elements of any type.</summary>
-        /// <param name="x">Object which is compared to object <paramref name="y"/>.</param>
-        /// <param name="y">Object which is compared against.</param>
-        /// <returns>Result of comparison as an <see cref="int"/>.</returns>
-        public static int CompareObjects(object x, object y)
-        {
-            // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
-            // complex process and the VB runtime library is distributed with .NET anyway, so why not use it:
-
-            // Note that comparison is based on VB object comparison rules:
-            // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
-            return (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectLess(x, y, false) ? -1 :
-                (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
-        }
-
         #region [ Old Code ]
 
+        ///// <summary>Returns the smallest item from a list of parameters.</summary>
+        ///// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
+        ///// <returns>Result is the minimum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
+        //public static object Min(params object[] itemList)
+        //{
+        //    return itemList.Min<object>(CompareObjects);
+        //}
+
+        ///// <summary>Returns the largest item from a list of parameters.</summary>
+        ///// <param name="itemList">A variable number of parameters of type <see cref="Object"/></param>
+        ///// <returns>Result is the maximum value of type <see cref="Object"/> in the <paramref name="itemList"/>.</returns>
+        //public static object Max(params object[] itemList)
+        //{
+        //    return itemList.Max<object>(CompareObjects);
+        //}
+
+        ///// <summary>Compares two elements of any type.</summary>
+        ///// <param name="x">Object which is compared to object <paramref name="y"/>.</param>
+        ///// <param name="y">Object which is compared against.</param>
+        ///// <returns>Result of comparison as an <see cref="int"/>.</returns>
+        //public static int CompareObjects(object x, object y)
+        //{
+        //    // Just using Visual Basic runtime to compare two objects of unknown types - this can be a very
+        //    // complex process and the VB runtime library is distributed with .NET anyway, so why not use it:
+
+        //    // Note that comparison is based on VB object comparison rules:
+        //    // ms-help://MS.VSCC.v80/MS.MSDN.v80/MS.VisualStudio.v80.en/dv_vbalr/html/d6cb12a8-e52e-46a7-8aaf-f804d634a825.htm
+        //    return (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectLess(x, y, false) ? -1 :
+        //        (Microsoft.VisualBasic.CompilerServices.Operators.ConditionalCompareObjectGreater(x, y, false) ? 1 : 0));
+        //}
         // This function is probably not that useful
 
         ///// <summary>Time zone names enumeration used to look up desired time zone in GetWin32TimeZone function.</summary>
