@@ -124,7 +124,7 @@ namespace TVA.Security.Cryptography
                 return null;
 
             if (string.IsNullOrEmpty(key))
-                key = StandardKey.Source;
+                key = Standard.Source;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -254,7 +254,7 @@ namespace TVA.Security.Cryptography
         public static void Encrypt(this Stream source, Stream destination, byte[] key, byte[] iv, CipherStrength strength, Action<ProcessProgress<long>> progressHandler)
         {
             ProcessProgressHandler<long> progress = null;
-            byte[] inBuffer = new byte[StandardKey.BufferSize];
+            byte[] inBuffer = new byte[Standard.BufferSize];
             byte[] outBuffer, lengthBuffer;
             long total = 0;
             long length = -1;
@@ -279,7 +279,7 @@ namespace TVA.Security.Cryptography
             }
 
             // Reads initial buffer.
-            read = source.Read(inBuffer, 0, StandardKey.BufferSize);
+            read = source.Read(inBuffer, 0, Standard.BufferSize);
 
             while (read > 0)
             {
@@ -301,7 +301,7 @@ namespace TVA.Security.Cryptography
                 }
 
                 // Reads next buffer.
-                read = source.Read(inBuffer, 0, StandardKey.BufferSize);
+                read = source.Read(inBuffer, 0, Standard.BufferSize);
             }
         }
 
@@ -330,7 +330,7 @@ namespace TVA.Security.Cryptography
             FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
-                key = StandardKey.Source;
+                key = Standard.Source;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -378,7 +378,7 @@ namespace TVA.Security.Cryptography
                 return null;
 
             if (string.IsNullOrEmpty(key))
-                key = StandardKey.Source;
+                key = Standard.Source;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -609,7 +609,7 @@ namespace TVA.Security.Cryptography
             FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
-                key = StandardKey.Source;
+                key = Standard.Source;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -777,14 +777,14 @@ namespace TVA.Security.Cryptography
         /// <param name="encryptionKey">Encryption key to use to encrypt or decrypt stream.</param>
         public static void Crypt(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[StandardKey.BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+            byte[] buffer = new byte[Standard.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, Standard.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Crypt(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+                bytesRead = source.Read(buffer, 0, Standard.BufferSize);
             }
         }
 
@@ -905,14 +905,14 @@ namespace TVA.Security.Cryptography
         /// <param name="encryptionKey">Encryption key to use to obfuscate stream.</param>
         public static void Obfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[StandardKey.BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+            byte[] buffer = new byte[Standard.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, Standard.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Obfuscate(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+                bytesRead = source.Read(buffer, 0, Standard.BufferSize);
             }
         }
 
@@ -1001,14 +1001,14 @@ namespace TVA.Security.Cryptography
         /// <param name="encryptionKey">Encryption key to use to deobfuscate stream.</param>
         public static void Deobfuscate(Stream source, Stream destination, byte[] encryptionKey)
         {
-            byte[] buffer = new byte[StandardKey.BufferSize], results;
-            int bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+            byte[] buffer = new byte[Standard.BufferSize], results;
+            int bytesRead = source.Read(buffer, 0, Standard.BufferSize);
 
             while (bytesRead > 0)
             {
                 results = Deobfuscate(buffer, 0, bytesRead, encryptionKey);
                 destination.Write(results, 0, results.Length);
-                bytesRead = source.Read(buffer, 0, StandardKey.BufferSize);
+                bytesRead = source.Read(buffer, 0, Standard.BufferSize);
             }
         }
 

@@ -43,7 +43,6 @@ namespace TVA.Security.Cryptography
             MemoryStream destination = new MemoryStream();
 
             algorithm.Encrypt(source, destination, key, iv);
-            destination.Position = 0;
 
             return destination.ToArray();
         }
@@ -58,17 +57,17 @@ namespace TVA.Security.Cryptography
         /// <param name="iv">The initialization vector to use for the symmetric algorithm.</param>
         public static void Encrypt(this SymmetricAlgorithm algorithm, Stream source, Stream destination, byte[] key, byte[] iv)
         {
-            byte[] buffer = new byte[StandardKey.BufferSize];
+            byte[] buffer = new byte[Standard.BufferSize];
             CryptoStream encodeStream = new CryptoStream(destination, algorithm.CreateEncryptor(key, iv), CryptoStreamMode.Write);
             int read;
 
             // Encrypts data onto output stream.
-            read = source.Read(buffer, 0, StandardKey.BufferSize);
+            read = source.Read(buffer, 0, Standard.BufferSize);
 
             while (read > 0)
             {
                 encodeStream.Write(buffer, 0, read);
-                read = source.Read(buffer, 0, StandardKey.BufferSize);
+                read = source.Read(buffer, 0, Standard.BufferSize);
             }
 
             encodeStream.FlushFinalBlock();
@@ -90,7 +89,6 @@ namespace TVA.Security.Cryptography
             MemoryStream destination = new MemoryStream();
 
             algorithm.Decrypt(source, destination, key, iv);
-            destination.Position = 0;
 
             return destination.ToArray();
         }
@@ -105,17 +103,17 @@ namespace TVA.Security.Cryptography
         /// <param name="iv">The initialization vector to use for the symmetric algorithm.</param>
         public static void Decrypt(this SymmetricAlgorithm algorithm, Stream source, Stream destination, byte[] key, byte[] iv)
         {
-            byte[] buffer = new byte[StandardKey.BufferSize];
+            byte[] buffer = new byte[Standard.BufferSize];
             CryptoStream decodeStream = new CryptoStream(destination, algorithm.CreateDecryptor(key, iv), CryptoStreamMode.Write);
             int read;
 
             // Decrypts data onto output stream.
-            read = source.Read(buffer, 0, StandardKey.BufferSize);
+            read = source.Read(buffer, 0, Standard.BufferSize);
 
             while (read > 0)
             {
                 decodeStream.Write(buffer, 0, read);
-                read = source.Read(buffer, 0, StandardKey.BufferSize);
+                read = source.Read(buffer, 0, Standard.BufferSize);
             }
 
             decodeStream.FlushFinalBlock();
@@ -139,7 +137,7 @@ namespace TVA.Security.Cryptography
                 if (x < key.Length)
                     rgbKey.Add(key[x]);
                 else
-                    rgbKey.Add(StandardKey.Value[x % StandardKey.Value.Length]);
+                    rgbKey.Add(Standard.Value[x % Standard.Value.Length]);
             }
 
             rgbKey.Scramble(rgbKey[0]);
@@ -165,7 +163,7 @@ namespace TVA.Security.Cryptography
                 if (x < iv.Length)
                     rgbIV.Add(iv[iv.Length - 1 - x]);
                 else
-                    rgbIV.Add(StandardKey.Value[x % StandardKey.Value.Length]);
+                    rgbIV.Add(Standard.Value[x % Standard.Value.Length]);
             }
 
             rgbIV.Scramble(rgbIV[0]);

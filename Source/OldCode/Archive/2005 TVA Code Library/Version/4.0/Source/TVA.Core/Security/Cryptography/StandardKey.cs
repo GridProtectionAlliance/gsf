@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  StandardKey.cs
+//  Standard.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -18,14 +18,15 @@
 namespace TVA.Security.Cryptography
 {
     /// <summary>
-    /// This class is used internally do define a standard key which is used when consumer does not provide a key
-    /// so that data still always gets obfuscated.
+    /// This class is used internally do define a standard key and buffer size. The standard key gets
+    /// used within the <see cref="Cipher"/> class so that when consumer does not provide a key, data
+    /// will still at least get obfuscated.
     /// </summary>
-    internal static class StandardKey
+    internal static class Standard
     {
         // The following constants should not be changed
         public const string Source = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
-        public const int BufferSize = 262144; // 256K
         public static byte[] Value = Cipher.GetBinaryKeyFromString(Source);
+        public const int BufferSize = 262144; // 256K
     }
 }
