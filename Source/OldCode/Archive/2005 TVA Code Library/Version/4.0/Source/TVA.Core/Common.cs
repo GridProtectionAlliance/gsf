@@ -102,13 +102,13 @@ namespace TVA
         /// <param name="length">Desired length of new array.</param>
         /// <typeparam name="T">Return type for new array.</typeparam>
         /// <remarks>
+        /// <para>It is expected that this function will only be used in Visual Basic.NET.</para>
         /// <para>
         /// The Array.CreateInstance provides better performance and more direct CLR access for array creation (not to
-        /// mention less confusion on the matter of array lengths), however the returned System.Array is not typed properly.
-        /// This function properly casts the return array based on the the type specification helping when Option Strict is
-        /// enabled.
+        /// mention less confusion on the matter of array lengths) in VB.NET, however the returned System.Array is not
+        /// typed properly. This function properly casts the return array based on the the type specification helping
+        /// when Option Strict is enabled.
         /// </para>
-        /// <para>It is expected that this function will only be used in Visual Basic.NET.</para>
         /// </remarks>
         /// <example>
         /// <code language="VB">
