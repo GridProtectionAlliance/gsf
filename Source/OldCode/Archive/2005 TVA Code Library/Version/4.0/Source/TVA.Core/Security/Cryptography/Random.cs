@@ -41,7 +41,7 @@ namespace TVA.Security.Cryptography
             {
                 unchecked
                 {
-                    return (double)((uint)Int32) / (double)uint.MaxValue;
+                    return (double)UInt32 / (double)uint.MaxValue;
                 }
             }
         }
@@ -56,7 +56,7 @@ namespace TVA.Security.Cryptography
             {
                 unchecked
                 {
-                    return (decimal)((ulong)Int64) / (decimal)ulong.MaxValue;
+                    return (decimal)UInt64 / (decimal)ulong.MaxValue;
                 }
             }
         }
@@ -170,6 +170,39 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
+        /// Generates a cryptographically strong unsigned 16-bit random integer.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        [CLSCompliant(false)]
+        public static ushort UInt16
+        {
+            get
+            {
+                byte[] value = new byte[2];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return BitConverter.ToUInt16(value, 0);
+            }
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 16-bit random integer between specified values.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="ushort"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="ushort"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="ushort"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
+        [CLSCompliant(false)]
+        public static ushort UInt16Between(ushort startNumber, ushort stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (ushort)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>
         /// Generates a cryptographically strong 24-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
@@ -198,6 +231,39 @@ namespace TVA.Security.Cryptography
                 throw new ArgumentException("stopNumber must be greater than startNumber");
 
             return (Int24)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 24-bit random integer.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        [CLSCompliant(false)]
+        public static UInt24 UInt24
+        {
+            get
+            {
+                byte[] value = new byte[3];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return UInt24.GetValue(value, 0);
+            }
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 24-bit random integer between specified values.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="UInt24"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="UInt24"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="UInt24"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
+        [CLSCompliant(false)]
+        public static UInt24 Int24Between(UInt24 startNumber, UInt24 stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (UInt24)(Number * (stopNumber - startNumber) + startNumber);
         }
 
         /// <summary>
@@ -232,6 +298,39 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
+        /// Generates a cryptographically strong unsigned 32-bit random integer.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        [CLSCompliant(false)]
+        public static uint UInt32
+        {
+            get
+            {
+                byte[] value = new byte[4];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return BitConverter.ToUInt32(value, 0);
+            }
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 32-bit random integer between specified values.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="uint"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="uint"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="uint"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
+        [CLSCompliant(false)]
+        public static uint UInt32Between(uint startNumber, uint stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (uint)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>
         /// Generates a cryptographically strong 64-bit random integer.
         /// </summary>
         /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
@@ -260,6 +359,39 @@ namespace TVA.Security.Cryptography
                 throw new ArgumentException("stopNumber must be greater than startNumber");
 
             return (long)(Number * (stopNumber - startNumber) + startNumber);
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 64-bit random integer.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        [CLSCompliant(false)]
+        public static ulong UInt64
+        {
+            get
+            {
+                byte[] value = new byte[8];
+
+                m_randomNumberGenerator.GetBytes(value);
+
+                return BitConverter.ToUInt64(value, 0);
+            }
+        }
+
+        /// <summary>
+        /// Generates a cryptographically strong unsigned 64-bit random integer between specified values.
+        /// </summary>
+        /// <exception cref="System.Security.Cryptography.CryptographicException">The cryptographic service provider (CSP) cannot be acquired.</exception>
+        /// <param name="startNumber">A <see cref="ulong"/> that is the low end of our range.</param>
+        /// <param name="stopNumber">A <see cref="ulong"/> that is the high end of our range.</param>
+        /// <returns>A <see cref="ulong"/> that is generated between the <paramref name="startNumber"/> and the <paramref name="stopNumber"/>.</returns>
+        [CLSCompliant(false)]
+        public static ulong UInt64Between(ulong startNumber, ulong stopNumber)
+        {
+            if (stopNumber < startNumber)
+                throw new ArgumentException("stopNumber must be greater than startNumber");
+
+            return (ulong)(Number * (stopNumber - startNumber) + startNumber);
         }
     }
 }
