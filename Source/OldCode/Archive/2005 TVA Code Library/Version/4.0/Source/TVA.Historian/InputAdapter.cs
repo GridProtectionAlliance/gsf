@@ -96,6 +96,9 @@ namespace TVA.Historian
 
                 status.AppendLine();
 
+                if (m_parser != null)
+                    status.Append(m_parser.Status);
+
                 if (m_client != null)
                     status.Append(m_client.Status);
 
