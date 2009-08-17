@@ -346,6 +346,7 @@
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Measurements\Routing\IaonAdapters.vsd" />
     <None Include="Media\Wavefile Information\Waveform Audio Format.ppt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
