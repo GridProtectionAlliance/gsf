@@ -164,6 +164,7 @@
     <Compile Include="PhasorDataConcentratorBase.cs" />
     <Compile Include="PhasorDefinitionBase.cs" />
     <Compile Include="PhasorDefinitionCollection.cs" />
+    <Compile Include="PhasorMeasurementMapper.cs" />
     <Compile Include="PhasorValueBase.cs" />
     <Compile Include="PhasorValueCollection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
