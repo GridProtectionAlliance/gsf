@@ -73,7 +73,7 @@ namespace TVA.PhasorProtocols
         /// Gets the specified composite value of this <see cref="IChannelValue{T}"/>.
         /// </summary>
         /// <param name="index">Index of composite value to retrieve.</param>
-        /// <returns>A <see cref="Double"/> representing the composite value.</returns>
+        /// <returns>A <see cref="double"/> representing the composite value.</returns>
         double GetCompositeValue(int index);
     }
 }

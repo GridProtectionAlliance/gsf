@@ -34,7 +34,7 @@
     </NOWARN>
     <RemoveIntegerChecks>true</RemoveIntegerChecks>
     <RunCodeAnalysis>true</RunCodeAnalysis>
-    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1021;-Microsoft.Design#CA1031;-Microsoft.Design#CA1045;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1036;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1819;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
+    <CodeAnalysisRules>-Microsoft.Design#CA2210;-Microsoft.Design#CA1021;-Microsoft.Design#CA1031;-Microsoft.Design#CA1051;-Microsoft.Design#CA1045;-Microsoft.Design#CA1008;-Microsoft.Design#CA1028;-Microsoft.Design#CA1033;-Microsoft.Design#CA1027;-Microsoft.Design#CA1036;-Microsoft.Design#CA1030;-Microsoft.Globalization#CA1304;-Microsoft.Globalization#CA1305;-Microsoft.Globalization#CA1307;-Microsoft.Maintainability#CA1506;-Microsoft.Naming#CA1702;-Microsoft.Naming#CA1700;-Microsoft.Naming#CA1709;-Microsoft.Naming#CA1704;-Microsoft.Naming#CA1710;-Microsoft.Naming#CA1720;-Microsoft.Naming#CA1707;-Microsoft.Naming#CA1716;-Microsoft.Naming#CA1724;-Microsoft.Naming#CA1726;-Microsoft.Performance#CA1819;-Microsoft.Usage#CA2214;-Microsoft.Usage#CA2217;-Microsoft.Usage#CA2201;-Microsoft.Usage#CA2233</CodeAnalysisRules>
     <DefineConstants>DEBUG</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -61,6 +61,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -71,6 +72,14 @@
     <Compile Include="AnalogDefinitionCollection.cs" />
     <Compile Include="AnalogValueBase.cs" />
     <Compile Include="AnalogValueCollection.cs" />
+    <Compile Include="Anonymous\AnalogDefinition.cs" />
+    <Compile Include="Anonymous\ConfigurationCell.cs" />
+    <Compile Include="Anonymous\ConfigurationCellCollection.cs" />
+    <Compile Include="Anonymous\ConfigurationFrame.cs" />
+    <Compile Include="Anonymous\DigitalDefinition.cs" />
+    <Compile Include="Anonymous\FrequencyDefinition.cs" />
+    <Compile Include="Anonymous\PhasorDefinition.cs" />
+    <Compile Include="BpaPdcStream\Concentrator.cs" />
     <Compile Include="ChannelBase.cs" />
     <Compile Include="ChannelCellBase.cs" />
     <Compile Include="ChannelCellCollectionBase.cs" />
@@ -142,6 +151,7 @@
     <Compile Include="IDataFrameParsingState.cs" />
     <Compile Include="IDigitalDefinition.cs" />
     <Compile Include="IDigitalValue.cs" />
+    <Compile Include="IeeeC37_118\Concentrator.cs" />
     <Compile Include="IFrameParser.cs" />
     <Compile Include="IFrequencyDefinition.cs" />
     <Compile Include="IFrequencyValue.cs" />
@@ -151,6 +161,7 @@
     <Compile Include="IPhasorDefinition.cs" />
     <Compile Include="IPhasorValue.cs" />
     <Compile Include="MultiProtocolFrameParser.cs" />
+    <Compile Include="PhasorDataConcentratorBase.cs" />
     <Compile Include="PhasorDefinitionBase.cs" />
     <Compile Include="PhasorDefinitionCollection.cs" />
     <Compile Include="PhasorValueBase.cs" />
@@ -261,6 +272,8 @@
     <Compile Include="SelFastMessage\FrequencyValue.cs" />
     <Compile Include="SelFastMessage\PhasorDefinition.cs" />
     <Compile Include="SelFastMessage\PhasorValue.cs" />
+    <Compile Include="SignalReference.cs" />
+    <Compile Include="SignalReferenceMeasurement.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Communication\TVA.Communication.csproj">
