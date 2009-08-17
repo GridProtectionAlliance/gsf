@@ -124,7 +124,7 @@ namespace TVA.Security.Cryptography
                 return null;
 
             if (string.IsNullOrEmpty(key))
-                key = Standard.Source;
+                key = Standard.Key;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -330,7 +330,7 @@ namespace TVA.Security.Cryptography
             FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
-                key = Standard.Source;
+                key = Standard.Key;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -378,7 +378,7 @@ namespace TVA.Security.Cryptography
                 return null;
 
             if (string.IsNullOrEmpty(key))
-                key = Standard.Source;
+                key = Standard.Key;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 
@@ -609,7 +609,7 @@ namespace TVA.Security.Cryptography
             FileStream destFileStream = File.Create(destinationFileName);
 
             if (string.IsNullOrEmpty(key))
-                key = Standard.Source;
+                key = Standard.Key;
 
             byte[] rgbKey = GetBinaryKeyFromString(key);
 

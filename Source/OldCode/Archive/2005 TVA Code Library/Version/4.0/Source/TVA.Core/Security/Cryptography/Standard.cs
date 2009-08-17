@@ -25,8 +25,8 @@ namespace TVA.Security.Cryptography
     internal static class Standard
     {
         // The following constants should not be changed
-        public const string Source = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
-        public static byte[] Value = Cipher.GetBinaryKeyFromString(Source);
+        public const string Key = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
+        public static byte[] KeyValue = Cipher.GetBinaryKeyFromString(Key);
         public const int BufferSize = 262144; // 256K
     }
 }

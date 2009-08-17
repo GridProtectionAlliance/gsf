@@ -137,7 +137,7 @@ namespace TVA.Security.Cryptography
                 if (x < key.Length)
                     rgbKey.Add(key[x]);
                 else
-                    rgbKey.Add(Standard.Value[x % Standard.Value.Length]);
+                    rgbKey.Add(Standard.KeyValue[x % Standard.KeyValue.Length]);
             }
 
             rgbKey.Scramble(rgbKey[0]);
@@ -163,7 +163,7 @@ namespace TVA.Security.Cryptography
                 if (x < iv.Length)
                     rgbIV.Add(iv[iv.Length - 1 - x]);
                 else
-                    rgbIV.Add(Standard.Value[x % Standard.Value.Length]);
+                    rgbIV.Add(Standard.KeyValue[x % Standard.KeyValue.Length]);
             }
 
             rgbIV.Scramble(rgbIV[0]);
