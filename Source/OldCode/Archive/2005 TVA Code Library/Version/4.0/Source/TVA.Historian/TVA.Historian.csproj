@@ -111,12 +111,14 @@
     <Compile Include="Files\StateRecordSummary.cs" />
     <Compile Include="IArchive.cs" />
     <Compile Include="IDataPoint.cs" />
+    <Compile Include="InputAdapter.cs" />
     <Compile Include="MetadataProviders\IMetadataProvider.cs" />
     <Compile Include="MetadataProviders\MetadataProviderBase.cs" />
     <Compile Include="MetadataProviders\MetadataProviders.cs" />
     <Compile Include="MetadataProviders\MetadataUpdater.cs" />
     <Compile Include="MetadataProviders\OleDbMetadataProvider.cs" />
     <Compile Include="MetadataProviders\RestWebServiceMetadataProvider.cs" />
+    <Compile Include="OutputAdapter.cs" />
     <Compile Include="Services\SerializableMetadata.cs" />
     <Compile Include="Services\SerializableMetadataRecord.cs" />
     <Compile Include="Notifiers\EmailNotifier.cs" />
