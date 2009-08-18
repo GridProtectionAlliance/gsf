@@ -16,10 +16,8 @@
 //*******************************************************************************************************
 
 using System;
-using System.Data;
 using System.Data.OleDb;
 using TVA.Configuration;
-using TVA.Data;
 
 namespace TVA.Historian.MetadataProviders
 {
