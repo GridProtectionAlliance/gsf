@@ -153,7 +153,7 @@ namespace TVA.Measurements
             if (obj is MeasurementKey)
                 return Equals((MeasurementKey)obj);
 
-            throw new ArgumentException("Object is not a MeasurementKey");
+            return false;
         }
 
         /// <summary>
