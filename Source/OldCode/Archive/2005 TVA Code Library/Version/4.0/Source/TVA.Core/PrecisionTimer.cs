@@ -228,8 +228,8 @@ namespace TVA
         private int m_period;               // Period between timer events in milliseconds.
         private int m_resolution;           // Timer resolution in milliseconds.
         private TimerProc m_timeProc;       // Called by Windows when a timer periodic event occurs.
-        private bool m_running = false;     // Indicates whether or not the timer is running.
-        private bool m_disposed = false;    // Indicates whether or not the timer has been disposed.
+        private bool m_running;             // Indicates whether or not the timer is running.
+        private bool m_disposed;            // Indicates whether or not the timer has been disposed.
         private EventArgs m_eventArgs;      // Private user event args to pass into Ticks call
 
         #endregion
