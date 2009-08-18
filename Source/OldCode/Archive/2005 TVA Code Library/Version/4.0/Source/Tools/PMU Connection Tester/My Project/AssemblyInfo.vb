@@ -1,7 +1,6 @@
-﻿Imports System.Resources
-
-Imports System
+﻿Imports System
 Imports System.Reflection
+Imports System.Resources
 Imports System.Runtime.InteropServices
 
 ' General Information about an assembly is controlled through the following 
@@ -16,7 +15,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyProduct("PMU Connection Tester")> 
 <Assembly: AssemblyCopyright("Copyright © TVA 2009")> 
 <Assembly: AssemblyTrademark("James Ritchie Carroll")> 
-
+<Assembly: NeutralResourcesLanguageAttribute("en-US")> 
 <Assembly: ComVisible(False)> 
 
 'The following GUID is for the ID of the typelib if this project is exposed to COM
@@ -32,7 +31,4 @@ Imports System.Runtime.InteropServices
 ' You can specify all the values or you can default the Build and Revision Numbers 
 ' by using the '*' as shown below:
 ' <Assembly: AssemblyVersion("2.2.*")> 
-
 <Assembly: AssemblyVersion("3.1.0.*")> 
-
-<Assembly: NeutralResourcesLanguageAttribute("en-US")> 
