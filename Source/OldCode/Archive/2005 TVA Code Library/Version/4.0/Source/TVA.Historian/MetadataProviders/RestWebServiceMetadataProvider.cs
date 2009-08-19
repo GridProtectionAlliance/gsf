@@ -12,10 +12,13 @@
 //  -----------------------------------------------------------------------------------------------------
 //  08/11/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  08/18/2009 - Pinal C. Patel
+//       Added cleanup code for response stream of the REST web service.
 //
 //*******************************************************************************************************
 
 using System;
+using System.IO;
 using System.Net;
 using TVA.Configuration;
 
@@ -163,10 +166,23 @@ namespace TVA.Historian.MetadataProviders
                 throw new ArgumentNullException("ServiceUri");
 
             // Update existing metadata with retrieved metadata.
-            using (WebResponse serviceResponse = WebRequest.Create(m_serviceUri).GetResponse())
+            WebResponse response = null;
+            Stream responseStream = null;
+            try
             {
+                response = WebRequest.Create(m_serviceUri).GetResponse();
+                responseStream = response.GetResponseStream();
+
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
-                metadataUpdater.UpdateMetadata(serviceResponse.GetResponseStream(), m_serviceDataFormat);
+                metadataUpdater.UpdateMetadata(responseStream, m_serviceDataFormat);
+            }
+            finally
+            {
+                if (response != null)
+                    response.Close();
+
+                if (responseStream != null)
+                    responseStream.Dispose();
             }
         }
 
