@@ -13,31 +13,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "TVA.Web\TVA.Web.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "TVA.Windows\TVA.Windows.csproj", "{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "PMU Connection Tester", "Tools\PMU Connection Tester\PMU Connection Tester.vbproj", "{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.PhasorProtocols", "TVA.PhasorProtocols\TVA.PhasorProtocols.csproj", "{54CA98CC-2F0A-41F2-879D-0E42B17E8544}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PMU Connection Tester", "PMU Connection Tester", "{29E2997D-F2D6-486C-8D08-DE2F72752C89}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Tools\PMU Connection Tester\Setup\Setup.vdproj", "{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{3D5336D4-E14B-48A6-8F2D-172921D025BC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{5FC30A85-A8D5-47EC-96C7-FF02ABB72493}"
-	ProjectSection(SolutionItems) = preProject
-		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
-		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 12
+		SccNumberOfProjects = 8
 		SccLocalPath0 = .
 		SccProjectUniqueName1 = TVA.Core\\TVA.Core.csproj
 		SccLocalPath1 = .
@@ -57,24 +39,10 @@ Global
 		SccProjectUniqueName6 = TVA.Communication\\TVA.Communication.csproj
 		SccLocalPath6 = .
 		SccProjectFilePathRelativizedFromConnection6 = TVA.Communication\\
-		SccProjectUniqueName7 = TVA.Historian\\TVA.Historian.csproj
+		SccProjectUniqueName7 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
+		SccProjectTopLevelParentUniqueName7 = TVACodeLibrary.sln
 		SccLocalPath7 = .
-		SccProjectFilePathRelativizedFromConnection7 = TVA.Historian\\
-		SccProjectUniqueName8 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
-		SccProjectTopLevelParentUniqueName8 = TVACodeLibrary.sln
-		SccLocalPath8 = .
-		SccProjectFilePathRelativizedFromConnection8 = Tools\\ConfigCrypter\\
-		SccProjectUniqueName9 = TVA.PhasorProtocols\\TVA.PhasorProtocols.csproj
-		SccLocalPath9 = .
-		SccProjectFilePathRelativizedFromConnection9 = TVA.PhasorProtocols\\
-		SccProjectUniqueName10 = Tools\\PMU\u0020Connection\u0020Tester\\PMU\u0020Connection\u0020Tester.vbproj
-		SccProjectTopLevelParentUniqueName10 = TVACodeLibrary.sln
-		SccLocalPath10 = .
-		SccProjectFilePathRelativizedFromConnection10 = Tools\\PMU\u0020Connection\u0020Tester\\
-		SccProjectUniqueName11 = Tools\\PMU\u0020Connection\u0020Tester\\Setup\\Setup.vdproj
-		SccProjectTopLevelParentUniqueName11 = TVACodeLibrary.sln
-		SccLocalPath11 = .
-		SccProjectFilePathRelativizedFromConnection11 = Tools\\PMU\u0020Connection\u0020Tester\\Setup\\
+		SccProjectFilePathRelativizedFromConnection7 = Tools\\ConfigCrypter\\
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,35 +73,15 @@ Global
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
 		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38}.Release|Any CPU.Build.0 = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54CA98CC-2F0A-41F2-879D-0E42B17E8544}.Release|Any CPU.Build.0 = Release|Any CPU
-		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Debug|Any CPU.ActiveCfg = Debug
-		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Debug|Any CPU.Build.0 = Debug
-		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Release|Any CPU.ActiveCfg = Release
-		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
-		{29E2997D-F2D6-486C-8D08-DE2F72752C89} = {6C78685B-1653-43B5-98C8-0470A173A848}
-		{AB9A5D8C-38C2-4393-93D9-BC548ED0AB38} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
-		{626BBEA0-D5CA-468D-95A5-3A55891EC4BD} = {29E2997D-F2D6-486C-8D08-DE2F72752C89}
-		{5FC30A85-A8D5-47EC-96C7-FF02ABB72493} = {3D5336D4-E14B-48A6-8F2D-172921D025BC}
 	EndGlobalSection
 EndGlobal
