@@ -1,0 +1,88 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "Libraries\TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "Libraries\TVA.Communication\TVA.Communication.csproj", "{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "Libraries\TVA.Services\TVA.Services.csproj", "{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "Libraries\TVA.Security\TVA.Security.csproj", "{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "Libraries\TVA.Web\TVA.Web.csproj", "{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "Libraries\TVA.Windows\TVA.Windows.csproj", "{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{D7805B20-D771-4546-90DD-CD98C4BA4436}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C3058807-1DFE-4681-BBBC-959BE6A84E10}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
+		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{8D2945DE-CD0F-48B0-9911-BE858BFBCBEC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{C9556EF5-7671-4E99-AC5B-BE6743E16EDF}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\Microsoft\Microsoft.Web.Services3.dll = Dependencies\Microsoft\Microsoft.Web.Services3.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}.Release|Any CPU.Build.0 = Release|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35027A69-1A76-4312-B57B-F5826F0B87AF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
+		{C9556EF5-7671-4E99-AC5B-BE6743E16EDF} = {13006BBE-434A-4027-940B-EAD752844137}
+	EndGlobalSection
+EndGlobal

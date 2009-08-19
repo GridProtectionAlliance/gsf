@@ -1,0 +1,6 @@
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Build\Output\Debug\TVA.Services.XML
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Build\Output\Debug\TVA.Services.dll
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Build\Output\Debug\TVA.Services.pdb
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Source\Libraries\TVA.Services\obj\Debug\ResolveAssemblyReference.cache
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Source\Libraries\TVA.Services\obj\Debug\TVA.Services.dll
+C:\My Projects\CLR 3.5\Win\openPDC\Library\Current Version\Source\Libraries\TVA.Services\obj\Debug\TVA.Services.pdb
