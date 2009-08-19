@@ -37,6 +37,40 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{
 	EndProjectSection
 EndProject
 Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 8
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs07.codeplex.com/
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\TVA.Core\\TVA.Core.csproj
+		SccProjectTopLevelParentUniqueName1 = Framework.sln
+		SccProjectName1 = Libraries/TVA.Core
+		SccLocalPath1 = Libraries\\TVA.Core
+		SccProjectUniqueName2 = Libraries\\TVA.Communication\\TVA.Communication.csproj
+		SccProjectTopLevelParentUniqueName2 = Framework.sln
+		SccProjectName2 = Libraries/TVA.Communication
+		SccLocalPath2 = Libraries\\TVA.Communication
+		SccProjectUniqueName3 = Libraries\\TVA.Services\\TVA.Services.csproj
+		SccProjectTopLevelParentUniqueName3 = Framework.sln
+		SccProjectName3 = Libraries/TVA.Services
+		SccLocalPath3 = Libraries\\TVA.Services
+		SccProjectUniqueName4 = Libraries\\TVA.Security\\TVA.Security.csproj
+		SccProjectTopLevelParentUniqueName4 = Framework.sln
+		SccProjectName4 = Libraries/TVA.Security
+		SccLocalPath4 = Libraries\\TVA.Security
+		SccProjectUniqueName5 = Libraries\\TVA.Web\\TVA.Web.csproj
+		SccProjectTopLevelParentUniqueName5 = Framework.sln
+		SccProjectName5 = Libraries/TVA.Web
+		SccLocalPath5 = Libraries\\TVA.Web
+		SccProjectUniqueName6 = Libraries\\TVA.Windows\\TVA.Windows.csproj
+		SccProjectTopLevelParentUniqueName6 = Framework.sln
+		SccProjectName6 = Libraries/TVA.Windows
+		SccLocalPath6 = Libraries\\TVA.Windows
+		SccProjectUniqueName7 = Tools\\ConfigCrypter\\ConfigCrypter.csproj
+		SccProjectTopLevelParentUniqueName7 = Framework.sln
+		SccProjectName7 = Tools/ConfigCrypter
+		SccLocalPath7 = Tools\\ConfigCrypter
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -75,13 +109,13 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
-		{4060E729-EFFD-4E50-A0D5-99C0990EF7DA} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
-		{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
-		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
 		{C9556EF5-7671-4E99-AC5B-BE6743E16EDF} = {13006BBE-434A-4027-940B-EAD752844137}
 	EndGlobalSection
