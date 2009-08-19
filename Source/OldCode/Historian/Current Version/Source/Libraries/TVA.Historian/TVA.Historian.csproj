@@ -21,20 +21,20 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\Build\Output\Debug\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Debug\Libraries\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Debug\TVA.Historian.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Debug\Libraries\TVA.Historian.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\Build\Output\Release\</OutputPath>
+    <OutputPath>..\..\..\Build\Output\Release\Libraries\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\Build\Output\Release\TVA.Historian.XML</DocumentationFile>
+    <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TVA.Historian.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -60,11 +60,11 @@
     <Reference Include="System.Xml" />
     <Reference Include="TVA.Communication, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Framework\Current Version\Build\Output\Debug\TVA.Communication.dll</HintPath>
+      <HintPath>..\..\..\..\..\Framework\Current Version\Build\Output\Debug\Libraries\TVA.Communication.dll</HintPath>
     </Reference>
     <Reference Include="TVA.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\Framework\Current Version\Build\Output\Debug\TVA.Core.dll</HintPath>
+      <HintPath>..\..\..\..\..\Framework\Current Version\Build\Output\Debug\Libraries\TVA.Core.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
