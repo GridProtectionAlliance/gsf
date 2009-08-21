@@ -11,7 +11,7 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  02/21/2007 - Pinal C. Patel
-//       Generated original version of source code.
+//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
 //  01/23/2008 - Pinal C. Patel
 //       Added AlarmDelay property to expose delay in sending alarm notification.
 //  04/20/2009 - Pinal C. Patel

@@ -11,7 +11,7 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  05/04/2009 - Pinal C. Patel
-//       Generated original version of source code.
+//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
 //
 //*******************************************************************************************************
 

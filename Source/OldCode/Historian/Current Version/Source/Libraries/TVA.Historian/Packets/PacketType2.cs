@@ -11,7 +11,7 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  07/27/2007 - Pinal C. Patel
-//       Generated original version of source code.
+//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
 //

@@ -10,7 +10,7 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  03/08/2007 - Pinal C. Patel
-//       Generated original version of source code.
+//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
 //  03/31/2008 - Pinal C. Patel
 //       Removed Obsolete tag from ActiveDataBlockIndex and ActiveDataBlockSlot as it's being used.
 //  04/20/2009 - Pinal C. Patel
