@@ -12,15 +12,15 @@
 //  -----------------------------------------------------------------------------------------------------
 //  08/07/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  08/21/2009 - Pinal C. Patel
+//       Removed ExtractMetadata() method as this can be achived using Serialization.Serialize() method.
+//       Modified UpdateMetadata() overload for processing web service data to use Serialization class.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Data;
 using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Xml.Serialization;
 using TVA.Historian.Files;
 using TVA.Historian.Services;
 
@@ -264,82 +264,16 @@ namespace TVA.Historian.MetadataProviders
         /// Updates the <see cref="Metadata"/> from <paramref name="streamData"/>
         /// </summary>
         /// <param name="streamData"><see cref="Stream"/> containing serialized <see cref="SerializableMetadata"/>.</param>
-        /// <param name="dataFormat"><see cref="RestDataFormat"/> in which the <see cref="SerializableMetadata"/> is serialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="streamData"/> is null.</exception>
-        /// <exception cref="NotSupportedException">Specified <paramref name="dataFormat"/> is not supported.</exception>
-        public void UpdateMetadata(Stream streamData, RestDataFormat dataFormat)
+        /// <param name="dataFormat"><see cref="Services.SerializationFormat"/> in which the <see cref="SerializableMetadata"/> was serialized to <paramref name="streamData"/>.</param>
+        public void UpdateMetadata(Stream streamData, Services.SerializationFormat dataFormat)
         {
-            if (streamData == null)
-                throw new ArgumentNullException("streamData");
-
             // Deserialize serialized metadata.
-            SerializableMetadata deserializedMetadata = null;
-            if (dataFormat == RestDataFormat.AsmxXml)
-            {
-                // Data is in ASMX XML format.
-                XmlSerializer serializer = new XmlSerializer(typeof(SerializableMetadata));
-                deserializedMetadata = (SerializableMetadata)serializer.Deserialize(streamData);
-            }
-            else if (dataFormat == RestDataFormat.RestXml)
-            {
-                // Data is in REST XML format.
-                DataContractSerializer serializer = new DataContractSerializer(typeof(SerializableMetadata));
-                deserializedMetadata = (SerializableMetadata)serializer.ReadObject(streamData);
-            }
-            else if (dataFormat == RestDataFormat.RestJson)
-            {
-                // Data is in REST JSON format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(SerializableMetadata));
-                deserializedMetadata = (SerializableMetadata)serializer.ReadObject(streamData);
-            }
-            else
-            {
-                // Data format is not supported.
-                throw new NotSupportedException(string.Format("{0} data format is not supported.", dataFormat));
-            }
+            SerializableMetadata deserializedMetadata = Services.Serialization.Deserialize<SerializableMetadata>(streamData, dataFormat);
 
             // Update metadata from the deserialized metadata.
             foreach (SerializableMetadataRecord deserializedMetadataRecord in deserializedMetadata.MetadataRecords)
             {
                 m_metadata.Write(deserializedMetadataRecord.HistorianID, deserializedMetadataRecord.Deflate());
-            }
-        }
-
-        /// <summary>
-        /// Serializes <see cref="Metadata"/> to <see cref="SerializableMetadata"/> in the specified <paramref name="dataFormat"/>.
-        /// </summary>
-        /// <param name="outputStream"><see cref="Stream"/> where serialized <see cref="Metadata"/> is to be outputted.</param>
-        /// <param name="dataFormat"><see cref="RestDataFormat"/> in which the <see cref="Metadata"/> is to be serialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="outputStream"/> is null.</exception>
-        /// <exception cref="NotSupportedException">Specified <paramref name="dataFormat"/> is not supported.</exception>
-        public void ExtractMetadata(ref Stream outputStream, RestDataFormat dataFormat)
-        {
-            if (outputStream == null)
-                throw new ArgumentNullException("outputStream");
-
-            // Serialize data to the provided stream.
-            if (dataFormat == RestDataFormat.AsmxXml)
-            {
-                // Serialize to ASMX XML data format.
-                XmlSerializer serializer = new XmlSerializer(typeof(SerializableMetadata));
-                serializer.Serialize(outputStream, new SerializableMetadata(m_metadata));
-            }
-            else if (dataFormat == RestDataFormat.RestXml)
-            {
-                // Serialize to REST XML data format.
-                DataContractSerializer serializer = new DataContractSerializer(typeof(SerializableMetadata));
-                serializer.WriteObject(outputStream, new SerializableMetadata(m_metadata));
-            }
-            else if (dataFormat == RestDataFormat.RestJson)
-            {
-                // Serialize to REST JSON data format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(SerializableMetadata));
-                serializer.WriteObject(outputStream, new SerializableMetadata(m_metadata));
-            }
-            else
-            {
-                // Data format is not supported.
-                throw new NotSupportedException(string.Format("{0} data format is not supported.", dataFormat));
             }
         }
 

@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  08/18/2009 - Pinal C. Patel
 //       Added cleanup code for response stream of the REST web service.
+//  08/21/2009 - Pinal C. Patel
+//       Moved RestDataFormat to Services namespace as SerializationFormat.
 //
 //*******************************************************************************************************
 
@@ -21,42 +23,21 @@ using System;
 using System.IO;
 using System.Net;
 using TVA.Configuration;
+using TVA.Historian.Services;
 
 namespace TVA.Historian.MetadataProviders
-{
-    #region [ Enumerations ]
-
-    /// <summary>
-    /// Indicates the data format for a REST (Representational State Transfer) web service.
-    /// </summary>
-    public enum RestDataFormat
-    {
-        /// <summary>
-        /// Data is in ASMX (.NET Web Service) XML (eXtensible Markup Language) format.
-        /// </summary>
-        AsmxXml,
-        /// <summary>
-        /// Data is in REST (Representational State Transfer) XML (eXtensible Markup Language) format.
-        /// </summary>
-        RestXml,
-        /// <summary>
-        /// Data is in REST (Representational State Transfer) JSON (JavaScript Object Notation) format.
-        /// </summary>
-        RestJson
-    }
-
-    #endregion
-
+{   
     /// <summary>
     /// Represents a provider of data to a <see cref="TVA.Historian.Files.MetadataFile"/> from a REST (Representational State Transfer) web service.
     /// </summary>
+    /// <seealso cref="MetadataUpdater"/>
     public class RestWebServiceMetadataProvider : MetadataProviderBase
     {
         #region [ Members ]
 
         // Fields
         private string m_serviceUri;
-        private RestDataFormat m_serviceDataFormat;
+        private SerializationFormat m_serviceDataFormat;
 
         #endregion
 
@@ -69,7 +50,7 @@ namespace TVA.Historian.MetadataProviders
             : base()
         {
             m_serviceUri = string.Empty;
-            m_serviceDataFormat = RestDataFormat.RestXml;
+            m_serviceDataFormat = SerializationFormat.PoxRest;
         }
 
         #endregion
@@ -92,9 +73,9 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="RestDataFormat"/> in which the REST web service exposes the data.
+        /// Gets or sets the <see cref="SerializationFormat"/> in which the REST web service exposes the data.
         /// </summary>
-        public RestDataFormat ServiceDataFormat
+        public SerializationFormat ServiceDataFormat
         {
             get
             {
@@ -150,7 +131,7 @@ namespace TVA.Historian.MetadataProviders
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("ServiceUri", m_serviceUri, "URI where the REST web service is hosted.");
-                settings.Add("ServiceDataFormat", m_serviceDataFormat, "Format (AsmxXml; RestXml; RestJson) in which the REST web service exposes the data.");
+                settings.Add("ServiceDataFormat", m_serviceDataFormat, "Format (Json; PoxAsmx; PoxRest) in which the REST web service exposes the data.");
                 ServiceUri = settings["ServiceUri"].ValueAs(m_serviceUri);
                 ServiceDataFormat = settings["ServiceDataFormat"].ValueAs(m_serviceDataFormat);
             }
@@ -165,14 +146,15 @@ namespace TVA.Historian.MetadataProviders
             if (string.IsNullOrEmpty(m_serviceUri))
                 throw new ArgumentNullException("ServiceUri");
 
-            // Update existing metadata with retrieved metadata.
             WebResponse response = null;
             Stream responseStream = null;
             try
             {
+                // Retrieve new metadata.
                 response = WebRequest.Create(m_serviceUri).GetResponse();
                 responseStream = response.GetResponseStream();
 
+                // Update existing metadata.
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
                 metadataUpdater.UpdateMetadata(responseStream, m_serviceDataFormat);
             }

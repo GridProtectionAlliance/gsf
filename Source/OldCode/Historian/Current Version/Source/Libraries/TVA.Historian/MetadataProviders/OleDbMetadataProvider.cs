@@ -24,6 +24,7 @@ namespace TVA.Historian.MetadataProviders
     /// <summary>
     /// Represents a provider of data to a <see cref="TVA.Historian.Files.MetadataFile"/> from any OLE DB data store.
     /// </summary>
+    /// <seealso cref="MetadataUpdater"/>
     public class OleDbMetadataProvider : MetadataProviderBase
     {
         #region [ Members ]
@@ -142,16 +143,16 @@ namespace TVA.Historian.MetadataProviders
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
 
-
-            // Update existing metadata with retrieved metadata.
             OleDbDataReader reader = null;
             OleDbConnection connection = new OleDbConnection(m_connectString);
             OleDbCommand command = new OleDbCommand(m_selectString, connection);
             try
             {
+                // Retrieve new metadata.
                 connection.Open();
                 reader = command.ExecuteReader();
 
+                // Update existing metadata.
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
                 metadataUpdater.UpdateMetadata(reader);
             }
