@@ -148,6 +148,7 @@ namespace TVA.Historian.Services
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="MetadataFile"/>
     /// <seealso cref="SerializableMetadataRecord"/>
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
@@ -180,12 +181,12 @@ namespace TVA.Historian.Services
                 throw new ArgumentException("metadataFile is closed.");
 
             // Process all records in the metadata file.
-            List<SerializableMetadataRecord> serializedMetadataRecords = new List<SerializableMetadataRecord>();
+            List<SerializableMetadataRecord> serializableMetadataRecords = new List<SerializableMetadataRecord>();
             foreach (MetadataRecord metadataRecord in metadataFile.Read())
             {
-                serializedMetadataRecords.Add(new SerializableMetadataRecord(metadataRecord));
+                serializableMetadataRecords.Add(new SerializableMetadataRecord(metadataRecord));
             }
-            MetadataRecords = serializedMetadataRecords.ToArray();
+            MetadataRecords = serializableMetadataRecords.ToArray();
         }
 
         #endregion

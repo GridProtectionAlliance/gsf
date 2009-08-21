@@ -138,6 +138,7 @@ namespace TVA.Historian.Services
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="MetadataRecord"/>
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
