@@ -26,7 +26,9 @@ using System.Collections.Generic;
 
 namespace TVA.Collections
 {
-    /// <summary>Sorted dictionary style list that supports IList.</summary>
+    /// <summary>
+    /// Represents a sorted dictionary style list that supports <see cref="IList"/>.
+    /// </summary>
     /// <remarks>
     /// <para>
     /// Have you ever needed the quick look-up feature on a Dictionary (e.g., Hashtable), but ended

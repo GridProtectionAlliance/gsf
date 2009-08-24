@@ -30,8 +30,8 @@ using System.ComponentModel;
 namespace TVA.Collections
 {
     /// <summary>
-    /// <para>This class processes a keyed collection of items on independent threads.</para>
-    /// <para>Consumer must implement a function to process items.</para>
+    /// Represents a keyed collection of items that get processed on independent threads with
+    /// a consumer provided function.
     /// </summary>
     /// <typeparam name="TKey">Type of keys used to reference process items.</typeparam>
     /// <typeparam name="TValue">Type of values to process.</typeparam>

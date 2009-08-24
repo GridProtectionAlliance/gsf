@@ -79,7 +79,9 @@ namespace TVA
     // part these functions may have the most value in a Visual Basic application which supports importing functions
     // down to a class level, e.g.: Imports TVA.Common
 
-    /// <summary>Defines common global functions.</summary>
+    /// <summary>
+    /// Defines common global functions.
+    /// </summary>
     public static class Common
     {
         /// <summary>Returns one of two strongly-typed objects.</summary>

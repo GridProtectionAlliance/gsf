@@ -36,7 +36,7 @@ using System.Text.RegularExpressions;
 namespace TVA
 {
     /// <summary>
-    /// Handles conversion of byte buffers to and from user presentable data formats.
+    /// Defines a set of methods used to convert byte buffers to and from user presentable data formats.
     /// </summary>
     public abstract class ByteEncoding
     {

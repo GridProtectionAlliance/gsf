@@ -23,7 +23,9 @@ using System.Collections.Generic;
 
 namespace TVA
 {
-    /// <summary>Defines extension functions related to character manipulation.</summary>
+    /// <summary>
+    /// Defines extension functions related to character manipulation.
+    /// </summary>
     public static class CharExtensions
     {
         // so that this only happens one time

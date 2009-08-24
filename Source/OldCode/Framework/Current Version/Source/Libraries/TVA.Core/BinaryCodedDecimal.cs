@@ -33,7 +33,7 @@ using System;
 namespace TVA
 {
     /// <summary>
-    /// Represents functions related to binary-coded decimals.
+    /// Defines functions related to binary-coded decimals.
     /// </summary>
     /// <remarks>
     /// See <a href="http://en.wikipedia.org/wiki/Binary-coded_decimal">Binary-coded decimal</a> for details.

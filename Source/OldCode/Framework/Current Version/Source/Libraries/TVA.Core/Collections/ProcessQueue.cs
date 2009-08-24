@@ -89,8 +89,8 @@ namespace TVA.Collections
     #endregion
 
     /// <summary>
-    /// <para>This class processes a collection of items on independent threads.</para>
-    /// <para>The consumer must implement a function to process items.</para>
+    /// Represents a collection of items that get processed on independent threads with
+    /// a consumer provided function.
     /// </summary>
     /// <typeparam name="T">Type of object to process</typeparam>
     /// <remarks>

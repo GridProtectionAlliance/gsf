@@ -56,7 +56,9 @@ namespace TVA
 
     #endregion
 
-    /// <summary>Big-endian byte order interoperability class</summary>
+    /// <summary>
+    /// Represents a big-endian byte order interoperability class.
+    /// </summary>
     public class BigEndianOrder : EndianOrder
     {
         #region [ Constructors ]
@@ -90,7 +92,9 @@ namespace TVA
         #endregion
     }
 
-    /// <summary>Little-endian byte order interoperability class</summary>
+    /// <summary>
+    /// Represents a little-endian byte order interoperability class.
+    /// </summary>
     public class LittleEndianOrder : EndianOrder
     {
         #region [ Constructors ]
@@ -124,7 +128,9 @@ namespace TVA
         #endregion
     }
 
-    /// <summary>Native-endian byte order interoperability class</summary>
+    /// <summary>
+    /// Represents a native-endian byte order interoperability class.
+    /// </summary>
     public class NativeEndianOrder : EndianOrder
     {
         #region [ Constructors ]
@@ -158,7 +164,9 @@ namespace TVA
         #endregion
     }
 
-    /// <summary>Endian byte order interoperability class</summary>
+    /// <summary>
+    /// Represents an endian byte order interoperability class.
+    /// </summary>
     /// <remarks>
     /// Intel systems use little-endian byte order, other systems, such as Unix, use big-endian byte ordering.
     /// Little-endian ordering means bits are ordered such that the bit whose in-memory representation is right-most is the most-significant-bit in a byte.

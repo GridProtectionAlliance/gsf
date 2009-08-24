@@ -27,7 +27,7 @@ using TVA.Parsing;
 namespace TVA.Interop
 {
     /// <summary>
-    /// Old Style Visual Basic Array Descriptor
+    /// Represents an old style Visual Basic array descriptor.
     /// </summary>
     /// <remarks>
     /// This class is used to mimic the binary array descriptor used when an array is serialized

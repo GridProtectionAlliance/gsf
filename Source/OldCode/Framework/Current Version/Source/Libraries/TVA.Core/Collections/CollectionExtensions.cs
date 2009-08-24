@@ -40,7 +40,9 @@ using System.Text;
 
 namespace TVA.Collections
 {
-    /// <summary>Defines extension functions related to manipulation of arrays and collections.</summary>
+    /// <summary>
+    /// Defines extension functions related to manipulation of arrays and collections.
+    /// </summary>
     public static class CollectionExtensions
     {
         /// <summary>

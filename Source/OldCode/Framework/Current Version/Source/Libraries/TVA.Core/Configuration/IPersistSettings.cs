@@ -22,7 +22,7 @@
 namespace TVA.Configuration
 {
     /// <summary>
-    /// Specifies that this object can persists settings to a config file.
+    /// Defines as interface that specifies that this object can persists settings to a config file.
     /// </summary>
     public interface IPersistSettings
     {

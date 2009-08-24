@@ -20,7 +20,7 @@ using TVA.Units;
 namespace TVA.Collections
 {
     /// <summary>
-    /// Represents the current process queue statistics.
+    /// Represents the statistics of a <see cref="ProcessQueue{T}"/>.
     /// </summary>
     public struct ProcessQueueStatistics
     {

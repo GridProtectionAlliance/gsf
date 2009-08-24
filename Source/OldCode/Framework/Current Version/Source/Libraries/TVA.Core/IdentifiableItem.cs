@@ -22,7 +22,7 @@
 namespace TVA
 {
     /// <summary>
-    /// A class that can be used to assign an identifier to an item for the purpose of identification.
+    /// Represents an identifiable item.
     /// </summary>
     /// <typeparam name="TId">Type of the identifier to be used for identification.</typeparam>
     /// <typeparam name="TItem">Type of the item that is to be made identifiable.</typeparam>

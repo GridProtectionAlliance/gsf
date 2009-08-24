@@ -51,7 +51,7 @@ using TVA.Windows.Forms;
 namespace TVA.ErrorManagement
 {
     /// <summary>
-    /// Implements a logger that can be used for logging handled as well as unhandled exceptions across multiple 
+    /// Represents a logger that can be used for logging handled as well as unhandled exceptions across multiple 
     /// application types (Windows Application, Console Application, Windows Service, Web Application, Web Service).
     /// </summary>
     /// <remarks>

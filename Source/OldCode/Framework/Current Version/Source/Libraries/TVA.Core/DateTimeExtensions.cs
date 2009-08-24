@@ -28,7 +28,9 @@ using System.Globalization;
 
 namespace TVA
 {
-    /// <summary>Defines extension functions related to Date/Time manipulation.</summary>
+    /// <summary>
+    /// Defines extension functions related to Date/Time manipulation.
+    /// </summary>
     public static class DateTimeExtensions
     {
         /// <summary>Determines if the specified UTC time is valid, by comparing it to the system clock.</summary>

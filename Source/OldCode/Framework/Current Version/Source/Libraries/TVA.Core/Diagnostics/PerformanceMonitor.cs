@@ -32,7 +32,8 @@ using System.Timers;
 namespace TVA.Diagnostics
 {
     /// <summary>
-    /// A class that can be used to monitor system and process performance similar to the Performance Monitor utility.
+    /// Represents a process performance monitor that operates similar to the Windows Performance Monitor utility
+    /// that can be used to monitor system performance.
     /// </summary>
     /// <seealso cref="PerformanceCounter"/>
     /// <example>

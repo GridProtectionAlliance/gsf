@@ -35,7 +35,7 @@ using TVA.Collections;
 namespace TVA.Console
 {
     /// <summary>
-    /// A class to parse command-line command containing ordered arguments along with optional arguments.
+    /// Represents an ordered set of arguments along with optional arguments parsed from a command-line.
     /// </summary>
     /// <example>
     /// This example shows how to parse a command-line command that does not contain an executable name:

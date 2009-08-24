@@ -28,7 +28,7 @@ using System.Runtime.InteropServices;
 namespace TVA.Console
 {
     /// <summary>
-    /// A helper class that can be used to subscribe to events raised by a console application.
+    /// Defines a set of consumable events that can be raised by a console application.
     /// </summary>
     /// <example>
     /// This example shows how to subscribe to console application events:

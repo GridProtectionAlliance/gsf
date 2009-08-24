@@ -32,7 +32,7 @@ using TVA.Net.Smtp;
 namespace TVA.ErrorManagement
 {
     /// <summary>
-    /// Defines an e-mail based <see cref="TraceListener"/>.
+    /// Represents an e-mail based <see cref="TraceListener"/>.
     /// </summary>
     /// <example>
     /// Below is the config file entry required for enabling e-mail based tracing using <see cref="SmtpTraceListener"/>:

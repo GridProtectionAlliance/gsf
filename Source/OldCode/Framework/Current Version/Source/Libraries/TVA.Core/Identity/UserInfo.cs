@@ -54,7 +54,7 @@ using TVA.Interop;
 namespace TVA.Identity
 {
     /// <summary>
-    /// A class that can be used to retrieve information about a domain user from Active Directory.
+    /// Represents information about a domain user retrieved from Active Directory.
     /// </summary>
     /// <remarks>
     /// See <a href="http://msdn.microsoft.com/en-us/library/ms677980.aspx" target="_blank">http://msdn.microsoft.com/en-us/library/ms677980.aspx</a> for more information on active directory properties.
