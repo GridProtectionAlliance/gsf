@@ -32,7 +32,11 @@
 //*******************************************************************************************************
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  8/3/2009 - Josh Patterson
+//  11/12/2004 - James R. Carroll
+//      Initial version of source generated
+//  01/14/2005 - James R. Carroll
+//      Added GetByte overloads, and To<Type> functions - changes reviewed by John Shugart
+//  08/03/2009 - Josh Patterson
 //      Updated comments
 //
 //*******************************************************************************************************

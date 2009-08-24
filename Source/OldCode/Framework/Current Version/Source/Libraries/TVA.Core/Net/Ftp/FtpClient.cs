@@ -8,6 +8,16 @@
 //       Phone: 423/751-2827
 //       Email: jrcarrol@tva.gov
 //
+//   ------------------------------------------------------------------------------
+//
+//   Code based on the following project:
+//        http://www.codeproject.com/KB/IP/net_ftp_upload.aspx
+//  
+//   The Code Project Open License (CPOL):
+//        http://www.codeproject.com/info/cpol10.aspx
+//
+//   ------------------------------------------------------------------------------
+//
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  05/22/2003 - James R. Carroll
@@ -22,16 +32,15 @@ using System.ComponentModel;
 using System.Drawing;
 
 // This FTP library is based on a similar C# library found on "The Code Project" web site originally written by
-// Alex Kwok, the enhanced by Uwe Keim.  It was translated into VB with most of classes being renamed
-// (removed Ftp prefix) and the namespace was changed to TVA.Ftp. Many bug fixes, additions and modifications
-// have been made to this code as well as extensive testing.  Note worthy changes:  converted the C# delegates
-// to standard .NET events for ease of use, made the library work with IIS based FTP servers that were in Unix
-// mode, added detailed file system information for FTP files and directories (size, timestamp, etc), coverted
-// FTP session into a component that could be dragged onto a design surface, created an FTP FileWatcher
-// component and an FTP file system crawler based on this library - JRC
-
-// JRC 2008: Now we're back to C# and I replaced the "Ftp" prefix to the classes for to satisfy uniqueness
-// in type name constraint coming from code analysis.
+// Alex Kwok (no license specified), then enhanced by Uwe Keim (licensed under The Code Project Open License).
+// TVA translated the code into VB with most of classes being renamed (removed Ftp prefix) and the namespace was
+// changed to TVA.Ftp. Many bug fixes, additions and modifications have been made to this code as well as extensive
+// testing.  Note worthy changes:  converted the C# delegates to standard .NET events for ease of use, made the
+// library work with IIS based FTP servers that were in Unix mode, added detailed file system information for FTP
+// files and directories (size, timestamp, etc), converted FTP session into a component that could be dragged onto
+// a design surface, created an FTP FileWatcher component and an FTP file system crawler based on this library.
+// In 2008 we migrated the entire code set to C# and restored the original "Ftp" prefix to the classes for to
+// satisfy uniqueness in type name constraint coming from code analysis.
 
 namespace TVA.Net.Ftp
 {

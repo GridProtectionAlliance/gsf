@@ -8,6 +8,18 @@
 //       Phone: 423-751-2250
 //       Email: pcpatel@tva.gov
 //
+//   ------------------------------------------------------------------------------
+//
+//   Code based on the following project:
+//        User Friendly ASP.NET Exception Handling
+//        http://www.codeproject.com/KB/aspnet/ASPNETExceptionHandling.aspx
+//        Copyright Jeff Atwood
+//  
+//   The Code Project Open License (CPOL):
+//        http://www.codeproject.com/info/cpol10.aspx
+//
+//   ------------------------------------------------------------------------------
+//
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  04/03/2007 - Pinal C. Patel
