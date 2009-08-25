@@ -344,7 +344,7 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, encrypt value
             if (GetEncryptStatus(name))
-                return value.Encrypt(GenerateEncryptionKey(name), CipherStrength.Level6);
+                return value.Encrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
 
             return value;
         }
@@ -354,7 +354,7 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, decrypt value
             if (GetEncryptStatus(name))
-                return value.Decrypt(GenerateEncryptionKey(name), CipherStrength.Level6);
+                return value.Decrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
 
             return value;
         }

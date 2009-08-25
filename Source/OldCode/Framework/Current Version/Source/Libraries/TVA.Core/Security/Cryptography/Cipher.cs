@@ -68,10 +68,7 @@ namespace TVA.Security.Cryptography
         Level4,
         /// <summary>Adds simple bit-rotation based encryption.</summary>
         /// <remarks>This is a proprietary encryption algorithm.</remarks>
-        Level5,
-        /// <summary>Adds classic pkzip based encryption.</summary>
-        /// <remarks>This is a common encryption algorithm.</remarks>
-        Level6
+        Level5
     }
 
     #endregion
@@ -199,10 +196,6 @@ namespace TVA.Security.Cryptography
                         if (strength >= CipherStrength.Level5)
                         {
                             source = Obfuscate(source, 0, source.Length, key);
-                            if (strength >= CipherStrength.Level6)
-                            {
-                                source = LegalKeyEncrypt(new Pkzip.PkzipClassicManaged(), source, 0, source.Length, key, iv);
-                            }
                         }
                     }
                 }
@@ -440,13 +433,6 @@ namespace TVA.Security.Cryptography
                 return source;
 
             // Performs requested levels of decryption.
-            if (strength >= CipherStrength.Level6)
-            {
-                source = LegalKeyDecrypt(new Pkzip.PkzipClassicManaged(), source, startIndex, length, key, iv);
-                startIndex = 0;
-                length = source.Length;
-            }
-
             if (strength >= CipherStrength.Level5)
             {
                 source = Deobfuscate(source, startIndex, length, key);

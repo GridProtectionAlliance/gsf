@@ -25,31 +25,6 @@ namespace TVA.IO.Checksums
     [CLSCompliant(false)]
     public static class ChecksumExtensions
     {
-        /// <summary>Calculates the Adler32 check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <remarks>
-        /// <para>
-        /// Computes Adler32 checksum for a stream of data. An Adler32 checksum is not as reliable as a CRC32
-        /// checksum, but a lot faster to compute.
-        /// </para>
-        /// <para>
-        /// The specification for Adler32 may be found in RFC 1950. ZLIB Compressed Data Format Specification
-        /// version 3.3.
-        /// </para>
-        /// </remarks>
-        /// <returns>Computed Adler32 checksum over the specified portion of the buffer.</returns>
-        public static uint Adler32Checksum(this byte[] data, int startIndex, int length)
-        {
-            Adler32 checksum = new Adler32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
         /// <summary>Calculates the CRC16 check-sum on specified portion of a buffer.</summary>
         /// <param name="data">Data buffer to perform check-sum on.</param>
         /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
@@ -106,25 +81,6 @@ namespace TVA.IO.Checksums
         /// perform check-sum over.</param>
         /// <returns>Computed CRC32 checksum over the specified portion of the buffer.</returns>
         public static uint Crc32Checksum(this byte[] data, int startIndex, int length)
-        {
-            Crc32 checksum = new Crc32();
-
-            checksum.Update(data, startIndex, length);
-
-            return checksum.Value;
-        }
-
-        /// <summary>Calculates the StrangeCRC check-sum on specified portion of a buffer.</summary>
-        /// <param name="data">Data buffer to perform check-sum on.</param>
-        /// <param name="startIndex">Starts index in data buffer to begin check-sum.</param>
-        /// <param name="length">Total number of bytes from <paramref name="startIndex">startIndex</paramref> to
-        /// perform check-sum over.</param>
-        /// <remarks>
-        /// The StrangeCRC is used by BZip library algorithms which are specifically used for
-        /// lossless, block-sorting data compression.
-        /// </remarks>
-        /// <returns>Computed StrangeCRC checksum over the specified portion of the buffer.</returns>
-        public static uint StrangeCrcChecksum(this byte[] data, int startIndex, int length)
         {
             Crc32 checksum = new Crc32();
 

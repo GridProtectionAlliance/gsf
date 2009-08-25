@@ -54,7 +54,7 @@ namespace TVA.IO
         {
             MemoryStream outStream = new MemoryStream();
 
-            CopyStream(source, outStream);
+            source.CopyStream(outStream);
 
             return outStream.ToArray();
         }

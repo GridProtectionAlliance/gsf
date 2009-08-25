@@ -51,9 +51,9 @@ namespace TVA.IO.Checksums
     /// <para>        16   15   2    1</para>
     /// <para>G(X) = X  + X  + X  + X</para>
     /// </remarks>
-    public sealed class Crc16 : IChecksum
+    public sealed class Crc16
 	{			
-		#region [ Members]
+		#region [ Members ]
 
 		// Constants
 		private const ushort Crc16Seed = 0x0000;
@@ -106,14 +106,6 @@ namespace TVA.IO.Checksums
 			}
 		}
 
-		long IChecksum.Value
-		{
-			get
-			{
-				return (long)crc;
-			}
-		}
-
 		#endregion
 
 		#region [ Methods ]
@@ -139,7 +131,7 @@ namespace TVA.IO.Checksums
 		}
 
 		/// <summary>
-		/// Updates the checksum with the int bval.
+		/// Updates the checksum with the byte value.
 		/// </summary>
         /// <param name="value">The <see cref="Byte"/> value to use for the update.</param>
 		public void Update(byte value)
@@ -149,11 +141,6 @@ namespace TVA.IO.Checksums
             temp = (ushort)(crc ^ temp);
             crc = (ushort)((crc >> 8) ^ CrcTable[temp & 0xFF]);
         }
-
-		void IChecksum.Update(int value)
-		{
-			Update((byte)value);
-		}
 
 		/// <summary>
 		/// Updates the checksum with the bytes taken from the array.
@@ -170,9 +157,9 @@ namespace TVA.IO.Checksums
 		/// <summary>
 		/// Adds the byte array to the data checksum.
 		/// </summary>
-		/// <param name = "buffer">The buffer which contains the data</param>
-		/// <param name = "offset">The offset in the buffer where the data starts</param>
-		/// <param name = "count">The number of data bytes to update the CRC with.</param>
+		/// <param name="buffer">The buffer which contains the data</param>
+		/// <param name="offset">The offset in the buffer where the data starts</param>
+		/// <param name="count">The number of data bytes to update the CRC with.</param>
 		public void Update(byte[] buffer, int offset, int count)
 		{
 			if (buffer == null)

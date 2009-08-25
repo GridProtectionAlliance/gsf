@@ -23,7 +23,7 @@ namespace TVA.IO.Checksums
 {
     /// <summary>Calculates word length (16-bit) XOR-based check-sum on specified portion of a buffer.</summary>
     [CLSCompliant(false)]
-    public sealed class Xor16 : IChecksum
+    public sealed class Xor16
     {
         #region [ Members ]
 
@@ -58,14 +58,6 @@ namespace TVA.IO.Checksums
             }
         }
 
-        long IChecksum.Value
-        {
-            get
-            {
-                return m_checksum;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -85,11 +77,6 @@ namespace TVA.IO.Checksums
         public void Update(ushort value)
         {
             m_checksum ^= value;
-        }
-        
-        void IChecksum.Update(int value)
-        {
-            Update((ushort)value);
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ namespace TVA.IO.Compression
         /// <param name="destinationFileName">Destination file name.</param>
         public static void Compress(String sourceFileName, String destinationFileName)
         {
-            Compress(sourceFileName, destinationFileName, CompressionStrength.DefaultCompression);
+            Compress(sourceFileName, destinationFileName, CompressionStrength.Standard);
         }
 
         /// <summary>

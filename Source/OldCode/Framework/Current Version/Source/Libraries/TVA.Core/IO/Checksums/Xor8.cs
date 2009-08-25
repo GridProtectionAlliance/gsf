@@ -22,7 +22,7 @@ using System;
 namespace TVA.IO.Checksums
 {
     /// <summary>Calculates byte length (8-bit) XOR-based check-sum on specified portion of a buffer.</summary>
-    public sealed class Xor8 : IChecksum
+    public sealed class Xor8
     {
         #region [ Members ]
 
@@ -57,14 +57,6 @@ namespace TVA.IO.Checksums
             }
         }
 
-        long IChecksum.Value
-        {
-            get
-            {
-                return m_checksum;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -84,11 +76,6 @@ namespace TVA.IO.Checksums
         public void Update(byte value)
         {
             m_checksum ^= value;
-        }
-        
-        void IChecksum.Update(int value)
-        {
-            Update((byte)value);
         }
 
         /// <summary>

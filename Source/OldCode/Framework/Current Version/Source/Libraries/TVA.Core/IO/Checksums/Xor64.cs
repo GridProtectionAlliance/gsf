@@ -23,7 +23,7 @@ namespace TVA.IO.Checksums
 {
     /// <summary>Calculates quad-word length (64-bit) XOR-based check-sum on specified portion of a buffer.</summary>
     [CLSCompliant(false)]
-    public sealed class Xor64 : IChecksum
+    public sealed class Xor64
     {
         #region [ Members ]
 
@@ -58,14 +58,6 @@ namespace TVA.IO.Checksums
             }
         }
 
-        long IChecksum.Value
-        {
-            get
-            {
-                return (long)m_checksum;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -85,11 +77,6 @@ namespace TVA.IO.Checksums
         public void Update(ulong value)
         {
             m_checksum ^= value;
-        }
-        
-        void IChecksum.Update(int value)
-        {
-            Update((ulong)value);
         }
 
         /// <summary>

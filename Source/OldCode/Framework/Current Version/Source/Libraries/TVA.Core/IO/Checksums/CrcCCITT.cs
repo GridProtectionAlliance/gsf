@@ -28,7 +28,7 @@ namespace TVA.IO.Checksums
     /// This is a table based 16-bit CRC popular for modem protocols defined for use by the
     /// Consultative Committee on International Telegraphy and Telephony (CCITT) 
     /// </remarks>
-    public sealed class CrcCCITT : IChecksum
+    public sealed class CrcCCITT
 	{	
 		#region [ Members ]
 
@@ -71,14 +71,6 @@ namespace TVA.IO.Checksums
             }
         }
 
-        long IChecksum.Value
-        {
-            get
-            {
-                return (long)crc;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -98,11 +90,6 @@ namespace TVA.IO.Checksums
         public void Update(byte value)
         {
             crc = (ushort)((crc << 8) ^ CrcTable[((crc >> 8) ^ value) & 0xff]);
-        }
-
-        void IChecksum.Update(int value)
-        {
-            Update((byte)value);
         }
 
         /// <summary>

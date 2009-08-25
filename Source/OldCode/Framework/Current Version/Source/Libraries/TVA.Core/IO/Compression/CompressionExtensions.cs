@@ -19,38 +19,38 @@
 
 using System;
 using System.IO;
-using TVA.IO.Compression.Zip.Algorithms;
+using System.IO.Compression;
 
 namespace TVA.IO.Compression
 {
     #region [ Enumerations ]
 
     /// <summary>
-    /// Specifies the level of compression to be performed on data.
+    /// Level of compression enumeration.
     /// </summary>
     /// <remarks>
     /// Compression strengths represent tradeoffs on speed of compression vs. effectiveness of compression.
     /// </remarks>
     public enum CompressionStrength
     {
-        /// <summary>Use default compression (balanced mix of strength vs. speed).</summary>
-        DefaultCompression = -1,
-        /// <summary>Turns off compression.</summary>
+        /// <summary>Disables compression.</summary>
         NoCompression = 0,
-        /// <summary>Enables best speed.</summary>
-        BestSpeed = 1,
-        /// <summary>Enables best compression.</summary>
-        BestCompression = 9,
-        /// <summary>Enables multi-pass compression (using BestCompression level) to continue recompressing buffer as long as size continues to shrink.</summary>
-        MultiPass = 10
+        /// <summary>Enables standard compression.</summary>
+        Standard = 1,
+        /// <summary>Enables multi-pass compression to continue recompressing buffer as long as size continues to shrink.</summary>
+        MultiPass = 2
     }
 
     #endregion
 
-    /// <summary>Defines extension functions related to compression.</summary>
+    /// <summary>
+    /// Defines extension functions related to compression.
+    /// </summary>
     public static class CompressionExtensions
     {
-        /// <summary>Default compression buffer size.</summary>
+        /// <summary>
+        /// Default compression buffer size.
+        /// </summary>
         // A 256K buffer size produces very good compression, slightly better than WinZip (~2%) when using the
         // CompressFile function with CompressLevel.BestCompression.  To achieve best results zlib needs a
         // sizeable buffer to work with, however when these buffers are needed in the code they are created on
@@ -58,33 +58,40 @@ namespace TVA.IO.Compression
         // buffer size if you intend on running this code on an embedded device.
         public const int BufferSize = 262144;
 
-        /// <summary>Needed version of this library to uncompress stream (1.0.0 stored as byte 100).</summary>
+        /// <summary>
+        /// Needed version of this library to uncompress stream (1.0.0 stored as byte 100).
+        /// </summary>
         public const byte CompressionVersion = 100;
-
-
-        /// <summary>Compress a byte array using default compression strength.</summary>
+        
+        /// <summary>
+        /// Compress a byte array using standard compression method.
+        /// </summary>
         /// <param name="source">The <see cref="Byte"/> array to compress.</param>
-        /// <returns>A <see cref="Byte"/> array.</returns>
+        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source)
         {
-	        return source.Compress(CompressionStrength.DefaultCompression);
+	        return source.Compress(CompressionStrength.Standard);
         }
 
-        /// <summary>Compress a byte array using specified compression strength.</summary>
+        /// <summary>
+        /// Compress a byte array using specified compression method.
+        /// </summary>
         /// <param name="source">The <see cref="Byte"/> array to compress.</param>
         /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
-        /// <returns>A <see cref="Byte"/> array.</returns>
+        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, CompressionStrength strength)
         {
             return source.Compress(0, source.Length, strength, 0);
         }
 
-        /// <summary>Compress a byte array using specified compression strength.</summary>
+        /// <summary>
+        /// Compress a byte array using specified compression method.
+        /// </summary>
         /// <param name="source">The <see cref="Byte"/> array to compress.</param>
-        /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
         /// <param name="length">The number of bytes to read into the byte array for compression.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
-        /// <returns>A <see cref="Byte"/> array.</returns>
+        /// <param name="strength">The specified <see cref="CompressionStrength"/>.</param>
+        /// <returns>A compressed version of the source <see cref="Byte"/> array.</returns>
         public static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength)
         {
 	        return source.Compress(startIndex, length, strength, 0);
@@ -94,16 +101,16 @@ namespace TVA.IO.Compression
         // this can often produce better compression results
         private static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength, int compressionDepth)
         {
-	        // zlib requests destination buffer to be 0.1% and 12 bytes larger than source stream...
-            int destinationLength = length + (int)(length * 0.001) + 12;
-	        byte[] destination = new byte[destinationLength];
+            // Create a new compression deflater
+            MemoryStream compressedData = new MemoryStream();
+            DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress);
 
-            // Create a new zip deflater
-            Deflater deflater = new Deflater(strength > CompressionStrength.BestCompression ? CompressionStrength.BestCompression : strength);
+            // Provide data for compression
+            deflater.Write(source, startIndex, length);
+            deflater.Close();
 
-            deflater.SetInput(source, startIndex, length);
-            deflater.Finish();
-            destinationLength = deflater.Deflate(destination);
+            byte[] destination = compressedData.ToArray();
+            int destinationLength = destination.Length;
         
 	        // Preprend compression depth and extract only used part of compressed buffer
 	        byte[] outBuffer = new byte[++destinationLength];	
@@ -126,7 +133,9 @@ namespace TVA.IO.Compression
 		        return outBuffer;
         }
 
-        /// <summary>Compress a stream using specified compression strength</summary>
+        /// <summary>
+        /// Compress a stream using specified compression strength.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the compressed results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -142,7 +151,9 @@ namespace TVA.IO.Compression
 	        return destination;
         }
 
-        /// <summary>Compress a stream onto given output stream using specified compression strength.</summary>
+        /// <summary>
+        /// Compress a stream onto given output stream using specified compression strength.
+        /// </summary>
         /// <param name="source">The <see cref="Stream"/> to compress.</param>
         /// <param name="strength">The <see cref="CompressionStrength"/> of the compression.</param>
         /// <param name="destination">The <see cref="Stream"/> destination.</param>
@@ -207,7 +218,20 @@ namespace TVA.IO.Compression
 	        }
         }
 
-        /// <summary>Uncompress a byte array.</summary>
+        /// <summary>
+        /// Decompress a byte array.
+        /// </summary>
+        /// <param name="source">The <see cref="Byte"/> array to decompress.</param>
+        /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
+        /// <returns>A decompressed version of the source <see cref="Byte"/> array.</returns>
+        public static byte[] Decompress(this byte[] source, int uncompressedSize)
+        {
+            return source.Decompress(0, source.Length, uncompressedSize);
+        }
+
+        /// <summary>
+        /// Decompress a byte array.
+        /// </summary>
         /// <remarks>
         /// <para>
         /// Uncompressed buffer size is requested because we must allocate a buffer large enough to hold resultant uncompressed
@@ -219,17 +243,20 @@ namespace TVA.IO.Compression
         /// take advantage of this functionality when compressing and decompressing buffers.
         /// </para>
         /// </remarks>
-        /// <param name="source">The <see cref="Byte"/> array of the source.</param>
+        /// <param name="source">The <see cref="Byte"/> array to decompress.</param>
+        /// <param name="length">The number of bytes to read into the byte array for compression.</param>
+        /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
         /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
         /// <returns>A decompressed <see cref="Byte"/> array.</returns>
-        public static byte[] Decompress(this byte[] source, int uncompressedSize)
+        public static byte[] Decompress(this byte[] source, int startIndex, int length, int uncompressedSize)
         {
-            int destinationLength;
-	        byte[] destination = new byte[uncompressedSize];
+            // Create a new decompression deflater
+            MemoryStream compressedData = new MemoryStream(source);
+            DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
 
-            Inflater inflater = new Inflater();
-            inflater.SetInput(source, 1, source.Length -1); // Skip compression depth marker
-            destinationLength = inflater.Inflate(destination);
+            // Read uncompressed data
+            byte[] destination = inflater.ReadStream();
+            int destinationLength = destination.Length;
 
             // Extract only used part of compressed buffer
             if (destinationLength != uncompressedSize)
@@ -243,7 +270,9 @@ namespace TVA.IO.Compression
                 return destination;
         }
 
-        /// <summary>Uncompress a stream.</summary>
+        /// <summary>
+        /// Decompress a stream.
+        /// </summary>
         /// <remarks>
         /// This returns a memory stream of the uncompressed results, if the incoming stream is
         /// very large this will consume a large amount memory.  In this case use the overload
@@ -258,7 +287,9 @@ namespace TVA.IO.Compression
 	        return destination;
         }
 
-        /// <summary>Uncompress a stream onto given output stream.</summary>
+        /// <summary>
+        /// Decompress a stream onto given output stream.
+        /// </summary>
         /// <param name="source">A source <see cref="Stream"/> to decompress.</param>
         /// <param name="destination">The destination <see cref="Stream"/> to decompress to.</param>
         /// <param name="progressHandler">A <see cref="Action"/> handler to monitor the action's progress.</param>
