@@ -238,7 +238,7 @@ namespace TVA.IO.Compression
         public static byte[] Decompress(this byte[] source, int startIndex, int length)
         {
             // Create a new decompression deflater
-            MemoryStream compressedData = new MemoryStream(source, startIndex, length);
+            MemoryStream compressedData = new MemoryStream(source, startIndex + 1, length - 1);
             DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
 
             // Read uncompressed data
