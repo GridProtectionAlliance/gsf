@@ -222,50 +222,32 @@ namespace TVA.IO.Compression
         /// Decompress a byte array.
         /// </summary>
         /// <param name="source">The <see cref="Byte"/> array to decompress.</param>
-        /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
         /// <returns>A decompressed version of the source <see cref="Byte"/> array.</returns>
-        public static byte[] Decompress(this byte[] source, int uncompressedSize)
+        public static byte[] Decompress(this byte[] source)
         {
-            return source.Decompress(0, source.Length, uncompressedSize);
+            return source.Decompress(0, source.Length);
         }
 
         /// <summary>
         /// Decompress a byte array.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// Uncompressed buffer size is requested because we must allocate a buffer large enough to hold resultant uncompressed
-        /// data and user will have a better idea of what this will be since they compressed the original data.
-        /// </para>
-        /// <para>
-        /// Note that the <see cref="Stream"/> extensions will automatically serialize the compressed size into the data stream
-        /// making it unnecessary to track this value for large buffers.  You can simply use <c>new MemoryStream(byte[])</c> to
-        /// take advantage of this functionality when compressing and decompressing buffers.
-        /// </para>
-        /// </remarks>
         /// <param name="source">The <see cref="Byte"/> array to decompress.</param>
         /// <param name="length">The number of bytes to read into the byte array for compression.</param>
         /// <param name="startIndex">An <see cref="Int32"/> representing the start index of the byte array.</param>
-        /// <param name="uncompressedSize">An <see cref="Int32"/> representing the source's uncompressed size.</param>
         /// <returns>A decompressed <see cref="Byte"/> array.</returns>
-        public static byte[] Decompress(this byte[] source, int startIndex, int length, int uncompressedSize)
+        public static byte[] Decompress(this byte[] source, int startIndex, int length)
         {
             // Create a new decompression deflater
-            MemoryStream compressedData = new MemoryStream(source);
+            MemoryStream compressedData = new MemoryStream(source, startIndex, length);
             DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
 
             // Read uncompressed data
             byte[] destination = inflater.ReadStream();
-            int destinationLength = destination.Length;
-
-            // Extract only used part of compressed buffer
-            if (destinationLength != uncompressedSize)
-                destination = destination.BlockCopy(0, destinationLength);
 
 	        // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
 	        // so we cycle through the needed uncompressions to get back to the original data
 	        if (source[0] > 0)
-                return destination.Decompress(uncompressedSize);
+                return destination.Decompress();
 	        else
                 return destination;
         }
@@ -345,7 +327,7 @@ namespace TVA.IO.Compression
 				        if (read > 0)
 				        {
 					        // Uncompress buffer
-					        outBuffer = inBuffer.Decompress(BufferSize);
+					        outBuffer = inBuffer.Decompress();
 					        destination.Write(outBuffer, 0, outBuffer.Length);
 				        }
 
