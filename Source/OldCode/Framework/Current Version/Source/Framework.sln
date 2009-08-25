@@ -44,7 +44,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcasterConsole", "
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 8
+		SccNumberOfProjects = 10
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs07.codeplex.com/
 		SccLocalPath0 = .
@@ -76,6 +76,14 @@ Global
 		SccProjectTopLevelParentUniqueName7 = Framework.sln
 		SccProjectName7 = Tools/ConfigCrypter
 		SccLocalPath7 = Tools\\ConfigCrypter
+		SccProjectUniqueName8 = Tools\\UDPRebroadcaster\\UDPRebroadcaster\\UDPRebroadcaster.csproj
+		SccProjectTopLevelParentUniqueName8 = Framework.sln
+		SccProjectName8 = Tools/UDPRebroadcaster/UDPRebroadcaster
+		SccLocalPath8 = Tools\\UDPRebroadcaster\\UDPRebroadcaster
+		SccProjectUniqueName9 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole\\UDPRebroadcasterConsole.csproj
+		SccProjectTopLevelParentUniqueName9 = Framework.sln
+		SccProjectName9 = Tools/UDPRebroadcaster/UDPRebroadcasterConsole
+		SccLocalPath9 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
