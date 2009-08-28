@@ -341,7 +341,7 @@ namespace TVA.Measurements.Routing
             string setting;
 
             // Load required parameters
-            base.FramesPerSecond = int.Parse(settings["expectedFramesPerSecond"]);
+            base.FramesPerSecond = int.Parse(settings["framesPerSecond"]);
             base.LagTime = double.Parse(settings["lagTime"]);
             base.LeadTime = double.Parse(settings["leadTime"]);
 

@@ -22,7 +22,7 @@ using System;
 namespace TVA.Measurements
 {
     /// <summary>
-    /// Abstract measurement interface representing a value measured by a device at an extact time.
+    /// Represents an interface for an abstract measurement value measured by a device at an extact time.
     /// </summary>
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
@@ -31,41 +31,46 @@ namespace TVA.Measurements
     public interface IMeasurement : IEquatable<IMeasurement>, IComparable<IMeasurement>, IComparable
     {
         /// <summary>
-        /// Gets or sets the numeric ID of this measurement.
+        /// Gets or sets the numeric ID of this <see cref="IMeasurement"/>.
         /// </summary>
         /// <remarks>
         /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to Source, typically creates the primary key for a measurement.</para>
+        /// <para>Note that this field, in addition to Source, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
         /// </remarks>
         uint ID { get; set; }
 
         /// <summary>
-        /// Gets or sets the source of this measurement.
+        /// Gets or sets the source of this <see cref="IMeasurement"/>.
         /// </summary>
         /// <remarks>
         /// <para>In most implementations, this will be a required field.</para>
-        /// <para>Note that this field, in addition to ID, typically creates the primary key for a measurement.</para>
-        /// <para>This value is typically used to track the archive name in which measurement is stored.</para>
+        /// <para>Note that this field, in addition to ID, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
+        /// <para>This value is typically used to track the archive name in which <see cref="IMeasurement"/> is stored.</para>
         /// </remarks>
         string Source { get; set; }
 
         /// <summary>
-        /// Returns the primary key of this measurement.
+        /// Returns the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
         MeasurementKey Key { get; }
 
         /// <summary>
-        /// Gets or sets the text based tag name of this measurement.
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="IMeasurement"/>, if available.
+        /// </summary>
+        Guid SignalID { get; set; }
+
+        /// <summary>
+        /// Gets or sets the text based tag name of this <see cref="IMeasurement"/>.
         /// </summary>
         string TagName { get; set; }
 
         /// <summary>
-        /// Gets or sets the raw value of this measurement (i.e., the numeric value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).
+        /// Gets or sets the raw value of this <see cref="IMeasurement"/> (i.e., the numeric value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).
         /// </summary>
         double Value { get; set; }
 
         /// <summary>
-        /// Gets the adjusted numeric value of this measurement, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
+        /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
         /// </summary>
         /// <remarks>
         /// <para>Implementors need to account for <see cref="Adder"/> and <see cref="Multiplier"/> in return value, e.g.:<br/>
@@ -75,7 +80,7 @@ namespace TVA.Measurements
         double AdjustedValue { get; }
 
         /// <summary>
-        /// Defines an offset to add to the measurement value.
+        /// Defines an offset to add to the <see cref="IMeasurement"/> value.
         /// </summary>
         /// <remarks>
         /// Implementors should make sure this value defaults to zero.
@@ -83,7 +88,7 @@ namespace TVA.Measurements
         double Adder { get; set; }
 
         /// <summary>
-        /// Defines a mulplicative offset to apply to the measurement value.
+        /// Defines a mulplicative offset to apply to the <see cref="IMeasurement"/> value.
         /// </summary>
         /// <remarks>
         /// Implementors should make sure this value defaults to one.
@@ -91,7 +96,7 @@ namespace TVA.Measurements
         double Multiplier { get; set; }
 
         /// <summary>
-        /// Gets or sets exact timestamp, in ticks, of the data represented by this measurement.
+        /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="IMeasurement"/>.
         /// </summary>
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -99,12 +104,12 @@ namespace TVA.Measurements
         Ticks Timestamp { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the numeric value of this measurement is good.
+        /// Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="IMeasurement"/> is good.
         /// </summary>
         bool ValueQualityIsGood { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the timestamp of this measurement is good.
+        /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
         /// </summary>
         bool TimestampQualityIsGood { get; set; }
     }

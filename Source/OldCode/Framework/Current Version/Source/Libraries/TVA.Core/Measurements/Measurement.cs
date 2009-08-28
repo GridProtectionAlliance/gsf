@@ -36,6 +36,7 @@ namespace TVA.Measurements
         private uint m_id;
         private string m_source;
         private MeasurementKey m_key;
+        private Guid m_signalID;
         private string m_tagName;
         private Ticks m_timestamp;
         private double m_value;
@@ -52,7 +53,7 @@ namespace TVA.Measurements
         /// Constructs a new <see cref="Measurement"/> using default settings.
         /// </summary>
         public Measurement()
-            : this(uint.MaxValue, "__", double.NaN, 0.0, 1.0, 0)
+            : this(uint.MaxValue, "__", Guid.Empty, double.NaN, 0.0, 1.0, 0)
         {
         }
 
@@ -62,7 +63,16 @@ namespace TVA.Measurements
         /// <param name="id">Numeric ID of the new measurement.</param>
         /// <param name="source">Source name of the new measurement.</param>
         public Measurement(uint id, string source)
-            : this(id, source, double.NaN, 0.0, 1.0, 0)
+            : this(id, source, Guid.Empty, double.NaN, 0.0, 1.0, 0)
+        {
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
+        /// </summary>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
+        public Measurement(Guid signalID)
+            : this(uint.MaxValue, "__", signalID, double.NaN, 0.0, 1.0, 0)
         {
         }
 
@@ -74,7 +84,18 @@ namespace TVA.Measurements
         /// <param name="value">Value of the new measurement.</param>
         /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
         public Measurement(uint id, string source, double value, Ticks timestamp)
-            : this(id, source, value, 0.0, 1.0, timestamp)
+            : this(id, source, Guid.Empty, value, 0.0, 1.0, timestamp)
+        {
+        }
+
+        /// <summary>
+        /// Constructs a new <see cref="Measurement"/> given the specified parameters.
+        /// </summary>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
+        /// <param name="value">Value of the new measurement.</param>
+        /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
+        public Measurement(Guid signalID, double value, Ticks timestamp)
+            : this(uint.MaxValue, "__", signalID, value, 0.0, 1.0, timestamp)
         {
         }
 
@@ -87,7 +108,7 @@ namespace TVA.Measurements
         /// <param name="adder">Defined adder to apply to the new measurement.</param>
         /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
         public Measurement(uint id, string source, string tagName, double adder, double multiplier)
-            : this(id, source, double.NaN, adder, multiplier, 0)
+            : this(id, source, Guid.Empty, double.NaN, adder, multiplier, 0)
         {
             m_tagName = tagName;
         }
@@ -97,15 +118,17 @@ namespace TVA.Measurements
         /// </summary>
         /// <param name="id">Numeric ID of the new measurement.</param>
         /// <param name="source">Source name of the new measurement.</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of the new measurement.</param>
         /// <param name="value">Value of the new measurement.</param>
         /// <param name="adder">Defined adder to apply to the new measurement.</param>
         /// <param name="multiplier">Defined multiplier to apply to the new measurement.</param>
         /// <param name="timestamp">Timestamp, in ticks, of the new measurement.</param>
-        public Measurement(uint id, string source, double value, double adder, double multiplier, Ticks timestamp)
+        public Measurement(uint id, string source, Guid signalID, double value, double adder, double multiplier, Ticks timestamp)
         {
             m_id = id;
             m_source = source;
             m_key = new MeasurementKey(m_id, m_source);
+            m_signalID = signalID;
             m_value = value;
             m_adder = adder;
             m_multiplier = multiplier;
@@ -173,6 +196,21 @@ namespace TVA.Measurements
             get
             {
                 return m_key;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="Measurement"/>, if available.
+        /// </summary>
+        public virtual Guid SignalID
+        {
+            get
+            {
+                return m_signalID;
+            }
+            set
+            {
+                m_signalID = value;
             }
         }
 
@@ -466,7 +504,7 @@ namespace TVA.Measurements
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, measurementToClone.Timestamp);
         }
 
         /// <summary>
@@ -477,7 +515,7 @@ namespace TVA.Measurements
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, Ticks timestamp)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, measurementToClone.Value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
 
         /// <summary>
@@ -489,7 +527,7 @@ namespace TVA.Measurements
         /// <returns>A copy of the <see cref="Measurement"/> object.</returns>
         public static Measurement Clone(IMeasurement measurementToClone, double value, Ticks timestamp)
         {
-            return new Measurement(measurementToClone.ID, measurementToClone.Source, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
+            return new Measurement(measurementToClone.ID, measurementToClone.Source, measurementToClone.SignalID, value, measurementToClone.Adder, measurementToClone.Multiplier, timestamp);
         }
 
         /// <summary>

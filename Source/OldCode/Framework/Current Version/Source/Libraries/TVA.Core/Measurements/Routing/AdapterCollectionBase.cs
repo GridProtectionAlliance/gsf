@@ -400,12 +400,12 @@ namespace TVA.Measurements.Routing
                 throw new NullReferenceException(string.Format("Cannot initialize from null adpater DataRow"));
 
             Assembly assembly;
-            string adapterName = "", assemblyName = "", typeName = "", connectionString;
+            string name = "", assemblyName = "", typeName = "", connectionString;
             uint id;
 
             try
             {
-                adapterName = adapterRow["AdapterName"].ToNonNullString("[IAdapter]");
+                name = adapterRow["Name"].ToNonNullString("[IAdapter]");
                 assemblyName = FilePath.GetAbsolutePath(adapterRow["AssemblyName"].ToNonNullString());
                 typeName = adapterRow["TypeName"].ToNonNullString();
                 connectionString = adapterRow["ConnectionString"].ToNonNullString();
@@ -420,7 +420,7 @@ namespace TVA.Measurements.Routing
                 assembly = Assembly.LoadFrom(assemblyName);
                 adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));
 
-                adapter.Name = adapterName;
+                adapter.Name = name;
                 adapter.ID = id;
                 adapter.ConnectionString = connectionString;
                 adapter.DataSource = m_dataSource;
@@ -430,7 +430,7 @@ namespace TVA.Measurements.Routing
             catch (Exception ex)
             {
                 // We report any errors encountered during type creation...
-                OnProcessException(new InvalidOperationException(string.Format("Failed to load adapter \"{0}\" [{1}] from \"{2}\": {3}", adapterName, typeName, assemblyName, ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Failed to load adapter \"{0}\" [{1}] from \"{2}\": {3}", name, typeName, assemblyName, ex.Message), ex));
             }
 
             adapter = default(T);
