@@ -1,20 +1,15 @@
 package TVA.Hadoop.Samples;
 
-
 	import java.io.IOException;
-	import java.util.StringTokenizer;
 	import java.util.ArrayList;
 	import java.util.Iterator;
 	import java.util.List;
-
 
 	import org.apache.hadoop.conf.Configuration;
 	import org.apache.hadoop.conf.Configured;
 	import org.apache.hadoop.fs.Path;
 	import org.apache.hadoop.io.IntWritable;
 	import org.apache.hadoop.io.LongWritable;
-	import org.apache.hadoop.io.DoubleWritable;
-	import org.apache.hadoop.io.Text;
 	import org.apache.hadoop.mapred.FileInputFormat;
 	import org.apache.hadoop.mapred.FileOutputFormat;
 	import org.apache.hadoop.mapred.JobClient;
@@ -27,36 +22,19 @@ package TVA.Hadoop.Samples;
 	import org.apache.hadoop.util.Tool;
 	import org.apache.hadoop.util.ToolRunner;
 
-import TVA.Hadoop.MapReduce.DatAware.DatAwareInputFormat;
-import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
-
-
-
+	import TVA.Hadoop.MapReduce.DatAware.DatAwareInputFormat;
+	import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 
 	public class TestRecordReader extends Configured implements Tool {
 
 		 public static class MapClass extends MapReduceBase implements Mapper<LongWritable, StandardPointFile, IntWritable, StandardPointFile> {
 		    
-			 static enum FooCounter { DISCARDED, MAPPED };
-			 
-		 //   private final static IntWritable one = new IntWritable(1);
-		 //   private Text word = new Text();
-		    private int iCount = 0;
+			static enum ExCounter { DISCARDED, MAPPED };
 		    
 		    public void map(LongWritable key, StandardPointFile value, OutputCollector<IntWritable, StandardPointFile> output, Reporter reporter) throws IOException {
-/*
-		    	if ( this.iCount < 100 ) {
-	*/	    		
-		    		this.iCount++;
-		    		output.collect( new IntWritable( value.iPointID ), value);
-		    		reporter.incrCounter( FooCounter.MAPPED, 1 );
-		/*    		
-		    	} else {
-		    		
-		    		reporter.incrCounter( FooCounter.DISCARDED, 1 );
-		    		
-		    	}
-		  */  	
+
+		    	output.collect( new IntWritable( value.iPointID ), value);
+		    	reporter.incrCounter( ExCounter.MAPPED, 1 );
 		    	
 		    } // map method
 		  
@@ -69,21 +47,16 @@ import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 	    
 	    public void reduce(IntWritable key, Iterator<StandardPointFile> values, OutputCollector<IntWritable, IntWritable> output, Reporter reporter) throws IOException {
 
-	    	float val = 0;
 	    	int count = 0;
 	    	
 	    	while (values.hasNext()) {
 
 	    		count++;
-	    		val = values.next().Value;
+	    		values.next(); // if we dont call next(), we get stuck in an infinite loop
 	    		
-	          }    	
-	    	
+	        }    	
 
 	    	output.collect( key, new IntWritable( count ) );
-	    	
-	
-	    	
 	    	
 	    } // reduce
 	    
@@ -105,7 +78,6 @@ import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 		  
 	    JobConf conf = new JobConf( getConf(), TestRecordReader.class );
 	    conf.setJobName("TestRecordReader");
-	 
 	    
 	    conf.setMapOutputKeyClass(IntWritable.class);
 	    conf.setMapOutputValueClass(StandardPointFile.class);
@@ -114,7 +86,6 @@ import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 	    conf.setReducerClass(Reduce.class);
 	    
 	    conf.setInputFormat( DatAwareInputFormat.class );
-	    
 	    
 	    List<String> other_args = new ArrayList<String>();
 	    for(int i=0; i < args.length; ++i) {
@@ -147,14 +118,13 @@ import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 	        
 	    JobClient.runJob(conf);
 	    
-	    
 	    return 0;
 	  }
 	  
 	  
 	  public static void main(String[] args) throws Exception {
 	    
-		  int res = ToolRunner.run( new Configuration(), new TestRecordReader(), args );
+		int res = ToolRunner.run( new Configuration(), new TestRecordReader(), args );
 	    System.exit(res);
 	    
 	  }
