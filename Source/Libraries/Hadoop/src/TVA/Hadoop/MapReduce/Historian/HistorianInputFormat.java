@@ -12,7 +12,7 @@ import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
  * @author jpatter0
  *
  */
-public class DatAwareInputFormat extends FileInputFormat<LongWritable, StandardPointFile> implements JobConfigurable {
+public class HistorianInputFormat extends FileInputFormat<LongWritable, StandardPointFile> implements JobConfigurable {
 	
 	public void configure(JobConf conf) {
 	
