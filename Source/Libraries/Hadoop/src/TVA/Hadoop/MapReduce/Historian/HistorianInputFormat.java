@@ -5,7 +5,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.*;
 
 import TVA.Hadoop.MapReduce.Historian.HistorianRecordReader;
-import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
+import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
 
 /**
  * Custom InputFormat class for reading DatAware .d files that store smartgrid PMU data

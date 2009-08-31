@@ -1,6 +1,6 @@
 package TVA.Hadoop.MapReduce.Historian.File;
 
-import TVA.Hadoop.MapReduce.DatAware.File.TimeTag;
+import TVA.Hadoop.MapReduce.Historian.File.TimeTag;
 
 public class ArchiveDataBlockPointer {
 	

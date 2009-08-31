@@ -8,9 +8,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.commons.logging.*;
 
-import TVA.Hadoop.MapReduce.DatAware.File.ArchiveFile;
-import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
-import TVA.Hadoop.MapReduce.DatAware.File.ArchiveFile.Reader;
+import TVA.Hadoop.MapReduce.Historian.File.ArchiveFile;
+import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
+import TVA.Hadoop.MapReduce.Historian.File.ArchiveFile.Reader;
 
 /**
  * Basic record reader used to read DatAware .d files; DatAware storage files are the primary storage
