@@ -4,7 +4,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapred.*;
 
-import TVA.Hadoop.MapReduce.DatAware.DatAwareRecordReader;
+import TVA.Hadoop.MapReduce.Historian.HistorianRecordReader;
 import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
 
 /**
@@ -22,7 +22,7 @@ public class HistorianInputFormat extends FileInputFormat<LongWritable, Standard
 	    
 		reporter.setStatus( genericSplit.toString() );
 	
-		return new DatAwareRecordReader( job, (FileSplit)genericSplit );
+		return new HistorianRecordReader( job, (FileSplit)genericSplit );
 	    
 	}
 

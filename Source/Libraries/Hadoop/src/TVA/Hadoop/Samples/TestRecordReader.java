@@ -22,8 +22,8 @@ package TVA.Hadoop.Samples;
 	import org.apache.hadoop.util.Tool;
 	import org.apache.hadoop.util.ToolRunner;
 
-	import TVA.Hadoop.MapReduce.DatAware.DatAwareInputFormat;
-	import TVA.Hadoop.MapReduce.DatAware.File.StandardPointFile;
+	import TVA.Hadoop.MapReduce.Historian.HistorianInputFormat;
+	import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
 
 	public class TestRecordReader extends Configured implements Tool {
 
@@ -85,7 +85,7 @@ package TVA.Hadoop.Samples;
 	    conf.setMapperClass(MapClass.class);        
 	    conf.setReducerClass(Reduce.class);
 	    
-	    conf.setInputFormat( DatAwareInputFormat.class );
+	    conf.setInputFormat( HistorianInputFormat.class );
 	    
 	    List<String> other_args = new ArrayList<String>();
 	    for(int i=0; i < args.length; ++i) {
