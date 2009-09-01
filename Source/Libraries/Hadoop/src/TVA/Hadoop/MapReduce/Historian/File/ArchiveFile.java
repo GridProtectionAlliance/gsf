@@ -145,32 +145,6 @@ public class ArchiveFile {
 				start_block++;
 			}
 
-/*			
-			// now check to see if the block contains points we are actually interested in
-
-			for ( ; start_block < this._FAT._EventBlockCount; start_block++ ) {
-				
-				// scan til we hit a relevant block
-				if (this.BlockIsInLookupTable( start_block )) {
-					//LOG.info("Block[" + start_block + "] is in lookup table -> " + this._FAT._BlockMap.GetBlockPointerByIndex(start_block).iPointID );
-					bFound = true;
-					break;
-				}
-				
-			}
-	*/		
-			
-/*
-			if (!bFound) {
-				
-				this.iCurrentBlockPointIndex = this.iPossiblePointsInBlock;
-
-				//LOG.info(">>> Did not find a relevant block in valid block range, kicking out!" );
-				this.in.seek( this.end );
-				return false;
-				
-			}
-	*/		
 			this.iCurrentBlockIndex = start_block;
 			this.iCurrentBlockPointIndex = 0;
 			long lStartBlockOffset = start_block * block_size;
@@ -349,7 +323,6 @@ public class ArchiveFile {
 	    	val.Flags 		= this.currentPoint.Flags;
 	    	val.iTimeTag 	= this.currentPoint.iTimeTag;
 	    	val.Value 		= this.currentPoint.Value;
-	    	//val.Index 		= this.currentPoint.Index;
 	    	val.iPointID 	= this.currentPoint.iPointID;
 	    	
 	      return val;
