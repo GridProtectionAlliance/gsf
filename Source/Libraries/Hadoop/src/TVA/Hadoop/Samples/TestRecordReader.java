@@ -25,6 +25,13 @@ package TVA.Hadoop.Samples;
 	import TVA.Hadoop.MapReduce.Historian.HistorianInputFormat;
 	import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
 
+	/**
+	 * A simple record reader built to show an example data path for the StandardPointFile type as a value with Map Reduce.
+	 * An actual count MR program could get away without a reduce phase, this example is for demo purposes only.
+	 * 
+	 * @author jpatter0
+	 *
+	 */
 	public class TestRecordReader extends Configured implements Tool {
 
 		 public static class MapClass extends MapReduceBase implements Mapper<LongWritable, StandardPointFile, IntWritable, StandardPointFile> {
