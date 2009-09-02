@@ -501,9 +501,9 @@ namespace TVA.Historian.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Returns a <see cref="MetadataRecord"/> object for this <see cref="SerializableMetadataRecord"/>.
+        /// Returns an <see cref="MetadataRecord"/> object for this <see cref="SerializableMetadataRecord"/>.
         /// </summary>
-        /// <returns>A <see cref="MetadataRecord"/> object.</returns>
+        /// <returns>An <see cref="MetadataRecord"/> object.</returns>
         public MetadataRecord Deflate()
         {
             MetadataRecord metadataRecord = new MetadataRecord(HistorianID);

@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/21/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  09/02/2009 - Pinal C. Patel
+//       Modified ReadData() to take start and end times as strings for flexibility.
 //
 //*******************************************************************************************************
 
@@ -22,6 +24,7 @@ namespace TVA.Historian
     /// <summary>
     /// Defines a repository where time series data is warehoused by a historian.
     /// </summary>
+    /// <seealso cref="IDataPoint"/>
     public interface IArchive
     {
         #region [ Methods ]
@@ -60,10 +63,10 @@ namespace TVA.Historian
         /// Reads time series data from the repository.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
-        /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="startTime"><see cref="System.String"/> representation of the start time (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
+        /// <param name="endTime"><see cref="System.String"/> representation of the end time (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="IDataPoint"/>s.</returns>
-        IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime);
+        IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime);
 
         /// <summary>
         /// Read meta information for the specified <paramref name="historianID"/>.

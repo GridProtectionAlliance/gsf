@@ -24,6 +24,8 @@
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
 //       Modified state alterning properties to reopen the file when changed.
+//  09/02/2009 - Pinal C. Patel
+//       Modified code to prevent writes to dependency files when their access mode doesn't allow writes.
 //
 //*******************************************************************************************************
 
@@ -1344,9 +1346,12 @@ namespace TVA.Historian.Files
                     m_conserveMemoryTimer.Start();
 
                 // Ensure that "rollover in progress" is not set.
-                IntercomRecord system = m_intercomFile.Read(1);
-                system.RolloverInProgress = false;
-                m_intercomFile.Write(1, system);
+                if (m_intercomFile.FileAccessMode != FileAccess.Read)
+                {
+                    IntercomRecord system = m_intercomFile.Read(1);
+                    system.RolloverInProgress = false;
+                    m_intercomFile.Write(1, system);
+                }
 
                 // Start preparing the list of historic files.
                 m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
@@ -1963,7 +1968,7 @@ namespace TVA.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveData"/> points.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime)
         {
-            return ReadData(historianID, Convert.ToDateTime(startTime), Convert.ToDateTime(endTime));
+            return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime));
         }
 
         /// <summary>
@@ -2908,7 +2913,7 @@ namespace TVA.Historian.Files
 
         private void MetadataFile_FileModified(object sender, System.EventArgs e)
         {
-            if (m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
+            if (m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk && m_metadataFile.FileAccessMode != FileAccess.Read)
             {
                 // Since we have more number of records in the Metadata File than in the State File we'll synchronize
                 // the number of records in both the files (very important) by writting a new records to the State

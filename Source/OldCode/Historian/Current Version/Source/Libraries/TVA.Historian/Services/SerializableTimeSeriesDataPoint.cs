@@ -18,6 +18,7 @@
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TVA.Historian.Files;
 
 namespace TVA.Historian.Services
 {
@@ -113,6 +114,20 @@ namespace TVA.Historian.Services
         /// </summary>
         [XmlAttribute(), DataMember(Order = 3)]
         public Quality Quality { get; set; }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Returns an <see cref="IDataPoint"/> object for this <see cref="SerializableTimeSeriesDataPoint"/>.
+        /// </summary>
+        /// <returns>An <see cref="IDataPoint"/> object.</returns>
+        public IDataPoint Deflate()
+        {
+            // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
+            return new ArchiveData(HistorianID, TimeTag.Parse(Time), Value, Quality);
+        }
 
         #endregion
     }

@@ -47,6 +47,9 @@
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.ServiceModel">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.ServiceModel.Web">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -127,6 +130,10 @@
     <Compile Include="MetadataProviders\OleDbMetadataProvider.cs" />
     <Compile Include="MetadataProviders\RestWebServiceMetadataProvider.cs" />
     <Compile Include="OutputAdapter.cs" />
+    <Compile Include="Services\IMetadataService.cs" />
+    <Compile Include="Services\IService.cs" />
+    <Compile Include="Services\ITimeSeriesDataService.cs" />
+    <Compile Include="Services\MetadataService.cs" />
     <Compile Include="Services\SerializableMetadata.cs" />
     <Compile Include="Services\SerializableMetadataRecord.cs" />
     <Compile Include="Notifiers\EmailNotifier.cs" />
@@ -150,6 +157,9 @@
     <Compile Include="Services\SerializableTimeSeriesData.cs" />
     <Compile Include="Services\SerializableTimeSeriesDataPoint.cs" />
     <Compile Include="Services\Serialization.cs" />
+    <Compile Include="Services\ServiceBase.cs" />
+    <Compile Include="Services\Services.cs" />
+    <Compile Include="Services\TimeSeriesDataService.cs" />
     <Compile Include="TimeTag.cs" />
   </ItemGroup>
   <ItemGroup>
