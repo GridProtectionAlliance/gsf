@@ -104,7 +104,7 @@ namespace TVA.Historian
         /// <paramref name="timetag"/> can be specified in one of the following format:
         /// <list type="table">
         ///     <listheader>
-        ///         <term>Time format</term>
+        ///         <term>Time Format</term>
         ///         <description>Format Description</description>
         ///     </listheader>
         ///     <item>
