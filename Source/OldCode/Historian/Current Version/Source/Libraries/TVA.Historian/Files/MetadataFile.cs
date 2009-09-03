@@ -14,9 +14,13 @@
 //       Generated original version of source code.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
+//  09/03/2009 - Pinal C. Patel
+//       Added Read() overload that takes string as its parameter for performing flexible reads.
 //
 //*******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using TVA.IO;
@@ -55,26 +59,41 @@ namespace TVA.Historian.Files
 
         #region [ Methods ]
 
-        //public MetadataRecord Read(string name)
-        //{
-        //    if (IsOpen)
-        //    {
-        //        List<MetadataRecord> records = Read();
-        //        for (int i = 0; i < records.Count; i++)
-        //        {
-        //            if (string.Compare(name, records[i].Name) == 0 || string.Compare(name, records[i].Synonym1) == 0 || string.Compare(name, records[i].Synonym2) == 0)
-        //            {
-        //                return records[i];
-        //            }
-        //        }
-
-        //        return null;
-        //    }
-        //    else
-        //    {
-        //        throw (new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, name)));
-        //    }
-        //}
+        /// <summary>
+        /// Reads <see cref="MetadataRecord"/>s that matches the <paramref name="searchPattern"/>.
+        /// </summary>
+        /// <param name="searchPattern">Comma or semi-colon delimited list of IDs or text for which the matching <see cref="MetadataRecord"/>s are to be retrieved.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="MetadataRecord"/>.</returns>
+        public IEnumerable<MetadataRecord> Read(string searchPattern)
+        {
+            int id;
+            foreach (string searchPart in searchPattern.Split(',', ';'))
+            {
+                // Iterate through all parts.
+                if (int.TryParse(searchPattern, out id))
+                {
+                    // Exact id is specified.
+                    yield return Read(id);
+                }
+                else
+                {
+                    // Text is specfied, so search for matches.
+                    foreach (MetadataRecord record in Read())
+                    {
+                        if (record.Name.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.Synonym1.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.Synonym2.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.Synonym3.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.Description.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.Remarks.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0 ||
+                            record.HardwareInfo.IndexOf(searchPart, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                        {
+                            yield return record;
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Gets the binary size of a <see cref="MetadataRecord"/>.
