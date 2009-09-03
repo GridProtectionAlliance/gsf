@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  08/27/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  09/02/2009 - Pinal C. Patel
+//       Modified configuration of the default WebHttpBinding to enable receiving of large payloads.
 //
 //*******************************************************************************************************
 
@@ -282,8 +284,11 @@ namespace TVA.Historian.Services
                     // Create service host.
                     m_serviceHost = new WebServiceHost(this, new Uri(m_serviceUri));
                     // Add default endpoint.
-                    m_serviceHost.AddServiceEndpoint(Type.GetType(m_serviceContract), new WebHttpBinding(), "");                   
+                    WebHttpBinding webHttpBinding = new WebHttpBinding();
+                    webHttpBinding.MaxReceivedMessageSize = int.MaxValue;
+                    m_serviceHost.AddServiceEndpoint(Type.GetType(m_serviceContract), webHttpBinding, "");
                     OnServiceHostCreated();
+                    // Change serialization behavior.
                     foreach (ServiceEndpoint endpoint in m_serviceHost.Description.Endpoints)
                     {
                         foreach (OperationDescription operation in endpoint.Contract.Operations)
