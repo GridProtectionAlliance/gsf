@@ -27,7 +27,7 @@ namespace TVA.Historian.Services
     /// </summary>
     /// <seealso cref="SerializableMetadata"/>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public class MetadataService : ServiceBase, IMetadataService
+    public class MetadataService : Service, IMetadataService
     {
         #region [ Constructors ]
 
@@ -45,7 +45,7 @@ namespace TVA.Historian.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="ServiceBase.Archive"/>.
+        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="Service.Archive"/>.
         /// </summary>
         /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
         public void WriteMetadataAsXml(SerializableMetadata metadata)
@@ -54,7 +54,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="ServiceBase.Archive"/>.
+        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="Service.Archive"/>.
         /// </summary>
         /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
         public void WriteMetadataAsJson(SerializableMetadata metadata)
@@ -63,7 +63,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads all metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads all metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
         public SerializableMetadata ReadAllMetadataAsXml()
@@ -72,7 +72,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads a subset of metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads a subset of metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
@@ -82,7 +82,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads a subset of metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads a subset of metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
@@ -93,7 +93,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads all metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads all metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
         public SerializableMetadata ReadAllMetadataAsJson()
@@ -102,7 +102,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads a subset of metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads a subset of metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
         /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
@@ -112,7 +112,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads a subset of metadata from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads a subset of metadata from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>

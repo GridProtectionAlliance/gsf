@@ -157,7 +157,7 @@
     <Compile Include="Services\SerializableTimeSeriesData.cs" />
     <Compile Include="Services\SerializableTimeSeriesDataPoint.cs" />
     <Compile Include="Services\Serialization.cs" />
-    <Compile Include="Services\ServiceBase.cs" />
+    <Compile Include="Services\Service.cs" />
     <Compile Include="Services\Services.cs" />
     <Compile Include="Services\TimeSeriesDataService.cs" />
     <Compile Include="TimeTag.cs" />

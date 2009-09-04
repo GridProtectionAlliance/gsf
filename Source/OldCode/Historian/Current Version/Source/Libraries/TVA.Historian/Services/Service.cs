@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ServiceBase.cs
+//  Service.cs
 //  Copyright © 2009 - TVA, all rights reserved - Gbtc
 //
 //  Build Environment: C#, Visual Studio 2008
@@ -28,7 +28,7 @@ namespace TVA.Historian.Services
     /// <summary>
     /// A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
-    public class ServiceBase : IService
+    public class Service : IService
     {
         #region [ Members ]
 
@@ -74,7 +74,7 @@ namespace TVA.Historian.Services
         /// <summary>
         /// Initializes a new instance of the web service.
         /// </summary>
-        protected ServiceBase()
+        protected Service()
         {
             m_serviceContract = this.GetType().Namespace + ".I" + this.GetType().Name;
             m_serviceDataFlow = DataFlowDirection.BothWays;
@@ -85,7 +85,7 @@ namespace TVA.Historian.Services
         /// <summary>
         /// Releases the unmanaged resources before the web service is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~ServiceBase()
+        ~Service()
         {
             Dispose(false);
         }

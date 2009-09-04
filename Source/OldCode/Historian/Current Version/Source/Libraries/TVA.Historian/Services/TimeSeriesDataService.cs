@@ -27,7 +27,7 @@ namespace TVA.Historian.Services
     /// </summary>
     /// <seealso cref="SerializableTimeSeriesData"/>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public class TimeSeriesDataService : ServiceBase, ITimeSeriesDataService
+    public class TimeSeriesDataService : Service, ITimeSeriesDataService
     {
         #region [ Constructors ]
 
@@ -45,7 +45,7 @@ namespace TVA.Historian.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="ServiceBase.Archive"/>.
+        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="Service.Archive"/>.
         /// </summary>
         /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
         public void WriteTimeSeriesDataAsXml(SerializableTimeSeriesData data)
@@ -54,7 +54,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="ServiceBase.Archive"/>.
+        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="Service.Archive"/>.
         /// </summary>
         /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
         public void WriteTimeSeriesDataAsJson(SerializableTimeSeriesData data)
@@ -63,7 +63,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
@@ -73,7 +73,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
@@ -84,7 +84,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
         /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
@@ -94,7 +94,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
@@ -105,7 +105,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
         /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
@@ -117,7 +117,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
@@ -130,7 +130,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
         /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
@@ -142,7 +142,7 @@ namespace TVA.Historian.Services
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="ServiceBase.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
         /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
         /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
