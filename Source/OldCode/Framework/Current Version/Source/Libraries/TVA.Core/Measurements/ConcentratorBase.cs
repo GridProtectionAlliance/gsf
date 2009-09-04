@@ -137,6 +137,41 @@ namespace TVA.Measurements
         /// <summary>
         /// Creates a new <see cref="ConcentratorBase"/>.
         /// </summary>
+        /// <remarks>
+        /// Concentration will not begin until consumer "Starts" concentrator (i.e., calling <see cref="ConcentratorBase.Start"/> method or setting
+        /// <c><see cref="ConcentratorBase.Enabled"/> = true</c>).
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
+        protected ConcentratorBase()
+        {
+#if UseHighResolutionTime
+            m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
+#else
+            m_realTime = DateTime.UtcNow.Ticks;
+#endif
+            m_allowSortsByArrival = true;
+            m_latestMeasurements = new ImmediateMeasurements(this);
+
+            // Create a new queue for managing real-time frames
+            m_frameQueue = new FrameQueue(this);
+
+            // Create high precision timer used for frame processing
+            m_publicationTimer = new PrecisionTimer();
+            m_publicationTimer.AutoReset = true;
+            m_publicationTimer.Tick += PublishFrames;
+
+            // This timer monitors the total number of unpublished samples every second. This is a useful statistic
+            // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
+            // be falling behind.
+            m_monitorTimer = new System.Timers.Timer();
+            m_monitorTimer.Interval = 1000;
+            m_monitorTimer.AutoReset = true;
+            m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="ConcentratorBase"/> from specified parameters.
+        /// </summary>
         /// <param name="framesPerSecond">Number of frames to publish per second.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
@@ -159,41 +194,11 @@ namespace TVA.Measurements
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
         protected ConcentratorBase(int framesPerSecond, double lagTime, double leadTime)
+            : this()
         {
-            if (lagTime <= 0)
-                throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
-
-            if (leadTime <= 0)
-                throw new ArgumentOutOfRangeException("leadTime", "leadTime must be greater than zero, but it can be less than one");
-
             this.FramesPerSecond = framesPerSecond;
-
-#if UseHighResolutionTime
-            m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
-            m_realTime = DateTime.UtcNow.Ticks;
-#endif
-            m_allowSortsByArrival = true;
-            m_lagTime = lagTime;
-            m_leadTime = leadTime;
-            m_lagTicks = (long)(m_lagTime * Ticks.PerSecond);
-            m_latestMeasurements = new ImmediateMeasurements(this);
-
-            // Create a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(this);
-
-            // Create high precision timer used for frame processing
-            m_publicationTimer = new PrecisionTimer();
-            m_publicationTimer.AutoReset = true;
-            m_publicationTimer.Tick += PublishFrames;
-
-            // This timer monitors the total number of unpublished samples every second. This is a useful statistic
-            // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
-            // be falling behind.
-            m_monitorTimer = new System.Timers.Timer();
-            m_monitorTimer.Interval = 1000;
-            m_monitorTimer.AutoReset = true;
-            m_monitorTimer.Elapsed += MonitorUnpublishedSamples;
+            this.LagTime = lagTime;
+            this.LeadTime = leadTime;
         }
 
         /// <summary>

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using TVA.Collections;
+using System.Text.RegularExpressions;
 
 namespace TVA.Measurements.Routing
 {
@@ -65,18 +66,7 @@ namespace TVA.Measurements.Routing
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
         private int m_minimumMeasurementsToUse;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Constructs a new instance of the <see cref="ActionAdapterBase"/>.
-        /// </summary>
-        protected ActionAdapterBase()
-            : base(30, 1.0D, 1.0D)
-        {
-        }
+        private Regex m_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         #endregion
 
@@ -86,16 +76,61 @@ namespace TVA.Measurements.Routing
         /// Gets or sets key/value pair connection information specific to action adapter.
         /// </summary>
         /// <remarks>
-        /// Example connection string format:<br/>
+        /// <para>
+        /// Example connection string using manually defined measurements:<br/>
         /// expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
-        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;
-        /// inputMeasurementKeys={P1:1245;P1:1247;P2:1335}; outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}
-        /// <br/>
-        /// Elements in inputMeasurementKeys are defined as "ArchiveSource:MeasurementID"<br/>
-        /// Elements in outputMeasurements are defined as "ArchiveSource:MeasurementID,Adder,Multiplier", the adder and multiplier are optional
+        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;<br/>
+        /// inputMeasurementKeys={P1:1245;P1:1247;P2:1335};<br/>
+        /// outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}<br/>
+        /// When defined manually, elements in key:<br/>
+        /// * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
+        /// * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
         /// defaulting to 0.0 and 1.0 respectively.
         /// <br/>
+        /// </para>
+        /// <para>
+        /// Example connection string using measurements defined in a <see cref="DataSource"/> table:<br/>
+        /// expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
+        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;<br/>
+        /// inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};<br/>
+        /// outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}<br/>
+        /// <br/>
+        /// Basic filtering syntax is as follows:<br/>
+        /// <br/>
+        ///     {FILTER &lt;TableName&gt; WHERE &lt;Expression&gt; [ORDER BY &lt;SortField&gt;]}<br/>
+        /// <br/>
+        /// Source tables are expected to have at least the following fields:<br/>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Name</term>
+        ///         <term>Type</term>
+        ///         <description>Description.</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>ID</term>
+        ///         <term>NVARCHAR</term>
+        ///         <description>Measurement key formatted as: ArchiveSource:PointID.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>PointTag</term>
+        ///         <term>NVARCHAR</term>
+        ///         <description>Point tag of measurement.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Adder</term>
+        ///         <term>FLOAT</term>
+        ///         <description>Adder to apply to value, if any (default to 0.0).</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Multiplier</term>
+        ///         <term>FLOAT</term>
+        ///         <description>Multipler to apply to value, if any (default to 1.0).</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// <para>
         /// Note that expectedFramesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
+        /// </para>
         /// </remarks>
         public virtual string ConnectionString
         {
@@ -508,44 +543,101 @@ namespace TVA.Measurements.Routing
                 StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
         }
 
+        // Input keys can use DataSource for filtering desired set of input or output measurements
+        // based on any table and fields in the data set by using a filter expression instead of
+        // a list of measurement ID's. The format is as follows:
+
+        //  FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]
+
+        // Source tables are expected to have at least the following fields:
+        //
+        //      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
+        //      PointTag    NVARCHAR    Point tag of measurement
+        //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
+        //      Multiplier  FLOAT       Multipler to apply to value, if any (default to 1.0)
+        //
+        // Could have used standard SQL syntax here but didn't want to give user the impression
+        // that this a standard SQL expression when it isn't - so chose the word FILTER to make
+        // consumer was aware that this was not SQL, but SQL "like". The WHERE clause expression
+        // uses standard SQL syntax (it is simply the DataTable.Select filter expression).
+
         // Parse input measurement keys from connection string
-        private static MeasurementKey[] ParseInputMeasurementKeys(string value)
+        private MeasurementKey[] ParseInputMeasurementKeys(string value)
         {
             List<MeasurementKey> keys = new List<MeasurementKey>();
-            
-            foreach (string item in value.Split(';'))
-            {
-                keys.Add(MeasurementKey.Parse(item));
-            }
+            Match filterMatch;
 
+            value = value.Trim();
+            filterMatch = m_filterExpression.Match(value);
+
+            if (filterMatch.Success)
+            {
+                string tableName = filterMatch.Result("${TableName}").Trim();
+                string expression = filterMatch.Result("${Expression}").Trim();
+                string sortField = filterMatch.Result("${SortField}").Trim();
+
+                foreach (DataRow row in DataSource.Tables[tableName].Select(expression, sortField))
+                {
+                    keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
+                }
+            }
+            else
+            {
+                // Add manually defined measurement keys
+                foreach (string item in value.Split(';'))
+                {
+                    keys.Add(MeasurementKey.Parse(item));
+                }
+            }
+            
             return keys.ToArray();
         }
 
         // Parse output measurements from connection string
-        private static IMeasurement[] ParseOutputMeasurements(string value)
+        private IMeasurement[] ParseOutputMeasurements(string value)
         {
             List<IMeasurement> measurements = new List<IMeasurement>();
             MeasurementKey key;
-            string[] elem;
-            double adder, multipler;
+            Match filterMatch;
 
-            foreach (string item in value.Split(';'))
+            value = value.Trim();
+            filterMatch = m_filterExpression.Match(value);
+
+            if (filterMatch.Success)
             {
-                elem = item.Trim().Split(',');
+                string tableName = filterMatch.Result("${TableName}").Trim();
+                string expression = filterMatch.Result("${Expression}").Trim();
+                string sortField = filterMatch.Result("${SortField}").Trim();
 
-                key = MeasurementKey.Parse(elem[0]);
+                foreach (DataRow row in DataSource.Tables[tableName].Select(expression, sortField))
+                {
+                    key = MeasurementKey.Parse(row["ID"].ToString());
+                    measurements.Add(new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString())));
+                }
+            }
+            else
+            {
+                string[] elem;
+                double adder, multipler;
 
-                if (elem.Length > 1)
-                    adder = double.Parse(elem[1].Trim());
-                else
-                    adder = 0.0D;
+                foreach (string item in value.Split(';'))
+                {
+                    elem = item.Trim().Split(',');
 
-                if (elem.Length > 2)
-                    multipler = double.Parse(elem[2].Trim());
-                else
-                    multipler = 1.0D;
+                    key = MeasurementKey.Parse(elem[0]);
 
-                measurements.Add(new Measurement(key.ID, key.Source, string.Empty, adder, multipler));
+                    if (elem.Length > 1)
+                        adder = double.Parse(elem[1].Trim());
+                    else
+                        adder = 0.0D;
+
+                    if (elem.Length > 2)
+                        multipler = double.Parse(elem[2].Trim());
+                    else
+                        multipler = 1.0D;
+
+                    measurements.Add(new Measurement(key.ID, key.Source, string.Empty, adder, multipler));
+                }
             }
 
             return measurements.ToArray();
