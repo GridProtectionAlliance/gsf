@@ -405,7 +405,7 @@ namespace TVA.Measurements.Routing
 
             try
             {
-                name = adapterRow["Name"].ToNonNullString("[IAdapter]");
+                name = adapterRow["AdapterName"].ToNonNullString("[IAdapter]");
                 assemblyName = FilePath.GetAbsolutePath(adapterRow["AssemblyName"].ToNonNullString());
                 typeName = adapterRow["TypeName"].ToNonNullString();
                 connectionString = adapterRow["ConnectionString"].ToNonNullString();

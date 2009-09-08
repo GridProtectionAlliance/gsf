@@ -51,11 +51,6 @@ namespace TVA.IO.Compression
         /// <summary>
         /// Default compression buffer size.
         /// </summary>
-        // A 256K buffer size produces very good compression, slightly better than WinZip (~2%) when using the
-        // CompressFile function with CompressLevel.BestCompression.  To achieve best results zlib needs a
-        // sizeable buffer to work with, however when these buffers are needed in the code they are created on
-        // the garbage collected heap and used as briefly as possible.  Even so, you may want to reduce this
-        // buffer size if you intend on running this code on an embedded device.
         public const int BufferSize = 262144;
 
         /// <summary>
@@ -101,36 +96,52 @@ namespace TVA.IO.Compression
         // this can often produce better compression results
         private static byte[] Compress(this byte[] source, int startIndex, int length, CompressionStrength strength, int compressionDepth)
         {
-            // Create a new compression deflater
-            MemoryStream compressedData = new MemoryStream();
-            DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress);
+            if (strength == CompressionStrength.NoCompression)
+            {
+                // No compression requested, return specified portion of the buffer
+                byte[] outBuffer = new byte[++length];
+                outBuffer[0] = (byte)strength;
 
-            // Provide data for compression
-            deflater.Write(source, startIndex, length);
-            deflater.Close();
+                for (int x = 1; x < length; x++)
+                    outBuffer[x] = source[x - 1];
 
-            byte[] destination = compressedData.ToArray();
-            int destinationLength = destination.Length;
-        
-	        // Preprend compression depth and extract only used part of compressed buffer
-	        byte[] outBuffer = new byte[++destinationLength];	
-	        outBuffer[0] = (byte)compressionDepth;
+                return outBuffer;
+            }
+            else
+            {
+                // Create a new compression deflater
+                MemoryStream compressedData = new MemoryStream();
+                DeflateStream deflater = new DeflateStream(compressedData, CompressionMode.Compress);
 
-	        for (int x = 1; x < destinationLength; x++)
-		        outBuffer[x] = destination[x - 1];
+                // Provide data for compression
+                deflater.Write(source, startIndex, length);
+                deflater.Close();
 
-            if (strength == CompressionStrength.MultiPass && destinationLength < length && compressionDepth < 256)
-	        {
-		        // See if another pass would help the compression...
-                byte[] testBuffer = outBuffer.Compress(0, outBuffer.Length, strength, compressionDepth + 1);
+                byte[] destination = compressedData.ToArray();
+                int destinationLength = destination.Length;
 
-		        if (testBuffer.Length < outBuffer.Length)
-			        return testBuffer;
-		        else
-			        return outBuffer;
-	        }
-	        else
-		        return outBuffer;
+                // Preprend compression depth and extract only used part of compressed buffer
+                byte[] outBuffer = new byte[++destinationLength];
+                
+                // First two bits are reserved for compression strength - this leaves 6 bits for a maximum of 64 compressions
+                outBuffer[0] = (byte)((compressionDepth << 2) | (int)strength);
+
+                for (int x = 1; x < destinationLength; x++)
+                    outBuffer[x] = destination[x - 1];
+
+                if (strength == CompressionStrength.MultiPass && destinationLength < length && compressionDepth < 64)
+                {
+                    // See if another pass would help the compression...
+                    byte[] testBuffer = outBuffer.Compress(0, outBuffer.Length, strength, compressionDepth + 1);
+
+                    if (testBuffer.Length < outBuffer.Length)
+                        return testBuffer;
+                    else
+                        return outBuffer;
+                }
+                else
+                    return outBuffer;
+            }
         }
 
         /// <summary>
@@ -237,19 +248,33 @@ namespace TVA.IO.Compression
         /// <returns>A decompressed <see cref="Byte"/> array.</returns>
         public static byte[] Decompress(this byte[] source, int startIndex, int length)
         {
-            // Create a new decompression deflater
-            MemoryStream compressedData = new MemoryStream(source, startIndex + 1, length - 1);
-            DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+            const byte CompressionStrengthMask = (byte)(Bits.Bit00 | Bits.Bit01);
 
-            // Read uncompressed data
-            byte[] destination = inflater.ReadStream();
+            // Unmask compression strength from first buffer byte
+            CompressionStrength strength = (CompressionStrength)(source[startIndex] & CompressionStrengthMask);
 
-	        // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
-	        // so we cycle through the needed uncompressions to get back to the original data
-	        if (source[0] > 0)
-                return destination.Decompress();
-	        else
-                return destination;
+            if (strength == CompressionStrength.NoCompression)
+            {
+                // No compression was applied to original buffer, return specified portion of the buffer
+                return source.BlockCopy(startIndex + 1, length - 1);
+            }
+            else
+            {
+                // Create a new decompression deflater
+                MemoryStream compressedData = new MemoryStream(source, startIndex + 1, length - 1);
+                DeflateStream inflater = new DeflateStream(compressedData, CompressionMode.Decompress);
+                int compressionDepth = (source[startIndex] & ~CompressionStrengthMask) >> 2;
+
+                // Read uncompressed data
+                byte[] destination = inflater.ReadStream();
+
+                // When user requests muli-pass compression, there may be multiple compression passes on a buffer,
+                // so we cycle through the needed uncompressions to get back to the original data
+                if (strength == CompressionStrength.MultiPass && compressionDepth > 0)
+                    return destination.Decompress();
+                else
+                    return destination;
+            }
         }
 
         /// <summary>
