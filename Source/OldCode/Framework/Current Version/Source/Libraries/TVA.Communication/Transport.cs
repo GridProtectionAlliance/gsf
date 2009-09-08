@@ -14,8 +14,10 @@
 //       Original version of source created.
 //  09/29/2008 - James R. Carroll
 //       Converted to C#.
-//  09/22/2009 - Pinal C. Patel
+//  08/22/2009 - Pinal C. Patel
 //       Modified CreateEndPoint() to try parsing IP address first before doing a DNS lookup.
+//  09/08/2009 - Pinal C. Patel
+//       Modified CreateSocket() to create a socket for the AddressFamily of the endpoint.
 //
 //*******************************************************************************************************
 
@@ -75,17 +77,18 @@ namespace TVA.Communication
         public static Socket CreateSocket(string address, int port, ProtocolType protocol)
         {
             Socket socket = null;
+            IPEndPoint endpoint = Transport.CreateEndPoint(address, port);
             switch (protocol)
             {
                 case ProtocolType.Tcp:
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    socket.Bind(Transport.CreateEndPoint(address, port));
+                    socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                    socket.Bind(endpoint);
                     break;
                 case ProtocolType.Udp:
-                    socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                     // Don't bind to an interface if specified by using negative port number.
                     if (port >= 0)
-                        socket.Bind(Transport.CreateEndPoint(address, port));
+                        socket.Bind(endpoint);
                     break;
                 default:
                     throw new NotSupportedException(string.Format("{0} is not supported.", protocol));
