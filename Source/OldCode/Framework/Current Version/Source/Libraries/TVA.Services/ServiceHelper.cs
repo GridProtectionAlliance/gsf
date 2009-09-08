@@ -39,6 +39,11 @@
 //       Subscribed to ErrorLogger.LoggingException event.
 //  08/10/2009 - Josh Patterson
 //      Edited Comments
+//  09/08/2009 - Pinal C. Patel
+//       Modified GetProcess(), GetConnectedClient() and GetClientRequestHandler() to use lambda
+//       functions instead of manual iteration of collection items.
+//       Renamed GetProcess(), GetConnectedClient() and GetClientRequestHandler() to FindProcess(), 
+//       FindConnectedClient() and FindClientRequestHandler() respectively.
 //
 //*******************************************************************************************************
 
@@ -1068,7 +1073,7 @@ namespace TVA.Services
         {
             processName = processName.Trim();
 
-            if (GetProcess(processName) == null)
+            if (FindProcess(processName) == null)
             {
                 ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
                 process.StateChanged += Process_StateChanged;
@@ -1125,7 +1130,7 @@ namespace TVA.Services
         {
             processName = processName.Trim();
 
-            if (GetProcess(processName) != null)
+            if (FindProcess(processName) != null)
             {
                 // The specified process exists, so we'll schedule it, or update its schedule if it is acheduled already.
                 Schedule existingSchedule = m_processScheduler.FindSchedule(processName);
@@ -1219,66 +1224,33 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets the <see cref="ServiceProcess"/> for the specified <paramref name="processName"/>.
+        /// Returns the <see cref="ServiceProcess"/> for the specified <paramref name="processName"/>.
         /// </summary>
         /// <param name="processName">Name of the <see cref="ServiceProcess"/> to be retrieved.</param>
         /// <returns><see cref="ServiceProcess"/> object if found; otherwise null.</returns>
-        public ServiceProcess GetProcess(string processName)
+        public ServiceProcess FindProcess(string processName)
         {
-            ServiceProcess match = null;
-
-            foreach (ServiceProcess process in m_processes)
-            {
-                if (string.Compare(process.Name, processName, true) == 0)
-                {
-                    match = process;
-                    break;
-                }
-            }
-
-            return match;
+            return m_processes.Find(process => string.Compare(process.Name, processName, true) == 0);
         }
 
         /// <summary>
-        /// Gets the <see cref="ClientInfo"/> object for the specified <paramref name="client"/>.
+        /// Returns the <see cref="ClientInfo"/> object for the specified <paramref name="client"/>.
         /// </summary>
-        /// <param name="client">ID of the client whose <see cref="ClientInfo"/> object is to be retrieved.</param>
+        /// <param name="clientID">ID of the client whose <see cref="ClientInfo"/> object is to be retrieved.</param>
         /// <returns><see cref="ClientInfo"/> object if found; otherwise null.</returns>
-        public ClientInfo GetConnectedClient(Guid client)
+        public ClientInfo FindConnectedClient(Guid clientID)
         {
-            ClientInfo match = null;
-
-            foreach (ClientInfo clientInfo in m_remoteClients)
-            {
-                if (client == clientInfo.ClientID)
-                {
-                    match = clientInfo;
-                    break;
-                }
-            }
-
-            return match;
+            return m_remoteClients.Find(clientInfo => clientInfo.ClientID == clientID);
         }
 
         /// <summary>
-        /// Gets the <see cref="ClientRequestHandler"/> object for the specified <paramref name="requestType"/>.
+        /// Returns the <see cref="ClientRequestHandler"/> object for the specified <paramref name="requestType"/>.
         /// </summary>
-        /// <param name="requestType">Request type whose <see cref="ClientRequestHandler"/> object is to be retrieved.</param>
+        /// <param name="handlerCommand">Request type whose <see cref="ClientRequestHandler"/> object is to be retrieved.</param>
         /// <returns><see cref="ClientRequestHandler"/> object if found; otherwise null.</returns>
-        public ClientRequestHandler GetClientRequestHandler(string requestType)
+        public ClientRequestHandler FindClientRequestHandler(string handlerCommand)
         {
-            ClientRequestHandler match = null;
-
-            foreach (ClientRequestHandler handler in m_clientRequestHandlers)
-            {
-                if (string.Compare(handler.Command, requestType, true) == 0)
-                {
-                    match = handler;
-                    break;
-                }
-            }
-
-            return match;
+            return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, true) == 0);
         }
 
         /// <summary>
@@ -1522,7 +1494,7 @@ namespace TVA.Services
 
         private void Scheduler_ScheduleDue(object sender, EventArgs<Schedule> e)
         {
-            ServiceProcess scheduledProcess = GetProcess(e.Argument.Name);
+            ServiceProcess scheduledProcess = FindProcess(e.Argument.Name);
 
             // Start the process execution if it exists.
             if (scheduledProcess != null)
@@ -1544,7 +1516,7 @@ namespace TVA.Services
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
         {
-            ClientInfo disconnectedClient = GetConnectedClient(e.Argument);
+            ClientInfo disconnectedClient = FindConnectedClient(e.Argument);
 
             if (disconnectedClient != null)
             {
@@ -1572,7 +1544,7 @@ namespace TVA.Services
             // Set the thread's principal to the current principal.
             Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
-            ClientInfo requestSender = GetConnectedClient(e.Argument1);
+            ClientInfo requestSender = FindConnectedClient(e.Argument1);
             if (requestSender == null)
             {
                 // First message from a remote client should be its info.
@@ -1659,7 +1631,7 @@ namespace TVA.Services
                             // Notify the consumer about the incoming request from client.
                             OnReceivedClientRequest(request, requestSender);
 
-                            ClientRequestHandler requestHandler = GetClientRequestHandler(request.Command);
+                            ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
                             if (requestHandler != null)
                             {                              
                                 // Request handler exists.
@@ -2506,7 +2478,7 @@ namespace TVA.Services
 
                 if (!systemProcess)
                 {
-                    ServiceProcess processToStart = GetProcess(processName);
+                    ServiceProcess processToStart = FindProcess(processName);
 
                     if (processToStart != null)
                     {
@@ -2611,7 +2583,7 @@ namespace TVA.Services
 
                 if (!systemProcess)
                 {
-                    ServiceProcess processToAbort = GetProcess(processName);
+                    ServiceProcess processToAbort = FindProcess(processName);
 
                     if (processToAbort != null)
                     {
