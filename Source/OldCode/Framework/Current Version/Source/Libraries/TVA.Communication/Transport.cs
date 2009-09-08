@@ -18,6 +18,7 @@
 //       Modified CreateEndPoint() to try parsing IP address first before doing a DNS lookup.
 //  09/08/2009 - Pinal C. Patel
 //       Modified CreateSocket() to create a socket for the AddressFamily of the endpoint.
+//       Modified CreateEndPoint() to use IPv6 if supported when no IP address is specified.
 //
 //*******************************************************************************************************
 
@@ -53,7 +54,10 @@ namespace TVA.Communication
             if (string.IsNullOrEmpty(hostNameOrAddress))
             {
                 // Use all of the local IPs.
-                return new IPEndPoint(IPAddress.Any, port);
+                if (Socket.OSSupportsIPv6)
+                    return new IPEndPoint(IPAddress.IPv6Any, port);
+                else
+                    return new IPEndPoint(IPAddress.Any, port);
             }
             else
             {
