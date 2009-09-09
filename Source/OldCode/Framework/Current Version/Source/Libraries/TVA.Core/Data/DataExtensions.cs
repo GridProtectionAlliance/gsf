@@ -29,6 +29,8 @@
 //      Converted to C# extensions.
 //  09/29/2008 - Pinal C. Patel
 //      Reviewed code comments.
+//  09/09/2009 - James R. Carroll
+//      Added extensions for ODBC providers.
 //
 //*******************************************************************************************************
 
@@ -36,6 +38,7 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
+using System.Data.Odbc;
 using System.Data.OracleClient;
 using System.Data.SqlClient;
 using System.Text;
@@ -48,17 +51,6 @@ namespace TVA.Data
     /// </summary>
     public static class DataExtensions
     {
-        #region [ Enumerations ]
-
-        private enum ConnectionType
-        {
-            OleDb,
-            SqlClient,
-            OracleClient
-        }
-
-        #endregion
-
         /// <summary>
         /// The default timeout duration used for executing SQL statements when timeout duration is not specified.
         /// </summary>
@@ -81,26 +73,31 @@ namespace TVA.Data
         #region [ ExecuteNonQuery Overloaded Extension ]
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the number of rows affected.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the number of rows affected.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this OleDbConnection connection, string sql)
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
         {
             return connection.ExecuteNonQuery(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the number of rows affected.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the number of rows affected.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this OleDbConnection connection, string sql, int timeout)
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
         {
-            return connection.ExecuteNonQuery(sql, timeout, null);
+            IDbCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = timeout;
+            return command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -132,26 +129,31 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the number of rows affected.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the number of rows affected.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this SqlConnection connection, string sql)
+        public static int ExecuteNonQuery(this OdbcConnection connection, string sql, params object[] parameters)
         {
-            return connection.ExecuteNonQuery(sql, DefaultTimeoutDuration);
+            return connection.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the number of rows affected.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the number of rows affected.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this SqlConnection connection, string sql, int timeout)
+        public static int ExecuteNonQuery(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
-            return connection.ExecuteNonQuery(sql, timeout, null);
+            OdbcCommand command = new OdbcCommand(sql, connection);
+            command.CommandTimeout = timeout;
+            command.PopulateParameters(parameters);
+            return command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -187,17 +189,6 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this OracleConnection connection, string sql)
-        {
-            return connection.ExecuteNonQuery(sql, null);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the number of rows affected.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OracleConnection connection, string sql, params object[] parameters)
@@ -212,27 +203,45 @@ namespace TVA.Data
         #region [ ExecuteReader Overloaded Extensions ]
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and builds a <see cref="OleDbDataReader"/>.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and builds a <see cref="IDataReader"/>.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
-        public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql)
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
         {
             return connection.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and builds a <see cref="OleDbDataReader"/>.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and builds a <see cref="IDataReader"/>.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
+        {
+            return connection.ExecuteReader(sql, CommandBehavior.Default, timeout);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and builds a <see cref="IDataReader"/>.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
-        public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql, CommandBehavior behavior, int timeout)
+        /// <returns>A <see cref="IDataReader"/> object.</returns>
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, CommandBehavior behavior, int timeout) where TConnection : IDbConnection
         {
-            return connection.ExecuteReader(sql, behavior, timeout, null);
+            IDbCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = timeout;
+            return command.ExecuteReader(behavior);
         }
 
         /// <summary>
@@ -265,27 +274,32 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and builds a <see cref="SqlDataReader"/>.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and builds a <see cref="OdbcDataReader"/>.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>A <see cref="SqlDataReader"/> object.</returns>
-        public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql)
+        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
+        public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, params object[] parameters)
         {
-            return connection.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration);
+            return connection.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and builds a <see cref="SqlDataReader"/>.
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and builds a <see cref="OdbcDataReader"/>.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <returns>A <see cref="SqlDataReader"/> object.</returns>
-        public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql, CommandBehavior behavior, int timeout)
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
+        public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
-            return connection.ExecuteReader(sql, behavior, timeout, null);
+            OdbcCommand command = new OdbcCommand(sql, connection);
+            command.CommandTimeout = timeout;
+            command.PopulateParameters(parameters);
+            return command.ExecuteReader(behavior);
         }
 
         /// <summary>
@@ -322,29 +336,6 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>A <see cref="OracleDataReader"/> object.</returns>
-        public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql)
-        {
-            return connection.ExecuteReader(sql, CommandBehavior.Default);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
-        /// <returns>A <see cref="OracleDataReader"/> object.</returns>
-        public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, CommandBehavior behavior)
-        {
-            return connection.ExecuteReader(sql, behavior, null);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>A <see cref="OracleDataReader"/> object.</returns>
         public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, params object[] parameters)
@@ -372,28 +363,33 @@ namespace TVA.Data
         #region [ ExecuteScalar Overloaded Extensions ]
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the value in the first column 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the value in the first column 
         /// of the first row in the resultset.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this OleDbConnection connection, string sql)
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
         {
             return connection.ExecuteScalar(sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OleDbConnection"/>, and returns the value in the first column 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the value in the first column 
         /// of the first row in the resultset.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this OleDbConnection connection, string sql, int timeout)
+        /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
+        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
         {
-            return connection.ExecuteScalar(sql, timeout, null);
+            IDbCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = timeout;
+            return command.ExecuteScalar();
         }
 
         /// <summary>
@@ -427,28 +423,33 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the value in the first column 
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the value in the first column 
         /// of the first row in the resultset.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this SqlConnection connection, string sql)
+        public static object ExecuteScalar(this OdbcConnection connection, string sql, params object[] parameters)
         {
-            return connection.ExecuteScalar(sql, DefaultTimeoutDuration);
+            return connection.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="SqlConnection"/>, and returns the value in the first column 
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the value in the first column 
         /// of the first row in the resultset.
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this SqlConnection connection, string sql, int timeout)
+        public static object ExecuteScalar(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
-            return connection.ExecuteScalar(sql, timeout, null);
+            OdbcCommand command = new OdbcCommand(sql, connection);
+            command.CommandTimeout = timeout;
+            command.PopulateParameters(parameters);
+            return command.ExecuteScalar();
         }
 
         /// <summary>
@@ -479,18 +480,6 @@ namespace TVA.Data
             command.CommandTimeout = timeout;
             command.PopulateParameters(parameters);
             return command.ExecuteScalar();
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this OracleConnection connection, string sql)
-        {
-            return connection.ExecuteScalar(sql, null);
         }
 
         /// <summary>
@@ -556,6 +545,59 @@ namespace TVA.Data
         /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
+        {
+            DataTable dataTable = connection.RetrieveData(sql, 0, 1, timeout, parameters);
+
+            if (dataTable.Rows.Count == 0)
+                dataTable.Rows.Add(dataTable.NewRow());
+
+            return dataTable.Rows[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcConnection connection, string sql)
+        {
+            return connection.RetrieveRow(sql, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcConnection connection, string sql, int timeout)
+        {
+            return connection.RetrieveRow(sql, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcConnection connection, string sql, params object[] parameters)
+        {
+            return connection.RetrieveRow(sql, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        public static DataRow RetrieveRow(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
             DataTable dataTable = connection.RetrieveData(sql, 0, 1, timeout, parameters);
 
@@ -702,6 +744,62 @@ namespace TVA.Data
         /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            return connection.RetrieveDataSet(sql, startRow, maxRows, timeout, parameters).Tables[0];
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcConnection connection, string sql)
+        {
+            return connection.RetrieveData(sql, 0, int.MaxValue, 30);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout)
+        {
+            return connection.RetrieveData(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcConnection connection, string sql, params object[] parameters)
+        {
+            return connection.RetrieveData(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// of resultset, if the resultset contains multiple tables.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="DataTable"/> object.</returns>
+        public static DataTable RetrieveData(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
             return connection.RetrieveDataSet(sql, startRow, maxRows, timeout, parameters).Tables[0];
         }
@@ -874,9 +972,70 @@ namespace TVA.Data
         public static DataSet RetrieveDataSet(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
             OleDbCommand command = new OleDbCommand(sql, connection);
-
             command.PopulateParameters(parameters);
             OleDbDataAdapter dataAdapter = new OleDbDataAdapter(command);
+            DataSet data = new DataSet("Temp");
+            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+
+            return data;
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql)
+        {
+            return connection.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout)
+        {
+            return connection.RetrieveDataSet(sql, startRow, maxRows, timeout, null);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, params object[] parameters)
+        {
+            return connection.RetrieveDataSet(sql, 0, int.MaxValue, DefaultTimeoutDuration, parameters);
+        }
+
+        /// <summary>
+        /// Executes the SQL statement using <see cref="OdbcConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// may contain multiple tables, depending on the SQL statement.
+        /// </summary>
+        /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="startRow">The zero-based record number to start with.</param>
+        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <returns>A <see cref="DataSet"/> object.</returns>
+        public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
+        {
+            OdbcCommand command = new OdbcCommand(sql, connection);
+            command.PopulateParameters(parameters);
+            OdbcDataAdapter dataAdapter = new OdbcDataAdapter(command);
             DataSet data = new DataSet("Temp");
             dataAdapter.Fill(data, startRow, maxRows, "Table1");
 
@@ -1026,6 +1185,21 @@ namespace TVA.Data
         }
 
         /// <summary>
+        /// Updates the underlying data of the <see cref="DataTable"/> using <see cref="OdbcConnection"/>, and
+        /// returns the number of rows successfully updated.
+        /// </summary>
+        /// <param name="sourceData">The <see cref="DataTable"/> used to update the underlying data source.</param>
+        /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
+        /// <param name="connection">The <see cref="OdbcConnection"/> to use for updating the underlying data source.</param>
+        /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
+        public static int UpdateData(this OdbcConnection connection, DataTable sourceData, string sourceSql)
+        {
+            OdbcDataAdapter dataAdapter = new OdbcDataAdapter(sourceSql, connection);
+            OdbcCommandBuilder commandBuilder = new OdbcCommandBuilder(dataAdapter);
+            return dataAdapter.Update(sourceData);
+        }
+
+        /// <summary>
         /// Updates the underlying data of the <see cref="DataTable"/> using <see cref="SqlConnection"/>, and
         /// returns the number of rows successfully updated.
         /// </summary>
@@ -1066,7 +1240,17 @@ namespace TVA.Data
         /// <param name="parameters">The parameters to populate the <see cref="OleDbCommand"/> parameters with.</param>
         public static void PopulateParameters(this OleDbCommand command, object[] parameters)
         {
-            command.PopulateParameters(ConnectionType.OleDb, parameters);
+            command.PopulateParameters(OleDbCommandBuilder.DeriveParameters, parameters);
+        }
+
+        /// <summary>
+        /// Takes the <see cref="OdbcCommand"/> object and populates it with the given parameters.
+        /// </summary>
+        /// <param name="command">The <see cref="OdbcCommand"/> whose parameters are to be populated.</param>
+        /// <param name="parameters">The parameters to populate the <see cref="OdbcCommand"/> parameters with.</param>
+        public static void PopulateParameters(this OdbcCommand command, object[] parameters)
+        {
+            command.PopulateParameters(OdbcCommandBuilder.DeriveParameters, parameters);
         }
 
         /// <summary>
@@ -1076,7 +1260,7 @@ namespace TVA.Data
         /// <param name="parameters">The parameters to populate the <see cref="SqlCommand"/> parameters with.</param>
         public static void PopulateParameters(this SqlCommand command, object[] parameters)
         {
-            command.PopulateParameters(ConnectionType.SqlClient, parameters);
+            command.PopulateParameters(SqlCommandBuilder.DeriveParameters, parameters);
         }
 
         /// <summary>
@@ -1086,10 +1270,17 @@ namespace TVA.Data
         /// <param name="parameters">The parameters to populate the <see cref="OracleCommand"/> parameters with.</param>
         public static void PopulateParameters(this OracleCommand command, object[] parameters)
         {
-            command.PopulateParameters(ConnectionType.OracleClient, parameters);
+            command.PopulateParameters(OracleCommandBuilder.DeriveParameters, parameters);
         }
 
-        private static void PopulateParameters(this IDbCommand command, ConnectionType connectionType, object[] parameters)
+        /// <summary>
+        /// Takes the <see cref="IDbCommand"/> object and populates it with the given parameters.
+        /// </summary>
+        /// <param name="command">The <see cref="IDbCommand"/> whose parameters are to be populated.</param>
+        /// <param name="deriveParameters">The DeriveParameters implementation of the <paramref name="command"/> to use to populate parameters.</param>
+        /// <param name="parameters">The parameters to populate the <see cref="IDbCommand"/> parameters with.</param>
+        /// <typeparam name="TDbCommand">Then <see cref="IDbCommand"/> type to be used.</typeparam>
+        public static void PopulateParameters<TDbCommand>(this TDbCommand command, Action<TDbCommand> deriveParameters, object[] parameters) where TDbCommand : IDbCommand
         {
             // tmshults 12/10/2004
             if (parameters != null)
@@ -1119,18 +1310,7 @@ namespace TVA.Data
 
                     // Makes quick query to db to find the parameters for the StoredProc, and then creates them for
                     // the command. The DeriveParameters() only for commands with CommandType of StoredProcedure.
-                    switch (connectionType)
-                    {
-                        case ConnectionType.SqlClient:
-                            SqlCommandBuilder.DeriveParameters((SqlCommand)command);
-                            break;
-                        case ConnectionType.OleDb:
-                            OleDbCommandBuilder.DeriveParameters((OleDbCommand)command);
-                            break;
-                        case ConnectionType.OracleClient:
-                            OracleCommandBuilder.DeriveParameters((OracleCommand)command);
-                            break;
-                    }
+                    deriveParameters(command);
 
                     // Removes the ReturnValue Parameter.
                     command.Parameters.RemoveAt(0);
@@ -1269,48 +1449,6 @@ namespace TVA.Data
             //Returns the delimited data.
             return data.ToString();
         }
-
-        #region [ Old Code ]
-
-        // This was never used
-        ///// <summary>
-        ///// Executes the SQL statement, and returns the number of rows affected.
-        ///// </summary>
-        ///// <param name="sql">The SQL statement to be executed.</param>
-        ///// <param name="connectString">The connection string used for connecting to the data source.</param>
-        ///// <param name="connectionType">The type of data provider to use for connecting to the data source and executing the SQL statement.</param>
-        ///// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        ///// <returns>The number of rows affected.</returns>
-        //public static int ExecuteNonQuery(string sql, string connectString, ConnectionType connectionType, int timeout)
-        //{
-        //    int executionResult = -1;
-        //    IDbConnection connection = null;
-        //    IDbCommand command = null;
-
-        //    switch (connectionType)
-        //    {
-        //        case ConnectionType.SqlClient:
-        //            connection = new SqlConnection(connectString);
-        //            command = new SqlCommand(sql, (SqlConnection)connection);
-        //            break;
-        //        case ConnectionType.OracleClient:
-        //            connection = new OracleConnection(connectString);
-        //            command = new OracleCommand(sql, (OracleConnection)connection);
-        //            break;
-        //        case ConnectionType.OleDb:
-        //            connection = new OleDbConnection(connectString);
-        //            command = new OleDbCommand(sql, (OleDbConnection)connection);
-        //            break;
-        //    }
-
-        //    connection.Open();
-        //    command.CommandTimeout = timeout;
-        //    executionResult = command.ExecuteNonQuery();
-        //    connection.Close();
-        //    return executionResult;
-        //}
-
-        #endregion
 
         #endregion
     }
