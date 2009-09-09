@@ -14,8 +14,6 @@
 //       Generated original version of source code.
 //  05/25/2004 - James R. Carroll
 //       Added "with parameters" overloads to all basic query functions.
-//  06/21/2004 - James R. Carroll
-//       Added support for Oracle native .NET client since ESO systems can now work with this.
 //  12/10/2004 - Tim M Shults
 //       Added several new WithParameters overloads that allow a programmer to send just the
 //       parameter values instead of creating a series of parameter objects and then sending
@@ -39,7 +37,6 @@ using System.Data;
 using System.Data.Common;
 using System.Data.OleDb;
 using System.Data.Odbc;
-using System.Data.OracleClient;
 using System.Data.SqlClient;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -184,19 +181,6 @@ namespace TVA.Data
             return command.ExecuteNonQuery();
         }
 
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the number of rows affected.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>The number of rows affected.</returns>
-        public static int ExecuteNonQuery(this OracleConnection connection, string sql, params object[] parameters)
-        {
-            OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(parameters);
-            return command.ExecuteNonQuery();
-        }
 
         #endregion
 
@@ -331,33 +315,6 @@ namespace TVA.Data
             return command.ExecuteReader(behavior);
         }
 
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="OracleDataReader"/> object.</returns>
-        public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, params object[] parameters)
-        {
-            return connection.ExecuteReader(sql, CommandBehavior.Default, parameters);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="OracleDataReader"/> object.</returns>
-        public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, CommandBehavior behavior, params object[] parameters)
-        {
-            OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(parameters);
-            return command.ExecuteReader(behavior);
-        }
-
         #endregion
 
         #region [ ExecuteScalar Overloaded Extensions ]
@@ -478,21 +435,6 @@ namespace TVA.Data
         {
             SqlCommand command = new SqlCommand(sql, connection);
             command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteScalar();
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the value in the first column 
-        /// of the first row in the resultset.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>Value in the first column of the first row in the resultset.</returns>
-        public static object ExecuteScalar(this OracleConnection connection, string sql, params object[] parameters)
-        {
-            OracleCommand command = new OracleCommand(sql, connection);
             command.PopulateParameters(parameters);
             return command.ExecuteScalar();
         }
@@ -661,26 +603,28 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
-        public static DataRow RetrieveRow(this OracleConnection connection, string sql)
+        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql)
         {
-            return connection.RetrieveRow(sql, null);
+            return connection.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
-        public static DataRow RetrieveRow(this OracleConnection connection, string sql, params object[] parameters)
+        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
         {
-            DataTable dataTable = connection.RetrieveData(sql, 0, 1, parameters);
+            DataTable dataTable = connection.RetrieveData(dataAdapterType, sql, timeout);
 
             if (dataTable.Rows.Count == 0)
                 dataTable.Rows.Add(dataTable.NewRow());
@@ -861,57 +805,30 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataTable"/> 
         /// of resultset, if the resultset contains multiple tables.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this OracleConnection connection, string sql)
+        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql)
         {
-            return connection.RetrieveData(sql, 0, int.MaxValue);
+            return connection.RetrieveData(dataAdapterType, sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the first <see cref="DataTable"/> 
         /// of resultset, if the resultset contains multiple tables.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="startRow">The zero-based record number to start with.</param>
-        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this OracleConnection connection, string sql, int startRow, int maxRows)
+        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
         {
-            return connection.RetrieveData(sql, startRow, maxRows, null);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this OracleConnection connection, string sql, params object[] parameters)
-        {
-            return connection.RetrieveData(sql, 0, int.MaxValue, parameters);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
-        /// of resultset, if the resultset contains multiple tables.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="startRow">The zero-based record number to start with.</param>
-        /// <param name="maxRows">The maximum number of records to retrieve.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
-        {
-            return connection.RetrieveDataSet(sql, startRow, maxRows, parameters).Tables[0];
+            return connection.RetrieveDataSet(dataAdapterType, sql, timeout).Tables[0];
         }
 
         #endregion
@@ -1106,61 +1023,35 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the <see cref="DataSet"/> that 
         /// may contain multiple tables, depending on the SQL statement.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this OracleConnection connection, string sql)
+        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql)
         {
-            return connection.RetrieveDataSet(sql, 0, int.MaxValue);
+            return connection.RetrieveDataSet(dataAdapterType, sql, DefaultTimeoutDuration);
         }
 
         /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        /// Executes the SQL statement using <see cref="IDbConnection"/>, and returns the <see cref="DataSet"/> that 
         /// may contain multiple tables, depending on the SQL statement.
         /// </summary>
+        /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="startRow">The zero-based record number to start with.</param>
-        /// <param name="maxRows">The maximum number of records to retrieve.</param>
+        /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows)
+        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
         {
-            return connection.RetrieveDataSet(sql, startRow, maxRows, null);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
-        /// may contain multiple tables, depending on the SQL statement.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, params object[] parameters)
-        {
-            return connection.RetrieveDataSet(sql, 0, int.MaxValue, parameters);
-        }
-
-        /// <summary>
-        /// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
-        /// may contain multiple tables, depending on the SQL statement.
-        /// </summary>
-        /// <param name="sql">The SQL statement to be executed.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="startRow">The zero-based record number to start with.</param>
-        /// <param name="maxRows">The maximum number of records to retrieve.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
-        /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
-        {
-            OracleCommand command = new OracleCommand(sql, connection);
-            command.PopulateParameters(parameters);
-            OracleDataAdapter dataAdapter = new OracleDataAdapter(command);
+            IDbCommand command = connection.CreateCommand();
+            command.CommandText = sql;
+            command.CommandTimeout = timeout;
+            IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(dataAdapterType, command);
             DataSet data = new DataSet("Temp");
-            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+            dataAdapter.Fill(data);
 
             return data;
         }
@@ -1214,21 +1105,6 @@ namespace TVA.Data
             return dataAdapter.Update(sourceData);
         }
 
-        /// <summary>
-        /// Updates the underlying data of the <see cref="DataTable"/> using <see cref="OracleConnection"/>, and
-        /// returns the number of rows successfully updated.
-        /// </summary>
-        /// <param name="sourceData">The <see cref="DataTable"/> used to update the underlying data source.</param>
-        /// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
-        /// <param name="connection">The <see cref="OracleConnection"/> to use for updating the underlying data source.</param>
-        /// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
-        public static int UpdateData(this OracleConnection connection, DataTable sourceData, string sourceSql)
-        {
-            OracleDataAdapter dataAdapter = new OracleDataAdapter(sourceSql, connection);
-            OracleCommandBuilder commandBuilder = new OracleCommandBuilder(dataAdapter);
-            return dataAdapter.Update(sourceData);
-        }
-
         #endregion
 
         #region [ Command Parameter Population Functions ]
@@ -1261,16 +1137,6 @@ namespace TVA.Data
         public static void PopulateParameters(this SqlCommand command, object[] parameters)
         {
             command.PopulateParameters(SqlCommandBuilder.DeriveParameters, parameters);
-        }
-
-        /// <summary>
-        ///  Takes the <see cref="OracleCommand"/> object and populates it with the given parameters.
-        /// </summary>
-        /// <param name="command">The <see cref="OracleCommand"/> whose parameters are to be populated.</param>
-        /// <param name="parameters">The parameters to populate the <see cref="OracleCommand"/> parameters with.</param>
-        public static void PopulateParameters(this OracleCommand command, object[] parameters)
-        {
-            command.PopulateParameters(OracleCommandBuilder.DeriveParameters, parameters);
         }
 
         /// <summary>
@@ -1449,6 +1315,235 @@ namespace TVA.Data
             //Returns the delimited data.
             return data.ToString();
         }
+
+        #endregion
+
+        #region [ Oracle Extensions ]
+
+        // Because of reference dependency, these should be added to a TVA.Data assembly along with MySql versions if useful
+        
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the number of rows affected.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>The number of rows affected.</returns>
+        //public static int ExecuteNonQuery(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    OracleCommand command = new OracleCommand(sql, connection);
+        //    command.PopulateParameters(parameters);
+        //    return command.ExecuteNonQuery();
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="OracleDataReader"/> object.</returns>
+        //public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    return connection.ExecuteReader(sql, CommandBehavior.Default, parameters);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and builds a <see cref="OracleDataReader"/>.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="OracleDataReader"/> object.</returns>
+        //public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, CommandBehavior behavior, params object[] parameters)
+        //{
+        //    OracleCommand command = new OracleCommand(sql, connection);
+        //    command.PopulateParameters(parameters);
+        //    return command.ExecuteReader(behavior);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the value in the first column 
+        ///// of the first row in the resultset.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>Value in the first column of the first row in the resultset.</returns>
+        //public static object ExecuteScalar(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    OracleCommand command = new OracleCommand(sql, connection);
+        //    command.PopulateParameters(parameters);
+        //    return command.ExecuteScalar();
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        //public static DataRow RetrieveRow(this OracleConnection connection, string sql)
+        //{
+        //    return connection.RetrieveRow(sql, null);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataRow"/> in the resultset.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
+        //public static DataRow RetrieveRow(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    DataTable dataTable = connection.RetrieveData(sql, 0, 1, parameters);
+
+        //    if (dataTable.Rows.Count == 0)
+        //        dataTable.Rows.Add(dataTable.NewRow());
+
+        //    return dataTable.Rows[0];
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        ///// of resultset, if the resultset contains multiple tables.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <returns>A <see cref="DataTable"/> object.</returns>
+        //public static DataTable RetrieveData(this OracleConnection connection, string sql)
+        //{
+        //    return connection.RetrieveData(sql, 0, int.MaxValue);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        ///// of resultset, if the resultset contains multiple tables.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="startRow">The zero-based record number to start with.</param>
+        ///// <param name="maxRows">The maximum number of records to retrieve.</param>
+        ///// <returns>A <see cref="DataTable"/> object.</returns>
+        //public static DataTable RetrieveData(this OracleConnection connection, string sql, int startRow, int maxRows)
+        //{
+        //    return connection.RetrieveData(sql, startRow, maxRows, null);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        ///// of resultset, if the resultset contains multiple tables.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="DataTable"/> object.</returns>
+        //public static DataTable RetrieveData(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    return connection.RetrieveData(sql, 0, int.MaxValue, parameters);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the first <see cref="DataTable"/> 
+        ///// of resultset, if the resultset contains multiple tables.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="startRow">The zero-based record number to start with.</param>
+        ///// <param name="maxRows">The maximum number of records to retrieve.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="DataTable"/> object.</returns>
+        //public static DataTable RetrieveData(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
+        //{
+        //    return connection.RetrieveDataSet(sql, startRow, maxRows, parameters).Tables[0];
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        ///// may contain multiple tables, depending on the SQL statement.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <returns>A <see cref="DataSet"/> object.</returns>
+        //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql)
+        //{
+        //    return connection.RetrieveDataSet(sql, 0, int.MaxValue);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        ///// may contain multiple tables, depending on the SQL statement.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="startRow">The zero-based record number to start with.</param>
+        ///// <param name="maxRows">The maximum number of records to retrieve.</param>
+        ///// <returns>A <see cref="DataSet"/> object.</returns>
+        //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows)
+        //{
+        //    return connection.RetrieveDataSet(sql, startRow, maxRows, null);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        ///// may contain multiple tables, depending on the SQL statement.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="DataSet"/> object.</returns>
+        //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, params object[] parameters)
+        //{
+        //    return connection.RetrieveDataSet(sql, 0, int.MaxValue, parameters);
+        //}
+
+        ///// <summary>
+        ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the <see cref="DataSet"/> that 
+        ///// may contain multiple tables, depending on the SQL statement.
+        ///// </summary>
+        ///// <param name="sql">The SQL statement to be executed.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
+        ///// <param name="startRow">The zero-based record number to start with.</param>
+        ///// <param name="maxRows">The maximum number of records to retrieve.</param>
+        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <returns>A <see cref="DataSet"/> object.</returns>
+        //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
+        //{
+        //    OracleCommand command = new OracleCommand(sql, connection);
+        //    command.PopulateParameters(parameters);
+        //    OracleDataAdapter dataAdapter = new OracleDataAdapter(command);
+        //    DataSet data = new DataSet("Temp");
+        //    dataAdapter.Fill(data, startRow, maxRows, "Table1");
+
+        //    return data;
+        //}
+
+        ///// <summary>
+        ///// Updates the underlying data of the <see cref="DataTable"/> using <see cref="OracleConnection"/>, and
+        ///// returns the number of rows successfully updated.
+        ///// </summary>
+        ///// <param name="sourceData">The <see cref="DataTable"/> used to update the underlying data source.</param>
+        ///// <param name="sourceSql">The SQL statement used initially to populate the <see cref="DataTable"/>.</param>
+        ///// <param name="connection">The <see cref="OracleConnection"/> to use for updating the underlying data source.</param>
+        ///// <returns>The number of rows successfully updated from the <see cref="DataTable"/>.</returns>
+        //public static int UpdateData(this OracleConnection connection, DataTable sourceData, string sourceSql)
+        //{
+        //    OracleDataAdapter dataAdapter = new OracleDataAdapter(sourceSql, connection);
+        //    OracleCommandBuilder commandBuilder = new OracleCommandBuilder(dataAdapter);
+        //    return dataAdapter.Update(sourceData);
+        //}
+
+        ///// <summary>
+        /////  Takes the <see cref="OracleCommand"/> object and populates it with the given parameters.
+        ///// </summary>
+        ///// <param name="command">The <see cref="OracleCommand"/> whose parameters are to be populated.</param>
+        ///// <param name="parameters">The parameters to populate the <see cref="OracleCommand"/> parameters with.</param>
+        //public static void PopulateParameters(this OracleCommand command, object[] parameters)
+        //{
+        //    command.PopulateParameters(OracleCommandBuilder.DeriveParameters, parameters);
+        //}
 
         #endregion
     }

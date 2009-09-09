@@ -375,10 +375,13 @@ namespace TVA.Measurements.Routing
 
             Clear();
 
-            foreach (DataRow adapterRow in m_dataSource.Tables[m_dataMember].Rows)
+            if (m_dataSource.Tables.Contains(m_dataMember))
             {
-                if (TryCreateAdapter(adapterRow, out item))
-                    Add(item);
+                foreach (DataRow adapterRow in m_dataSource.Tables[m_dataMember].Rows)
+                {
+                    if (TryCreateAdapter(adapterRow, out item))
+                        Add(item);
+                }
             }
 
             m_initialized = true;

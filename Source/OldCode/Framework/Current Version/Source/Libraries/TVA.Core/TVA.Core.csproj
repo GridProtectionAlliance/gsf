@@ -44,7 +44,6 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.OracleClient" />
     <Reference Include="System.Design" />
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Drawing" />
