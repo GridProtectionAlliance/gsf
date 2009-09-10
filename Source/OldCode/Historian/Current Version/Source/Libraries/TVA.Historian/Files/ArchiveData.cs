@@ -14,10 +14,13 @@
 //       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
 //  04/20/2009 - Pinal C. Patel
 //       Converted to C#.
+//  09/10/2009 - Pinal C. Patel
+//       Added contructor that takes in IMeasurement.
 //
 //*******************************************************************************************************
 
 using System;
+using TVA.Measurements;
 
 namespace TVA.Historian.Files
 {
@@ -88,6 +91,19 @@ namespace TVA.Historian.Files
         public ArchiveData(IDataPoint dataPoint)
             : this(dataPoint.HistorianID, dataPoint.Time, dataPoint.Value, dataPoint.Quality)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// </summary>
+        /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
+        [CLSCompliant(false)]
+        public ArchiveData(IMeasurement measurement)
+            : this((int)measurement.ID)
+        {
+            this.Time = new TimeTag((DateTime)measurement.Timestamp);
+            this.Value = (float)measurement.AdjustedValue;
+            this.Quality = (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData);
         }
 
         /// <summary>
