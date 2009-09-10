@@ -103,7 +103,7 @@ namespace TVA.IO.Compression
                 outBuffer[0] = (byte)strength;
 
                 for (int x = 1; x < length; x++)
-                    outBuffer[x] = source[x - 1];
+                    outBuffer[x] = source[startIndex + x - 1];
 
                 return outBuffer;
             }
