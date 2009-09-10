@@ -12,6 +12,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/01/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  09/10/2009 - Pinal C. Patel
+//       Modified the logic in ReadCurrentTimeSeriesData() overloads to remove try-catch and check for 
+//       null reference instead.
 //
 //*******************************************************************************************************
 
@@ -200,10 +203,18 @@ namespace TVA.Historian.Services
                 List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
                 foreach (string singleID in idList.Split(',', ';'))
                 {
-                    id = int.Parse(singleID);
-                    buffer = Archive.ReadStateData(id);
-                    state = new StateRecord(id, buffer, 0, buffer.Length);
-                    points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
+                    buffer = Archive.ReadStateData(id = int.Parse(singleID));
+                    if (buffer == null)
+                    {
+                        // ID is invalid.
+                        continue;
+                    }
+                    else
+                    {
+                        // Add to resultset.
+                        state = new StateRecord(id, buffer, 0, buffer.Length);
+                        points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
+                    }
                 }
                 data.TimeSeriesDataPoints = points.ToArray();
 
@@ -237,8 +248,17 @@ namespace TVA.Historian.Services
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
                 {
                     buffer = Archive.ReadStateData(id);
-                    state = new StateRecord(id, buffer, 0, buffer.Length);
-                    points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
+                    if (buffer == null)
+                    {
+                        // ID is invalid.
+                        continue;
+                    }
+                    else
+                    {
+                        // Add to resultset.
+                        state = new StateRecord(id, buffer, 0, buffer.Length);
+                        points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
+                    }
                 }
                 data.TimeSeriesDataPoints = points.ToArray();
 

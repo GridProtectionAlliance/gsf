@@ -26,6 +26,9 @@
 //       Modified state alterning properties to reopen the file when changed.
 //  09/02/2009 - Pinal C. Patel
 //       Modified code to prevent writes to dependency files when their access mode doesn't allow writes.
+//  09/10/2009 - Pinal C. Patel
+//       Modified ReadMetaData(), ReadStateData(), ReadMetaDataSummary() and ReadStateDataSummary() to
+//       check for null references, indicating no matching record, before returning the binary image.
 //
 //*******************************************************************************************************
 
@@ -2129,40 +2132,56 @@ namespace TVA.Historian.Files
         /// Reads <see cref="MetadataRecord.BinaryImage"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecord.BinaryImage"/>.</returns>
+        /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecord.BinaryImage"/> of <see cref="MetadataRecord"/> if found; otherwise null.</returns>
         public byte[] ReadMetaData(int historianID)
         {
-            return MetadataFile.Read(historianID).BinaryImage;
+            MetadataRecord record = MetadataFile.Read(historianID);
+            if (record == null)
+                return null;
+            else
+                return record.BinaryImage;
         }
 
         /// <summary>
         /// Reads <see cref="StateRecord.BinaryImage"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing <see cref="StateRecord.BinaryImage"/>.</returns>
+        /// <returns>A <see cref="byte"/> array containing <see cref="StateRecord.BinaryImage"/> of <see cref="StateRecord"/> if found; otherwise null.</returns>
         public byte[] ReadStateData(int historianID)
         {
-            return StateFile.Read(historianID).BinaryImage;
+            StateRecord record = StateFile.Read(historianID);
+            if (record == null)
+                return null;
+            else
+                return record.BinaryImage;
         }
 
         /// <summary>
         /// Reads <see cref="MetadataRecordSummary.BinaryImage"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecordSummary.BinaryImage"/>.</returns>
+        /// <returns>A <see cref="byte"/> array containing <see cref="MetadataRecordSummary.BinaryImage"/> of <see cref="MetadataRecordSummary"/> if found; otherwise null.</returns>
         public byte[] ReadMetaDataSummary(int historianID)
         {
-            return MetadataFile.Read(historianID).Summary.BinaryImage;
+            MetadataRecord record = MetadataFile.Read(historianID);
+            if (record == null)
+                return null;
+            else
+                return record.Summary.BinaryImage;
         }
 
         /// <summary>
         /// Reads <see cref="StateRecordSummary.BinaryImage"/> for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
-        /// <returns>A <see cref="byte"/> array containing <see cref="StateRecordSummary.BinaryImage"/>.</returns>
+        /// <returns>A <see cref="byte"/> array containing <see cref="StateRecordSummary.BinaryImage"/> of <see cref="StateRecordSummary"/> if found; otherwise null.</returns>
         public byte[] ReadStateDataSummary(int historianID)
         {
-            return StateFile.Read(historianID).Summary.BinaryImage;
+            StateRecord record = StateFile.Read(historianID);
+            if (record == null)
+                return null;
+            else
+                return record.Summary.BinaryImage;
         }
 
         /// <summary>

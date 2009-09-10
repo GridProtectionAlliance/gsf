@@ -14,6 +14,8 @@
 //       Generated original version of source code.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
+//  09/10/2009 - Pinal C. Patel
+//       Modified Process() to use deferred execution using "yield" for efficiency.
 //
 //*******************************************************************************************************
 
@@ -61,23 +63,22 @@ namespace TVA.Historian.Packets
         protected virtual IEnumerable<byte[]> Process()
         {
             if (Archive == null)
-                return null;
+                yield break;
 
-            List<byte[]> reply = new List<byte[]>();
+            byte[] data;
             if (RequestIDs.Count == 0 || (RequestIDs.Count == 1 && RequestIDs[0] == -1))
             {
                 // Information for all defined records is requested.
                 int id = 0;
                 while (true)
                 {
-                    try
-                    {
-                        reply.Add(Archive.ReadStateDataSummary(++id));
-                    }
-                    catch
-                    {
+                    data = Archive.ReadStateDataSummary(++id);
+                    if (data == null)
+                        // No more records.
                         break;
-                    }
+                    else
+                        // Yield retrieved data.
+                        yield return data;
                 }
             }
             else
@@ -85,18 +86,16 @@ namespace TVA.Historian.Packets
                 // Information for specific records is requested.
                 foreach (int id in RequestIDs)
                 {
-                    try
-                    {
-                        reply.Add(Archive.ReadStateDataSummary(id));
-                    }
-                    catch
-                    {
-                    }
+                    data = Archive.ReadStateDataSummary(id);
+                    if (data == null)
+                        // ID is invalid.
+                        continue;
+                    else
+                        // Yield retrieved data.
+                        yield return data;
                 }
             }
-            reply.Add(new StateRecord(-1).Summary.BinaryImage);
-
-            return reply;
+            yield return new StateRecord(-1).Summary.BinaryImage;   // To indicate EOT.
         }
 
         #endregion

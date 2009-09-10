@@ -12,6 +12,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  08/28/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  09/10/2009 - Pinal C. Patel
+//       Modified ReadMetadata() overloads to remove try-catch and check for null reference instead.
 //
 //*******************************************************************************************************
 
@@ -167,17 +169,13 @@ namespace TVA.Historian.Services
                 List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 while (true)
                 {
-                    try
-                    {
-                        id++;
-                        buffer = Archive.ReadMetaData(id);
-                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
-                    }
-                    catch
-                    {
-                        // Exception will be thrown when the specified id is not valid indicating EOF.
+                    buffer = Archive.ReadMetaData(++id);
+                    if (buffer == null)
+                        // No more records.
                         break;
-                    }
+                    else
+                        // Add to resultset.
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 
@@ -210,9 +208,13 @@ namespace TVA.Historian.Services
                 List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 foreach (string singleID in idList.Split(',', ';'))
                 {
-                    id = int.Parse(singleID);
-                    buffer = Archive.ReadMetaData(id);
-                    records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
+                    buffer = Archive.ReadMetaData(id = int.Parse(singleID));
+                    if (buffer == null)
+                        // ID is invalid.
+                        continue;
+                    else
+                        // Add to resultset.
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 
@@ -245,7 +247,12 @@ namespace TVA.Historian.Services
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
                 {
                     buffer = Archive.ReadMetaData(id);
-                    records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
+                    if (buffer == null)
+                        // ID is invalid.
+                        continue;
+                    else
+                        // Add to resultset.
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
                 metadata.MetadataRecords = records.ToArray();
 
