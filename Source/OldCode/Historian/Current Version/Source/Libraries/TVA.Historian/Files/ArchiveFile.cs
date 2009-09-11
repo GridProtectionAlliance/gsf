@@ -29,6 +29,9 @@
 //  09/10/2009 - Pinal C. Patel
 //       Modified ReadMetaData(), ReadStateData(), ReadMetaDataSummary() and ReadStateDataSummary() to
 //       check for null references, indicating no matching record, before returning the binary image.
+//  09/11/2009 - Pinal C. Patel
+//       Modified code to ensure the validity of dependency files by synchronizing them.
+//       Removed event handler on StateFile.FileModified event to avoid unnecessary processing.
 //
 //*******************************************************************************************************
 
@@ -888,19 +891,7 @@ namespace TVA.Historian.Files
             }
             set
             {
-                if (m_stateFile != null)
-                {
-                    // Detach events from any existing instance
-                    m_stateFile.FileModified -= StateFile_FileModified;
-                }
-
                 m_stateFile = value;
-
-                if (m_stateFile != null)
-                {
-                    // Attach events to new instance
-                    m_stateFile.FileModified += StateFile_FileModified;
-                }
             }
         }
 
@@ -1344,17 +1335,21 @@ namespace TVA.Historian.Files
                 else
                     m_dataBlocks = new List<ArchiveDataBlock>(new ArchiveDataBlock[m_stateFile.RecordsOnDisk]);
 
-                // Start the memory conservation process.
-                if (m_conserveMemory)
-                    m_conserveMemoryTimer.Start();
-
-                // Ensure that "rollover in progress" is not set.
+                // Validate the dependency files.
+                SyncStateFile();
                 if (m_intercomFile.FileAccessMode != FileAccess.Read)
                 {
+                    // Ensure that "rollover in progress" is not set.
                     IntercomRecord system = m_intercomFile.Read(1);
+                    if (system == null)
+                        system = new IntercomRecord(1);
                     system.RolloverInProgress = false;
                     m_intercomFile.Write(1, system);
                 }
+
+                // Start the memory conservation process.
+                if (m_conserveMemory)
+                    m_conserveMemoryTimer.Start();
 
                 // Start preparing the list of historic files.
                 m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
@@ -2529,6 +2524,26 @@ namespace TVA.Historian.Files
             }
         }
 
+        private void SyncStateFile()
+        {
+            if (m_stateFile.FileAccessMode != FileAccess.Read &&
+                m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
+            {
+                // Since we have more number of records in the Metadata File than in the State File we'll synchronize
+                // the number of records in both the files (very important) by writting a new records to the State
+                // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
+                // State File to grow in-memory or on-disk depending on how it's configured.
+                m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
+                m_stateFile.Save();
+
+                // We synchronize the block list with the number of state records physically present on the disk.
+                lock (m_dataBlocks)
+                {
+                    m_dataBlocks.AddRange(new ArchiveDataBlock[m_stateFile.RecordsOnDisk - m_dataBlocks.Count]);
+                }
+            }
+        }
+
         private void BuildHistoricFileList()
         {
             if (m_historicArchiveFiles == null)
@@ -2916,31 +2931,9 @@ namespace TVA.Historian.Files
 
         #region [ Event Handlers ]
 
-        private void StateFile_FileModified(object sender, EventArgs e)
-        {
-            if (m_stateFile.RecordsOnDisk > m_dataBlocks.Count)
-            {
-                // We synchronize the block list with the number of state records physically present on the disk.
-                // This count goes up when new metadata records are added which in turn causes new state records
-                // to be added to match with the metadata records.
-                lock (m_dataBlocks)
-                {
-                    m_dataBlocks.AddRange(new ArchiveDataBlock[m_stateFile.RecordsOnDisk - m_dataBlocks.Count]);
-                }
-            }
-        }
-
         private void MetadataFile_FileModified(object sender, System.EventArgs e)
         {
-            if (m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk && m_metadataFile.FileAccessMode != FileAccess.Read)
-            {
-                // Since we have more number of records in the Metadata File than in the State File we'll synchronize
-                // the number of records in both the files (very important) by writting a new records to the State
-                // File with an ID same as the number of records on disk for Metadata File. Doing so will cause the
-                // State File to grow in-memory or on-disk depending on how it's configured.
-                m_stateFile.Write(m_metadataFile.RecordsOnDisk, new StateRecord(m_metadataFile.RecordsOnDisk));
-                m_stateFile.Save();
-            }
+            SyncStateFile();
         }
 
         private void ConserveMemoryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
