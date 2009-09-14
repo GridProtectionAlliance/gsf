@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CodeSnippets xmlns="http://schemas.microsoft.com/VisualStudio/2005/CodeSnippet">
+	<CodeSnippet Format="1.0.0">
+		<Header>
+			<Title>IDisposable Implementation</Title>
+			<Shortcut>disposable</Shortcut>
+			<Description>Creates the canonical IDisposable implementation.</Description>
+			<Author>Pinal Patel</Author>
+			<SnippetTypes>
+				<SnippetType>Expansion</SnippetType>
+			</SnippetTypes>
+		</Header>
+		<Snippet>
+			<Declarations>
+				<Literal Editable="false">
+					<ID>class</ID>
+					<Function>ClassName()</Function>
+				</Literal>
+			</Declarations>
+			<Code Language="csharp">
+				<![CDATA[private bool m_disposed;
+				
+		/// <summary>
+		/// Releases all the resources used by the <see cref="$class$"/> object.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Releases the unmanaged resources before the <see cref="$class$"/> object is reclaimed by <see cref="GC"/>.
+		/// </summary>
+		~$class$()
+		{
+			Dispose(false);
+		}
+
+		/// <summary>
+		/// Releases the unmanaged resources used by the <see cref="$class$"/> object and optionally releases the managed resources.
+		/// </summary>
+		/// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!m_disposed)
+			{
+			    try
+			    {			
+				// This will be done regardless of whether the object is finalized or disposed.
+				$end$
+				if (disposing)
+				{
+				    // This will be done only when the object is disposed by calling Dispose().
+				}
+			    }
+			    finally
+			    {
+				m_disposed = true;          // Prevent duplicate dispose.
+			    }
+			}
+		}]]>
+			</Code>
+		</Snippet>
+	</CodeSnippet>
+</CodeSnippets>
