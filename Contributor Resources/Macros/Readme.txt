@@ -4,14 +4,15 @@ First, install the project macro:
 
 1) Go to “Tools” / “Macros” / “Macros IDE”
 2) Right click “MyMacros” and select "Add" / “Add Module”
-3) Enter name “ProjectMacros”
+3) Enter name “ProjectMacros”, then select the "Add" button
 3) Select all default code by pressing "Ctrl+A"
 5) Press the "delete" key to remove all existing code
 4) Paste in code from the "ProjectMacros.vb" found in this folder
 5) Right click “References” in the Project Explorer and select “Add Reference”
 6) Select “System.DirectoryServices.dll”
-7) Select “File” / “Save MyMacros”
-8) Close “Macros IDE”
+7) Select the "Add" button, then select the "OK" button
+8) Select “File” / “Save MyMacros”
+9) Close “Macros IDE”
 
 Second, assign a shortcut key to the macro:
 
