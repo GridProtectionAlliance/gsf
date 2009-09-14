@@ -6,10 +6,10 @@ If you have been granted developer access, please adhere to the following rules:
 
  3) All public and/or protected members should have a fully populated XML comment.
 
- 4) All check-in's must have a decription - please make it relevant.
+ 4) All check-in's must have a comment - please make it relevant.
 
- 5) Check-in descriptions should have a project prefix. For example, prefix check-in
-    descriptions for the Synchrophasor project with "Synchrophasor:".
+ 5) Check-in comment should have a project prefix. For example, prefix check-in
+    descriptions for the Synchrophasor project with "Synchrophasor: ".
 
  6) Do not leave debug code in the system unless it is properly regioned (#if DEBUG).
 
