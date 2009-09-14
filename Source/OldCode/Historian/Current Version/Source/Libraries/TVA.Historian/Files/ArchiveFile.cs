@@ -32,6 +32,8 @@
 //  09/11/2009 - Pinal C. Patel
 //       Modified code to ensure the validity of dependency files by synchronizing them.
 //       Removed event handler on StateFile.FileModified event to avoid unnecessary processing.
+//  09/11/2009 - Pinal C. Patel
+//       Fixed NullReferenceException encountered in Statistics if accessed when file is being opened.
 //
 //*******************************************************************************************************
 
@@ -1051,8 +1053,9 @@ namespace TVA.Historian.Files
                 ArchiveFileStatistics statistics = new ArchiveFileStatistics();
 
                 // Calculate file usage.
-                if (m_fileType == ArchiveFileType.Active)
-                    statistics.FileUsage = ((float)m_intercomFile.Read(1).DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
+                IntercomRecord system = m_intercomFile.Read(1);
+                if (m_fileType == ArchiveFileType.Active && system != null)
+                    statistics.FileUsage = ((float)system.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
                 else
                     statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
 
