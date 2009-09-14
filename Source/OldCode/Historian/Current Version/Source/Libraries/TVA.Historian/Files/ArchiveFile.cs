@@ -32,8 +32,9 @@
 //  09/11/2009 - Pinal C. Patel
 //       Modified code to ensure the validity of dependency files by synchronizing them.
 //       Removed event handler on StateFile.FileModified event to avoid unnecessary processing.
-//  09/11/2009 - Pinal C. Patel
+//  09/14/2009 - Pinal C. Patel
 //       Fixed NullReferenceException encountered in Statistics if accessed when file is being opened.
+//       Fixed bug in MetadataFile property related to event handlers.
 //
 //*******************************************************************************************************
 
@@ -918,7 +919,7 @@ namespace TVA.Historian.Files
 
                 m_metadataFile = value;
 
-                if (m_stateFile != null)
+                if (m_metadataFile != null)
                 {
                     // Attach events to new instance
                     m_metadataFile.FileModified += MetadataFile_FileModified;
