@@ -9,7 +9,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("TVA")]
 [assembly: AssemblyProduct("ConfigCrypter")]
-[assembly: AssemblyCopyright("Copyright © TVA 2009")]
+[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
