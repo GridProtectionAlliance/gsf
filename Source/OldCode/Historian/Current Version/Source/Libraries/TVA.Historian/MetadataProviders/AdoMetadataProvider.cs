@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  OleDbMetadataProvider.cs - Gbtc
+//  AdoMetadataProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  07/20/2009 - Pinal C. Patel
+//  09/15/2009 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  9/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -232,22 +230,25 @@
 #endregion
 
 using System;
-using System.Data.OleDb;
+using System.Collections.Generic;
+using System.Data;
+using System.Reflection;
 using TVA.Configuration;
 using TVA.Data;
 
 namespace TVA.Historian.MetadataProviders
 {
     /// <summary>
-    /// Represents a provider of data to a <see cref="TVA.Historian.Files.MetadataFile"/> from any OLE DB data store.
+    /// Represents a provider of data to a <see cref="TVA.Historian.Files.MetadataFile"/> from any ADO.NET based data store.
     /// </summary>
     /// <seealso cref="MetadataUpdater"/>
-    public class OleDbMetadataProvider : MetadataProviderBase
+    public class AdoMetadataProvider : MetadataProviderBase
     {
         #region [ Members ]
 
         // Fields
         private string m_connectString;
+        private string m_dataProviderString;
         private string m_selectString;
 
         #endregion
@@ -255,12 +256,13 @@ namespace TVA.Historian.MetadataProviders
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="OleDbMetadataProvider"/> class.
+        /// Initializes a new instance of the <see cref="AdoMetadataProvider"/> class.
         /// </summary>
-        public OleDbMetadataProvider()
+        public AdoMetadataProvider()
             : base()
         {
             m_connectString = string.Empty;
+            m_dataProviderString = string.Empty;
             m_selectString = string.Empty;
         }
 
@@ -269,7 +271,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the connection string for connecting to the OLE DB data store of metadata.
+        /// Gets or sets the connection string for connecting to the ADO.NET based data store of metadata.
         /// </summary>
         public string ConnectString
         {
@@ -284,7 +286,52 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Gets or sets the SELECT statement for retrieving metadata from the OLE DB data store.
+        /// Gets or sets the ADO.NET data provider assembly type creation string.
+        /// </summary>
+        /// <remarks>
+        /// Expected keys: AssemblyName;ConnectionType<br/>
+        /// Examples:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Database Connection Type</term>
+        ///         <description>Example ADO.NET Data Provider String</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>SQL Server</term>
+        ///         <description>AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.SqlClient.SqlConnection</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>MySQL</term>
+        ///         <description>AssemblyName={MySql.Data, Version=5.2.7.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d};ConnectionType=MySql.Data.MySqlClient.MySqlConnection</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Oracle</term>
+        ///         <description>AssemblyName={System.Data.OracleClient, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OracleClient.OracleConnection</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>OleDb</term>
+        ///         <description>AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>ODBC</term>
+        ///         <description>AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.Odbc.OdbcConnection</description>
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        public string DataProviderString
+        {
+            get
+            {
+                return m_dataProviderString;
+            }
+            set
+            {
+                m_dataProviderString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the SELECT statement for retrieving metadata from the ADO.NET based data store.
         /// </summary>
         public string SelectString
         {
@@ -303,7 +350,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Methods ]
 
         /// <summary>
-        /// Saves <see cref="OleDbMetadataProvider"/> settings to the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="AdoMetadataProvider"/> settings to the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -320,6 +367,8 @@ namespace TVA.Historian.MetadataProviders
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 element = settings["ConnectString", true];
                 element.Update(m_connectString, element.Description, element.Encrypted);
+                element = settings["DataProviderString", true];
+                element.Update(m_connectString, element.Description, element.Encrypted);
                 element = settings["SelectString", true];
                 element.Update(m_selectString, element.Description, element.Encrypted);
                 config.Save();
@@ -327,7 +376,7 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Loads saved <see cref="OleDbMetadataProvider"/> settings from the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="AdoMetadataProvider"/> settings from the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {
@@ -341,15 +390,17 @@ namespace TVA.Historian.MetadataProviders
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ConnectString", m_connectString, "Connection string for connecting to the OLE DB data store of metadata.", true);
-                settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the OLE DB data store.");
+                settings.Add("ConnectString", m_connectString, "Connection string for connecting to the ADO.NET based data store of metadata.", true);
+                settings.Add("DataProviderString", m_dataProviderString, "The ADO.NET data provider assembly type creation string used to create a connection to the data store of metadata.", true);
+                settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the ADO.NET based data store.");
                 ConnectString = settings["ConnectString"].ValueAs(m_connectString);
+                DataProviderString = settings["DataProviderString"].ValueAs(m_dataProviderString);
                 SelectString = settings["SelectString"].ValueAs(m_selectString);
             }
         }
 
         /// <summary>
-        /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from an OLE DB data store.
+        /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from an ADO.NET based data store.
         /// </summary>
         /// <exception cref="ArgumentNullException"><see cref="ConnectString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
         protected override void RefreshMetadata()
@@ -359,15 +410,37 @@ namespace TVA.Historian.MetadataProviders
 
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
-
-            OleDbConnection connection = new OleDbConnection(m_connectString);
+            
+            // Attempt to load configuration from an ADO.NET database connection
+            IDbConnection connection = null;
+            Dictionary<string, string> settings;
+            string assemblyName, connectionTypeName, adapterTypeName;
+            Assembly assembly;
+            Type connectionType, adapterType;
 
             try
             {
-                // Open OleDb connection.
+                settings = m_dataProviderString.ParseKeyValuePairs();
+                assemblyName = settings["AssemblyName"].ToNonNullString();
+                connectionTypeName = settings["ConnectionType"].ToNonNullString();
+                adapterTypeName = settings["AdapterType"].ToNonNullString();
+
+                if (string.IsNullOrEmpty(connectionTypeName))
+                    throw new InvalidOperationException("Database connection type was not defined.");
+
+                if (string.IsNullOrEmpty(adapterTypeName))
+                    throw new InvalidOperationException("Database adapter type was not defined.");
+
+                assembly = Assembly.Load(new AssemblyName(assemblyName));
+                connectionType = assembly.GetType(connectionTypeName);
+                adapterType = assembly.GetType(adapterTypeName);
+
+                // Open ADO.NET provider connection
+                connection = (IDbConnection)Activator.CreateInstance(connectionType);
+                connection.ConnectionString = m_connectString;
                 connection.Open();
 
-                // Update existing metadata.
+                // Update existing metadata
                 MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
                 metadataUpdater.UpdateMetadata(connection.ExecuteReader(m_selectString));
             }

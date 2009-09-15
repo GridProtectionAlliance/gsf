@@ -122,6 +122,7 @@
     <Compile Include="Files\StateRecordSummary.cs" />
     <Compile Include="IArchive.cs" />
     <Compile Include="IDataPoint.cs" />
+    <Compile Include="MetadataProviders\AdoMetadataProvider.cs" />
     <Compile Include="MetadataProviders\IMetadataProvider.cs" />
     <Compile Include="MetadataProviders\MetadataProviderBase.cs" />
     <Compile Include="MetadataProviders\MetadataProviders.cs" />
