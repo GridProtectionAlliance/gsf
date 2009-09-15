@@ -8,9 +8,9 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  3/16/2009 - Josh L. Patterson
+//  03/16/2009 - Josh L. Patterson
 //       Generated original version of source code.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************
