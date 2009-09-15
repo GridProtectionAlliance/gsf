@@ -19,8 +19,11 @@
 //       Added SocketConnecting event to notify that socket connection is being attempted.
 //  04/23/2009 - Pinal C. Patel
 //       Converted to C#.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/15/2009 - Pinal C. Patel
+//       Made caching of data locally optional so DataListener can be used just for getting real-time
+//       time series data that is now being made available via the new DataExtracted event.
 //
 //*******************************************************************************************************
 
@@ -292,6 +295,11 @@ namespace TVA.Historian
         public const bool DefaultConnectToServer = true;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="CacheData"/> property.
+        /// </summary>
+        public const bool DefaultCacheData = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="InitializeData"/> property.
         /// </summary>
         public const bool DefaultInitializeData = true;
@@ -391,6 +399,13 @@ namespace TVA.Historian
         public event EventHandler DataInitFailure;
 
         /// <summary>
+        /// Occurs when time series data is extracted from the received packets.
+        /// </summary>
+        [Category("Data"),
+        Description("Occurs when time series data is extracted from the received packets.")]
+        public event EventHandler<EventArgs<IList<IDataPoint>>> DataExtracted;
+
+        /// <summary>
         /// Occurs when the <see cref="Data"/> has changed.
         /// </summary>
         [Category("Data"),
@@ -403,6 +418,7 @@ namespace TVA.Historian
         private int m_port;
         private TransportProtocol m_protocol;
         private bool m_connectToServer;
+        private bool m_cacheData;
         private bool m_initializeData;
         private int m_initializeDataTimeout;
         private bool m_persistSettings;
@@ -437,6 +453,7 @@ namespace TVA.Historian
             m_port = DefaultPort;
             m_protocol = DefaultProtocol;
             m_connectToServer = DefaultConnectToServer;
+            m_cacheData = DefaultCacheData;
             m_initializeData = DefaultInitializeData;
             m_initializeDataTimeout = DefaultInitializeDataTimeout;
             m_persistSettings = DefaultPersistSettings;
@@ -593,13 +610,36 @@ namespace TVA.Historian
                 m_connectToServer = value;
             }
         }
+       
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="Data"/> is to be updated with the latest time series data.
+        /// </summary>
+        /// <exception cref="InvalidOperationException"><see cref="CacheData"/> is being disabled when <see cref="InitializeData"/> is enabled.</exception>
+        [Category("Data"),
+        DefaultValue(DefaultCacheData),
+        Description("Indicates whether the Data is to be updated with the latest time series data.")]
+        public bool CacheData 
+        {
+            get
+            {
+                return m_cacheData;
+            }
+            set
+            {
+                if (!value && m_initializeData)
+                    throw new InvalidOperationException("CacheData cannot be disabled when InitializeData is enabled.");
+
+                m_cacheData = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="DataListener"/> will initialize the <see cref="Data"/> from the <see cref="Server"/> on startup.
         /// </summary>
         /// <remarks>
-        ///  <see cref="InitializeData"/> should be enabled only if the <see cref="Server"/> software on port 1003 is programmed to accept <see cref="PacketType11"/>.
+        /// <see cref="InitializeData"/> should be enabled only if the <see cref="Server"/> software on port 1003 is programmed to accept <see cref="PacketType11"/>.
         /// </remarks>
+        /// <exception cref="InvalidOperationException"><see cref="InitializeData"/> is being enabled when <see cref="CacheData"/> is disabled.</exception>
         [Category("Data"),
         DefaultValue(DefaultInitializeData),
         Description("Indicates whether the DataListener will initialize the Data from the Server on startup.")]
@@ -611,6 +651,9 @@ namespace TVA.Historian
             }
             set
             {
+                if (value && !m_cacheData)
+                    throw new InvalidOperationException("InitializeData cannot be enabled when CacheData is disabled.");
+
                 m_initializeData = value;
             }
         }
@@ -901,6 +944,8 @@ namespace TVA.Historian
                 element.Update(m_protocol, element.Description, element.Encrypted);
                 element = settings["ConnectToServer", true];
                 element.Update(m_connectToServer, element.Description, element.Encrypted);
+                element = settings["CacheData", true];
+                element.Update(m_cacheData, element.Description, element.Encrypted);
                 element = settings["InitializeData", true];
                 element.Update(m_initializeData, element.Description, element.Encrypted);
                 element = settings["InitializeDataTimeout", true];
@@ -928,13 +973,15 @@ namespace TVA.Historian
                 settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
                 settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
                 settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
-                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False..");
+                settings.Add("CacheData", m_cacheData, "True if newest data is to be cached locally; otherwise False.");
+                settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False.");
                 settings.Add("InitializeDataTimeout", m_initializeDataTimeout, "Number of milliseconds to wait for data to be initialized from the server on startup.");
                 ID = settings["ID"].ValueAs(m_id);
                 Server = settings["Server"].ValueAs(m_server);
                 Port = settings["Port"].ValueAs(m_port);
                 Protocol = settings["Protocol"].ValueAs(m_protocol);
                 ConnectToServer = settings["ConnectToServer"].ValueAs(m_connectToServer);
+                CacheData = settings["CacheData"].ValueAs(m_cacheData);
                 InitializeData = settings["InitializeData"].ValueAs(m_initializeData);
                 InitializeDataTimeout = settings["InitializeDataTimeout"].ValueAs(m_initializeDataTimeout);
             }
@@ -1188,6 +1235,16 @@ namespace TVA.Historian
         }
 
         /// <summary>
+        /// Raises the <see cref="DataExtracted"/> event.
+        /// </summary>
+        /// <param name="data">Extracted time series data to send to <see cref="DataExtracted"/> event.</param>
+        protected virtual void OnDataExtracted(IList<IDataPoint> data)
+        {
+            if (DataExtracted != null)
+                DataExtracted(this, new EventArgs<IList<IDataPoint>>(data));
+        }
+        
+        /// <summary>
         /// Raises the <see cref="DataChanged"/> event.
         /// </summary>
         protected virtual void OnDataChanged()
@@ -1331,36 +1388,39 @@ namespace TVA.Historian
 
         private void PacketParser_DataParsed(object sender, EventArgs<Guid, IList<IPacket>> e)
         {
-            // Process all the packets.
-            IEnumerable<IDataPoint> dataPoints;
+            // Extract data from the packets.
+            IEnumerable<IDataPoint> extractedData;
+            List<IDataPoint> dataPoints = new List<IDataPoint>();
             foreach (IPacket packet in e.Argument2)
             {
-                dataPoints = packet.ExtractTimeSeriesData();
-                if (dataPoints != null)
-                {
-                    // Packet contains time series data.
-                    lock (m_data)
-                    {
-                        foreach (IDataPoint dataPoint in dataPoints)
-                        {
-                            if (dataPoint.HistorianID > m_data.Count)
-                            {
-                                // No data exists for the id, so add one for it and others in-between.
-                                for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
-                                {
-                                    m_data.Add(new ArchiveData(i));
-                                }
-                            }
+                    extractedData = packet.ExtractTimeSeriesData();
+                    if (extractedData != null)
+                        dataPoints.AddRange(extractedData);
+            }
+            OnDataExtracted(dataPoints);
 
-                            // Replace existing data with the new data.
-                            m_data[dataPoint.HistorianID - 1] = dataPoint;
+            // Cache extracted data for reuse.
+            if (m_cacheData)
+            {
+                lock (m_data)
+                {
+                    foreach (IDataPoint dataPoint in dataPoints)
+                    {
+                        if (dataPoint.HistorianID > m_data.Count)
+                        {
+                            // No data exists for the id, so add one for it and others in-between.
+                            for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
+                            {
+                                m_data.Add(new ArchiveData(i));
+                            }
                         }
+
+                        // Replace existing data with the new data.
+                        m_data[dataPoint.HistorianID - 1] = dataPoint;
                     }
                 }
+                OnDataChanged();
             }
-
-            // Notify that the data has changed.
-            OnDataChanged();
         }
 
         #endregion
