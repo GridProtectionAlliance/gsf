@@ -150,6 +150,36 @@ Public Class MeasurementExporter
         End Get
     End Property
 
+    ' To help with processor utilization, I am now filtering measurements in advance!
+
+    Public Overrides Sub QueueMeasurementForCalculation(ByVal measurement As IMeasurement)
+
+        Dim ticks As Long = measurement.Ticks
+
+        If (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 Then
+            MyBase.QueueMeasurementForCalculation(measurement)
+        End If
+
+    End Sub
+
+    Public Overrides Sub QueueMeasurementsForCalculation(ByVal measurements As ICollection(Of IMeasurement))
+
+        MyBase.QueueMeasurementsForCalculation(measurements)
+
+        Dim inputMeasurements As New List(Of IMeasurement)
+        Dim ticks As Long
+
+        For Each measurement As IMeasurement In measurements
+            ticks = measurement.Ticks
+            If (New Date(ticks)).Second Mod m_exportInterval = 0 AndAlso TicksBeyondSecond(ticks) = 0 AndAlso IsInputMeasurement(measurement.Key) Then
+                inputMeasurements.Add(measurement)
+            End If
+        Next
+
+        If inputMeasurements.Count > 0 Then SortMeasurements(inputMeasurements)
+
+    End Sub
+
     ''' <summary>
     ''' Export PMU data to ICCP using an intermediate file
     ''' </summary>
