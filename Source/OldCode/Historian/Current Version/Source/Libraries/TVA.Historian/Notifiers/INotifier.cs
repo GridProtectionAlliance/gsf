@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  04/21/2009 - Pinal C. Patel
 //       Converted to C#.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

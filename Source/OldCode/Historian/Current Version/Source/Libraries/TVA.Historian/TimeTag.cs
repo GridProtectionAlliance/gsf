@@ -16,7 +16,7 @@
 //       Converted to C#.
 //  09/02/2009 - Pinal C. Patel
 //       Added Parse() static method to allow conversion of string to TimeTag.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

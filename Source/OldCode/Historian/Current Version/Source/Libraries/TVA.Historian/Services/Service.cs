@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  09/02/2009 - Pinal C. Patel
 //       Modified configuration of the default WebHttpBinding to enable receiving of large payloads.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

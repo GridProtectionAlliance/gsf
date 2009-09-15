@@ -14,7 +14,7 @@
 //       Added AlarmDelay property to expose delay in sending alarm notification.
 //  04/20/2009 - Pinal C. Patel
 //       Converted to C#.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

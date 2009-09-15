@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  09/02/2009 - Pinal C. Patel
 //       Modified ReadData() to take start and end times as strings for flexibility.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

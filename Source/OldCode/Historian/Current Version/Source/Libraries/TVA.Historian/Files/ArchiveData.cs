@@ -14,7 +14,7 @@
 //       Converted to C#.
 //  09/10/2009 - Pinal C. Patel
 //       Added contructor that takes in IMeasurement.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

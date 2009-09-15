@@ -14,7 +14,7 @@
 //       Added cleanup code for response stream of the REST web service.
 //  08/21/2009 - Pinal C. Patel
 //       Moved RestDataFormat to Services namespace as SerializationFormat.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

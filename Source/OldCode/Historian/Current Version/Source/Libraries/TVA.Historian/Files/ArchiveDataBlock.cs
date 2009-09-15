@@ -19,7 +19,7 @@
 //       Converted to C#.
 //  08/05/2009 - Josh L. Patterson
 //       Edited Comments.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

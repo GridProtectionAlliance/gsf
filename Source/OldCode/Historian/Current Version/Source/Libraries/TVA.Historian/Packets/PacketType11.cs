@@ -14,7 +14,7 @@
 //       Converted to C#.
 //  09/10/2009 - Pinal C. Patel
 //       Modified Process() to use deferred execution using "yield" for efficiency.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

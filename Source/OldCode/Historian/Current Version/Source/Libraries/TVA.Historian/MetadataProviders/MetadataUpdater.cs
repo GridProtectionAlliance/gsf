@@ -13,7 +13,7 @@
 //  08/21/2009 - Pinal C. Patel
 //       Removed ExtractMetadata() method as this can be achived using Serialization.Serialize() method.
 //       Modified UpdateMetadata() overload for processing web service data to use Serialization class.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

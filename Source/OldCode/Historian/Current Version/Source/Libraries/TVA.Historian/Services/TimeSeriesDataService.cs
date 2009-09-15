@@ -13,7 +13,7 @@
 //  09/10/2009 - Pinal C. Patel
 //       Modified the logic in ReadCurrentTimeSeriesData() overloads to remove try-catch and check for 
 //       null reference instead.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

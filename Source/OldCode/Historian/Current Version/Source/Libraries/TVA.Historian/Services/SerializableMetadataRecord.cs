@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  08/18/2009 - Pinal C. Patel
 //       Set the order of property serialization/deserialization for DataMember attribute.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

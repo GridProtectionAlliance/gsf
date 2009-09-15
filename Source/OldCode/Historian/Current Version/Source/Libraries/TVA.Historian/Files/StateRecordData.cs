@@ -10,7 +10,7 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/04/2009 - Pinal C. Patel
 //       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

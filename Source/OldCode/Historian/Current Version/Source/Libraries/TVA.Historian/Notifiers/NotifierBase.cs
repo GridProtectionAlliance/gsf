@@ -14,7 +14,7 @@
 //       Converted to C#.
 //  08/06/2009 - Pinal C. Patel
 //       Made Initialize() virtual so inheriting classes can override the default behavior.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

@@ -33,7 +33,7 @@
 //  09/14/2009 - Pinal C. Patel
 //       Fixed NullReferenceException encountered in Statistics if accessed when file is being opened.
 //       Fixed bug in MetadataFile property related to event handlers.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

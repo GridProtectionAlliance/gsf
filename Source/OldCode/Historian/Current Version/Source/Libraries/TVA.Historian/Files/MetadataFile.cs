@@ -14,7 +14,7 @@
 //       Converted to C#.
 //  09/03/2009 - Pinal C. Patel
 //       Added Read() overload that takes string as its parameter for performing flexible reads.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************
