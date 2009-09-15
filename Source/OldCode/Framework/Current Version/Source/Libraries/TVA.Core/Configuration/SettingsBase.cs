@@ -18,7 +18,7 @@
 //          DefaultValueAttribute value if provided and current value was uninitialized.
 //  08/05/2009 - Josh L. Patterson
 //       Edited Comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

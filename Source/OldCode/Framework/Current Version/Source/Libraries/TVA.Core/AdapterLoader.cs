@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  08/06/2009 - Pinal C. Patel
 //       Modified Dispose(boolean) to iterate through the adapter collection correctly.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

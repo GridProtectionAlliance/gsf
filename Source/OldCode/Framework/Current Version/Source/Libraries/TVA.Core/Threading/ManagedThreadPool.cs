@@ -12,7 +12,7 @@
 //       Initial version of source generated.
 //  09/11/2008 - J. Ritchie Carroll
 //       Converted to C#.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

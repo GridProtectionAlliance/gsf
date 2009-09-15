@@ -15,7 +15,7 @@
 //  09/26/2008 - J. Ritchie Carroll
 //       Added a ProcessProgress.Handler class to allow functions with progress delegate
 //       to update progress information using the ProcessProgress class.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

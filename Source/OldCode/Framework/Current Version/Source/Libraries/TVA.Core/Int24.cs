@@ -14,7 +14,7 @@
 //       Updated comments.
 //  8/11/2009 - Josh L. Patterson
 //       Updated comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

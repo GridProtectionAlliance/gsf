@@ -28,7 +28,7 @@
 //  08/10/2009 - Pinal C. Patel
 //       Modified Write() to write empty intermediate records that are missing to avoid garbage data 
 //       for the missing intermediate records when records are being written to disk directly.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

@@ -14,7 +14,7 @@
 //       Made initialize during constructor optional for languages that do not initialize
 //           member variables before call to constructor (e.g., Visual Basic.NET).
 //       Updated class to pick up DesctiptionAttribute and apply value to settings.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

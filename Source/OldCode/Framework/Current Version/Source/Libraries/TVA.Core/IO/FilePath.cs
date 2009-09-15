@@ -22,7 +22,7 @@
 //       Fixed bug in GetFilePatternRegularExpression().
 //  06/30/2009 - Pinal C. Patel
 //       Removed FilePathHasFileName() since the result was error prone.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

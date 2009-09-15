@@ -16,7 +16,7 @@
 //       Added TryGetAttribute extension.
 //  06/30/2009 - Pinal C. Patel
 //       Fixed LoadImplementations() to correctly use FilePath.GetFileList().
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

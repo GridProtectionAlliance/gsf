@@ -25,7 +25,7 @@
 //       Enabled upon initialization rather than instantiation.
 //  08/07/2009 - Pinal C. Patel
 //       Added LoggingException event to notify about exceptions encountered when logging exceptions.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

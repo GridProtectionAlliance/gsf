@@ -14,7 +14,7 @@
 //       Converted to C#.
 //  11/03/2008 - Pinal C. Patel
 //       Edited code comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

@@ -13,7 +13,7 @@
 //  11/20/2008 - J. Ritchie Carroll
 //       Adapted for more generalized use via the following related base classes:
 //          BinaryImageParserBase => FrameImageParserBase => MultiSourceFrameImageParserBase.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

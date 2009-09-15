@@ -14,7 +14,7 @@
 //		 Modified calculation to use predefined table instead of calculation on the fly.
 //  08/05/2009 - Josh L. Patterson
 //       Edited Comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

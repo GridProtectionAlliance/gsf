@@ -16,7 +16,7 @@
 //       Converted to C#.
 //  07/08/2009 - J. Ritchie Carroll
 //       Added WaitHandle return value from asynchronous connection.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

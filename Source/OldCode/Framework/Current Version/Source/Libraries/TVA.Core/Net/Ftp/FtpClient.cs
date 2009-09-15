@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  09/23/2008 - J. Ritchie Carroll
 //       Generated original version of source code.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

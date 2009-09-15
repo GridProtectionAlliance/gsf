@@ -42,7 +42,7 @@
 //       functions instead of manual iteration of collection items.
 //       Renamed GetProcess(), GetConnectedClient() and GetClientRequestHandler() to FindProcess(), 
 //       FindConnectedClient() and FindClientRequestHandler() respectively.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

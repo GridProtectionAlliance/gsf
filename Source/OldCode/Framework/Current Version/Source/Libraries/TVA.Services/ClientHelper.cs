@@ -28,7 +28,7 @@
 //       to allow for input text to be specified for any AuthenticationMethod instead of just Ntml.
 //  07/23/2009 - Pinal C. Patel
 //       ReceivedServiceResponse is now raised only for custom service responses instead of all.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

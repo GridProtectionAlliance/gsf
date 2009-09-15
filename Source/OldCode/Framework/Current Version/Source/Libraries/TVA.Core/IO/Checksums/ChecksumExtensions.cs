@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  06/10/2009 - Mehulbhi Thakkar
 //		 Added extension method for CRC-ModBus calculation.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

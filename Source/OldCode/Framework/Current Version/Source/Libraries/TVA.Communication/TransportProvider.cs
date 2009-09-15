@@ -12,7 +12,7 @@
 //       Generated original version of source code.
 //  07/15/2009 - Pinal C. Patel
 //       Added error checking to Reset().
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

@@ -18,7 +18,7 @@
 //       Added WaitHandle return value from asynchronous connection.
 //  07/15/2009 - Pinal C. Patel
 //       Modified Disconnect() to add error checking.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

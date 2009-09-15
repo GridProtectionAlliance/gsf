@@ -20,7 +20,7 @@
 //       the "Config file has been modified" exception that is thrown when using shortcut methods.
 //  10/01/2008 - J. Ritchie Carroll
 //       Converted to C# extensions.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

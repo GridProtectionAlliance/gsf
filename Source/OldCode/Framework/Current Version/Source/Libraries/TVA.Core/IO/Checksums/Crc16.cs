@@ -14,7 +14,7 @@
 //       Modified code to calculate either standard CRC-16 or ModBus CRC.
 //  08/05/2009 - Josh L. Patterson
 //       Edited Comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

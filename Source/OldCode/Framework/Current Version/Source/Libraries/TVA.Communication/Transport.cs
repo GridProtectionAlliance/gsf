@@ -17,7 +17,7 @@
 //  09/08/2009 - Pinal C. Patel
 //       Modified CreateSocket() to create a socket for the AddressFamily of the endpoint.
 //       Modified CreateEndPoint() to use IPv6 if supported when no IP address is specified.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

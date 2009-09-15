@@ -24,7 +24,7 @@
 //       Converted to C# - basic encryption/decryption extends string, byte[], and Stream.
 //  08/10/2009 - Josh L. Patterson
 //       Edited Comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

@@ -18,7 +18,7 @@
 //       Modified to transmit serialized identity token used for authentication by the ServiceHelper.
 //  07/21/2009 - Pinal C. Patel
 //       Modified identity token generation to use the new ClientHelper.AuthenticationInput property.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

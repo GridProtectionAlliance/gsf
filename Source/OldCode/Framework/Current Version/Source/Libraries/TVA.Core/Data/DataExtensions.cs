@@ -27,7 +27,7 @@
 //       Reviewed code comments.
 //  09/09/2009 - J. Ritchie Carroll
 //       Added extensions for ODBC providers.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

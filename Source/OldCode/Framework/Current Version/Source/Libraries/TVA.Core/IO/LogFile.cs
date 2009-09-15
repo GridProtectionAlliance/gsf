@@ -21,7 +21,7 @@
 //       Fixed the implementation of Enabled property.
 //  07/02/2009 - Pinal C. Patel
 //       Modified state alterning properties to reopen the file when changed.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

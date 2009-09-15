@@ -22,7 +22,7 @@
 //       Made boolean types a special case (i.e., using ParseBoolean extension).
 //  09/29/2008 - Pinal C. Patel
 //       Reviewed code comments.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

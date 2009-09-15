@@ -20,7 +20,7 @@
 //       Converted to C#.
 //  07/17/2009 - Pinal C. Patel
 //       Added support to specify a specific interface address on a multiple interface machine.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************

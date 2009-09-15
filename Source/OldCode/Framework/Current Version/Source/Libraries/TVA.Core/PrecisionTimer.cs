@@ -14,7 +14,7 @@
 //       Original version of source code for DateTimePrecise class.
 //  08/21/2008 - J. Ritchie Carroll
 //       Integrated, merged and adapted for general use as PrecisionTimer.
-//  9/14/2009 - Stephen C. Wills
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
 //*******************************************************************************************************
