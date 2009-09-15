@@ -12,8 +12,10 @@
 //       Generated original version of source code.
 //  08/06/2009 - Pinal C. Patel
 //       Made Initialize() virtual so inheriting classes can override the default behavior.
-//  9/15/2009 - Stephen C. Wills
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/15/2009 - Pinal C. Patel
+//       Throwing ArgumentNullException exception in Refresh() if Metadata is null.
 //
 //*******************************************************************************************************
 
@@ -512,30 +514,38 @@ namespace TVA.Historian.MetadataProviders
         /// Refreshes the <see cref="Metadata"/> from an external source.
         /// </summary>
         /// <returns>true if the <see cref="Metadata"/> is refreshed; otherwise false.</returns>
+        /// <exception cref="ArgumentNullException"><see cref="Metadata"/> is null.</exception>
         public bool Refresh()
         {
-            if (!m_enabled)
-                return false;
+            if (m_metadata == null)
+                throw new ArgumentNullException("Metadata");
 
-            Thread refreshThread = new Thread(RefreshInternal);
-            refreshThread.Start();
-            if (m_refreshTimeout < 1)
+            if (m_enabled)
             {
-                // Wait indefinetely on the refresh.
-                refreshThread.Join(Timeout.Infinite);
+                Thread refreshThread = new Thread(RefreshInternal);
+                refreshThread.Start();
+                if (m_refreshTimeout < 1)
+                {
+                    // Wait indefinetely on the refresh.
+                    refreshThread.Join(Timeout.Infinite);
+                }
+                else
+                {
+                    // Wait for the specified time on refresh.
+                    if (!refreshThread.Join(m_refreshTimeout * 1000))
+                    {
+                        refreshThread.Abort();
+
+                        return false;
+                    }
+                }
+
+                return true;
             }
             else
             {
-                // Wait for the specified time on refresh.
-                if (!refreshThread.Join(m_refreshTimeout * 1000))
-                {
-                    refreshThread.Abort();                  
-
-                    return false;
-                }
+                return false;
             }
-
-            return true;
         }
 
         /// <summary>
