@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/16/2009 - Pinal C. Patel
+//       Modified Stop() to not call OnProcessException() on exception to avoid getting in a loop.
 //
 //*******************************************************************************************************
 
@@ -235,6 +237,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace TVA.Measurements.Routing
 {
@@ -426,9 +429,13 @@ namespace TVA.Measurements.Routing
                 if (performedDisconnect && !UseAsyncConnect)
                     OnDisconnected();
             }
+            catch (ThreadAbortException)
+            {
+                // Ignore this exception.
+            }
             catch (Exception ex)
             {
-                OnProcessException(new InvalidOperationException(string.Format("Exception occured during disconnect: {0}", ex.Message), ex));
+                OnStatusMessage("ERROR: Exception occured during disconnect: {0}", ex.Message);
             }
         }
 
