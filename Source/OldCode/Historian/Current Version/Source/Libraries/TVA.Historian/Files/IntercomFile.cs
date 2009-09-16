@@ -14,6 +14,8 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/16/2009 - Pinal C. Patel
+//       Changed the default value for SettingsCategory property to the type name.
 //
 //*******************************************************************************************************
 
@@ -254,7 +256,7 @@ namespace TVA.Historian.Files
         public IntercomFile()
             : base()
         {
-            MinimumRecordCount = 1;
+            SettingsCategory = this.GetType().Name;
         }
 
         /// <summary>

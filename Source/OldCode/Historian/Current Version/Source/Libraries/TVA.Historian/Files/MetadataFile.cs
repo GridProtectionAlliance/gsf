@@ -16,6 +16,8 @@
 //       Added Read() overload that takes string as its parameter for performing flexible reads.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/16/2009 - Pinal C. Patel
+//       Changed the default value for SettingsCategory property to the type name.
 //
 //*******************************************************************************************************
 
@@ -258,6 +260,7 @@ namespace TVA.Historian.Files
         public MetadataFile()
             : base()
         {
+            SettingsCategory = this.GetType().Name;
         }
 
         /// <summary>
