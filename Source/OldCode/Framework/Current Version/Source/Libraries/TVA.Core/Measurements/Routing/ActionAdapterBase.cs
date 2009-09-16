@@ -235,8 +235,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
-using TVA.Collections;
 using System.Text.RegularExpressions;
+using TVA;
 
 namespace TVA.Measurements.Routing
 {
@@ -294,10 +294,10 @@ namespace TVA.Measurements.Routing
         /// <remarks>
         /// <para>
         /// Example connection string using manually defined measurements:<br/>
-        /// expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
-        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;<br/>
-        /// inputMeasurementKeys={P1:1245;P1:1247;P2:1335};<br/>
-        /// outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}<br/>
+        /// <c>expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
+        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;</c><br/>
+        /// <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
+        /// <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
         /// When defined manually, elements in key:<br/>
         /// * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
         /// * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
@@ -306,10 +306,10 @@ namespace TVA.Measurements.Routing
         /// </para>
         /// <para>
         /// Example connection string using measurements defined in a <see cref="DataSource"/> table:<br/>
-        /// expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
-        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;<br/>
-        /// inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};<br/>
-        /// outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}<br/>
+        /// <c>expectedFramesPerSecond=30; lagTime=1.0; leadTime=0.5; minimumMeasurementsToUse=-1;
+        /// useLocalClockAsRealTime=true; allowSortsByArrival=false;</c><br/>
+        /// <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+        /// <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
         /// <br/>
         /// Basic filtering syntax is as follows:<br/>
         /// <br/>
