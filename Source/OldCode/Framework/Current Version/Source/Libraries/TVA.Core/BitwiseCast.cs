@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -235,8 +236,10 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
 /**************************************************************************\
-   Copyright © 2009 - Gbtc, James Ritchie Carroll
+   Copyright © 2009 - J. Ritchie Carroll
    All rights reserved.
   
    Redistribution and use in source and binary forms, with or without
@@ -264,6 +267,8 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   
 \**************************************************************************/
+
+#endregion
 
 using System;
 

@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -246,32 +247,22 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
 //*******************************************************************************************************
-//  ErrorLogger.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
-//
-//  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: Pinal C. Patel
-//      Office: INFO SVCS APP DEV, CHATTANOOGA - MR 2W-C
-//       Phone: 423-751-2250
-//       Email: pcpatel@tva.gov
-//
-//   ------------------------------------------------------------------------------
 //
 //   Code based on the following project:
 //        User Friendly ASP.NET Exception Handling
 //        http://www.codeproject.com/KB/aspnet/ASPNETExceptionHandling.aspx
-//        Copyright Jeff Atwood
+//
+//   Copyright Jeff Atwood
 //  
 //   The Code Project Open License (CPOL):
 //        http://www.codeproject.com/info/cpol10.aspx
 //
-//   ------------------------------------------------------------------------------
-//
-//  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
-//
 //*******************************************************************************************************
+
+#endregion
 
 using System;
 using System.Collections.Generic;

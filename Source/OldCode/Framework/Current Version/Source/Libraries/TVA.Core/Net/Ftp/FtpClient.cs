@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -233,30 +234,21 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
 //*******************************************************************************************************
-//  FtpSession.cs
-//  Copyright © 2008 - TVA, all rights reserved - Gbtc
-//
-//  Build Environment: C#, Visual Studio 2008
-//  Primary Developer: J. Ritchie Carroll
-//      Office: PSO TRAN & REL, CHATTANOOGA - MR 2W-C
-//       Phone: 423/751-2827
-//       Email: jrcarrol@tva.gov
-//
-//   ------------------------------------------------------------------------------
 //
 //   Code based on the following project:
 //        http://www.codeproject.com/KB/IP/net_ftp_upload.aspx
 //  
+//   Copyright Alex Kwok & Uwe Keim 
+//
 //   The Code Project Open License (CPOL):
 //        http://www.codeproject.com/info/cpol10.aspx
 //
-//   ------------------------------------------------------------------------------
-//
-//  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
-//
 //*******************************************************************************************************
+
+#endregion
 
 using System;
 using System.ComponentModel;

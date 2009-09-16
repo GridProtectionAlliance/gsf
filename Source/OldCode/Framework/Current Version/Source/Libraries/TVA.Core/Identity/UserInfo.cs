@@ -20,8 +20,7 @@
 //       Modified the logic of Authenticate method to use the user's DirectoryEntry instance.
 //       Modified UserEntry property to impersonate privileged user if configured for the instance.
 //  11/08/2007 - J. Ritchie Carroll
-//       Corrected spelling of "Previleged" - this was a breaking change.
-//       Also, implemented user customizable implementation of previleged account credentials.
+//       Implemented user customizable implementation of previleged account credentials.
 //  09/15/2008 - J. Ritchie Carroll
 //       Converted to C#.
 //  10/06/2008 - Pinal C. Patel

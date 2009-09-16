@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -229,6 +230,22 @@
  representative as follows: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>.
 
 */
+#endregion
+
+#region [ Contributor License Agreements ]
+
+//*******************************************************************************************************
+//
+//   Code based on the following project:
+//        http://www.codeproject.com/KB/IP/net_ftp_upload.aspx
+//  
+//   Copyright Alex Kwok & Uwe Keim 
+//
+//   The Code Project Open License (CPOL):
+//        http://www.codeproject.com/info/cpol10.aspx
+//
+//*******************************************************************************************************
+
 #endregion
 
 using System.Collections;

@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -235,10 +236,12 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
 /**********************************************************************************\
-   Copyright © 2009 for combined work, Gbtc - 
-        James Ritchie Carroll, Leslie Sanford and James Brock
- 
+   
+   PrecisionTimer class
+   Copyright © 2009 - J. Ritchie Carroll for combined work
    All rights reserved.
   
    Redistribution and use in source and binary forms, with or without
@@ -267,7 +270,7 @@
 
    ------------------------------------------------------------------------------
 
-   Multimedia.Timer class adaptation:
+   Multimedia.Timer class:
    Copyright (c) 2006 Leslie Sanford
 
    * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -293,18 +296,15 @@
 
    ------------------------------------------------------------------------------
 
-   DateTimePrecise adpatation:
+   DateTimePrecise class:
    Copyright James Brock
   
    The Code Project Open License (CPOL):
         http://www.codeproject.com/info/cpol10.aspx
 
-   ------------------------------------------------------------------------------
-
-   Code Modification History:
-   ------------------------------------------------------------------------------
-
 \**********************************************************************************/
+
+#endregion
 
 using System;
 using System.Diagnostics;
