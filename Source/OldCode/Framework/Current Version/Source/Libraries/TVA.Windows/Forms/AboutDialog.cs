@@ -242,6 +242,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Windows.Forms;
 using TVA.Reflection;
 
@@ -357,7 +358,7 @@ namespace TVA.Windows.Forms
             if (File.Exists(disclaimerFile))
             {
                 // Disclaimer file exists so load it in memory.
-                StreamReader disclaimerReader = new StreamReader(disclaimerFile);
+                StreamReader disclaimerReader = new StreamReader(disclaimerFile, Encoding.Default);
                 SetCompanyDisclaimer(disclaimerReader.BaseStream);
                 disclaimerReader.Close(); // Release all locks on the file.
             }
@@ -375,7 +376,7 @@ namespace TVA.Windows.Forms
         public void SetCompanyDisclaimer(Stream disclaimerStream)
         {
             if (disclaimerStream != null)
-                RichTextBoxDisclaimer.Text = new StreamReader(disclaimerStream).ReadToEnd();
+                RichTextBoxDisclaimer.Text = new StreamReader(disclaimerStream, Encoding.Default).ReadToEnd();
         }
 
         private void AddListViewItem(ListView listView, string text, params string[] subitems)
