@@ -614,7 +614,7 @@ namespace TVA.Measurements.Routing
             else
             {
                 // Filter measurements to list of specified source IDs
-                IEnumerable<IMeasurement> filteredMeasurements = measurements.Where(measurement => m_sourceIDs.BinarySearch(measurement.Source) > -1);
+                IEnumerable<IMeasurement> filteredMeasurements = measurements.Where(measurement => m_sourceIDs.BinarySearch(measurement.Source, StringComparer.CurrentCultureIgnoreCase) > -1);
                 m_measurementQueue.AddRange(filteredMeasurements);
                 IncrementProcessedMeasurements(filteredMeasurements.Count());
             }
