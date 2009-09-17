@@ -25,6 +25,8 @@
 //  09/29/2008 - Pinal C. Patel
 //       Added new CurrentWeb and CurrentWin static properties to get the configuration file for a 
 //       specific type of application (i.e. Web or Windows).
+//       Modified GetConfiguration() to remove dependency on HttpContext.Current to avoid exception in
+//       async web application operations where HttpContext.Current is null.
 //
 //*******************************************************************************************************
 
@@ -248,6 +250,7 @@ using System;
 using System.Configuration;
 using System.Text;
 using System.Web.Configuration;
+using System.Web.Hosting;
 using System.Xml;
 using TVA.IO;
 using TVA.Xml;
@@ -517,7 +520,7 @@ namespace TVA.Configuration
                             break;
                         case ApplicationType.Web:
                             if (string.IsNullOrEmpty(configFilePath))
-                                configFilePath = System.Web.HttpContext.Current.Request.ApplicationPath;
+                                configFilePath = HostingEnvironment.ApplicationVirtualPath;
                             configuration = WebConfigurationManager.OpenWebConfiguration(TrimEnd(configFilePath, "web.config"));
                             break;
                     }

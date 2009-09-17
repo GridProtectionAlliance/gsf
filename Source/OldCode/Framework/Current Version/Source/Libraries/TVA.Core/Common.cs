@@ -18,6 +18,8 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/17/2009 - Pinal C. Patel
+//       Modified GetApplicationType() to remove dependency on HttpContext.Current.
 //
 //*******************************************************************************************************
 
@@ -241,7 +243,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using TVA.Collections;
+using System.Web.Hosting;
 using TVA.Reflection;
 
 namespace TVA
@@ -371,10 +373,14 @@ namespace TVA
         /// <summary>
         /// Gets the type of the currently executing application.
         /// </summary>
-        /// <returns>One of the TVA.ApplicationType values.</returns>
+        /// <returns>One of the <see cref="ApplicationType"/> values.</returns>
         public static ApplicationType GetApplicationType()
         {
-            if (System.Web.HttpContext.Current == null)
+            if (HostingEnvironment.ApplicationVirtualPath != null)
+            {
+                return ApplicationType.Web;
+            }
+            else
             {
                 try
                 {
@@ -398,15 +404,9 @@ namespace TVA
                 }
                 catch
                 {
-                    // We are unable to determine the application type. This is possible in case of a web app/web site
-                    // when this method is being called from a thread other than the main thread, in which case the
-                    // System.Web.HttpContext.Current property, used to determine if it is a web app, will not be set.
+                    // We are unable to determine the application type.
                     return ApplicationType.Unknown;
                 }
-            }
-            else
-            {
-                return ApplicationType.Web;
             }
         }
 

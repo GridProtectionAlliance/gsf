@@ -24,6 +24,8 @@
 //       Removed FilePathHasFileName() since the result was error prone.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/17/2009 - Pinal C. Patel
+//       Modified GetAbsolutePath() to remove dependency on HttpContext.Current.
 //
 //*******************************************************************************************************
 
@@ -249,6 +251,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Web.Hosting;
 using TVA.Interop;
 using TVA.Reflection;
 
@@ -548,7 +551,7 @@ namespace TVA.IO
                 {
                     // Prepends the application's root to the file path.
                     case ApplicationType.Web:
-                        filePath = Path.Combine(System.Web.HttpContext.Current.Request.MapPath("~/"), filePath);
+                        filePath = Path.Combine(HostingEnvironment.ApplicationPhysicalPath, filePath);
                         break;
                     case ApplicationType.WindowsCui:
                     case ApplicationType.WindowsGui:
