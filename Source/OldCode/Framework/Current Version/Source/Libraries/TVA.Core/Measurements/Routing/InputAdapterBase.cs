@@ -12,8 +12,6 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  09/16/2009 - Pinal C. Patel
-//       Modified Stop() to not call OnProcessException() on exception to avoid getting in a loop.
 //
 //*******************************************************************************************************
 
@@ -431,11 +429,11 @@ namespace TVA.Measurements.Routing
             }
             catch (ThreadAbortException)
             {
-                // Ignore this exception.
+                // This exception can be safely ignored...
             }
             catch (Exception ex)
             {
-                OnStatusMessage("ERROR: Exception occured during disconnect: {0}", ex.Message);
+                OnProcessException(new InvalidOperationException(string.Format("Exception occured during disconnect: {0}", ex.Message), ex));
             }
         }
 
@@ -477,11 +475,6 @@ namespace TVA.Measurements.Routing
         protected override void OnProcessException(Exception ex)
         {
             base.OnProcessException(ex);
-
-            // Exceptions thrown during measurement processing will cause a "reconnect" - this has to be
-            // this way - for example, if data source threw an exception because it was no longer connected
-            // this is the only way you could make sure connection cycle was restarted...
-            Start();
         }
 
         private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -495,6 +488,10 @@ namespace TVA.Measurements.Routing
 
                 if (!UseAsyncConnect)
                     OnConnected();
+            }
+            catch (ThreadAbortException)
+            {
+                // This exception can be safely ignored...
             }
             catch (Exception ex)
             {

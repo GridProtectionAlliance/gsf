@@ -12,8 +12,6 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  09/16/2009 - Pinal C. Patel
-//       Modified Stop() to not call OnProcessException() on exception to avoid getting in a loop.
 //
 //*******************************************************************************************************
 
@@ -238,8 +236,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TVA.Collections;
 using System.Threading;
+using TVA.Collections;
 
 namespace TVA.Measurements.Routing
 {
@@ -530,6 +528,12 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         protected virtual void OnConnected()
         {
+            // Start data processing thread
+            m_measurementQueue.Start();
+
+            // Start data monitor...
+            m_monitorTimer.Start();
+
             OnStatusMessage("Connection established.");
         }
 
@@ -558,11 +562,11 @@ namespace TVA.Measurements.Routing
             }
             catch (ThreadAbortException)
             {
-                // Ignore this exception.
+                // This exception can be safely ignored...
             }
             catch (Exception ex)
             {
-                OnStatusMessage("ERROR: Exception occured during disconnect: {0}", ex.Message);
+                OnProcessException(new InvalidOperationException(string.Format("Exception occured during disconnect: {0}", ex.Message), ex));
             }
         }
 
@@ -620,8 +624,35 @@ namespace TVA.Measurements.Routing
         /// Serializes measurements to data output stream.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// Derived classes must implement this function to process queued measurements.
         /// For example, this function would "archive" measurements if output adapter is for a historian.
+        /// </para>
+        /// <para>
+        /// It is important that consumers "resume" connection cycle if processing fails (e.g., connection
+        /// to archive is lost). Here is an example:
+        /// <example>
+        /// <code>
+        /// protected virtual void ProcessMeasurements(IMeasurement[] measurements)
+        /// {
+        ///     try
+        ///     {
+        ///         // Process measurements...
+        ///         foreach (IMeasurement measurement in measurement)
+        ///         {
+        ///             ArchiveMeasurement(measurement);
+        ///         }
+        ///     }
+        ///     catch (Exception)
+        ///     {                
+        ///         // So long as user hasn't requested to stop, restart connection cycle
+        ///         if (Enabled)
+        ///             Start();
+        ///     }
+        /// }
+        /// </code>
+        /// </example>
+        /// </para>
         /// </remarks>
         protected abstract void ProcessMeasurements(IMeasurement[] measurements);
 
@@ -681,11 +712,6 @@ namespace TVA.Measurements.Routing
         protected override void OnProcessException(Exception ex)
         {
             base.OnProcessException(ex);
-
-            // Exceptions thrown during measurement processing will cause a "reconnect" - this has to be
-            // this way - for example, if historian threw an exception because it was no longer connected
-            // this is the only way you could make sure historian connection cycle was restarted...
-            Start();
         }
 
         private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -697,14 +723,12 @@ namespace TVA.Measurements.Routing
                 // Attempt connection to data output adapter (e.g., call historian API connect function).
                 AttemptConnection();
 
-                // Start data processing thread
-                m_measurementQueue.Start();
-
-                // Start data monitor...
-                m_monitorTimer.Start();
-
                 if (!UseAsyncConnect)
                     OnConnected();
+            }
+            catch (ThreadAbortException)
+            {
+                // This exception can be safely ignored...
             }
             catch (Exception ex)
             {
