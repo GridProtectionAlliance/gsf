@@ -14,6 +14,8 @@
 //       Modified Dispose(boolean) to iterate through the adapter collection correctly.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/17/2009 - Pinal C. Patel
+//       Modified ProcessAdapter() to instantiate types with a default public contructor only.
 //
 //*******************************************************************************************************
 
@@ -490,18 +492,21 @@ namespace TVA
         {
             try
             {
-                // Instantiate adapter instance.
-                T adapter = (T)(Activator.CreateInstance(adapterType));
-
-                // Initialize adapter if supported.
-                ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
-                if (initializableAdapter != null)
-                    initializableAdapter.Initialize();
-
-                // Add adapter and notify via event.
-                lock (m_adapters)
+                if (adapterType.GetConstructor(Type.EmptyTypes) != null)
                 {
-                    m_adapters.Add(adapter);
+                    // Instantiate adapter instance.
+                    T adapter = (T)(Activator.CreateInstance(adapterType));
+
+                    // Initialize adapter if supported.
+                    ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
+                    if (initializableAdapter != null)
+                        initializableAdapter.Initialize();
+
+                    // Add adapter and notify via event.
+                    lock (m_adapters)
+                    {
+                        m_adapters.Add(adapter);
+                    }
                 }
             }
             catch (Exception ex)
