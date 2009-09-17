@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/17/2009 - Pinal C. Patel
+//       Renamed ConnectString to ConnectionString.
 //
 //*******************************************************************************************************
 
@@ -247,7 +249,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Members ]
 
         // Fields
-        private string m_connectString;
+        private string m_connectionString;
         private string m_selectString;
 
         #endregion
@@ -260,7 +262,7 @@ namespace TVA.Historian.MetadataProviders
         public OleDbMetadataProvider()
             : base()
         {
-            m_connectString = string.Empty;
+            m_connectionString = string.Empty;
             m_selectString = string.Empty;
         }
 
@@ -271,15 +273,15 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Gets or sets the connection string for connecting to the OLE DB data store of metadata.
         /// </summary>
-        public string ConnectString
+        public string ConnectionString
         {
             get
             {
-                return m_connectString;
+                return m_connectionString;
             }
             set
             {
-                m_connectString = value;
+                m_connectionString = value;
             }
         }
 
@@ -318,8 +320,8 @@ namespace TVA.Historian.MetadataProviders
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["ConnectString", true];
-                element.Update(m_connectString, element.Description, element.Encrypted);
+                element = settings["ConnectionString", true];
+                element.Update(m_connectionString, element.Description, element.Encrypted);
                 element = settings["SelectString", true];
                 element.Update(m_selectString, element.Description, element.Encrypted);
                 config.Save();
@@ -341,9 +343,9 @@ namespace TVA.Historian.MetadataProviders
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ConnectString", m_connectString, "Connection string for connecting to the OLE DB data store of metadata.", true);
+                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the OLE DB data store of metadata.", true);
                 settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the OLE DB data store.");
-                ConnectString = settings["ConnectString"].ValueAs(m_connectString);
+                ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
                 SelectString = settings["SelectString"].ValueAs(m_selectString);
             }
         }
@@ -351,16 +353,16 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from an OLE DB data store.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><see cref="ConnectString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException"><see cref="ConnectionString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
         protected override void RefreshMetadata()
         {
-            if (string.IsNullOrEmpty(m_connectString))
-                throw new ArgumentNullException("ConnectString");
+            if (string.IsNullOrEmpty(m_connectionString))
+                throw new ArgumentNullException("ConnectionString");
 
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
 
-            OleDbConnection connection = new OleDbConnection(m_connectString);
+            OleDbConnection connection = new OleDbConnection(m_connectionString);
 
             try
             {

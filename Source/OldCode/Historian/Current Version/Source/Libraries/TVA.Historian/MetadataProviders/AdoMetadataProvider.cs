@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/15/2009 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  09/17/2009 - Pinal C. Patel
+//       Renamed ConnectString to ConnectionString.
 //
 //*******************************************************************************************************
 
@@ -247,7 +249,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Members ]
 
         // Fields
-        private string m_connectString;
+        private string m_connectionString;
         private string m_dataProviderString;
         private string m_selectString;
 
@@ -261,7 +263,7 @@ namespace TVA.Historian.MetadataProviders
         public AdoMetadataProvider()
             : base()
         {
-            m_connectString = string.Empty;
+            m_connectionString = string.Empty;
             m_dataProviderString = string.Empty;
             m_selectString = string.Empty;
         }
@@ -273,15 +275,15 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Gets or sets the connection string for connecting to the ADO.NET based data store of metadata.
         /// </summary>
-        public string ConnectString
+        public string ConnectionString
         {
             get
             {
-                return m_connectString;
+                return m_connectionString;
             }
             set
             {
-                m_connectString = value;
+                m_connectionString = value;
             }
         }
 
@@ -365,10 +367,10 @@ namespace TVA.Historian.MetadataProviders
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["ConnectString", true];
-                element.Update(m_connectString, element.Description, element.Encrypted);
+                element = settings["ConnectionString", true];
+                element.Update(m_connectionString, element.Description, element.Encrypted);
                 element = settings["DataProviderString", true];
-                element.Update(m_connectString, element.Description, element.Encrypted);
+                element.Update(m_connectionString, element.Description, element.Encrypted);
                 element = settings["SelectString", true];
                 element.Update(m_selectString, element.Description, element.Encrypted);
                 config.Save();
@@ -390,10 +392,10 @@ namespace TVA.Historian.MetadataProviders
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ConnectString", m_connectString, "Connection string for connecting to the ADO.NET based data store of metadata.", true);
+                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the ADO.NET based data store of metadata.", true);
                 settings.Add("DataProviderString", m_dataProviderString, "The ADO.NET data provider assembly type creation string used to create a connection to the data store of metadata.", true);
                 settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the ADO.NET based data store.");
-                ConnectString = settings["ConnectString"].ValueAs(m_connectString);
+                ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
                 DataProviderString = settings["DataProviderString"].ValueAs(m_dataProviderString);
                 SelectString = settings["SelectString"].ValueAs(m_selectString);
             }
@@ -402,11 +404,11 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from an ADO.NET based data store.
         /// </summary>
-        /// <exception cref="ArgumentNullException"><see cref="ConnectString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException"><see cref="ConnectionString"/> or <see cref="SelectString"/> is set to a null or empty string.</exception>
         protected override void RefreshMetadata()
         {
-            if (string.IsNullOrEmpty(m_connectString))
-                throw new ArgumentNullException("ConnectString");
+            if (string.IsNullOrEmpty(m_connectionString))
+                throw new ArgumentNullException("ConnectionString");
 
             if (string.IsNullOrEmpty(m_selectString))
                 throw new ArgumentNullException("SelectString");
@@ -437,7 +439,7 @@ namespace TVA.Historian.MetadataProviders
 
                 // Open ADO.NET provider connection
                 connection = (IDbConnection)Activator.CreateInstance(connectionType);
-                connection.ConnectionString = m_connectString;
+                connection.ConnectionString = m_connectionString;
                 connection.Open();
 
                 // Update existing metadata
