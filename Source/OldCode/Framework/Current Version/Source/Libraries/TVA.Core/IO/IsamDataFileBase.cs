@@ -30,6 +30,9 @@
 //       for the missing intermediate records when records are being written to disk directly.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/16/2009 - Pinal C. Patel
+//       Modified Save() to flush buffered data to disk.
+//       Removed MinimumRecordCount property - not very useful.
 //
 //*******************************************************************************************************
 
@@ -465,11 +468,6 @@ namespace TVA.IO
         public const int DefaultAutoSaveInterval = -1;
 
         /// <summary>
-        /// Specifes the default value for the <see cref="MinimumRecordCount"/> property.
-        /// </summary>
-        public const int DefaultMinimumRecordCount = 0;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="LoadOnOpen"/> property.
         /// </summary>
         public const bool DefaultLoadOnOpen = false;
@@ -530,7 +528,6 @@ namespace TVA.IO
         private string m_fileName;
         private FileAccess m_fileAccessMode;
         private int m_autoSaveInterval;
-        private int m_minimumRecordCount;
         private bool m_loadOnOpen;
         private bool m_saveOnClose;
         private bool m_reloadOnModify;
@@ -558,7 +555,6 @@ namespace TVA.IO
             m_fileName = DefaultFileName;
             m_fileAccessMode = DefaultFileAccessMode;
             m_autoSaveInterval = DefaultAutoSaveInterval;
-            m_minimumRecordCount = DefaultMinimumRecordCount;
             m_loadOnOpen = DefaultLoadOnOpen;
             m_saveOnClose = DefaultSaveOnClose;
             m_reloadOnModify = DefaultReloadOnModify;
@@ -640,25 +636,6 @@ namespace TVA.IO
             set
             {
                 m_autoSaveInterval = value;
-                ReOpen();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the minimum number of records that the file will have when it is opened.
-        /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultMinimumRecordCount),
-        Description("Minimum number of records that the file will have when it is opened.")]
-        public int MinimumRecordCount
-        {
-            get
-            {
-                return m_minimumRecordCount;
-            }
-            set
-            {
-                m_minimumRecordCount = value;
                 ReOpen();
             }
         }
@@ -1069,8 +1046,6 @@ namespace TVA.IO
                 element.Update(m_fileAccessMode, element.Description, element.Encrypted);
                 element = settings["AutoSaveInterval", true];
                 element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
-                element = settings["MinimumRecordCount", true];
-                element.Update(m_minimumRecordCount, element.Description, element.Encrypted);
                 element = settings["LoadOnOpen", true];
                 element.Update(m_loadOnOpen, element.Description, element.Encrypted);
                 element = settings["SaveOnClose", true];
@@ -1098,14 +1073,12 @@ namespace TVA.IO
                 settings.Add("FileName", m_fileName, "Name of the file including its path.");
                 settings.Add("FileAccessMode", m_fileAccessMode, "Access mode (Read; Write; ReadWrite) to be used when opening the file.");
                 settings.Add("AutoSaveInterval", m_autoSaveInterval, "Interval in milliseconds at which the file records loaded in memory are to be saved automatically to disk. Use -1 to disable automatic saving.");
-                settings.Add("MinimumRecordCount", m_minimumRecordCount, "Minimum number of records that the file must have when it is opened.");
                 settings.Add("LoadOnOpen", m_loadOnOpen, "True if file records are to be loaded in memory when opened; otherwise False.");
                 settings.Add("SaveOnClose", m_saveOnClose, "True if file records loaded in memory are to be saved to disk when file is closed; otherwise False.");
                 settings.Add("ReloadOnModify", m_reloadOnModify, "True if file records loaded in memory are to be re-loaded when file is modified on disk; otherwise False.");
                 FileName = settings["FileName"].ValueAs(m_fileName);
                 FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
                 AutoSaveInterval = settings["AutoSaveInterval"].ValueAs(m_autoSaveInterval);
-                MinimumRecordCount = settings["MinimumRecordCount"].ValueAs(m_minimumRecordCount);
                 LoadOnOpen = settings["LoadOnOpen"].ValueAs(m_loadOnOpen);
                 SaveOnClose = settings["SaveOnClose"].ValueAs(m_saveOnClose);
                 ReloadOnModify = settings["ReloadOnModify"].ValueAs(m_reloadOnModify);
@@ -1135,19 +1108,10 @@ namespace TVA.IO
                 // Load records into memory if specified to do so.
                 if (m_loadOnOpen) Load();
 
-                // Makes sure that we have the minimum number of records specified.
-                for (int i = RecordsOnDisk + 1; i <= m_minimumRecordCount; i++)
-                {
-                    Write(i, CreateNewRecord(i));
-                }
-
-                if (m_reloadOnModify)
-                {
-                    // Watch for any modifications made to the file on disk.
-                    m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
-                    m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
-                    m_fileWatcher.EnableRaisingEvents = true;
-                }
+                // Watch the file for any modifications made to the file on disk.
+                m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
+                m_fileWatcher.Filter = FilePath.GetFileName(m_fileName);
+                m_fileWatcher.EnableRaisingEvents = true;
 
                 if (m_autoSaveInterval > 0)
                 {
@@ -1240,6 +1204,9 @@ namespace TVA.IO
         /// <summary>
         /// Saves records loaded in memory to disk.
         /// </summary>
+        /// <remarks>
+        /// <see cref="Save()"/> is equivalent to <see cref="FileStream.Flush()"/> when records are not loaded in memory.
+        /// </remarks>
         public void Save()
         {
             if (IsOpen)
@@ -1263,6 +1230,8 @@ namespace TVA.IO
                             WriteToDisk(m_fileRecords);
                         }
                     }
+                    m_fileData.Flush();
+                    File.SetLastWriteTime(m_fileName, DateTime.Now);
 
                     OnDataSaved();
                 }
@@ -1490,6 +1459,7 @@ namespace TVA.IO
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        Close();
                         SaveSettings();
 
                         if (m_loadWaitHandle != null)
