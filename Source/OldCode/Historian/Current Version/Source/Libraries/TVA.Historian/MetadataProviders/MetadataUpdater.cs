@@ -15,6 +15,8 @@
 //       Modified UpdateMetadata() overload for processing web service data to use Serialization class.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/16/2009 - Pinal C. Patel
+//       Modified UpdateMetadata() overloads to save the metadata file upon update.
 //
 //*******************************************************************************************************
 
@@ -402,6 +404,7 @@ namespace TVA.Historian.MetadataProviders
 
                 m_metadata.Write(metadataRecord.HistorianID, metadataRecord);
             }
+            m_metadata.Save();
         }
 
         /// <summary>
@@ -474,6 +477,7 @@ namespace TVA.Historian.MetadataProviders
 
                 m_metadata.Write(metadataRecord.HistorianID, metadataRecord);
             }
+            m_metadata.Save();
         }
 
         /// <summary>
@@ -491,6 +495,7 @@ namespace TVA.Historian.MetadataProviders
             {
                 m_metadata.Write(deserializedMetadataRecord.HistorianID, deserializedMetadataRecord.Deflate());
             }
+            m_metadata.Save();
         }
 
         #endregion       
