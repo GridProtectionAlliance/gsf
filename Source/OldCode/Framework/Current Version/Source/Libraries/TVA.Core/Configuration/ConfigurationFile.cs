@@ -22,6 +22,9 @@
 //       Reviewed code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/29/2008 - Pinal C. Patel
+//       Added new CurrentWeb and CurrentWin static properties to get the configuration file for a 
+//       specific type of application (i.e. Web or Windows).
 //
 //*******************************************************************************************************
 
@@ -355,22 +358,39 @@ namespace TVA.Configuration
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class representing the config file of 
-        /// current Windows or Web application.
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
         /// </summary>
         public ConfigurationFile()
-            : this("")
+            : this(string.Empty)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class representing the config file of 
-        /// another Windows or Web application.
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
+        /// </summary>
+        /// <param name="appType">One of the <see cref="ApplicationType"/> values.</param>
+        public ConfigurationFile(ApplicationType appType)
+            : this(string.Empty, appType)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
         /// </summary>
         /// <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
         public ConfigurationFile(string configFilePath)
+            : this(configFilePath, TVA.Common.GetApplicationType())
         {
-            m_configuration = GetConfiguration(configFilePath);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
+        /// </summary>
+        /// <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
+        /// <param name="appType">One of the <see cref="ApplicationType"/> values.</param>
+        public ConfigurationFile(string configFilePath, ApplicationType appType)
+        {
+            m_configuration = GetConfiguration(configFilePath, appType);
             if (m_configuration.HasFile)
             {
                 ValidateConfigurationFile(m_configuration.FilePath);
@@ -379,7 +399,7 @@ namespace TVA.Configuration
             {
                 CreateConfigurationFile(m_configuration.FilePath);
             }
-            m_configuration = GetConfiguration(configFilePath);
+            m_configuration = GetConfiguration(configFilePath, appType);
         }
 
         #endregion
@@ -478,7 +498,7 @@ namespace TVA.Configuration
             m_cryptoKey = cryptoKey;
         }
 
-        private System.Configuration.Configuration GetConfiguration(string configFilePath)
+        private System.Configuration.Configuration GetConfiguration(string configFilePath, ApplicationType appType)
         {
             System.Configuration.Configuration configuration = null;
 
@@ -489,7 +509,7 @@ namespace TVA.Configuration
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())
                     // yielded incorrect output resulting in the Configuration object not being initialized correctly.
-                    switch (TVA.Common.GetApplicationType())
+                    switch (appType)
                     {
                         case ApplicationType.WindowsCui:
                         case ApplicationType.WindowsGui:
@@ -545,17 +565,43 @@ namespace TVA.Configuration
         private static ConfigurationFile m_current;
 
         /// <summary>
-        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently 
-        /// executing Windows or Web application.
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
         /// </summary>
         public static ConfigurationFile Current
         {
-            get 
+            get
             {
                 if (m_current == null)
-                {
                     m_current = new ConfigurationFile();
-                }
+                
+                return m_current;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Web application.
+        /// </summary>
+        public static ConfigurationFile CurrentWeb
+        {
+            get
+            {
+                if (m_current == null)
+                    m_current = new ConfigurationFile(ApplicationType.Web);
+
+                return m_current;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows application.
+        /// </summary>
+        public static ConfigurationFile CurrentWin
+        {
+            get
+            {
+                if (m_current == null)
+                    m_current = new ConfigurationFile(ApplicationType.WindowsGui);
+                
                 return m_current;
             }
         }
