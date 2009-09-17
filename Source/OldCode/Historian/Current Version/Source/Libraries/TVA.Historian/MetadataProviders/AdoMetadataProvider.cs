@@ -370,7 +370,7 @@ namespace TVA.Historian.MetadataProviders
                 element = settings["ConnectionString", true];
                 element.Update(m_connectionString, element.Description, element.Encrypted);
                 element = settings["DataProviderString", true];
-                element.Update(m_connectionString, element.Description, element.Encrypted);
+                element.Update(m_dataProviderString, element.Description, element.Encrypted);
                 element = settings["SelectString", true];
                 element.Update(m_selectString, element.Description, element.Encrypted);
                 config.Save();
