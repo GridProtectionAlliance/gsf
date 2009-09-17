@@ -2,7 +2,7 @@
 //  DatAwareFilteredRecordReader.java - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
@@ -50,7 +50,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -127,7 +127,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
