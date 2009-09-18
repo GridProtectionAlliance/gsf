@@ -274,6 +274,19 @@ using System.Reflection;
 
 namespace TVA.Media.Music
 {
+    #region [ Namespace Documentation ]
+
+    /// <tocexclude />
+    /// <remarks>
+    /// This namespace is excluded from the official documentation TOC.
+    /// </remarks>
+    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    class NamespaceDoc
+    {
+    }
+    
+    #endregion
+
     /// <summary>
     /// Defines fundamental musical note frequencies and methods to create them.
     /// </summary>
