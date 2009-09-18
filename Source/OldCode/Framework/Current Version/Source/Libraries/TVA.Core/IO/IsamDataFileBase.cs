@@ -33,6 +33,8 @@
 //  09/16/2009 - Pinal C. Patel
 //       Modified Save() to flush buffered data to disk.
 //       Removed MinimumRecordCount property - not very useful.
+//  09/17/2009 - Pinal C. Patel
+//       Added exception handling to event handlers.
 //
 //*******************************************************************************************************
 
@@ -1569,16 +1571,30 @@ namespace TVA.IO
 
         private void m_autoSaveTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            // Automatically save records to disk if loaded in memory.
-            if ((m_fileRecords != null) && IsOpen) Save();
+            try
+            {
+                // Automatically save records to disk if loaded in memory.
+                if (m_autoSaveTimer.Enabled && (m_fileRecords != null) && IsOpen)
+                    Save();
+            }
+            catch
+            {
+            }
         }
 
         private void m_fileWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
-            OnFileModified();
+            try
+            {
+                OnFileModified();
 
-            // Reload records if they have been loaded in memory and reloading is enabled.
-            if ((m_fileRecords != null) && m_reloadOnModify) Load();
+                // Reload records if they have been loaded in memory and reloading is enabled.
+                if (m_fileWatcher.EnableRaisingEvents && (m_fileRecords != null) && m_reloadOnModify)
+                    Load();
+            }
+            catch
+            {
+            }
         }
 
         #endregion
