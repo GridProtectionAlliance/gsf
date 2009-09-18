@@ -23,7 +23,23 @@
     </DocumentationSources>
     <HelpTitle>openPDC Historian Help</HelpTitle>
     <PresentationStyle>Prototype</PresentationStyle>
-    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, TypeParameter</MissingTags>
+    <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter</MissingTags>
+    <CopyrightHref>https://naspi.tva.com/PhasorMeasurementData/Documents/TVA%2520Open%2520Source%2520Agreement.txt</CopyrightHref>
+    <CopyrightText>Tennessee Valley Authority, 2009. No copyright is claimed pursuant to 17 USC &amp;#167%3b 105.  All Other Rights Reserved.</CopyrightText>
+    <FeedbackEMailAddress>pcpatel%40tva.gov</FeedbackEMailAddress>
+    <FeedbackEMailLinkText>Pinal C. Patel</FeedbackEMailLinkText>
+    <Preliminary>True</Preliminary>
+    <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
+    <PlugInConfigurations>
+      <PlugInConfig id="Additional Reference Links" enabled="True">
+        <configuration>
+          <targets>
+            <target linkType="Index" helpFileProject="..\..\..\..\Framework\Current Version\Build\Scripts\Framework.shfbproj" />
+          </targets>
+        </configuration>
+      </PlugInConfig>
+    </PlugInConfigurations>
+    <HelpFileFormat>Help1xAndHelp2x</HelpFileFormat>
   </PropertyGroup>
   <!-- There are no properties for these two groups but they need to appear in
        order for Visual Studio to perform the build. -->
