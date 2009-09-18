@@ -35,6 +35,8 @@
 //       Fixed bug in MetadataFile property related to event handlers.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/17/2009 - Pinal C. Patel
+//       Implementated the IProvideStatus interface.
 //
 //*******************************************************************************************************
 
@@ -261,6 +263,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Collections;
@@ -299,7 +302,7 @@ namespace TVA.Historian.Files
     /// <seealso cref="ArchiveData"/>
     /// <seealso cref="ArchiveFileAllocationTable"/>
     [ToolboxBitmap(typeof(ArchiveFile))]
-    public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportInitialize, IPersistSettings
+    public class ArchiveFile : Component, IArchive, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {
         #region [ Members ]
 
@@ -1225,6 +1228,63 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
+        /// Gets the unique identifier of the <see cref="ArchiveFile"/>.
+        /// </summary>
+        [Browsable(false)]
+        public string Name
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="ArchiveFile"/>.
+        /// </summary>
+        [Browsable(false)]
+        public string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                status.Append("                 File name: ");
+                status.Append(FilePath.TrimFileName(m_fileName, 30));
+                status.AppendLine();
+                status.Append("                File state: ");
+                status.Append(IsOpen ? "Open" : "Closed");
+                status.AppendLine();
+                status.Append("          File access mode: ");
+                status.Append(m_fileAccessMode);
+                status.AppendLine();
+                if (IsOpen)
+                {
+                    ArchiveFileStatistics statistics = Statistics;
+                    status.Append("                File usage: ");
+                    status.Append(statistics.FileUsage.ToString("0.00") + "%");
+                    status.AppendLine();
+                    status.Append("          Compression rate: ");
+                    status.Append(statistics.CompressionRate.ToString("0.00") + "%");
+                    status.AppendLine();
+                    status.Append("      Data points received: ");
+                    status.Append(m_fat.DataPointsReceived);
+                    status.AppendLine();
+                    status.Append("      Data points archived: ");
+                    status.Append(m_fat.DataPointsArchived);
+                    status.AppendLine();
+                    status.Append("       Average write speed: ");
+                    status.Append(statistics.AverageWriteSpeed + " per Second");
+                    status.AppendLine();
+                    status.Append("          Averaging window: ");
+                    status.Append(statistics.AveragingWindow.ToString());
+                    status.AppendLine();
+                }
+
+                return status.ToString();
+            }
+        }
+
+        /// <summary>
         /// Gets a boolean value that indicates whether the <see cref="ArchiveFile"/> is currently open.
         /// </summary>
         [Browsable(false)]
@@ -1799,7 +1859,7 @@ namespace TVA.Historian.Files
             IntercomRecord system = m_intercomFile.Read(1);
 
             // Ensure that the received data is to be archived.
-            if (metadata == null || !metadata.GeneralFlags.Enabled)
+            if (state == null || metadata == null || !metadata.GeneralFlags.Enabled)
             {
                 OnOrphanDataReceived(data);
                 return;
@@ -2746,7 +2806,8 @@ namespace TVA.Historian.Files
 
         private void SyncStateFile()
         {
-            if (m_stateFile.FileAccessMode != FileAccess.Read &&
+            if (m_stateFile.IsOpen && m_metadataFile.IsOpen && 
+                m_stateFile.FileAccessMode != FileAccess.Read &&
                 m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
             {
                 // Since we have more number of records in the Metadata File than in the State File we'll synchronize

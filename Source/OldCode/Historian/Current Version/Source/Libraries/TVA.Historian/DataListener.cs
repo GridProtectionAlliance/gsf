@@ -24,6 +24,9 @@
 //  09/15/2009 - Pinal C. Patel
 //       Made caching of data locally optional so DataListener can be used just for getting real-time
 //       time series data that is now being made available via the new DataExtracted event.
+//  09/17/2009 - Pinal C. Patel
+//       Added check to prevent raising DataExtracted and DataChanged events if no time-series data
+//       was present in the received packets.
 //
 //*******************************************************************************************************
 
@@ -1397,29 +1400,34 @@ namespace TVA.Historian
                     if (extractedData != null)
                         dataPoints.AddRange(extractedData);
             }
-            OnDataExtracted(dataPoints);
 
-            // Cache extracted data for reuse.
-            if (m_cacheData)
+            if (dataPoints.Count > 0)
             {
-                lock (m_data)
-                {
-                    foreach (IDataPoint dataPoint in dataPoints)
-                    {
-                        if (dataPoint.HistorianID > m_data.Count)
-                        {
-                            // No data exists for the id, so add one for it and others in-between.
-                            for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
-                            {
-                                m_data.Add(new ArchiveData(i));
-                            }
-                        }
+                // Published the extracted data.
+                OnDataExtracted(dataPoints);
 
-                        // Replace existing data with the new data.
-                        m_data[dataPoint.HistorianID - 1] = dataPoint;
+                // Cache extracted data for reuse.
+                if (m_cacheData)
+                {
+                    lock (m_data)
+                    {
+                        foreach (IDataPoint dataPoint in dataPoints)
+                        {
+                            if (dataPoint.HistorianID > m_data.Count)
+                            {
+                                // No data exists for the id, so add one for it and others in-between.
+                                for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
+                                {
+                                    m_data.Add(new ArchiveData(i));
+                                }
+                            }
+
+                            // Replace existing data with the new data.
+                            m_data[dataPoint.HistorianID - 1] = dataPoint;
+                        }
                     }
+                    OnDataChanged();
                 }
-                OnDataChanged();
             }
         }
 
