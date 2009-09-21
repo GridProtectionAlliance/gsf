@@ -14,6 +14,9 @@
 //       Converted to C#.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/21/2009 - Pinal C. Patel
+//       Fixed a bug in AddHeader() that was putting the length of the provided buffer in the header 
+//       instead of the length specified in the method parameter.
 //
 //*******************************************************************************************************
 
@@ -273,7 +276,7 @@ namespace TVA.Communication
             // First, copy the the payload marker to the buffer.
             Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
             // Then, copy the payload's size to the buffer after the payload marker.
-            Buffer.BlockCopy(BitConverter.GetBytes(buffer.Length), 0, result, marker.Length, LengthSegment);
+            Buffer.BlockCopy(BitConverter.GetBytes(length), 0, result, marker.Length, LengthSegment);
             // At last, copy the payload after the payload marker and payload size.
             Buffer.BlockCopy(buffer, offset, result, marker.Length + LengthSegment, length);
 
