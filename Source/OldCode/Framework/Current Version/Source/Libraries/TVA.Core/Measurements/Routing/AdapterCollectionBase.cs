@@ -795,9 +795,31 @@ namespace TVA.Measurements.Routing
 
             foreach (T item in this)
             {
-                item.Start();
+                // We start items from thread pool if auto-intializing since
+                // start will block and wait for initialization to complete
+                if (AutoInitialize)
+                    ThreadPool.QueueUserWorkItem(StartItem, item);
+                else
+                    item.Start();
             }
         }
+
+        // Thread pool delegate to handle item startup
+        private void StartItem(object state)
+        {
+            T item = (T)state;
+
+            try
+            {
+                item.Start();
+            }
+            catch (Exception ex)
+            {
+                // We report any errors encountered during startup...
+                OnProcessException(ex);
+            }
+        }
+
         /// <summary>
         /// Stops each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>

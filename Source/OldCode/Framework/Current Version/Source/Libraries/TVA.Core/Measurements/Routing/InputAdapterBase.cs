@@ -371,7 +371,8 @@ namespace TVA.Measurements.Routing
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }

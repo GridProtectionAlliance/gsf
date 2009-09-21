@@ -236,6 +236,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using TVA;
 using TVA.Collections;
 
@@ -283,7 +284,21 @@ namespace TVA.Measurements.Routing
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
         private int m_minimumMeasurementsToUse;
+        private ManualResetEvent m_initializeWaitHandle;
         private Regex m_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        protected ActionAdapterBase()
+        {
+            m_initializeWaitHandle = new ManualResetEvent(true);
+        }
 
         #endregion
 
@@ -477,6 +492,12 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_initialized = value;
+
+                // When initialization is complete we send notification
+                if (value)
+                    m_initializeWaitHandle.Set();
+                else
+                    m_initializeWaitHandle.Reset();
             }
         }
 
@@ -501,7 +522,7 @@ namespace TVA.Measurements.Routing
         {
             get
 			{
-				const int MaxMeasurementsToShow = 6;
+				const int MaxMeasurementsToShow = 4;
 				
 				StringBuilder status = new StringBuilder();
 
@@ -541,36 +562,45 @@ namespace TVA.Measurements.Routing
                 }
 
                 status.AppendLine();
-                status.Append("   Output measurement ID\'s: ");
 
-				if (OutputMeasurements.Length <= MaxMeasurementsToShow)
-				{
-					status.Append(OutputMeasurements.ToDelimitedString(','));
-				}
-				else
-				{
-					IMeasurement[] outputMeasurements = new IMeasurement[MaxMeasurementsToShow];
-					Array.Copy(OutputMeasurements, 0, outputMeasurements, 0, MaxMeasurementsToShow);
-					status.Append(outputMeasurements.ToDelimitedString(','));
-					status.Append(",...");
-				}
+                if (OutputMeasurements != null)
+                {
+                    status.Append("   Output measurement ID\'s: ");
 
-				status.AppendLine();
-				status.Append("    Input measurement ID\'s: ");
-				
-                if (InputMeasurementKeys.Length <= MaxMeasurementsToShow)
-				{
-					status.Append(InputMeasurementKeys.ToDelimitedString(','));
-				}
-				else
-				{
-					MeasurementKey[] inputMeasurements = new MeasurementKey[MaxMeasurementsToShow];
-					Array.Copy(InputMeasurementKeys, 0, inputMeasurements, 0, MaxMeasurementsToShow);
-					status.Append(inputMeasurements.ToDelimitedString(','));
-					status.Append(",...");
-				}
+                    if (OutputMeasurements.Length <= MaxMeasurementsToShow)
+                    {
+                        status.Append(OutputMeasurements.ToDelimitedString(','));
+                    }
+                    else
+                    {
+                        IMeasurement[] outputMeasurements = new IMeasurement[MaxMeasurementsToShow];
+                        Array.Copy(OutputMeasurements, 0, outputMeasurements, 0, MaxMeasurementsToShow);
+                        status.Append(outputMeasurements.ToDelimitedString(','));
+                        status.Append(",...");
+                    }
 
-				status.AppendLine();
+                    status.AppendLine();
+                }
+
+                if (InputMeasurementKeys != null)
+                {
+                    status.Append("    Input measurement ID\'s: ");
+
+                    if (InputMeasurementKeys.Length <= MaxMeasurementsToShow)
+                    {
+                        status.Append(InputMeasurementKeys.ToDelimitedString(','));
+                    }
+                    else
+                    {
+                        MeasurementKey[] inputMeasurements = new MeasurementKey[MaxMeasurementsToShow];
+                        Array.Copy(InputMeasurementKeys, 0, inputMeasurements, 0, MaxMeasurementsToShow);
+                        status.Append(inputMeasurements.ToDelimitedString(','));
+                        status.Append(",...");
+                    }
+
+                    status.AppendLine();
+                }
+
 				status.Append(" Minimum measurements used: ");
 				status.Append(MinimumMeasurementsToUse);
 				status.AppendLine();
@@ -585,10 +615,38 @@ namespace TVA.Measurements.Routing
         #region [ Methods ]
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="ActionAdapterBase"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_initializeWaitHandle != null)
+                            m_initializeWaitHandle.Close();
+
+                        m_initializeWaitHandle = null;
+                    }
+                }
+                finally
+                {
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes <see cref="ActionAdapterBase"/>.
         /// </summary>
         public virtual void Initialize()
         {
+            Initialized = false;
+
             Dictionary<string, string> settings = Settings;
             string setting;
 
@@ -620,6 +678,8 @@ namespace TVA.Measurements.Routing
         [AdapterCommand("Starts the action adapter, if it is not already running.")]
         public override void Start()
         {
+            // Wait for adapter intialization to complete...
+            m_initializeWaitHandle.WaitOne();
             base.Start();
         }
 
@@ -633,13 +693,23 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Manually sets the intialized state of the <see cref="AdapterBase"/>.
+        /// </summary>
+        /// <param name="initialized">Desired initialized state.</param>
+        [AdapterCommand("Manually sets the intialized state of the action adapter.")]
+        public virtual void SetInitializedState(bool initialized)
+        {
+            this.Initialized = initialized;
+        }
+
+        /// <summary>
         /// Gets a short one-line status of this <see cref="ActionAdapterBase"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", InputMeasurementKeys.Length, OutputMeasurements.Length).PadLeft(maxLength);
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", (InputMeasurementKeys == null ? 0 : InputMeasurementKeys.Length), (OutputMeasurements == null ? 0 : OutputMeasurements.Length)).PadLeft(maxLength);
         }
 
         /// <summary>

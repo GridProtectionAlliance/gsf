@@ -609,7 +609,10 @@ namespace TVA.Measurements
         /// <remarks>This implementation of a basic measurement compares itself by value.</remarks>
         public int CompareTo(IMeasurement other)
         {
-            return m_value.CompareTo(other.Value);
+            if ((object)other != null)
+                return m_value.CompareTo(other.Value);
+
+            return 1;
         }
 
         /// <summary>

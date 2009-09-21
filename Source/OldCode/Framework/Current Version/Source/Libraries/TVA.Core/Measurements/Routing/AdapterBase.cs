@@ -235,6 +235,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using System.Threading;
 
 namespace TVA.Measurements.Routing
 {
@@ -270,8 +271,10 @@ namespace TVA.Measurements.Routing
         private string m_connectionString;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
+        private ManualResetEvent m_initializeWaitHandle;
         private bool m_enabled;
         private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -283,6 +286,7 @@ namespace TVA.Measurements.Routing
         protected AdapterBase()
         {
             m_name = this.GetType().Name;
+            m_initializeWaitHandle = new ManualResetEvent(true);
         }
 
         /// <summary>
@@ -378,6 +382,12 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_initialized = value;
+
+                // When initialization is complete we send notification
+                if (value)
+                    m_initializeWaitHandle.Set();
+                else
+                    m_initializeWaitHandle.Reset();
             }
         }
 
@@ -484,15 +494,36 @@ namespace TVA.Measurements.Routing
         /// Releases the unmanaged resources used by the <see cref="AdapterBase"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        /// <remarks>
-        /// Derived classes should release the unmanaged resources used by the adapter and optionally release the managed resources.
-        /// </remarks>
-        protected abstract void Dispose(bool disposing);
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        if (m_initializeWaitHandle != null)
+                            m_initializeWaitHandle.Close();
+
+                        m_initializeWaitHandle = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                }
+            }
+        }
 
         /// <summary>
         /// Intializes <see cref="AdapterBase"/>.
         /// </summary>
-        public abstract void Initialize();
+        public virtual void Initialize()
+        {
+            Initialized = false;
+        }
 
         /// <summary>
         /// Starts the <see cref="AdapterBase"/>, if it is not already running.
@@ -500,6 +531,8 @@ namespace TVA.Measurements.Routing
         [AdapterCommand("Starts the adapter, if it is not already running.")]
         public virtual void Start()
         {
+            // Wait for adapter intialization to complete...
+            m_initializeWaitHandle.WaitOne();
             m_enabled = true;
         }
 
@@ -510,6 +543,16 @@ namespace TVA.Measurements.Routing
         public virtual void Stop()
         {
             m_enabled = false;
+        }
+
+        /// <summary>
+        /// Manually sets the intialized state of the <see cref="AdapterBase"/>.
+        /// </summary>
+        /// <param name="initialized">Desired initialized state.</param>
+        [AdapterCommand("Manually sets the intialized state of the adapter.")]
+        public virtual void SetInitializedState(bool initialized)
+        {
+            this.Initialized = initialized;
         }
         
         /// <summary>

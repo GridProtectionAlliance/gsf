@@ -440,7 +440,7 @@ namespace TVA.Measurements.Routing
         #endregion
 
         #region [ Methods ]
-        
+
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="OutputAdapterBase"/> object and optionally releases the managed resources.
         /// </summary>
@@ -477,7 +477,8 @@ namespace TVA.Measurements.Routing
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
         }
@@ -487,6 +488,8 @@ namespace TVA.Measurements.Routing
         /// </summary>
         public override void Initialize()
         {
+            base.Initialize();
+
             Dictionary<string, string> settings = Settings;
             string setting;
 
