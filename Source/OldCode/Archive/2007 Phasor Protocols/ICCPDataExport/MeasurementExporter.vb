@@ -90,6 +90,8 @@ Public Class MeasurementExporter
         Dim inputMeasurementKey As MeasurementKey
 
         Try
+            Dim pointTag As String
+
             connection = New OleDbConnection(StringSetting("PMUDatabase"))
             connection.Open()
 
@@ -106,7 +108,13 @@ Public Class MeasurementExporter
                         connection)
 
                     ' Load measurement tag name (remove any dashes or colons)
-                    m_measurementTags.Add(inputMeasurementKey, .Item("PointTag").ToString().Replace("-"c, "_"c).Replace(":"c, "_"c))
+                    pointTag = .Item("PointTag").ToString().Replace("-"c, "_"c).Replace(":"c, "_"c).ToUpper()
+
+                    If Not pointTag.StartsWith("TVA_") Then
+                        pointTag = "TVA_" & pointTag
+                    End If
+
+                    m_measurementTags.Add(inputMeasurementKey, pointTag)
 
                     ' Load measurement signal type
                     m_signalTypes.Add(inputMeasurementKey, .Item("SignalAcronym").ToString())
