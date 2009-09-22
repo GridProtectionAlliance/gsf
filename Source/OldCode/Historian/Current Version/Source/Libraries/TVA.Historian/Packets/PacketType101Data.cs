@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/21/2009 - Pinal C. Patel
+//       Added overloaded constructor that takes in IMeasurement.
 //
 //*******************************************************************************************************
 
@@ -233,6 +235,7 @@
 
 using System;
 using TVA.Historian.Files;
+using TVA.Measurements;
 
 namespace TVA.Historian.Packets
 {
@@ -272,6 +275,16 @@ namespace TVA.Historian.Packets
         /// <param name="dataPoint">A time series data point.</param>
         public PacketType101Data(IDataPoint dataPoint)
             : base(dataPoint)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
+        /// </summary>
+        /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
+        [CLSCompliant(false)]
+        public PacketType101Data(IMeasurement measurement)
+            : base(measurement)
         {
         }
 
