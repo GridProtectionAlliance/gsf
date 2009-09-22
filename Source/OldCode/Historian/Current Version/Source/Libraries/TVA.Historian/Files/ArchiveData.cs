@@ -492,7 +492,7 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveData"/>.</returns>
         public virtual int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 Flags = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 4);

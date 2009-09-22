@@ -375,11 +375,11 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecordSummary"/>.</returns>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
-                CurrentData = new StateRecordData(HistorianID, binaryImage, startIndex + 4, StateRecordData.ByteCount);
+                CurrentData = new StateRecordData(HistorianID, binaryImage, startIndex + 4, length - 4);
 
                 return ByteCount;
             }

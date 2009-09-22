@@ -326,7 +326,7 @@ namespace TVA.Historian.Packets
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType5"/>.</returns>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);

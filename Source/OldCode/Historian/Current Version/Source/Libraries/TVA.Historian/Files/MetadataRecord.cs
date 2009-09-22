@@ -1011,7 +1011,7 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecord"/>.</returns>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 Remarks = Encoding.ASCII.GetString(binaryImage, startIndex, 512).Trim();
@@ -1039,16 +1039,16 @@ namespace TVA.Historian.Files
                 switch (GeneralFlags.DataType)
                 {
                     case DataType.Analog:
-                        m_analogFields.Initialize(binaryImage, startIndex + 2152, length);
+                        m_analogFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Digital:
-                        m_digitalFields.Initialize(binaryImage, startIndex + 2152, length);
+                        m_digitalFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Composed:
-                        m_composedFields.Initialize(binaryImage, startIndex + 2152, length);
+                        m_composedFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
                         break;
                     case DataType.Constant:
-                        m_constantFields.Initialize(binaryImage, startIndex + 2152, length);
+                        m_constantFields.Initialize(binaryImage, startIndex + 2152, length - 2152);
                         break;
                 }
 

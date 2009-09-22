@@ -451,7 +451,7 @@ namespace TVA.Historian.Packets
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType1"/>.</returns>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
@@ -465,7 +465,7 @@ namespace TVA.Historian.Packets
                 Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 18);
 
                 // We'll send an "ACK" to the sender if this is the last packet in the transmission.
-                if (startIndex + ByteCount == length)
+                if (length == ByteCount)
                     PreProcessHandler = PreProcess;
 
                 return ByteCount;

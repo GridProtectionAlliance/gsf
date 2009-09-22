@@ -267,6 +267,7 @@ namespace TVA.Historian.Files
         private int m_index;
         private int m_historianID;
         private ArchiveFile m_parent;
+        private byte[] m_readBuffer;
         private long m_writeCursor;
         private DateTime m_lastActivityTime;
 
@@ -286,6 +287,7 @@ namespace TVA.Historian.Files
             m_parent = parent;
             m_index = index;
             m_historianID = historianID;
+            m_readBuffer = new byte[ArchiveData.ByteCount];
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
             if (reset)
@@ -388,13 +390,12 @@ namespace TVA.Historian.Files
                 // We'll start reading from where the data block begins.
                 m_parent.FileData.Seek(Location, SeekOrigin.Begin);
 
-                byte[] binaryImage = new byte[ArchiveData.ByteCount];
                 for (int i = 1; i <= Capacity; i++)
                 {
                     // Read the data in the block.
                     m_lastActivityTime = DateTime.Now;
-                    m_parent.FileData.Read(binaryImage, 0, binaryImage.Length);
-                    ArchiveData dataPoint = new ArchiveData(m_historianID, binaryImage, 0, binaryImage.Length);
+                    m_parent.FileData.Read(m_readBuffer, 0, m_readBuffer.Length);
+                    ArchiveData dataPoint = new ArchiveData(m_historianID, m_readBuffer, 0, m_readBuffer.Length);
                     if (!dataPoint.IsEmpty)
                     {
                         // There is data - use it.

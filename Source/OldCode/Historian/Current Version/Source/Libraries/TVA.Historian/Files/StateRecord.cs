@@ -510,12 +510,12 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecord"/>.</returns>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 m_archivedData.Initialize(binaryImage, startIndex, length);
-                m_previousData.Initialize(binaryImage, startIndex + 16, length);
-                m_currentData.Initialize(binaryImage, startIndex + 32, length);
+                m_previousData.Initialize(binaryImage, startIndex + 16, length - 16);
+                m_currentData.Initialize(binaryImage, startIndex + 32, length - 32);
                 ActiveDataBlockIndex = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 48) - 1;
                 ActiveDataBlockSlot = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 52);
                 Slope1 = EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex + 56);

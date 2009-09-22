@@ -418,7 +418,7 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecordData"/>.</returns>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 Time = new TimeTag(EndianOrder.LittleEndian.ToDouble(binaryImage, startIndex));

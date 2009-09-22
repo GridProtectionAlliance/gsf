@@ -317,12 +317,14 @@ namespace TVA.Historian.Files
                 DataBlockSize = EndianOrder.LittleEndian.ToInt32(fixedFatData, 24);
                 DataBlockCount = EndianOrder.LittleEndian.ToInt32(fixedFatData, 28);
 
+                int offset;
                 byte[] variableFatData = new byte[m_dataBlockCount * ArchiveDataBlockPointer.ByteCount];
                 m_parent.FileData.Seek(-(variableFatData.Length + FixedBinaryLength), SeekOrigin.End);
                 m_parent.FileData.Read(variableFatData, 0, variableFatData.Length);
                 for (int i = 0; i < m_dataBlockCount; i++)
                 {
-                    m_dataBlockPointers.Add(new ArchiveDataBlockPointer(m_parent, i, variableFatData, i * ArchiveDataBlockPointer.ByteCount, variableFatData.Length));
+                    offset = i * ArchiveDataBlockPointer.ByteCount;
+                    m_dataBlockPointers.Add(new ArchiveDataBlockPointer(m_parent, i, variableFatData, offset, variableFatData.Length - offset));
                 }
             }
         }

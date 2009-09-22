@@ -524,7 +524,7 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecordAnalogFields"/>.</returns>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 EngineeringUnits = Encoding.ASCII.GetString(binaryImage, startIndex, 24).Trim();

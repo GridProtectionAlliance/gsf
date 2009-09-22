@@ -403,7 +403,7 @@ namespace TVA.Historian.Files
         /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="MetadataRecordDigitalFields"/>.</returns>
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
-            if (length - startIndex >= ByteCount)
+            if (length >= ByteCount)
             {
                 // Binary image has sufficient data.
                 SetDescription = Encoding.ASCII.GetString(binaryImage, startIndex, 24).Trim();
