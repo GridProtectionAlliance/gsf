@@ -241,7 +241,7 @@ using System.Collections.Generic;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// Defines an exporter of real-time time series data.
+    /// Defines an exporter of real-time time-series data.
     /// </summary>
     /// <seealso cref="Export"/>
     /// <seealso cref="DataListener"/>
@@ -290,7 +290,7 @@ namespace TVA.Historian.Exporters
         IList<Export> Exports { get; }
 
         /// <summary>
-        /// Gets the <see cref="DataListener"/>s providing real-time time series data to the exporter.
+        /// Gets the <see cref="DataListener"/>s providing real-time time-series data to the exporter.
         /// </summary>
         IList<DataListener> Listeners { get; }
 

@@ -244,7 +244,7 @@ using TVA.Historian.Packets;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// Represents an exporter that can export real-time time series data over a TCP server socket.
+    /// Represents an exporter that can export real-time time-series data over a TCP server socket.
     /// </summary>
     /// <example>
     /// Definition of a sample <see cref="Export"/> that can be processed by <see cref="DataMonitorExporter"/>:
@@ -310,17 +310,17 @@ namespace TVA.Historian.Exporters
         private class ExportContext
         {
             /// <summary>
-            /// <see cref="IServer"/> used for transmitting the time series data.
+            /// <see cref="IServer"/> used for transmitting the time-series data.
             /// </summary>
             public IServer Socket;
 
             /// <summary>
-            /// Number of time series data points to be transmitted in a single packet.
+            /// Number of time-series data points to be transmitted in a single packet.
             /// </summary>
             public int DataPerPacket;
 
             /// <summary>
-            /// <see cref="Delegate"/> to invoke for transmitting the time series data.
+            /// <see cref="Delegate"/> to invoke for transmitting the time-series data.
             /// </summary>
             public Action<ExportContext, IList<IDataPoint>> TransmitHandler;
         }
@@ -360,10 +360,10 @@ namespace TVA.Historian.Exporters
         #region [ Methods ]
 
         /// <summary>
-        /// Performs the transmission of time series data for the <paramref name="export"/>.
+        /// Performs the transmission of time-series data for the <paramref name="export"/>.
         /// </summary>
-        /// <param name="export"><see cref="Export"/> whose time series data os to be transmitted.</param>
-        /// <param name="dataToTransmit">Collection of time series data to be transmitted.</param>
+        /// <param name="export"><see cref="Export"/> whose time-series data os to be transmitted.</param>
+        /// <param name="dataToTransmit">Collection of time-series data to be transmitted.</param>
         protected override void TransmitData(Export export, IList<IDataPoint> dataToTransmit)
         {
             // Retrieve the export context.

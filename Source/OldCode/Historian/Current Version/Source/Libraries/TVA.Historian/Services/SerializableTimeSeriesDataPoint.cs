@@ -342,7 +342,7 @@ namespace TVA.Historian.Services
         public IDataPoint Deflate()
         {
             // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
-            return new ArchiveData(HistorianID, TimeTag.Parse(Time), Value, Quality);
+            return new ArchiveDataPoint(HistorianID, TimeTag.Parse(Time), Value, Quality);
         }
 
         #endregion

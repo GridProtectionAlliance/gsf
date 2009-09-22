@@ -236,12 +236,12 @@ using System;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents time series data stored in <see cref="StateFile"/>.
+    /// Represents time-series data stored in <see cref="StateFile"/>.
     /// </summary>
     /// <seealso cref="StateFile"/>
     /// <seealso cref="StateRecord"/>
     /// <seealso cref="StateRecordSummary"/>
-    public class StateRecordData : ArchiveData
+    public class StateRecordDataPoint : ArchiveDataPoint
     {
         // **************************************************************************************************
         // *                                        Binary Structure                                        *
@@ -258,18 +258,18 @@ namespace TVA.Historian.Files
         // Constants
 
         /// <summary>
-        /// Specifies the number of bytes in the binary image of <see cref="StateRecordData"/>.
+        /// Specifies the number of bytes in the binary image of <see cref="StateRecordDataPoint"/>.
         /// </summary>
         public new const int ByteCount = 16;
 
         /// <summary>
-        /// Specifies the bit-mask for <see cref="TimeZoneIndex"/> stored in <see cref="ArchiveData.Flags"/>.
+        /// Specifies the bit-mask for <see cref="TimeZoneIndex"/> stored in <see cref="ArchiveDataPoint.Flags"/>.
         /// </summary>
         [CLSCompliant(false)]
         protected const Bits TziMask = Bits.Bit05 | Bits.Bit06 | Bits.Bit07 | Bits.Bit08 | Bits.Bit09 | Bits.Bit10;
 
         /// <summary>
-        /// Specifies the bit-mask for <see cref="DaylightSavingsTime"/> stored in <see cref="ArchiveData.Flags"/>.
+        /// Specifies the bit-mask for <see cref="DaylightSavingsTime"/> stored in <see cref="ArchiveDataPoint.Flags"/>.
         /// </summary>
         [CLSCompliant(false)]
         protected const Bits DstMask = Bits.Bit11;
@@ -279,43 +279,43 @@ namespace TVA.Historian.Files
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateRecordData"/> class.
+        /// Initializes a new instance of the <see cref="StateRecordDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
-        public StateRecordData(int historianID)
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordDataPoint"/>.</param>
+        public StateRecordDataPoint(int historianID)
             : base(historianID)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateRecordData"/> class.
+        /// Initializes a new instance of the <see cref="StateRecordDataPoint"/> class.
         /// </summary>
-        /// <param name="dataPoint">A time series data point.</param>
-        public StateRecordData(IDataPoint dataPoint)
+        /// <param name="dataPoint">A time-series data point.</param>
+        public StateRecordDataPoint(IDataPoint dataPoint)
             : base(dataPoint)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateRecordData"/> class.
+        /// Initializes a new instance of the <see cref="StateRecordDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
-        /// <param name="time"><see cref="TimeTag"/> of <see cref="StateRecordData"/>.</param>
-        /// <param name="value">Floating-point value of <see cref="StateRecordData"/>.</param>
-        /// <param name="quality"><see cref="Quality"/> of <see cref="StateRecordData"/>.</param>
-        public StateRecordData(int historianID, TimeTag time, float value, Quality quality)
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="time"><see cref="TimeTag"/> of <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="value">Floating-point value of <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="quality"><see cref="Quality"/> of <see cref="StateRecordDataPoint"/>.</param>
+        public StateRecordDataPoint(int historianID, TimeTag time, float value, Quality quality)
             : base(historianID, time, value, quality)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="StateRecordData"/> class.
+        /// Initializes a new instance of the <see cref="StateRecordDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="StateRecordData"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordData"/>.</param>
+        /// <param name="historianID">Historian identifier of <see cref="StateRecordDataPoint"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public StateRecordData(int historianID, byte[] binaryImage, int startIndex, int length)
+        public StateRecordDataPoint(int historianID, byte[] binaryImage, int startIndex, int length)
             : this(historianID)
         {
             Initialize(binaryImage, startIndex, length);
@@ -360,7 +360,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of <see cref="StateRecordData"/>.
+        /// Gets or sets the <see cref="TimeTag"/> of <see cref="StateRecordDataPoint"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public override TimeTag Time
@@ -389,7 +389,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the binary representation of <see cref="StateRecordData"/>.
+        /// Gets the binary representation of <see cref="StateRecordDataPoint"/>.
         /// </summary>
         public override byte[] BinaryImage
         {
@@ -410,12 +410,12 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="StateRecordData"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="StateRecordDataPoint"/> from the specified <paramref name="binaryImage"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordData"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="StateRecordDataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecordData"/>.</returns>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="StateRecordDataPoint"/>.</returns>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             if (length >= ByteCount)

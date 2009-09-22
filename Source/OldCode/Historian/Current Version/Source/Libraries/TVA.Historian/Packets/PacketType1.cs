@@ -242,7 +242,7 @@ using TVA.Measurements;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet to be used for sending single time series data point to a historian for archival.
+    /// Represents a packet to be used for sending single time-series data point to a historian for archival.
     /// </summary>
     public class PacketType1 : PacketBase
     {
@@ -341,7 +341,7 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the historian identifier of the time series data.
+        /// Gets or sets the historian identifier of the time-series data.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         public int HistorianID
@@ -360,7 +360,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of the time series data.
+        /// Gets or sets the <see cref="TimeTag"/> of the time-series data.
         /// </summary>
         /// /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public TimeTag Time
@@ -379,7 +379,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Quality"/> of the time series data.
+        /// Gets or sets the <see cref="Quality"/> of the time-series data.
         /// </summary>
         public Quality Quality
         {
@@ -394,7 +394,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets or sets the value of the time series data.
+        /// Gets or sets the value of the time-series data.
         /// </summary>
         public float Value
         {
@@ -478,12 +478,12 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Extracts time series data from <see cref="PacketType1"/>.
+        /// Extracts time-series data from <see cref="PacketType1"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveData"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
-            return new ArchiveData[] { new ArchiveData(m_historianID, m_time, m_value, m_quality) };
+            return new ArchiveDataPoint[] { new ArchiveDataPoint(m_historianID, m_time, m_value, m_quality) };
         }
 
         /// <summary>

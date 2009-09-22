@@ -261,7 +261,7 @@ namespace TVA.Historian.Files
         public Time AveragingWindow;
 
         /// <summary>
-        /// Average number of time series data points written to the <see cref="ArchiveFile"/> in one second.
+        /// Average number of time-series data points written to the <see cref="ArchiveFile"/> in one second.
         /// </summary>
         public int AverageWriteSpeed;
 

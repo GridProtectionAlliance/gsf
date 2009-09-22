@@ -90,7 +90,7 @@
     <Compile Include="Exporters\RollingHistoryExporter.cs" />
     <Compile Include="Exporters\StatisticsExporter.cs" />
     <Compile Include="Exporters\XmlExporter.cs" />
-    <Compile Include="Files\ArchiveData.cs" />
+    <Compile Include="Files\ArchiveDataPoint.cs" />
     <Compile Include="Files\ArchiveDataBlock.cs" />
     <Compile Include="Files\ArchiveDataBlockPointer.cs" />
     <Compile Include="Files\ArchiveFile.cs">
@@ -118,7 +118,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Files\StateRecord.cs" />
-    <Compile Include="Files\StateRecordData.cs" />
+    <Compile Include="Files\StateRecordDataPoint.cs" />
     <Compile Include="Files\StateRecordSummary.cs" />
     <Compile Include="IArchive.cs" />
     <Compile Include="IDataPoint.cs" />
@@ -145,7 +145,7 @@
     <Compile Include="Packets\PacketParser.cs" />
     <Compile Include="Packets\PacketType1.cs" />
     <Compile Include="Packets\PacketType101.cs" />
-    <Compile Include="Packets\PacketType101Data.cs" />
+    <Compile Include="Packets\PacketType101DataPoint.cs" />
     <Compile Include="Packets\PacketType11.cs" />
     <Compile Include="Packets\PacketType2.cs" />
     <Compile Include="Packets\PacketType3.cs" />

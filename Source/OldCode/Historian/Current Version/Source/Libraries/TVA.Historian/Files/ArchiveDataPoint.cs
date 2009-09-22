@@ -241,13 +241,13 @@ using TVA.Measurements;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents time series data stored in <see cref="ArchiveFile"/>.
+    /// Represents time-series data stored in <see cref="ArchiveFile"/>.
     /// </summary>
     /// <seealso cref="ArchiveFile"/>
     /// <seealso cref="ArchiveFileAllocationTable"/>
     /// <seealso cref="ArchiveDataBlock"/>
     /// <seealso cref="ArchiveDataBlockPointer"/>
-    public class ArchiveData : IDataPoint, IComparable
+    public class ArchiveDataPoint : IDataPoint, IComparable
     {
         // **************************************************************************************************
         // *                                        Binary Structure                                        *
@@ -264,7 +264,7 @@ namespace TVA.Historian.Files
         // Constants
 
         /// <summary>
-        /// Specifies the number of bytes in the binary image of <see cref="ArchiveData"/>.
+        /// Specifies the number of bytes in the binary image of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public const int ByteCount = 10;
 
@@ -291,30 +291,30 @@ namespace TVA.Historian.Files
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="ArchiveData"/>.</param>
-        public ArchiveData(int historianID)
+        /// <param name="historianID">Historian identifier of <see cref="ArchiveDataPoint"/>.</param>
+        public ArchiveDataPoint(int historianID)
         {
             m_time = TimeTag.MinValue;
             this.HistorianID = historianID;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
-        /// <param name="dataPoint">A time series data point.</param>
-        public ArchiveData(IDataPoint dataPoint)
+        /// <param name="dataPoint">A time-series data point.</param>
+        public ArchiveDataPoint(IDataPoint dataPoint)
             : this(dataPoint.HistorianID, dataPoint.Time, dataPoint.Value, dataPoint.Quality)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
-        public ArchiveData(IMeasurement measurement)
+        public ArchiveDataPoint(IMeasurement measurement)
             : this((int)measurement.ID)
         {
             this.Time = new TimeTag((DateTime)measurement.Timestamp);
@@ -323,13 +323,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="ArchiveData"/>.</param>
-        /// <param name="time"><see cref="TimeTag"/> of <see cref="ArchiveData"/>.</param>
-        /// <param name="value">Floating-point value of <see cref="ArchiveData"/>.</param>
-        /// <param name="quality"><see cref="Quality"/> of <see cref="ArchiveData"/>.</param>
-        public ArchiveData(int historianID, TimeTag time, float value, Quality quality)
+        /// <param name="historianID">Historian identifier of <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="time"><see cref="TimeTag"/> of <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="value">Floating-point value of <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="quality"><see cref="Quality"/> of <see cref="ArchiveDataPoint"/>.</param>
+        public ArchiveDataPoint(int historianID, TimeTag time, float value, Quality quality)
             : this(historianID)
         {
             this.Time = time;
@@ -338,13 +338,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveData"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="ArchiveData"/>.</param>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveData"/>.</param>
+        /// <param name="historianID">Historian identifier of <see cref="ArchiveDataPoint"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public ArchiveData(int historianID, byte[] binaryImage, int startIndex, int length)
+        public ArchiveDataPoint(int historianID, byte[] binaryImage, int startIndex, int length)
             : this(historianID)
         {
             Initialize(binaryImage, startIndex, length);
@@ -355,7 +355,7 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the historian identifier of <see cref="ArchiveData"/>.
+        /// Gets or sets the historian identifier of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int HistorianID
@@ -374,7 +374,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of <see cref="ArchiveData"/>.
+        /// Gets or sets the <see cref="TimeTag"/> of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public virtual TimeTag Time
@@ -394,7 +394,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the floating-point value of <see cref="ArchiveData"/>.
+        /// Gets or sets the floating-point value of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public virtual float Value
         {
@@ -409,7 +409,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Quality"/> of <see cref="ArchiveData"/>.
+        /// Gets or sets the <see cref="Quality"/> of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public virtual Quality Quality
         {
@@ -424,7 +424,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets a boolean value that indicates whether <see cref="ArchiveData"/> contains any data.
+        /// Gets a boolean value that indicates whether <see cref="ArchiveDataPoint"/> contains any data.
         /// </summary>
         public virtual bool IsEmpty
         {
@@ -448,7 +448,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the binary representation of <see cref="ArchiveData"/>.
+        /// Gets the binary representation of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public virtual byte[] BinaryImage
         {
@@ -465,7 +465,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the 32-bit word used for storing data of <see cref="ArchiveData"/>.
+        /// Gets or sets the 32-bit word used for storing data of <see cref="ArchiveDataPoint"/>.
         /// </summary>
         protected virtual int Flags
         {
@@ -484,12 +484,12 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="ArchiveData"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="ArchiveDataPoint"/> from the specified <paramref name="binaryImage"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveData"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="ArchiveDataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveData"/>.</returns>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="ArchiveDataPoint"/>.</returns>
         public virtual int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             if (length >= ByteCount)
@@ -510,17 +510,17 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Compares the current <see cref="ArchiveData"/> object to <paramref name="obj"/>.
+        /// Compares the current <see cref="ArchiveDataPoint"/> object to <paramref name="obj"/>.
         /// </summary>
-        /// <param name="obj">Object against which the current <see cref="ArchiveData"/> object is to be compared.</param>
+        /// <param name="obj">Object against which the current <see cref="ArchiveDataPoint"/> object is to be compared.</param>
         /// <returns>
-        /// Negative value if the current <see cref="ArchiveData"/> object is less than <paramref name="obj"/>, 
-        /// Zero if the current <see cref="ArchiveData"/> object is equal to <paramref name="obj"/>, 
-        /// Positive value if the current <see cref="ArchiveData"/> object is greater than <paramref name="obj"/>.
+        /// Negative value if the current <see cref="ArchiveDataPoint"/> object is less than <paramref name="obj"/>, 
+        /// Zero if the current <see cref="ArchiveDataPoint"/> object is equal to <paramref name="obj"/>, 
+        /// Positive value if the current <see cref="ArchiveDataPoint"/> object is greater than <paramref name="obj"/>.
         /// </returns>
         public virtual int CompareTo(object obj)
         {
-            ArchiveData other = obj as ArchiveData;
+            ArchiveDataPoint other = obj as ArchiveDataPoint;
             if (other == null)
             {
                 return 1;
@@ -536,17 +536,17 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Determines whether the current <see cref="ArchiveData"/> object is equal to <paramref name="obj"/>.
+        /// Determines whether the current <see cref="ArchiveDataPoint"/> object is equal to <paramref name="obj"/>.
         /// </summary>
-        /// <param name="obj">Object against which the current <see cref="ArchiveData"/> object is to be compared for equality.</param>
-        /// <returns>true if the current <see cref="ArchiveData"/> object is equal to <paramref name="obj"/>; otherwise false.</returns>
+        /// <param name="obj">Object against which the current <see cref="ArchiveDataPoint"/> object is to be compared for equality.</param>
+        /// <returns>true if the current <see cref="ArchiveDataPoint"/> object is equal to <paramref name="obj"/>; otherwise false.</returns>
         public override bool Equals(object obj)
         {
             return (CompareTo(obj) == 0);
         }
 
         /// <summary>
-        /// Returns the text representation of <see cref="ArchiveData"/> object.
+        /// Returns the text representation of <see cref="ArchiveDataPoint"/> object.
         /// </summary>
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
@@ -555,7 +555,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Returns the hash code for the current <see cref="ArchiveData"/> object.
+        /// Returns the hash code for the current <see cref="ArchiveDataPoint"/> object.
         /// </summary>
         /// <returns>A 32-bit signed integer value.</returns>
         public override int GetHashCode()

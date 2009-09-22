@@ -272,9 +272,9 @@ namespace TVA.Historian.Packets
         #region [ Methods ]
 
         /// <summary>
-        /// Extracts time series data from the packet.
+        /// Extracts time-series data from the packet.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time series data; otherwise null.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
         IEnumerable<IDataPoint> ExtractTimeSeriesData();
 
         #endregion

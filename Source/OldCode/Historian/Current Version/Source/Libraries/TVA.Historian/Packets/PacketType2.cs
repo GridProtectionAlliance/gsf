@@ -316,7 +316,7 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the historian identifier of the time series data.
+        /// Gets or sets the historian identifier of the time-series data.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
         public int HistorianID
@@ -449,7 +449,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Quality"/> of the time series data.
+        /// Gets or sets the <see cref="Quality"/> of the time-series data.
         /// </summary>
         public Quality Quality
         {
@@ -498,7 +498,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets or sets the value of the time series data.
+        /// Gets or sets the value of the time-series data.
         /// </summary>
         public float Value
         {
@@ -596,14 +596,14 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Extracts time series data from <see cref="PacketType2"/>.
+        /// Extracts time-series data from <see cref="PacketType2"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveData"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
             DateTime timestamp = new DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, m_second, m_millisecond, DateTimeKind.Utc);
 
-            return new ArchiveData[] { new ArchiveData(m_historianID, new TimeTag(timestamp), m_value, m_quality) };
+            return new ArchiveDataPoint[] { new ArchiveDataPoint(m_historianID, new TimeTag(timestamp), m_value, m_quality) };
         }
 
         /// <summary>

@@ -314,7 +314,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of fist <see cref="ArchiveData"/> point in the <see cref="DataBlock"/>.
+        /// Gets or sets the <see cref="TimeTag"/> of fist <see cref="ArchiveDataPoint"/> point in the <see cref="DataBlock"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not between 01/01/1995 and 01/19/2063.</exception>
         public TimeTag StartTime
@@ -355,7 +355,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets a boolean value that indicates whether the <see cref="DataBlock"/> has been allocated to contain <see cref="ArchiveData"/>.
+        /// Gets a boolean value that indicates whether the <see cref="DataBlock"/> has been allocated to contain <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public bool IsAllocated
         {
@@ -397,7 +397,7 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Deallocates the <see cref="DataBlock"/> to store new <see cref="ArchiveData"/>.
+        /// Deallocates the <see cref="DataBlock"/> to store new <see cref="ArchiveDataPoint"/>.
         /// </summary>
         public void Reset()
         {

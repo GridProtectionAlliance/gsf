@@ -240,9 +240,9 @@ using TVA.Measurements;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents a packet that can be used to send multiple time series data points to a historian for archival.
+    /// Represents a packet that can be used to send multiple time-series data points to a historian for archival.
     /// </summary>
-    /// <seealso cref="PacketType101Data"/>
+    /// <seealso cref="PacketType101DataPoint"/>
     public class PacketType101 : PacketBase
     {
         // **************************************************************************************************
@@ -279,7 +279,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Initializes a new instance of the <see cref="PacketType101"/> class.
         /// </summary>
-        /// <param name="dataPoints">A collection of time series data points.</param>
+        /// <param name="dataPoints">A collection of time-series data points.</param>
         public PacketType101(IEnumerable<IDataPoint> dataPoints)
             : this()
         {
@@ -288,7 +288,7 @@ namespace TVA.Historian.Packets
 
             foreach (IDataPoint dataPoint in dataPoints)
             {
-                m_data.Add(new PacketType101Data(dataPoint));
+                m_data.Add(new PacketType101DataPoint(dataPoint));
             }
         }
 
@@ -304,7 +304,7 @@ namespace TVA.Historian.Packets
 
             foreach (IMeasurement measurement in measurements)
             {
-                m_data.Add(new PacketType101Data((int)measurement.ID,
+                m_data.Add(new PacketType101DataPoint((int)measurement.ID,
                                                  new TimeTag((DateTime)measurement.Timestamp),
                                                  (float)measurement.AdjustedValue,
                                                  (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData)));
@@ -328,7 +328,7 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the time series data in <see cref="PacketType101"/>.
+        /// Gets the time-series data in <see cref="PacketType101"/>.
         /// </summary>
         public IList<IDataPoint> Data
         {
@@ -345,7 +345,7 @@ namespace TVA.Historian.Packets
         {
             get
             {
-                return (2 + 4 + (m_data.Count * PacketType101Data.ByteCount));
+                return (2 + 4 + (m_data.Count * PacketType101DataPoint.ByteCount));
             }
         }
 
@@ -362,7 +362,7 @@ namespace TVA.Historian.Packets
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_data.Count), 0, image, 2, 4);
                 for (int i = 0; i < m_data.Count; i++)
                 {
-                    Array.Copy(m_data[i].BinaryImage, 0, image, 6 + (i * PacketType101Data.ByteCount), PacketType101Data.ByteCount);
+                    Array.Copy(m_data[i].BinaryImage, 0, image, 6 + (i * PacketType101DataPoint.ByteCount), PacketType101DataPoint.ByteCount);
                 }
 
                 return image;
@@ -391,7 +391,7 @@ namespace TVA.Historian.Packets
 
                 // Ensure that the binary image is complete
                 int dataCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-                if (length < 6 + dataCount * PacketType101Data.ByteCount)
+                if (length < 6 + dataCount * PacketType101DataPoint.ByteCount)
                     return 0;
 
                 // We have a binary image with the correct packet id.
@@ -399,8 +399,8 @@ namespace TVA.Historian.Packets
                 m_data.Clear();
                 for (int i = 0; i < dataCount; i++)
                 {
-                    offset = startIndex + 6 + (i * PacketType101Data.ByteCount);
-                    m_data.Add(new PacketType101Data(binaryImage, offset, length - offset));
+                    offset = startIndex + 6 + (i * PacketType101DataPoint.ByteCount);
+                    m_data.Add(new PacketType101DataPoint(binaryImage, offset, length - offset));
                 }
 
                 return BinaryLength;
@@ -413,15 +413,15 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Extracts time series data from <see cref="PacketType101"/>.
+        /// Extracts time-series data from <see cref="PacketType101"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveData"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
             List<IDataPoint> data = new List<IDataPoint>();
             foreach (IDataPoint dataPoint in m_data)
             {
-                data.Add(new ArchiveData(dataPoint));
+                data.Add(new ArchiveDataPoint(dataPoint));
             }
             return data;
         }

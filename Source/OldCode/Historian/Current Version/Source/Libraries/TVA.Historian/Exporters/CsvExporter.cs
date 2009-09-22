@@ -240,7 +240,7 @@ using System.ComponentModel;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// Represents an exporter that can export the current time series data in CSV format to a file.
+    /// Represents an exporter that can export the current time-series data in CSV format to a file.
     /// </summary>
     /// <example>
     /// Definition of a sample <see cref="Export"/> that can be processed by <see cref="CsvExporter"/>:
@@ -332,7 +332,7 @@ namespace TVA.Historian.Exporters
         /// </summary>
         /// <param name="export"><see cref="Export"/> to be processed.</param>
         /// <param name="listener"><see cref="DataListener"/> that provided the <paramref name="data"/>.</param>
-        /// <param name="data">Real-time time series data received by the <paramref name="listener"/>.</param>
+        /// <param name="data">Real-time time-series data received by the <paramref name="listener"/>.</param>
         /// <exception cref="NotSupportedException">Always</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void ProcessRealTimeExport(Export export, DataListener listener, IList<IDataPoint> data)

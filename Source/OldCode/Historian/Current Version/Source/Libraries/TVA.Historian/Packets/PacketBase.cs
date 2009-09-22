@@ -386,9 +386,9 @@ namespace TVA.Historian.Packets
         public abstract int Initialize(byte[] binaryImage, int startIndex, int length);
 
         /// <summary>
-        /// When overridden in a derived class, extracts time series data from the packet.
+        /// When overridden in a derived class, extracts time-series data from the packet.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time series data; otherwise null.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="IDataPoint"/>s if the packet contains time-series data; otherwise null.</returns>
         public abstract IEnumerable<IDataPoint> ExtractTimeSeriesData();
 
         #endregion

@@ -248,10 +248,10 @@ using System.IO;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents a block of <see cref="ArchiveData"/> in an <see cref="ArchiveFile"/>.
+    /// Represents a block of <see cref="ArchiveDataPoint"/> in an <see cref="ArchiveFile"/>.
     /// </summary>
-    /// <seealso cref="ArchiveData"/>
     /// <seealso cref="ArchiveFile"/>
+    /// <seealso cref="ArchiveDataPoint"/>
     public class ArchiveDataBlock
     {
         #region [ Members ]
@@ -280,20 +280,20 @@ namespace TVA.Historian.Files
         /// </summary>
         /// <param name="parent">An <see cref="ArchiveFile"/> object.</param>
         /// <param name="index">0-based index of the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="historianID">Historian identifier whose <see cref="ArchiveData"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
+        /// <param name="historianID">Historian identifier whose <see cref="ArchiveDataPoint"/> is stored in the <see cref="ArchiveDataBlock"/>.</param>
         /// <param name="reset">true if the <see cref="ArchiveDataBlock"/> is to be <see cref="Reset()"/>; otherwise false.</param>
         internal ArchiveDataBlock(ArchiveFile parent, int index, int historianID, bool reset)
         {
             m_parent = parent;
             m_index = index;
             m_historianID = historianID;
-            m_readBuffer = new byte[ArchiveData.ByteCount];
+            m_readBuffer = new byte[ArchiveDataPoint.ByteCount];
             m_writeCursor = Location;
             m_lastActivityTime = DateTime.Now;
             if (reset)
                 Reset();                                        // Clear existing data.
             else
-                foreach (ArchiveData dataPoint in Read()) { }   // Read existing data.
+                foreach (ArchiveDataPoint dataPoint in Read()) { }   // Read existing data.
         }
 
         #endregion
@@ -323,29 +323,29 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the maximum number of <see cref="ArchiveData"/> points that can be stored in the <see cref="ArchiveDataBlock"/>.
+        /// Gets the maximum number of <see cref="ArchiveDataPoint"/> points that can be stored in the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int Capacity
         {
             get
             {
-                return ((m_parent.DataBlockSize * 1024) / ArchiveData.ByteCount);
+                return ((m_parent.DataBlockSize * 1024) / ArchiveDataPoint.ByteCount);
             }
         }
 
         /// <summary>
-        /// Gets the number of <see cref="ArchiveData"/> points that have been written to the <see cref="ArchiveDataBlock"/>.
+        /// Gets the number of <see cref="ArchiveDataPoint"/> points that have been written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int SlotsUsed
         {
             get
             {
-                return (int)((m_writeCursor - Location) / ArchiveData.ByteCount);
+                return (int)((m_writeCursor - Location) / ArchiveDataPoint.ByteCount);
             }
         }
 
         /// <summary>
-        /// Gets the number of <see cref="ArchiveData"/> points that can to written to the <see cref="ArchiveDataBlock"/>.
+        /// Gets the number of <see cref="ArchiveDataPoint"/> points that can to written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int SlotsAvailable
         {
@@ -380,10 +380,10 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Reads existing <see cref="ArchiveData"/> points from the <see cref="ArchiveDataBlock"/>.
+        /// Reads existing <see cref="ArchiveDataPoint"/> points from the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        /// <returns>Returns <see cref="ArchiveData"/> points from the <see cref="ArchiveDataBlock"/>.</returns>
-        public IEnumerable<ArchiveData> Read()
+        /// <returns>Returns <see cref="ArchiveDataPoint"/> points from the <see cref="ArchiveDataBlock"/>.</returns>
+        public IEnumerable<ArchiveDataPoint> Read()
         {
             lock (m_parent.FileData)
             {
@@ -395,7 +395,7 @@ namespace TVA.Historian.Files
                     // Read the data in the block.
                     m_lastActivityTime = DateTime.Now;
                     m_parent.FileData.Read(m_readBuffer, 0, m_readBuffer.Length);
-                    ArchiveData dataPoint = new ArchiveData(m_historianID, m_readBuffer, 0, m_readBuffer.Length);
+                    ArchiveDataPoint dataPoint = new ArchiveDataPoint(m_historianID, m_readBuffer, 0, m_readBuffer.Length);
                     if (!dataPoint.IsEmpty)
                     {
                         // There is data - use it.
@@ -414,8 +414,8 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Writes the <paramref name="dataPoint"/> to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        /// <param name="dataPoint"><see cref="ArchiveData"/> point to write.</param>
-        public void Write(ArchiveData dataPoint)
+        /// <param name="dataPoint"><see cref="ArchiveDataPoint"/> point to write.</param>
+        public void Write(ArchiveDataPoint dataPoint)
         {
             if (SlotsAvailable > 0)
             {
@@ -425,7 +425,7 @@ namespace TVA.Historian.Files
                 {
                     // Write the data.
                     m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
-                    m_parent.FileData.Write(dataPoint.BinaryImage, 0, ArchiveData.ByteCount);
+                    m_parent.FileData.Write(dataPoint.BinaryImage, 0, ArchiveDataPoint.ByteCount);
                     // Update the write cursor.
                     m_writeCursor = m_parent.FileData.Position;
                     // Flush the data if configured.
@@ -440,14 +440,14 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Resets the <see cref="ArchiveDataBlock"/> by overwriting existing <see cref="ArchiveData"/> points with empty <see cref="ArchiveData"/> points.
+        /// Resets the <see cref="ArchiveDataBlock"/> by overwriting existing <see cref="ArchiveDataPoint"/> points with empty <see cref="ArchiveDataPoint"/> points.
         /// </summary>
         public void Reset()
         {
             m_writeCursor = Location;
             for (int i = 1; i <= Capacity; i++)
             {
-                Write(new ArchiveData(m_historianID));
+                Write(new ArchiveDataPoint(m_historianID));
             }
             m_writeCursor = Location;
         }

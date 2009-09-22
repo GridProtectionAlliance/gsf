@@ -238,7 +238,7 @@ using System.Collections.Generic;
 namespace TVA.Historian
 {
     /// <summary>
-    /// Defines a repository where time series data is warehoused by a historian.
+    /// Defines a repository where time-series data is warehoused by a historian.
     /// </summary>
     /// <seealso cref="IDataPoint"/>
     public interface IArchive
@@ -256,7 +256,7 @@ namespace TVA.Historian
         void Close();
 
         /// <summary>
-        /// Writes time series data to the repository.
+        /// Writes time-series data to the repository.
         /// </summary>
         /// <param name="dataPoint"><see cref="IDataPoint"/> to be written.</param>
         void WriteData(IDataPoint dataPoint);
@@ -276,7 +276,7 @@ namespace TVA.Historian
         void WriteStateData(int historianID, byte[] stateData);
 
         /// <summary>
-        /// Reads time series data from the repository.
+        /// Reads time-series data from the repository.
         /// </summary>
         /// <param name="historianID">Historian identifier for which <see cref="IDataPoint"/>s are to be read.</param>
         /// <param name="startTime"><see cref="System.String"/> representation of the start time (in GMT) of the timespan for which <see cref="IDataPoint"/>s are to be read.</param>

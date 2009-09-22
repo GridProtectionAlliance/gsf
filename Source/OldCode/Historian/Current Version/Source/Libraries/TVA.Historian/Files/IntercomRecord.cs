@@ -357,7 +357,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of latest <see cref="ArchiveData"/> received by the active <see cref="ArchiveFile"/>.
+        /// Gets or sets the <see cref="TimeTag"/> of latest <see cref="ArchiveDataPoint"/> received by the active <see cref="ArchiveFile"/>.
         /// </summary>
         public TimeTag LatestDataTime
         {
@@ -378,7 +378,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the historian identifier of latest <see cref="ArchiveData"/> received by the active <see cref="ArchiveFile"/>.
+        /// Gets or sets the historian identifier of latest <see cref="ArchiveDataPoint"/> received by the active <see cref="ArchiveFile"/>.
         /// </summary>
         public int LatestDataID
         {
@@ -399,7 +399,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets a list of <see cref="TimeTag"/>s of the latest <see cref="ArchiveData"/> received from each of the <see cref="MetadataRecord.SourceID"/>s.
+        /// Gets a list of <see cref="TimeTag"/>s of the latest <see cref="ArchiveDataPoint"/> received from each of the <see cref="MetadataRecord.SourceID"/>s.
         /// </summary>
         public IList<TimeTag> SourceLatestDataTime
         {

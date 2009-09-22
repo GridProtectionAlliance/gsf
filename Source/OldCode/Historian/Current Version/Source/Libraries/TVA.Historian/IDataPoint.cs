@@ -240,7 +240,7 @@ namespace TVA.Historian
     #region [ Enumerations ]
 
     /// <summary>
-    /// Indicates the quality of time series data.
+    /// Indicates the quality of time-series data.
     /// </summary>
     public enum Quality
     {
@@ -369,7 +369,7 @@ namespace TVA.Historian
     #endregion
 
     /// <summary>
-    /// Defines time series data warehoused by a historian.
+    /// Defines time-series data warehoused by a historian.
     /// </summary>
     /// <seealso cref="TimeTag"/>
     /// <seealso cref="Quality"/>
@@ -378,22 +378,22 @@ namespace TVA.Historian
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the historian identifier of the time series data point.
+        /// Gets or sets the historian identifier of the time-series data point.
         /// </summary>
         int HistorianID { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="TimeTag"/> of the time series data point.
+        /// Gets or sets the <see cref="TimeTag"/> of the time-series data point.
         /// </summary>
         TimeTag Time { get; set; }
 
         /// <summary>
-        /// Gets or sets the value of the time series data point.
+        /// Gets or sets the value of the time-series data point.
         /// </summary>
         float Value { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="Quality"/> of the time series data point.
+        /// Gets or sets the <see cref="Quality"/> of the time-series data point.
         /// </summary>
         Quality Quality { get; set; }
 

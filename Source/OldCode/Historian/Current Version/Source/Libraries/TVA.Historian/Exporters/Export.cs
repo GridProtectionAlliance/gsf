@@ -257,11 +257,11 @@ namespace TVA.Historian.Exporters
         /// </summary>
         OnDemand,
         /// <summary>
-        /// <see cref="Export"/> is to be processed as time series data is received in real-time.
+        /// <see cref="Export"/> is to be processed as time-series data is received in real-time.
         /// </summary>
         RealTime,
         /// <summary>
-        /// <see cref="Export"/> is to be processed at a set interval regardless of change in the time series data.
+        /// <see cref="Export"/> is to be processed at a set interval regardless of change in the time-series data.
         /// </summary>
         Intervaled
     }
@@ -288,7 +288,7 @@ namespace TVA.Historian.Exporters
     #endregion
 
     /// <summary>
-    /// A class with information that can be used by an exporter for exporting time series data.
+    /// A class with information that can be used by an exporter for exporting time-series data.
     /// </summary>
     /// <seealso cref="ExportRecord"/>
     /// <seealso cref="ExportSetting"/>
@@ -484,7 +484,7 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Gets the <see cref="ExportRecord"/>s whose time series data is to be exported by the <see cref="Exporter"/>.
+        /// Gets the <see cref="ExportRecord"/>s whose time-series data is to be exported by the <see cref="Exporter"/>.
         /// </summary>
         public virtual List<ExportRecord> Records
         {

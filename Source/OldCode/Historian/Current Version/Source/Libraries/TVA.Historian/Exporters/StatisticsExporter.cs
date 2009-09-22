@@ -329,7 +329,7 @@ namespace TVA.Historian.Exporters
         // Nested Types
 
         /// <summary>
-        /// A class for calculating the MIN, MAX and AVG of time series data over a period of time.
+        /// A class for calculating the MIN, MAX and AVG of time-series data over a period of time.
         /// </summary>
         protected class Statistics
         {
@@ -344,24 +344,24 @@ namespace TVA.Historian.Exporters
             }
 
             /// <summary>
-            /// The smallest value in the time series data.
+            /// The smallest value in the time-series data.
             /// </summary>
             public double MinimumValue;
 
             /// <summary>
-            /// The largest value in the time series data.
+            /// The largest value in the time-series data.
             /// </summary>
             public double MaximumValue;
 
             /// <summary>
-            /// The average value in the time series data.
+            /// The average value in the time-series data.
             /// </summary>
             public double AverageValue;
 
             /// <summary>
             /// Calculates <see cref="Statistics"/> from the provided <paramref name="data"/> and clear the <paramref name="data"/> when done.
             /// </summary>
-            /// <param name="data">A <see cref="DataSet"/> containing buffered real-time time series data.</param>
+            /// <param name="data">A <see cref="DataSet"/> containing buffered real-time time-series data.</param>
             /// <param name="filerClause">Filter clause to be applied for limiting the data included in the calculation.</param>
             public void Calculate(DataSet data, string filerClause)
             {
@@ -460,7 +460,7 @@ namespace TVA.Historian.Exporters
         /// </summary>
         /// <param name="export"><see cref="Export"/> to be processed.</param>
         /// <param name="listener"><see cref="DataListener"/> that provided the <paramref name="data"/>.</param>
-        /// <param name="data">Real-time time series data received by the <paramref name="listener"/>.</param>
+        /// <param name="data">Real-time time-series data received by the <paramref name="listener"/>.</param>
         /// <exception cref="NotSupportedException">Always</exception>
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void ProcessRealTimeExport(Export export, DataListener listener, IList<IDataPoint> data)

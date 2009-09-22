@@ -362,7 +362,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Extracts time series data from the query packet type.
+        /// Extracts time-series data from the query packet type.
         /// </summary>
         /// <returns>A null reference.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()

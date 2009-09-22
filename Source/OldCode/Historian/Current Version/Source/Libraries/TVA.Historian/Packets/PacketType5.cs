@@ -344,7 +344,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Extracts time series data from <see cref="PacketType5"/>.
+        /// Extracts time-series data from <see cref="PacketType5"/>.
         /// </summary>
         /// <returns>A null reference.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()

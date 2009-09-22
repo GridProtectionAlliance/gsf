@@ -372,7 +372,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the number <see cref="ArchiveData"/> points received by the <see cref="ArchiveFile"/> for archival.
+        /// Gets or sets the number <see cref="ArchiveDataPoint"/> points received by the <see cref="ArchiveFile"/> for archival.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int DataPointsReceived
@@ -391,7 +391,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the number <see cref="ArchiveData"/> points archived by the <see cref="ArchiveFile"/>.
+        /// Gets or sets the number <see cref="ArchiveDataPoint"/> points archived by the <see cref="ArchiveFile"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive or zero.</exception>
         public int DataPointsArchived
@@ -700,7 +700,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Returns all <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/> with <see cref="ArchiveData"/> points later than the specified <paramref name="startTime"/>.
+        /// Returns all <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/> with <see cref="ArchiveDataPoint"/> points later than the specified <paramref name="startTime"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
@@ -711,7 +711,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Returns all <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/> with <see cref="ArchiveData"/> points between the specified <paramref name="startTime"/> and <paramref name="endTime"/>.
+        /// Returns all <see cref="ArchiveDataBlock"/>s in the <see cref="ArchiveFile"/> for the specified <paramref name="historianID"/> with <see cref="ArchiveDataPoint"/> points between the specified <paramref name="startTime"/> and <paramref name="endTime"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier.</param>
         /// <param name="startTime">Start <see cref="TimeTag"/>.</param>
@@ -742,11 +742,11 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Returns an <see cref="ArchiveDataBlock"/> for writting <see cref="ArchiveData"/> points for the specified <paramref name="historianID"/>.
+        /// Returns an <see cref="ArchiveDataBlock"/> for writting <see cref="ArchiveDataPoint"/> points for the specified <paramref name="historianID"/>.
         /// </summary>
         /// <param name="historianID">Historian identifier for which the <see cref="ArchiveDataBlock"/> is being requested.</param>
-        /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveData"/> point to be written to the <see cref="ArchiveDataBlock"/>.</param>
-        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writting <see cref="ArchiveData"/> points for the <paramref name="historianID"/>.</param>
+        /// <param name="dataTime"><see cref="TimeTag"/> of the <see cref="ArchiveDataPoint"/> point to be written to the <see cref="ArchiveDataBlock"/>.</param>
+        /// <param name="blockIndex"><see cref="ArchiveDataBlock.Index"/> of the <see cref="ArchiveDataBlock"/> last used for writting <see cref="ArchiveDataPoint"/> points for the <paramref name="historianID"/>.</param>
         /// <returns><see cref="ArchiveDataBlock"/> object if available; otherwise null if all <see cref="ArchiveDataBlock"/>s have been allocated.</returns>
         internal ArchiveDataBlock RequestDataBlock(int historianID, TimeTag dataTime, int blockIndex)
         {

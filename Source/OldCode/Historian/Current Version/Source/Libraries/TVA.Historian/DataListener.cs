@@ -23,7 +23,7 @@
 //       Added new header and license agreement.
 //  09/15/2009 - Pinal C. Patel
 //       Made caching of data locally optional so DataListener can be used just for getting real-time
-//       time series data that is now being made available via the new DataExtracted event.
+//       time-series data that is now being made available via the new DataExtracted event.
 //  09/17/2009 - Pinal C. Patel
 //       Added check to prevent raising DataExtracted and DataChanged events if no time-series data
 //       was present in the received packets.
@@ -261,7 +261,7 @@ using TVA.Units;
 namespace TVA.Historian
 {
     /// <summary>
-    /// Represents a listener that can receive time series data in real-time using <see cref="System.Net.Sockets.Socket"/>s.
+    /// Represents a listener that can receive time-series data in real-time using <see cref="System.Net.Sockets.Socket"/>s.
     /// </summary>
     /// <seealso cref="IDataPoint"/>
     /// <seealso cref="PacketParser"/>
@@ -353,24 +353,24 @@ namespace TVA.Historian
         public event EventHandler ListenerStopped;
 
         /// <summary>
-        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time series data is being attempted.
+        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time-series data is being attempted.
         /// </summary>
         [Category("Socket"),
-        Description("Occurs when the underlying Socket connection for receiving time series data is being attempted.")]
+        Description("Occurs when the underlying Socket connection for receiving time-series data is being attempted.")]
         public event EventHandler SocketConnecting;
 
         /// <summary>
-        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time series data is established.
+        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time-series data is established.
         /// </summary>
         [Category("Socket"),
-        Description("Occurs when the underlying Socket connection for receiving time series data is established.")]
+        Description("Occurs when the underlying Socket connection for receiving time-series data is established.")]
         public event EventHandler SocketConnected;
 
         /// <summary>
-        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time series data is terminated.
+        /// Occurs when the underlying <see cref="System.Net.Sockets.Socket"/> connection for receiving time-series data is terminated.
         /// </summary>
         [Category("Socket"),
-        Description("Occurs when the underlying Socket connection for receiving time series data is terminated.")]
+        Description("Occurs when the underlying Socket connection for receiving time-series data is terminated.")]
         public event EventHandler SocketDisconnected;
 
         /// <summary>
@@ -402,10 +402,10 @@ namespace TVA.Historian
         public event EventHandler DataInitFailure;
 
         /// <summary>
-        /// Occurs when time series data is extracted from the received packets.
+        /// Occurs when time-series data is extracted from the received packets.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when time series data is extracted from the received packets.")]
+        Description("Occurs when time-series data is extracted from the received packets.")]
         public event EventHandler<EventArgs<IList<IDataPoint>>> DataExtracted;
 
         /// <summary>
@@ -529,12 +529,12 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets or sets the DNS name or IP address of the server from where the <see cref="DataListener"/> will get the time series data.
+        /// Gets or sets the DNS name or IP address of the server from where the <see cref="DataListener"/> will get the time-series data.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Connection"),
         DefaultValue(DefaultServer),
-        Description("DNS name or IP address of the server from where the DataListener will get the time series data.")]
+        Description("DNS name or IP address of the server from where the DataListener will get the time-series data.")]
         public string Server
         {
             get
@@ -551,12 +551,12 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets or sets the network port of the <see cref="Server"/> where the <see cref="DataListener"/> will connect to get the time series data.
+        /// Gets or sets the network port of the <see cref="Server"/> where the <see cref="DataListener"/> will connect to get the time-series data.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not between 0 and 65535.</exception>
         [Category("Connection"),
         DefaultValue(DefaultPort),
-        Description("Network port of the Server where the DataListener will connect to get the time series data.")]
+        Description("Network port of the Server where the DataListener will connect to get the time-series data.")]
         public int Port
         {
             get
@@ -573,12 +573,12 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="TransportProtocol"/> to be used for receiving time series data from the <see cref="Server"/>.
+        /// Gets or sets the <see cref="TransportProtocol"/> to be used for receiving time-series data from the <see cref="Server"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not Tcp or Udp.</exception>
         [Category("Connection"),
         DefaultValue(DefaultProtocol),
-        Description("Protocol to be used for receiving time series data from the Server.")]
+        Description("Protocol to be used for receiving time-series data from the Server.")]
         public TransportProtocol Protocol
         {
             get
@@ -596,12 +596,12 @@ namespace TVA.Historian
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="DataListener"/> will connect to the <see cref="Server"/> 
-        /// for receiving the time series data or the <see cref="Server"/> will make a connection to the <see cref="DataListener"/> on 
-        /// the specified <see cref="Port"/> for sending time series data.
+        /// for receiving the time-series data or the <see cref="Server"/> will make a connection to the <see cref="DataListener"/> on 
+        /// the specified <see cref="Port"/> for sending time-series data.
         /// </summary>
         [Category("Connection"),
         DefaultValue(DefaultConnectToServer),
-        Description("Indicates whether the DataListener will connect to the Server for receiving the time series data or the Server will make a connection to the DataListener on the specified Port for sending time series data.")]
+        Description("Indicates whether the DataListener will connect to the Server for receiving the time-series data or the Server will make a connection to the DataListener on the specified Port for sending time-series data.")]
         public bool ConnectToServer
         {
             get
@@ -615,12 +615,12 @@ namespace TVA.Historian
         }
        
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="Data"/> is to be updated with the latest time series data.
+        /// Gets or sets a boolean value that indicates whether the <see cref="Data"/> is to be updated with the latest time-series data.
         /// </summary>
         /// <exception cref="InvalidOperationException"><see cref="CacheData"/> is being disabled when <see cref="InitializeData"/> is enabled.</exception>
         [Category("Data"),
         DefaultValue(DefaultCacheData),
-        Description("Indicates whether the Data is to be updated with the latest time series data.")]
+        Description("Indicates whether the Data is to be updated with the latest time-series data.")]
         public bool CacheData 
         {
             get
@@ -748,7 +748,7 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets the newest time series data received by the <see cref="DataListener"/>.
+        /// Gets the newest time-series data received by the <see cref="DataListener"/>.
         /// </summary>
         /// <remarks>
         /// WARNING: <see cref="Data"/> is thread unsafe. Synchronized access is required.
@@ -763,7 +763,7 @@ namespace TVA.Historian
         }
 
         /// <summary>
-        /// Gets the underlying <see cref="PacketParser"/> used the <see cref="DataListener"/> for extracting the time series data.
+        /// Gets the underlying <see cref="PacketParser"/> used the <see cref="DataListener"/> for extracting the time-series data.
         /// </summary>
         [Browsable(false)]
         public PacketParser Parser
@@ -972,9 +972,9 @@ namespace TVA.Historian
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ID", m_id, "Alpha-numeric identifier of the listener.");
-                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time series data.");
-                settings.Add("Port", m_port, "Network port at the server where the time series data is being server.");
-                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time series data.");
+                settings.Add("Server", m_server, "DNS name or IP address of the server providing the time-series data.");
+                settings.Add("Port", m_port, "Network port at the server where the time-series data is being server.");
+                settings.Add("Protocol", m_protocol, "Protocol (Tcp; Udp) to be used for receiving time-series data.");
                 settings.Add("ConnectToServer", m_connectToServer, "True is the listener to initiate connection to the server; otherwise False;");
                 settings.Add("CacheData", m_cacheData, "True if newest data is to be cached locally; otherwise False.");
                 settings.Add("InitializeData", m_initializeData, "True if data is to be initialized from the server on startup; otherwise False.");
@@ -1240,7 +1240,7 @@ namespace TVA.Historian
         /// <summary>
         /// Raises the <see cref="DataExtracted"/> event.
         /// </summary>
-        /// <param name="data">Extracted time series data to send to <see cref="DataExtracted"/> event.</param>
+        /// <param name="data">Extracted time-series data to send to <see cref="DataExtracted"/> event.</param>
         protected virtual void OnDataExtracted(IList<IDataPoint> data)
         {
             if (DataExtracted != null)
@@ -1334,7 +1334,7 @@ namespace TVA.Historian
             {
                 lock (m_data)
                 {
-                    m_data.Add(new ArchiveData(state.HistorianID, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
+                    m_data.Add(new ArchiveDataPoint(state.HistorianID, state.CurrentData.Time, state.CurrentData.Value, state.CurrentData.Quality));
                 }
             }
             else
@@ -1418,7 +1418,7 @@ namespace TVA.Historian
                                 // No data exists for the id, so add one for it and others in-between.
                                 for (int i = m_data.Count + 1; i <= dataPoint.HistorianID; i++)
                                 {
-                                    m_data.Add(new ArchiveData(i));
+                                    m_data.Add(new ArchiveDataPoint(i));
                                 }
                             }
 

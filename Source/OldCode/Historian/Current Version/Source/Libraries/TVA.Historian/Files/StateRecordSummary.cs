@@ -266,7 +266,7 @@ namespace TVA.Historian.Files
 
         // Fields
         private int m_historianID;
-        private StateRecordData m_currentData;
+        private StateRecordDataPoint m_currentData;
 
         #endregion
 
@@ -320,7 +320,7 @@ namespace TVA.Historian.Files
         /// Same as <see cref="StateRecord.CurrentData"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
-        public StateRecordData CurrentData
+        public StateRecordDataPoint CurrentData
         {
             get
             {
@@ -356,7 +356,7 @@ namespace TVA.Historian.Files
                 byte[] image = new byte[ByteCount];
 
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_historianID), 0, image, 0, 4);
-                Array.Copy(m_currentData.BinaryImage, 0, image, 4, StateRecordData.ByteCount);
+                Array.Copy(m_currentData.BinaryImage, 0, image, 4, StateRecordDataPoint.ByteCount);
 
                 return image;
             }
@@ -379,7 +379,7 @@ namespace TVA.Historian.Files
             {
                 // Binary image has sufficient data.
                 HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex);
-                CurrentData = new StateRecordData(HistorianID, binaryImage, startIndex + 4, length - 4);
+                CurrentData = new StateRecordDataPoint(HistorianID, binaryImage, startIndex + 4, length - 4);
 
                 return ByteCount;
             }

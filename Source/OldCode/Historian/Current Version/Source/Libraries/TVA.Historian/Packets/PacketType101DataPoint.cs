@@ -240,10 +240,10 @@ using TVA.Measurements;
 namespace TVA.Historian.Packets
 {
     /// <summary>
-    /// Represents time series data transmitted in <see cref="PacketType101"/>.
+    /// Represents time-series data transmitted in <see cref="PacketType101"/>.
     /// </summary>
     /// <seealso cref="PacketType101"/>
-    public class PacketType101Data : ArchiveData
+    public class PacketType101DataPoint : ArchiveDataPoint
     {
         // **************************************************************************************************
         // *                                        Binary Structure                                        *
@@ -261,7 +261,7 @@ namespace TVA.Historian.Packets
         // Constants
 
         /// <summary>
-        /// Specifies the number of bytes in the binary image of <see cref="PacketType101Data"/>.
+        /// Specifies the number of bytes in the binary image of <see cref="PacketType101DataPoint"/>.
         /// </summary>
         public new const int ByteCount = 14;
 
@@ -270,43 +270,43 @@ namespace TVA.Historian.Packets
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
+        /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
-        /// <param name="dataPoint">A time series data point.</param>
-        public PacketType101Data(IDataPoint dataPoint)
+        /// <param name="dataPoint">A time-series data point.</param>
+        public PacketType101DataPoint(IDataPoint dataPoint)
             : base(dataPoint)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
+        /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
-        public PacketType101Data(IMeasurement measurement)
+        public PacketType101DataPoint(IMeasurement measurement)
             : base(measurement)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
+        /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
-        /// <param name="historianID">Historian identifier of <see cref="PacketType101Data"/>.</param>
-        /// <param name="time"><see cref="TimeTag"/> of <see cref="PacketType101Data"/>.</param>
-        /// <param name="value">Floating-point value of <see cref="PacketType101Data"/>.</param>
-        /// <param name="quality"><see cref="Quality"/> of <see cref="PacketType101Data"/>.</param>
-        public PacketType101Data(int historianID, TimeTag time, float value, Quality quality)
+        /// <param name="historianID">Historian identifier of <see cref="PacketType101DataPoint"/>.</param>
+        /// <param name="time"><see cref="TimeTag"/> of <see cref="PacketType101DataPoint"/>.</param>
+        /// <param name="value">Floating-point value of <see cref="PacketType101DataPoint"/>.</param>
+        /// <param name="quality"><see cref="Quality"/> of <see cref="PacketType101DataPoint"/>.</param>
+        public PacketType101DataPoint(int historianID, TimeTag time, float value, Quality quality)
             : base(historianID, time, value, quality)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="PacketType101Data"/> class.
+        /// Initializes a new instance of the <see cref="PacketType101DataPoint"/> class.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101Data"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        public PacketType101Data(byte[] binaryImage, int startIndex, int length)
+        public PacketType101DataPoint(byte[] binaryImage, int startIndex, int length)
             : base(1, binaryImage, startIndex, length)
         {
         }
@@ -327,7 +327,7 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Gets the binary representation of <see cref="PacketType101Data"/>.
+        /// Gets the binary representation of <see cref="PacketType101DataPoint"/>.
         /// </summary>
         public override byte[] BinaryImage
         {
@@ -345,12 +345,12 @@ namespace TVA.Historian.Packets
         }
 
         /// <summary>
-        /// Initializes <see cref="PacketType101Data"/> from the specified <paramref name="binaryImage"/>.
+        /// Initializes <see cref="PacketType101DataPoint"/> from the specified <paramref name="binaryImage"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101Data"/>.</param>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="PacketType101DataPoint"/>.</param>
         /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
         /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType101Data"/>.</returns>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="PacketType101DataPoint"/>.</returns>
         public override int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             if (length >= ByteCount)

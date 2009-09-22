@@ -255,7 +255,7 @@ using TVA.Historian.Packets;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// A base class for an exporter of real-time time series data.
+    /// A base class for an exporter of real-time time-series data.
     /// </summary>
     /// <seealso cref="Export"/>
     /// <seealso cref="DataListener"/>
@@ -266,7 +266,7 @@ namespace TVA.Historian.Exporters
         // Nested Types
 
         /// <summary>
-        /// A class that can be used to save real-time time series data for <see cref="Export"/>s of type <see cref="ExportType.RealTime"/>.
+        /// A class that can be used to save real-time time-series data for <see cref="Export"/>s of type <see cref="ExportType.RealTime"/>.
         /// </summary>
         /// <seealso cref="Export"/>
         protected class RealTimeData
@@ -421,7 +421,7 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Gets the <see cref="DataListener"/>s providing real-time time series data to the exporter.
+        /// Gets the <see cref="DataListener"/>s providing real-time time-series data to the exporter.
         /// </summary>
         /// <remarks>
         /// WARNING: <see cref="Listeners"/> is therad unsafe. Synchronized access is required.
@@ -496,7 +496,7 @@ namespace TVA.Historian.Exporters
         /// </summary>
         /// <param name="export"><see cref="Export"/> to be processed.</param>
         /// <param name="listener"><see cref="DataListener"/> that provided the <paramref name="data"/>.</param>
-        /// <param name="data">Real-time time series data received by the <paramref name="listener"/>.</param>
+        /// <param name="data">Real-time time-series data received by the <paramref name="listener"/>.</param>
         protected abstract void ProcessRealTimeExport(Export export, DataListener listener, IList<IDataPoint> data);
 
         #endregion
@@ -707,10 +707,10 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Returns the current time series data for the specified <paramref name="export"/> organized by listener.
+        /// Returns the current time-series data for the specified <paramref name="export"/> organized by listener.
         /// </summary>
-        /// <param name="export"><see cref="Export"/> whose current time series data is to be returned.</param>
-        /// <returns>A <see cref="Dictionary{TKey,TValue}"/> object where the <b>key</b> is the <see cref="DataListener.Name"/> and <b>value</b> is the time series data.</returns>
+        /// <param name="export"><see cref="Export"/> whose current time-series data is to be returned.</param>
+        /// <returns>A <see cref="Dictionary{TKey,TValue}"/> object where the <b>key</b> is the <see cref="DataListener.Name"/> and <b>value</b> is the time-series data.</returns>
         protected Dictionary<string, IList<IDataPoint>> GetExportData(Export export)
         {
             // Arrange all export records by listeners.
@@ -723,7 +723,7 @@ namespace TVA.Historian.Exporters
                 exportRecords[record.Instance].Add(record);
             }
 
-            // Gather time series data for the export records.
+            // Gather time-series data for the export records.
             DataListener listener;
             List<IDataPoint> listenerData = new List<IDataPoint>();
             Dictionary<string, IList<IDataPoint>> exportData = new Dictionary<string, IList<IDataPoint>>();
@@ -759,7 +759,7 @@ namespace TVA.Historian.Exporters
                         else
                         {
                             // Data does not exist for the point, so provide empty data.
-                            exportData[listenerName].Add(new ArchiveData(record.Identifier));
+                            exportData[listenerName].Add(new ArchiveDataPoint(record.Identifier));
                         }
                     }
                 }
@@ -768,17 +768,17 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Returns the current time series data for the specified <paramref name="export"/> in a <see cref="DataSet"/>.
+        /// Returns the current time-series data for the specified <paramref name="export"/> in a <see cref="DataSet"/>.
         /// </summary>
-        /// <param name="export"><see cref="Export"/> whose current time series data is to be returned.</param>
-        /// <param name="dataTableName">Name of the <see cref="DataTable"/> containing the time series data.</param>
+        /// <param name="export"><see cref="Export"/> whose current time-series data is to be returned.</param>
+        /// <param name="dataTableName">Name of the <see cref="DataTable"/> containing the time-series data.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         protected DataSet GetExportDataAsDataset(Export export, string dataTableName)
         {
             DataSet result = ExporterBase.DatasetTemplate(dataTableName);
             Dictionary<string, IList<IDataPoint>> exportData = GetExportData(export);
 
-            // Populate the dataset with time series data.
+            // Populate the dataset with time-series data.
             foreach (string listenerName in exportData.Keys)
             {
                 foreach (IDataPoint dataPoint in exportData[listenerName])
@@ -973,16 +973,16 @@ namespace TVA.Historian.Exporters
         // Static Methods
 
         /// <summary>
-        /// Returns a template <see cref="DataSet"/> that can be used for storing time series data in a tabular format.
+        /// Returns a template <see cref="DataSet"/> that can be used for storing time-series data in a tabular format.
         /// </summary>
-        /// <param name="dataTableName">Name of the <see cref="DataTable"/> that will be used for storing the time series data.</param>
+        /// <param name="dataTableName">Name of the <see cref="DataTable"/> that will be used for storing the time-series data.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         /// <remarks>
         /// <para>
         /// The returned <see cref="DataSet"/> consists of two <see cref="DataTable"/>s with the following structure:<br/>
         /// </para>
         /// <para>
-        /// Table 1 is to be used for storing time series data.
+        /// Table 1 is to be used for storing time-series data.
         /// <list type="table">
         ///     <listheader>
         ///         <term>Column Name</term>
@@ -990,23 +990,23 @@ namespace TVA.Historian.Exporters
         ///     </listheader>
         ///     <item>
         ///         <term>Instance</term>
-        ///         <description>Historian instance providing the time series data.</description>
+        ///         <description>Historian instance providing the time-series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>ID</term>
-        ///         <description><see cref="IDataPoint.HistorianID"/> of the time series data.</description>
+        ///         <description><see cref="IDataPoint.HistorianID"/> of the time-series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Time</term>
-        ///         <description><see cref="IDataPoint.Time"/> of the time series data.</description>
+        ///         <description><see cref="IDataPoint.Time"/> of the time-series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Value</term>
-        ///         <description><see cref="IDataPoint.Value"/> of the time series data.</description>
+        ///         <description><see cref="IDataPoint.Value"/> of the time-series data.</description>
         ///     </item>
         ///     <item>
         ///         <term>Quality</term>
-        ///         <description><see cref="IDataPoint.Quality"/> of the time series data.</description>
+        ///         <description><see cref="IDataPoint.Quality"/> of the time-series data.</description>
         ///     </item>
         /// </list>
         /// Table 2 is to be used for providing information about Table 1.
@@ -1021,7 +1021,7 @@ namespace TVA.Historian.Exporters
         ///     </item>
         ///     <item>
         ///         <term>RecordCount</term>
-        ///         <description>Number of time series data points in Table 1.</description>
+        ///         <description>Number of time-series data points in Table 1.</description>
         ///     </item>
         ///     <item>
         ///         <term>RefreshSchedule</term>

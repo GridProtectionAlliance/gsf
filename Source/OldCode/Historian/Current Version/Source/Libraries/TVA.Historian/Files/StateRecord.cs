@@ -243,9 +243,9 @@ namespace TVA.Historian.Files
     /// <summary>
     /// Represents a record in the <see cref="StateFile"/> that contains the state information associated to a <see cref="HistorianID"/>.
     /// </summary>
-    /// <seealso cref="StateFile"/>
-    /// <seealso cref="StateRecordData"/>
+    /// <seealso cref="StateFile"/>    
     /// <seealso cref="StateRecordSummary"/>
+    /// <seealso cref="StateRecordDataPoint"/>
     public class StateRecord : ISupportBinaryImage, IComparable
     {
         // **************************************************************************************************
@@ -273,9 +273,9 @@ namespace TVA.Historian.Files
 
         // Fields
         private int m_historianID;
-        private StateRecordData m_archivedData;
-        private StateRecordData m_previousData;
-        private StateRecordData m_currentData;
+        private StateRecordDataPoint m_archivedData;
+        private StateRecordDataPoint m_previousData;
+        private StateRecordDataPoint m_currentData;
         private int m_activeDataBlockIndex;
         private int m_activeDataBlockSlot;
         private double m_slope1;
@@ -292,9 +292,9 @@ namespace TVA.Historian.Files
         public StateRecord(int historianID)
         {
             m_historianID = historianID;
-            m_archivedData = new StateRecordData(m_historianID);
-            m_previousData = new StateRecordData(m_historianID);
-            m_currentData = new StateRecordData(m_historianID);
+            m_archivedData = new StateRecordDataPoint(m_historianID);
+            m_previousData = new StateRecordDataPoint(m_historianID);
+            m_currentData = new StateRecordDataPoint(m_historianID);
             m_activeDataBlockIndex = -1;
             m_activeDataBlockSlot = 1;
         }
@@ -317,10 +317,10 @@ namespace TVA.Historian.Files
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the most recently archived <see cref="StateRecordData"/> for the <see cref="HistorianID"/>.
+        /// Gets or sets the most recently archived <see cref="StateRecordDataPoint"/> for the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
-        public StateRecordData ArchivedData
+        public StateRecordDataPoint ArchivedData
         {
             get
             {
@@ -336,10 +336,10 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the previous <see cref="StateRecordData"/> received for the <see cref="HistorianID"/>.
+        /// Gets or sets the previous <see cref="StateRecordDataPoint"/> received for the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
-        public StateRecordData PreviousData
+        public StateRecordDataPoint PreviousData
         {
             get
             {
@@ -355,10 +355,10 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the most current <see cref="StateRecordData"/> received for the <see cref="HistorianID"/>.
+        /// Gets or sets the most current <see cref="StateRecordDataPoint"/> received for the <see cref="HistorianID"/>.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null.</exception>
-        public StateRecordData CurrentData
+        public StateRecordDataPoint CurrentData
         {
             get
             {
@@ -485,9 +485,9 @@ namespace TVA.Historian.Files
             {
                 byte[] image = new byte[ByteCount];
 
-                Array.Copy(m_archivedData.BinaryImage, 0, image, 0, StateRecordData.ByteCount);
-                Array.Copy(m_previousData.BinaryImage, 0, image, 16, StateRecordData.ByteCount);
-                Array.Copy(m_currentData.BinaryImage, 0, image, 32, StateRecordData.ByteCount);
+                Array.Copy(m_archivedData.BinaryImage, 0, image, 0, StateRecordDataPoint.ByteCount);
+                Array.Copy(m_previousData.BinaryImage, 0, image, 16, StateRecordDataPoint.ByteCount);
+                Array.Copy(m_currentData.BinaryImage, 0, image, 32, StateRecordDataPoint.ByteCount);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockIndex), 0, image, 48, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_activeDataBlockSlot), 0, image, 52, 4);
                 Array.Copy(EndianOrder.LittleEndian.GetBytes(m_slope1), 0, image, 56, 8);

@@ -255,7 +255,7 @@ namespace TVA.Historian.Files
         /// </summary>
         Composed,
         /// <summary>
-        /// Data value is a constant and no real-time time series data is received.
+        /// Data value is a constant and no real-time time-series data is received.
         /// </summary>
         Constant
     }
@@ -426,7 +426,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether a "step change" operation is to be performed on incoming time series data for the <see cref="MetadataRecord"/>.
+        /// Gets or sets a boolean value that indicates whether a "step change" operation is to be performed on incoming time-series data for the <see cref="MetadataRecord"/>.
         /// </summary>
         public bool StepCheck
         {
