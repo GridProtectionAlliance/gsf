@@ -23,6 +23,7 @@
 //       Added new header and license agreement.
 //  09/23/2009 - Pinal C. Patel
 //       Edited code comments.
+//       Removed the dependency on ArchiveDataPoint.
 //
 //*******************************************************************************************************
 
@@ -385,7 +386,7 @@ namespace TVA.Historian.Files
         /// Reads existing <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         /// <returns>Returns <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveDataBlock"/>.</returns>
-        public IEnumerable<ArchiveDataPoint> Read()
+        public IEnumerable<IDataPoint> Read()
         {
             lock (m_parent.FileData)
             {
@@ -416,8 +417,8 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Writes the <paramref name="dataPoint"/> to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        /// <param name="dataPoint"><see cref="ArchiveDataPoint"/> to write.</param>
-        public void Write(ArchiveDataPoint dataPoint)
+        /// <param name="dataPoint"><see cref="IDataPoint"/> to write.</param>
+        public void Write(IDataPoint dataPoint)
         {
             if (SlotsAvailable > 0)
             {
@@ -427,7 +428,7 @@ namespace TVA.Historian.Files
                 {
                     // Write the data.
                     m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
-                    m_parent.FileData.Write(dataPoint.BinaryImage, 0, ArchiveDataPoint.ByteCount);
+                    m_parent.FileData.Write(dataPoint.BinaryImage, 0, dataPoint.BinaryLength);
                     // Update the write cursor.
                     m_writeCursor = m_parent.FileData.Position;
                     // Flush the data if configured.
