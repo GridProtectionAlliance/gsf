@@ -14,6 +14,8 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/23/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -598,7 +600,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Extracts time-series data from <see cref="PacketType2"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>s.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
             DateTime timestamp = new DateTime(m_year, m_month, m_day, m_hour + m_gmtOffset, m_minute, m_second, m_millisecond, DateTimeKind.Utc);

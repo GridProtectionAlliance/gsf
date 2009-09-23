@@ -21,6 +21,8 @@
 //       Edited Comments.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/23/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -248,7 +250,7 @@ using System.IO;
 namespace TVA.Historian.Files
 {
     /// <summary>
-    /// Represents a block of <see cref="ArchiveDataPoint"/> in an <see cref="ArchiveFile"/>.
+    /// Represents a block of <see cref="ArchiveDataPoint"/>s in an <see cref="ArchiveFile"/>.
     /// </summary>
     /// <seealso cref="ArchiveFile"/>
     /// <seealso cref="ArchiveDataPoint"/>
@@ -323,7 +325,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the maximum number of <see cref="ArchiveDataPoint"/> points that can be stored in the <see cref="ArchiveDataBlock"/>.
+        /// Gets the maximum number of <see cref="ArchiveDataPoint"/>s that can be stored in the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int Capacity
         {
@@ -334,7 +336,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the number of <see cref="ArchiveDataPoint"/> points that have been written to the <see cref="ArchiveDataBlock"/>.
+        /// Gets the number of <see cref="ArchiveDataPoint"/>s that have been written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int SlotsUsed
         {
@@ -345,7 +347,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets the number of <see cref="ArchiveDataPoint"/> points that can to written to the <see cref="ArchiveDataBlock"/>.
+        /// Gets the number of <see cref="ArchiveDataPoint"/>s that can to written to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
         public int SlotsAvailable
         {
@@ -380,9 +382,9 @@ namespace TVA.Historian.Files
         #region [ Methods ]
 
         /// <summary>
-        /// Reads existing <see cref="ArchiveDataPoint"/> points from the <see cref="ArchiveDataBlock"/>.
+        /// Reads existing <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        /// <returns>Returns <see cref="ArchiveDataPoint"/> points from the <see cref="ArchiveDataBlock"/>.</returns>
+        /// <returns>Returns <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveDataBlock"/>.</returns>
         public IEnumerable<ArchiveDataPoint> Read()
         {
             lock (m_parent.FileData)
@@ -414,7 +416,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Writes the <paramref name="dataPoint"/> to the <see cref="ArchiveDataBlock"/>.
         /// </summary>
-        /// <param name="dataPoint"><see cref="ArchiveDataPoint"/> point to write.</param>
+        /// <param name="dataPoint"><see cref="ArchiveDataPoint"/> to write.</param>
         public void Write(ArchiveDataPoint dataPoint)
         {
             if (SlotsAvailable > 0)
@@ -440,7 +442,7 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Resets the <see cref="ArchiveDataBlock"/> by overwriting existing <see cref="ArchiveDataPoint"/> points with empty <see cref="ArchiveDataPoint"/> points.
+        /// Resets the <see cref="ArchiveDataBlock"/> by overwriting existing <see cref="ArchiveDataPoint"/>s with empty <see cref="ArchiveDataPoint"/>s.
         /// </summary>
         public void Reset()
         {

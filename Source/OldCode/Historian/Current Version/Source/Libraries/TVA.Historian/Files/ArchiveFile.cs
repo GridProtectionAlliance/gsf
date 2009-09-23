@@ -37,6 +37,8 @@
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
 //       Implementated the IProvideStatus interface.
+//  09/23/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -297,7 +299,7 @@ namespace TVA.Historian.Files
     #endregion
 
     /// <summary>
-    /// Represents a file that contains <see cref="ArchiveDataPoint"/>.
+    /// Represents a file that contains <see cref="ArchiveDataPoint"/>s.
     /// </summary>
     /// <seealso cref="ArchiveDataPoint"/>
     /// <seealso cref="ArchiveFileAllocationTable"/>
@@ -579,91 +581,91 @@ namespace TVA.Historian.Files
         /// Occurs when <see cref="ArchiveDataPoint"/> is received whose <see cref="MetadataRecord"/> does not exist or is marked as disabled.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when ArchiveData is received whose MetadataRecord does not exist or is marked as disabled.")]
+        Description("Occurs when ArchiveDataPoint is received whose MetadataRecord does not exist or is marked as disabled.")]
         public event EventHandler<EventArgs<ArchiveDataPoint>> OrphanDataReceived;
 
         /// <summary>
         /// Occurs when <see cref="ArchiveDataPoint"/> is received with <see cref="TimeTag"/> ahead of the local clock by more than the <see cref="LeadTimeTolerance"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when ArchiveDatais received with TimeTag ahead of the local clock by more than the LeadTimeTolerance.")]
+        Description("Occurs when ArchiveDataPoint is received with TimeTag ahead of the local clock by more than the LeadTimeTolerance.")]
         public event EventHandler<EventArgs<ArchiveDataPoint>> FutureDataReceived;
 
         /// <summary>
         /// Occurs when <see cref="ArchiveDataPoint"/> that belongs to a historic <see cref="ArchiveFile"/> is received for archival.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when ArchiveData that belongs to a historic ArchiveFile is received for archival.")]
+        Description("Occurs when ArchiveDataPoint that belongs to a historic ArchiveFile is received for archival.")]
         public event EventHandler<EventArgs<ArchiveDataPoint>> HistoricDataReceived;
 
         /// <summary>
         /// Occurs when the process of archiving <see cref="ArchiveDataPoint"/> to historic <see cref="ArchiveFile"/> is started.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when the process of archiving ArchiveData to historic ArchiveFile is started.")]
+        Description("Occurs when the process of archiving ArchiveDataPoint to historic ArchiveFile is started.")]
         public event EventHandler HistoricDataWriteStart;
 
         /// <summary>
         /// Occurs when the process of archiving <see cref="ArchiveDataPoint"/> to historic <see cref="ArchiveFile"/> is complete.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when the process of archiving ArchiveData to historic ArchiveFile is complete.")]
+        Description("Occurs when the process of archiving ArchiveDataPoint to historic ArchiveFile is complete.")]
         public event EventHandler HistoricDataWriteComplete;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while archiving <see cref="ArchiveDataPoint"/> to historic <see cref="ArchiveFile"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when an Exception is encountered while writting ArchiveData to historic ArchiveFile.")]
+        Description("Occurs when an Exception is encountered while writting ArchiveDataPoint to historic ArchiveFile.")]
         public event EventHandler<EventArgs<Exception>> HistoricDataWriteException;
 
         /// <summary>
         /// Occurs when <see cref="ArchiveDataPoint"/> is being archived to historic <see cref="ArchiveFile"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs to when ArchievData is being written to historic ArchiveFile.")]
+        Description("Occurs to when ArchiveDataPoint is being written to historic ArchiveFile.")]
         public event EventHandler<EventArgs<ProcessProgress<int>>> HistoricDataWriteProgress;
 
         /// <summary>
         /// Occurs when misaligned <see cref="ArchiveDataPoint"/> is received for archival.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when misaligned ArchiveData is received for archival.")]
+        Description("Occurs when misaligned ArchiveDataPoint is received for archival.")]
         public event EventHandler<EventArgs<ArchiveDataPoint>> OutOfSequenceDataReceived;
 
         /// <summary>
         /// Occurs when the process of archiving misaligned (by time) <see cref="ArchiveDataPoint"/> is started.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when the process of archiving misaligned ArchiveData is started.")]
+        Description("Occurs when the process of archiving misaligned ArchiveDataPoint is started.")]
         public event EventHandler OutOfSequenceDataWriteStart;
 
         /// <summary>
         /// Occurs when the process of archiving misaligned (by time) <see cref="ArchiveDataPoint"/> is complete.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when the process of archiving misaligned ArchiveData is complete.")]
+        Description("Occurs when the process of archiving misaligned ArchiveDataPoint is complete.")]
         public event EventHandler OutOfSequenceDataWriteComplete;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while archiving misaligned (by time) <see cref="ArchiveDataPoint"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when an Exception is encountered while archiving misaligned ArchiveData.")]
+        Description("Occurs when an Exception is encountered while archiving misaligned ArchiveDataPoint.")]
         public event EventHandler<EventArgs<Exception>> OutOfSequenceDataWriteException;
 
         /// <summary>
         /// Occurs when misaligned (by time) <see cref="ArchiveDataPoint"/> is being archived.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when misaligned ArchievData is being archived.")]
+        Description("Occurs when misaligned ArchiveDataPoint is being archived.")]
         public event EventHandler<EventArgs<ProcessProgress<int>>> OutOfSequenceDataWriteProgress;
 
         /// <summary>
         /// Occurs when <see cref="ArchiveDataPoint"/> triggers an alarm notification.
         /// </summary>
         [Category("File"),
-        Description("Occurs when ArchiveData triggers an alarm notification.")]
+        Description("Occurs when ArchiveDataPoint triggers an alarm notification.")]
         public event EventHandler<EventArgs<StateRecord>> ProcessAlarmNotification;
 
         // Fields
@@ -1011,7 +1013,7 @@ namespace TVA.Historian.Files
         /// <exception cref="ArgumentException">The value being assigned is not zero or positive.</exception>
         [Category("Data"),
         DefaultValue(DefaultLeadTimeTolerance),
-        Description("Number of minutes by which incoming ArchiveData can be ahead of local system clock and still be considered valid.")]
+        Description("Number of minutes by which incoming ArchiveDataPoint can be ahead of local system clock and still be considered valid.")]
         public double LeadTimeTolerance
         {
             get
@@ -1028,11 +1030,11 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or set a boolean value that indicates whether incoming <see cref="ArchiveDataPoint"/> is to be compressed to save space.
+        /// Gets or set a boolean value that indicates whether incoming <see cref="ArchiveDataPoint"/>s are to be compressed to save space.
         /// </summary>
         [Category("Data"),
         DefaultValue(DefaultCompressData),
-        Description("Indicates whether incoming ArchiveData is to be compressed to save space.")]
+        Description("Indicates whether incoming ArchiveDataPoints are to be compressed to save space.")]
         public bool CompressData
         {
             get
@@ -1046,11 +1048,11 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether incoming <see cref="ArchiveDataPoint"/> with out-of-sequence <see cref="TimeTag"/> is to be discarded.
+        /// Gets or sets a boolean value that indicates whether incoming <see cref="ArchiveDataPoint"/>s with out-of-sequence <see cref="TimeTag"/> are to be discarded.
         /// </summary>
         [Category("Data"),
         DefaultValue(DefaultDiscardOutOfSequenceData),
-        Description("Indicates whether incoming ArchiveData with out-of-sequence TimeTag is to be discarded.")]
+        Description("Indicates whether incoming ArchiveDataPoints with out-of-sequence TimeTag are to be discarded.")]
         public bool DiscardOutOfSequenceData
         {
             get
@@ -2217,79 +2219,79 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID)
         {
             return ReadData(historianID, TimeTag.MinValue);
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, string startTime)
         {
             return ReadData(historianID, startTime, TimeTag.MinValue.ToString());
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <param name="endTime"><see cref="String"/> representation of the end time (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime"><see cref="String"/> representation of the start time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime"><see cref="String"/> representation of the end time (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, string startTime, string endTime)
         {
             return ReadData(historianID, TimeTag.Parse(startTime), TimeTag.Parse(endTime));
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime)
         {
             return ReadData(historianID, startTime, TimeTag.MinValue.ToDateTime());
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <param name="endTime">End <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="DateTime"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, DateTime startTime, DateTime endTime)
         {
             return ReadData(historianID, new TimeTag(startTime), new TimeTag(endTime));
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime)
         {
             return ReadData(historianID, startTime, TimeTag.MaxValue);
         }
 
         /// <summary>
-        /// Reads <see cref="ArchiveDataPoint"/> points.
+        /// Reads <see cref="ArchiveDataPoint"/>s from the <see cref="ArchiveFile"/>.
         /// </summary>
-        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/> points are to be retrieved.</param>
-        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/> points to be retrieved.</param>
-        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/> points.</returns>
+        /// <param name="historianID">Historian identifier for which <see cref="ArchiveDataPoint"/>s are to be retrieved.</param>
+        /// <param name="startTime">Start <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <param name="endTime">End <see cref="TimeTag"/> (in GMT) for the <see cref="ArchiveDataPoint"/>s to be retrieved.</param>
+        /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
         {
             // Ensure that the current file is open.

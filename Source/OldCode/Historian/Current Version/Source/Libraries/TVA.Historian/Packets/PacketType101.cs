@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/23/2009 - Pinal C. Patel
+//       Edited code comments.
 //
 //*******************************************************************************************************
 
@@ -415,7 +417,7 @@ namespace TVA.Historian.Packets
         /// <summary>
         /// Extracts time-series data from <see cref="PacketType101"/>.
         /// </summary>
-        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>.</returns>
+        /// <returns>An <see cref="IEnumerable{T}"/> object of <see cref="ArchiveDataPoint"/>s.</returns>
         public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
         {
             List<IDataPoint> data = new List<IDataPoint>();
