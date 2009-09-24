@@ -461,16 +461,16 @@ namespace TVA.Interop
         #region [ Static ]
 
         // Static Methods
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileStringW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileString", BestFitMapping = false)]
         private static extern int GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
 
-        [DllImport("kernel32", EntryPoint = "WritePrivateProfileStringW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32", EntryPoint = "WritePrivateProfileString", BestFitMapping = false)]
         private static extern int WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
 
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSection", BestFitMapping = false)]
         private static extern int GetPrivateProfileSection(string lpAppName, byte[] lpszReturnBuffer, int nSize, string lpFileName);
 
-        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNamesW", ExactSpelling = true, CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32", EntryPoint = "GetPrivateProfileSectionNames", BestFitMapping = false)]
         private static extern int GetPrivateProfileSectionNames(byte[] lpszReturnBuffer, int nSize, string lpFileName);
 
         // Remove any comments from key value string
