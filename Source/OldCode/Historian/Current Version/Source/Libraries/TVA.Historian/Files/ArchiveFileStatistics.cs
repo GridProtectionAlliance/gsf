@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/24/2009 - Pinal C. Patel
+//       Added member initialization to the constructor.
 //
 //*******************************************************************************************************
 
@@ -274,6 +276,7 @@ namespace TVA.Historian.Files
         /// </summary>
         internal ArchiveFileStatistics()
         {
+            AveragingWindow = Time.MinValue;
         }
 
         #endregion

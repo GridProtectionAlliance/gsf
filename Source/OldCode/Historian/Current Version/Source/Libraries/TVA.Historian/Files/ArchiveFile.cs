@@ -1295,7 +1295,7 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return (m_fileStream != null);
+                return (m_fileStream != null & m_fat != null);
             }
         }
 
@@ -1332,30 +1332,27 @@ namespace TVA.Historian.Files
             {
                 ArchiveFileStatistics statistics = new ArchiveFileStatistics();
 
-                // Calculate file usage.
-                IntercomRecord system = m_intercomFile.Read(1);
-                if (m_fileType == ArchiveFileType.Active && system != null)
-                    statistics.FileUsage = ((float)system.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
-                else
-                    statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
+                if (IsOpen)
+                {
+                    // Calculate file usage.
+                    IntercomRecord system = m_intercomFile.Read(1);
+                    if (m_fileType == ArchiveFileType.Active && system != null)
+                        statistics.FileUsage = ((float)system.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
+                    else
+                        statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
 
-                // Calculate compression rate.
-                if (m_fat.DataPointsReceived > 0)
-                    statistics.CompressionRate = ((float)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (float)m_fat.DataPointsReceived) * 100;
-                else
-                    statistics.CompressionRate = 0f;
+                    // Calculate compression rate.
+                    if (m_fat.DataPointsReceived > 0)
+                        statistics.CompressionRate = ((float)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (float)m_fat.DataPointsReceived) * 100;
 
-                // Calculate write speed averaging window.
-                if (m_fat.FileStartTime != TimeTag.MinValue && system != null && system.LatestDataTime != TimeTag.MinValue)
-                    statistics.AveragingWindow = new Time(system.LatestDataTime.Value - m_fat.FileStartTime.Value);
-                else
-                    statistics.AveragingWindow = Time.MinValue;
+                    // Calculate write speed averaging window.
+                    if (m_fat.FileStartTime != TimeTag.MinValue && system != null && system.LatestDataTime != TimeTag.MinValue)
+                        statistics.AveragingWindow = new Time(system.LatestDataTime.Value - m_fat.FileStartTime.Value);
 
-                // Calculate average write speed.
-                if (statistics.AveragingWindow != Time.MinValue)
-                    statistics.AverageWriteSpeed = m_fat.DataPointsArchived / (int)statistics.AveragingWindow;
-                else
-                    statistics.AverageWriteSpeed = 0;
+                    // Calculate average write speed.
+                    if (statistics.AveragingWindow != Time.MinValue)
+                        statistics.AverageWriteSpeed = m_fat.DataPointsArchived / (int)statistics.AveragingWindow;
+                }
 
                 return statistics;
             }
