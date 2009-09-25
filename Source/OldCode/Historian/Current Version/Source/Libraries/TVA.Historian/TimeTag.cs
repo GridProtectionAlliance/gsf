@@ -20,6 +20,7 @@
 //       Added new header and license agreement.
 //  09/25/2009 - Pinal C. Patel
 //       Added overloaded constructor that take ticks.
+//       Added Now and UtcNow static properties for ease-of-use.
 //
 //*******************************************************************************************************
 
@@ -318,6 +319,30 @@ namespace TVA.Historian
             BaseDate = new DateTime(1995, 1, 1, 0, 0, 0);
             MinValue = new TimeTag(0.0);
             MaxValue = new TimeTag(2147483647.999);
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets a <see cref="TimeTag"/> object that is set to the current date and time on this computer, expressed as the local time.
+        /// </summary>
+        public static TimeTag Now
+        {
+            get 
+            {
+                return new TimeTag(PrecisionTimer.Now.Ticks - BaseDate.Ticks);
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="TimeTag"/> object that is set to the current date and time on this computer, expressed as the Coordinated Universal Time (UTC).
+        /// </summary>
+        public static TimeTag UtcNow
+        {
+            get
+            {
+                return new TimeTag(PrecisionTimer.UtcNow.Ticks - BaseDate.Ticks);
+            }
         }
 
         // Static Methods
