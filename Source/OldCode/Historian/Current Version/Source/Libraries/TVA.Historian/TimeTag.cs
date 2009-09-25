@@ -18,7 +18,7 @@
 //       Added Parse() static method to allow conversion of string to TimeTag.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  09/02/2009 - Pinal C. Patel
+//  09/25/2009 - Pinal C. Patel
 //       Added overloaded constructor that take ticks.
 //
 //*******************************************************************************************************
