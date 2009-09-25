@@ -18,6 +18,8 @@
 //       Added Parse() static method to allow conversion of string to TimeTag.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/02/2009 - Pinal C. Patel
+//       Added overloaded constructor that take ticks.
 //
 //*******************************************************************************************************
 
@@ -247,6 +249,15 @@ namespace TVA.Historian
     public class TimeTag : TimeTagBase
     {
         #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TimeTag"/> class.
+        /// </summary>
+        /// <param name="ticks">Number of ticks since the <see cref="BaseDate"/>.</param>
+        public TimeTag(long ticks)
+            : base(BaseDate.Ticks, Ticks.ToSeconds(ticks))
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TimeTag"/> class.
