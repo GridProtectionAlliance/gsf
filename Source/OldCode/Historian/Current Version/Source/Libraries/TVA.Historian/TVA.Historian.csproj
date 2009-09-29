@@ -87,6 +87,7 @@
     <Compile Include="Exporters\ExportSetting.cs" />
     <Compile Include="Exporters\FileHelper.cs" />
     <Compile Include="Exporters\IExporter.cs" />
+    <Compile Include="Exporters\NamespaceDoc.cs" />
     <Compile Include="Exporters\RawDataExporter.cs" />
     <Compile Include="Exporters\RebroadcastExporter.cs" />
     <Compile Include="Exporters\RollingHistoryExporter.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="Files\MetadataRecordGeneralFlags.cs" />
     <Compile Include="Files\MetadataRecordSecurityFlags.cs" />
     <Compile Include="Files\MetadataRecordSummary.cs" />
+    <Compile Include="Files\NamespaceDoc.cs" />
     <Compile Include="Files\StateFile.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -129,12 +131,17 @@
     <Compile Include="MetadataProviders\MetadataProviderBase.cs" />
     <Compile Include="MetadataProviders\MetadataProviders.cs" />
     <Compile Include="MetadataProviders\MetadataUpdater.cs" />
+    <Compile Include="MetadataProviders\NamespaceDoc.cs" />
     <Compile Include="MetadataProviders\OleDbMetadataProvider.cs" />
     <Compile Include="MetadataProviders\RestWebServiceMetadataProvider.cs" />
+    <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="Notifiers\NamespaceDoc.cs" />
+    <Compile Include="Packets\NamespaceDoc.cs" />
     <Compile Include="Services\IMetadataService.cs" />
     <Compile Include="Services\IService.cs" />
     <Compile Include="Services\ITimeSeriesDataService.cs" />
     <Compile Include="Services\MetadataService.cs" />
+    <Compile Include="Services\NamespaceDoc.cs" />
     <Compile Include="Services\SerializableMetadata.cs" />
     <Compile Include="Services\SerializableMetadataRecord.cs" />
     <Compile Include="Notifiers\EmailNotifier.cs" />
