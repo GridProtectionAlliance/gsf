@@ -180,6 +180,7 @@
     <Compile Include="Measurements\Routing\InputAdapterBase.cs" />
     <Compile Include="Measurements\Routing\InputAdapterCollection.cs" />
     <Compile Include="Measurements\Routing\IOutputAdapter.cs" />
+    <Compile Include="Measurements\Routing\NamespaceDoc.cs" />
     <Compile Include="Measurements\Routing\OutputAdapterBase.cs" />
     <Compile Include="Measurements\Routing\OutputAdapterCollection.cs" />
     <Compile Include="Measurements\TemporalMeasurement.cs" />
