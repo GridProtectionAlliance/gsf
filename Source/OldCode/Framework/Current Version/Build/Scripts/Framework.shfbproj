@@ -14,25 +14,25 @@
     <RootNamespace>Documentation</RootNamespace>
     <Name>Documentation</Name>
     <!-- SHFB properties -->
-    <OutputPath>.\Help\</OutputPath>
-    <HtmlHelpName>Framework</HtmlHelpName>
+    <OutputPath>..\Output\$(Configuration)\Libraries\Help\</OutputPath>
+    <HtmlHelpName>openPDC.Framework</HtmlHelpName>
     <HelpTitle>openPDC Framework Help</HelpTitle>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Communication.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Communication.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Core.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Core.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Security.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Security.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Services.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Services.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Web.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Web.xml" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Windows.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Windows.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Communication.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Core.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Security.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Services.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Services.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Web.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.xml" xmlns="" />
     </DocumentationSources>
     <FrameworkVersion>3.5</FrameworkVersion>
-    <Preliminary>True</Preliminary>
+    <Preliminary>False</Preliminary>
     <PresentationStyle>Prototype</PresentationStyle>
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter</MissingTags>
     <CopyrightText>Tennessee Valley Authority, 2009. No copyright is claimed pursuant to 17 USC &amp;#167%3b 105.  All Other Rights Reserved.</CopyrightText>
