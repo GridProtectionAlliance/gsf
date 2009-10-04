@@ -393,7 +393,7 @@ namespace TVA.Measurements
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         /// <remarks>
         /// <para>
-        /// <paramref name="framesPerSecond"/> must be between 1 and 500.
+        /// <paramref name="framesPerSecond"/> must be greater then 0.
         /// </para>
         /// <para>
         /// <paramref name="lagTime"/> must be greater than zero, but can be specified in sub-second intervals (e.g., set to .25 for a quarter-second lag time).
@@ -541,7 +541,7 @@ namespace TVA.Measurements
         /// Gets or sets the number of frames per second.
         /// </summary>
         /// <remarks>
-        /// Valid frame rates for a <see cref="ConcentratorBase"/> are between 1 and 500 frames per second.
+        /// Valid frame rates for a <see cref="ConcentratorBase"/> are greater than 0 frames per second.
         /// </remarks>
         public int FramesPerSecond
         {
@@ -551,8 +551,8 @@ namespace TVA.Measurements
             }
             set
             {
-                if (value < 1 || value > 500)
-                    throw new ArgumentOutOfRangeException("value", "Frames per second must be between 1 and 500");
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
 
                 m_framesPerSecond = value;
                 m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
@@ -1360,8 +1360,6 @@ namespace TVA.Measurements
         // these variables. This method is the PrecisionTimer's "Tick" event delegate handler.
         private void PublishFrames(object sender, EventArgs e)
         {
-            const decimal ticksPerHalfMillisecond = Ticks.PerMillisecond / 2;
-
             IFrame frame;
             Ticks timestamp, distance;
             int frameIndex, period;
@@ -1421,7 +1419,7 @@ namespace TVA.Measurements
                         // Calculate index of this frame within its second - note that we have to calculate this
                         // value instead of using m_frameIndex since it is is possible for multiple frames to be
                         // published within one frame period if the system is stressed
-                        frameIndex = (int)((timestamp.DistanceBeyondSecond() + ticksPerHalfMillisecond) / m_ticksPerFrame);
+                        frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + 1) / m_ticksPerFrame);
 
                         // Mark the frame as published to prevent any further sorting into this frame
                         lock (frame.Measurements)
