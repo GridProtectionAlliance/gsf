@@ -417,7 +417,9 @@ namespace TVA.Windows.Forms
             AddListViewItem(ListViewApplicationInfo, "Company", AssemblyInfo.EntryAssembly.Company);
             AddListViewItem(ListViewApplicationInfo, "Product", AssemblyInfo.EntryAssembly.Product);
             AddListViewItem(ListViewApplicationInfo, "Copyright", AssemblyInfo.EntryAssembly.Copyright);
-            AddListViewItem(ListViewApplicationInfo, "Trademark", AssemblyInfo.EntryAssembly.Trademark);
+
+            // None of the openPDC assemblies contain trademark information...
+            //AddListViewItem(ListViewApplicationInfo, "Trademark", AssemblyInfo.EntryAssembly.Trademark);
 
             // Query all the assemblies used by the calling application.
             if (m_assemblies == null)
