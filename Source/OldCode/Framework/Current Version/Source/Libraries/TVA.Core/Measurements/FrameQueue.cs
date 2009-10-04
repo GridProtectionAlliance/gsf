@@ -447,8 +447,11 @@ namespace TVA.Measurements
         /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
         public IFrame GetFrame(Ticks timestamp)
         {
+            const decimal ticksPerHalfMillisecond = Ticks.PerMillisecond / 2;
+
             // Calculate destination ticks for this frame
-            Ticks destinationTicks = (long)((long)(timestamp / m_ticksPerFrame) * m_ticksPerFrame);
+            // Note: This algorithm is designed to maintain accuracy for frame rates up to 500 samples per second
+            Ticks destinationTicks = (long)(Math.Ceiling((timestamp + ticksPerHalfMillisecond) / m_ticksPerFrame) * m_ticksPerFrame - m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 
