@@ -31,13 +31,6 @@
     <Preliminary>False</Preliminary>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
     <PlugInConfigurations>
-      <PlugInConfig id="Additional Reference Links" enabled="True">
-        <configuration>
-          <targets>
-            <target linkType="Index" helpFileProject="..\..\..\..\Framework\Current Version\Build\Scripts\Framework.shfbproj" />
-          </targets>
-        </configuration>
-      </PlugInConfig>
     </PlugInConfigurations>
     <HelpFileFormat>Help1xAndHelp2x</HelpFileFormat>
   </PropertyGroup>
