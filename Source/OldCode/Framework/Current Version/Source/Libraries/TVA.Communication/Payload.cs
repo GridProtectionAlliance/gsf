@@ -340,7 +340,7 @@ namespace TVA.Communication
                 if (cryptoLevel != CipherStrength.None)
                 {
                     // Decrypt the data.
-                    temp = temp.Decrypt(Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
+                    temp = temp.Decrypt(cryptoKey, cryptoLevel);
                     offset = 0;
                     length = temp.Length;
                 }
@@ -408,7 +408,7 @@ namespace TVA.Communication
             if (cryptoLevel != CipherStrength.None)
             {
                 // Encrypt the data.
-                buffer = buffer.Encrypt(offset, length, Encoding.ASCII.GetBytes(cryptoKey), cryptoLevel);
+                buffer = buffer.Encrypt(offset, length, cryptoKey, cryptoLevel);
                 offset = 0;
                 length = buffer.Length;
             }

@@ -334,57 +334,5 @@ namespace TVA.Security.Cryptography
 
             decodeStream.FlushFinalBlock();
         }
-
-        /// <summary>
-        /// Coerces given key to maximum legal bit length for given encryption algorithm using a repeatable generation algorithm.
-        /// </summary>
-        /// <param name="algorithm"><see cref="SymmetricAlgorithm"/> used to determine legal key length.</param>
-        /// <param name="key">The source secret key to coerce into a legal bit length.</param>
-        /// <returns>A legal sized secret key for given encryption algorithm.</returns>
-        public static byte[] GetLegalKey(this SymmetricAlgorithm algorithm, byte[] key)
-        {
-            List<byte> rgbKey = new List<byte>();
-            int length = algorithm.LegalKeySizes[0].MaxSize / 8;
-
-            // Note that we use a repeatable salted injection and randomization sequence such that if user provides
-            // a key that is too short, the same short key could be used to decrypt data later.
-            for (int x = 0; x < length; x++)
-            {
-                if (x < key.Length)
-                    rgbKey.Add(key[x]);
-                else
-                    rgbKey.Add(Standard.KeyValue[x % Standard.KeyValue.Length]);
-            }
-
-            rgbKey.Scramble(rgbKey[0]);
-
-            return rgbKey.ToArray();
-        }
-
-        /// <summary>
-        /// Coerces given initialization vector to legal block size for given encryption algorithm using a repeatable generation algorithm.
-        /// </summary>
-        /// <param name="algorithm"><see cref="SymmetricAlgorithm"/> used to determine legal initialization vector block size.</param>
-        /// <param name="iv">The source initialization vector to coerce into a legal block size.</param>
-        /// <returns>A legal sized initialization vector for given encryption algorithm.</returns>
-        public static byte[] GetLegalIV(this SymmetricAlgorithm algorithm, byte[] iv)
-        {
-            List<byte> rgbIV = new List<byte>();
-            int length = algorithm.LegalBlockSizes[0].MinSize / 8;
-
-            // Note that we use a repeatable salted injection and randomization sequence such that if user provides
-            // a key that is too short, the same short key could be used to decrypt data later.
-            for (int x = 0; x < length; x++)
-            {
-                if (x < iv.Length)
-                    rgbIV.Add(iv[iv.Length - 1 - x]);
-                else
-                    rgbIV.Add(Standard.KeyValue[x % Standard.KeyValue.Length]);
-            }
-
-            rgbIV.Scramble(rgbIV[0]);
-
-            return rgbIV.ToArray();
-        }
     }
 }

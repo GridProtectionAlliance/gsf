@@ -234,15 +234,10 @@
 namespace TVA.Security.Cryptography
 {
     /// <summary>
-    /// This class is used internally do define a standard key and buffer size. The standard key gets
-    /// used within the <see cref="Cipher"/> class so that when consumer does not provide a key, data
-    /// will still at least get obfuscated.
+    /// This class is used internally do define a standard buffer size.
     /// </summary>
     internal static class Standard
     {
-        // The following constants should not be changed
-        public const string Key = "{§&-<«%=£($#/P.C:S!\\_¤,@[20O9¡]*ªn^±j`&|?)>+~¥}";
-        public static byte[] KeyValue = Cipher.GetBinaryKeyFromString(Key);
         public const int BufferSize = 262144; // 256K
     }
 }

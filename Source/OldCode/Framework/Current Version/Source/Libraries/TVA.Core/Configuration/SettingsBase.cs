@@ -560,7 +560,7 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, encrypt value
             if (GetEncryptStatus(name))
-                return value.Encrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
+                return value.Encrypt(name, CipherStrength.Aes256);
 
             return value;
         }
@@ -570,54 +570,9 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, decrypt value
             if (GetEncryptStatus(name))
-                return value.Decrypt(GenerateEncryptionKey(name), CipherStrength.Level5);
+                return value.Decrypt(name, CipherStrength.Aes256);
 
             return value;
-        }
-
-        // Generate encryption key based on any applied private encryption key in field or property attributes plus internal key
-        private string GenerateEncryptionKey(string name)
-        {
-            string internalKey = InternalKey;
-            string encryptionKey = GetEncryptKey(name);
-
-            if (encryptionKey == null)
-                return internalKey;
-
-            // We continue to further obfuscate key provided in attribute since this is easily reflected...
-            StringBuilder generatedKey = new StringBuilder();
-            char eKey, iKeyL, iKeyR;
-            int keyLength = internalKey.Length;
-            int index;
-
-            for (int i = 0; i < encryptionKey.Length; i++)
-            {
-                eKey = encryptionKey[i];
-                index = i % keyLength;
-                iKeyL = internalKey[index];
-                iKeyR = internalKey[keyLength - index - 1];
-
-                switch ((int)eKey % 3)
-                {
-                    case 0:
-                        generatedKey.Append(iKeyL);
-                        generatedKey.Append(eKey);
-                        generatedKey.Append(iKeyR);
-                        break;
-                    case 1:
-                        generatedKey.Append(iKeyR);
-                        generatedKey.Append(eKey);
-                        generatedKey.Append(iKeyL);
-                        break;
-                    case 2:
-                        generatedKey.Append(eKey);
-                        generatedKey.Append(iKeyL);
-                        generatedKey.Append(iKeyR);
-                        break;
-                }
-            }
-
-            return generatedKey.ToString();
         }
 
         /// <summary>

@@ -730,7 +730,7 @@ namespace TVA.Communication
                             if (SecureSession)
                             {
                                 // Create a secret key for ciphering client data.
-                                tcpClient.Secretkey = Cipher.GenerateKey(260);
+                                tcpClient.Secretkey = Guid.NewGuid().ToString();
                                 handshake.Secretkey = tcpClient.Secretkey;
                             }
 

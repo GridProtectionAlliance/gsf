@@ -662,7 +662,7 @@ namespace TVA.Communication
                         if (SecureSession)
                         {
                             // Create a secret key for ciphering client data.
-                            udpClient.Secretkey = Cipher.GenerateKey(260);
+                            udpClient.Secretkey = Guid.NewGuid().ToString();
                             handshake.Secretkey = udpClient.Secretkey;
                         }
 

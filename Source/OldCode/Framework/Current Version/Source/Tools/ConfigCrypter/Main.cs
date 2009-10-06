@@ -297,29 +297,29 @@ namespace ConfigCrypter
         
         private void PerformCipher()
         {
-            try
-            {
+            //try
+            //{
                 if (true == RadioButtonEncrypt.Checked)
                 {
                     // Encrypt the specified text and display the result.
                     if (!string.IsNullOrEmpty(TextBoxKey.Text))
-                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, TextBoxKey.Text, CipherStrength.Level4);
+                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, TextBoxKey.Text, CipherStrength.Aes256);
                     else
-                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, DefaultCryptoKey, CipherStrength.Level4);
+                        TextBoxOutput.Text = Cipher.Encrypt(TextBoxInput.Text, DefaultCryptoKey, CipherStrength.Aes256);
                 }
                 else if (true == RadioButtonDecrypt.Checked)
                 {
                     // Decrypt the specified text and display the result.
                     if (!string.IsNullOrEmpty(TextBoxKey.Text))
-                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, TextBoxKey.Text, CipherStrength.Level4);
+                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, TextBoxKey.Text, CipherStrength.Aes256);
                     else
-                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, DefaultCryptoKey, CipherStrength.Level4);
+                        TextBoxOutput.Text = Cipher.Decrypt(TextBoxInput.Text, DefaultCryptoKey, CipherStrength.Aes256);
                 }
-            }
-            catch (Exception)
-            {
-                TextBoxOutput.Text = "[Input is not valid]";
-            }
+            //}
+            //catch (Exception)
+            //{
+            //    TextBoxOutput.Text = "[Input is not valid]";
+            //}
         }
 
         #endregion
