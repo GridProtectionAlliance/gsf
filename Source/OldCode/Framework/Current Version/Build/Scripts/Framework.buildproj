@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+ 
+  <Import Project="..\..\..\..\Contributor Resources\Tools\Build Tools\Master Build\Master.buildproj"/>
+  
+  <Target Name="BeforePrepareSettings">
+    <PropertyGroup>
+      <!-- Project specific settings. -->
+      <ProjectName>Framework</ProjectName>
+      <BuildDeployFolder>\\rgocopgfs1\Applications\openPDC\Framework\Beta</BuildDeployFolder>
+    </PropertyGroup>
+  </Target>
+  
+  <Target Name="AfterPrepareSettings">
+    <ItemGroup>
+      <!-- List of projects to build. -->
+      <ProjectsToBuild Include="$(LocalFolder)\Source\$(ProjectName).sln"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj"/>
+    </ItemGroup>
+  </Target>
+</Project>
