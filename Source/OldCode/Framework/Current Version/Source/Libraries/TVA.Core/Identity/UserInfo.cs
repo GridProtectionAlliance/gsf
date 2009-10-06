@@ -20,7 +20,7 @@
 //       Modified the logic of Authenticate method to use the user's DirectoryEntry instance.
 //       Modified UserEntry property to impersonate privileged user if configured for the instance.
 //  11/08/2007 - J. Ritchie Carroll
-//       Implemented user customizable implementation of previleged account credentials.
+//       Implemented user customizable implementation of privileged account credentials.
 //  09/15/2008 - J. Ritchie Carroll
 //       Converted to C#.
 //  10/06/2008 - Pinal C. Patel
@@ -313,9 +313,9 @@ namespace TVA.Identity
         private string m_domain;
         private string m_username;
         private DirectoryEntry m_userEntry;
-        private string m_previlegedDomain;
-        private string m_previlegedUserName;
-        private string m_previlegedPassword;
+        private string m_privilegedDomain;
+        private string m_privilegedUserName;
+        private string m_privilegedPassword;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_enabled;
@@ -683,13 +683,13 @@ namespace TVA.Identity
                     // before only AD property lookup had this behavior.
 
                     // Impersonate to the privileged account if specified.
-                    if (!string.IsNullOrEmpty(m_previlegedDomain) &&
-                        !string.IsNullOrEmpty(m_previlegedUserName) &&
-                        !string.IsNullOrEmpty(m_previlegedPassword))
+                    if (!string.IsNullOrEmpty(m_privilegedDomain) &&
+                        !string.IsNullOrEmpty(m_privilegedUserName) &&
+                        !string.IsNullOrEmpty(m_privilegedPassword))
                     {
-                        currentContext = ImpersonateUser(m_previlegedDomain,
-                                                         m_previlegedUserName,
-                                                         m_previlegedPassword);
+                        currentContext = ImpersonateUser(m_privilegedDomain,
+                                                         m_privilegedUserName,
+                                                         m_privilegedPassword);
                     }
 
                     // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
@@ -736,12 +736,12 @@ namespace TVA.Identity
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["PrevilegedDomain", true];
-                element.Update(m_previlegedDomain, element.Description, element.Encrypted);
-                element = settings["PrevilegedUserName", true];
-                element.Update(m_previlegedUserName, element.Description, element.Encrypted);
-                element = settings["PrevilegedPassword", true];
-                element.Update(m_previlegedPassword, element.Description, element.Encrypted);
+                element = settings["PrivilegedDomain", true];
+                element.Update(m_privilegedDomain, element.Description, element.Encrypted);
+                element = settings["PrivilegedUserName", true];
+                element.Update(m_privilegedUserName, element.Description, element.Encrypted);
+                element = settings["PrivilegedPassword", true];
+                element.Update(m_privilegedPassword, element.Description, element.Encrypted);
                 config.Save();
             }
         }
@@ -761,17 +761,17 @@ namespace TVA.Identity
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("PrevilegedDomain", m_previlegedDomain, "Domain of privileged domain user account.");
-                settings.Add("PrevilegedUserName", m_previlegedUserName, "Username of privileged domain user account.");
-                settings.Add("PrevilegedPassword", m_previlegedPassword, "Password of privileged domain user account.", true);
-                m_previlegedDomain = settings["PrevilegedDomain"].ValueAs(m_previlegedDomain);
-                m_previlegedUserName = settings["PrevilegedUserName"].ValueAs(m_previlegedUserName);
-                m_previlegedPassword = settings["PrevilegedPassword"].ValueAs(m_previlegedPassword);
+                settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account.");
+                settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account.");
+                settings.Add("PrivilegedPassword", m_privilegedPassword, "Password of privileged domain user account.", true);
+                m_privilegedDomain = settings["PrivilegedDomain"].ValueAs(m_privilegedDomain);
+                m_privilegedUserName = settings["PrivilegedUserName"].ValueAs(m_privilegedUserName);
+                m_privilegedPassword = settings["PrivilegedPassword"].ValueAs(m_privilegedPassword);
             }
         }
 
         /// <summary>
-        /// Defines the credentials of a previleged domain account that can be used for impersonation prior to the 
+        /// Defines the credentials of a privileged domain account that can be used for impersonation prior to the 
         /// retrieval of user information from the Active Directory.
         /// </summary>
         /// <param name="domain">Domain of privileged domain user account.</param>
@@ -817,10 +817,10 @@ namespace TVA.Identity
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
-            // Set the credentials for previleged domain user account.
-            m_previlegedDomain = domain;
-            m_previlegedUserName = username;
-            m_previlegedPassword = password;
+            // Set the credentials for privileged domain user account.
+            m_privilegedDomain = domain;
+            m_privilegedUserName = username;
+            m_privilegedPassword = password;
         }
 
         /// <summary>
@@ -846,13 +846,13 @@ namespace TVA.Identity
                     return string.Empty;
 
                 // Impersonate to the privileged account if specified.
-                if (!string.IsNullOrEmpty(m_previlegedDomain) &&
-                    !string.IsNullOrEmpty(m_previlegedUserName) &&
-                    !string.IsNullOrEmpty(m_previlegedPassword))
+                if (!string.IsNullOrEmpty(m_privilegedDomain) &&
+                    !string.IsNullOrEmpty(m_privilegedUserName) &&
+                    !string.IsNullOrEmpty(m_privilegedPassword))
                 {
-                    currentContext = ImpersonateUser(m_previlegedDomain,
-                                                     m_previlegedUserName,
-                                                     m_previlegedPassword);
+                    currentContext = ImpersonateUser(m_privilegedDomain,
+                                                     m_privilegedUserName,
+                                                     m_privilegedPassword);
                 }
 
                 if (m_userEntry == null)
@@ -1156,7 +1156,7 @@ namespace TVA.Identity
         ///     {
         ///         // Impersonate user.
         ///         WindowsImpersonationContext context = UserInfo.ImpersonateUser("XYZCorp", "johndoe", "password");
-        ///         // Perform operation requiring elevated previleges.
+        ///         // Perform operation requiring elevated privileges.
         ///         Console.WriteLine(File.ReadAllText(@"\\server\share\file.xml"));
         ///         // End the impersonation.
         ///         UserInfo.EndImpersonation(context);
