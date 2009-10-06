@@ -300,7 +300,7 @@ namespace TVA.Security.Cryptography
         /// </summary>
         /// <param name="password">User password used for key lookups.</param>
         /// <param name="keySize">Specifies the desired key size.</param>
-        /// <param name="keyIVText">Test based key and initialization vector to import into local key cache.</param>
+        /// <param name="keyIVText">Text based key and initialization vector to import into local key cache.</param>
         /// <remarks>
         /// This method is used to manually import a key created on another computer.
         /// </remarks>
@@ -408,7 +408,7 @@ namespace TVA.Security.Cryptography
         /// </summary>
         private static void SerializeKeyIVTable(object state)
         {
-            // We need interprocess synchronization on the key cache file so we create a system level mutex
+            // We need interprocess synchronization on the key & IV cache file so we create a system level mutex
             Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
             byte[] serializedKeyIVTable;
 
@@ -418,12 +418,20 @@ namespace TVA.Security.Cryptography
                 serializedKeyIVTable = ProtectedData.Protect(Serialization.GetBytes(m_keyIVTable), null, DataProtectionScope.LocalMachine);
             }
 
-            // Wait for system level mutex lock before we work with key cache file
-            fileLockMutex.WaitOne();
+            try
+            {
+                // Wait for system level mutex lock before we work with key & IV cache file
+                fileLockMutex.WaitOne();
+            }
+            catch (AbandonedMutexException)
+            {
+                // Abnormal system terminations can leave mutexs abandoned, in this
+                // case we now own the mutex and can safely ignore this exception
+            }
 
             try
             {
-                FileStream keyIVCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create);
+                FileStream keyIVCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                 keyIVCacheFile.Write(serializedKeyIVTable, 0, serializedKeyIVTable.Length);
                 keyIVCacheFile.Close();
             }
@@ -444,15 +452,23 @@ namespace TVA.Security.Cryptography
 
             if (File.Exists(keyIVCacheFilePath))
             {
-                // We need interprocess synchronization on the key cache file so we create a system level mutex
+                // We need interprocess synchronization on the key & IV cache file so we create a system level mutex
                 Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
                 
-                // Wait for system level mutex lock before we work with key cache file
-                fileLockMutex.WaitOne();
+                try
+                {
+                    // Wait for system level mutex lock before we work with key & IV cache file
+                    fileLockMutex.WaitOne();
+                }
+                catch (AbandonedMutexException)
+                {
+                    // Abnormal system terminations can leave mutexs abandoned, in this
+                    // case we now own the mutex and can safely ignore this exception
+                }
 
                 try
                 {
-                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open);
+                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
                     byte[] serializedKeyIVTable = ProtectedData.Unprotect(keyIVCacheFile.ReadStream(), null, DataProtectionScope.LocalMachine);
                     keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
                 }
