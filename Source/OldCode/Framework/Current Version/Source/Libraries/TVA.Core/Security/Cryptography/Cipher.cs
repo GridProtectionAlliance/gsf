@@ -290,7 +290,7 @@ namespace TVA.Security.Cryptography
         private const string KeyIVCacheMutexName = "CryptoKeyIVCache";
 
         // Internal key and initialization vector table
-        private static Dictionary<string, byte[][]> m_keyIVTable = DeserializeKeyTable();
+        private static Dictionary<string, byte[][]> m_keyIVTable = DeserializeKeyIVTable();
 
         // Password hash table (run-time optimization)
         private static Dictionary<string, string> m_passwordHash = new Dictionary<string, string>();
@@ -318,7 +318,7 @@ namespace TVA.Security.Cryptography
                 m_keyIVTable[hash] = new byte[][] { key, iv };
 
                 // Queue up a serialization for this new key
-                ThreadPool.QueueUserWorkItem(SerializeKeyTable);
+                ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
             }
         }
 
@@ -396,7 +396,7 @@ namespace TVA.Security.Cryptography
                     m_keyIVTable.Add(hash, keyIV);
 
                     // Queue up a serialization for this new key
-                   ThreadPool.QueueUserWorkItem(SerializeKeyTable);
+                   ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
                 }
             }
 
@@ -404,18 +404,18 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Serializes key table to local cache file that can only be decrypted from local machine.
+        /// Serializes key and initialization vector table to local cache file that can only be decrypted from local machine.
         /// </summary>
-        private static void SerializeKeyTable(object state)
+        private static void SerializeKeyIVTable(object state)
         {
             // We need interprocess synchronization on the key cache file so we create a system level mutex
             Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
-            byte[] serializedKeyTable;
+            byte[] serializedKeyIVTable;
 
             // Wait for thread level lock on key table (keep this outside mutex lock to avoid possible dead locks)
             lock (m_keyIVTable)
             {
-                serializedKeyTable = ProtectedData.Protect(Serialization.GetBytes(m_keyIVTable), null, DataProtectionScope.LocalMachine);
+                serializedKeyIVTable = ProtectedData.Protect(Serialization.GetBytes(m_keyIVTable), null, DataProtectionScope.LocalMachine);
             }
 
             // Wait for system level mutex lock before we work with key cache file
@@ -423,9 +423,9 @@ namespace TVA.Security.Cryptography
 
             try
             {
-                FileStream keyCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create);
-                keyCacheFile.Write(serializedKeyTable, 0, serializedKeyTable.Length);
-                keyCacheFile.Close();
+                FileStream keyIVCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create);
+                keyIVCacheFile.Write(serializedKeyIVTable, 0, serializedKeyIVTable.Length);
+                keyIVCacheFile.Close();
             }
             finally
             {
@@ -434,15 +434,15 @@ namespace TVA.Security.Cryptography
         }
 
         /// <summary>
-        /// Deserializes key table from local cache that was encrypted on local machine.
+        /// Deserializes key and initialization vector table from local cache that was encrypted on local machine.
         /// </summary>
-        private static Dictionary<string, byte[][]> DeserializeKeyTable()
+        private static Dictionary<string, byte[][]> DeserializeKeyIVTable()
         {
-            Dictionary<string, byte[][]> keyTable;
+            Dictionary<string, byte[][]> keyIVTable;
 
-            string keyCacheFilePath = FilePath.GetAbsolutePath(KeyIVCacheFileName);
+            string keyIVCacheFilePath = FilePath.GetAbsolutePath(KeyIVCacheFileName);
 
-            if (File.Exists(keyCacheFilePath))
+            if (File.Exists(keyIVCacheFilePath))
             {
                 // We need interprocess synchronization on the key cache file so we create a system level mutex
                 Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
@@ -452,9 +452,9 @@ namespace TVA.Security.Cryptography
 
                 try
                 {
-                    FileStream keyCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Open);
-                    byte[] serializedKeyTable = ProtectedData.Unprotect(keyCacheFile.ReadStream(), null, DataProtectionScope.LocalMachine);
-                    keyTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyTable);
+                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open);
+                    byte[] serializedKeyIVTable = ProtectedData.Unprotect(keyIVCacheFile.ReadStream(), null, DataProtectionScope.LocalMachine);
+                    keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
                 }
                 finally
                 {
@@ -464,10 +464,10 @@ namespace TVA.Security.Cryptography
             else
             {
                 // No crypto key cache file exists, create a blank crypto key table
-                keyTable = new Dictionary<string, byte[][]>();
+                keyIVTable = new Dictionary<string, byte[][]>();
             }
 
-            return keyTable;
+            return keyIVTable;
         }
 
         /// <summary>
