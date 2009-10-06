@@ -15,7 +15,7 @@
     <Name>Documentation</Name>
     <!-- SHFB properties -->
     <OutputPath>..\Output\$(Configuration)\Libraries\Help\</OutputPath>
-    <HtmlHelpName>Historian</HtmlHelpName>
+    <HtmlHelpName>openPDC.Historian</HtmlHelpName>
     <FrameworkVersion>3.5</FrameworkVersion>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Historian.dll" xmlns="" />
