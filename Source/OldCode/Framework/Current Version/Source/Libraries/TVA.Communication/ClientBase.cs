@@ -1152,7 +1152,7 @@ namespace TVA.Communication
                 settings.Add("Handshake", m_handshake, "True if the client will do a handshake with the server after the connection has been established; otherwise False.");
                 settings.Add("HandshakeTimeout", m_handshakeTimeout, "Number of milliseconds the client will wait for the server's response to the Handshake.");
                 settings.Add("SharedSecret", m_sharedSecret, "Key to be used for ciphering the data exchanged between the client and server.", true);
-                settings.Add("Encryption", m_encryption, "Cipher strength (None; Level1; Level2; Level3; Level4; Level5) to be used for ciphering the data exchanged between the client and server.");
+                settings.Add("Encryption", m_encryption, "Cipher strength (None; Aes128; Aes256) to be used for ciphering the data exchanged between the client and server.");
                 settings.Add("SecureSession", m_secureSession, "True if the data exchanged between the client and server will be encrypted using a private session passphrase; otherwise False.");
                 settings.Add("ReceiveTimeout", m_receiveTimeout, "Number of milliseconds the client will wait for data to be received from the server.");
                 settings.Add("ReceiveBufferSize", m_receiveBufferSize, "Size of the buffer used by the client for receiving data from the server.");
