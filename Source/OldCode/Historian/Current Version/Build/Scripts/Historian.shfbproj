@@ -14,12 +14,12 @@
     <RootNamespace>Documentation</RootNamespace>
     <Name>Documentation</Name>
     <!-- SHFB properties -->
-    <OutputPath>.\Help\</OutputPath>
+    <OutputPath>..\Output\$(Configuration)\Libraries\Help\</OutputPath>
     <HtmlHelpName>Historian</HtmlHelpName>
     <FrameworkVersion>3.5</FrameworkVersion>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Historian.dll" xmlns="" />
-      <DocumentationSource sourceFile="..\Output\Debug\Libraries\TVA.Historian.xml" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Historian.dll" xmlns="" />
+      <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Historian.xml" xmlns="" />
     </DocumentationSources>
     <HelpTitle>openPDC Historian Help</HelpTitle>
     <PresentationStyle>Prototype</PresentationStyle>
@@ -28,7 +28,7 @@
     <CopyrightText>Tennessee Valley Authority, 2009. No copyright is claimed pursuant to 17 USC &amp;#167%3b 105.  All Other Rights Reserved.</CopyrightText>
     <FeedbackEMailAddress>pcpatel%40tva.gov</FeedbackEMailAddress>
     <FeedbackEMailLinkText>Pinal C. Patel</FeedbackEMailLinkText>
-    <Preliminary>True</Preliminary>
+    <Preliminary>False</Preliminary>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
     <PlugInConfigurations>
       <PlugInConfig id="Additional Reference Links" enabled="True">
