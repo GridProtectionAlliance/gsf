@@ -18,6 +18,8 @@
 **  09/10/2009 - Pinal C. Patel
 **       Added the ability to compile install packages.
 **       Added the ability to choose the files to be versioned.
+**  09/13/2009 - Pinal C. Patel
+**       Enabled the check for Sandcastle Builder as a required tool.
 **
 *******************************************************************************************************
 -->
@@ -148,6 +150,7 @@
     <!-- List of files to be versioned. -->
     <FilesToVersion Include="Nothing" Exclude="Nothing">
       <VersionRegex>(?'BeforeVersion')(?'CoreVersion')(?'AfterVersion')</VersionRegex>
+      <VersionPrecision>4</VersionPrecision>
     </FilesToVersion>
   </ItemGroup>
 
@@ -156,20 +159,15 @@
     <CallTarget Targets="InitializeBuild"/>
     <CallTarget Targets="CompileBuild"/>
     <CallTarget Targets="FinalizeBuild"/>
-  </Target>
-
-  <Target Name="InitializeBuild" DependsOnTargets="$(InitializeBuildDependsOn)">
-    <OnError ExecuteTargets="HandleBuildFailure"/>
-  </Target>
-
-  <Target Name="CompileBuild" DependsOnTargets="$(CompileBuildDependsOn)">
-    <OnError ExecuteTargets="HandleBuildFailure"/>
-  </Target>
-
-  <Target Name="FinalizeBuild" DependsOnTargets="$(FinalizeBuildDependsOn)">
     <Beep/>
     <OnError ExecuteTargets="HandleBuildFailure"/>
   </Target>
+
+  <Target Name="InitializeBuild" DependsOnTargets="$(InitializeBuildDependsOn)"/>
+
+  <Target Name="CompileBuild" DependsOnTargets="$(CompileBuildDependsOn)"/>
+
+  <Target Name="FinalizeBuild" DependsOnTargets="$(FinalizeBuildDependsOn)"/>
 
   <Target Name="PrepareSettings" DependsOnTargets="$(PrepareSettingsDependsOn)"/>
 
@@ -220,7 +218,7 @@
     <Message Text="Checking for required application..."/>
     <Error Condition="!Exists('$(TfsClient)')" Text="TFS Client is not installed."/>
     <Error Condition="!Exists('$(VisualStudio)')" Text="Visual Studio is not installed."/>
-    <!--<Error Condition="!Exists('$(SandcastleBuilder)')" Text="Sandcastle Builder is not installed."/>-->
+    <Error Condition="!Exists('$(SandcastleBuilder)')" Text="Sandcastle Builder is not installed."/>
   </Target>
 
   <Target Name="AfterCheckEnvironment"/>
@@ -267,8 +265,8 @@
     <TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
       <Output TaskParameter="Changeset" PropertyName="Revision"/>
     </TfsVersion>
-    <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)" />
-    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}" />
+    <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
+    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}"/>
     <PropertyGroup>
       <BuildLabel Condition="'$(BuildLabel)' == ''">$(ProjectName)_v$(Major).$(Minor).$(Build).$(Revision)</BuildLabel>
     </PropertyGroup>
