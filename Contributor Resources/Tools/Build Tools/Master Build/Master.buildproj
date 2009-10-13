@@ -20,6 +20,7 @@
 **       Added the ability to choose the files to be versioned.
 **  09/13/2009 - Pinal C. Patel
 **       Enabled the check for Sandcastle Builder as a required tool.
+**       Modified deletion of *.pdb files to be active for release builds only.
 **
 *******************************************************************************************************
 -->
@@ -305,7 +306,7 @@
     <Message Text="Deploying build content..."/>
     <ItemGroup>
       <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
     </ItemGroup>
