@@ -20,6 +20,9 @@
 //       Added support to specify a specific interface address on a multiple interface machine.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/14/2009 - Pinal C. Patel
+//       Fixed bug in the processing of Handshake messages.
+//       Added null reference checks to Stop() and DisconnectOne() for safety.
 //
 //*******************************************************************************************************
 
@@ -420,8 +423,9 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.Running)
             {
-                DisconnectAll();                // Disconnection all clients.
-                m_udpServer.Provider.Close();   // Stop accepting new connections.
+                DisconnectAll();                    // Disconnection all clients.
+                if (m_udpServer.Provider != null)
+                    m_udpServer.Provider.Close();   // Stop accepting new connections.
             }
         }
 
@@ -514,7 +518,8 @@ namespace TVA.Communication
                 udpClient.Provider.SendTo(udpClient.SendBuffer, udpClient.Provider.RemoteEndPoint);
             }
 
-            udpClient.Provider.Close();
+            if (udpClient.Provider != null)
+                udpClient.Provider.Close();
         }
 
         /// <summary>
@@ -646,7 +651,7 @@ namespace TVA.Communication
                 HandshakeMessage handshake = new HandshakeMessage();
                 if (handshake.Initialize(udpServer.ReceiveBuffer, udpServer.ReceiveBufferOffset, udpServer.ReceiveBufferLength) != -1)
                 {
-                    // Received handshake message could be parsed successfully.
+                    // Received handshake message is parsed successfully.
                     if (handshake.ID != Guid.Empty)
                     {
                         // Create a random socket and connect it to the client.
@@ -680,8 +685,7 @@ namespace TVA.Communication
                         {
                             m_udpClients.Add(udpClient.ID, udpClient);
                         }
-                        OnClientConnected(udpClient.ID);
-                        ReceiveHandshakeAsync(udpServer);
+                        OnClientConnected(udpClient.ID);                        
 
                         try
                         {
@@ -695,17 +699,18 @@ namespace TVA.Communication
                     }
                     else
                     {
-                        // Authentication during handshake failed, so we terminate the client connection.
-                        TerminateConnection(udpServer, false);
+                        // Validation during handshake failed.
                         OnHandshakeProcessUnsuccessful();
                     }
                 }
                 else
                 {
-                    // Handshake message could not be parsed, so we terminate the client connection.
-                    TerminateConnection(udpServer, false);
+                    // Handshake message could not be parsed.
                     OnHandshakeProcessUnsuccessful();
                 }
+
+                // Resume receiving of client handshake messages.
+                ReceiveHandshakeAsync(udpServer);
             }
             catch
             {

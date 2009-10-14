@@ -22,6 +22,8 @@
 //       Added support to specify a specific interface address on a multiple interface machine.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/14/2009 - Pinal C. Patel
+//       Added null reference check to DisconnectOne() for safety.
 //
 //*******************************************************************************************************
 
@@ -524,7 +526,9 @@ namespace TVA.Communication
         /// <exception cref="InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
         public override void DisconnectOne(Guid clientID)
         {
-            Client(clientID).Provider.Close();
+            TransportProvider<Socket> client = Client(clientID);
+            if (client.Provider != null)
+                client.Provider.Close();
         }
 
         /// <summary>
