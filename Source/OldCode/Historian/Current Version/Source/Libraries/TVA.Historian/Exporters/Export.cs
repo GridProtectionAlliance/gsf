@@ -255,7 +255,7 @@ namespace TVA.Historian.Exporters
         /// <summary>
         /// <see cref="Export"/> is to be processed only when a request is made to process it.
         /// </summary>
-        OnDemand,
+        Manual,
         /// <summary>
         /// <see cref="Export"/> is to be processed as time-series data is received in real-time.
         /// </summary>

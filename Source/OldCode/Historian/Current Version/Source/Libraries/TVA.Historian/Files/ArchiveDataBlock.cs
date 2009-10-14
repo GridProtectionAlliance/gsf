@@ -24,6 +24,8 @@
 //  09/23/2009 - Pinal C. Patel
 //       Edited code comments.
 //       Removed the dependency on ArchiveDataPoint.
+//  10/14/2009 - Pinal C. Patel
+//       Modified Write() to seek only when necessary.
 //
 //*******************************************************************************************************
 
@@ -427,7 +429,8 @@ namespace TVA.Historian.Files
                 lock (m_parent.FileData)
                 {
                     // Write the data.
-                    m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
+                    if (m_writeCursor != m_parent.FileData.Position)
+                        m_parent.FileData.Seek(m_writeCursor, SeekOrigin.Begin);
                     m_parent.FileData.Write(dataPoint.BinaryImage, 0, dataPoint.BinaryLength);
                     // Update the write cursor.
                     m_writeCursor = m_parent.FileData.Position;

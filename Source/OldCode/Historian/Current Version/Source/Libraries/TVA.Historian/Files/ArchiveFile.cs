@@ -40,6 +40,11 @@
 //  09/23/2009 - Pinal C. Patel
 //       Edited code comments.
 //       Removed the dependency on ArchiveDataPoint.
+//  10/14/2009 - Pinal C. Patel
+//       Re-coded the way current data was being written for maximum write throughput.
+//       Fixed DivideByZero exception in Statistics property.
+//       Fixed a bug in quality-based alarm processing.
+//       Removed unused/unnecessary event raised during the write process.
 //
 //*******************************************************************************************************
 
@@ -598,35 +603,7 @@ namespace TVA.Historian.Files
         [Category("Data"),
         Description("Occurs when IDataPoint that belongs to a historic ArchiveFile is received for archival.")]
         public event EventHandler<EventArgs<IDataPoint>> HistoricDataReceived;
-
-        /// <summary>
-        /// Occurs when the process of archiving <see cref="IDataPoint"/> to historic <see cref="ArchiveFile"/> is started.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when the process of archiving IDataPoint to historic ArchiveFile is started.")]
-        public event EventHandler HistoricDataWriteStart;
-
-        /// <summary>
-        /// Occurs when the process of archiving <see cref="IDataPoint"/> to historic <see cref="ArchiveFile"/> is complete.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when the process of archiving IDataPoint to historic ArchiveFile is complete.")]
-        public event EventHandler HistoricDataWriteComplete;
-
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered while archiving <see cref="IDataPoint"/> to historic <see cref="ArchiveFile"/>.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when an Exception is encountered while writting IDataPoint to historic ArchiveFile.")]
-        public event EventHandler<EventArgs<Exception>> HistoricDataWriteException;
-
-        /// <summary>
-        /// Occurs when <see cref="IDataPoint"/> is being archived to historic <see cref="ArchiveFile"/>.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs to when IDataPoint is being written to historic ArchiveFile.")]
-        public event EventHandler<EventArgs<ProcessProgress<int>>> HistoricDataWriteProgress;
-
+        
         /// <summary>
         /// Occurs when misaligned (by time) <see cref="IDataPoint"/> is received for archival.
         /// </summary>
@@ -635,32 +612,11 @@ namespace TVA.Historian.Files
         public event EventHandler<EventArgs<IDataPoint>> OutOfSequenceDataReceived;
 
         /// <summary>
-        /// Occurs when the process of archiving misaligned (by time) <see cref="IDataPoint"/> is started.
+        /// Occurs when an <see cref="Exception"/> is encountered while writing <see cref="IDataPoint"/> to the current or historic <see cref="ArchiveFile"/>.
         /// </summary>
         [Category("Data"),
-        Description("Occurs when the process of archiving misaligned (by time) IDataPoint is started.")]
-        public event EventHandler OutOfSequenceDataWriteStart;
-
-        /// <summary>
-        /// Occurs when the process of archiving misaligned (by time) <see cref="IDataPoint"/> is complete.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when the process of archiving misaligned (by time) IDataPoint is complete.")]
-        public event EventHandler OutOfSequenceDataWriteComplete;
-
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered while archiving misaligned (by time) <see cref="IDataPoint"/>.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when an Exception is encountered while archiving misaligned (by time) IDataPoint.")]
-        public event EventHandler<EventArgs<Exception>> OutOfSequenceDataWriteException;
-
-        /// <summary>
-        /// Occurs when misaligned (by time) <see cref="IDataPoint"/> is being archived.
-        /// </summary>
-        [Category("Data"),
-        Description("Occurs when misaligned (by time) IDataPoint is being archived.")]
-        public event EventHandler<EventArgs<ProcessProgress<int>>> OutOfSequenceDataWriteProgress;
+        Description("Occurs when an Exception is encountered while writing IDataPoint to the current or historic ArchiveFile.")]
+        public event EventHandler<EventArgs<Exception>> DataWriteException;
 
         /// <summary>
         /// Occurs when <see cref="IDataPoint"/> triggers an alarm notification.
@@ -710,6 +666,7 @@ namespace TVA.Historian.Files
         private IntercomFile m_intercomFile;
         private MetadataFile m_metadataFile;
         private System.Timers.Timer m_conserveMemoryTimer;
+        private ProcessQueue<IDataPoint> m_currentDataQueue;
         private ProcessQueue<IDataPoint> m_historicDataQueue;
         private ProcessQueue<IDataPoint> m_outOfSequenceDataQueue;
         private FileSystemWatcher m_currentLocationFileWatcher;
@@ -750,6 +707,9 @@ namespace TVA.Historian.Files
 
             m_conserveMemoryTimer = new System.Timers.Timer(DataBlockCheckInterval);
             m_conserveMemoryTimer.Elapsed += ConserveMemoryTimer_Elapsed;
+
+            m_currentDataQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(WriteToCurrentArchiveFile);
+            m_currentDataQueue.ProcessException += CurrentDataQueue_ProcessException;
 
             m_historicDataQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(WriteToHistoricArchiveFile);
             m_historicDataQueue.ProcessException += HistoricDataQueue_ProcessException;
@@ -1342,19 +1302,56 @@ namespace TVA.Historian.Files
                         statistics.FileUsage = ((float)m_fat.DataBlocksUsed / (float)m_fat.DataBlockCount) * 100;
 
                     // Calculate compression rate.
-                    if (m_fat.DataPointsReceived > 0)
+                    if (m_fat.DataPointsReceived >= 1)
                         statistics.CompressionRate = ((float)(m_fat.DataPointsReceived - m_fat.DataPointsArchived) / (float)m_fat.DataPointsReceived) * 100;
 
-                    // Calculate write speed averaging window.
-                    if (m_fat.FileStartTime != TimeTag.MinValue && system != null && system.LatestDataTime != TimeTag.MinValue)
-                        statistics.AveragingWindow = new Time(system.LatestDataTime.Value - m_fat.FileStartTime.Value);
-
-                    // Calculate average write speed.
-                    if (statistics.AveragingWindow != Time.MinValue)
-                        statistics.AverageWriteSpeed = m_fat.DataPointsArchived / (int)statistics.AveragingWindow;
+                    if (m_currentDataQueue.RunTime >= 1)
+                    {
+                        statistics.AveragingWindow = m_currentDataQueue.RunTime;
+                        statistics.AverageWriteSpeed = (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems - 
+                                                             (m_historicDataQueue.CurrentStatistics.TotalProcessedItems + 
+                                                              m_historicDataQueue.CurrentStatistics.QueueCount + 
+                                                              m_historicDataQueue.CurrentStatistics.ItemsBeingProcessed + 
+                                                              m_outOfSequenceDataQueue.CurrentStatistics.TotalProcessedItems + 
+                                                              m_outOfSequenceDataQueue.CurrentStatistics.QueueCount + 
+                                                              m_outOfSequenceDataQueue.CurrentStatistics.ItemsBeingProcessed)) / (long)statistics.AveragingWindow);
+                    }
                 }
 
                 return statistics;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ProcessQueueStatistics"/> for the internal current data write <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        public ProcessQueueStatistics CurrentWriteStatistics
+        {
+            get
+            {
+                return m_currentDataQueue.CurrentStatistics;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ProcessQueueStatistics"/> for the internal historic data write <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        public ProcessQueueStatistics HistoricWriteStatistics
+        {
+            get
+            {
+                return m_historicDataQueue.CurrentStatistics;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="ProcessQueueStatistics"/> for the internal out-of-sequence data write <see cref="ProcessQueue{T}"/>.
+        /// </summary>
+        public ProcessQueueStatistics OutOfSequenceWriteStatistics
+        {
+            get
+            {
+                return m_outOfSequenceDataQueue.CurrentStatistics;
             }
         }
 
@@ -1577,25 +1574,14 @@ namespace TVA.Historian.Files
                 if (!Directory.Exists(FilePath.GetDirectoryName(m_fileName)))
                     Directory.CreateDirectory(FilePath.GetDirectoryName(m_fileName));
 
-                if (File.Exists(m_fileName))
-                {
-                    // File has been created already, so we just need to read it.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
-                    m_fat = new ArchiveFileAllocationTable(this);
-                }
-                else
-                {
-                    // File does not exist, so we have to create it and initialize it.
-                    m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                    m_fat = new ArchiveFileAllocationTable(this);
-                    m_fat.Save();
-                }
+                OpenStream();
 
                 // Don't proceed further for standby and historic files.
                 if (m_fileType != ArchiveFileType.Active)
                     return;
 
                 // Start internal process queues.
+                m_currentDataQueue.Start();
                 m_historicDataQueue.Start();
                 m_outOfSequenceDataQueue.Start();
 
@@ -1664,19 +1650,11 @@ namespace TVA.Historian.Files
                 m_conserveMemoryTimer.Stop();
 
                 // Stop the historic and out-of-sequence data queues.
-                m_historicDataQueue.Stop();
-                m_outOfSequenceDataQueue.Stop();
+                m_currentDataQueue.Flush();
+                m_historicDataQueue.Flush();
+                m_outOfSequenceDataQueue.Flush();
 
-                // Dispose the underlying file stream object.
-                m_fat = null;
-                if (m_fileStream != null)
-                {
-                    lock (m_fileStream)
-                    {
-                        m_fileStream.Dispose();
-                    }
-                    m_fileStream = null;
-                }
+                CloseStream();
 
                 if (m_dataBlocks != null)
                 {
@@ -1732,10 +1710,10 @@ namespace TVA.Historian.Files
             {
                 OnRolloverStart();
 
-                // Notify other threads that rollover is in progress.
+                // Notify internal components about the rollover.
                 m_rolloverWaitHandle.Reset();
 
-                // Notify server that rollover is in progress.
+                // Notify external components about the rollover.
                 IntercomRecord system = m_intercomFile.Read(1);
                 system.DataBlocksUsed = 0;
                 system.RolloverInProgress = true;
@@ -1760,33 +1738,26 @@ namespace TVA.Historian.Files
                 m_fat.FileEndTime = endTime;
                 Save();
 
-                List<Info> historicFiles = new List<Info>();
+                // Clear all of the cached data blocks.
+                lock (m_dataBlocks)
+                {
+                    for (int i = 0; i < m_dataBlocks.Count; i++)
+                    {
+                        m_dataBlocks[i] = null;
+                    }
+                }
+
                 string historyFileName = HistoryArchiveFileName;
                 string standbyFileName = StandbyArchiveFileName;
-                // We get a local copy of the list of historic archive files before closing as closing the
-                // file clears the list. After file's been closed, we re-assign the local copy to the list
-                // in order to avoid this list from being created over and over again after rollovers.
-                lock (m_historicArchiveFiles)
-                {
-                    historicFiles.AddRange(m_historicArchiveFiles);
-                }
-                Close();
-                m_historicArchiveFiles = historicFiles;
+                CloseStream();
 
                 // CRITICAL: Exception can be encountered if exclusive lock to the current file cannot be obtained.
-                //           Possible if the server fails to give up the file or for some reason the current file
-                //           doesn't release all locks on the file.
                 if (File.Exists(m_fileName))
                 {
                     try
                     {
-                        FilePath.WaitForWriteLock(m_fileName, 60); // Wait for the server to release the file.
-                        File.Move(m_fileName, historyFileName); // Make the active archive file historic.
-                        // We add the file that we just rolled over from to the list of historic files.
-                        lock (m_historicArchiveFiles)
-                        {
-                            m_historicArchiveFiles.Add(GetHistoricFileInfo(historyFileName));
-                        }
+                        FilePath.WaitForWriteLock(m_fileName, 60);  // Wait for an exclusive lock on the file.
+                        File.Move(m_fileName, historyFileName);     // Make the active archive file historic.
 
                         if (File.Exists(standbyFileName))
                         {
@@ -1800,7 +1771,7 @@ namespace TVA.Historian.Files
                     }
                     catch (Exception)
                     {
-                        Open();
+                        OpenStream();
                         throw;
                     }
                 }
@@ -1809,7 +1780,7 @@ namespace TVA.Historian.Files
                 //           we cannot create a new archive file probably because there isn't enough disk space.
                 try
                 {
-                    Open();
+                    OpenStream();
                     m_fat.FileStartTime = endTime;
 
                     // Notify server that rollover is complete.
@@ -1824,7 +1795,7 @@ namespace TVA.Historian.Files
                 }
                 catch (Exception)
                 {
-                    Close(); // Close the file if we fail to open it.
+                    CloseStream(); // Close the file if we fail to open it.
                     File.Delete(m_fileName);
                     throw; // Rethrow the exception so that the exception event can be raised.
                 }
@@ -1849,329 +1820,7 @@ namespace TVA.Historian.Files
             if (m_fileType != ArchiveFileType.Active)
                 throw new InvalidOperationException("Data can only be directly written to files that are Active.");
 
-            // Yeild to the rollover process if it is in progress.
-            m_rolloverWaitHandle.WaitOne();
-
-            // Initialize local variables.
-            MetadataRecord metadata = m_metadataFile.Read(dataPoint.HistorianID);
-            StateRecord state = m_stateFile.Read(dataPoint.HistorianID);
-            IntercomRecord system = m_intercomFile.Read(1);
-
-            // Ensure that the received data is to be archived.
-            if (state == null || metadata == null || !metadata.GeneralFlags.Enabled)
-            {
-                OnOrphanDataReceived(dataPoint);
-                return;
-            }
-
-            // Ensure that data is not far out in to the future.
-            if (dataPoint.Time > DateTime.UtcNow.AddMinutes(m_leadTimeTolerance))
-            {
-                OnFutureDataReceived(dataPoint);
-                return;
-            }
-
-            // Perform quality check if data quality is not set.
-            if ((int)dataPoint.Quality == 31)
-            {
-                // Note: Here we're checking if the Quality is 31 instead of -1 because the quality value is stored
-                // in the first 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is
-                // set to -1, all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the
-                // Quality, which is a masked value of Flags, we get 31 and not -1.
-                switch (metadata.GeneralFlags.DataType)
-                {
-                    case DataType.Analog:
-                        if (dataPoint.Value >= metadata.AnalogFields.HighRange)
-                            dataPoint.Quality = Quality.UnreasonableHigh;
-                        else if (dataPoint.Value >= metadata.AnalogFields.HighAlarm)
-                            dataPoint.Quality = Quality.ValueAboveHiHiAlarm;
-                        else if (dataPoint.Value >= metadata.AnalogFields.HighWarning)
-                            dataPoint.Quality = Quality.ValueAboveHiAlarm;
-                        else if (dataPoint.Value <= metadata.AnalogFields.LowRange)
-                            dataPoint.Quality = Quality.UnreasonableLow;
-                        else if (dataPoint.Value <= metadata.AnalogFields.LowAlarm)
-                            dataPoint.Quality = Quality.ValueBelowLoLoAlarm;
-                        else if (dataPoint.Value <= metadata.AnalogFields.LowWarning)
-                            dataPoint.Quality = Quality.ValueBelowLoAlarm;
-                        else
-                            dataPoint.Quality = Quality.Good;
-                        break;
-                    case DataType.Digital:
-                        if (dataPoint.Value == metadata.DigitalFields.AlarmState)
-                            dataPoint.Quality = Quality.LogicalAlarm;
-                        else
-                            dataPoint.Quality = Quality.Good;
-                        break;
-                }
-            }
-
-            // Update information about the latest data point received.
-            if (dataPoint.Time > system.LatestDataTime)
-            {
-                system.LatestDataID = dataPoint.HistorianID;
-                system.LatestDataTime = dataPoint.Time;
-                m_intercomFile.Write(1, system);
-            }
-
-            // Check for data that out-of-sequence based on it's time.
-            if (dataPoint.Time <= state.PreviousData.Time)
-            {
-                if (dataPoint.Time == state.PreviousData.Time)
-                {
-                    // Discard data that is an exact duplicate of data in line for archival.
-                    if (dataPoint.Value == state.PreviousData.Value && dataPoint.Quality == state.PreviousData.Quality)
-                        return;
-                }
-                else
-                {
-                    // Queue out-of-sequence data for processing if it is not be discarded.
-                    if (!m_discardOutOfSequenceData)
-                        m_outOfSequenceDataQueue.Add(dataPoint);
-
-                    OnOutOfSequenceDataReceived(dataPoint);
-                    return;
-                }
-            }
-
-            // [BEGIN]   Data compression
-            bool archiveData = false;
-            bool calculateSlopes = false;
-            float compressionLimit = metadata.AnalogFields.CompressionLimit;
-
-            // Set the compression limit to a very low number for digital points.
-            if (metadata.GeneralFlags.DataType == DataType.Digital)
-                compressionLimit = 0.000000001f;
-
-            state.CurrentData = new StateRecordDataPoint(dataPoint);
-            if (state.ArchivedData.IsEmpty)
-            {
-                // This is the first time data is received.
-                state.CurrentData = new StateRecordDataPoint(-1);
-                archiveData = true;
-            }
-            else if (state.PreviousData.IsEmpty)
-            {
-                // This is the second time data is received.
-                calculateSlopes = true;
-            }
-            else
-            {
-                // Process quality-based alarming if enabled.
-                if (metadata.GeneralFlags.AlarmEnabled)
-                {
-                    if ((metadata.AlarmFlags.Value & (2 ^ (int)state.CurrentData.Quality)) != 0)
-                    {
-                        // Current data quality warrants alarming based on the alarming settings.
-                        float delay = 0;
-                        switch (metadata.GeneralFlags.DataType)
-                        {
-                            case DataType.Analog:
-                                delay = metadata.AnalogFields.AlarmDelay;
-                                break;
-                            case DataType.Digital:
-                                delay = metadata.DigitalFields.AlarmDelay;
-                                break;
-                        }
-
-                        // Dispatch the alarm immediately or after a given time based on settings.
-                        if (delay > 0)
-                        {
-                            // Wait before dispatching alarm.
-                            double first;
-                            if (m_delayedAlarmProcessing.TryGetValue(dataPoint.HistorianID, out first))
-                            {
-                                if (state.CurrentData.Time.Value - first > delay)
-                                {
-                                    // Wait is now over, dispatch the alarm.
-                                    m_delayedAlarmProcessing.Remove(dataPoint.HistorianID);
-                                    OnProcessAlarmNotification(state);
-                                }
-                            }
-                            else
-                            {
-                                m_delayedAlarmProcessing.Add(state.HistorianID, state.CurrentData.Time.Value);
-                            }
-                        }
-                        else
-                        {
-                            // Dispatch the alarm immediately.
-                            OnProcessAlarmNotification(state);
-                        }
-                    }
-                    else
-                    {
-                        m_delayedAlarmProcessing.Remove(dataPoint.HistorianID);
-                    }
-                }
-
-                if (m_compressData)
-                {
-                    // Data is to be compressed.
-                    if (metadata.CompressionMinTime > 0 && state.CurrentData.Time.Value - state.ArchivedData.Time.Value < metadata.CompressionMinTime)
-                    {
-                        // CompressionMinTime is in effect.
-                        archiveData = false;
-                        calculateSlopes = false;
-                    }
-                    else if (state.CurrentData.Quality != state.ArchivedData.Quality || state.CurrentData.Quality != state.PreviousData.Quality || (metadata.CompressionMaxTime > 0 && state.PreviousData.Time.Value - state.ArchivedData.Time.Value > metadata.CompressionMaxTime))
-                    {
-                        // Quality changed or CompressionMaxTime is exceeded.
-                        dataPoint = new ArchiveDataPoint(state.PreviousData);
-                        archiveData = true;
-                        calculateSlopes = true;
-                    }
-                    else
-                    {
-                        // Perform a compression test.
-                        double slope1;
-                        double slope2;
-                        double currentSlope;
-
-                        slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                        slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                        currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-
-                        if (slope1 >= state.Slope1)
-                            state.Slope1 = slope1;
-                        
-                        if (slope2 <= state.Slope2)
-                            state.Slope2 = slope2;
-                        
-                        if (currentSlope <= state.Slope1 || currentSlope >= state.Slope2)
-                        {
-                            dataPoint = new ArchiveDataPoint(state.PreviousData);
-                            archiveData = true;
-                            calculateSlopes = true;
-                        }
-                    }
-                }
-                else
-                {
-                    // Data is not to be compressed.
-                    dataPoint = new ArchiveDataPoint(state.PreviousData);
-                    archiveData = true;
-                }
-            }
-            // [END]     Data compression
-
-            // [BEGIN]   Data archival
-            m_fat.DataPointsReceived++;
-            if (archiveData)
-            {
-                if (dataPoint.Time >= m_fat.FileStartTime)
-                {
-                    // Data belongs to this file.
-                    ArchiveDataBlock dataBlock;
-                    lock (m_dataBlocks)
-                    {
-                        dataBlock = m_dataBlocks[dataPoint.HistorianID - 1];
-                    }
-
-                    if (dataBlock == null || dataBlock.SlotsAvailable == 0)
-                    {
-                        // Need to find a data block for writting the data.
-                        if (dataBlock != null)
-                        {
-                            dataBlock = null;
-                            state.ActiveDataBlockIndex = -1;
-                        }
-
-                        if (state.ActiveDataBlockIndex >= 0)
-                        {
-                            // Retrieve previously used data block.
-                            dataBlock = m_fat.RequestDataBlock(dataPoint.HistorianID, dataPoint.Time, state.ActiveDataBlockIndex);
-                        }
-                        else
-                        {
-                            // Time to request a brand new data block.
-                            dataBlock = m_fat.RequestDataBlock(dataPoint.HistorianID, dataPoint.Time, system.DataBlocksUsed);
-                        }
-
-                        if (dataBlock != null)
-                        {
-                            // Update the total number of data blocks used.
-                            if (dataBlock.SlotsUsed == 0 && system.DataBlocksUsed == dataBlock.Index)
-                            {
-                                system.DataBlocksUsed++;
-                                m_intercomFile.Write(1, system);
-                            }
-
-                            // Update the active data block index information.
-                            state.ActiveDataBlockIndex = dataBlock.Index;
-                        }
-
-                        // Keep in-memory reference to the data block for consecutive writes.
-                        lock (m_dataBlocks)
-                        {
-                            m_dataBlocks[dataPoint.HistorianID - 1] = dataBlock;
-                        }
-
-                        // Kick-off the rollover preparation when its threshold is reached.
-                        if (Statistics.FileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
-                        {
-                            m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
-                            m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
-                            m_rolloverPreparationThread.Start();
-                        }
-                    }
-
-                    if (dataBlock != null)
-                    {
-                        // Write data to the data block.
-                        dataBlock.Write(dataPoint);
-                        m_fat.DataPointsArchived++;
-                    }
-                    else
-                    {
-                        // File is full, rollover if configured.
-                        OnFileFull();
-
-                        if (m_rolloverOnFull)
-                        {
-                            while (true)
-                            {
-                                Rollover(); // Start rollover.
-                                if (m_rolloverWaitHandle.WaitOne(1, false))
-                                {
-                                    break; // Rollover is successful.
-                                }
-                            }
-                        }
-
-                        // Re-read the state information since it is modified during the rollover.
-                        state = m_stateFile.Read(dataPoint.HistorianID);
-                    }
-                }
-                else
-                {
-                    // Data is historic.
-                    m_fat.DataPointsReceived--;
-                    m_historicDataQueue.Add(dataPoint);
-                    OnHistoricDataReceived(dataPoint);
-                }
-
-                state.ArchivedData = new StateRecordDataPoint(dataPoint);
-            }
-
-            if (calculateSlopes)
-            {
-                if (state.CurrentData.Time.Value != state.ArchivedData.Time.Value)
-                {
-                    state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                    state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
-                }
-                else
-                {
-                    state.Slope1 = 0;
-                    state.Slope2 = 0;
-                }
-            }
-
-            state.PreviousData = state.CurrentData;
-
-            // Write state information to the file.
-            m_stateFile.Write(state.HistorianID, state);
-            // [END]     Data archival
+            m_currentDataQueue.Add(dataPoint);
         }
 
         /// <summary>
@@ -2629,44 +2278,6 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Raises the <see cref="HistoricDataWriteStart"/> event.
-        /// </summary>
-        protected virtual void OnHistoricDataWriteStart()
-        {
-            if (HistoricDataWriteStart != null)
-                HistoricDataWriteStart(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="HistoricDataWriteComplete"/> event.
-        /// </summary>
-        protected virtual void OnHistoricDataWriteComplete()
-        {
-            if (HistoricDataWriteComplete != null)
-                HistoricDataWriteComplete(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="HistoricDataWriteException"/> event.
-        /// </summary>
-        /// <param name="ex"><see cref="Exception"/> to send to <see cref="HistoricDataWriteException"/> event.</param>
-        protected virtual void OnHistoricDataWriteException(Exception ex)
-        {
-            if (HistoricDataWriteException != null)
-                HistoricDataWriteException(this, new EventArgs<Exception>(ex));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="HistoricDataWriteProgress"/> event.
-        /// </summary>
-        /// <param name="historicWriteProgress"><see cref="ProcessProgress{T}"/> to send to <see cref="HistoricDataWriteProgress"/> event.</param>
-        protected virtual void OnHistoricDataWriteProgress(ProcessProgress<int> historicWriteProgress)
-        {
-            if (HistoricDataWriteProgress != null)
-                HistoricDataWriteProgress(this, new EventArgs<ProcessProgress<int>>(historicWriteProgress));
-        }
-
-        /// <summary>
         /// Raises the <see cref="OutOfSequenceDataReceived"/> event.
         /// </summary>
         /// <param name="dataPoint"><see cref="IDataPoint"/> to send to <see cref="OutOfSequenceDataReceived"/> event.</param>
@@ -2677,41 +2288,13 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Raises the <see cref="OutOfSequenceDataWriteStart"/> event.
+        /// Raises the <see cref="DataWriteException"/> event.
         /// </summary>
-        protected virtual void OnOutOfSequenceDataWriteStart()
+        /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataWriteException"/> event.</param>
+        protected virtual void OnDataWriteException(Exception ex)
         {
-            if (OutOfSequenceDataWriteStart != null)
-                OutOfSequenceDataWriteStart(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="OutOfSequenceDataWriteComplete"/> event.
-        /// </summary>
-        protected virtual void OnOutOfSequenceDataWriteComplete()
-        {
-            if (OutOfSequenceDataWriteComplete != null)
-                OutOfSequenceDataWriteComplete(this, EventArgs.Empty);
-        }
-
-        /// <summary>
-        /// Raises the <see cref="OutOfSequenceDataWriteException"/> event.
-        /// </summary>
-        /// <param name="ex"><see cref="Exception"/> to send to <see cref="OutOfSequenceDataWriteException"/> event.</param>
-        protected virtual void OnOutOfSequenceDataWriteException(Exception ex)
-        {
-            if (OutOfSequenceDataWriteException != null)
-                OutOfSequenceDataWriteException(this, new EventArgs<Exception>(ex));
-        }
-
-        /// <summary>
-        /// Raises the <see cref="OutOfSequenceDataWriteProgress"/> event.
-        /// </summary>
-        /// <param name="historicWriteProgress"><see cref="ProcessProgress{T}"/> to send to <see cref="OutOfSequenceDataWriteProgress"/> event.</param>
-        protected virtual void OnOutOfSequenceDataWriteProgress(ProcessProgress<int> historicWriteProgress)
-        {
-            if (OutOfSequenceDataWriteProgress != null)
-                OutOfSequenceDataWriteProgress(this, new EventArgs<ProcessProgress<int>>(historicWriteProgress));
+            if (DataWriteException != null)
+                DataWriteException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
@@ -2748,6 +2331,12 @@ namespace TVA.Historian.Files
                         {
                             m_conserveMemoryTimer.Elapsed -= ConserveMemoryTimer_Elapsed;
                             m_conserveMemoryTimer.Dispose();
+                        }
+
+                        if (m_currentDataQueue != null)
+                        {
+                            m_currentDataQueue.ProcessException -= CurrentDataQueue_ProcessException;
+                            m_currentDataQueue.Dispose();
                         }
 
                         if (m_historicDataQueue != null)
@@ -2800,6 +2389,36 @@ namespace TVA.Historian.Files
             {
                 Close();
                 Open();
+            }
+        }
+
+        private void OpenStream()
+        {
+            if (File.Exists(m_fileName))
+            {
+                // File has been created already, so we just need to read it.
+                m_fileStream = new FileStream(m_fileName, FileMode.Open, m_fileAccessMode, FileShare.ReadWrite);
+                m_fat = new ArchiveFileAllocationTable(this);
+            }
+            else
+            {
+                // File does not exist, so we have to create it and initialize it.
+                m_fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                m_fat = new ArchiveFileAllocationTable(this);
+                m_fat.Save();
+            }
+        }
+
+        private void CloseStream()
+        {
+            m_fat = null;
+            if (m_fileStream != null)
+            {
+                lock (m_fileStream)
+                {
+                    m_fileStream.Dispose();
+                }
+                m_fileStream = null;
             }
         }
 
@@ -3083,13 +2702,357 @@ namespace TVA.Historian.Files
 
         #region [ Queue Delegates ]
 
+        private void WriteToCurrentArchiveFile(IDataPoint[] items)
+        {
+            Dictionary<int, List<IDataPoint>> sortedDataPoints = new Dictionary<int, List<IDataPoint>>();
+            // First we'll seperate all point data by ID.
+            for (int i = 0; i < items.Length; i++)
+            {
+                if (!sortedDataPoints.ContainsKey(items[i].HistorianID))
+                {
+                    sortedDataPoints.Add(items[i].HistorianID, new List<IDataPoint>());
+                }
+
+                sortedDataPoints[items[i].HistorianID].Add(items[i]);
+            }
+
+            IntercomRecord system = m_intercomFile.Read(1);
+            foreach (int pointID in sortedDataPoints.Keys)
+            {
+                // Initialize local variables.
+                MetadataRecord metadata = m_metadataFile.Read(pointID);
+                StateRecord state = m_stateFile.Read(pointID);
+
+                IDataPoint dataPoint;
+                for (int i = 0; i < sortedDataPoints[pointID].Count; i++)
+                {
+                    dataPoint = sortedDataPoints[pointID][i];
+
+                    // Ensure that the received data is to be archived.
+                    if (state == null || metadata == null || !metadata.GeneralFlags.Enabled)
+                    {
+                        OnOrphanDataReceived(dataPoint);
+                        continue;
+                    }
+
+                    // Ensure that data is not far out in to the future.
+                    if (dataPoint.Time > DateTime.UtcNow.AddMinutes(m_leadTimeTolerance))
+                    {
+                        OnFutureDataReceived(dataPoint);
+                        continue;
+                    }
+
+                    // Perform quality check if data quality is not set.
+                    if ((int)dataPoint.Quality == 31)
+                    {
+                        // Note: Here we're checking if the Quality is 31 instead of -1 because the quality value is stored
+                        // in the first 5 bits (QualityMask = 31) of Flags in the point data. Initially when the Quality is
+                        // set to -1, all the bits Flags (a 32-bit integer) are set to 1. And therefore, when we get the
+                        // Quality, which is a masked value of Flags, we get 31 and not -1.
+                        switch (metadata.GeneralFlags.DataType)
+                        {
+                            case DataType.Analog:
+                                if (dataPoint.Value >= metadata.AnalogFields.HighRange)
+                                    dataPoint.Quality = Quality.UnreasonableHigh;
+                                else if (dataPoint.Value >= metadata.AnalogFields.HighAlarm)
+                                    dataPoint.Quality = Quality.ValueAboveHiHiAlarm;
+                                else if (dataPoint.Value >= metadata.AnalogFields.HighWarning)
+                                    dataPoint.Quality = Quality.ValueAboveHiAlarm;
+                                else if (dataPoint.Value <= metadata.AnalogFields.LowRange)
+                                    dataPoint.Quality = Quality.UnreasonableLow;
+                                else if (dataPoint.Value <= metadata.AnalogFields.LowAlarm)
+                                    dataPoint.Quality = Quality.ValueBelowLoLoAlarm;
+                                else if (dataPoint.Value <= metadata.AnalogFields.LowWarning)
+                                    dataPoint.Quality = Quality.ValueBelowLoAlarm;
+                                else
+                                    dataPoint.Quality = Quality.Good;
+                                break;
+                            case DataType.Digital:
+                                if (dataPoint.Value == metadata.DigitalFields.AlarmState)
+                                    dataPoint.Quality = Quality.LogicalAlarm;
+                                else
+                                    dataPoint.Quality = Quality.Good;
+                                break;
+                        }
+                    }
+
+                    // Update information about the latest data point received.
+                    if (dataPoint.Time > system.LatestDataTime)
+                    {
+                        system.LatestDataID = dataPoint.HistorianID;
+                        system.LatestDataTime = dataPoint.Time;
+                        m_intercomFile.Write(1, system);
+                    }
+
+                    // Check for data that out-of-sequence based on it's time.
+                    if (dataPoint.Time <= state.PreviousData.Time)
+                    {
+                        if (dataPoint.Time == state.PreviousData.Time)
+                        {
+                            // Discard data that is an exact duplicate of data in line for archival.
+                            if (dataPoint.Value == state.PreviousData.Value && dataPoint.Quality == state.PreviousData.Quality)
+                                return;
+                        }
+                        else
+                        {
+                            // Queue out-of-sequence data for processing if it is not be discarded.
+                            if (!m_discardOutOfSequenceData)
+                                m_outOfSequenceDataQueue.Add(dataPoint);
+
+                            OnOutOfSequenceDataReceived(dataPoint);
+                            return;
+                        }
+                    }
+
+                    // [BEGIN]   Data compression
+                    bool archiveData = false;
+                    bool calculateSlopes = false;
+                    float compressionLimit = metadata.AnalogFields.CompressionLimit;
+
+                    // Set the compression limit to a very low number for digital points.
+                    if (metadata.GeneralFlags.DataType == DataType.Digital)
+                        compressionLimit = 0.000000001f;
+
+                    state.CurrentData = new StateRecordDataPoint(dataPoint);
+                    if (state.ArchivedData.IsEmpty)
+                    {
+                        // This is the first time data is received.
+                        state.CurrentData = new StateRecordDataPoint(-1);
+                        archiveData = true;
+                    }
+                    else if (state.PreviousData.IsEmpty)
+                    {
+                        // This is the second time data is received.
+                        calculateSlopes = true;
+                    }
+                    else
+                    {
+                        // Process quality-based alarming if enabled.
+                        if (metadata.GeneralFlags.AlarmEnabled)
+                        {
+                            if (metadata.AlarmFlags.Value.CheckBits(BitExtensions.BitVal((int)state.CurrentData.Quality)))
+                            {
+                                // Current data quality warrants alarming based on the alarming settings.
+                                float delay = 0;
+                                switch (metadata.GeneralFlags.DataType)
+                                {
+                                    case DataType.Analog:
+                                        delay = metadata.AnalogFields.AlarmDelay;
+                                        break;
+                                    case DataType.Digital:
+                                        delay = metadata.DigitalFields.AlarmDelay;
+                                        break;
+                                }
+
+                                // Dispatch the alarm immediately or after a given time based on settings.
+                                if (delay > 0)
+                                {
+                                    // Wait before dispatching alarm.
+                                    double first;
+                                    if (m_delayedAlarmProcessing.TryGetValue(dataPoint.HistorianID, out first))
+                                    {
+                                        if (state.CurrentData.Time.Value - first > delay)
+                                        {
+                                            // Wait is now over, dispatch the alarm.
+                                            m_delayedAlarmProcessing.Remove(dataPoint.HistorianID);
+                                            OnProcessAlarmNotification(state);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        m_delayedAlarmProcessing.Add(state.HistorianID, state.CurrentData.Time.Value);
+                                    }
+                                }
+                                else
+                                {
+                                    // Dispatch the alarm immediately.
+                                    OnProcessAlarmNotification(state);
+                                }
+                            }
+                            else
+                            {
+                                m_delayedAlarmProcessing.Remove(dataPoint.HistorianID);
+                            }
+                        }
+
+                        if (m_compressData)
+                        {
+                            // Data is to be compressed.
+                            if (metadata.CompressionMinTime > 0 && state.CurrentData.Time.Value - state.ArchivedData.Time.Value < metadata.CompressionMinTime)
+                            {
+                                // CompressionMinTime is in effect.
+                                archiveData = false;
+                                calculateSlopes = false;
+                            }
+                            else if (state.CurrentData.Quality != state.ArchivedData.Quality || state.CurrentData.Quality != state.PreviousData.Quality || (metadata.CompressionMaxTime > 0 && state.PreviousData.Time.Value - state.ArchivedData.Time.Value > metadata.CompressionMaxTime))
+                            {
+                                // Quality changed or CompressionMaxTime is exceeded.
+                                dataPoint = new ArchiveDataPoint(state.PreviousData);
+                                archiveData = true;
+                                calculateSlopes = true;
+                            }
+                            else
+                            {
+                                // Perform a compression test.
+                                double slope1;
+                                double slope2;
+                                double currentSlope;
+
+                                slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                                slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                                currentSlope = (state.CurrentData.Value - state.ArchivedData.Value) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+
+                                if (slope1 >= state.Slope1)
+                                    state.Slope1 = slope1;
+
+                                if (slope2 <= state.Slope2)
+                                    state.Slope2 = slope2;
+
+                                if (currentSlope <= state.Slope1 || currentSlope >= state.Slope2)
+                                {
+                                    dataPoint = new ArchiveDataPoint(state.PreviousData);
+                                    archiveData = true;
+                                    calculateSlopes = true;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Data is not to be compressed.
+                            dataPoint = new ArchiveDataPoint(state.PreviousData);
+                            archiveData = true;
+                        }
+                    }
+                    // [END]     Data compression
+
+                    // [BEGIN]   Data archival
+                    m_fat.DataPointsReceived++;
+                    if (archiveData)
+                    {
+                        if (dataPoint.Time >= m_fat.FileStartTime)
+                        {
+                            // Data belongs to this file.
+                            ArchiveDataBlock dataBlock;
+                            lock (m_dataBlocks)
+                            {
+                                dataBlock = m_dataBlocks[dataPoint.HistorianID - 1];
+                            }
+
+                            if (dataBlock == null || dataBlock.SlotsAvailable == 0)
+                            {
+                                // Need to find a data block for writting the data.
+                                if (dataBlock != null)
+                                {
+                                    dataBlock = null;
+                                    state.ActiveDataBlockIndex = -1;
+                                }
+
+                                if (state.ActiveDataBlockIndex >= 0)
+                                {
+                                    // Retrieve previously used data block.
+                                    dataBlock = m_fat.RequestDataBlock(dataPoint.HistorianID, dataPoint.Time, state.ActiveDataBlockIndex);
+                                }
+                                else
+                                {
+                                    // Time to request a brand new data block.
+                                    dataBlock = m_fat.RequestDataBlock(dataPoint.HistorianID, dataPoint.Time, system.DataBlocksUsed);
+                                }
+
+                                if (dataBlock != null)
+                                {
+                                    // Update the total number of data blocks used.
+                                    if (dataBlock.SlotsUsed == 0 && system.DataBlocksUsed == dataBlock.Index)
+                                    {
+                                        system.DataBlocksUsed++;
+                                        m_intercomFile.Write(1, system);
+                                    }
+
+                                    // Update the active data block index information.
+                                    state.ActiveDataBlockIndex = dataBlock.Index;
+                                }
+
+                                // Keep in-memory reference to the data block for consecutive writes.
+                                lock (m_dataBlocks)
+                                {
+                                    m_dataBlocks[dataPoint.HistorianID - 1] = dataBlock;
+                                }
+
+                                // Kick-off the rollover preparation when its threshold is reached.
+                                if (Statistics.FileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
+                                {
+                                    m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
+                                    m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
+                                    m_rolloverPreparationThread.Start();
+                                }
+                            }
+
+                            if (dataBlock != null)
+                            {
+                                // Write data to the data block.
+                                dataBlock.Write(dataPoint);
+                                m_fat.DataPointsArchived++;
+                            }
+                            else
+                            {
+                                // File is full, rollover if configured.
+                                OnFileFull();
+
+                                if (m_rolloverOnFull)
+                                {
+                                    while (true)
+                                    {
+                                        Rollover(); // Start rollover.
+                                        if (m_rolloverWaitHandle.WaitOne(1, false))
+                                        {
+                                            break; // Rollover is successful.
+                                        }
+                                    }
+                                }
+
+                                // Process the current data point again.
+                                i--;
+                                continue;
+                            }
+                        }
+                        else
+                        {
+                            // Data is historic.
+                            m_fat.DataPointsReceived--;
+                            m_historicDataQueue.Add(dataPoint);
+                            OnHistoricDataReceived(dataPoint);
+                        }
+
+                        state.ArchivedData = new StateRecordDataPoint(dataPoint);
+                    }
+
+                    if (calculateSlopes)
+                    {
+                        if (state.CurrentData.Time.Value != state.ArchivedData.Time.Value)
+                        {
+                            state.Slope1 = (state.CurrentData.Value - (state.ArchivedData.Value + compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                            state.Slope2 = (state.CurrentData.Value - (state.ArchivedData.Value - compressionLimit)) / (state.CurrentData.Time.Value - state.ArchivedData.Time.Value);
+                        }
+                        else
+                        {
+                            state.Slope1 = 0;
+                            state.Slope2 = 0;
+                        }
+                    }
+
+                    state.PreviousData = state.CurrentData;
+
+                    // Write state information to the file.
+                    m_stateFile.Write(state.HistorianID, state);
+                    // [END]     Data archival
+                }
+            }
+        }
+
         private void WriteToHistoricArchiveFile(IDataPoint[] items)
         {
             if (m_buildHistoricFileListThread.IsAlive)
                 // Wait until the historic file list has been built.
                 m_buildHistoricFileListThread.Join();
-
-            OnHistoricDataWriteStart();
 
             Dictionary<int, List<IDataPoint>> sortedPointData = new Dictionary<int, List<IDataPoint>>();
             // First we'll seperate all point data by ID.
@@ -3103,8 +3066,6 @@ namespace TVA.Historian.Files
                 sortedPointData[items[i].HistorianID].Add(items[i]);
             }
 
-            ProcessProgress<int> historicWriteProgress = new ProcessProgress<int>("HistoricWrite");
-            historicWriteProgress.Total = items.Length;
             foreach (int pointID in sortedPointData.Keys)
             {
                 // We'll sort the point data for the current point ID by time.
@@ -3159,8 +3120,6 @@ namespace TVA.Historian.Files
                                     historicFile = null;
                                     historicFileBlock = null;
                                 }
-
-                                historicWriteProgress.Complete++;
                             }
                             else
                             {
@@ -3173,10 +3132,6 @@ namespace TVA.Historian.Files
                             }
                         }
                     }
-
-                    // Notify of progress per point.
-                    historicWriteProgress.ProgressMessage = string.Format("Wrote historic data for point id {0} ({1} of {2}).", pointID, "{0}", "{1}");
-                    OnHistoricDataWriteProgress(historicWriteProgress);
                 }
                 catch (Exception ex)
                 {
@@ -3195,11 +3150,9 @@ namespace TVA.Historian.Files
                     }
 
                     // Notify of the exception.
-                    OnHistoricDataWriteException(ex);
+                    OnDataWriteException(ex);
                 }
             }
-
-            OnHistoricDataWriteComplete();
         }
 
         private void InsertInCurrentArchiveFile(IDataPoint[] items)
@@ -3232,14 +3185,19 @@ namespace TVA.Historian.Files
             }
         }
 
+        private void CurrentDataQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            OnDataWriteException(e.Argument);
+        }
+
         private void HistoricDataQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnHistoricDataWriteException(e.Argument);
+            OnDataWriteException(e.Argument);
         }
 
         private void OutOfSequenceDataQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
-            OnOutOfSequenceDataWriteException(e.Argument);
+            OnDataWriteException(e.Argument);
         }
 
         private void FileWatcher_Created(object sender, FileSystemEventArgs e)
