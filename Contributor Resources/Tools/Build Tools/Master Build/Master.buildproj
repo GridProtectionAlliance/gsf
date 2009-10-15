@@ -11,16 +11,18 @@
 **
 **  Code Modification History:
 **  ===================================================================================================
-**  09/05/2009 - Pinal C. Patel
+**  10/05/2009 - Pinal C. Patel
 **       Generated original version of source code.
-**  09/07/2009 - Pinal C. Patel
+**  10/07/2009 - Pinal C. Patel
 **       Fixed a bug in deletion of unwanted files prior to deployment.
-**  09/10/2009 - Pinal C. Patel
+**  10/10/2009 - Pinal C. Patel
 **       Added the ability to compile install packages.
 **       Added the ability to choose the files to be versioned.
-**  09/13/2009 - Pinal C. Patel
+**  10/13/2009 - Pinal C. Patel
 **       Enabled the check for Sandcastle Builder as a required tool.
 **       Modified deletion of *.pdb files to be active for release builds only.
+**  10/15/2009 - Pinal C. Patel
+**       Added unit testing to the build process.
 **
 *******************************************************************************************************
 -->
@@ -62,6 +64,8 @@
     <TfsClient></TfsClient>
     <!-- Path to Visual Studio IDE. -->
     <VisualStudio></VisualStudio>
+    <!-- Path to unit testing tool. -->
+    <MSTest></MSTest>
     <!-- Path to Sandcastle Builder. -->
     <SandcastleBuilder></SandcastleBuilder>
   </PropertyGroup>
@@ -76,6 +80,7 @@
            PopulateWorkspace  (Before > Core > After)
            VersionSource      (Before > Core > After)
            BuildProjects      (Before > Core > After)
+           ExecuteUnitTests   (Before > Core > After)
          FinalizeBuild
            LabelBuild         (Before > Core > After)
            DeployBuild        (Before > Core > After)
@@ -90,6 +95,7 @@
       PopulateWorkspace;
       VersionSource;
       BuildProjects;
+      ExecuteUnitTests;
     </CompileBuildDependsOn>
     <FinalizeBuildDependsOn>
       LabelBuild;
@@ -126,6 +132,11 @@
       CoreBuildProjects;
       AfterBuildProjects;
     </BuildProjectsDependsOn>
+    <ExecuteUnitTestsDependsOn>
+      BeforeExecuteUnitTests;
+      CoreExecuteUnitTests;
+      AfterExecuteUnitTests;
+    </ExecuteUnitTestsDependsOn>
     <LabelBuildDependsOn>
       BeforeLabelBuild;
       CoreLabelBuild;
@@ -153,6 +164,8 @@
       <VersionRegex>(?'BeforeVersion')(?'CoreVersion')(?'AfterVersion')</VersionRegex>
       <VersionPrecision>4</VersionPrecision>
     </FilesToVersion>
+    <!-- List of unit test assemblies. -->
+    <UnitTestAssemblies Include="Nothing" Exclude="Nothing"/>
   </ItemGroup>
 
   <Target Name="All">
@@ -182,6 +195,8 @@
 
   <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)"/>
 
+  <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)"/>
+
   <Target Name="LabelBuild" DependsOnTargets="$(LabelBuildDependsOn)"/>
 
   <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)"/>
@@ -206,6 +221,7 @@
       <SourceVersion Condition="'$(SourceVersion)' == ''">T</SourceVersion>
       <TfsClient Condition="'$(TfsClient)' == ''">$(VS90COMNTOOLS)\..\IDE\tf.exe</TfsClient>
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS90COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
+      <MSTest Condition="'$(MSTest)' == ''">$(VS90COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
     </PropertyGroup>
   </Target>
@@ -217,9 +233,10 @@
   <Target Name="CoreCheckEnvironment">
     <!-- Ensure that all required tools are installed. -->
     <Message Text="Checking for required application..."/>
-    <Error Condition="!Exists('$(TfsClient)')" Text="TFS Client is not installed."/>
-    <Error Condition="!Exists('$(VisualStudio)')" Text="Visual Studio is not installed."/>
-    <Error Condition="!Exists('$(SandcastleBuilder)')" Text="Sandcastle Builder is not installed."/>
+    <Error Condition="'$(TfsClient)' != '' And !Exists('$(TfsClient)')" Text="TFS Client is not installed."/>
+    <Error Condition="'$(VisualStudio)' != '' And !Exists('$(VisualStudio)')" Text="Visual Studio is not installed."/>
+    <Error Condition="'$(MSTest)' != '' And !Exists('$(MSTest)')" Text="Unit testing tool is not installed."/>
+    <Error Condition="'$(SandcastleBuilder)' != '' And !Exists('$(SandcastleBuilder)')" Text="Sandcastle Builder is not installed."/>
   </Target>
 
   <Target Name="AfterCheckEnvironment"/>
@@ -288,6 +305,16 @@
   </Target>
 
   <Target Name="AfterBuildProjects"/>
+
+  <Target Name="BeforeExecuteUnitTests"/>
+
+  <Target Name="CoreExecuteUnitTests" Condition="'@(UnitTestAssemblies)' != ''">
+    <!-- Execute tests in unit test assemblies. -->
+    <Message Text="Executing unit tests..."/>
+    <Exec Command="%22$(MSTest)%22 /testcontainer:%22%(UnitTestAssemblies.FullPath)%22" WorkingDirectory="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)"/>
+  </Target>
+
+  <Target Name="AfterExecuteUnitTests"/>
 
   <Target Name="BeforeLabelBuild"/>
 
