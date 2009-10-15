@@ -128,9 +128,6 @@ Global
 		SccProjectName15 = Libraries/TVA.Windows.Test
 		SccLocalPath15 = Libraries\\TVA.Windows.Test
 	EndGlobalSection
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = Framework.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
