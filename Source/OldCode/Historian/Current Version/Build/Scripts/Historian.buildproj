@@ -11,12 +11,14 @@
 **
 **  Code Modification History:
 **  ===================================================================================================
-**  09/05/2009 - Pinal C. Patel
+**  10/05/2009 - Pinal C. Patel
 **       Generated original version of source code.
-**  09/10/2009 - Pinal C. Patel
+**  10/10/2009 - Pinal C. Patel
 **       Modified to accommodate the change in file versioning.
-**  09/13/2009 - Pinal C. Patel
+**  10/13/2009 - Pinal C. Patel
 **       Made building of help docs optional using SkipHelpFiles property.
+**  10/15/2009 - Pinal C. Patel
+**       Enabled unit testing.
 **
 *******************************************************************************************************
 -->
@@ -49,4 +51,16 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="AfterBuildProjects">
+    <ItemGroup>
+      <!-- List of unit test assemblies. -->
+      <UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Test.dll"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="AfterExecuteUnitTests">
+    <!-- Clean-up after all unit tests have been executed and passed. -->
+    <RemoveDir Directories="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)" Condition="Exists('%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)')"/>
+  </Target>
+  
 </Project>
