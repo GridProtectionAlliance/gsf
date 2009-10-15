@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestRunConfiguration name="Framework Test Configuration" id="66a0f15a-409f-46b8-9141-56106fcf3b61" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2006">
+  <Description>Configuration for all test runs.</Description>
+  <TestTypeSpecific />
+</TestRunConfiguration>

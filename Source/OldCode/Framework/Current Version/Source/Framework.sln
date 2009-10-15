@@ -42,9 +42,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcaster", "Tools\U
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcasterConsole", "Tools\UDPRebroadcaster\UDPRebroadcasterConsole\UDPRebroadcasterConsole.csproj", "{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{31BD748D-B2A7-4603-82CF-3AD86CED1274}"
+	ProjectSection(SolutionItems) = preProject
+		Framework.testrunconfig = Framework.testrunconfig
+		Framework.vsmdi = Framework.vsmdi
+		openPDC.snk = openPDC.snk
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core.Test", "Libraries\TVA.Core.Test\TVA.Core.Test.csproj", "{1B035023-96E7-4137-AC0F-9D0276D6E5A9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication.Test", "Libraries\TVA.Communication.Test\TVA.Communication.Test.csproj", "{BFDB717C-F14D-4C8D-937D-305E078EDF4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security.Test", "Libraries\TVA.Security.Test\TVA.Security.Test.csproj", "{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services.Test", "Libraries\TVA.Services.Test\TVA.Services.Test.csproj", "{4BFE648D-4C42-423A-912F-E4E90F796BD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web.Test", "Libraries\TVA.Web.Test\TVA.Web.Test.csproj", "{B7964BA5-487B-47D7-BB6C-AE67F5739BE9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows.Test", "Libraries\TVA.Windows.Test\TVA.Windows.Test.csproj", "{7534EC9F-5A92-40A8-A12D-FA773120C95C}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 10
+		SccNumberOfProjects = 16
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs07.codeplex.com/
 		SccLocalPath0 = .
@@ -84,6 +103,33 @@ Global
 		SccProjectTopLevelParentUniqueName9 = Framework.sln
 		SccProjectName9 = Tools/UDPRebroadcaster/UDPRebroadcasterConsole
 		SccLocalPath9 = Tools\\UDPRebroadcaster\\UDPRebroadcasterConsole
+		SccProjectUniqueName10 = Libraries\\TVA.Core.Test\\TVA.Core.Test.csproj
+		SccProjectTopLevelParentUniqueName10 = Framework.sln
+		SccProjectName10 = Libraries/TVA.Core.Test
+		SccLocalPath10 = Libraries\\TVA.Core.Test
+		SccProjectUniqueName11 = Libraries\\TVA.Communication.Test\\TVA.Communication.Test.csproj
+		SccProjectTopLevelParentUniqueName11 = Framework.sln
+		SccProjectName11 = Libraries/TVA.Communication.Test
+		SccLocalPath11 = Libraries\\TVA.Communication.Test
+		SccProjectUniqueName12 = Libraries\\TVA.Security.Test\\TVA.Security.Test.csproj
+		SccProjectTopLevelParentUniqueName12 = Framework.sln
+		SccProjectName12 = Libraries/TVA.Security.Test
+		SccLocalPath12 = Libraries\\TVA.Security.Test
+		SccProjectUniqueName13 = Libraries\\TVA.Services.Test\\TVA.Services.Test.csproj
+		SccProjectTopLevelParentUniqueName13 = Framework.sln
+		SccProjectName13 = Libraries/TVA.Services.Test
+		SccLocalPath13 = Libraries\\TVA.Services.Test
+		SccProjectUniqueName14 = Libraries\\TVA.Web.Test\\TVA.Web.Test.csproj
+		SccProjectTopLevelParentUniqueName14 = Framework.sln
+		SccProjectName14 = Libraries/TVA.Web.Test
+		SccLocalPath14 = Libraries\\TVA.Web.Test
+		SccProjectUniqueName15 = Libraries\\TVA.Windows.Test\\TVA.Windows.Test.csproj
+		SccProjectTopLevelParentUniqueName15 = Framework.sln
+		SccProjectName15 = Libraries/TVA.Windows.Test
+		SccLocalPath15 = Libraries\\TVA.Windows.Test
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Framework.vsmdi
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -126,6 +172,30 @@ Global
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B035023-96E7-4137-AC0F-9D0276D6E5A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B035023-96E7-4137-AC0F-9D0276D6E5A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B035023-96E7-4137-AC0F-9D0276D6E5A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B035023-96E7-4137-AC0F-9D0276D6E5A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFDB717C-F14D-4C8D-937D-305E078EDF4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFDB717C-F14D-4C8D-937D-305E078EDF4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFDB717C-F14D-4C8D-937D-305E078EDF4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFDB717C-F14D-4C8D-937D-305E078EDF4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BFE648D-4C42-423A-912F-E4E90F796BD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BFE648D-4C42-423A-912F-E4E90F796BD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BFE648D-4C42-423A-912F-E4E90F796BD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BFE648D-4C42-423A-912F-E4E90F796BD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7964BA5-487B-47D7-BB6C-AE67F5739BE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7964BA5-487B-47D7-BB6C-AE67F5739BE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7964BA5-487B-47D7-BB6C-AE67F5739BE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7964BA5-487B-47D7-BB6C-AE67F5739BE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7534EC9F-5A92-40A8-A12D-FA773120C95C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7534EC9F-5A92-40A8-A12D-FA773120C95C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7534EC9F-5A92-40A8-A12D-FA773120C95C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7534EC9F-5A92-40A8-A12D-FA773120C95C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -137,6 +207,12 @@ Global
 		{0501C2DC-3428-4413-AE92-F0D82FF3DBBC} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{1B035023-96E7-4137-AC0F-9D0276D6E5A9} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{BFDB717C-F14D-4C8D-937D-305E078EDF4D} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{1D12CF7D-640C-49E8-B459-77ECA5DCFFDE} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{4BFE648D-4C42-423A-912F-E4E90F796BD1} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{B7964BA5-487B-47D7-BB6C-AE67F5739BE9} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
+		{7534EC9F-5A92-40A8-A12D-FA773120C95C} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
