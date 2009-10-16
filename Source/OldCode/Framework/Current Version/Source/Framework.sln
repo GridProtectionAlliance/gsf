@@ -1,33 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "Libraries\TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "Libraries\TVA.Communication\TVA.Communication.csproj", "{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "Libraries\TVA.Services\TVA.Services.csproj", "{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "Libraries\TVA.Security\TVA.Security.csproj", "{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "Libraries\TVA.Web\TVA.Web.csproj", "{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "Libraries\TVA.Windows\TVA.Windows.csproj", "{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{D7805B20-D771-4546-90DD-CD98C4BA4436}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C3058807-1DFE-4681-BBBC-959BE6A84E10}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{31BD748D-B2A7-4603-82CF-3AD86CED1274}"
 	ProjectSection(SolutionItems) = preProject
-		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
-		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
+		Framework.testrunconfig = Framework.testrunconfig
+		Framework.vsmdi = Framework.vsmdi
+		openPDC.snk = openPDC.snk
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{8D2945DE-CD0F-48B0-9911-BE858BFBCBEC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{13006BBE-434A-4027-940B-EAD752844137}"
 EndProject
@@ -36,18 +15,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{
 		Dependencies\Microsoft\Microsoft.Web.Services3.dll = Dependencies\Microsoft\Microsoft.Web.Services3.dll
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UDPRebroadcaster", "UDPRebroadcaster", "{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{8D2945DE-CD0F-48B0-9911-BE858BFBCBEC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcaster", "Tools\UDPRebroadcaster\UDPRebroadcaster\UDPRebroadcaster.csproj", "{6BFB4BFD-6906-4E92-8078-3AB5641AAFAB}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{D7805B20-D771-4546-90DD-CD98C4BA4436}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcasterConsole", "Tools\UDPRebroadcaster\UDPRebroadcasterConsole\UDPRebroadcasterConsole.csproj", "{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{31BD748D-B2A7-4603-82CF-3AD86CED1274}"
-	ProjectSection(SolutionItems) = preProject
-		Framework.testrunconfig = Framework.testrunconfig
-		Framework.vsmdi = Framework.vsmdi
-		openPDC.snk = openPDC.snk
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B7E96B17-85C7-42C2-A5B0-DB6FAF6E5FAB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core.Test", "Libraries\Test\TVA.Core.Test\TVA.Core.Test.csproj", "{1B035023-96E7-4137-AC0F-9D0276D6E5A9}"
 EndProject
@@ -61,7 +33,35 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web.Test", "Libraries\T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows.Test", "Libraries\Test\TVA.Windows.Test\TVA.Windows.Test.csproj", "{7534EC9F-5A92-40A8-A12D-FA773120C95C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{B7E96B17-85C7-42C2-A5B0-DB6FAF6E5FAB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Core", "Libraries\TVA.Core\TVA.Core.csproj", "{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Communication", "Libraries\TVA.Communication\TVA.Communication.csproj", "{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Services", "Libraries\TVA.Services\TVA.Services.csproj", "{595C35F5-AC9A-4D94-99F4-806C2ED0B8F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Security", "Libraries\TVA.Security\TVA.Security.csproj", "{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Web", "Libraries\TVA.Web\TVA.Web.csproj", "{0501C2DC-3428-4413-AE92-F0D82FF3DBBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Windows", "Libraries\TVA.Windows\TVA.Windows.csproj", "{EA70C8AA-60DE-4FFD-B1D9-B5406395B1AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C3058807-1DFE-4681-BBBC-959BE6A84E10}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
+		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigCrypter", "Tools\ConfigCrypter\ConfigCrypter.csproj", "{35027A69-1A76-4312-B57B-F5826F0B87AF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UDPRebroadcaster", "UDPRebroadcaster", "{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcaster", "Tools\UDPRebroadcaster\UDPRebroadcaster\UDPRebroadcaster.csproj", "{6BFB4BFD-6906-4E92-8078-3AB5641AAFAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UDPRebroadcasterConsole", "Tools\UDPRebroadcaster\UDPRebroadcasterConsole\UDPRebroadcasterConsole.csproj", "{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
