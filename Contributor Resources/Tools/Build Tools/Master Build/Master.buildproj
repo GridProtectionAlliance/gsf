@@ -23,13 +23,16 @@
 **       Modified deletion of *.pdb files to be active for release builds only.
 **  10/15/2009 - Pinal C. Patel
 **       Added unit testing to the build process.
+**  10/16/2009 - Pinal C. Patel
+**       Modified to skip the build process in the absence of new changes since the last build.
 **
 *******************************************************************************************************
 -->
 
 <Project DefaultTargets="All" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="MSBuild.Community.Tasks.Targets"/>
+  <Import Project="MSBuild Community Tasks\MSBuild.Community.Tasks.Targets"/>
+  <Import Project="MSBuild Extension Pack\MSBuild.ExtensionPack.tasks"/>
 
   <PropertyGroup>
     <!-- Name of the project being built. -->
@@ -68,6 +71,8 @@
     <MSTest></MSTest>
     <!-- Path to Sandcastle Builder. -->
     <SandcastleBuilder></SandcastleBuilder>
+    <!-- Forces a build regardless of new changes since last build. -->
+    <ForceBuild></ForceBuild>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -191,15 +196,15 @@
 
   <Target Name="PopulateWorkspace" DependsOnTargets="$(PopulateWorkspaceDependsOn)"/>
 
-  <Target Name="VersionSource" DependsOnTargets="$(VersionSourceDependsOn)"/>
+  <Target Name="VersionSource" DependsOnTargets="$(VersionSourceDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
-  <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)"/>
+  <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
-  <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)"/>
+  <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
-  <Target Name="LabelBuild" DependsOnTargets="$(LabelBuildDependsOn)"/>
+  <Target Name="LabelBuild" DependsOnTargets="$(LabelBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
-  <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)"/>
+  <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="DeleteWorkspace" DependsOnTargets="$(DeleteWorkspaceDependsOn)"/>
 
@@ -223,6 +228,7 @@
       <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS90COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
       <MSTest Condition="'$(MSTest)' == ''">$(VS90COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
+      <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
     </PropertyGroup>
   </Target>
 
@@ -264,6 +270,21 @@
     <!-- Get source code for the specified version. -->
     <Message Text="Getting source code..."/>
     <Exec Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
+    <!-- Check for new changes since the last build. -->
+    <Message Text="Checking for changes..."/>
+    <Attrib Files="$(VersionFile)" ReadOnly="false"/>
+    <Version VersionFile="$(VersionFile)">
+      <Output TaskParameter="Revision" PropertyName="Changeset"/>
+    </Version>
+    <Attrib Files="$(VersionFile)" ReadOnly="true"/>
+    <Exec Command="%22$(TfsClient)%22 history %22$(LocalFolder)%22 /version:C$(Changeset)~ /recursive /noprompt > $(LocalFolder)\$(ProjectName).history"/>
+    <File TaskAction="CountLines" Files="$(LocalFolder)\$(ProjectName).history">
+      <Output TaskParameter="TotalLinecount" PropertyName="TotalChanges"/>
+    </File>
+    <PropertyGroup>
+      <ForceBuild Condition="'$(ForceBuild)' != 'true' And '$(TotalChanges)' > '4'">true</ForceBuild>
+    </PropertyGroup>
+    <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
 
   <Target Name="AfterPopulateWorkspace"/>
@@ -276,13 +297,13 @@
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
     <Version VersionFile="$(VersionFile)" BuildType="Increment">
-      <Output TaskParameter="Major" PropertyName="Major" />
-      <Output TaskParameter="Minor" PropertyName="Minor" />
-      <Output TaskParameter="Build" PropertyName="Build" />
+      <Output TaskParameter="Major" PropertyName="Major"/>
+      <Output TaskParameter="Minor" PropertyName="Minor"/>
+      <Output TaskParameter="Build" PropertyName="Build"/>
     </Version>
-    <TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
+    <Tfs.TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
       <Output TaskParameter="Changeset" PropertyName="Revision"/>
-    </TfsVersion>
+    </Tfs.TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}"/>
     <PropertyGroup>
@@ -341,8 +362,8 @@
     <ItemGroup>
       <FilesToDeploy Include="$(BuildOutputFolder)\**\*.*"/>
     </ItemGroup>
-    <RemoveDir Directories="$(BuildDeployFolder)" Condition="Exists('$(BuildDeployFolder)')"/>
-    <MakeDir Directories="$(BuildDeployFolder)"/>
+    <MakeDir Directories="$(BuildDeployFolder)" Condition="!Exists('$(BuildDeployFolder)')"/>
+    <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
   </Target>
 
@@ -360,6 +381,8 @@
 
   <Target Name="HandleBuildFailure">
     <!-- Handle any unexpected build errors. -->
+    <Message Text="Undoing pending changes..."/>
+    <Exec Command="%22$(TfsClient)%22 undo %22$(LocalFolder)%22 /recursive /noprompt" ContinueOnError="true"/>
     <CallTarget Targets="DeleteWorkspace"/>
     <Beep Duration="2000"/>
   </Target>
