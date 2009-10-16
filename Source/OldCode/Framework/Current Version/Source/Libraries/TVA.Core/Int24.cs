@@ -11,9 +11,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/12/2004 - J. Ritchie Carroll
 //       Initial version of source generated.
-//  8/3/2009 - Josh L. Patterson
+//  08/3/2009 - Josh L. Patterson
 //       Updated comments.
-//  8/11/2009 - Josh L. Patterson
+//  08/11/2009 - Josh L. Patterson
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.

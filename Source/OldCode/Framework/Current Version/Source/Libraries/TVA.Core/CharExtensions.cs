@@ -10,7 +10,7 @@
 //  -----------------------------------------------------------------------------------------------------
 //  12/13/2008 - F. Russell Robertson
 //       Generated original version of source code.
-//  8/3/2009 - Josh L. Patterson
+//  08/3/2009 - Josh L. Patterson
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
