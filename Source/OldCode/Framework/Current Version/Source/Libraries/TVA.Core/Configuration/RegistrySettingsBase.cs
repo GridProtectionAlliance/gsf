@@ -365,6 +365,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets root registry path used to access settings in the registry (e.g., "HKEY_CURRENT_USER\\Software\\My Company\\My Product\\").
         /// </summary>
+        [Browsable(false), SerializeSetting(false)]
         public string RootPath
         {
             get
@@ -380,6 +381,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets name of default key used to access settings in the registry (e.g., "General Settings").
         /// </summary>
+        [Browsable(false), SerializeSetting(false)]
         public string KeyName
         {
             get
@@ -403,6 +405,7 @@ namespace TVA.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will stored in the registry key identified by the <see cref="KeyName"/> value.
         /// </remarks>
+        [Browsable(false), SerializeSetting(false)]
         public bool UseCategoryAttributes
         {
             get

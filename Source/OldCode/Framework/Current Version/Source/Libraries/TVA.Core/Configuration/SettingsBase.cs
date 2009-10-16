@@ -262,11 +262,6 @@ namespace TVA.Configuration
     {
         #region [ Members ]
 
-        // Constants
-
-        // IMPORTANT! Never change the following constant or you will break backwards compatibility
-        private const string InternalKey = "§g¥J2&5:0xDr;£l8fL?C¡dF4?6c«u%ª±n¤9µ%î]a4@³,ÜaD*{©[1P.¢7_~`4rËd®!5:1j=)Al6¦)a#2¦Ï3E?¤(^\\dz$|¶TÁ+";
-
         // Fields
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
@@ -326,6 +321,7 @@ namespace TVA.Configuration
         /// required to exist before a field or property is serialized to the configuration
         /// file; defaults to False.
         /// </summary>
+        [Browsable(false), SerializeSetting(false)]
         public bool RequireSerializeSettingAttribute
         {
             get

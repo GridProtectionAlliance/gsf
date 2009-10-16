@@ -407,6 +407,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets default category name of section used to access settings in configuration file.
         /// </summary>
+        [Browsable(false), SerializeSetting(false)]
         public string CategoryName
         {
             get
@@ -430,6 +431,7 @@ namespace TVA.Configuration
         /// as the <see cref="CategoryAttribute.Category"/> value and if the attribute doesn't exist the member value
         /// will serialized into the section labeled by the <see cref="CategoryName"/> value.
         /// </remarks>
+        [Browsable(false), SerializeSetting(false)]
         public bool UseCategoryAttributes
         {
             get
