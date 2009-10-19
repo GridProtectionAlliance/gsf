@@ -25,6 +25,8 @@
 **       Added unit testing to the build process.
 **  10/16/2009 - Pinal C. Patel
 **       Modified to skip the build process in the absence of new changes since the last build.
+**  10/19/2009 - Pinal C. Patel
+**       Modified to allow archiving of binaries and installs for easy access.
 **
 *******************************************************************************************************
 -->
@@ -88,6 +90,7 @@
            ExecuteUnitTests   (Before > Core > After)
          FinalizeBuild
            LabelBuild         (Before > Core > After)
+           CleanBuild         (Before > Core > After)
            DeployBuild        (Before > Core > After)
            DeleteWorkspace    (Before > Core > After)
     -->
@@ -104,6 +107,7 @@
     </CompileBuildDependsOn>
     <FinalizeBuildDependsOn>
       LabelBuild;
+      CleanBuild;
       DeployBuild;
       DeleteWorkspace;
     </FinalizeBuildDependsOn>
@@ -147,6 +151,11 @@
       CoreLabelBuild;
       AfterLabelBuild;
     </LabelBuildDependsOn>
+    <CleanBuildDependsOn>
+      BeforeCleanBuild;
+      CoreCleanBuild;
+      AfterCleanBuild;
+    </CleanBuildDependsOn>
     <DeployBuildDependsOn>
       BeforeDeployBuild;
       CoreDeployBuild;
@@ -171,6 +180,12 @@
     </FilesToVersion>
     <!-- List of unit test assemblies. -->
     <UnitTestAssemblies Include="Nothing" Exclude="Nothing"/>
+    <!-- List of binaries to archive. -->
+    <BinariesToArchive Include="Nothing" Exclude="Nothing"/>
+    <!-- List of installs to archive. -->
+    <InstallsToArchive Include="Nothing" Exclude="Nothing"/>
+    <!-- Destinations of archive files (*.zip). -->
+    <ArchiveDestinations Include="Nothing" Exclude="Nothing"/>
   </ItemGroup>
 
   <Target Name="All">
@@ -203,6 +218,8 @@
   <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="LabelBuild" DependsOnTargets="$(LabelBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+
+  <Target Name="CleanBuild" DependsOnTargets="$(CleanBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
@@ -301,9 +318,9 @@
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
     </Version>
-    <Tfs.TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
+    <MSBuild.Community.Tasks.Tfs.TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
       <Output TaskParameter="Changeset" PropertyName="Revision"/>
-    </Tfs.TfsVersion>
+    </MSBuild.Community.Tasks.Tfs.TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}"/>
     <PropertyGroup>
@@ -347,11 +364,11 @@
 
   <Target Name="AfterLabelBuild"/>
 
-  <Target Name="BeforeDeployBuild"/>
+  <Target Name="BeforeCleanBuild"/>
 
-  <Target Name="CoreDeployBuild" Condition="'$(BuildOutputFolder)' != '' And '$(BuildDeployFolder)' != ''">
-    <!-- Copy build content to the deploy folder. -->
-    <Message Text="Deploying build content..."/>
+  <Target Name="CoreCleanBuild">
+    <!-- Clean output of the current build. -->
+    <Message Text="Cleaning build output..."/>
     <ItemGroup>
       <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
@@ -359,12 +376,29 @@
       <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
     </ItemGroup>
     <Delete Files="@(FilesToDelete)" ContinueOnError="true"/>
+  </Target>
+
+  <Target Name="AfterCleanBuild"/>
+
+  <Target Name="BeforeDeployBuild"/>
+
+  <Target Name="CoreDeployBuild" Condition="'$(BuildOutputFolder)' != '' And '$(BuildDeployFolder)' != ''">
+    <!-- Copy build content to the deploy folder. -->
+    <Message Text="Deploying build content..."/>
     <ItemGroup>
       <FilesToDeploy Include="$(BuildOutputFolder)\**\*.*"/>
     </ItemGroup>
     <MakeDir Directories="$(BuildDeployFolder)" Condition="!Exists('$(BuildDeployFolder)')"/>
     <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
+    <!-- Create specified archives of build content. -->
+    <Message Text="Archiving build content..."/>
+    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(BinariesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(InstallsToArchive)' != ''"/>
+    <ItemGroup>
+      <Archives Include="$(LocalFolder)\*.zip"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(Archives)" DestinationFolder="%(ArchiveDestinations.FullPath)" ContinueOnError="true"/>
   </Target>
 
   <Target Name="AfterDeployBuild"/>
