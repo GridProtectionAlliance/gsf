@@ -13,16 +13,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{867183C2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "Libraries\TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A1-436D-B126-018C3DEB51D4}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\TVA\TVA.Communication.dll = Dependencies\TVA\TVA.Communication.dll
+		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
+		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
+		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 2
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs07.codeplex.com/
-		SccProjectUniqueName0 = Libraries\\TVA.Historian\\TVA.Historian.csproj
-		SccProjectTopLevelParentUniqueName0 = Historian.sln
-		SccProjectName0 = Libraries/TVA.Historian
-		SccLocalPath0 = Libraries\\TVA.Historian
-		SccLocalPath1 = .
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\TVA.Historian\\TVA.Historian.csproj
+		SccProjectTopLevelParentUniqueName1 = Historian.sln
+		SccProjectName1 = Libraries/TVA.Historian
+		SccLocalPath1 = Libraries\\TVA.Historian
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +46,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{EF3BA2EC-66A1-436D-B126-018C3DEB51D4} = {10F92F7C-6857-484D-9707-01ECE4F7467A}
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {A80F340A-FD72-407A-B070-5124162B64EC}
 	EndGlobalSection
 EndGlobal
