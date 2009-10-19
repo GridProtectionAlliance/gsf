@@ -19,6 +19,8 @@
 **       Made building of help docs optional using SkipHelpFiles property.
 **  10/15/2009 - Pinal C. Patel
 **       Enabled unit testing.
+**  10/19/2009 - Pinal C. Patel
+**       Enabled archiving of binaries and installs.
 **
 *******************************************************************************************************
 -->
@@ -51,7 +53,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="AfterBuildProjects">
+  <Target Name="BeforeExecuteUnitTests">
     <ItemGroup>
       <!-- List of unit test assemblies. -->
       <UnitTestAssemblies Include="$(BuildOutputFolder)\**\*.Test.dll"/>
@@ -61,6 +63,17 @@
   <Target Name="AfterExecuteUnitTests">
     <!-- Clean-up after all unit tests have been executed and passed. -->
     <RemoveDir Directories="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)" Condition="Exists('%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)')"/>
+  </Target>
+
+  <Target Name="BeforeDeployBuild">
+    <ItemGroup>
+      <!-- List of binaries to archive. -->
+      <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*"/>
+      <!-- List of installs to archive. -->
+      <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
+      <!-- Destinations of archive files (*.zip). -->
+      <ArchiveDestinations Include="$(BuildDeployFolder);\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC"/>
+    </ItemGroup>
   </Target>
   
 </Project>
