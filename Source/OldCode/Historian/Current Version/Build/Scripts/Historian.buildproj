@@ -21,6 +21,8 @@
 **       Enabled unit testing.
 **  10/19/2009 - Pinal C. Patel
 **       Enabled archiving of binaries and installs.
+**  10/20/2009 - Pinal C. Patel
+**       Made deployment of archives to public locations switchable.
 **
 *******************************************************************************************************
 -->
@@ -72,7 +74,8 @@
       <!-- List of installs to archive. -->
       <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
       <!-- Destinations of archive files (*.zip). -->
-      <ArchiveDestinations Include="$(BuildDeployFolder);\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC"/>
+      <ArchiveDestinations Include="$(BuildDeployFolder)"/>
+      <ArchiveDestinations Include="\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC" Condition="'$(SkipPublicArchive)' != 'true'"/>
     </ItemGroup>
   </Target>
   
