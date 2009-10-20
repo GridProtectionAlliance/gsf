@@ -1,5 +1,5 @@
 ::*******************************************************************************************************
-::  Build.bat - Gbtc
+::  BuildBeta.bat - Gbtc
 ::
 ::  Tennessee Valley Authority, 2009
 ::  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,12 +8,13 @@
 ::
 ::  Code Modification History:
 ::  -----------------------------------------------------------------------------------------------------
-::  09/05/2009 - Pinal C. Patel
+::  10/05/2009 - Pinal C. Patel
 ::       Generated original version of source code.
+::  10/20/2009 - Pinal C. Patel
+::       Modified to force a build and suppress archives from being published to public locations.
 ::
 ::*******************************************************************************************************
 
 @ECHO OFF
-:: Passing in "false" for argument #1 will cause the build to take place in unattended mode.
-C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe Framework.buildproj /p:BuildInteractive=%1 /l:FileLogger,Microsoft.Build.Engine;logfile=Framework.output
-IF NOT "%1" == "false" PAUSE
+C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe Framework.buildproj /p:ForceBuild=true;SkipPublicArchive=true /l:FileLogger,Microsoft.Build.Engine;logfile=Framework.output
+PAUSE
