@@ -3,15 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B373F64D-C79D-4C08-950D-E0018860AEBA}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{910996C6-2E4E-47C3-A000-3507E6BBA85E}"
+	ProjectSection(SolutionItems) = preProject
+		Historian.testrunconfig = Historian.testrunconfig
+		Historian.vsmdi = Historian.vsmdi
+		openPDC.snk = openPDC.snk
+	EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{10F92F7C-6857-484D-9707-01ECE4F7467A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{CC049F97-6B48-499F-A7F9-67EA1FC95983}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{A80F340A-FD72-407A-B070-5124162B64EC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{867183C2-7FA4-48AD-B995-DFDE62C2EBB9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "Libraries\TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A1-436D-B126-018C3DEB51D4}"
 	ProjectSection(SolutionItems) = preProject
@@ -21,16 +20,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A
 		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{CC049F97-6B48-499F-A7F9-67EA1FC95983}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{A80F340A-FD72-407A-B070-5124162B64EC}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{A0BB1312-9332-4B46-A785-35F14EA88AD9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian.Test", "Libraries\Test\TVA.Historian.Test\TVA.Historian.Test.csproj", "{D405B0BE-88EE-4224-AA8C-4A6817481C17}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{910996C6-2E4E-47C3-A000-3507E6BBA85E}"
-	ProjectSection(SolutionItems) = preProject
-		Historian.testrunconfig = Historian.testrunconfig
-		Historian.vsmdi = Historian.vsmdi
-		openPDC.snk = openPDC.snk
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "Libraries\TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{867183C2-7FA4-48AD-B995-DFDE62C2EBB9}"
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
