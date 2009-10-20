@@ -482,12 +482,12 @@ namespace TVA.Communication
                 if (parts.Length == 2)
                     m_udpServer = Transport.CreateEndPoint(parts[0], int.Parse(parts[1]));
                 else
-                    throw new FormatException(string.Format("Server property in ConnectionString is invalid. Example: {0}.", DefaultConnectionString));
+                    throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
             }
             else
             {
                 if (Handshake)
-                    throw new InvalidOperationException("Handshake requires Server property in the ConnectionString.");
+                    throw new InvalidOperationException("Handshake requires Server property in the ConnectionString");
 
                 // Create a random server endpoint since one is not specified.
                 m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
@@ -623,10 +623,10 @@ namespace TVA.Communication
                 m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["remoteport"];
 
             if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
 
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}.", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>

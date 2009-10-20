@@ -402,7 +402,7 @@ namespace TVA.Scheduling
                 string[] scheduleParts = value.RemoveDuplicateWhiteSpace().Split(' ');
 
                 if (scheduleParts.Length != 5)
-                    throw new ArgumentException("Schedule rule must have exactly 5 parts (Example: * * * * *).");
+                    throw new ArgumentException("Schedule rule must have exactly 5 parts (Example: * * * * *)");
 
                 m_minutePart = new SchedulePart(scheduleParts[0], DateTimePart.Minute);
                 m_hourPart = new SchedulePart(scheduleParts[1], DateTimePart.Hour);

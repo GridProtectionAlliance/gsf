@@ -549,7 +549,7 @@ namespace TVA.IO.Compression
 	        if (source.Read(versionBuffer, 0, 1) > 0)
 	        {
 		        if (versionBuffer[0] != CompressionVersion)
-			        throw new InvalidOperationException("Invalid compression version encountered in compressed stream - decompression aborted.");
+			        throw new InvalidOperationException("Invalid compression version encountered in compressed stream - decompression aborted");
 
 		        // Read initial buffer
 		        read = source.Read(lengthBuffer, 0, lengthBuffer.Length);

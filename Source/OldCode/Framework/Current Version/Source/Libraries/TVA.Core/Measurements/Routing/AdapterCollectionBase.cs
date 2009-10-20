@@ -582,10 +582,10 @@ namespace TVA.Measurements.Routing
         public virtual void Initialize()
         {
             if (m_dataSource == null)
-                throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}.", Name));
+                throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
             if (string.IsNullOrEmpty(m_dataMember))
-                throw new InvalidOperationException(string.Format("DataMember is null or empty, cannot load {0}.", Name));
+                throw new InvalidOperationException(string.Format("DataMember is null or empty, cannot load {0}", Name));
 
             T item;
 
@@ -634,7 +634,7 @@ namespace TVA.Measurements.Routing
                     throw new InvalidOperationException("Type was undefined");
 
                 if (!File.Exists(assemblyName))
-                    throw new InvalidOperationException("Assembly does not exist.");
+                    throw new InvalidOperationException("Assembly does not exist");
 
                 assembly = Assembly.LoadFrom(assemblyName);
                 adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));

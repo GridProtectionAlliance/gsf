@@ -348,7 +348,7 @@ namespace TVA.Media
                 bytesRead = source.Read(m_extraParameters, 0, m_extraParametersSize);
 
                 if (bytesRead < m_extraParametersSize)
-                    throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted.");
+                    throw new InvalidOperationException("WAVE extra parameters section too small, wave file corrupted");
             }
         }
 
@@ -606,7 +606,7 @@ namespace TVA.Media
         public int Initialize(byte[] binaryImage, int startIndex, int length)
         {
             if (length < ChunkSize)
-                throw new InvalidOperationException("WAVE format section too small, wave file corrupted.");
+                throw new InvalidOperationException("WAVE format section too small, wave file corrupted");
 
             m_audioFormat = EndianOrder.LittleEndian.ToUInt16(binaryImage, 0);
             m_channels = EndianOrder.LittleEndian.ToInt16(binaryImage, 2);

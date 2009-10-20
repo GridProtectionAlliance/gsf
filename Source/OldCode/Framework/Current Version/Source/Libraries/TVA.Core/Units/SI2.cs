@@ -496,7 +496,7 @@ namespace TVA.Units
         public static string ToScaledString(long totalUnits, int decimalPlaces, string unitName)
         {
             if (decimalPlaces < 0)
-                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative.");
+                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
 
             string format;
 
@@ -554,7 +554,7 @@ namespace TVA.Units
         public static string ToScaledIECString(long totalUnits, int decimalPlaces, string unitName)
         {
             if (decimalPlaces < 0)
-                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative.");
+                throw new ArgumentOutOfRangeException("decimalPlaces", "decimalPlaces cannot be negative");
 
             string format;
 

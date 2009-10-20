@@ -423,7 +423,7 @@ namespace TVA.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
                 m_valueDivisor = value;
             }
         }
@@ -442,7 +442,7 @@ namespace TVA.Diagnostics
             set
             {
                 if (value <= 0)
-                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
                 m_samplingWindow = value;
             }
         }

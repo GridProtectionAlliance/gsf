@@ -480,7 +480,7 @@ namespace TVA.Communication
             set
             {
                 if (value && m_fileAccessMode == FileAccess.ReadWrite)
-                    throw new InvalidOperationException("AutoRepeat cannot be enabled when FileAccessMode is FileAccess.ReadWrite.");
+                    throw new InvalidOperationException("AutoRepeat cannot be enabled when FileAccessMode is FileAccess.ReadWrite");
 
                 m_autoRepeat = value;
             }
@@ -551,7 +551,7 @@ namespace TVA.Communication
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_startingOffset = value;
             }
@@ -609,7 +609,7 @@ namespace TVA.Communication
             set
             {
                 if (value == FileAccess.ReadWrite && m_autoRepeat)
-                    throw new InvalidOperationException("FileAccessMode cannot be set to FileAccess.ReadWrite when AutoRepeat is enabled.");
+                    throw new InvalidOperationException("FileAccessMode cannot be set to FileAccess.ReadWrite when AutoRepeat is enabled");
 
                 m_fileAccessMode = value;
             }
@@ -658,12 +658,12 @@ namespace TVA.Communication
                 }
                 else
                 {
-                    throw new InvalidOperationException("Client is currently not connected.");
+                    throw new InvalidOperationException("Client is currently not connected");
                 }
             }
             else
             {
-                throw new InvalidOperationException("ReceiveData() cannot be used when ReceiveOnDemand is disabled.");
+                throw new InvalidOperationException("ReceiveData() cannot be used when ReceiveOnDemand is disabled");
             }
         }
 
@@ -804,7 +804,7 @@ namespace TVA.Communication
             m_connectData = connectionString.ParseKeyValuePairs();
 
             if (!m_connectData.ContainsKey("file"))
-                throw new ArgumentException(string.Format("File property is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("File property is missing (Example: {0})", DefaultConnectionString));
         }
 
         /// <summary>

@@ -523,7 +523,7 @@ namespace TVA.Threading
             set
             {
                 if (m_type == ThreadType.QueuedThread)
-                    throw new InvalidOperationException("Cannot change priority of a thread that was queued into thread pool.");
+                    throw new InvalidOperationException("Cannot change priority of a thread that was queued into thread pool");
 
                 m_thread.Priority = value;
             }
@@ -568,7 +568,7 @@ namespace TVA.Threading
         public void Start()
         {
             if (m_type == ThreadType.QueuedThread)
-                throw new InvalidOperationException("Cannot manually start a thread that was queued into thread pool.");
+                throw new InvalidOperationException("Cannot manually start a thread that was queued into thread pool");
 
             ManagedThreads.Add(this);
 
@@ -582,7 +582,7 @@ namespace TVA.Threading
         public void Start(object parameter)
         {
             if (m_type == ThreadType.QueuedThread)
-                throw new InvalidOperationException("Cannot manually start a thread that was queued into thread pool.");
+                throw new InvalidOperationException("Cannot manually start a thread that was queued into thread pool");
 
             m_state = parameter;
 
@@ -600,10 +600,10 @@ namespace TVA.Threading
         public void Join()
         {
             if (m_type == ThreadType.QueuedThread)
-                throw new InvalidOperationException("Cannot join a thread that was queued into thread pool.");
+                throw new InvalidOperationException("Cannot join a thread that was queued into thread pool");
 
             if (!IsAlive)
-                throw new InvalidOperationException("Cannot join a thread that has not been started.");
+                throw new InvalidOperationException("Cannot join a thread that has not been started");
 
             m_thread.Join();
         }

@@ -432,7 +432,7 @@ namespace TVA
             if (obj is DateTime)
                 return CompareTo((DateTime)obj);
 
-            throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes...");
+            throw new ArgumentException("TimeTag can only be compared with other TimeTags or DateTimes");
         }
 
         /// <summary>

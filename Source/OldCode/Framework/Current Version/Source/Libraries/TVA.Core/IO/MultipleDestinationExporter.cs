@@ -701,7 +701,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -735,7 +735,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

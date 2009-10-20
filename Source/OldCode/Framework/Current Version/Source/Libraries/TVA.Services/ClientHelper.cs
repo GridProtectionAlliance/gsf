@@ -631,7 +631,7 @@ namespace TVA.Services
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -654,7 +654,7 @@ namespace TVA.Services
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -672,7 +672,7 @@ namespace TVA.Services
         public void Connect()
         {           
             if (m_remotingClient == null)
-                throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set.");
+                throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
             m_attemptReconnection = true;
             m_authenticationComplete = false;

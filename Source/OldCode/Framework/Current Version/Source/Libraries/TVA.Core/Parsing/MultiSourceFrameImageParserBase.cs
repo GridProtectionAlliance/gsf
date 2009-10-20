@@ -486,7 +486,7 @@ namespace TVA.Parsing
         [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
         public override void Parse(ISupportBinaryImage image)
         {
-            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead.");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,ISupportBinaryImage) method to queue data for parsing instead");
         }
 
         /// <summary>
@@ -499,7 +499,7 @@ namespace TVA.Parsing
         [EditorBrowsable(EditorBrowsableState.Never), Obsolete("MultiSourceFrameParser requires consumers call Parse overload that takes source identifier as an argument", true)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead.");
+            throw new NotImplementedException("This method should not be called directly, call the Parse(TSourceIdentifier,byte[],int,int) method to queue data for parsing instead");
         }
 
         /// <summary>

@@ -348,10 +348,10 @@ namespace TVA.Identity
             string[] parts = loginID.Split('\\');
 
             if (parts.Length != 2)
-                throw new ArgumentException("Expected login ID in format of 'domain\\username'.");
+                throw new ArgumentException("Expected login ID in format of 'domain\\username'");
 
             if (string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
-                throw new ArgumentException("Expected login ID in format of 'domain\\username'.");
+                throw new ArgumentException("Expected login ID in format of 'domain\\username'");
 
             m_domain = parts[0];
             m_username = parts[1];
@@ -730,7 +730,7 @@ namespace TVA.Identity
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -756,7 +756,7 @@ namespace TVA.Identity
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1114,12 +1114,12 @@ namespace TVA.Identity
             {
                 // Calls LogonUser to obtain a handle to an access token.
                 if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\". {2}", domain, username, WindowsApi.GetLastErrorMessage()));
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - {2}", domain, username, WindowsApi.GetLastErrorMessage()));
 
                 if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
                 {
                     CloseHandle(tokenHandle);
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\". Exception thrown while trying to duplicate token.", domain, username));
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - Exception thrown while trying to duplicate token", domain, username));
                 }
 
                 // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation.

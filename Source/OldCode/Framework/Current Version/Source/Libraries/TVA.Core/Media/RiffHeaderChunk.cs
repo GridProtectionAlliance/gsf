@@ -321,7 +321,7 @@ namespace TVA.Media
             int bytesRead = source.Read(buffer, 0, length);
 
             if (bytesRead < length)
-                throw new InvalidOperationException("RIFF format section too small, media file corrupted.");
+                throw new InvalidOperationException("RIFF format section too small, media file corrupted");
 
             // Read and validate format stored in RIFF section
             Initialize(buffer, 0, bytesRead);

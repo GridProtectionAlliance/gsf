@@ -578,7 +578,7 @@ namespace TVA
                 #endregion
 
                 default:
-                    throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 63.");
+                    throw new ArgumentOutOfRangeException("bit", "Parameter must be between 0 and 63");
             }
         }
 

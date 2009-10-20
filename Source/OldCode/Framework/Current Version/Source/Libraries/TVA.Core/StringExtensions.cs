@@ -533,7 +533,7 @@ namespace TVA
                 keyValueDelimeter == startValueDelimeter || 
                 keyValueDelimeter == endValueDelimeter ||
                 startValueDelimeter == endValueDelimeter)
-                    throw new ArgumentException("All delimeters must be unique.");
+                    throw new ArgumentException("All delimeters must be unique");
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             string[] elements;
@@ -561,7 +561,7 @@ namespace TVA
                     }
                     else
                     {
-                        throw new FormatException("Only one level of tagged value expressions are allowed.");
+                        throw new FormatException("Only one level of tagged value expressions are allowed");
                     }
                 }
 
@@ -574,7 +574,7 @@ namespace TVA
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", endValueDelimeter, startValueDelimeter));
+                        throw new FormatException(string.Format("Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'", endValueDelimeter, startValueDelimeter));
                     }
                 }
 

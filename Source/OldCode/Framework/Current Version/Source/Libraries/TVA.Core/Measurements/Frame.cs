@@ -447,7 +447,7 @@ namespace TVA.Measurements
             if ((object)other != null)
                 return CompareTo(other);
 
-            throw new ArgumentException("Frame can only be compared with other IFrames...");
+            throw new ArgumentException("Frame can only be compared with other IFrames");
         }
 
         /// <summary>

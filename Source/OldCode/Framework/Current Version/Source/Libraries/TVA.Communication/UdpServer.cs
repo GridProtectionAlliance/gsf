@@ -495,7 +495,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("Server is currently running.");
+                throw new InvalidOperationException("Server is currently running");
             }
         }
 
@@ -536,7 +536,7 @@ namespace TVA.Communication
                 if (m_udpClients.TryGetValue(clientID, out udpClient))
                     return udpClient;
                 else
-                    throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\".", clientID));
+                    throw new InvalidOperationException(string.Format("No client exists for Client ID \"{0}\"", clientID));
             }
         }
 
@@ -554,10 +554,10 @@ namespace TVA.Communication
                 m_configData.Add("interface", string.Empty);
 
             if (!m_configData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port is missing. Example: {0}.", DefaultConfigurationString));
+                throw new ArgumentException(string.Format("Port is missing (Example: {0})", DefaultConfigurationString));
 
             if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>

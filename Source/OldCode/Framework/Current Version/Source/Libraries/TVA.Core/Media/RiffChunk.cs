@@ -340,7 +340,7 @@ namespace TVA.Media
         protected RiffChunk(RiffChunk preRead, string typeID)
         {
             if (typeID != preRead.TypeID)
-                throw new InvalidDataException(string.Format("{0} chunk expected but got {1}, file does not appear to be valid.", typeID, preRead.TypeID));
+                throw new InvalidDataException(string.Format("{0} chunk expected but got {1}, file does not appear to be valid", typeID, preRead.TypeID));
 
             m_typeID = preRead.TypeID;
             m_chunkSize = preRead.ChunkSize;
@@ -457,7 +457,7 @@ namespace TVA.Media
             int bytesRead = source.Read(buffer, 0, length);
 
             if (bytesRead < length)
-                throw new InvalidOperationException("RIFF chunk too small, media file corrupted.");
+                throw new InvalidOperationException("RIFF chunk too small, media file corrupted");
 
             riffChunk.TypeID = Encoding.ASCII.GetString(buffer, 0, 4);
             riffChunk.ChunkSize = EndianOrder.LittleEndian.ToInt32(buffer, 4);

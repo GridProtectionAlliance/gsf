@@ -718,7 +718,7 @@ namespace TVA.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one");
 
                 if (value == -1.0D)
                     m_dynamic = (double)Music.Dynamic.MezzoForte / 100.0D;

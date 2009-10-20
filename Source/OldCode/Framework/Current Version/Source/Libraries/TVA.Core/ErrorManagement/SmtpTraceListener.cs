@@ -296,7 +296,7 @@ namespace TVA.ErrorManagement
 
             // Check to see if sufficient initialization data was provided.
             if (smtpData.Length < 3)
-                throw new ArgumentException("Insufficient initialization data provided. Initialization data must be provided in the following format: \"sender@email.com,recipient@email.com,smtp.email.com\".");
+                throw new ArgumentException("Insufficient initialization data provided. Initialization data must be provided in the following format: \"sender@email.com,recipient@email.com,smtp.email.com\"");
 
             // Initializes private variables.
             m_sender = smtpData[0].Trim();

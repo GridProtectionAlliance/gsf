@@ -596,7 +596,7 @@ namespace TVA.Services
 			set
 			{
                 if (value < 1)
-                    throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0.");
+                    throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0");
 
                 m_requestHistoryLimit = value;
 			}
@@ -1054,7 +1054,7 @@ namespace TVA.Services
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1104,7 +1104,7 @@ namespace TVA.Services
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1154,10 +1154,10 @@ namespace TVA.Services
         {
             // Ensure required components are present.
             if (m_parentService == null)
-                throw new InvalidOperationException("ParentService property of ServiceHelper component is not set.");
+                throw new InvalidOperationException("ParentService property of ServiceHelper component is not set");
 
             if (m_remotingServer == null)
-                throw new InvalidOperationException("RemotingServer property of ServiceHelper component is not set.");
+                throw new InvalidOperationException("RemotingServer property of ServiceHelper component is not set");
 
             OnServiceStarting(args);
 
@@ -1298,7 +1298,7 @@ namespace TVA.Services
             }
             else
             {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined.", processName));
+                throw new InvalidOperationException(string.Format("Process \"{0}\" is already defined", processName));
             }
         }
 
@@ -1365,7 +1365,7 @@ namespace TVA.Services
             }
             else
             {
-                throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined.", processName));
+                throw new InvalidOperationException(string.Format("Process \"{0}\" is not defined", processName));
             }
         }
 

@@ -294,7 +294,7 @@ namespace TVA.Interop
             }
             else
             {
-                throw new ArgumentException("Number of lengths and lower bounds must be the same.");
+                throw new ArgumentException("Number of lengths and lower bounds must be the same");
             }
         }
 

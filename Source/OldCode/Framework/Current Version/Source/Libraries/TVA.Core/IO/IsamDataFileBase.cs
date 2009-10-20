@@ -433,7 +433,7 @@ namespace TVA.IO
     ///             Description = Encoding.ASCII.GetString(binaryImage, startIndex + 28, 100);
     ///         }
     ///         else
-    ///             throw new InvalidOperationException("Invalid record size, not enough data to deserialize record."); 
+    ///             throw new InvalidOperationException("Invalid record size, not enough data to deserialize record"); 
     /// 
     ///         return RecordLength;
     ///     }
@@ -807,7 +807,7 @@ namespace TVA.IO
                 }
                 else
                 {
-                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
                 }
             }
         }
@@ -848,7 +848,7 @@ namespace TVA.IO
                 }
                 else
                 {
-                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                    throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
                 }
             }
         }
@@ -1036,7 +1036,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1067,7 +1067,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1199,7 +1199,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -1244,7 +1244,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -1274,7 +1274,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -1333,7 +1333,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -1361,7 +1361,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 
@@ -1398,7 +1398,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 

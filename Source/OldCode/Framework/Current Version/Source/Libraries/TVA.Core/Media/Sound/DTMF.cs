@@ -469,7 +469,7 @@ namespace TVA.Media.Sound
         public static void Generate(WaveFile destination, DTMF[] tones, double volume, int repeatCount)
         {
             if (volume < 0.0D || volume > 1.0D)
-                throw new ArgumentOutOfRangeException("volume", "Value must be expressed as a fractional percentage between zero and one.");
+                throw new ArgumentOutOfRangeException("volume", "Value must be expressed as a fractional percentage between zero and one");
 
             double amplitude = destination.AmplitudeScalar * volume;
 

@@ -447,7 +447,7 @@ namespace TVA.IO
             set
             {
                 if (value < MinFileSize || value > MaxFileSize)
-                    throw new ArgumentOutOfRangeException("value", string.Format("Value must be between {0} and {1}.", MinFileSize, MaxFileSize));
+                    throw new ArgumentOutOfRangeException("value", string.Format("Value must be between {0} and {1}", MinFileSize, MaxFileSize));
 
                 m_fileSize = value;
             }
@@ -680,7 +680,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -706,7 +706,7 @@ namespace TVA.IO
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -809,7 +809,7 @@ namespace TVA.IO
                 // Queue the text for writing to the log file.
                 m_logEntryQueue.Add(text);
             else
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
         }
 
         /// <summary>
@@ -860,7 +860,7 @@ namespace TVA.IO
             }
             else
             {
-                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open.", this.GetType().Name, m_fileName));
+                throw new InvalidOperationException(string.Format("{0} \"{1}\" is not open", this.GetType().Name, m_fileName));
             }
         }
 

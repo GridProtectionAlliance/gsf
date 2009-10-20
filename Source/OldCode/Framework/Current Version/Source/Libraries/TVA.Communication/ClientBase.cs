@@ -566,7 +566,7 @@ namespace TVA.Communication
             {
                 // Can't disable handshake when secure session is enabled.
                 if (!value && m_secureSession)
-                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled.");
+                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled");
 
                 m_handshake = value;
                 ReConnect();
@@ -589,7 +589,7 @@ namespace TVA.Communication
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative.");
+                    throw new ArgumentException("Value cannot be zero or negative");
 
                 m_handshakeTimeout = value;
                 ReConnect();
@@ -651,7 +651,7 @@ namespace TVA.Communication
             {
                 // Can't disable encryption when secure session is enabled.
                 if (value == CipherStrength.None && m_secureSession)
-                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
+                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled");
 
                 m_encryption = value;
                 ReConnect();
@@ -679,11 +679,11 @@ namespace TVA.Communication
             {
                 // Handshake is required for SecureSession.
                 if (value && !m_handshake)
-                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession.");
+                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession");
 
                 // Encryption is required for SecureSession.
                 if (value && m_encryption == CipherStrength.None)
-                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession.");
+                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession");
 
                 m_secureSession = value;
                 ReConnect();
@@ -729,7 +729,7 @@ namespace TVA.Communication
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative.");
+                    throw new ArgumentException("Value cannot be zero or negative");
 
                 m_receiveBufferSize = value;
                 ReConnect();
@@ -1103,7 +1103,7 @@ namespace TVA.Communication
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1142,7 +1142,7 @@ namespace TVA.Communication
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1207,7 +1207,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("Client is currently not disconnected.");
+                throw new InvalidOperationException("Client is currently not disconnected");
             }
         }
 
@@ -1296,7 +1296,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("Client is not connected.");
+                throw new InvalidOperationException("Client is not connected");
             }
         }
 
@@ -1541,12 +1541,12 @@ namespace TVA.Communication
                         client = new SerialClient(settings.ToString());
                         break;
                     default:
-                        throw new ArgumentException(protocol + " is not a valid transport protocol.");
+                        throw new ArgumentException(protocol + " is not a valid transport protocol");
                 }
             }
             else
             {
-                throw new ArgumentException("Transport protocol must be specified.");
+                throw new ArgumentException("Transport protocol must be specified");
             }
 
             return client;

@@ -497,7 +497,7 @@ namespace TVA.Measurements
             if (elem.Length == 2)
                 return new MeasurementKey(uint.Parse(elem[1].Trim()), elem[0].Trim());
 
-            throw new FormatException("The value is not in the correct format for a MeasurementKey value.");
+            throw new FormatException("The value is not in the correct format for a MeasurementKey value");
         }
 
         #endregion

@@ -311,7 +311,7 @@ namespace TVA.Communication
                         socket.Bind(endpoint);
                     break;
                 default:
-                    throw new NotSupportedException(string.Format("{0} is not supported.", protocol));
+                    throw new NotSupportedException(string.Format("{0} is not supported", protocol));
             }
             return socket;
         }
@@ -336,7 +336,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new ArgumentException("Port number is not a valid number.");
+                throw new ArgumentException("Port number is not a valid number");
             }
         }
 

@@ -1090,7 +1090,7 @@ namespace TVA.Media.Music
             set
             {
                 if (value != -1.0D && (value < 0.0D || value > 1.0D))
-                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one.");
+                    throw new ArgumentOutOfRangeException("value", "Value must be expressed as a fractional percentage between zero and one");
 
                 m_dynamic = value;
             }
@@ -1226,7 +1226,7 @@ namespace TVA.Media.Music
         {
             Note other = obj as Note;
             if (other != null) return CompareTo(other);
-            throw new ArgumentException("Note can only be compared with other Notes...");
+            throw new ArgumentException("Note can only be compared with other Notes");
         }
 
         /// <summary>

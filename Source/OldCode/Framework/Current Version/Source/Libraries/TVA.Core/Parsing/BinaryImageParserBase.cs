@@ -582,7 +582,7 @@ namespace TVA.Parsing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException("Cannnot read from WriteOnly stream.");
+            throw new NotImplementedException("Cannnot read from WriteOnly stream");
         }
 
         /// <summary>
@@ -595,7 +595,7 @@ namespace TVA.Parsing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override long Seek(long offset, System.IO.SeekOrigin origin)
         {
-            throw new NotImplementedException("WriteOnly stream has no position.");
+            throw new NotImplementedException("WriteOnly stream has no position");
         }
 
         /// <summary>
@@ -606,7 +606,7 @@ namespace TVA.Parsing
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override void SetLength(long value)
         {
-            throw new NotImplementedException("WriteOnly stream has no length.");
+            throw new NotImplementedException("WriteOnly stream has no length");
         }
 
         /// <summary>

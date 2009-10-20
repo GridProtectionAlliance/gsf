@@ -1020,7 +1020,7 @@ namespace TVA.Media
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
-                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel.");
+                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel");
 
             LittleBinaryValue[] binaryValues;
 
@@ -1056,7 +1056,7 @@ namespace TVA.Media
         {
             // Validate number of samples
             if (samples.Length != m_waveFormat.Channels)
-                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel.");
+                throw new ArgumentOutOfRangeException("samples", "You must provide one sample for each defined channel");
 
             int byteLength = m_waveFormat.BitsPerSample / 8;
 
@@ -1064,7 +1064,7 @@ namespace TVA.Media
             foreach (LittleBinaryValue item in samples)
             {
                 if (item.Buffer.Length != byteLength)
-                    throw new ArrayTypeMismatchException(string.Format("One of the parameters is {0}-bits and wave is configured for {1}-bits per sample.", item.Buffer.Length * 8, m_waveFormat.BitsPerSample));
+                    throw new ArrayTypeMismatchException(string.Format("One of the parameters is {0}-bits and wave is configured for {1}-bits per sample", item.Buffer.Length * 8, m_waveFormat.BitsPerSample));
             }
 
             m_waveData.SampleBlocks.Add(samples);
@@ -1199,13 +1199,13 @@ namespace TVA.Media
                         break;
                     case WaveFormatChunk.RiffTypeID:
                         if (waveHeader == null)
-                            throw new InvalidDataException("WAVE format section encountered before RIFF header, wave file corrupted.");
+                            throw new InvalidDataException("WAVE format section encountered before RIFF header, wave file corrupted");
 
                         waveFormat = new WaveFormatChunk(riffChunk, source);
                         break;
                     case WaveDataChunk.RiffTypeID:
                         if (waveFormat == null)
-                            throw new InvalidDataException("WAVE data section encountered before format section, wave file corrupted.");
+                            throw new InvalidDataException("WAVE data section encountered before format section, wave file corrupted");
 
                         waveData = new WaveDataChunk(riffChunk, source, waveFormat);
                         break;
@@ -1277,10 +1277,10 @@ namespace TVA.Media
             {
                 // Validate volumes
                 if (volumes.Length != waveFiles.Length)
-                    throw new ArgumentOutOfRangeException("volumes", "There must be one volume per each wave file.");
+                    throw new ArgumentOutOfRangeException("volumes", "There must be one volume per each wave file");
 
                 if (volumes.Sum() > 1.0D)
-                    throw new ArgumentOutOfRangeException("volumes", "Cumulatively, volumes cannot exceed 1.0.");
+                    throw new ArgumentOutOfRangeException("volumes", "Cumulatively, volumes cannot exceed 1.0");
 
                 // Deep clone first wave file - this will become the base of the new combined wave file
                 WaveFile next, source = waveFiles[0].Clone();
@@ -1295,7 +1295,7 @@ namespace TVA.Media
                         source.SampleRate != next.SampleRate ||
                         source.BitsPerSample != next.BitsPerSample ||
                         source.Channels != next.Channels)
-                        throw new ArgumentException("All wave files to be combined must have the same audio format, sample rate, bits per sample and number of channels.");
+                        throw new ArgumentException("All wave files to be combined must have the same audio format, sample rate, bits per sample and number of channels");
                 }
 
                 // Apply volume adjustment to source file
@@ -1374,7 +1374,7 @@ namespace TVA.Media
                         source.SampleRate != next.SampleRate ||
                         source.BitsPerSample != next.BitsPerSample ||
                         source.Channels != next.Channels)
-                        throw new ArgumentException("All wave files to be appended together must have the same audio format, sample rate, bits per sample and number of channels.");
+                        throw new ArgumentException("All wave files to be appended together must have the same audio format, sample rate, bits per sample and number of channels");
                 }
 
                 // Combine subsequent wave files

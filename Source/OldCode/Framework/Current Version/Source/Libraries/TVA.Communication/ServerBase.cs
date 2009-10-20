@@ -568,7 +568,7 @@ namespace TVA.Communication
             {
                 // Can't disable handshake when secure session is enabled.
                 if (!value && m_secureSession)
-                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled.");
+                    throw new InvalidOperationException("Handshake is required when SecureSession is enabled");
 
                 m_handshake = value;
                 ReStart();
@@ -591,7 +591,7 @@ namespace TVA.Communication
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative.");
+                    throw new ArgumentException("Value cannot be zero or negative");
 
                 m_handshakeTimeout = value;
                 ReStart();
@@ -653,7 +653,7 @@ namespace TVA.Communication
             {
                 // Can't disable encryption when secure session is enabled.
                 if (value == CipherStrength.None && m_secureSession)
-                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled.");
+                    throw new InvalidOperationException("Encryption is required when SecureSession is enabled");
 
                 m_encryption = value;
                 ReStart();
@@ -681,11 +681,11 @@ namespace TVA.Communication
             {
                 // Handshake is required for SecureSession.
                 if (value && !m_handshake)
-                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession.");
+                    throw new InvalidOperationException("Handshake must be enabled in order to use SecureSession");
 
                 // Encryption is required for SecureSession.
                 if (value && m_encryption == CipherStrength.None)
-                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession.");
+                    throw new InvalidOperationException("Encryption must be enabled in order to use SecureSession");
 
                 m_secureSession = value;
                 ReStart();
@@ -731,7 +731,7 @@ namespace TVA.Communication
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value cannot be zero or negative.");
+                    throw new ArgumentException("Value cannot be zero or negative");
 
                 m_receiveBufferSize = value;
                 ReStart();
@@ -1119,7 +1119,7 @@ namespace TVA.Communication
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1158,7 +1158,7 @@ namespace TVA.Communication
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1333,7 +1333,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("Server is not running.");
+                throw new InvalidOperationException("Server is not running");
             }
         }
 
@@ -1625,12 +1625,12 @@ namespace TVA.Communication
                         server = new UdpServer(settings.ToString());
                         break;
                     default:
-                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid.");
+                        throw new ArgumentException("Transport protocol \'" + protocol + "\' is not valid");
                 }
             }
             else
             {
-                throw new ArgumentException("Transport protocol must be specified.");
+                throw new ArgumentException("Transport protocol must be specified");
             }
 
             return server;

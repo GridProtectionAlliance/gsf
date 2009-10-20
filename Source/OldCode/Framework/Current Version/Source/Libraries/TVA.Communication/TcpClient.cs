@@ -526,7 +526,7 @@ namespace TVA.Communication
             }
             else
             {
-                throw new InvalidOperationException("Client is currently not disconnected.");
+                throw new InvalidOperationException("Client is currently not disconnected");
             }
         }
 
@@ -551,13 +551,13 @@ namespace TVA.Communication
                 m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["port"];
 
             if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing. Example: {0}.", DefaultConnectionString));
+                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
 
             if (!m_connectData["server"].Contains(":"))
-                throw new FormatException(string.Format("Server property is invalid. Example: {0}.", DefaultConnectionString));
+                throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
 
             if (!Transport.IsPortNumberValid(m_connectData["server"].Split(':')[1]))
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}.", Transport.PortRangeLow, Transport.PortRangeHigh));
+                throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>

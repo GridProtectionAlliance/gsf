@@ -629,7 +629,7 @@ namespace TVA.Measurements
             if ((object)other != null)
                 return CompareTo(other);
 
-            throw new ArgumentException("Measurement can only be compared with other IMeasurements...");
+            throw new ArgumentException("Measurement can only be compared with other IMeasurements");
         }
 
         /// <summary>

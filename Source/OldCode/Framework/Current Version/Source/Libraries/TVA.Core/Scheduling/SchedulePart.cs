@@ -335,7 +335,7 @@ namespace TVA.Scheduling
             }
             else
             {
-                throw new ArgumentException("Text is not valid for " + dateTimePart + " schedule part.");
+                throw new ArgumentException("Text is not valid for " + dateTimePart + " schedule part");
             }
         }
 

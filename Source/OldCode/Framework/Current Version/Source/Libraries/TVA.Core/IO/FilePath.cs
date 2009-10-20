@@ -345,7 +345,7 @@ namespace TVA.IO
 
             result = WNetAddConnection2(ref resource, password, username, 0);
             if (result != 0)
-                throw new InvalidOperationException("Failed to connect to network share \"" + sharename + "\" as user " + username + ". " + WindowsApi.GetErrorMessage(result));
+                throw new InvalidOperationException("Failed to connect to network share \"" + sharename + "\" as user " + username + " - " + WindowsApi.GetErrorMessage(result));
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace TVA.IO
         {
             int result = WNetCancelConnection2(sharename, 0, force);
             if (result != 0)
-                throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\".  " + WindowsApi.GetErrorMessage(result));
+                throw new InvalidOperationException("Failed to disconnect from network share \"" + sharename + "\" - " + WindowsApi.GetErrorMessage(result));
         }
 
         /// <summary>
