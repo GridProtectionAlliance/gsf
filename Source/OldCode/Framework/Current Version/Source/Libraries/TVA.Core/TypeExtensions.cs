@@ -266,28 +266,6 @@ namespace TVA
         }
 
         /// <summary>
-        /// Attempts to get the specified <paramref name="Attribute"/> from a <see cref="Type"/>, returning <c>true</c> if it does.
-        /// </summary>
-        /// <param name="type">The <see cref="Type"/> object over which to search attributes.</param>
-        /// <param name="attribute">The <see cref="Attribute"/> that was found, if any.</param>
-        /// <returns><c>true</c> if <paramref name="Attribute"/> was found; otherwise <c>false</c>.</returns>
-        /// <typeparam name="TAttribute"><see cref="Type"/> of <see cref="Attribute"/> to attempt to retrieve.</typeparam>
-        public static bool TryGetAttribute<TAttribute>(this Type type, out TAttribute attribute)
-            where TAttribute : Attribute
-        {
-            object[] attributes = type.GetCustomAttributes(typeof(TAttribute), true);
-
-            if (attributes.Length > 0)
-            {
-                attribute = attributes[0] as TAttribute;
-                return true;
-            }
-
-            attribute = null;
-            return false;
-        }
-
-        /// <summary>
         /// Loads public types from assemblies in the application binaries directory that implement the specified 
         /// <paramref name="type"/> either through class inheritance or interface implementation.
         /// </summary>
