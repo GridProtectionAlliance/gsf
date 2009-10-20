@@ -252,7 +252,7 @@ namespace TVA.Historian.Packets
              if (length > 1)
                  TypeID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
              else
-                 throw new InvalidOperationException("Binary image is malformed.");
+                 throw new InvalidOperationException("Binary image is malformed");
          }
     }
 }

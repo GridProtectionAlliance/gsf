@@ -522,7 +522,7 @@ namespace TVA.Historian.Exporters
                 // Queue the export for processing regardless of its type.
                 m_nonRealTimeQueue.Add(export);
             else
-                throw new InvalidOperationException(string.Format("Export \"{0}\" does not exist.", exportName));
+                throw new InvalidOperationException(string.Format("Export \"{0}\" does not exist", exportName));
         }
 
         /// <summary>

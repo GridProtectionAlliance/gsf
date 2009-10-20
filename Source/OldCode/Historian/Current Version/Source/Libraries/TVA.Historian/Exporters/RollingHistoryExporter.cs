@@ -341,13 +341,13 @@ namespace TVA.Historian.Exporters
             // Ensure that required settings are present.
             ExportSetting outputFileSetting = export.FindSetting("OutputFile");
             if (outputFileSetting == null)
-                throw new ArgumentException("OutputFile setting is missing.");
+                throw new ArgumentException("OutputFile setting is missing");
             ExportSetting outputFormatSetting = export.FindSetting("OutputFormat");
             if (outputFormatSetting == null)
-                throw new ArgumentException("OutputFormat setting is missing.");
+                throw new ArgumentException("OutputFormat setting is missing");
             ExportSetting outputTimespanSetting = export.FindSetting("OutputTimespan");
             if (outputTimespanSetting == null)
-                throw new ArgumentException("OutputTimespan setting is missing.");
+                throw new ArgumentException("OutputTimespan setting is missing");
 
             // Initialize local variables.
             DataSet output = null;

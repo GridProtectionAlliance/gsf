@@ -354,10 +354,10 @@ namespace TVA.Historian.Exporters
                 // Ensure that required settings are present.
                 ExportSetting outputFileSetting = export.FindSetting("OutputFile");
                 if (outputFileSetting == null)
-                    throw new ArgumentException("OutputFile setting is missing.");
+                    throw new ArgumentException("OutputFile setting is missing");
                 ExportSetting outputFormatSetting = export.FindSetting("OutputFormat");
                 if (outputFormatSetting == null)
-                    throw new ArgumentException("OutputFormat setting is missing.");
+                    throw new ArgumentException("OutputFormat setting is missing");
 
                 if (rawData != null)
                 {

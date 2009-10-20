@@ -309,7 +309,7 @@ namespace TVA.Historian.Services
             else
             {
                 // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported.", serializationFormat));
+                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
             }
 
             // Seek to the beginning of the serialized output stream.
@@ -353,7 +353,7 @@ namespace TVA.Historian.Services
             else
             {
                 // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported.", serializationFormat));
+                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
             }
 
             return deserializedObject;

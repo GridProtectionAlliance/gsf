@@ -569,7 +569,7 @@ namespace TVA.Historian.Packets
                 // Binary image has sufficient data.
                 short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
                 if (packetID != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}').", packetID, TypeID));
+                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
 
                 // We have a binary image with the correct packet id.
                 HistorianID = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);

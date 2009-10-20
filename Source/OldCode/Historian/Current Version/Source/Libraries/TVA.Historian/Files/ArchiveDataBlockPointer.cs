@@ -309,7 +309,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 1 && value != -1)
-                    throw new ArgumentException("Value must be positive or -1.");
+                    throw new ArgumentException("Value must be positive or -1");
 
                 m_historianID = value;
             }
@@ -328,7 +328,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < TimeTag.MinValue || value > TimeTag.MaxValue)
-                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063.");
+                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063");
 
                 m_startTime = value;
             }

@@ -361,7 +361,7 @@ namespace TVA.Historian.MetadataProviders
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -387,7 +387,7 @@ namespace TVA.Historian.MetadataProviders
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -428,10 +428,10 @@ namespace TVA.Historian.MetadataProviders
                 adapterTypeName = settings["AdapterType"].ToNonNullString();
 
                 if (string.IsNullOrEmpty(connectionTypeName))
-                    throw new InvalidOperationException("Database connection type was not defined.");
+                    throw new InvalidOperationException("Database connection type was not defined");
 
                 if (string.IsNullOrEmpty(adapterTypeName))
-                    throw new InvalidOperationException("Database adapter type was not defined.");
+                    throw new InvalidOperationException("Database adapter type was not defined");
 
                 assembly = Assembly.Load(new AssemblyName(assemblyName));
                 connectionType = assembly.GetType(connectionTypeName);

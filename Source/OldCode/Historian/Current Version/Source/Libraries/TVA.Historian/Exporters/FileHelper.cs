@@ -266,7 +266,7 @@ namespace TVA.Historian.Exporters
                     break;
                 default:
                     // Throw an exception if a non-supported file format is specified.
-                    throw new ArgumentException(string.Format("{0} file format is not supported.", format.ToUpper()));
+                    throw new ArgumentException(string.Format("{0} file format is not supported", format.ToUpper()));
             }
         }
 

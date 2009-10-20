@@ -314,7 +314,7 @@ namespace TVA.Historian.MetadataProviders
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -338,7 +338,7 @@ namespace TVA.Historian.MetadataProviders
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

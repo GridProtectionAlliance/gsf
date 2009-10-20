@@ -321,7 +321,7 @@ namespace TVA.Historian.Exporters
             // Ensure that required settings are present.
             ExportSetting outputFileSetting = export.FindSetting("OutputFile");
             if (outputFileSetting == null)
-                throw new ArgumentException("OutputFile setting is missing.");
+                throw new ArgumentException("OutputFile setting is missing");
             
             // Write the current data for the export to the specified files in XML format.
             FileHelper.WriteToFile(outputFileSetting.Value, "XML", GetExportDataAsDataset(export, null));

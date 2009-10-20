@@ -309,7 +309,7 @@ namespace TVA.Historian.Exporters
             set
             {
                 if (value < 1 && value != -1)
-                    throw new ArgumentException("Value must be positive or -1.");
+                    throw new ArgumentException("Value must be positive or -1");
 
                 m_identifier = value;
             }

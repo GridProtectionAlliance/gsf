@@ -326,7 +326,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Value must be positive or zero.");
+                    throw new ArgumentException("Value must be positive or zero");
 
                 lock (this)
                 {

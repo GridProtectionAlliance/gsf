@@ -808,7 +808,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value <= 0)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_fileSize = value;
             }
@@ -860,7 +860,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_dataBlockSize = value;
             }
@@ -900,7 +900,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 1 || value > 95)
-                    throw new ArgumentOutOfRangeException("RolloverPreparationThreshold", "Value must be between 1 and 95.");
+                    throw new ArgumentOutOfRangeException("RolloverPreparationThreshold", "Value must be between 1 and 95");
 
                 m_rolloverPreparationThreshold = value;
             }
@@ -940,7 +940,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_fileOffloadCount = value;
             }
@@ -962,7 +962,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 1 || value > 99)
-                    throw new ArgumentOutOfRangeException("FileOffloadThreshold", "Value must be between 1 and 99.");
+                    throw new ArgumentOutOfRangeException("FileOffloadThreshold", "Value must be between 1 and 99");
 
                 m_fileOffloadThreshold = value;
             }
@@ -984,7 +984,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Value must be zero or positive.");
+                    throw new ArgumentException("Value must be zero or positive");
 
                 m_leadTimeTolerance = value;
             }
@@ -1464,7 +1464,7 @@ namespace TVA.Historian.Files
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1511,7 +1511,7 @@ namespace TVA.Historian.Files
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -1693,7 +1693,7 @@ namespace TVA.Historian.Files
             }
             else
             {
-                throw new InvalidOperationException(string.Format("\"{0}\" is not open.", m_fileName));
+                throw new InvalidOperationException(string.Format("\"{0}\" is not open", m_fileName));
             }
         }
 
@@ -1704,7 +1704,7 @@ namespace TVA.Historian.Files
         public void Rollover()
         {
             if (m_fileType != ArchiveFileType.Active)
-                throw new InvalidOperationException("Cannot rollover a file that is not active.");
+                throw new InvalidOperationException("Cannot rollover a file that is not active");
 
             try
             {
@@ -1814,11 +1814,11 @@ namespace TVA.Historian.Files
         {
             // Ensure that the current file is open.
             if (!IsOpen)
-                throw new InvalidOperationException(string.Format("\"{0}\" file is not open.", m_fileName));
+                throw new InvalidOperationException(string.Format("\"{0}\" file is not open", m_fileName));
 
             // Ensure that the current file is active.
             if (m_fileType != ArchiveFileType.Active)
-                throw new InvalidOperationException("Data can only be directly written to files that are Active.");
+                throw new InvalidOperationException("Data can only be directly written to files that are Active");
 
             m_currentDataQueue.Add(dataPoint);
         }
@@ -1942,15 +1942,15 @@ namespace TVA.Historian.Files
         {
             // Ensure that the current file is open.
             if (!IsOpen)
-                throw new InvalidOperationException(string.Format("\"{0}\" file is not open.", m_fileName));
+                throw new InvalidOperationException(string.Format("\"{0}\" file is not open", m_fileName));
 
             // Ensure that the current file is active.
             if (m_fileType != ArchiveFileType.Active)
-                throw new InvalidOperationException("Data can only be directly read from files that are Active.");
+                throw new InvalidOperationException("Data can only be directly read from files that are Active");
 
             // Ensure that the start and end time are valid.
             if (startTime > endTime)
-                throw new ArgumentException("End Time preceeds Start Time in the specified timespan.");
+                throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
 
             // Yeild to the rollover process if it is in progress.
             m_rolloverWaitHandle.WaitOne();

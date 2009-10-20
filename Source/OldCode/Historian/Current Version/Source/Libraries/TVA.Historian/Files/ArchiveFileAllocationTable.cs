@@ -348,7 +348,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < TimeTag.MinValue || value > TimeTag.MaxValue)
-                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063.");
+                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063");
 
                 m_fileStartTime = value;
             }
@@ -367,7 +367,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < TimeTag.MinValue || value > TimeTag.MaxValue)
-                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063.");
+                    throw new ArgumentException("Value must between 01/01/1995 and 01/19/2063");
 
                 m_fileEndTime = value;
             }
@@ -386,7 +386,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Value must be positive or zero.");
+                    throw new ArgumentException("Value must be positive or zero");
 
                 m_dataPointsReceived = value;
             }
@@ -405,7 +405,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 0)
-                    throw new ArgumentException("Value must be positive or zero.");
+                    throw new ArgumentException("Value must be positive or zero");
 
                 m_dataPointsArchived = value;
             }
@@ -423,7 +423,7 @@ namespace TVA.Historian.Files
             private set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_dataBlockSize = value;
             }
@@ -441,7 +441,7 @@ namespace TVA.Historian.Files
             private set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_dataBlockCount = value;
             }

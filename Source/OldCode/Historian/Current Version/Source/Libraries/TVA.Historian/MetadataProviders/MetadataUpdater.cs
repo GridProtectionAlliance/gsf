@@ -303,7 +303,7 @@ namespace TVA.Historian.MetadataProviders
                 throw new ArgumentNullException("tableData");
 
             if (tableData.Rows[0].ItemArray.Length != 43)
-                throw new ArgumentException("tableData must contain 43 columns.");
+                throw new ArgumentException("tableData must contain 43 columns");
 
             // Column 00: HistorianID
             // Column 01: DataType
@@ -419,7 +419,7 @@ namespace TVA.Historian.MetadataProviders
                 throw new ArgumentNullException("readerData");
 
             if (readerData.FieldCount != 43)
-                throw new ArgumentException("readerData must contain 43 columns.");
+                throw new ArgumentException("readerData must contain 43 columns");
 
             MetadataRecord metadataRecord;
             while (readerData.Read())

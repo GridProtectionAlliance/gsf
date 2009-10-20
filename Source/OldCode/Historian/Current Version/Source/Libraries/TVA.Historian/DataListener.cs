@@ -566,7 +566,7 @@ namespace TVA.Historian
             set
             {
                 if (!Transport.IsPortNumberValid(value.ToString()))
-                    throw new ArgumentException("Value must be between 0 and 65535.");
+                    throw new ArgumentException("Value must be between 0 and 65535");
 
                 m_port = value;
             }
@@ -588,7 +588,7 @@ namespace TVA.Historian
             set
             {
                 if (!(value == TransportProtocol.Tcp || value == TransportProtocol.Udp))
-                    throw new ArgumentException("Value must be Tcp or Udp.");
+                    throw new ArgumentException("Value must be Tcp or Udp");
 
                 m_protocol = value;
             }
@@ -630,7 +630,7 @@ namespace TVA.Historian
             set
             {
                 if (!value && m_initializeData)
-                    throw new InvalidOperationException("CacheData cannot be disabled when InitializeData is enabled.");
+                    throw new InvalidOperationException("CacheData cannot be disabled when InitializeData is enabled");
 
                 m_cacheData = value;
             }
@@ -655,7 +655,7 @@ namespace TVA.Historian
             set
             {
                 if (value && !m_cacheData)
-                    throw new InvalidOperationException("InitializeData cannot be enabled when CacheData is disabled.");
+                    throw new InvalidOperationException("InitializeData cannot be enabled when CacheData is disabled");
 
                 m_initializeData = value;
             }
@@ -677,7 +677,7 @@ namespace TVA.Historian
             set
             {
                 if (value < 1)
-                    throw new ArgumentException("Value must be positive.");
+                    throw new ArgumentException("Value must be positive");
 
                 m_initializeDataTimeout = value;
             }
@@ -931,7 +931,7 @@ namespace TVA.Historian
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -966,7 +966,7 @@ namespace TVA.Historian
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set.");
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

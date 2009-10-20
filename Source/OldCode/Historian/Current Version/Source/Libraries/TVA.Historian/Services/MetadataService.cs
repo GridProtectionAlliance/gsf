@@ -346,7 +346,7 @@ namespace TVA.Historian.Services
             {
                 // Ensure that writing data is allowed.
                 if (!CanWrite)
-                    throw new InvalidOperationException("Write operation is prohibited.");
+                    throw new InvalidOperationException("Write operation is prohibited");
 
                 // Ensure that data archive is available.
                 if (Archive == null)
@@ -372,7 +372,7 @@ namespace TVA.Historian.Services
             {
                 // Ensure that reading data is allowed.
                 if (!CanRead)
-                    throw new InvalidOperationException("Read operation is prohibited.");
+                    throw new InvalidOperationException("Read operation is prohibited");
 
                 // Ensure that data archive is available.
                 if (Archive == null)
@@ -411,7 +411,7 @@ namespace TVA.Historian.Services
             {
                 // Ensure that reading data is allowed.
                 if (!CanRead)
-                    throw new InvalidOperationException("Read operation is prohibited.");
+                    throw new InvalidOperationException("Read operation is prohibited");
 
                 // Ensure that data archive is available.
                 if (Archive == null)
@@ -450,7 +450,7 @@ namespace TVA.Historian.Services
             {
                 // Ensure that reading data is allowed.
                 if (!CanRead)
-                    throw new InvalidOperationException("Read operation is prohibited.");
+                    throw new InvalidOperationException("Read operation is prohibited");
 
                 // Ensure that data archive is available.
                 if (Archive == null)

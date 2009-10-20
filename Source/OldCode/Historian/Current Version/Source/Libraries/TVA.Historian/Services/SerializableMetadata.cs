@@ -394,7 +394,7 @@ namespace TVA.Historian.Services
                 throw new ArgumentNullException("metadataFile");
 
             if (!metadataFile.IsOpen)
-                throw new ArgumentException("metadataFile is closed.");
+                throw new ArgumentException("metadataFile is closed");
 
             // Process all records in the metadata file.
             List<SerializableMetadataRecord> serializableMetadataRecords = new List<SerializableMetadataRecord>();
