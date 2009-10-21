@@ -18,6 +18,8 @@
 //       Converted to C# as AssemblyInformation.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/21/2009 - Pinal C. Patel
+//       Added error checking to assembly attribute properties.
 //
 //*******************************************************************************************************
 
@@ -279,7 +281,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyTitleAttribute)(GetCustomAttribute(typeof(AssemblyTitleAttribute)))).Title;
+                AssemblyTitleAttribute attribute = GetCustomAttribute(typeof(AssemblyTitleAttribute)) as AssemblyTitleAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Title;
             }
         }
 
@@ -289,7 +295,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyDescriptionAttribute)(GetCustomAttribute(typeof(AssemblyDescriptionAttribute)))).Description;
+                AssemblyDescriptionAttribute attribute = GetCustomAttribute(typeof(AssemblyDescriptionAttribute)) as AssemblyDescriptionAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Description;
             }
         }
 
@@ -299,7 +309,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyCompanyAttribute)(GetCustomAttribute(typeof(AssemblyCompanyAttribute)))).Company;
+                AssemblyCompanyAttribute attribute = GetCustomAttribute(typeof(AssemblyCompanyAttribute)) as AssemblyCompanyAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Company;
             }
         }
 
@@ -309,7 +323,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyProductAttribute)(GetCustomAttribute(typeof(AssemblyProductAttribute)))).Product;
+                AssemblyProductAttribute attribute = GetCustomAttribute(typeof(AssemblyProductAttribute)) as AssemblyProductAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Product;
             }
         }
 
@@ -319,7 +337,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyCopyrightAttribute)(GetCustomAttribute(typeof(AssemblyCopyrightAttribute)))).Copyright;
+                AssemblyCopyrightAttribute attribute = GetCustomAttribute(typeof(AssemblyCopyrightAttribute)) as AssemblyCopyrightAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Copyright;
             }
         }
 
@@ -329,7 +351,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyTrademarkAttribute)(GetCustomAttribute(typeof(AssemblyTrademarkAttribute)))).Trademark;
+                AssemblyTrademarkAttribute attribute = GetCustomAttribute(typeof(AssemblyTrademarkAttribute)) as AssemblyTrademarkAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Trademark;
             }
         }
 
@@ -339,7 +365,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyConfigurationAttribute)(GetCustomAttribute(typeof(AssemblyConfigurationAttribute)))).Configuration;
+                AssemblyConfigurationAttribute attribute = GetCustomAttribute(typeof(AssemblyConfigurationAttribute)) as AssemblyConfigurationAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Configuration;
             }
         }
 
@@ -349,7 +379,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyDelaySignAttribute)(GetCustomAttribute(typeof(AssemblyDelaySignAttribute)))).DelaySign;
+                AssemblyDelaySignAttribute attribute = GetCustomAttribute(typeof(AssemblyDelaySignAttribute)) as AssemblyDelaySignAttribute;
+                if (attribute == null)
+                    return false;
+                else
+                    return attribute.DelaySign;
             }
         }
 
@@ -359,7 +393,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyInformationalVersionAttribute)(GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)))).InformationalVersion;
+                AssemblyInformationalVersionAttribute attribute = GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.InformationalVersion;
             }
         }
 
@@ -370,7 +408,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((AssemblyKeyFileAttribute)(GetCustomAttribute(typeof(AssemblyKeyFileAttribute)))).KeyFile;
+                AssemblyKeyFileAttribute attribute = GetCustomAttribute(typeof(AssemblyKeyFileAttribute)) as AssemblyKeyFileAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.KeyFile;
             }
         }
 
@@ -380,7 +422,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((NeutralResourcesLanguageAttribute)(GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute)))).CultureName;
+                NeutralResourcesLanguageAttribute attribute = GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute)) as NeutralResourcesLanguageAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.CultureName;
             }
         }
 
@@ -390,7 +436,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((SatelliteContractVersionAttribute)(GetCustomAttribute(typeof(SatelliteContractVersionAttribute)))).Version;
+                SatelliteContractVersionAttribute attribute = GetCustomAttribute(typeof(SatelliteContractVersionAttribute)) as SatelliteContractVersionAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Version;
             }
         }
 
@@ -402,8 +452,11 @@ namespace TVA.Reflection
         {
             get
             {
-                ComCompatibleVersionAttribute comVersionAttribute = ((ComCompatibleVersionAttribute)(GetCustomAttribute(typeof(ComCompatibleVersionAttribute))));
-                return comVersionAttribute.MajorVersion.ToString() + "." + comVersionAttribute.MinorVersion.ToString() + "." + comVersionAttribute.RevisionNumber.ToString() + "." + comVersionAttribute.BuildNumber.ToString();
+                ComCompatibleVersionAttribute attribute = GetCustomAttribute(typeof(ComCompatibleVersionAttribute)) as ComCompatibleVersionAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.MajorVersion.ToString() + "." + attribute.MinorVersion.ToString() + "." + "." + attribute.BuildNumber.ToString() + attribute.RevisionNumber.ToString();
             }
         }
 
@@ -413,7 +466,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((ComVisibleAttribute)(GetCustomAttribute(typeof(ComVisibleAttribute)))).Value;
+                ComVisibleAttribute attribute = GetCustomAttribute(typeof(ComVisibleAttribute)) as ComVisibleAttribute;
+                if (attribute == null)
+                    return false;
+                else
+                    return attribute.Value;
             }
         }
 
@@ -423,7 +480,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((GuidAttribute)(GetCustomAttribute(typeof(GuidAttribute)))).Value;
+                GuidAttribute attribute = GetCustomAttribute(typeof(GuidAttribute)) as GuidAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.Value;
             }
         }
 
@@ -433,8 +494,11 @@ namespace TVA.Reflection
         {
             get
             {
-                TypeLibVersionAttribute versionAttribute = ((TypeLibVersionAttribute)(GetCustomAttribute(typeof(TypeLibVersionAttribute))));
-                return versionAttribute.MajorVersion.ToString() + "." + versionAttribute.MinorVersion.ToString();
+                TypeLibVersionAttribute attribute = GetCustomAttribute(typeof(TypeLibVersionAttribute)) as TypeLibVersionAttribute;
+                if (attribute == null)
+                    return string.Empty;
+                else
+                    return attribute.MajorVersion.ToString() + "." + attribute.MinorVersion.ToString();
             }
         }
 
@@ -444,7 +508,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((CLSCompliantAttribute)(GetCustomAttribute(typeof(CLSCompliantAttribute)))).IsCompliant;
+                CLSCompliantAttribute attribute = GetCustomAttribute(typeof(CLSCompliantAttribute)) as CLSCompliantAttribute;
+                if (attribute == null)
+                    return false;
+                else
+                    return attribute.IsCompliant;
             }
         }
 
@@ -455,7 +523,11 @@ namespace TVA.Reflection
         {
             get
             {
-                return ((DebuggableAttribute)(GetCustomAttribute(typeof(DebuggableAttribute)))).IsJITTrackingEnabled;
+                DebuggableAttribute attribute = GetCustomAttribute(typeof(DebuggableAttribute)) as DebuggableAttribute;
+                if (attribute == null)
+                    return false;
+                else
+                    return attribute.IsJITTrackingEnabled;
             }
         }
 
@@ -653,16 +725,15 @@ namespace TVA.Reflection
 
         /// <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
         /// <param name="attributeType">Type of the attribute to get.</param>
-        /// <returns>The assembly attribute.</returns>
+        /// <returns>The requested assembly attribute if it exists; otherwise null.</returns>
         public object GetCustomAttribute(Type attributeType)
         {
             //Returns the requested assembly attribute.
             object[] assemblyAttributes = m_assemblyInstance.GetCustomAttributes(attributeType, false);
-
-            if (assemblyAttributes.Length >= 1)
-                return assemblyAttributes[0];
+            if (assemblyAttributes.Length <= 0)
+                return null;
             else
-                throw new ApplicationException("Assembly does not expose this attribute");
+                return assemblyAttributes[0];
         }
 
         /// <summary>Gets the specified embedded resource from the assembly.</summary>
@@ -731,7 +802,7 @@ namespace TVA.Reflection
         {
             get
             {
-                if (m_executingAssembly == null) 
+                if (m_executingAssembly == null)
                     // Caller's assembly will be the executing assembly for the caller.
                     m_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
 
