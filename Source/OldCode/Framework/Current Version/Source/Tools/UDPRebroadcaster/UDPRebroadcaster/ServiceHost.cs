@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/23/2009 - Pinal C. Patel
+//       Fixed errors introduced by breaking change to add support for classification of service updates.
 //
 //*******************************************************************************************************
 
@@ -235,6 +237,7 @@ using System;
 using System.ComponentModel;
 using System.ServiceProcess;
 using TVA;
+using TVA.Services;
 
 namespace UDPRebroadcaster
 {
@@ -277,7 +280,7 @@ namespace UDPRebroadcaster
         
         private void UdpClient_ConnectionEstablished(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus("Connection successful.\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "Connection successful.\r\n\r\n");
         }
 
 
@@ -298,23 +301,23 @@ namespace UDPRebroadcaster
             {
                 m_serviceHelper.ErrorLogger.Log(ex);
 
-                m_serviceHelper.UpdateStatus("Data Stream interrupted.\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Warning, "Data Stream interrupted.\r\n\r\n");
             }
         }
 
         private void UdpClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus("Connection terminated.\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Warning, "Connection terminated.\r\n\r\n");
         }
 
         private void UdpClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            m_serviceHelper.UpdateStatus("A connection exception has occurred: {0}.\r\n\r\n", e.Argument.Message);
+            m_serviceHelper.UpdateStatus(UpdateType.Alarm, "A connection exception has occurred: {0}.\r\n\r\n", e.Argument.Message);
         }
        
         private void UdpClient_ConnectionAttempt(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus("Attempting connection...\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "Attempting connection...\r\n\r\n");
         }
 
         #endregion
