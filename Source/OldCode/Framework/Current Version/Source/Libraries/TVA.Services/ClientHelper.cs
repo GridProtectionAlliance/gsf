@@ -30,6 +30,8 @@
 //       ReceivedServiceResponse is now raised only for custom service responses instead of all.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/23/2009 - Pinal C. Patel
+//       Modified ReceivedServiceUpdate event to support the change in ServiceHelper.UpdateStatus().
 //
 //*******************************************************************************************************
 
@@ -285,10 +287,10 @@ namespace TVA.Services
     /// <summary>
     /// Component that provides client-side functionality to <see cref="ServiceHelper"/>.
     /// </summary>
-	[ToolboxBitmap(typeof(ClientHelper))]
+    [ToolboxBitmap(typeof(ClientHelper))]
     public class ClientHelper : Component, ISupportLifecycle, ISupportInitialize, IPersistSettings
-	{
-	    #region [ Members ]
+    {
+        #region [ Members ]
 
         // Constants
 
@@ -315,30 +317,30 @@ namespace TVA.Services
         // Events
 
         /// <summary>
-		/// Occurs when a status update is received from the <see cref="ServiceHelper"/>.
-		/// </summary>
-        [Category("Client"), 
+        /// Occurs when a status update is received from the <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Category("Client"),
         Description("Occurs when a status update is received from the ServiceHelper.")]
-        public event EventHandler<EventArgs<string>> ReceivedServiceUpdate;
-				
-		/// <summary>
-		/// Occurs when a custom <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
-		/// </summary>
-        [Category("Service"), 
+        public event EventHandler<EventArgs<UpdateType, string>> ReceivedServiceUpdate;
+
+        /// <summary>
+        /// Occurs when a custom <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Category("Service"),
         Description("Occurs when a ServiceResponse is received from the ServiceHelper.")]
         public event EventHandler<EventArgs<ServiceResponse>> ReceivedServiceResponse;
-		
-		/// <summary>
-		/// Occurs when the state of the <see cref="ServiceHelper"/> is changed.
-		/// </summary>
-        [Category("Service"), 
+
+        /// <summary>
+        /// Occurs when the state of the <see cref="ServiceHelper"/> is changed.
+        /// </summary>
+        [Category("Service"),
         Description("Occurs when the state of the ServiceHelper is changed.")]
         public event EventHandler<EventArgs<ObjectState<ServiceState>>> ServiceStateChanged;
-		
-		/// <summary>
-		/// Occurs when the state of a <see cref="ServiceProcess"/> is changed.
-		/// </summary>
-        [Category("Service"), 
+
+        /// <summary>
+        /// Occurs when the state of a <see cref="ServiceProcess"/> is changed.
+        /// </summary>
+        [Category("Service"),
         Description("Occurs when the state of a ServiceProcess is changed.")]
         public event EventHandler<EventArgs<ObjectState<ServiceProcessState>>> ProcessStateChanged;
 
@@ -360,16 +362,16 @@ namespace TVA.Services
         Description("Occurs when the ServiceHelper fails to authenticate the ClientHelper.")]
         public event EventHandler<CancelEventArgs> AuthenticationFailure;
 
-		/// <summary>
-		/// Occurs when a telnet session has been established.
-		/// </summary>
-		[Category("Command"),
+        /// <summary>
+        /// Occurs when a telnet session has been established.
+        /// </summary>
+        [Category("Command"),
         Description("Occurs when a telnet session has been established.")]
-        public event EventHandler TelnetSessionEstablished;	
-		
-		/// <summary>
-		/// Occurs when a telnet session has been terminated.
-		/// </summary>
+        public event EventHandler TelnetSessionEstablished;
+
+        /// <summary>
+        /// Occurs when a telnet session has been terminated.
+        /// </summary>
         [Category("Command"),
         Description("Occurs when a telnet session has been terminated.")]
         public event EventHandler TelnetSessionTerminated;
@@ -384,7 +386,7 @@ namespace TVA.Services
         private bool m_authenticationComplete;
         private bool m_disposed;
         private bool m_initialized;
-		
+
         #endregion
 
         #region [ Constructors ]
@@ -463,7 +465,7 @@ namespace TVA.Services
             {
                 return m_authenticationMethod;
             }
-            set 
+            set
             {
                 m_authenticationMethod = value;
             }
@@ -670,7 +672,7 @@ namespace TVA.Services
         /// Connects <see cref="RemotingClient"/> to <see cref="ServiceHelper.RemotingServer"/> and wait until authentication is complete.
         /// </summary>
         public void Connect()
-        {           
+        {
             if (m_remotingClient == null)
                 throw new InvalidOperationException("RemotingClient property of ClientHelper component is not set");
 
@@ -701,7 +703,7 @@ namespace TVA.Services
             if (requestInstance != null)
                 SendRequest(requestInstance);
             else
-                UpdateStatus(string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
+                UpdateStatus(UpdateType.Warning, string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
         }
 
         /// <summary>
@@ -716,11 +718,12 @@ namespace TVA.Services
         /// <summary>
         /// Raises the <see cref="ReceivedServiceUpdate"/> event.
         /// </summary>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="update">Update message received.</param>
-        protected virtual void OnReceivedServiceUpdate(string update)
+        protected virtual void OnReceivedServiceUpdate(UpdateType type, string update)
         {
             if (ReceivedServiceUpdate != null)
-                ReceivedServiceUpdate(this, new EventArgs<string>(update));
+                ReceivedServiceUpdate(this, new EventArgs<UpdateType, string>(type, update));
         }
 
         /// <summary>
@@ -784,7 +787,7 @@ namespace TVA.Services
         /// Raises the <see cref="TelnetSessionEstablished"/> event.
         /// </summary>
         protected virtual void OnTelnetSessionEstablished()
-        {           
+        {
             if (TelnetSessionEstablished != null)
                 TelnetSessionEstablished(this, EventArgs.Empty);
         }
@@ -825,14 +828,14 @@ namespace TVA.Services
             }
         }
 
-        private void UpdateStatus(string message, params object[] args)
+        private void UpdateStatus(UpdateType type, string message, params object[] args)
         {
-            OnReceivedServiceUpdate(string.Format(message, args));
+            OnReceivedServiceUpdate(type, string.Format(message, args));
         }
 
         private void RemotingClient_ConnectionAttempt(object sender, System.EventArgs e)
         {
-            UpdateStatus("Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
+            UpdateStatus(UpdateType.Information, "Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
         }
 
         private void RemotingClient_ConnectionEstablished(object sender, System.EventArgs e)
@@ -847,7 +850,7 @@ namespace TVA.Services
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(status.ToString());
+            UpdateStatus(UpdateType.Information, status.ToString());
         }
 
         private void RemotingClient_ConnectionTerminated(object sender, System.EventArgs e)
@@ -858,11 +861,11 @@ namespace TVA.Services
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(status.ToString());
+            UpdateStatus(UpdateType.Warning, status.ToString());
 
             // Attempt reconnection on a seperate thread.
             if (m_attemptReconnection)
-                new Thread((ThreadStart)delegate(){ Connect(); }).Start();
+                new Thread((ThreadStart)delegate() { Connect(); }).Start();
         }
 
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
@@ -871,11 +874,17 @@ namespace TVA.Services
             Serialization.TryGetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), out response);
 
             if (response != null)
-            {              
+            {
                 switch (response.Type)
                 {
-                    case "UPDATECLIENTSTATUS":
-                        UpdateStatus(response.Message);
+                    case "UPDATECLIENTSTATUS-INFORMATION":
+                        UpdateStatus(UpdateType.Information, response.Message);
+                        break;
+                    case "UPDATECLIENTSTATUS-WARNING":
+                        UpdateStatus(UpdateType.Warning, response.Message);
+                        break;
+                    case "UPDATECLIENTSTATUS-ALARM":
+                        UpdateStatus(UpdateType.Alarm, response.Message);
                         break;
                     case "AUTHENTICATIONSUCCESS":
                         OnAuthenticationSuccess();
@@ -890,10 +899,20 @@ namespace TVA.Services
 
                             if (state != null)
                             {
-                                // Notify change in service state by raising the ServiceStateChanged event.
+                                // Notify change in service state by raising an event.
                                 OnServiceStateChanged(state);
 
-                                UpdateStatus(string.Format("State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
+                                // Provide a status update for change in state of the service.
+                                UpdateType type = UpdateType.Information;
+                                switch (state.CurrentState)
+                                {
+                                    case ServiceState.Stopped:
+                                    case ServiceState.Paused:
+                                    case ServiceState.Shutdown:
+                                        type = UpdateType.Warning;
+                                        break;
+                                }
+                                UpdateStatus(type, string.Format("State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
                             }
                         }
                         break;
@@ -904,10 +923,20 @@ namespace TVA.Services
 
                             if (state != null)
                             {
-                                // Notify change in process state by raising the ProcessStateChanged event.
+                                // Notify change in process state by raising an event.
                                 OnProcessStateChanged(state);
 
-                                UpdateStatus(string.Format("State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
+                                // Provide a status update for change in state of the service process.
+                                UpdateType type = UpdateType.Information;
+                                switch (state.CurrentState)
+                                {
+                                    case ServiceProcessState.Aborted:
+                                    case ServiceProcessState.Exception:
+                                        type = UpdateType.Alarm;
+                                        break;
+
+                                }
+                                UpdateStatus(type, string.Format("State of process \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
                             }
                         }
                         break;

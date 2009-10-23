@@ -44,6 +44,8 @@
 //       FindConnectedClient() and FindClientRequestHandler() respectively.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/23/2009 - Pinal C. Patel
+//       Modified UpdateStatus() method to allow the type of update to be specified.
 //
 //*******************************************************************************************************
 
@@ -312,6 +314,25 @@ namespace TVA.Services
         Shutdown
     }
 
+    /// <summary>
+    /// Indicates the type of service update.
+    /// </summary>
+    public enum UpdateType
+    {
+        /// <summary>
+        /// Update is informational.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Update is a warning message.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Update is an alarm message.
+        /// </summary>
+        Alarm
+    }
+
     #endregion
 
     /// <summary>
@@ -324,25 +345,25 @@ namespace TVA.Services
     /// <seealso cref="ClientRequestHandler"/>
     [ToolboxBitmap(typeof(ServiceHelper))]
     public class ServiceHelper : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
-	{
-		#region [ Members ]
-		
+    {
+        #region [ Members ]
+
         // Constants
-		
-		/// <summary>
+
+        /// <summary>
         /// Specifies the default value for the <see cref="LogStatusUpdates"/> property.
-		/// </summary>
-		public const bool DefaultLogStatusUpdates = true;
-		
-		/// <summary>
+        /// </summary>
+        public const bool DefaultLogStatusUpdates = true;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="MonitorServiceHealth"/> property.
-		/// </summary>
-		public const bool DefaultMonitorServiceHealth = false;
-		
-		/// <summary>
+        /// </summary>
+        public const bool DefaultMonitorServiceHealth = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
-		/// </summary>
-		public const int DefaultRequestHistoryLimit = 50;
+        /// </summary>
+        public const int DefaultRequestHistoryLimit = 50;
 
         /// <summary>
         /// Specifies the default value for the <see cref="SupportTelnetSessions"/> property.
@@ -358,85 +379,85 @@ namespace TVA.Services
         /// Specifies the default value for the <see cref="ImpersonateRemoteUser"/> property.
         /// </summary>
         public const bool DefaultImpersonateRemoteUser = false;
-			
-		/// <summary>
+
+        /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
-		/// </summary>
-		public const bool DefaultPersistSettings = false;
-		
-		/// <summary>
+        /// </summary>
+        public const bool DefaultPersistSettings = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
-		/// </summary>
-		public const string DefaultSettingsCategory = "ServiceHelper";
+        /// </summary>
+        public const string DefaultSettingsCategory = "ServiceHelper";
 
         // Events
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> is starting.
-		/// </summary>
-        [Category("Service"), 
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> is starting.
+        /// </summary>
+        [Category("Service"),
         Description("Occurs when the ParentService is starting.")]
         public event EventHandler<EventArgs<string[]>> ServiceStarting;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> has started.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> has started.
+        /// </summary>
         [Category("Service"),
-        Description("Occurs when the ParentService has started.")]		
+        Description("Occurs when the ParentService has started.")]
         public event EventHandler ServiceStarted;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> is stopping.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> is stopping.
+        /// </summary>
         [Category("Service"),
         Description("Occurs when the ParentService is stopping.")]
         public event EventHandler ServiceStopping;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> has stopped.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> has stopped.
+        /// </summary>
         [Category("Service"),
         Description("Occurs when the ParentService has stopped.")]
         public event EventHandler ServiceStopped;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> is pausing.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> is pausing.
+        /// </summary>
         [Category("Service"),
-        Description("Occurs when the ParentService is pausing.")]		
+        Description("Occurs when the ParentService is pausing.")]
         public event EventHandler ServicePausing;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> has paused.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> has paused.
+        /// </summary>
         [Category("Service"),
         Description("Occurs when the ParentService has paused.")]
         public event EventHandler ServicePaused;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> is resuming.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> is resuming.
+        /// </summary>
         [Category("Service"),
         Description("Occurs when the ParentService is resuming.")]
         public event EventHandler ServiceResuming;
-		
-		/// <summary>
-		/// Occurs when the <see cref="ParentService"/> has resumed.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the <see cref="ParentService"/> has resumed.
+        /// </summary>
         [Category("Service"),
         Description("Occurs when the ParentService has resumed.")]
         public event EventHandler ServiceResumed;
-		
-		/// <summary>
-		/// Occurs when the system is being shutdown.
-		/// </summary>
+
+        /// <summary>
+        /// Occurs when the system is being shutdown.
+        /// </summary>
         [Category("System"),
         Description("Occurs when the system is being shutdown.")]
-        public event EventHandler SystemShutdown;	
-		
-		/// <summary>
-		/// Occurs when a request is received from one of the <see cref="RemoteClients"/>.
-		/// </summary>
+        public event EventHandler SystemShutdown;
+
+        /// <summary>
+        /// Occurs when a request is received from one of the <see cref="RemoteClients"/>.
+        /// </summary>
         /// <remarks>
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the ID of the remote client that sent the request.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="ClientRequest"/> sent by the remote client.
@@ -457,16 +478,16 @@ namespace TVA.Services
         public event EventHandler<EventArgs<string, ServiceProcessState>> ProcessStateChanged;
 
         // Fields
-		private bool m_logStatusUpdates;
-		private bool m_monitorServiceHealth;
-		private int m_requestHistoryLimit;
+        private bool m_logStatusUpdates;
+        private bool m_monitorServiceHealth;
+        private int m_requestHistoryLimit;
         private bool m_supportTelnetSessions;
         private string m_telnetSessionPassword;
         private string m_allowedRemoteUsers;
         private bool m_impersonateRemoteUser;
-		private bool m_persistSettings;
-		private string m_settingsCategory;
-		private ServiceBase m_parentService;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
+        private ServiceBase m_parentService;
         private ServerBase m_remotingServer;
         private LogFile m_statusLog;
         private ScheduleManager m_processScheduler;
@@ -474,59 +495,59 @@ namespace TVA.Services
         private PerformanceMonitor m_performanceMonitor;
         private List<ServiceProcess> m_processes;
         private List<object> m_serviceComponents;
-		private List<ClientInfo> m_remoteClients;
-		private List<ClientRequestInfo> m_clientRequestHistory;
-		private List<ClientRequestHandler> m_clientRequestHandlers;
+        private List<ClientInfo> m_remoteClients;
+        private List<ClientRequestInfo> m_clientRequestHistory;
+        private List<ClientRequestHandler> m_clientRequestHandlers;
         private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
         private bool m_enabled;
         private bool m_disposed;
-        private bool m_initialized;       
+        private bool m_initialized;
         private bool m_suppressUpdates;
         private Guid m_remoteCommandClientID;
-        private Process m_remoteCommandProcess;	
-		
+        private Process m_remoteCommandProcess;
+
         #endregion
 
         #region [ Constructors ]
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceHelper"/> class.
         /// </summary>
         public ServiceHelper()
             : base()
-		{
-			m_logStatusUpdates = DefaultLogStatusUpdates;
-			m_monitorServiceHealth = DefaultMonitorServiceHealth;
-			m_requestHistoryLimit = DefaultRequestHistoryLimit;
+        {
+            m_logStatusUpdates = DefaultLogStatusUpdates;
+            m_monitorServiceHealth = DefaultMonitorServiceHealth;
+            m_requestHistoryLimit = DefaultRequestHistoryLimit;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
             m_allowedRemoteUsers = DefaultAllowedRemoteUsers;
             m_impersonateRemoteUser = DefaultImpersonateRemoteUser;
-			m_persistSettings = DefaultPersistSettings;
-			m_settingsCategory = DefaultSettingsCategory;
-			m_processes = new List<ServiceProcess>();
-			m_remoteClients = new List<ClientInfo>();
-			m_clientRequestHistory = new List<ClientRequestInfo>();
-			m_serviceComponents = new List<object>();
-			m_clientRequestHandlers = new List<ClientRequestHandler>();
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+            m_processes = new List<ServiceProcess>();
+            m_remoteClients = new List<ClientInfo>();
+            m_clientRequestHistory = new List<ClientRequestInfo>();
+            m_serviceComponents = new List<object>();
+            m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
-			m_telnetSessionPassword = "s3cur3";
+            m_telnetSessionPassword = "s3cur3";
 
-			// Components
-			m_statusLog = new LogFile();
-			m_statusLog.LogException += StatusLog_LogException;
-			m_statusLog.FileName = "StatusLog.txt";
-			m_statusLog.SettingsCategory = "StatusLog";
+            // Components
+            m_statusLog = new LogFile();
+            m_statusLog.LogException += StatusLog_LogException;
+            m_statusLog.FileName = "StatusLog.txt";
+            m_statusLog.SettingsCategory = "StatusLog";
 
             m_processScheduler = new ScheduleManager();
-			m_processScheduler.ScheduleDue += Scheduler_ScheduleDue;
-			m_processScheduler.SettingsCategory = "ProcessScheduler";
+            m_processScheduler.ScheduleDue += Scheduler_ScheduleDue;
+            m_processScheduler.SettingsCategory = "ProcessScheduler";
 
-			m_errorLogger = new ErrorLogger();
+            m_errorLogger = new ErrorLogger();
             m_errorLogger.LoggingException += ErrorLogger_LoggingException;
-			m_errorLogger.ExitOnUnhandledException = false;
-			m_errorLogger.SettingsCategory = "ErrorLogger";
+            m_errorLogger.ExitOnUnhandledException = false;
+            m_errorLogger.SettingsCategory = "ErrorLogger";
             m_errorLogger.ErrorLog.SettingsCategory = "ErrorLog";
-		}
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServiceHelper"/> class.
@@ -542,65 +563,65 @@ namespace TVA.Services
         #endregion
 
         #region [ Properties ]
-		
+
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(string,object[])"/> 
-        /// or <see cref="UpdateStatus(Guid,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
+        /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(UpdateType,string,object[])"/> 
+        /// or <see cref="UpdateStatus(Guid,UpdateType,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
         /// </summary>
-		[Category("Settings"), 
-        DefaultValue(DefaultLogStatusUpdates), 
+        [Category("Settings"),
+        DefaultValue(DefaultLogStatusUpdates),
         Description("Indicates whether messages sent using UpdateStatus() method overloads are to be logged to the StatusLog.")]
         public bool LogStatusUpdates
-		{
-			get
-			{
-				return m_logStatusUpdates;
-			}
-			set
-			{
-				m_logStatusUpdates = value;
-			}
-		}
+        {
+            get
+            {
+                return m_logStatusUpdates;
+            }
+            set
+            {
+                m_logStatusUpdates = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the health of the <see cref="ParentService"/> is to be monitored.
         /// </summary>
-        [Category("Settings"), 
+        [Category("Settings"),
         DefaultValue(DefaultMonitorServiceHealth),
         Description("Indicates whether the health of the ParentService is to be monitored.")]
         public bool MonitorServiceHealth
-		{
-			get
-			{
-				return m_monitorServiceHealth;
-			}
-			set
-			{
-				m_monitorServiceHealth = value;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_monitorServiceHealth;
+            }
+            set
+            {
+                m_monitorServiceHealth = value;
+            }
+        }
+
         /// <summary>
         /// Gets or sets the maximum number of <see cref="ClientRequest"/> entries to be maintained in the <see cref="ClientRequestHistory"/>.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
-        [Category("Settings"), 
-        DefaultValue(DefaultRequestHistoryLimit), 
+        [Category("Settings"),
+        DefaultValue(DefaultRequestHistoryLimit),
         Description("Maximum number of ClientRequest entries to be maintained in the ClientRequestHistory.")]
         public int RequestHistoryLimit
-		{
-			get
-			{
-				return m_requestHistoryLimit;
-			}
-			set
-			{
+        {
+            get
+            {
+                return m_requestHistoryLimit;
+            }
+            set
+            {
                 if (value < 1)
                     throw new ArgumentOutOfRangeException("RequestHistoryLimit", "Value must be greater that 0");
 
                 m_requestHistoryLimit = value;
-			}
-		}
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for remote telnet-like sessions.
@@ -610,7 +631,7 @@ namespace TVA.Services
         Description("Indicates whether the ServiceHelper will have support for remote telnet-like sessions.")]
         public bool SupportTelnetSessions
         {
-            get 
+            get
             {
                 return m_supportTelnetSessions;
             }
@@ -660,7 +681,7 @@ namespace TVA.Services
                 m_impersonateRemoteUser = value;
             }
         }
-		
+
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="ServiceHelper"/> are to be saved to the config file.
         /// </summary>
@@ -701,96 +722,96 @@ namespace TVA.Services
                 m_settingsCategory = value;
             }
         }
-	
-		/// <summary>
-		/// Gets or sets the <see cref="ServiceBase"/> to which the <see cref="ServiceHelper"/> will provided added functionality.
-		/// </summary>
-		[Category("Components"), 
+
+        /// <summary>
+        /// Gets or sets the <see cref="ServiceBase"/> to which the <see cref="ServiceHelper"/> will provided added functionality.
+        /// </summary>
+        [Category("Components"),
         Description("ServiceBase to which the ServiceHelper will provided added functionality.")]
         public ServiceBase ParentService
-		{
-			get
-			{
-				return m_parentService;
-			}
-			set
-			{
-				m_parentService = value;
-			}
-		}
+        {
+            get
+            {
+                return m_parentService;
+            }
+            set
+            {
+                m_parentService = value;
+            }
+        }
 
-		/// <summary>
-		/// Gets or sets the <see cref="ServerBase"/> component used for communicating with <see cref="RemoteClients"/>.
-		/// </summary>
-		[Category("Components"), 
+        /// <summary>
+        /// Gets or sets the <see cref="ServerBase"/> component used for communicating with <see cref="RemoteClients"/>.
+        /// </summary>
+        [Category("Components"),
         Description("ServerBase component used for communicating with RemoteClients.")]
         public ServerBase RemotingServer
-		{
-			get
-			{
-				return m_remotingServer;
-			}
-			set
-			{
+        {
+            get
+            {
+                return m_remotingServer;
+            }
+            set
+            {
                 if (m_remotingServer != null)
                 {
                     // Detach events from any existing instance
-				    m_remotingServer.ClientDisconnected -= RemotingServer_ClientDisconnected;
-				    m_remotingServer.ReceiveClientDataComplete -= RemotingServer_ReceiveClientDataComplete;
+                    m_remotingServer.ClientDisconnected -= RemotingServer_ClientDisconnected;
+                    m_remotingServer.ReceiveClientDataComplete -= RemotingServer_ReceiveClientDataComplete;
                 }
 
-				m_remotingServer = value;
+                m_remotingServer = value;
 
                 if (m_remotingServer != null)
                 {
                     // Attach events to new instance
-				    m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
-				    m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
+                    m_remotingServer.ClientDisconnected += RemotingServer_ClientDisconnected;
+                    m_remotingServer.ReceiveClientDataComplete += RemotingServer_ReceiveClientDataComplete;
                 }
-			}
-		}
-		
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="ScheduleManager"/> component used for scheduling defined <see cref="ServiceProcess"/>.
         /// </summary>
-		[Category("Components"), 
-        Description("ScheduleManager component used for scheduling defined ServiceProcess."), 
+        [Category("Components"),
+        Description("ScheduleManager component used for scheduling defined ServiceProcess."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ScheduleManager ProcessScheduler
-		{
-			get
-			{
-				return m_processScheduler;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_processScheduler;
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="LogFile"/> component used for logging status messages to a text file.
         /// </summary>
-		[Category("Components"), 
-        Description("LogFile component used for logging status messages to a text file."), 
+        [Category("Components"),
+        Description("LogFile component used for logging status messages to a text file."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public LogFile StatusLog
-		{
-			get
-			{
-				return m_statusLog;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_statusLog;
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="ErrorLogger"/> component used for logging errors encountered in the <see cref="ParentService"/>.
         /// </summary>
-		[Category("Components"), 
-        Description("ErrorLogger component used for logging errors encountered in the ParentService."), 
+        [Category("Components"),
+        Description("ErrorLogger component used for logging errors encountered in the ParentService."),
         DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public ErrorLogger ErrorLogger
-		{
-			get
-			{
-				return m_errorLogger;
-			}
-		}
+        {
+            get
+            {
+                return m_errorLogger;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> is currently enabled.
@@ -849,80 +870,80 @@ namespace TVA.Services
         /// <summary>
         /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
         /// </summary>
-		[Browsable(false), 
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<object> ServiceComponents
-		{
-			get
-			{
-				return m_serviceComponents;
-			}
-		}
+        {
+            get
+            {
+                return m_serviceComponents;
+            }
+        }
 
-		/// <summary>
-		/// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
-		/// </summary>
-		[Browsable(false),
+        /// <summary>
+        /// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
+        /// </summary>
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ServiceProcess> Processes
-		{
-			get
-			{
-				return m_processes;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_processes;
+            }
+        }
+
         /// <summary>
         /// Gets a list of <see cref="ClientInfo"/> for remote clients connected to the <see cref="RemotingServer"/>.
         /// </summary>
-		[Browsable(false),
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ClientInfo> RemoteClients
-		{
-			get
-			{
-				return m_remoteClients;
-			}
-		}
+        {
+            get
+            {
+                return m_remoteClients;
+            }
+        }
 
         /// <summary>
         /// Gets a list of <see cref="ClientRequestInfo"/> for requests made by <see cref="RemoteClients"/>.
         /// </summary>
-		[Browsable(false),
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ClientRequestInfo> ClientRequestHistory
-		{
-			get
-			{
-				return m_clientRequestHistory;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_clientRequestHistory;
+            }
+        }
+
         /// <summary>
         /// Gets a list of <see cref="ClientRequestHandler"/> registered for handling requests from <see cref="RemoteClients"/>.
         /// </summary>
-		[Browsable(false),
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public List<ClientRequestHandler> ClientRequestHandlers
-		{
-			get
-			{
-				return m_clientRequestHandlers;
-			}
-		}
-		
+        {
+            get
+            {
+                return m_clientRequestHandlers;
+            }
+        }
+
         /// <summary>
         /// Gets the <see cref="PerformanceMonitor"/> object used for monitoring the health of the <see cref="ParentService"/>.
         /// </summary>
-		[Browsable(false),
+        [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
         public PerformanceMonitor PerformanceMonitor
-		{
-			get
-			{
-				return m_performanceMonitor;
-			}
-		}
+        {
+            get
+            {
+                return m_performanceMonitor;
+            }
+        }
 
         /// <summary>
         /// Gets the unique identifier of the <see cref="ServiceHelper"/>.
@@ -1411,19 +1432,21 @@ namespace TVA.Services
         /// Provides a status update to all <see cref="RemoteClients"/>.
         /// </summary>
         /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
-        public void UpdateStatus(string message, params object[] args)
+        public void UpdateStatus(UpdateType type, string message, params object[] args)
         {
-            UpdateStatus(Guid.Empty, message, args);
+            UpdateStatus(Guid.Empty, type, message, args);
         }
 
         /// <summary>
         /// Provides a status update to the specified <paramref name="client"/>.
         /// </summary>
         /// <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
-        public void UpdateStatus(Guid client, string message, params object[] args)
+        public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
             if (!m_suppressUpdates)
             {
@@ -1431,7 +1454,7 @@ namespace TVA.Services
                 message = string.Format(message, args);
 
                 // Send the status update to specified client(s)
-                SendUpdateClientStatusResponse(client, message);
+                SendUpdateClientStatusResponse(client, type, message);
 
                 // Log the status update to the log file if logging is enabled.
                 if (m_logStatusUpdates)
@@ -1675,15 +1698,10 @@ namespace TVA.Services
             }
         }
 
-        private void SendUpdateClientStatusResponse(string response)
-        {
-            SendUpdateClientStatusResponse(Guid.Empty, response);
-        }
-
-        private void SendUpdateClientStatusResponse(Guid clientID, string response)
+        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
         {
             ServiceResponse serviceResponse = new ServiceResponse();
-            serviceResponse.Type = "UPDATECLIENTSTATUS";
+            serviceResponse.Type = "UPDATECLIENTSTATUS-" + type.ToString().ToUpper();
             serviceResponse.Message = response;
             SendResponse(clientID, serviceResponse);
         }
@@ -1721,13 +1739,13 @@ namespace TVA.Services
         {
             // We'll let the connected clients know that we encountered an exception while logging the status update.
             m_logStatusUpdates = false;
-            UpdateStatus("Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
             m_logStatusUpdates = true;
         }
 
         private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
         {
-            UpdateStatus("Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
         }
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -1751,7 +1769,7 @@ namespace TVA.Services
                 }
 
                 m_remoteClients.Remove(disconnectedClient);
-                UpdateStatus("Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.UserName, disconnectedClient.MachineName);
+                UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.UserName, disconnectedClient.MachineName);
             }
         }
 
@@ -1782,7 +1800,7 @@ namespace TVA.Services
                             client.ConnectedAt = DateTime.Now;
                             m_remoteClients.Add(client);
                             SendResponse(e.Argument1, new ServiceResponse("AuthenticationSuccess"));
-                            UpdateStatus("Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                            UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
                         }
                         else
                         {
@@ -1801,7 +1819,7 @@ namespace TVA.Services
                     try
                     {
                         SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"));
-                        UpdateStatus("Remote client connection rejected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                        UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
                         m_errorLogger.Log(ex);
                         m_remotingServer.DisconnectOne(e.Argument1);
                     }
@@ -1849,7 +1867,7 @@ namespace TVA.Services
 
                             ClientRequestHandler requestHandler = FindClientRequestHandler(request.Command);
                             if (requestHandler != null)
-                            {                              
+                            {
                                 // Request handler exists.
                                 requestHandler.HandlerMethod(requestInfo);
                             }
@@ -1873,7 +1891,7 @@ namespace TVA.Services
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestSender.ClientID, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
+                        UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
                     }
                     finally
                     {
@@ -1883,19 +1901,19 @@ namespace TVA.Services
                 }
                 else
                 {
-                    UpdateStatus(requestSender.ClientID, "Failed to process request - Request could not be deserialized.\r\n\r\n");
+                    UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request - Request could not be deserialized.\r\n\r\n");
                 }
             }
         }
 
         private void RemoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
+            UpdateStatus(m_remoteCommandClientID, UpdateType.Alarm, e.Data + "\r\n");
         }
 
         private void RemoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, e.Data + "\r\n");
+            UpdateStatus(m_remoteCommandClientID, UpdateType.Information, e.Data + "\r\n");
         }
 
         #region [ Client Request Handlers ]
@@ -1921,7 +1939,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -1976,11 +1994,11 @@ namespace TVA.Services
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, "No clients are connected to {0}\r\n\r\n", Name);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No clients are connected to {0}\r\n\r\n", Name);
                 }
             }
         }
@@ -2006,7 +2024,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2054,7 +2072,7 @@ namespace TVA.Services
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2088,7 +2106,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2150,12 +2168,12 @@ namespace TVA.Services
                         responseMessage.AppendLine();
                         responseMessage.AppendLine();
 
-                        UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                     }
                     else
                     {
                         // No processes defined in the service to be displayed.
-                        UpdateStatus(requestInfo.Sender.ClientID, "No processes are defined in {0}.\r\n\r\n", Name);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No processes are defined in {0}.\r\n\r\n", Name);
                     }
                 }
                 else
@@ -2209,7 +2227,7 @@ namespace TVA.Services
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
             }
         }
@@ -2235,7 +2253,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2275,11 +2293,11 @@ namespace TVA.Services
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, "No process schedules are defined in {0}.\r\n\r\n", Name);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No process schedules are defined in {0}.\r\n\r\n", Name);
                 }
             }
         }
@@ -2305,7 +2323,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2338,7 +2356,7 @@ namespace TVA.Services
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2363,7 +2381,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2395,7 +2413,7 @@ namespace TVA.Services
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2420,14 +2438,14 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 if (m_performanceMonitor != null)
-                    UpdateStatus(requestInfo.Sender.ClientID, m_performanceMonitor.Status + "\r\n");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.Status + "\r\n");
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, "Performance monitor is not available.");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "Performance monitor is not available.");
             }
         }
 
@@ -2452,11 +2470,11 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
-                UpdateStatus(requestInfo.Sender.ClientID, Status);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, Status);
             }
         }
 
@@ -2484,7 +2502,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2494,16 +2512,16 @@ namespace TVA.Services
                 foreach (object component in m_serviceComponents)
                 {
                     typedComponent = component as IPersistSettings;
-                    if (typedComponent != null && 
+                    if (typedComponent != null &&
                         string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                     {
                         typedComponent.LoadSettings();
-                        UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
                         return;
                     }
                 }
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Failed to load settings from category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to load settings from category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
@@ -2545,7 +2563,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2561,7 +2579,7 @@ namespace TVA.Services
                 foreach (object component in m_serviceComponents)
                 {
                     typedComponent = component as IPersistSettings;
-                    if (typedComponent != null && 
+                    if (typedComponent != null &&
                         string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                     {
                         ConfigurationFile config = ConfigurationFile.Current;
@@ -2572,14 +2590,14 @@ namespace TVA.Services
                             // Add new setting.
                             if (setting == null)
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 settings.Add(settingName, settingValue);
                                 config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
                                 return;
                             }
                         }
@@ -2588,14 +2606,14 @@ namespace TVA.Services
                             // Delete existing setting.
                             if (setting != null)
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 settings.Remove(setting);
                                 config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
-                            else 
+                            else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
                                 return;
                             }
                         }
@@ -2604,14 +2622,14 @@ namespace TVA.Services
                             // Update existing setting.
                             if (setting != null)
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                 setting.Value = settingValue;
                                 config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
                                 return;
                             }
                         }
@@ -2634,7 +2652,7 @@ namespace TVA.Services
                     }
                 }
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Failed to update settings under category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update settings under category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
@@ -2676,7 +2694,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2700,7 +2718,7 @@ namespace TVA.Services
                     {
                         if (processToStart.CurrentState != ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
                             if (string.IsNullOrEmpty(processArgs))
                             {
                                 processToStart.Start();
@@ -2714,34 +2732,34 @@ namespace TVA.Services
                                 // Start the service process.
                                 processToStart.Start(splitArgs);
                             }
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully started service process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to start process \"{0}\". Process is already executing.\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start process \"{0}\". Process is already executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
                 else
                 {
                     try
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
                         Process startedProcess = Process.Start(processName, processArgs);
 
                         if (startedProcess != null)
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully started system process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
                         else
-                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to start system process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
                     }
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                     }
                 }
 
@@ -2789,7 +2807,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2805,18 +2823,18 @@ namespace TVA.Services
                     {
                         if (processToAbort.CurrentState == ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Abort();
-                            UpdateStatus(requestInfo.Sender.ClientID, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
                 else
@@ -2850,26 +2868,26 @@ namespace TVA.Services
                     {
                         try
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, "Attempting to abort system process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort system process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Kill();
                             if (processToAbort.WaitForExit(10000))
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Successfully aborted system process \"{0}\".\r\n\r\n", processName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted system process \"{0}\".\r\n\r\n", processName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". Process not responding.\r\n\r\n", processName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". Process not responding.\r\n\r\n", processName);
                             }
                         }
                         catch (Exception ex)
                         {
                             m_errorLogger.Log(ex);
-                            UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
                     }
                 }
 
@@ -2955,7 +2973,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2967,9 +2985,9 @@ namespace TVA.Services
                 try
                 {
                     // Schedule the process if not scheduled or update its schedule if scheduled.
-                    UpdateStatus(requestInfo.Sender.ClientID, "Attempting to schedule process \"{0}\" with rule \"{1}\"...\r\n\r\n", processName, scheduleRule);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to schedule process \"{0}\" with rule \"{1}\"...\r\n\r\n", processName, scheduleRule);
                     ScheduleProcess(processName, scheduleRule, true);
-                    UpdateStatus(requestInfo.Sender.ClientID, "Successfully scheduled process \"{0}\" with rule \"{1}\".\r\n\r\n", processName, scheduleRule);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully scheduled process \"{0}\" with rule \"{1}\".\r\n\r\n", processName, scheduleRule);
 
                     if (saveSchedules)
                     {
@@ -2980,7 +2998,7 @@ namespace TVA.Services
                 catch (Exception ex)
                 {
                     m_errorLogger.Log(ex);
-                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
                 }
 
                 if (listSchedules)
@@ -3018,7 +3036,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3030,9 +3048,9 @@ namespace TVA.Services
 
                 if (scheduleToRemove != null)
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
                     m_processScheduler.Schedules.Remove(scheduleToRemove);
-                    UpdateStatus(requestInfo.Sender.ClientID, "Successfully unscheduled process \"{0}\".\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully unscheduled process \"{0}\".\r\n\r\n", processName);
 
                     if (saveSchedules)
                     {
@@ -3042,7 +3060,7 @@ namespace TVA.Services
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
                 }
 
                 if (listSchedules)
@@ -3077,15 +3095,15 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to save process schedules to the config file...\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to save process schedules to the config file...\r\n\r\n");
                 m_processScheduler.SaveSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, "Successfully saved process schedules to the config file.\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully saved process schedules to the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -3119,15 +3137,15 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, "Attempting to load process schedules from the config file...\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to load process schedules from the config file...\r\n\r\n");
                 m_processScheduler.LoadSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, "Successfully loaded process schedules from the config file.\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded process schedules from the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -3164,7 +3182,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestinfo.Sender.ClientID, helpMessage.ToString());
+                UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3191,14 +3209,14 @@ namespace TVA.Services
                         m_remoteCommandProcess.BeginOutputReadLine();
                         m_remoteCommandProcess.BeginErrorReadLine();
 
-                        UpdateStatus("Remote command session established - status updates are suspended.\r\n\r\n");
+                        UpdateStatus(UpdateType.Information, "Remote command session established - status updates are suspended.\r\n\r\n");
 
                         m_remoteCommandClientID = requestinfo.Sender.ClientID;
                         SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Established"));
                     }
                     else
                     {
-                        UpdateStatus(requestinfo.Sender.ClientID, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
+                        UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
                 else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
@@ -3206,17 +3224,17 @@ namespace TVA.Services
                     // User wants to terminate an established remote command session.                   
                     m_remoteCommandProcess.ErrorDataReceived -= RemoteCommandProcess_ErrorDataReceived;
                     m_remoteCommandProcess.OutputDataReceived -= RemoteCommandProcess_OutputDataReceived;
-                    
+
                     if (!m_remoteCommandProcess.HasExited)
                         m_remoteCommandProcess.Kill();
 
                     m_remoteCommandProcess.Dispose();
                     m_remoteCommandProcess = null;
-                 
+
                     m_remoteCommandClientID = Guid.Empty;
                     SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Terminated"));
 
-                    UpdateStatus("Remote command session terminated - status updates are resumed.\r\n\r\n");
+                    UpdateStatus(UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
                 else if (m_remoteCommandProcess != null)
                 {
@@ -3236,5 +3254,5 @@ namespace TVA.Services
         #endregion
 
         #endregion
-	}
+    }
 }
