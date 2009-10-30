@@ -250,7 +250,6 @@ using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
