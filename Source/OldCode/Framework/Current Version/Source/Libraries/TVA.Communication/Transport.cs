@@ -19,6 +19,9 @@
 //       Modified CreateEndPoint() to use IPv6 if supported when no IP address is specified.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/30/2009 - Pinal C. Patel
+//       Added IsIPv6IP() and IsMulticastIP() methods.
+//       Fixed bug in CreateSocket() that was breaking one-way communication support in UDP components.
 //
 //*******************************************************************************************************
 
@@ -297,23 +300,78 @@ namespace TVA.Communication
         public static Socket CreateSocket(string address, int port, ProtocolType protocol)
         {
             Socket socket = null;
-            IPEndPoint endpoint = Transport.CreateEndPoint(address, port);
+            IPEndPoint endpoint = null;
             switch (protocol)
             {
                 case ProtocolType.Tcp:
+                    endpoint = Transport.CreateEndPoint(address, port);
                     socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
                     socket.Bind(endpoint);
                     break;
                 case ProtocolType.Udp:
-                    socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                    // Don't bind to an interface if specified by using negative port number.
+                    // Allow negative port number to be specified for unbound socket.
                     if (port >= 0)
+                    {
+                        endpoint = Transport.CreateEndPoint(address, port);
+                        socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                         socket.Bind(endpoint);
+                    }
+                    else
+                    {
+                        endpoint = Transport.CreateEndPoint(address, 0);
+                        socket = new Socket(endpoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+                    }
                     break;
                 default:
                     throw new NotSupportedException(string.Format("{0} is not supported", protocol));
             }
             return socket;
+        }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="ipAddress"/> is an IPv6 IP.
+        /// </summary>
+        /// <param name="ipAddress">IP address to check.</param>
+        /// <returns>true if the <paramref name="ipAddress"/> is IPv6 IP; otherwise false.</returns>
+        public static bool IsIPv6IP(IPAddress ipAddress)
+        {
+            if (ipAddress == null)
+                throw new ArgumentNullException("ipAddress");
+
+            if (ipAddress.ToString().Contains(":"))
+                // IP is a IPV6 IP.
+                return true;
+            else
+                // IP is a IPV4 IP.
+                return false;
+        }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="ipAddress"/> is a multicast IP.
+        /// </summary>
+        /// <param name="ipAddress">IP address to check.</param>
+        /// <returns>true if the <paramref name="ipAddress"/> is multicast IP; otherwise false.</returns>
+        public static bool IsMulticastIP(IPAddress ipAddress)
+        {
+            if (ipAddress == null)
+                throw new ArgumentNullException("ipAddress");
+
+            if (Transport.IsIPv6IP(ipAddress))
+            {
+                // IP is a IPV6 IP.
+                return ipAddress.IsIPv6Multicast;
+            }
+            else
+            {
+                // IP is a IPV4 IP.
+                int firstOctet = int.Parse(ipAddress.ToString().Split('.')[0]);
+                if (firstOctet >= 224 && firstOctet <= 247)
+                    // IP is a Class D multicast IP.
+                    return true;
+                else
+                    // IP is not a multicast IP.
+                    return false;
+            }
         }
 
         /// <summary>

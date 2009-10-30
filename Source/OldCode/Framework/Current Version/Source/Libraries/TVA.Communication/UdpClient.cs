@@ -28,6 +28,8 @@
 //       Allowed for UDP endpoint to not be bound to a local interface by specifying -1 for port number.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/30/2009 - Pinal C. Patel
+//       Added true multicast support by allowing for socket level subscription to a multicast group.
 //
 //*******************************************************************************************************
 
@@ -269,7 +271,7 @@ namespace TVA.Communication
     /// </para>
     /// <para>
     /// The <see cref="UdpClient.Client"/> socket can be used just for transmitting data without being bound to a local interface 
-    /// by specifying -1 for the local port number in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=-1")
+    /// by specifying -1 for the port number in the <see cref="ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=-1")
     /// </para>
     /// </remarks>
     /// <example>
@@ -577,6 +579,16 @@ namespace TVA.Communication
                         // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
                         m_udpClient.Provider = Transport.CreateSocket(m_connectData["interface"], int.Parse(m_connectData["port"]), ProtocolType.Udp);
                         m_udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+
+                        // If the IP specified for the server is a multicast IP, subscribe to the specified multicast group.
+                        IPEndPoint serverEndpoint = (IPEndPoint)m_udpServer;
+                        if (Transport.IsMulticastIP(serverEndpoint.Address))
+                        {
+                            if (Transport.IsIPv6IP(serverEndpoint.Address))
+                                m_udpClient.Provider.SetSocketOption(SocketOptionLevel.IPv6, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
+                            else
+                                m_udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
+                        }
 
                         OnConnectionEstablished();
                         // Listen for incoming data only if endpoint is bound to a local interface.

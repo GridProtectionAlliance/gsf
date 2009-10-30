@@ -23,6 +23,8 @@
 //  10/14/2009 - Pinal C. Patel
 //       Fixed bug in the processing of Handshake messages.
 //       Added null reference checks to Stop() and DisconnectOne() for safety.
+//  10/30/2009 - Pinal C. Patel
+//       Added support for one-way communication by specifying Port=-1 in ConfigurationString.
 //
 //*******************************************************************************************************
 
@@ -263,6 +265,10 @@ namespace TVA.Communication
     /// The <see cref="UdpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
     /// specifying the interface in the <see cref="ServerBase.ConfigurationString"/> (Example: "Port=8888; Clients=localhost:8989; Interface=127.0.0.1")
     /// </para>
+    /// <para>
+    /// The <see cref="UdpServer.Server"/> socket can be used just for transmitting data without being bound to a local interface 
+    /// by specifying -1 for the port number in the <see cref="ServerBase.ConfigurationString"/> (Example: "Port=-1; Clients=localhost:8989")
+    /// </para>
     /// </remarks>
     /// <example>
     /// This example shows how to use the <see cref="UdpServer"/> component:
@@ -451,13 +457,17 @@ namespace TVA.Communication
 
                 if (Handshake)
                 {
+                    // Listen for incoming data if server endpoint is bound to a local interface.
                     m_receivedGoodbye = DoGoodbyeCheck;
-                    ReceiveHandshakeAsync(m_udpServer);
+                    if (m_udpServer.Provider.LocalEndPoint != null)
+                        ReceiveHandshakeAsync(m_udpServer);
                 }
                 else
                 {
+                    // Listen for incoming data if server endpoint is bound to a local interface.
                     m_receivedGoodbye = NoGoodbyeCheck;
-                    ReceivePayloadAnyAsync(m_udpServer);
+                    if (m_udpServer.Provider.LocalEndPoint != null)
+                        ReceivePayloadAnyAsync(m_udpServer);
 
                     // When handshake is not to be performed, we process the static list to clients.
                     foreach (string clientString in m_configData["clients"].Replace(" ", "").Split(','))
@@ -556,8 +566,8 @@ namespace TVA.Communication
             if (!m_configData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port is missing (Example: {0})", DefaultConfigurationString));
 
-            if (!Transport.IsPortNumberValid(m_configData["port"]))
-                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
+            if (!Transport.IsPortNumberValid(m_configData["port"]) && int.Parse(m_configData["port"]) != -1)
+                throw new ArgumentOutOfRangeException("configurationString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
         /// <summary>
@@ -685,7 +695,7 @@ namespace TVA.Communication
                         {
                             m_udpClients.Add(udpClient.ID, udpClient);
                         }
-                        OnClientConnected(udpClient.ID);                        
+                        OnClientConnected(udpClient.ID);
 
                         try
                         {
