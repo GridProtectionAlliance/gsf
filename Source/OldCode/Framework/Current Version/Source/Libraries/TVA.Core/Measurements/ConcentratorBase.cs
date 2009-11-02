@@ -371,6 +371,9 @@ namespace TVA.Measurements
             // Create a new queue for managing real-time frames
             m_frameQueue = new FrameQueue(this);
 
+            // Set minimum timer resolution to one millisecond to improve timer accuracy
+            PrecisionTimer.SetMinimumTimerResolution(1);
+
             // Create high precision timer used for frame processing
             m_publicationTimer = new PrecisionTimer();
             m_publicationTimer.AutoReset = true;
@@ -991,6 +994,9 @@ namespace TVA.Measurements
                         m_latestMeasurements = null;
 
                         m_lastDiscardedMeasurement = null;
+
+                        // Clear minimum timer resolution.
+                        PrecisionTimer.ClearMinimumTimerResolution(1);
                     }
                 }
                 finally

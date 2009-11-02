@@ -17,6 +17,9 @@
 //       Integrated, merged and adapted for general use as PrecisionTimer.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/02/2009 - J. Ritchie Carroll
+//       Added SetMinimumTimerResolution and ClearMinimumTimerResolution to control
+//       system level minimum timer resolutions.
 //
 //*******************************************************************************************************
 
@@ -811,6 +814,46 @@ namespace TVA
 
         // Static Methods
 
+        /// <summary>
+        /// Requests a minimum resolution for periodic timers such as the <see cref="PrecisionTimer"/>.
+        /// </summary>
+        /// <param name="period">
+        /// Minimum timer resolution, in milliseconds, for the application. A lower value specifies a higher (more accurate) resolution.
+        /// </param>
+        /// <remarks>
+        /// Call this function immediately before using the <see cref="PrecisionTimer"/> and call <see cref="ClearMinimumTimerResolution"/>
+        /// immediately after you are finished using the PrecisionTimer. You must match each call to <see cref="SetMinimumTimerResolution"/>
+        /// with a call to ClearMinimumTimerResolution specifying the same minimum resolution <paramref name="period"/> in both calls.
+        /// An application can make multiple ClearMinimumTimerResolution calls as long as each call is matched with a call to ClearMinimumTimerResolution.
+        /// This function affects a global Windows setting. Windows uses the lowest value (that is, highest resolution) requested by any process.
+        /// Setting a higher resolution can improve the accuracy of time-out intervals in wait functions. However, it can also reduce overall system
+        /// performance, because the thread scheduler switches tasks more often. High resolutions can also prevent the CPU power management system from
+        /// entering power-saving modes. See timeBeginPeriod Windows API for more information.
+        /// </remarks>
+        public static void SetMinimumTimerResolution(int period)
+        {
+            if (timeBeginPeriod(period) != 0)
+                throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+        }
+
+        /// <summary>
+        /// Clears a previously set minimum timer resolution established using <see cref="SetMinimumTimerResolution"/>.
+        /// </summary>
+        /// <param name="period">
+        /// Minimum timer resolution specified in the previous call to the <see cref="SetMinimumTimerResolution"/> function.
+        /// </param>
+        /// <remarks>
+        /// Call this function immediately after you are finished using the <see cref="PrecisionTimer"/>. You must match each call to
+        /// <see cref="SetMinimumTimerResolution"/> with a call to <see cref="ClearMinimumTimerResolution"/>, specifying the same minimum
+        /// resolution <paramref name="period"/> in both calls. An application can make multiple SetMinimumTimerResolution calls as long
+        /// as each call is matched with a call to ClearMinimumTimerResolution.
+        /// </remarks>
+        public static void ClearMinimumTimerResolution(int period)
+        {
+            if (timeEndPeriod(period) != 0)
+                throw new InvalidOperationException("Specified period resolution is out of range and is not supported.");
+        }
+
         // Initializes the the precise timing mechanism
         private static void InitializePreciseTime()
         {
@@ -844,6 +887,14 @@ namespace TVA
         // Stops and destroys the timer.
         [DllImport("winmm.dll")]
         private static extern int timeKillEvent(int id);
+
+        // Sets the minimum resolution for periodic timers.
+        [DllImport("winmm.dll")]
+        private static extern int timeBeginPeriod(int period);
+
+        // Clears a previously set minimum timer resolution.
+        [DllImport("winmm.dll")]
+        private static extern int timeEndPeriod(int period);
 
         #endregion
     }
