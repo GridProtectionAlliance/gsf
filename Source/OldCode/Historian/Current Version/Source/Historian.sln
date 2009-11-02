@@ -47,30 +47,27 @@ Global
 		SccProjectName2 = Libraries/Test/TVA.Historian.Test
 		SccLocalPath2 = Libraries\\Test\\TVA.Historian.Test
 	EndGlobalSection
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = Historian.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EF3BA2EC-66A1-436D-B126-018C3DEB51D4} = {10F92F7C-6857-484D-9707-01ECE4F7467A}
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {A80F340A-FD72-407A-B070-5124162B64EC}
 		{A0BB1312-9332-4B46-A785-35F14EA88AD9} = {A80F340A-FD72-407A-B070-5124162B64EC}
+		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {A80F340A-FD72-407A-B070-5124162B64EC}
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17} = {A0BB1312-9332-4B46-A785-35F14EA88AD9}
 	EndGlobalSection
 EndGlobal
