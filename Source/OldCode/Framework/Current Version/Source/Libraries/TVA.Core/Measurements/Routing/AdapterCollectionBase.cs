@@ -765,7 +765,12 @@ namespace TVA.Measurements.Routing
 
                                 // If old item was running, start new item
                                 if (enabled)
-                                    newAdapter.Start();
+                                {
+                                    if (AutoInitialize)
+                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                                    else
+                                        newAdapter.Start();
+                                }
 
                                 foundItem = true;
                                 break;
