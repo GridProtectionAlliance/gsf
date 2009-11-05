@@ -1035,7 +1035,7 @@ namespace TVA.Measurements
 
                 // Start real-time frame publication
                 m_frameIndex = 0;
-                m_lastFramePeriod = (int)(m_ticksPerFrame / (decimal)Ticks.PerMillisecond);
+                m_lastFramePeriod = m_framePeriods[m_frameIndex];
                 m_publicationTimer.Period = m_lastFramePeriod;
                 m_publicationTimer.Start();
                 m_monitorTimer.Start();
