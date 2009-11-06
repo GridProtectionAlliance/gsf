@@ -1,19 +1,15 @@
-//*******************************************************************************************************
-//  QueryPacketBase.cs - Gbtc
+๏ปฟ//*******************************************************************************************************
+//  IReplicationProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  07/16/2007 - Pinal C. Patel
-//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
-//  04/21/2009 - Pinal C. Patel
-//       Converted to C#.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
+//  11/02/2009 - Pinal C. Patel
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -52,7 +48,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -129,7 +125,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -234,141 +230,67 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using TVA.Configuration;
 
-namespace TVA.Historian.Packets
+namespace TVA.Historian.Replication
 {
     /// <summary>
-    /// Base class for a packet to be used for requesting information from a historian.
+    /// Defines a provider of replication mechanism for the <see cref="IArchive"/>.
     /// </summary>
-    public abstract class QueryPacketBase : PacketBase
+    public interface IReplicationProvider : ISupportLifecycle, IPersistSettings
     {
-        // **************************************************************************************************
-        // *                                        Binary Structure                                        *
-        // **************************************************************************************************
-        // * # Of Bytes Byte Index Data Type  Property Name                                                 *
-        // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      RequestIDs.Count                                              *
-        // * 4          6-9        Int32      RequestIDs[0]                                                 *
-        // * 4          n1-n2      Int32      RequestIDs[RequestIDs.Count -1 ]                              *
-        // **************************************************************************************************
-
         #region [ Members ]
 
-        // Fields
-        private List<int> m_requestIDs;
-
-        #endregion
-
-        #region [ Constructors ]
+        // Events
 
         /// <summary>
-        /// Initializes a new instance of the query packet.
+        /// Occurs when the process of replicating the <see cref="IArchive"/> is started.
         /// </summary>
-        /// <param name="packetID">Numeric identifier for the packet type.</param>
-        protected QueryPacketBase(short packetID)
-            : base(packetID)
-        {
-            m_requestIDs = new List<int>();
-        }
+        event EventHandler ReplicationStart;
+
+        /// <summary>
+        /// Occurs when the process of replicating the <see cref="IArchive"/> is complete.
+        /// </summary>
+        event EventHandler ReplicationComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during the replication process of <see cref="IArchive"/>.
+        /// </summary>
+        event EventHandler<EventArgs<Exception>> ReplicationException;
+
+        /// <summary>
+        /// Occurs when the <see cref="IArchive"/> is being replicated.
+        /// </summary>
+        event EventHandler<EventArgs<ProcessProgress<int>>> ReplicationProgress;
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a list of historian identifiers whose information is being requested.
+        /// Gets or sets the primary location of the <see cref="IArchive"/>.
         /// </summary>
-        /// <remarks>A singe entry with ID of -1 can be used to request information for all defined historian identifiers.</remarks>
-        public IList<int> RequestIDs
-        {
-            get
-            {
-                return m_requestIDs;
-            }
-        }
+        string ArchiveLocation { get; set; }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets or sets the mirrored location of the <see cref="IArchive"/>.
         /// </summary>
-        public override int BinaryLength
-        {
-            get
-            {
-                return (2 + 4 + (m_requestIDs.Count * 4));
-            }
-        }
+        string ReplicaLocation { get; set; }
 
         /// <summary>
-        /// Gets the binary representation of the query packet.
+        /// Gets or sets the interval in milliseconds at which the <see cref="IArchive"/> is to be replicated.
         /// </summary>
-        public override byte[] BinaryImage
-        {
-            get
-            {
-                byte[] image = new byte[BinaryLength];
-
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, image, 2, 4);
-                for (int i = 0; i < m_requestIDs.Count; i++)
-                {
-                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, image, 6 + (i * 4), 4);
-                }
-
-                return image;
-            }
-        }
+        int ReplicationInterval { get; set; }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the query packet from the specified <paramref name="binaryImage"/>.
+        /// Replicates the <see cref="IArchive"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing the query packet.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing the query packet.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
-        {
-            if (length >= 6)
-            {
-                // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetID != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
-
-                // Ensure that the binary image is complete
-                int requestIDCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-                if (length < 6 + requestIDCount * 4)
-                    return 0;
-
-                // We have a binary image with the correct packet id.
-                m_requestIDs.Clear();
-                for (int i = 0; i < requestIDCount; i++)
-                {
-                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 6 + (i * 4)));
-                }
-
-                return BinaryLength;
-            }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Extracts time-series data from the query packet type.
-        /// </summary>
-        /// <returns>A null reference.</returns>
-        public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
-        {
-            return null;
-        }
+        /// <returns>true if the replication is successful; otherwise false.</returns>
+        bool Replicate();
 
         #endregion
     }

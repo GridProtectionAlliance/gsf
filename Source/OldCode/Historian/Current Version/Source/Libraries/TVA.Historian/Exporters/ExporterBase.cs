@@ -255,7 +255,7 @@ using TVA.Historian.Packets;
 namespace TVA.Historian.Exporters
 {
     /// <summary>
-    /// A base class for an exporter of real-time time-series data.
+    /// Base class for an exporter of real-time time-series data.
     /// </summary>
     /// <seealso cref="Export"/>
     /// <seealso cref="DataListener"/>

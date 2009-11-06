@@ -16,6 +16,8 @@
 //       Added new header and license agreement.
 //  09/15/2009 - Pinal C. Patel
 //       Throwing ArgumentNullException exception in Refresh() if Metadata is null.
+//  11/05/2009 - Pinal C. Patel
+//       Modified to abort refresh operation during dispose.
 //
 //*******************************************************************************************************
 
@@ -244,7 +246,7 @@ using TVA.Historian.Files;
 namespace TVA.Historian.MetadataProviders
 {
     /// <summary>
-    /// A base class for a provider of updates to the data in a <see cref="MetadataFile"/>.
+    /// Base class for a provider of updates to the data in a <see cref="MetadataFile"/>.
     /// </summary>
     public abstract class MetadataProviderBase : IMetadataProvider
     {
@@ -281,6 +283,7 @@ namespace TVA.Historian.MetadataProviders
         private MetadataFile m_metadata;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private Thread m_refreshThread;
         private System.Timers.Timer m_refreshTimer;
         private bool m_enabled;
         private bool m_disposed;
@@ -335,7 +338,7 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Gets or sets the number of minutes at which the <see cref="Metadata"/> if to be refreshed automatically.
+        /// Gets or sets the interval in minutes at which the <see cref="Metadata"/> if to be refreshed automatically.
         /// </summary>
         /// <remarks>
         /// Set <see cref="RefreshInterval"/> to -1 to disable auto <see cref="Refresh()"/>.
@@ -413,7 +416,7 @@ namespace TVA.Historian.MetadataProviders
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -503,7 +506,7 @@ namespace TVA.Historian.MetadataProviders
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("Enabled", m_enabled, "True if this metadata provider is enabled; otherwise False.");
                 settings.Add("RefreshTimeout", m_refreshTimeout, "Number of seconds to wait for metadata refresh to complete.");
-                settings.Add("RefreshInterval", m_refreshInterval, "Number of minutes at which the metadata is to be refreshed.");
+                settings.Add("RefreshInterval", m_refreshInterval, "Interval in minutes at which the metadata is to be refreshed.");
                 Enabled = settings["Enabled"].ValueAs(m_enabled);
                 RefreshTimeout = settings["RefreshTimeout"].ValueAs(m_refreshTimeout);
                 RefreshInterval = settings["RefreshInterval"].ValueAs(m_refreshInterval);
@@ -520,32 +523,28 @@ namespace TVA.Historian.MetadataProviders
             if (m_metadata == null)
                 throw new ArgumentNullException("Metadata");
 
-            if (m_enabled)
+            if (!m_enabled || (m_refreshThread != null && m_refreshThread.IsAlive))
+                return false;
+
+            m_refreshThread = new Thread(RefreshInternal);
+            m_refreshThread.Start();
+            if (m_refreshTimeout < 1)
             {
-                Thread refreshThread = new Thread(RefreshInternal);
-                refreshThread.Start();
-                if (m_refreshTimeout < 1)
-                {
-                    // Wait indefinetely on the refresh.
-                    refreshThread.Join(Timeout.Infinite);
-                }
-                else
-                {
-                    // Wait for the specified time on refresh.
-                    if (!refreshThread.Join(m_refreshTimeout * 1000))
-                    {
-                        refreshThread.Abort();
-
-                        return false;
-                    }
-                }
-
-                return true;
+                // Wait indefinetely on the refresh.
+                m_refreshThread.Join(Timeout.Infinite);
             }
             else
             {
-                return false;
+                // Wait for the specified time on refresh.
+                if (!m_refreshThread.Join(m_refreshTimeout * 1000))
+                {
+                    m_refreshThread.Abort();
+
+                    return false;
+                }
             }
+
+            return true;
         }
 
         /// <summary>
@@ -563,6 +562,9 @@ namespace TVA.Historian.MetadataProviders
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
+
+                        if (m_refreshThread != null)
+                            m_refreshThread.Abort();
 
                         if (m_refreshTimer != null)
                         {

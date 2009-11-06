@@ -39,14 +39,6 @@
     <DocumentationFile>..\..\..\Build\Output\Release\Libraries\TVA.Historian.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Synchronization, Version=2.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\Microsoft\Microsoft.Synchronization.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Synchronization.Files, Version=2.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\Microsoft\Microsoft.Synchronization.Files.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -145,6 +137,10 @@
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Notifiers\NamespaceDoc.cs" />
     <Compile Include="Packets\NamespaceDoc.cs" />
+    <Compile Include="Replication\IReplicationProvider.cs" />
+    <Compile Include="Replication\NamespaceDoc.cs" />
+    <Compile Include="Replication\ReplicationProviderBase.cs" />
+    <Compile Include="Replication\ReplicationProviders.cs" />
     <Compile Include="Services\IMetadataService.cs" />
     <Compile Include="Services\IService.cs" />
     <Compile Include="Services\ITimeSeriesDataService.cs" />

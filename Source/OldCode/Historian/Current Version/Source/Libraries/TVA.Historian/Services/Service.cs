@@ -423,7 +423,7 @@ namespace TVA.Historian.Services
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }

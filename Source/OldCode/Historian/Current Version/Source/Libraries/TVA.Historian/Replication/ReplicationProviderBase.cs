@@ -1,19 +1,15 @@
-//*******************************************************************************************************
-//  QueryPacketBase.cs - Gbtc
+๏ปฟ//*******************************************************************************************************
+//  ReplicationProviderBase.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  07/16/2007 - Pinal C. Patel
-//       Generated original version of code based on DatAWare system specifications by Brian B. Fox, TVA.
-//  04/21/2009 - Pinal C. Patel
-//       Converted to C#.
-//  09/15/2009 - Stephen C. Wills
-//       Added new header and license agreement.
+//  11/04/2009 - Pinal C. Patel
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -52,7 +48,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -129,7 +125,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -234,43 +230,72 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
+using System.Threading;
+using TVA.Configuration;
 
-namespace TVA.Historian.Packets
+namespace TVA.Historian.Replication
 {
     /// <summary>
-    /// Base class for a packet to be used for requesting information from a historian.
+    /// Base class for a provider of replication mechanism for the <see cref="IArchive"/>.
     /// </summary>
-    public abstract class QueryPacketBase : PacketBase
+    public abstract class ReplicationProviderBase : IReplicationProvider
     {
-        // **************************************************************************************************
-        // *                                        Binary Structure                                        *
-        // **************************************************************************************************
-        // * # Of Bytes Byte Index Data Type  Property Name                                                 *
-        // * ---------- ---------- ---------- --------------------------------------------------------------*
-        // * 2          0-1        Int16      TypeID (packet identifier)                                    *
-        // * 4          2-5        Int32      RequestIDs.Count                                              *
-        // * 4          6-9        Int32      RequestIDs[0]                                                 *
-        // * 4          n1-n2      Int32      RequestIDs[RequestIDs.Count -1 ]                              *
-        // **************************************************************************************************
-
         #region [ Members ]
 
+        // Events
+
+        /// <summary>
+        /// Occurs when the process of replicating the <see cref="IArchive"/> is started.
+        /// </summary>
+        public event EventHandler ReplicationStart;
+
+        /// <summary>
+        /// Occurs when the process of replicating the <see cref="IArchive"/> is complete.
+        /// </summary>
+        public event EventHandler ReplicationComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during the replication process of <see cref="IArchive"/>.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> ReplicationException;
+
+        /// <summary>
+        /// Occurs when the <see cref="IArchive"/> is being replicated.
+        /// </summary>
+        public event EventHandler<EventArgs<ProcessProgress<int>>> ReplicationProgress;
+
         // Fields
-        private List<int> m_requestIDs;
+        private string m_archiveLocation;
+        private string m_replicaLocation;
+        private int m_replicationInterval;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
+        private Thread m_replicationThread;
+        private System.Timers.Timer m_replicationTimer;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the query packet.
+        /// Initializes a new instance of the replication provider.
         /// </summary>
-        /// <param name="packetID">Numeric identifier for the packet type.</param>
-        protected QueryPacketBase(short packetID)
-            : base(packetID)
+        protected ReplicationProviderBase()
         {
-            m_requestIDs = new List<int>();
+            m_replicationInterval = -1;
+            m_persistSettings = true;
+            m_settingsCategory = this.GetType().Name;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the replication provider is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~ReplicationProviderBase()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -278,45 +303,99 @@ namespace TVA.Historian.Packets
         #region [ Properties ]
 
         /// <summary>
-        /// Gets a list of historian identifiers whose information is being requested.
+        /// Gets or sets the primary location of the <see cref="IArchive"/>.
         /// </summary>
-        /// <remarks>A singe entry with ID of -1 can be used to request information for all defined historian identifiers.</remarks>
-        public IList<int> RequestIDs
+        public string ArchiveLocation
         {
             get
             {
-                return m_requestIDs;
+                return m_archiveLocation;
+            }
+            set
+            {
+                m_archiveLocation = value;
             }
         }
 
         /// <summary>
-        /// Gets the length of the <see cref="BinaryImage"/>.
+        /// Gets or sets the mirrored location of the <see cref="IArchive"/>.
         /// </summary>
-        public override int BinaryLength
+        public string ReplicaLocation
         {
             get
             {
-                return (2 + 4 + (m_requestIDs.Count * 4));
+                return m_replicaLocation;
+            }
+            set
+            {
+                m_replicaLocation = value;
             }
         }
 
         /// <summary>
-        /// Gets the binary representation of the query packet.
+        /// Gets or sets the interval in minutes at which the <see cref="IArchive"/> is to be replicated.
         /// </summary>
-        public override byte[] BinaryImage
+        public int ReplicationInterval
         {
             get
             {
-                byte[] image = new byte[BinaryLength];
+                return m_replicationInterval;
+            }
+            set
+            {
+                if (value < 0)
+                    m_replicationInterval = -1;
+                else
+                    m_replicationInterval = value;
+            }
+        }
 
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(TypeID), 0, image, 0, 2);
-                Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs.Count), 0, image, 2, 4);
-                for (int i = 0; i < m_requestIDs.Count; i++)
-                {
-                    Array.Copy(EndianOrder.LittleEndian.GetBytes(m_requestIDs[i]), 0, image, 6 + (i * 4), 4);
-                }
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the replication provider settings are to be saved to the config file.
+        /// </summary>
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
 
-                return image;
+        /// <summary>
+        /// Gets or sets the category under which the replication provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the replication provider is currently enabled.
+        /// </summary>
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
             }
         }
 
@@ -324,50 +403,208 @@ namespace TVA.Historian.Packets
 
         #region [ Methods ]
 
+        #region [ Abstract ]
+
         /// <summary>
-        /// Initializes the query packet from the specified <paramref name="binaryImage"/>.
+        /// When overridden in a derived class, replicates the <see cref="IArchive"/>.
         /// </summary>
-        /// <param name="binaryImage">Binary image to be used for initializing the query packet.</param>
-        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing the query packet.</returns>
-        public override int Initialize(byte[] binaryImage, int startIndex, int length)
+        protected abstract void ReplicateArchive();
+
+        #endregion
+
+        /// <summary>
+        /// Releases all the resources used by the replication provider.
+        /// </summary>
+        public void Dispose()
         {
-            if (length >= 6)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Initializes the replication provider.
+        /// </summary>
+        public void Initialize()
+        {
+            if (!m_initialized)
             {
-                // Binary image has sufficient data.
-                short packetID = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex);
-                if (packetID != TypeID)
-                    throw new ArgumentException(string.Format("Unexpected packet id '{0}' (expected '{1}')", packetID, TypeID));
-
-                // Ensure that the binary image is complete
-                int requestIDCount = EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 2);
-                if (length < 6 + requestIDCount * 4)
-                    return 0;
-
-                // We have a binary image with the correct packet id.
-                m_requestIDs.Clear();
-                for (int i = 0; i < requestIDCount; i++)
+                // Load settings from the config file.
+                LoadSettings();
+                // Start timer for periodic replication.
+                if (m_enabled && m_replicationInterval > 0)
                 {
-                    m_requestIDs.Add(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex + 6 + (i * 4)));
+                    m_replicationTimer = new System.Timers.Timer(m_replicationInterval * 60000);
+                    m_replicationTimer.Elapsed += ReplicationTimer_Elapsed;
+                    m_replicationTimer.Start();
                 }
-
-                return BinaryLength;
-            }
-            else
-            {
-                // Binary image does not have sufficient data.
-                return 0;
+                // Initialize only once.
+                m_initialized = true;
             }
         }
 
         /// <summary>
-        /// Extracts time-series data from the query packet type.
-        /// </summary>
-        /// <returns>A null reference.</returns>
-        public override IEnumerable<IDataPoint> ExtractTimeSeriesData()
+        /// Saves replication provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void SaveSettings()
         {
-            return null;
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElement element = null;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                element = settings["Enabled", true];
+                element.Update(m_enabled, element.Description, element.Encrypted);
+                element = settings["ArchiveLocation", true];
+                element.Update(m_archiveLocation, element.Description, element.Encrypted);
+                element = settings["ReplicaLocation", true];
+                element.Update(m_replicaLocation, element.Description, element.Encrypted);
+                element = settings["ReplicationInterval", true];
+                element.Update(m_replicationInterval, element.Description, element.Encrypted);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved replication provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>        
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new InvalidOperationException("SettingsCategory property has not been set");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("Enabled", m_enabled, "True if this replication provider is enabled; otherwise False.");
+                settings.Add("ArchiveLocation", m_archiveLocation, "Path to the primary location of time-series data archive.");
+                settings.Add("ReplicaLocation", m_replicaLocation, "Path to the mirrored location of time-series data archive.");
+                settings.Add("ReplicationInterval", m_replicationInterval, "Interval in minutes at which the time-series data archive is to be replicated.");
+                Enabled = settings["Enabled"].ValueAs(m_enabled);
+                ArchiveLocation = settings["ArchiveLocation"].ValueAs(m_archiveLocation);
+                ReplicaLocation = settings["ReplicaLocation"].ValueAs(m_replicaLocation);
+                ReplicationInterval = settings["ReplicationInterval"].ValueAs(m_replicationInterval);
+            }
+        }
+
+        /// <summary>
+        /// Replicates the <see cref="IArchive"/>.
+        /// </summary>
+        /// <returns>true if the replication is successful; otherwise false.</returns>
+        /// <exception cref="ArgumentNullException"><see cref="ArchiveLocation"/> or <see cref="ReplicaLocation"/> is null or empty string.</exception>
+        public bool Replicate()
+        {
+            if (string.IsNullOrEmpty(m_archiveLocation))
+                throw new ArgumentNullException("ArchiveLocation");
+
+            if (string.IsNullOrEmpty(m_replicaLocation))
+                throw new ArgumentNullException("ReplicaLocation");
+
+            if (!m_enabled || (m_replicationThread != null && m_replicationThread.IsAlive))
+                return false;
+
+            m_replicationThread = new Thread(ReplicateInternal);
+            m_replicationThread.Start();
+            m_replicationThread.Join();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the replication provider and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.				
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
+                        if (m_replicationThread != null)
+                            m_replicationThread.Abort();
+
+                        if (m_replicationTimer != null)
+                        {
+                            m_replicationTimer.Elapsed -= ReplicationTimer_Elapsed;
+                            m_replicationTimer.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReplicationStart"/> event.
+        /// </summary>
+        protected virtual void OnReplicationStart()
+        {
+            if (ReplicationStart != null)
+                ReplicationStart(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReplicationComplete"/> event.
+        /// </summary>
+        protected virtual void OnReplicationComplete()
+        {
+            if (ReplicationComplete != null)
+                ReplicationComplete(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReplicationException"/> event.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> to send to <see cref="ReplicationException"/> event.</param>
+        protected virtual void OnReplicationException(Exception ex)
+        {
+            if (ReplicationException != null)
+                ReplicationException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ReplicationProgress"/> event.
+        /// </summary>
+        /// <param name="replicationProgress"><see cref="ProcessProgress{T}"/> to send to <see cref="ReplicationProgress"/> event.</param>
+        protected virtual void OnReplicationProgress(ProcessProgress<int> replicationProgress)
+        {
+            if (ReplicationProgress != null)
+                ReplicationProgress(this, new EventArgs<ProcessProgress<int>>(replicationProgress));
+        }
+
+        private void ReplicateInternal()
+        {
+            try
+            {
+                OnReplicationStart();
+                ReplicateArchive();
+                OnReplicationComplete();
+            }
+            catch (Exception ex)
+            {
+                OnReplicationException(ex);
+            }
+        }
+
+        private void ReplicationTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            Replicate();
         }
 
         #endregion

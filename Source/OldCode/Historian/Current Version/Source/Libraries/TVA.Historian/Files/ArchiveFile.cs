@@ -45,6 +45,8 @@
 //       Fixed DivideByZero exception in Statistics property.
 //       Fixed a bug in quality-based alarm processing.
 //       Removed unused/unnecessary event raised during the write process.
+//  11/06/2009 - Pinal C. Patel
+//       Modified Read() and Write() methods to wait on the rollover process.
 //
 //*******************************************************************************************************
 
@@ -277,7 +279,6 @@ using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
-using TVA.Units;
 
 namespace TVA.Historian.Files
 {
@@ -412,19 +413,19 @@ namespace TVA.Historian.Files
         public const int DefaultRolloverPreparationThreshold = 75;
 
         /// <summary>
-        /// Gets or sets the default value for the <see cref="FileOffloadLocation"/> property.
+        /// Specifies the default value for the <see cref="ArchiveOffloadCount"/> property.
         /// </summary>
-        public const string DefaultFileOffloadLocation = "";
+        public const int DefaultArchiveOffloadCount = 5;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="FileOffloadCount"/> property.
+        /// Specifies the default value for the <see cref="ArchiveOffloadLocation"/> property.
         /// </summary>
-        public const int DefaultFileOffloadCount = 5;
+        public const string DefaultArchiveOffloadLocation = "";
 
         /// <summary>
-        /// Specifies the default value for the <see cref="FileOffloadThreshold"/> property.
+        /// Specifies the default value for the <see cref="ArchiveOffloadThreshold"/> property.
         /// </summary>
-        public const int DefaultFileOffloadThreshold = 90;
+        public const int DefaultArchiveOffloadThreshold = 90;
 
         /// <summary>
         /// Specifies the default value for the <see cref="LeadTimeTolerance"/> property.
@@ -486,6 +487,34 @@ namespace TVA.Historian.Files
         public event EventHandler FileFull;
 
         /// <summary>
+        /// Occurs when the process of offloading historic <see cref="ArchiveFile"/>s is started.
+        /// </summary>
+        [Category("Archive"),
+        Description("Occurs when the process of offloading historic ArchiveFiles is started.")]
+        public event EventHandler OffloadStart;
+
+        /// <summary>
+        /// Occurs when the process of offloading historic <see cref="ArchiveFile"/>s is complete.
+        /// </summary>
+        [Category("Archive"),
+        Description("Occurs when the process of offloading historic ArchiveFiles is complete.")]
+        public event EventHandler OffloadComplete;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered during the historic <see cref="ArchiveFile"/> offload process.
+        /// </summary>
+        [Category("Archive"),
+        Description("Occurs when an Exception is encountered during the historic ArchiveFile offload process.")]
+        public event EventHandler<EventArgs<Exception>> OffloadException;
+
+        /// <summary>
+        /// Occurs when an historic <see cref="ArchiveFile"/> is being offloaded.
+        /// </summary>
+        [Category("Archive"),
+        Description("Occurs when an historic ArchiveFile is being offloaded.")]
+        public event EventHandler<EventArgs<ProcessProgress<int>>> OffloadProgress;
+
+        /// <summary>
         /// Occurs when <see cref="Rollover()"/> to a new <see cref="ArchiveFile"/> is started.
         /// </summary>
         [Category("Rollover"),
@@ -505,34 +534,6 @@ namespace TVA.Historian.Files
         [Category("Rollover"),
         Description("Occurs when an Exception is encountered during the Rollover() process.")]
         public event EventHandler<EventArgs<Exception>> RolloverException;
-
-        /// <summary>
-        /// Occurs when the process of offloading historic <see cref="ArchiveFile"/>s is started.
-        /// </summary>
-        [Category("Offload"),
-        Description("Occurs when the process of offloading historic ArchiveFiles is started.")]
-        public event EventHandler OffloadStart;
-
-        /// <summary>
-        /// Occurs when the process of offloading historic <see cref="ArchiveFile"/>s is complete.
-        /// </summary>
-        [Category("Offload"),
-        Description("Occurs when the process of offloading historic ArchiveFiles is complete.")]
-        public event EventHandler OffloadComplete;
-
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered during the historic <see cref="ArchiveFile"/> offload process.
-        /// </summary>
-        [Category("Offload"),
-        Description("Occurs when an Exception is encountered during the historic ArchiveFile offload process.")]
-        public event EventHandler<EventArgs<Exception>> OffloadException;
-
-        /// <summary>
-        /// Occurs when historic <see cref="ArchiveFile"/>s are being offloaded.
-        /// </summary>
-        [Category("Offload"),
-        Description("Occurs when historic ArchiveFiles are being offloaded.")]
-        public event EventHandler<EventArgs<ProcessProgress<int>>> OffloadProgress;
 
         /// <summary>
         /// Occurs when the process of creating a standby <see cref="ArchiveFile"/> is started.
@@ -635,9 +636,9 @@ namespace TVA.Historian.Files
         private int m_dataBlockSize;
         private bool m_rolloverOnFull;
         private short m_rolloverPreparationThreshold;
-        private string m_fileOffloadLocation;
-        private int m_fileOffloadCount;
-        private short m_fileOffloadThreshold;
+        private string m_archiveOffloadLocation;
+        private int m_archiveOffloadCount;
+        private short m_archiveOffloadThreshold;
         private double m_leadTimeTolerance;
         private bool m_compressData;
         private bool m_discardOutOfSequenceData;
@@ -689,9 +690,9 @@ namespace TVA.Historian.Files
             m_dataBlockSize = DefaultDataBlockSize;
             m_rolloverOnFull = DefaultRolloverOnFull;
             m_rolloverPreparationThreshold = DefaultRolloverPreparationThreshold;
-            m_fileOffloadLocation = DefaultFileOffloadLocation;
-            m_fileOffloadCount = DefaultFileOffloadCount;
-            m_fileOffloadThreshold = DefaultFileOffloadThreshold;
+            m_archiveOffloadLocation = DefaultArchiveOffloadLocation;
+            m_archiveOffloadCount = DefaultArchiveOffloadCount;
+            m_archiveOffloadThreshold = DefaultArchiveOffloadThreshold;
             m_leadTimeTolerance = DefaultLeadTimeTolerance;
             m_compressData = DefaultCompressData;
             m_discardOutOfSequenceData = DefaultDiscardOutOfSequenceData;
@@ -705,7 +706,7 @@ namespace TVA.Historian.Files
             m_rolloverPreparationThread = new Thread(PrepareForRollover);
             m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
 
-            m_conserveMemoryTimer = new System.Timers.Timer(DataBlockCheckInterval);
+            m_conserveMemoryTimer = new System.Timers.Timer();
             m_conserveMemoryTimer.Elapsed += ConserveMemoryTimer_Elapsed;
 
             m_currentDataQueue = ProcessQueue<IDataPoint>.CreateRealTimeQueue(WriteToCurrentArchiveFile);
@@ -907,42 +908,42 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Gets or sets the path to the directory where historic <see cref="ArchiveFile"/>s are to be offloaded to make space in the primary archive location.
-        /// </summary>
-        [Category("Offload"),
-        DefaultValue(DefaultFileOffloadLocation),
-        Description("Path to the directory where historic ArchiveFiles are to be offloaded to make space in the primary archive location.")]
-        public string FileOffloadLocation
-        {
-            get
-            {
-                return m_fileOffloadLocation;
-            }
-            set
-            {
-                m_fileOffloadLocation = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of historic <see cref="ArchiveFile"/>s to be offloaded to the <see cref="FileOffloadLocation"/>.
+        /// Gets or sets the number of historic <see cref="ArchiveFile"/>s to be offloaded to the <see cref="ArchiveOffloadLocation"/>.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive.</exception>
-        [Category("Offload"),
-        DefaultValue(DefaultFileOffloadCount),
-        Description("Number of historic ArchiveFiles to be offloaded to the FileOffloadPath.")]
-        public int FileOffloadCount
+        [Category("Archive"),
+        DefaultValue(DefaultArchiveOffloadCount),
+        Description("Number of historic ArchiveFiles to be offloaded to the ArchiveOffloadLocation.")]
+        public int ArchiveOffloadCount
         {
             get
             {
-                return m_fileOffloadCount;
+                return m_archiveOffloadCount;
             }
             set
             {
                 if (value < 1)
                     throw new ArgumentException("Value must be positive");
 
-                m_fileOffloadCount = value;
+                m_archiveOffloadCount = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the directory where historic <see cref="ArchiveFile"/>s are to be offloaded to make space in the primary archive location.
+        /// </summary>
+        [Category("Archive"),
+        DefaultValue(DefaultArchiveOffloadLocation),
+        Description("Path to the directory where historic ArchiveFiles are to be offloaded to make space in the primary archive location.")]
+        public string ArchiveOffloadLocation
+        {
+            get
+            {
+                return m_archiveOffloadLocation;
+            }
+            set
+            {
+                m_archiveOffloadLocation = value;
             }
         }
 
@@ -950,23 +951,23 @@ namespace TVA.Historian.Files
         /// Gets or sets the free disk space (in %) of the primary archive location that triggers the offload of historic <see cref="ArchiveFile"/>s.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is not between 1 and 99.</exception>
-        [Category("Offload"),
-        DefaultValue(DefaultFileOffloadThreshold),
+        [Category("Archive"),
+        DefaultValue(DefaultArchiveOffloadThreshold),
         Description("Free disk space (in %) of the primary archive location that triggers the offload of historic ArchiveFiles.")]
-        public short FileOffloadThreshold
+        public short ArchiveOffloadThreshold
         {
             get
             {
-                return m_fileOffloadThreshold;
+                return m_archiveOffloadThreshold;
             }
             set
             {
                 if (value < 1 || value > 99)
-                    throw new ArgumentOutOfRangeException("FileOffloadThreshold", "Value must be between 1 and 99");
+                    throw new ArgumentOutOfRangeException("ArchiveOffloadThreshold", "Value must be between 1 and 99");
 
-                m_fileOffloadThreshold = value;
+                m_archiveOffloadThreshold = value;
             }
-        }
+        }      
 
         /// <summary>
         /// Gets or sets the number of minutes by which incoming <see cref="ArchiveDataPoint"/> can be ahead of local system clock and still be considered valid.
@@ -1286,6 +1287,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets the <see cref="ArchiveFileStatistics"/> object of the <see cref="ArchiveFile"/>.
         /// </summary>
+        [Browsable(false)]
         public ArchiveFileStatistics Statistics
         {
             get
@@ -1325,6 +1327,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets the <see cref="ProcessQueueStatistics"/> for the internal current data write <see cref="ProcessQueue{T}"/>.
         /// </summary>
+        [Browsable(false)]
         public ProcessQueueStatistics CurrentWriteStatistics
         {
             get
@@ -1336,6 +1339,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets the <see cref="ProcessQueueStatistics"/> for the internal historic data write <see cref="ProcessQueue{T}"/>.
         /// </summary>
+        [Browsable(false)]
         public ProcessQueueStatistics HistoricWriteStatistics
         {
             get
@@ -1347,6 +1351,7 @@ namespace TVA.Historian.Files
         /// <summary>
         /// Gets the <see cref="ProcessQueueStatistics"/> for the internal out-of-sequence data write <see cref="ProcessQueue{T}"/>.
         /// </summary>
+        [Browsable(false)]
         public ProcessQueueStatistics OutOfSequenceWriteStatistics
         {
             get
@@ -1482,12 +1487,12 @@ namespace TVA.Historian.Files
                 element.Update(m_rolloverOnFull, element.Description, element.Encrypted);
                 element = settings["RolloverPreparationThreshold", true];
                 element.Update(m_rolloverPreparationThreshold, element.Description, element.Encrypted);
-                element = settings["FileOffloadLocation", true];
-                element.Update(m_fileOffloadLocation, element.Description, element.Encrypted);
-                element = settings["FileOffloadCount", true];
-                element.Update(m_fileOffloadCount, element.Description, element.Encrypted);
-                element = settings["FileOffloadThreshold", true];
-                element.Update(m_fileOffloadThreshold, element.Description, element.Encrypted);
+                element = settings["ArchiveOffloadLocation", true];
+                element.Update(m_archiveOffloadLocation, element.Description, element.Encrypted);
+                element = settings["ArchiveOffloadCount", true];
+                element.Update(m_archiveOffloadCount, element.Description, element.Encrypted);
+                element = settings["ArchiveOffloadThreshold", true];
+                element.Update(m_archiveOffloadThreshold, element.Description, element.Encrypted);
                 element = settings["LeadTimeTolerance", true];
                 element.Update(m_leadTimeTolerance, element.Description, element.Encrypted);
                 element = settings["CompressData", true];
@@ -1522,28 +1527,28 @@ namespace TVA.Historian.Files
                 settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
                 settings.Add("RolloverOnFull", m_rolloverOnFull, "True if rollover of the file is to be performed when it is full; otherwise False.");
                 settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
-                settings.Add("FileOffloadLocation", m_fileOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
-                settings.Add("FileOffloadCount", m_fileOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
-                settings.Add("FileOffloadThreshold", m_fileOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
+                settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
+                settings.Add("ArchiveOffloadCount", m_archiveOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
+                settings.Add("ArchiveOffloadThreshold", m_archiveOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
                 settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
                 settings.Add("CompressData", m_compressData, "True if compression is to be performed on the incoming data points; otherwise False.");
                 settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
                 settings.Add("CacheWrites", m_cacheWrites, "True if writes are to be cached for performance; otherwise False.");
                 settings.Add("ConserveMemory", m_conserveMemory, "True if attempts are to be made to conserve memory; otherwise False.");
-                FileName = settings["FileName"].ValueAs(FileName);
-                FileType = settings["FileType"].ValueAs(FileType);
-                FileSize = settings["FileSize"].ValueAs(FileSize);
-                DataBlockSize = settings["DataBlockSize"].ValueAs(DataBlockSize);
-                RolloverOnFull = settings["RolloverOnFull"].ValueAs(RolloverOnFull);
-                RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(RolloverPreparationThreshold);
-                FileOffloadLocation = settings["FileOffloadLocation"].ValueAs(FileOffloadLocation);
-                FileOffloadCount = settings["FileOffloadCount"].ValueAs(FileOffloadCount);
-                FileOffloadThreshold = settings["FileOffloadThreshold"].ValueAs(FileOffloadThreshold);
-                LeadTimeTolerance = settings["LeadTimeTolerance"].ValueAs(LeadTimeTolerance);
-                CompressData = settings["CompressData"].ValueAs(CompressData);
-                DiscardOutOfSequenceData = settings["DiscardOutOfSequenceData"].ValueAs(DiscardOutOfSequenceData);
-                CacheWrites = settings["CacheWrites"].ValueAs(CacheWrites);
-                ConserveMemory = settings["ConserveMemory"].ValueAs(ConserveMemory);
+                FileName = settings["FileName"].ValueAs(m_fileName);
+                FileType = settings["FileType"].ValueAs(m_fileType);
+                FileSize = settings["FileSize"].ValueAs(m_fileSize);
+                DataBlockSize = settings["DataBlockSize"].ValueAs(m_dataBlockSize);
+                RolloverOnFull = settings["RolloverOnFull"].ValueAs(m_rolloverOnFull);
+                RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(m_rolloverPreparationThreshold);
+                ArchiveOffloadLocation = settings["ArchiveOffloadLocation"].ValueAs(m_archiveOffloadLocation);
+                ArchiveOffloadCount = settings["ArchiveOffloadCount"].ValueAs(m_archiveOffloadCount);
+                ArchiveOffloadThreshold = settings["ArchiveOffloadThreshold"].ValueAs(m_archiveOffloadThreshold);
+                LeadTimeTolerance = settings["LeadTimeTolerance"].ValueAs(m_leadTimeTolerance);
+                CompressData = settings["CompressData"].ValueAs(m_compressData);
+                DiscardOutOfSequenceData = settings["DiscardOutOfSequenceData"].ValueAs(m_discardOutOfSequenceData);
+                CacheWrites = settings["CacheWrites"].ValueAs(m_cacheWrites);
+                ConserveMemory = settings["ConserveMemory"].ValueAs(m_conserveMemory);
             }
         }
 
@@ -1615,7 +1620,10 @@ namespace TVA.Historian.Files
 
                 // Start the memory conservation process.
                 if (m_conserveMemory)
+                {
+                    m_conserveMemoryTimer.Interval = DataBlockCheckInterval;
                     m_conserveMemoryTimer.Start();
+                }
 
                 // Start preparing the list of historic files.
                 m_buildHistoricFileListThread = new Thread(BuildHistoricFileList);
@@ -1626,10 +1634,10 @@ namespace TVA.Historian.Files
                 m_currentLocationFileWatcher.Filter = HistoricFilesSearchPattern;
                 m_currentLocationFileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
                 m_currentLocationFileWatcher.EnableRaisingEvents = true;
-                if (Directory.Exists(m_fileOffloadLocation))
+                if (Directory.Exists(m_archiveOffloadLocation))
                 {
                     m_offloadLocationFileWatcher.Filter = HistoricFilesSearchPattern;
-                    m_offloadLocationFileWatcher.Path = m_fileOffloadLocation;
+                    m_offloadLocationFileWatcher.Path = m_archiveOffloadLocation;
                     m_offloadLocationFileWatcher.EnableRaisingEvents = true;
                 }
             }
@@ -1642,11 +1650,11 @@ namespace TVA.Historian.Files
         {
             if (IsOpen)
             {
-                // Abort any asynchronous processing.
+                // Abort all asynchronous processing.
                 m_rolloverPreparationThread.Abort();
                 m_buildHistoricFileListThread.Abort();
 
-                // Stop checking allocated data blocks for activity.
+                // Stop all timer based processing.
                 m_conserveMemoryTimer.Stop();
 
                 // Stop the historic and out-of-sequence data queues.
@@ -1812,6 +1820,9 @@ namespace TVA.Historian.Files
         /// <param name="dataPoint"><see cref="IDataPoint"/> to be written.</param>
         public void WriteData(IDataPoint dataPoint)
         {
+            // Yeild to archive rollover process.
+            m_rolloverWaitHandle.WaitOne();
+
             // Ensure that the current file is open.
             if (!IsOpen)
                 throw new InvalidOperationException(string.Format("\"{0}\" file is not open", m_fileName));
@@ -1940,6 +1951,9 @@ namespace TVA.Historian.Files
         /// <returns><see cref="IEnumerable{T}"/> object containing zero or more <see cref="ArchiveDataPoint"/>s.</returns>
         public IEnumerable<IDataPoint> ReadData(int historianID, TimeTag startTime, TimeTag endTime)
         {
+            // Yeild to archive rollover process.
+            m_rolloverWaitHandle.WaitOne();
+
             // Ensure that the current file is open.
             if (!IsOpen)
                 throw new InvalidOperationException(string.Format("\"{0}\" file is not open", m_fileName));
@@ -1951,9 +1965,6 @@ namespace TVA.Historian.Files
             // Ensure that the start and end time are valid.
             if (startTime > endTime)
                 throw new ArgumentException("End Time preceeds Start Time in the specified timespan");
-
-            // Yeild to the rollover process if it is in progress.
-            m_rolloverWaitHandle.WaitOne();
 
             List<Info> dataFiles = new List<Info>();
             if (startTime < m_fat.FileStartTime)
@@ -2469,9 +2480,9 @@ namespace TVA.Historian.Files
                             }
                         }
 
-                        if (Directory.Exists(m_fileOffloadLocation))
+                        if (Directory.Exists(m_archiveOffloadLocation))
                         {
-                            foreach (string historicFileName in Directory.GetFiles(m_fileOffloadLocation, HistoricFilesSearchPattern))
+                            foreach (string historicFileName in Directory.GetFiles(m_archiveOffloadLocation, HistoricFilesSearchPattern))
                             {
                                 historicFileInfo = GetHistoricFileInfo(historicFileName);
                                 if (historicFileInfo != null)
@@ -2500,7 +2511,7 @@ namespace TVA.Historian.Files
             try
             {
                 DriveInfo archiveDrive = new DriveInfo(Path.GetPathRoot(m_fileName));
-                if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - ((double)m_fileOffloadThreshold / 100)))
+                if (archiveDrive.AvailableFreeSpace < archiveDrive.TotalSize * (1 - ((double)m_archiveOffloadThreshold / 100)))
                 {
                     // We'll start offloading historic files if we've reached the offload threshold.
                     OffloadHistoricFiles();
@@ -2554,7 +2565,7 @@ namespace TVA.Historian.Files
 
         private void OffloadHistoricFiles()
         {
-            if (Directory.Exists(m_fileOffloadLocation))
+            if (Directory.Exists(m_archiveOffloadLocation))
             {
                 if (m_buildHistoricFileListThread.IsAlive)
                 {
@@ -2581,10 +2592,10 @@ namespace TVA.Historian.Files
                     // number of historic files is more than the offload count or all of the historic files if the
                     // offload count is smaller the available number of historic files.
                     ProcessProgress<int> offloadProgress = new ProcessProgress<int>("FileOffload");
-                    offloadProgress.Total = (newHistoricFiles.Count < m_fileOffloadCount ? newHistoricFiles.Count : m_fileOffloadCount);
+                    offloadProgress.Total = (newHistoricFiles.Count < m_archiveOffloadCount ? newHistoricFiles.Count : m_archiveOffloadCount);
                     for (int i = 0; i < offloadProgress.Total; i++)
                     {
-                        string destinationFileName = FilePath.AddPathSuffix(m_fileOffloadLocation) + FilePath.GetFileName(newHistoricFiles[i].FileName);
+                        string destinationFileName = FilePath.AddPathSuffix(m_archiveOffloadLocation) + FilePath.GetFileName(newHistoricFiles[i].FileName);
                         if (File.Exists(destinationFileName))
                         {
                             // Delete the destination file if it already exists.
@@ -2594,7 +2605,7 @@ namespace TVA.Historian.Files
                         File.Move(newHistoricFiles[i].FileName, destinationFileName);
 
                         offloadProgress.Complete++;
-                        offloadProgress.ProgressMessage = string.Format("Offloaded historic file {0} ({1} of {2}).", FilePath.GetFileName(newHistoricFiles[i].FileName), "{0}", "{1}");
+                        offloadProgress.ProgressMessage = string.Format("Offloaded historic file {0}", FilePath.GetFileName(newHistoricFiles[i].FileName));
                         OnOffloadProgress(offloadProgress);
                     }
 
@@ -2602,7 +2613,7 @@ namespace TVA.Historian.Files
                 }
                 catch (ThreadAbortException)
                 {
-                    throw; // Bubble up the ThreadAbortException.
+                    throw;
                 }
                 catch (Exception ex)
                 {
@@ -2694,8 +2705,8 @@ namespace TVA.Historian.Files
         private bool IsOldHistoricArchiveFile(Info fileInfo)
         {
             return (fileInfo != null &&
-                    !string.IsNullOrEmpty(m_fileOffloadLocation) &&
-                    string.Compare(FilePath.GetDirectoryName(m_fileOffloadLocation), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
+                    !string.IsNullOrEmpty(m_archiveOffloadLocation) &&
+                    string.Compare(FilePath.GetDirectoryName(m_archiveOffloadLocation), FilePath.GetDirectoryName(fileInfo.FileName), true) == 0);
         }
 
         #endregion
@@ -2980,7 +2991,7 @@ namespace TVA.Historian.Files
                                 // Kick-off the rollover preparation when its threshold is reached.
                                 if (Statistics.FileUsage >= m_rolloverPreparationThreshold && !File.Exists(StandbyArchiveFileName) && !m_rolloverPreparationThread.IsAlive)
                                 {
-                                    m_rolloverPreparationThread = new Thread(new ThreadStart(PrepareForRollover));
+                                    m_rolloverPreparationThread = new Thread(PrepareForRollover);
                                     m_rolloverPreparationThread.Priority = ThreadPriority.Lowest;
                                     m_rolloverPreparationThread.Start();
                                 }

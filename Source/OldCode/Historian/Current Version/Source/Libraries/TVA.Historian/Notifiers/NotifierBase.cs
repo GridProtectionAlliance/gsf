@@ -16,6 +16,8 @@
 //       Made Initialize() virtual so inheriting classes can override the default behavior.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/05/2009 - Pinal C. Patel
+//       Modified to abort notify operation during dispose.
 //
 //*******************************************************************************************************
 
@@ -242,7 +244,7 @@ using TVA.Configuration;
 namespace TVA.Historian.Notifiers
 {
     /// <summary>
-    /// A base class for a notifier that can process notification messages.
+    /// Base class for a notifier that can process notification messages.
     /// </summary>
     /// <see cref="NotificationTypes"/>
     public abstract class NotifierBase : INotifier
@@ -279,6 +281,7 @@ namespace TVA.Historian.Notifiers
         private NotificationTypes m_notifyOptions;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private Thread m_notifyThread;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -390,7 +393,7 @@ namespace TVA.Historian.Notifiers
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -515,27 +518,27 @@ namespace TVA.Historian.Notifiers
         /// <returns>true if notification is processed successfully; otherwise false.</returns>
         public bool Notify(string subject, string message, string details, NotificationTypes notificationType)
         {
-            if (!m_enabled)
+            if (!m_enabled || (m_notifyThread != null && m_notifyThread.IsAlive))
                 return false;
 
             // Start notification thread with appropriate parameters.
-            Thread notifyThread = new Thread(NotifyInternal);
+            m_notifyThread = new Thread(NotifyInternal);
             if ((notificationType & NotificationTypes.Alarm) == NotificationTypes.Alarm &&
                 (m_notifyOptions & NotificationTypes.Alarm) == NotificationTypes.Alarm)
                 // Alarm notifications are supported.
-                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyAlarm) , subject, message, details});
+                m_notifyThread.Start(new object[] { new Action<string, string, string>(NotifyAlarm) , subject, message, details});
             else if ((notificationType & NotificationTypes.Warning) == NotificationTypes.Warning && 
                      (m_notifyOptions & NotificationTypes.Warning) == NotificationTypes.Warning)
                 // Warning notifications are supported.
-                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyWarning), subject, message, details });
+                m_notifyThread.Start(new object[] { new Action<string, string, string>(NotifyWarning), subject, message, details });
             else if ((notificationType & NotificationTypes.Information) == NotificationTypes.Information && 
                      (m_notifyOptions & NotificationTypes.Information) == NotificationTypes.Information)
                 // Information notifications are supported.
-                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyInformation), subject, message, details });
+                m_notifyThread.Start(new object[] { new Action<string, string, string>(NotifyInformation), subject, message, details });
             else if ((notificationType & NotificationTypes.Heartbeat) == NotificationTypes.Heartbeat && 
                      (m_notifyOptions & NotificationTypes.Heartbeat) == NotificationTypes.Heartbeat)
                 // Heartbeat notifications are supported.
-                notifyThread.Start(new object[] { new Action<string, string, string>(NotifyHeartbeat), subject, message, details });
+                m_notifyThread.Start(new object[] { new Action<string, string, string>(NotifyHeartbeat), subject, message, details });
             else
                 // Specified notification type is not supported.
                 return false;
@@ -543,14 +546,14 @@ namespace TVA.Historian.Notifiers
             if (m_notifyTimeout < 1)
             {
                 // Wait indefinetely on the refresh.
-                notifyThread.Join(Timeout.Infinite);
+                m_notifyThread.Join(Timeout.Infinite);
             }
             else
             {
                 // Wait for the specified time on refresh.
-                if (!notifyThread.Join(m_notifyTimeout * 1000))
+                if (!m_notifyThread.Join(m_notifyTimeout * 1000))
                 {
-                    notifyThread.Abort();
+                    m_notifyThread.Abort();
 
                     return false;
                 }
@@ -575,6 +578,9 @@ namespace TVA.Historian.Notifiers
                     {
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
+
+                        if (m_notifyThread != null)
+                            m_notifyThread.Abort();
                     }
                 }
                 finally
