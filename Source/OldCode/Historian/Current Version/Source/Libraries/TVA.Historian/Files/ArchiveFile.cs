@@ -2605,7 +2605,7 @@ namespace TVA.Historian.Files
                         File.Move(newHistoricFiles[i].FileName, destinationFileName);
 
                         offloadProgress.Complete++;
-                        offloadProgress.ProgressMessage = string.Format("Offloaded historic file {0}", FilePath.GetFileName(newHistoricFiles[i].FileName));
+                        offloadProgress.ProgressMessage = FilePath.GetFileName(newHistoricFiles[i].FileName);
                         OnOffloadProgress(offloadProgress);
                     }
 
