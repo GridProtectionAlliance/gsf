@@ -521,7 +521,7 @@ namespace TVA.Measurements.Routing
         {
             get
 			{
-				const int MaxMeasurementsToShow = 4;
+				const int MaxMeasurementsToShow = 10;
 				
 				StringBuilder status = new StringBuilder();
 
@@ -564,46 +564,41 @@ namespace TVA.Measurements.Routing
 
                 if (OutputMeasurements != null)
                 {
-                    status.Append("   Output measurement ID\'s: ");
+                    status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
+                    status.AppendLine();
+                    status.AppendLine();
 
-                    if (OutputMeasurements.Length <= MaxMeasurementsToShow)
+                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.Append(OutputMeasurements.ToDelimitedString(','));
+                        status.AppendLine(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
                     }
-                    else
-                    {
-                        IMeasurement[] outputMeasurements = new IMeasurement[MaxMeasurementsToShow];
-                        Array.Copy(OutputMeasurements, 0, outputMeasurements, 0, MaxMeasurementsToShow);
-                        status.Append(outputMeasurements.ToDelimitedString(','));
-                        status.Append(",...");
-                    }
+
+                    if (OutputMeasurements.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".PadLeft(25));
 
                     status.AppendLine();
                 }
 
                 if (InputMeasurementKeys != null)
                 {
-                    status.Append("    Input measurement ID\'s: ");
+                    status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
 
-                    if (InputMeasurementKeys.Length <= MaxMeasurementsToShow)
+                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.Append(InputMeasurementKeys.ToDelimitedString(','));
+                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).PadLeft(25));
                     }
-                    else
-                    {
-                        MeasurementKey[] inputMeasurements = new MeasurementKey[MaxMeasurementsToShow];
-                        Array.Copy(InputMeasurementKeys, 0, inputMeasurements, 0, MaxMeasurementsToShow);
-                        status.Append(inputMeasurements.ToDelimitedString(','));
-                        status.Append(",...");
-                    }
+
+                    if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".PadLeft(25));
 
                     status.AppendLine();
                 }
 
-				status.Append(" Minimum measurements used: ");
-				status.Append(MinimumMeasurementsToUse);
-				status.AppendLine();
-				status.Append(base.Status);
+                status.AppendFormat(" Minimum measurements used: {0}", MinimumMeasurementsToUse);
+                status.AppendLine();
+                status.Append(base.Status);
 
 				return status.ToString();
 			}
@@ -662,10 +657,10 @@ namespace TVA.Measurements.Routing
                 base.AllowSortsByArrival = setting.ParseBoolean();
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
-                InputMeasurementKeys = ParseInputMeasurementKeys(setting);
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
 
             if (settings.TryGetValue("outputMeasurements", out setting))
-                OutputMeasurements = ParseOutputMeasurements(setting);
+                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);
 
             if (settings.TryGetValue("minimumMeasurementsToUse", out setting))
                 MinimumMeasurementsToUse = int.Parse(setting);
@@ -753,7 +748,11 @@ namespace TVA.Measurements.Routing
         /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
         public virtual bool IsInputMeasurement(MeasurementKey item)
         {
-            return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
+            if (m_inputMeasurementKeysHash != null)
+                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
+
+            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
+            return true;
         }
 
         /// <summary>
@@ -827,106 +826,6 @@ namespace TVA.Measurements.Routing
         {
             if (StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
-        }
-
-        // Input keys can use DataSource for filtering desired set of input or output measurements
-        // based on any table and fields in the data set by using a filter expression instead of
-        // a list of measurement ID's. The format is as follows:
-
-        //  FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]
-
-        // Source tables are expected to have at least the following fields:
-        //
-        //      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
-        //      PointTag    NVARCHAR    Point tag of measurement
-        //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
-        //      Multiplier  FLOAT       Multipler to apply to value, if any (default to 1.0)
-        //
-        // Could have used standard SQL syntax here but didn't want to give user the impression
-        // that this a standard SQL expression when it isn't - so chose the word FILTER to make
-        // consumer was aware that this was not SQL, but SQL "like". The WHERE clause expression
-        // uses standard SQL syntax (it is simply the DataTable.Select filter expression).
-
-        // Parse input measurement keys from connection string
-        private MeasurementKey[] ParseInputMeasurementKeys(string value)
-        {
-            List<MeasurementKey> keys = new List<MeasurementKey>();
-            Match filterMatch;
-
-            value = value.Trim();
-            filterMatch = m_filterExpression.Match(value);
-
-            if (filterMatch.Success)
-            {
-                string tableName = filterMatch.Result("${TableName}").Trim();
-                string expression = filterMatch.Result("${Expression}").Trim();
-                string sortField = filterMatch.Result("${SortField}").Trim();
-
-                foreach (DataRow row in DataSource.Tables[tableName].Select(expression, sortField))
-                {
-                    keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
-                }
-            }
-            else
-            {
-                // Add manually defined measurement keys
-                foreach (string item in value.Split(';'))
-                {
-                    keys.Add(MeasurementKey.Parse(item));
-                }
-            }
-            
-            return keys.ToArray();
-        }
-
-        // Parse output measurements from connection string
-        private IMeasurement[] ParseOutputMeasurements(string value)
-        {
-            List<IMeasurement> measurements = new List<IMeasurement>();
-            MeasurementKey key;
-            Match filterMatch;
-
-            value = value.Trim();
-            filterMatch = m_filterExpression.Match(value);
-
-            if (filterMatch.Success)
-            {
-                string tableName = filterMatch.Result("${TableName}").Trim();
-                string expression = filterMatch.Result("${Expression}").Trim();
-                string sortField = filterMatch.Result("${SortField}").Trim();
-
-                foreach (DataRow row in DataSource.Tables[tableName].Select(expression, sortField))
-                {
-                    key = MeasurementKey.Parse(row["ID"].ToString());
-                    measurements.Add(new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString())));
-                }
-            }
-            else
-            {
-                string[] elem;
-                double adder, multipler;
-
-                foreach (string item in value.Split(';'))
-                {
-                    elem = item.Trim().Split(',');
-
-                    key = MeasurementKey.Parse(elem[0]);
-
-                    if (elem.Length > 1)
-                        adder = double.Parse(elem[1].Trim());
-                    else
-                        adder = 0.0D;
-
-                    if (elem.Length > 2)
-                        multipler = double.Parse(elem[2].Trim());
-                    else
-                        multipler = 1.0D;
-
-                    measurements.Add(new Measurement(key.ID, key.Source, string.Empty, adder, multipler));
-                }
-            }
-
-            return measurements.ToArray();
         }
 
         #endregion		

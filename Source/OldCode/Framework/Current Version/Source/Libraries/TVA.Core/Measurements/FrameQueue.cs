@@ -253,6 +253,7 @@ namespace TVA.Measurements
         private Ticks m_publishedTicks;                 // Timstamp of last published frame
         private IFrame m_head;                          // Reference to current top of the frame collection
         private IFrame m_last;                          // Reference to last published frame
+        private long m_timeResolution;                  // Cached time resolution (max sorting resolution in ticks)
         private decimal m_ticksPerFrame;                // Cached ticks per frame
         private bool m_disposed;                        // Object disposed flag
 
@@ -286,6 +287,21 @@ namespace TVA.Measurements
         #endregion
 
         #region [ Properties ]
+        
+        /// <summary>
+        /// Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+        /// </summary>
+        public long TimeResolution
+        {
+            get
+            {
+                return m_timeResolution;
+            }
+            set
+            {
+                m_timeResolution = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets number of ticks per frame to be used by <see cref="FrameQueue"/>.
@@ -301,6 +317,7 @@ namespace TVA.Measurements
                 m_ticksPerFrame = value;
             }
         }
+
         /// <summary>
         /// Returns the next <see cref="IFrame"/> in the <see cref="FrameQueue"/>, if any.
         /// </summary>
@@ -448,7 +465,18 @@ namespace TVA.Measurements
         public IFrame GetFrame(Ticks timestamp)
         {
             // Calculate destination ticks for this frame
-            Ticks destinationTicks = (long)(Math.Ceiling(((decimal)timestamp + 1) / m_ticksPerFrame) * m_ticksPerFrame - m_ticksPerFrame);
+            long frameTicks;
+
+            if (m_timeResolution > 1)
+            {
+                long ticks = (long)timestamp;
+                long baseTicks = ticks - ticks % Ticks.PerSecond;
+                frameTicks = baseTicks + (ticks - baseTicks) / m_timeResolution * m_timeResolution + m_timeResolution / 2;
+            }
+            else
+                frameTicks = timestamp + 1;
+
+            Ticks destinationTicks = (long)(Math.Ceiling(frameTicks / m_ticksPerFrame) * m_ticksPerFrame - m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 

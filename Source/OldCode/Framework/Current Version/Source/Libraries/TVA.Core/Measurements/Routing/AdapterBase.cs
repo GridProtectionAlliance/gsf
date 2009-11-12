@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/12/2009 - J. Ritchie Carroll
+//       Made input and output measurement defintions optionally applicable to all adapters.
 //
 //*******************************************************************************************************
 
@@ -235,6 +237,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace TVA.Measurements.Routing
@@ -272,6 +275,9 @@ namespace TVA.Measurements.Routing
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private ManualResetEvent m_initializeWaitHandle;
+        private MeasurementKey[] m_inputMeasurementKeys;
+        private IMeasurement[] m_outputMeasurements;
+        private List<MeasurementKey> m_inputMeasurementKeysHash;
         private bool m_enabled;
         private bool m_initialized;
         private bool m_disposed;
@@ -337,6 +343,56 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Gets or sets key/value pair connection information specific to this <see cref="AdapterBase"/>.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Example connection string using manually defined measurements:<br/>
+        /// <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
+        /// <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
+        /// When defined manually, elements in key:<br/>
+        /// * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
+        /// * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
+        /// defaulting to 0.0 and 1.0 respectively.
+        /// <br/>
+        /// </para>
+        /// <para>
+        /// Example connection string using measurements defined in a <see cref="DataSource"/> table:<br/>
+        /// <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+        /// <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
+        /// <br/>
+        /// Basic filtering syntax is as follows:<br/>
+        /// <br/>
+        ///     {FILTER &lt;TableName&gt; WHERE &lt;Expression&gt; [ORDER BY &lt;SortField&gt;]}<br/>
+        /// <br/>
+        /// Source tables are expected to have at least the following fields:<br/>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Name</term>
+        ///         <term>Type</term>
+        ///         <description>Description.</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>ID</term>
+        ///         <term>NVARCHAR</term>
+        ///         <description>Measurement key formatted as: ArchiveSource:PointID.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>PointTag</term>
+        ///         <term>NVARCHAR</term>
+        ///         <description>Point tag of measurement.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Adder</term>
+        ///         <term>FLOAT</term>
+        ///         <description>Adder to apply to value, if any (default to 0.0).</description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Multiplier</term>
+        ///         <term>FLOAT</term>
+        ///         <description>Multipler to apply to value, if any (default to 1.0).</description>
+        ///     </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
         public virtual string ConnectionString
         {
             get
@@ -367,6 +423,40 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_dataSource = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterBase"/> will produce, if any.
+        /// </summary>
+        public virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return m_outputMeasurements;
+            }
+            set
+            {
+                m_outputMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="AdapterBase"/> expects, if any.
+        /// </summary>
+        public virtual MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return m_inputMeasurementKeys;
+            }
+            set
+            {
+                m_inputMeasurementKeys = value;
+
+                // Update input key lookup hash table
+                m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
+                m_inputMeasurementKeysHash.Sort();
             }
         }
 
@@ -434,6 +524,8 @@ namespace TVA.Measurements.Routing
         {
             get
             {
+                const int MaxMeasurementsToShow = 10;
+
                 StringBuilder status = new StringBuilder();
 
                 status.AppendFormat("    Referenced data source: {0}, {1} tables", DataSource.DataSetName, DataSource.Tables.Count);
@@ -472,6 +564,40 @@ namespace TVA.Measurements.Routing
                 }
 
                 status.AppendLine();
+
+                if (OutputMeasurements != null)
+                {
+                    status.AppendFormat("       Output measurements: {0} defined measurements", OutputMeasurements.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
+                    }
+
+                    if (OutputMeasurements.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".PadLeft(25));
+
+                    status.AppendLine();
+                }
+
+                if (InputMeasurementKeys != null)
+                {
+                    status.AppendFormat("        Input measurements: {0} defined measurements", InputMeasurementKeys.Length);
+                    status.AppendLine();
+                    status.AppendLine();
+
+                    for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
+                    {
+                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).PadLeft(25));
+                    }
+
+                    if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
+                        status.AppendLine("...".PadLeft(25));
+
+                    status.AppendLine();
+                }
 
                 return status.ToString();
             }
@@ -523,6 +649,15 @@ namespace TVA.Measurements.Routing
         public virtual void Initialize()
         {
             Initialized = false;
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+
+            if (settings.TryGetValue("inputMeasurementKeys", out setting))
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+
+            if (settings.TryGetValue("outputMeasurements", out setting))
+                OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);
         }
 
         /// <summary>
@@ -563,6 +698,20 @@ namespace TVA.Measurements.Routing
         public abstract string GetShortStatus(int maxLength);
 
         /// <summary>
+        /// Determines if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.
+        /// </summary>
+        /// <param name="item">Primary key of measurement to find.</param>
+        /// <returns>true if specified measurement key is defined in <see cref="InputMeasurementKeys"/>.</returns>
+        public virtual bool IsInputMeasurement(MeasurementKey item)
+        {
+            if (m_inputMeasurementKeysHash != null)
+                return (m_inputMeasurementKeysHash.BinarySearch(item) >= 0);
+
+            // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
+            return true;
+        }
+
+        /// <summary>
         /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
         /// <param name="status">New status message.</param>
@@ -571,7 +720,7 @@ namespace TVA.Measurements.Routing
             if (StatusMessage != null)
                 StatusMessage(this, new EventArgs<string>(status));
         }
-        
+
         /// <summary>
         /// Raises the <see cref="StatusMessage"/> event with a formatted status message.
         /// </summary>
@@ -597,5 +746,124 @@ namespace TVA.Measurements.Routing
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static Regex m_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // Static Methods
+
+        // Input keys can use DataSource for filtering desired set of input or output measurements
+        // based on any table and fields in the data set by using a filter expression instead of
+        // a list of measurement ID's. The format is as follows:
+
+        //  FILTER <TableName> WHERE <Expression> [ORDER BY <SortField>]
+
+        // Source tables are expected to have at least the following fields:
+        //
+        //      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
+        //      PointTag    NVARCHAR    Point tag of measurement
+        //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
+        //      Multiplier  FLOAT       Multipler to apply to value, if any (default to 1.0)
+        //
+        // Could have used standard SQL syntax here but didn't want to give user the impression
+        // that this a standard SQL expression when it isn't - so chose the word FILTER to make
+        // consumer was aware that this was not SQL, but SQL "like". The WHERE clause expression
+        // uses standard SQL syntax (it is simply the DataTable.Select filter expression).
+
+        /// <summary>
+        /// Parses input measurement keys from connection string setting.
+        /// </summary>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
+        /// <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
+        /// <returns>User selected input measurement keys.</returns>
+        public static MeasurementKey[] ParseInputMeasurementKeys(DataSet dataSource, string value)
+        {
+            List<MeasurementKey> keys = new List<MeasurementKey>();
+            Match filterMatch;
+
+            value = value.Trim();
+            filterMatch = m_filterExpression.Match(value);
+
+            if (filterMatch.Success)
+            {
+                string tableName = filterMatch.Result("${TableName}").Trim();
+                string expression = filterMatch.Result("${Expression}").Trim();
+                string sortField = filterMatch.Result("${SortField}").Trim();
+
+                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                {
+                    keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
+                }
+            }
+            else
+            {
+                // Add manually defined measurement keys
+                foreach (string item in value.Split(';'))
+                {
+                    keys.Add(MeasurementKey.Parse(item));
+                }
+            }
+
+            return keys.ToArray();
+        }
+
+        /// <summary>
+        /// Parses output measurements from connection string setting.
+        /// </summary>
+        /// <param name="dataSource">The <see cref="DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
+        /// <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+        /// <returns>User selected output measurements.</returns>
+        public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, string value)
+        {
+            List<IMeasurement> measurements = new List<IMeasurement>();
+            MeasurementKey key;
+            Match filterMatch;
+
+            value = value.Trim();
+            filterMatch = m_filterExpression.Match(value);
+
+            if (filterMatch.Success)
+            {
+                string tableName = filterMatch.Result("${TableName}").Trim();
+                string expression = filterMatch.Result("${Expression}").Trim();
+                string sortField = filterMatch.Result("${SortField}").Trim();
+
+                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                {
+                    key = MeasurementKey.Parse(row["ID"].ToString());
+                    measurements.Add(new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString())));
+                }
+            }
+            else
+            {
+                string[] elem;
+                double adder, multipler;
+
+                foreach (string item in value.Split(';'))
+                {
+                    elem = item.Trim().Split(',');
+
+                    key = MeasurementKey.Parse(elem[0]);
+
+                    if (elem.Length > 1)
+                        adder = double.Parse(elem[1].Trim());
+                    else
+                        adder = 0.0D;
+
+                    if (elem.Length > 2)
+                        multipler = double.Parse(elem[2].Trim());
+                    else
+                        multipler = 1.0D;
+
+                    measurements.Add(new Measurement(key.ID, key.Source, string.Empty, adder, multipler));
+                }
+            }
+
+            return measurements.ToArray();
+        }
+
+        #endregion        
     }
 }

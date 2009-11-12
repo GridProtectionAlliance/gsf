@@ -327,6 +327,7 @@ namespace TVA.Measurements
         private int m_frameIndex;                           // Determines current frame index
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
+        private long m_timeResolution;                      // Maximum sorting resolution in ticks
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
@@ -496,6 +497,56 @@ namespace TVA.Measurements
 
                 if (LeadTimeUpdated != null)
                     LeadTimeUpdated(m_leadTime);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+        /// </summary>
+        /// <remarks>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Desired maximum resolution</term>
+        ///         <description>Value to assign</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Seconds</term>
+        ///         <description><see cref="Ticks.PerSecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Milliseconds</term>
+        ///         <description><see cref="Ticks.PerMillisecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Microseconds</term>
+        ///         <description><see cref="Ticks.PerMicrosecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>100-Nanoseconds</term>
+        ///         <description>0</description>
+        ///     </item>
+        /// </list>
+        /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is <see cref="Ticks"/>,
+        /// 100-nanosecond intervals. Assigning values values greater than <see cref="Ticks.PerSecond"/> will be set to
+        /// <see cref="Ticks.PerSecond"/> since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
+        /// </remarks>
+        public long TimeResolution
+        {
+            get
+            {
+                return m_timeResolution;
+            }
+            set
+            {
+                if (value < 0)
+                    m_timeResolution = 0;
+                if (value > Ticks.PerSecond)
+                    m_timeResolution = Ticks.PerSecond;
+                else
+                    m_timeResolution = value;
+
+                // Assign desired time resolution to frame queue
+                m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
 
@@ -854,6 +905,8 @@ namespace TVA.Measurements
                 status.AppendFormat("    Measurement wait delay: {0} seconds (lag time)", m_lagTime);
                 status.AppendLine();
                 status.AppendFormat("     Local clock tolerance: {0} seconds (lead time)", m_leadTime);
+                status.AppendLine();
+                status.AppendFormat("   Maximum time resolution: {0} ticks", m_timeResolution);
                 status.AppendLine();
                 status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
@@ -1369,6 +1422,7 @@ namespace TVA.Measurements
             IFrame frame;
             Ticks timestamp, distance;
             int frameIndex, period;
+            decimal timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
 
             // First things first, prepare timer period for next call...
             m_frameIndex++;
@@ -1425,7 +1479,7 @@ namespace TVA.Measurements
                         // Calculate index of this frame within its second - note that we have to calculate this
                         // value instead of using m_frameIndex since it is is possible for multiple frames to be
                         // published within one frame period if the system is stressed
-                        frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + 1) / m_ticksPerFrame);
+                        frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + timeOffset) / m_ticksPerFrame);
 
                         // Mark the frame as published to prevent any further sorting into this frame
                         lock (frame.Measurements)
@@ -1481,7 +1535,7 @@ namespace TVA.Measurements
 
         // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
         // so we use this function to evenly distribute integer based millisecond wait times across a second.
-        private int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
+        private static int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
         {
             // Jian Zuo...
             int millisecondsWaitTime;

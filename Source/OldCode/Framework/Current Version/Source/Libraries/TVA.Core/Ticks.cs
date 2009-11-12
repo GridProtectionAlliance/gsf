@@ -273,6 +273,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TVA.Units;
 
 namespace TVA
 {
@@ -357,7 +358,10 @@ namespace TVA
         public const long PerSecond = 10000000L;
 
         /// <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
-        public const long PerMillisecond = Ticks.PerSecond / 1000L;
+        public const long PerMillisecond = (long)(Ticks.PerSecond * SI.Milli);
+
+        /// <summary>Number of 100-nanosecond ticks in one microsecond.</summary>
+        public const long PerMicrosecond = (long)(Ticks.PerSecond * SI.Micro);
 
         /// <summary>Number of 100-nanosecond ticks in one minute.</summary>
         public const long PerMinute = 60L * Ticks.PerSecond;
