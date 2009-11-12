@@ -664,6 +664,9 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("minimumMeasurementsToUse", out setting))
                 MinimumMeasurementsToUse = int.Parse(setting);
+
+            if (settings.TryGetValue("timeResolution", out setting))
+                TimeResolution = long.Parse(setting);
         }
 
         /// <summary>
