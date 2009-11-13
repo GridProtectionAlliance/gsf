@@ -437,6 +437,19 @@ namespace TVA
         }
 
         /// <summary>
+        /// Gets the <see cref="Ticks"/> value in equivalent number of microseconds.
+        /// </summary>
+        /// <returns>Value of <see cref="Ticks"/> in microseconds.</returns>
+        /// <remarks>
+        /// If <see cref="Ticks"/> value represents an instant in time, returned value will represent the number of microseconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public double ToMicroseconds()
+        {
+            return m_value / (double)Ticks.PerMicrosecond;
+        }
+
+        /// <summary>
         /// Determines if time, represented by <see cref="Ticks"/> value in UTC time, is valid by comparing it to
         /// the system clock.
         /// </summary>

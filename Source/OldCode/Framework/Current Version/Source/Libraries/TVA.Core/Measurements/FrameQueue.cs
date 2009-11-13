@@ -465,18 +465,10 @@ namespace TVA.Measurements
         public IFrame GetFrame(Ticks timestamp)
         {
             // Calculate destination ticks for this frame
-            long frameTicks;
-
-            if (m_timeResolution > 1)
-            {
-                long ticks = (long)timestamp;
-                long baseTicks = ticks - ticks % Ticks.PerSecond;
-                frameTicks = baseTicks + (ticks - baseTicks) / m_timeResolution * m_timeResolution + m_timeResolution / 2;
-            }
-            else
-                frameTicks = timestamp + 1;
-
-            Ticks destinationTicks = (long)(Math.Ceiling(frameTicks / m_ticksPerFrame) * m_ticksPerFrame - m_ticksPerFrame);
+            long ticks = (long)timestamp;
+            long baseTicks = ticks - ticks % Ticks.PerSecond;
+            long resolutionTicks = (m_timeResolution > 1 ? baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution : ticks + 1);
+            Ticks destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
             IFrame frame = null;
             bool nodeAdded = false;
 

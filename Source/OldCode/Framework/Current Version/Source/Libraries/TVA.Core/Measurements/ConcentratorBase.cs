@@ -501,7 +501,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+        /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
         /// </summary>
         /// <remarks>
         /// <list type="table">
@@ -526,9 +526,9 @@ namespace TVA.Measurements
         ///         <description>0</description>
         ///     </item>
         /// </list>
-        /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is <see cref="Ticks"/>,
-        /// 100-nanosecond intervals. Assigning values values greater than <see cref="Ticks.PerSecond"/> will be set to
-        /// <see cref="Ticks.PerSecond"/> since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
+        /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds).
+        /// Assigning values values greater than <see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks.PerSecond"/> since maximum
+        /// possible concentrator resolution is one second (i.e., 1 frame per second).
         /// </remarks>
         public long TimeResolution
         {

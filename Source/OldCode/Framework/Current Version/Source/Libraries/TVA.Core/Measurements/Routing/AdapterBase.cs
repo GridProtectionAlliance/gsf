@@ -573,11 +573,13 @@ namespace TVA.Measurements.Routing
 
                     for (int i = 0; i < Common.Min(OutputMeasurements.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.AppendLine(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
+                        status.Append(OutputMeasurements[i].ToString().TruncateRight(25).PadLeft(25));
+                        status.Append(" ");
+                        status.AppendLine(OutputMeasurements[i].SignalID.ToString());
                     }
 
                     if (OutputMeasurements.Length > MaxMeasurementsToShow)
-                        status.AppendLine("...".PadLeft(25));
+                        status.AppendLine("...".PadLeft(26));
 
                     status.AppendLine();
                 }
@@ -590,11 +592,11 @@ namespace TVA.Measurements.Routing
 
                     for (int i = 0; i < Common.Min(InputMeasurementKeys.Length, MaxMeasurementsToShow); i++)
                     {
-                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).PadLeft(25));
+                        status.AppendLine(InputMeasurementKeys[i].ToString().TruncateRight(25).CenterText(50));
                     }
 
                     if (InputMeasurementKeys.Length > MaxMeasurementsToShow)
-                        status.AppendLine("...".PadLeft(25));
+                        status.AppendLine("...".CenterText(50));
 
                     status.AppendLine();
                 }
