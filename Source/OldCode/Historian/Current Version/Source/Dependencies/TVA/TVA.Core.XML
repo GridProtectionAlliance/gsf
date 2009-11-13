@@ -14312,6 +14312,38 @@
             </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.TimeResolution">
+            <summary>
+            Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
+            </summary>
+            <remarks>
+            <list type="table">
+                <listheader>
+                    <term>Desired maximum resolution</term>
+                    <description>Value to assign</description>
+                </listheader>
+                <item>
+                    <term>Seconds</term>
+                    <description><see cref="F:TVA.Ticks.PerSecond"/></description>
+                </item>
+                <item>
+                    <term>Milliseconds</term>
+                    <description><see cref="F:TVA.Ticks.PerMillisecond"/></description>
+                </item>
+                <item>
+                    <term>Microseconds</term>
+                    <description><see cref="F:TVA.Ticks.PerMicrosecond"/></description>
+                </item>
+                <item>
+                    <term>100-Nanoseconds</term>
+                    <description>0</description>
+                </item>
+            </list>
+            Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds).
+            Assigning values values greater than <see cref="F:TVA.Ticks.PerSecond"/> will be set to <see cref="F:TVA.Ticks.PerSecond"/> since maximum
+            possible concentrator resolution is one second (i.e., 1 frame per second).
+            </remarks>
+        </member>
         <member name="P:TVA.Measurements.ConcentratorBase.TrackLatestMeasurements">
             <summary>
             Gets or sets flag to start tracking the absolute latest received measurement values.
@@ -14701,6 +14733,11 @@
             <see cref="P:TVA.Measurements.ConcentratorBase.FramesPerSecond"/> of the parent <see cref="T:TVA.Measurements.ConcentratorBase"/> implementation.
             </remarks>
             <returns>An existing or new <see cref="T:TVA.Measurements.IFrame"/> from the queue for the specified timestamp.</returns>
+        </member>
+        <member name="P:TVA.Measurements.FrameQueue.TimeResolution">
+            <summary>
+            Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+            </summary>
         </member>
         <member name="P:TVA.Measurements.FrameQueue.TicksPerFrame">
             <summary>
@@ -16118,6 +16155,13 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.</returns>
         </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.IsInputMeasurement(TVA.Measurements.MeasurementKey)">
+            <summary>
+            Determines if specified measurement key is defined in <see cref="P:TVA.Measurements.Routing.AdapterBase.InputMeasurementKeys"/>.
+            </summary>
+            <param name="item">Primary key of measurement to find.</param>
+            <returns>true if specified measurement key is defined in <see cref="P:TVA.Measurements.Routing.AdapterBase.InputMeasurementKeys"/>.</returns>
+        </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.OnStatusMessage(System.String)">
             <summary>
             Raises the <see cref="E:TVA.Measurements.Routing.AdapterBase.StatusMessage"/> event.
@@ -16139,6 +16183,22 @@
             Raises <see cref="E:TVA.Measurements.Routing.AdapterBase.ProcessException"/> event.
             </summary>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String)">
+            <summary>
+            Parses input measurement keys from connection string setting.
+            </summary>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
+            <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
+            <returns>User selected input measurement keys.</returns>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String)">
+            <summary>
+            Parses output measurements from connection string setting.
+            </summary>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
+            <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+            <returns>User selected output measurements.</returns>
         </member>
         <member name="E:TVA.Measurements.Routing.AdapterBase.StatusMessage">
             <summary>
@@ -16173,10 +16233,70 @@
             <summary>
             Gets or sets key/value pair connection information specific to this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.
             </summary>
+            <remarks>
+            <para>
+            Example connection string using manually defined measurements:<br/>
+            <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
+            <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
+            When defined manually, elements in key:<br/>
+            * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
+            * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
+            defaulting to 0.0 and 1.0 respectively.
+            <br/>
+            </para>
+            <para>
+            Example connection string using measurements defined in a <see cref="P:TVA.Measurements.Routing.AdapterBase.DataSource"/> table:<br/>
+            <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+            <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
+            <br/>
+            Basic filtering syntax is as follows:<br/>
+            <br/>
+                {FILTER &lt;TableName&gt; WHERE &lt;Expression&gt; [ORDER BY &lt;SortField&gt;]}<br/>
+            <br/>
+            Source tables are expected to have at least the following fields:<br/>
+            <list type="table">
+                <listheader>
+                    <term>Name</term>
+                    <term>Type</term>
+                    <description>Description.</description>
+                </listheader>
+                <item>
+                    <term>ID</term>
+                    <term>NVARCHAR</term>
+                    <description>Measurement key formatted as: ArchiveSource:PointID.</description>
+                </item>
+                <item>
+                    <term>PointTag</term>
+                    <term>NVARCHAR</term>
+                    <description>Point tag of measurement.</description>
+                </item>
+                <item>
+                    <term>Adder</term>
+                    <term>FLOAT</term>
+                    <description>Adder to apply to value, if any (default to 0.0).</description>
+                </item>
+                <item>
+                    <term>Multiplier</term>
+                    <term>FLOAT</term>
+                    <description>Multipler to apply to value, if any (default to 1.0).</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.OutputMeasurements">
+            <summary>
+            Gets or sets output measurements that the <see cref="T:TVA.Measurements.Routing.AdapterBase"/> will produce, if any.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TVA.Measurements.Routing.AdapterBase"/> expects, if any.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.Initialized">
@@ -25719,6 +25839,9 @@
         <member name="F:TVA.Ticks.PerMillisecond">
             <summary>Number of 100-nanosecond ticks in one millisecond.</summary>
         </member>
+        <member name="F:TVA.Ticks.PerMicrosecond">
+            <summary>Number of 100-nanosecond ticks in one microsecond.</summary>
+        </member>
         <member name="F:TVA.Ticks.PerMinute">
             <summary>Number of 100-nanosecond ticks in one minute.</summary>
         </member>
@@ -25763,6 +25886,16 @@
             <returns>Value of <see cref="T:TVA.Ticks"/> in milliseconds.</returns>
             <remarks>
             If <see cref="T:TVA.Ticks"/> value represents an instant in time, returned value will represent the number of milliseconds
+            that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="M:TVA.Ticks.ToMicroseconds">
+            <summary>
+            Gets the <see cref="T:TVA.Ticks"/> value in equivalent number of microseconds.
+            </summary>
+            <returns>Value of <see cref="T:TVA.Ticks"/> in microseconds.</returns>
+            <remarks>
+            If <see cref="T:TVA.Ticks"/> value represents an instant in time, returned value will represent the number of microseconds
             that have elapsed since 12:00:00 midnight, January 1, 0001.
             </remarks>
         </member>
