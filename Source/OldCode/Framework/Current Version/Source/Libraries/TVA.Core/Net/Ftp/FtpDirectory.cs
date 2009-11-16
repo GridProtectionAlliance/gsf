@@ -15,6 +15,9 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/13/2003 - Pinal C. Patel
+//       Fixed bug in initialization of Name, FullPath and Parent properties.
+//       Fixed null-reference exception occurrences in comparision methods/overloads.
 //
 //*******************************************************************************************************
 
@@ -316,7 +319,8 @@ namespace TVA.Net.Ftp
 
             if (fullPath.Length == 0)
             {
-                m_name = "/";
+                m_name = "";
+                m_fullPath = "/";
             }
             else
             {
@@ -343,7 +347,8 @@ namespace TVA.Net.Ftp
             }
             else
             {
-                m_name = "/";
+                m_name = "";
+                m_fullPath = "/";
             }
 
             m_size = info.Size;
@@ -487,7 +492,7 @@ namespace TVA.Net.Ftp
                     string[] paths = fullPath.Split('/');
                     int i;
 
-                    for (i = 0; i < paths.Length - 1; i++)
+                    for (i = 0; i < paths.Length - 2; i++)
                     {
                         if (paths[i].Length == 0)
                         {
@@ -950,13 +955,13 @@ namespace TVA.Net.Ftp
         int IComparable<FtpDirectory>.CompareTo(FtpDirectory other)
         {
             // Directories are sorted by name
-            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+            return string.Compare(m_name, other.Name, m_caseInsensitive);
         }
 
         int IComparable<IFtpFile>.CompareTo(IFtpFile other)
         {
             // Directories are sorted by name
-            return string.Compare(m_name, other.Name, m_parent.CaseInsensitive);
+            return string.Compare(m_name, other.Name, m_caseInsensitive);
         }
 
         /// <summary>
@@ -966,12 +971,18 @@ namespace TVA.Net.Ftp
         /// <returns>An <see cref="Int32"/> value representing the result. 1 - obj is greater than, 0 - obj is equal to, -1 - obj is less than.</returns>
         public int CompareTo(object obj)
         {
-            IFtpFile file = obj as IFtpFile;
-
-            if (file != null)
-                return CompareTo(file);
+            if (object.Equals(obj, null))
+            {
+                return 1;
+            }
             else
-                throw new ArgumentException("File can only be compared to other Files or Directories");
+            {
+                IFtpFile file = obj as IFtpFile;
+                if (file == null)
+                    return 1;
+                else
+                    return ((IComparable<IFtpFile>)this).CompareTo(file);
+            }
         }
 
         #endregion
@@ -986,7 +997,10 @@ namespace TVA.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator ==(FtpDirectory value1, FtpDirectory value2)
         {
-            return (value1.CompareTo(value2) == 0);
+            if (object.Equals(value1, null))
+                return object.Equals(value2, null);
+            else
+                return (value1.CompareTo(value2) == 0);
         }
 
         /// <summary>
@@ -997,7 +1011,7 @@ namespace TVA.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator !=(FtpDirectory value1, FtpDirectory value2)
         {
-            return (value1.CompareTo(value2) != 0);
+            return !(value1 == value2);
         }
 
         /// <summary>
@@ -1008,18 +1022,10 @@ namespace TVA.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator <(FtpDirectory value1, FtpDirectory value2)
         {
-            return (value1.CompareTo(value2) < 0);
-        }
-
-        /// <summary>
-        /// Returns true if left value is less or equal to than right value.
-        /// </summary>
-        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
-        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
-        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
-        public static bool operator <=(FtpDirectory value1, FtpDirectory value2)
-        {
-            return (value1.CompareTo(value2) <= 0);
+            if (object.Equals(value1, null))
+                return object.Equals(value2, null);
+            else
+                return (value1.CompareTo(value2) < 0);
         }
 
         /// <summary>
@@ -1030,7 +1036,21 @@ namespace TVA.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator >(FtpDirectory value1, FtpDirectory value2)
         {
-            return (value1.CompareTo(value2) > 0);
+            return !(value1 <= value2);
+        }
+
+        /// <summary>
+        /// Returns true if left value is less or equal to than right value.
+        /// </summary>
+        /// <param name="value1">A <see cref="FtpDirectory"/> left hand operand.</param>
+        /// <param name="value2">A <see cref="FtpDirectory"/> right hand operand.</param>
+        /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
+        public static bool operator <=(FtpDirectory value1, FtpDirectory value2)
+        {
+            if (object.Equals(value1, null))
+                return object.Equals(value2, null);
+            else
+                return (value1.CompareTo(value2) <= 0);
         }
 
         /// <summary>
@@ -1041,7 +1061,7 @@ namespace TVA.Net.Ftp
         /// <returns>A <see cref="Boolean"/> value indicating the result.</returns>
         public static bool operator >=(FtpDirectory value1, FtpDirectory value2)
         {
-            return (value1.CompareTo(value2) >= 0);
+            return !(value1 < value2);
         }
 
         #endregion
