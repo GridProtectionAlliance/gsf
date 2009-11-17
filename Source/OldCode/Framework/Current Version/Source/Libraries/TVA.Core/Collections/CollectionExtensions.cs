@@ -30,6 +30,8 @@
 //       Update comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/17/2009 - Pinal C. Patel
+//       Added generic UpdateRange() extension method for IList<T>.
 //
 //*******************************************************************************************************
 
@@ -264,14 +266,30 @@ namespace TVA.Collections
         /// <summary>
         /// Adds the specified <paramref name="items"/> to the <paramref name="collection"/>.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> of <paramref name="items"/> to be added.</typeparam>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="collection"/>.</typeparam>
         /// <param name="collection">The collection to which the <paramref name="items"/> are to be added.</param>
-        /// <param name="items">The items to be added to the <paramref name="collection"/>.</param>
+        /// <param name="items">The elements to be added to the <paramref name="collection"/>.</param>
         public static void AddRange<T>(this IList<T> collection, IEnumerable<T> items)
         {
             foreach (T item in items)
             {
                 collection.Add(item);
+            }
+        }
+
+        /// <summary>
+        /// Updates <paramref name="collection"/> starting at the <paramref name="index"/> with the specified <paramref name="items"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="collection"/>.</typeparam>
+        /// <param name="collection">The collection whose elements are to be updated with the specified <paramref name="items"/>.</param>
+        /// <param name="index">The zero-based index in the <paramref name="collection"/> at which elements are to be updated.</param>
+        /// <param name="items">The elements that will replace the <paramref name="collection"/> elements starting at the <paramref name="index"/>.</param>
+        /// <exception cref="ArgumentOutOfRangeException">The specified <paramref name="index"/> is present in the <paramref name="collection"/>.</exception>
+        public static void UpdateRange<T>(this IList<T> collection, int index, IEnumerable<T> items)
+        {
+            foreach (T item in items)
+            {
+                collection[index++] = item;
             }
         }
 
