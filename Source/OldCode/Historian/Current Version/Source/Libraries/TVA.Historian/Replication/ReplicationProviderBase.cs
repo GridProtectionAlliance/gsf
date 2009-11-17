@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  11/04/2009 - Pinal C. Patel
 //       Generated original version of source code.
+//  11/17/2009 - Pinal C. Patel
+//       Made Initialize(), SaveSettings() and LoadSettings() overridable in a derived class.
 //
 //*******************************************************************************************************
 
@@ -424,7 +426,7 @@ namespace TVA.Historian.Replication
         /// <summary>
         /// Initializes the replication provider.
         /// </summary>
-        public void Initialize()
+        public virtual void Initialize()
         {
             if (!m_initialized)
             {
@@ -444,8 +446,8 @@ namespace TVA.Historian.Replication
 
         /// <summary>
         /// Saves replication provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
-        public void SaveSettings()
+        /// </summary>
+        public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
@@ -472,7 +474,7 @@ namespace TVA.Historian.Replication
         /// <summary>
         /// Loads saved replication provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>        
-        public void LoadSettings()
+        public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {

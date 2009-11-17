@@ -2942,9 +2942,19 @@
             <summary>
             Adds the specified <paramref name="items"/> to the <paramref name="collection"/>.
             </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of <paramref name="items"/> to be added.</typeparam>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="collection"/>.</typeparam>
             <param name="collection">The collection to which the <paramref name="items"/> are to be added.</param>
-            <param name="items">The items to be added to the <paramref name="collection"/>.</param>
+            <param name="items">The elements to be added to the <paramref name="collection"/>.</param>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.UpdateRange``1(System.Collections.Generic.IList{``0},System.Int32,System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Updates <paramref name="collection"/> starting at the <paramref name="index"/> with the specified <paramref name="items"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="collection"/>.</typeparam>
+            <param name="collection">The collection whose elements are to be updated with the specified <paramref name="items"/>.</param>
+            <param name="index">The zero-based index in the <paramref name="collection"/> at which elements are to be updated.</param>
+            <param name="items">The elements that will replace the <paramref name="collection"/> elements starting at the <paramref name="index"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">The specified <paramref name="index"/> is present in the <paramref name="collection"/>.</exception>
         </member>
         <member name="M:TVA.Collections.CollectionExtensions.GetRange``1(System.Collections.Generic.IList{``0},System.Int32,System.Int32)">
             <summary>
@@ -20896,17 +20906,17 @@
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpDirectory"/> right hand operand.</param>
             <returns>A <see cref="T:System.Boolean"/> value indicating the result.</returns>
         </member>
-        <member name="M:TVA.Net.Ftp.FtpDirectory.op_LessThanOrEqual(TVA.Net.Ftp.FtpDirectory,TVA.Net.Ftp.FtpDirectory)">
+        <member name="M:TVA.Net.Ftp.FtpDirectory.op_GreaterThan(TVA.Net.Ftp.FtpDirectory,TVA.Net.Ftp.FtpDirectory)">
             <summary>
-            Returns true if left value is less or equal to than right value.
+            Returns true if left value is greater than right value.
             </summary>
             <param name="value1">A <see cref="T:TVA.Net.Ftp.FtpDirectory"/> left hand operand.</param>
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpDirectory"/> right hand operand.</param>
             <returns>A <see cref="T:System.Boolean"/> value indicating the result.</returns>
         </member>
-        <member name="M:TVA.Net.Ftp.FtpDirectory.op_GreaterThan(TVA.Net.Ftp.FtpDirectory,TVA.Net.Ftp.FtpDirectory)">
+        <member name="M:TVA.Net.Ftp.FtpDirectory.op_LessThanOrEqual(TVA.Net.Ftp.FtpDirectory,TVA.Net.Ftp.FtpDirectory)">
             <summary>
-            Returns true if left value is greater than right value.
+            Returns true if left value is less or equal to than right value.
             </summary>
             <param name="value1">A <see cref="T:TVA.Net.Ftp.FtpDirectory"/> left hand operand.</param>
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpDirectory"/> right hand operand.</param>
@@ -21120,17 +21130,17 @@
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpFile"/> as the right hand operand.</param>
             <returns>A <see cref="T:System.Boolean"/> value indicating the result of the comparison.</returns>
         </member>
-        <member name="M:TVA.Net.Ftp.FtpFile.op_LessThanOrEqual(TVA.Net.Ftp.FtpFile,TVA.Net.Ftp.FtpFile)">
+        <member name="M:TVA.Net.Ftp.FtpFile.op_GreaterThan(TVA.Net.Ftp.FtpFile,TVA.Net.Ftp.FtpFile)">
             <summary>
-            Returns true if left value is less or equal to than right value.
+            Returns true if left value is greater than right value.
             </summary>
             <param name="value1">A <see cref="T:TVA.Net.Ftp.FtpFile"/> as the left hand operand.</param>
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpFile"/> as the right hand operand.</param>
             <returns>A <see cref="T:System.Boolean"/> value indicating the result of the comparison.</returns>
         </member>
-        <member name="M:TVA.Net.Ftp.FtpFile.op_GreaterThan(TVA.Net.Ftp.FtpFile,TVA.Net.Ftp.FtpFile)">
+        <member name="M:TVA.Net.Ftp.FtpFile.op_LessThanOrEqual(TVA.Net.Ftp.FtpFile,TVA.Net.Ftp.FtpFile)">
             <summary>
-            Returns true if left value is greater than right value.
+            Returns true if left value is less or equal to than right value.
             </summary>
             <param name="value1">A <see cref="T:TVA.Net.Ftp.FtpFile"/> as the left hand operand.</param>
             <param name="value2">A <see cref="T:TVA.Net.Ftp.FtpFile"/> as the right hand operand.</param>
