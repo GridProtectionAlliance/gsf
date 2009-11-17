@@ -30,6 +30,9 @@
 //       Added new header and license agreement.
 //  10/30/2009 - Pinal C. Patel
 //       Added true multicast support by allowing for socket level subscription to a multicast group.
+//  11/17/2009 - Pinal C. Patel
+//       Fixed a bug in the creation of random server endpoint when server endpoint information is 
+//       omitted from the ConnectionString.
 //
 //*******************************************************************************************************
 
@@ -492,7 +495,7 @@ namespace TVA.Communication
                     throw new InvalidOperationException("Handshake requires Server property in the ConnectionString");
 
                 // Create a random server endpoint since one is not specified.
-                m_udpServer = Transport.CreateEndPoint(string.Empty, 0);
+                m_udpServer = Transport.CreateEndPoint(m_connectData["interface"], 0);
             }
 
 #if ThreadTracking
