@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  Service.cs - Gbtc
+//  RestService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
