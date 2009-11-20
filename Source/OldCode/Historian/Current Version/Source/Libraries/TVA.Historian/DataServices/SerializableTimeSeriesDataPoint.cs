@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  RestWebServiceMetadataProvider.cs - Gbtc
+//  SerializableTimeSeriesDataPoint.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,12 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/11/2009 - Pinal C. Patel
-//       Generated original version of source code.
-//  08/18/2009 - Pinal C. Patel
-//       Added cleanup code for response stream of the REST web service.
 //  08/21/2009 - Pinal C. Patel
-//       Moved RestDataFormat to Services namespace as SerializationFormat.
+//       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
@@ -236,37 +232,75 @@
 #endregion
 
 using System;
-using System.IO;
-using System.Net;
-using TVA.Configuration;
-using TVA.Web.Services;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
+using TVA.Historian.Files;
 
-namespace TVA.Historian.MetadataProviders
-{   
+namespace TVA.Historian.DataServices
+{
     /// <summary>
-    /// Represents a provider of data to a <see cref="TVA.Historian.Files.MetadataFile"/> from a REST (Representational State Transfer) web service.
+    /// Represents a time-series data-point that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
     /// </summary>
-    /// <seealso cref="MetadataUpdater"/>
-    public class RestWebServiceMetadataProvider : MetadataProviderBase
+    /// <example>
+    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="XmlSerializer"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <TimeSeriesDataPoint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+    ///   HistorianID="1" Time="21-Aug-2009 14:21:23.236" Value="60.0419579" Quality="Good" />
+    /// ]]>
+    /// </code>
+    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <TimeSeriesDataPoint xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    ///   <HistorianID>1</HistorianID>
+    ///   <Time>21-Aug-2009 14:21:54.612</Time>
+    ///   <Value>60.025547</Value>
+    ///   <Quality>Good</Quality>
+    /// </TimeSeriesDataPoint>
+    /// ]]>
+    /// </code>
+    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
+    /// <code>
+    /// {
+    ///   "HistorianID":1,
+    ///   "Time":"21-Aug-2009 14:22:26.971",
+    ///   "Value":59.9974136,
+    ///   "Quality":29
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="IDataPoint"/>
+    /// <seealso cref="XmlSerializer"/>
+    /// <seealso cref="DataContractSerializer"/>
+    /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
+    [XmlType("TimeSeriesDataPoint"), DataContract(Name = "TimeSeriesDataPoint")]
+    public class SerializableTimeSeriesDataPoint
     {
-        #region [ Members ]
-
-        // Fields
-        private string m_serviceUri;
-        private SerializationFormat m_serviceDataFormat;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="RestWebServiceMetadataProvider"/> class.
+        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
         /// </summary>
-        public RestWebServiceMetadataProvider()
-            : base()
+        public SerializableTimeSeriesDataPoint()
         {
-            m_serviceUri = string.Empty;
-            m_serviceDataFormat = SerializationFormat.PoxRest;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
+        /// </summary>
+        /// <param name="dataPoint"><see cref="IDataPoint"/> from which <see cref="SerializableTimeSeriesDataPoint"/> is to be initialized.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="dataPoint"/> is null.</exception>
+        public SerializableTimeSeriesDataPoint(IDataPoint dataPoint)
+        {
+            if (dataPoint == null)
+                throw new ArgumentNullException("dataPoint");
+
+            HistorianID = dataPoint.HistorianID;
+            Time = dataPoint.Time.ToString();
+            Value = dataPoint.Value;
+            Quality = dataPoint.Quality;
         }
 
         #endregion
@@ -274,114 +308,41 @@ namespace TVA.Historian.MetadataProviders
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the URI where the REST web service is hosted.
+        /// Gets or sets the <see cref="IDataPoint.HistorianID"/>.
         /// </summary>
-        public string ServiceUri
-        {
-            get
-            {
-                return m_serviceUri;
-            }
-            set
-            {
-                m_serviceUri = value;
-            }
-        }
+        [XmlAttribute(), DataMember(Order = 0)]
+        public int HistorianID { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="SerializationFormat"/> in which the REST web service exposes the data.
+        /// Gets or sets the <see cref="String"/> representation of <see cref="IDataPoint.Time"/>.
         /// </summary>
-        public SerializationFormat ServiceDataFormat
-        {
-            get
-            {
-                return m_serviceDataFormat;
-            }
-            set
-            {
-                m_serviceDataFormat = value;
-            }
-        }
+        [XmlAttribute(), DataMember(Order = 1)]
+        public string Time { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDataPoint.Value"/>.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 2)]
+        public float Value { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDataPoint.Quality"/>.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 3)]
+        public Quality Quality { get; set; }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Saves <see cref="RestWebServiceMetadataProvider"/> settings to the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
+        /// Returns an <see cref="IDataPoint"/> object for this <see cref="SerializableTimeSeriesDataPoint"/>.
         /// </summary>
-        public override void SaveSettings()
+        /// <returns>An <see cref="IDataPoint"/> object.</returns>
+        public IDataPoint Deflate()
         {
-            base.SaveSettings();
-            if (PersistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["ServiceUri", true];
-                element.Update(m_serviceUri, element.Description, element.Encrypted);
-                element = settings["ServiceDataFormat", true];
-                element.Update(m_serviceDataFormat, element.Description, element.Encrypted);
-                config.Save();
-            }
-        }
-
-        /// <summary>
-        /// Loads saved <see cref="RestWebServiceMetadataProvider"/> settings from the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
-        /// </summary>
-        public override void LoadSettings()
-        {
-            base.LoadSettings();
-            if (PersistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ServiceUri", m_serviceUri, "URI where the REST web service is hosted.");
-                settings.Add("ServiceDataFormat", m_serviceDataFormat, "Format (Json; PoxAsmx; PoxRest) in which the REST web service exposes the data.");
-                ServiceUri = settings["ServiceUri"].ValueAs(m_serviceUri);
-                ServiceDataFormat = settings["ServiceDataFormat"].ValueAs(m_serviceDataFormat);
-            }
-        }
-
-        /// <summary>
-        /// Refreshes the <see cref="MetadataProviderBase.Metadata"/> from a REST web service.
-        /// </summary>
-        /// <exception cref="ArgumentNullException"><see cref="ServiceUri"/> is set to a null or empty string.</exception>
-        protected override void RefreshMetadata()
-        {
-            if (string.IsNullOrEmpty(m_serviceUri))
-                throw new ArgumentNullException("ServiceUri");
-
-            WebResponse response = null;
-            Stream responseStream = null;
-            try
-            {
-                // Retrieve new metadata.
-                response = WebRequest.Create(m_serviceUri).GetResponse();
-                responseStream = response.GetResponseStream();
-
-                // Update existing metadata.
-                MetadataUpdater metadataUpdater = new MetadataUpdater(Metadata);
-                metadataUpdater.UpdateMetadata(responseStream, m_serviceDataFormat);
-            }
-            finally
-            {
-                if (response != null)
-                    response.Close();
-
-                if (responseStream != null)
-                    responseStream.Dispose();
-            }
+            // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
+            return new ArchiveDataPoint(HistorianID, TimeTag.Parse(Time), Value, Quality);
         }
 
         #endregion

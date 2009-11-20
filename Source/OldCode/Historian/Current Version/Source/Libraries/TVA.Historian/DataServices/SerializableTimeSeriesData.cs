@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SerializableMetadata.cs - Gbtc
+//  SerializableTimeSeriesData.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/07/2009 - Pinal C. Patel
+//  08/21/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
@@ -235,174 +235,127 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using TVA.Historian.Files;
 
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
     /// <summary>
-    /// Represents a container for <see cref="SerializableMetadataRecord"/>s that can be serialized using <see cref="XmlSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+    /// Represents a container for <see cref="SerializableTimeSeriesDataPoint"/>s that can be serialized using <see cref="XmlSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
     /// </summary>
     /// <example>
-    /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="XmlSerializer"/>:
+    /// This is the output for <see cref="SerializableTimeSeriesData"/> serialized using <see cref="XmlSerializer"/>:
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8" ?> 
-    /// <Metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-    ///   <MetadataRecords>
-    ///     <MetadataRecord HistorianID="1" DataType="0" Name="TVA_CORD-BUS2:ABBV" Synonym1="4-PM1" Synonym2="VPHM" Synonym3="" 
-    ///       Description="Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude" HardwareInfo="ABB RES521" Remarks="" 
-    ///       PlantCode="P1" UnitNumber="1" SystemName="CORD" SourceID="3" Enabled="true" ScanRate="0.0333333351" CompressionMinTime="0" 
-    ///       CompressionMaxTime="0" EngineeringUnits="Volts" LowWarning="475000" HighWarning="525000" LowAlarm="450000" HighAlarm="550000" 
-    ///       LowRange="475000" HighRange="525000" CompressionLimit="0" ExceptionLimit="0" DisplayDigits="7" SetDescription="" ClearDescription="" 
-    ///       AlarmState="0" ChangeSecurity="5" AccessSecurity="0" StepCheck="false" AlarmEnabled="false" AlarmFlags="0" AlarmDelay="0" AlarmToFile="false" 
-    ///       AlarmByEmail="false" AlarmByPager="false" AlarmByPhone="false" AlarmEmails="" AlarmPagers="" AlarmPhones="" /> 
-    ///   </MetadataRecords>
-    /// </Metadata>
+    /// <TimeSeriesData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    ///   <TimeSeriesDataPoints>
+    ///     <TimeSeriesDataPoint HistorianID="1" Time="21-Aug-2009 14:29:52.634" Value="59.9537773" Quality="Good" /> 
+    ///     <TimeSeriesDataPoint HistorianID="2" Time="21-Aug-2009 14:29:52.668" Value="60.0351028" Quality="Good" /> 
+    ///     <TimeSeriesDataPoint HistorianID="3" Time="21-Aug-2009 14:29:52.702" Value="59.99268" Quality="Good" /> 
+    ///     <TimeSeriesDataPoint HistorianID="4" Time="21-Aug-2009 14:29:52.736" Value="59.99003" Quality="Good" /> 
+    ///     <TimeSeriesDataPoint HistorianID="5" Time="21-Aug-2009 14:29:52.770" Value="59.9532661" Quality="Good" /> 
+    ///   </TimeSeriesDataPoints>
+    /// </TimeSeriesData>
     /// ]]>
     /// </code>
-    /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="DataContractSerializer"/>:
+    /// This is the output for <see cref="SerializableTimeSeriesData"/> serialized using <see cref="DataContractSerializer"/>:
     /// <code>
     /// <![CDATA[
-    /// <Metadata xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
-    ///   <MetadataRecords>
-    ///     <MetadataRecord>
+    /// <TimeSeriesData xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    ///   <TimeSeriesDataPoints>
+    ///     <TimeSeriesDataPoint>
     ///       <HistorianID>1</HistorianID> 
-    ///       <DataType>0</DataType> 
-    ///       <Name>TVA_CORD-BUS2:ABBV</Name> 
-    ///       <Synonym1>4-PM1</Synonym1> 
-    ///       <Synonym2>VPHM</Synonym2> 
-    ///       <Synonym3 /> 
-    ///       <Description>Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude</Description> 
-    ///       <HardwareInfo>ABB RES521</HardwareInfo> 
-    ///       <Remarks /> 
-    ///       <PlantCode>P1</PlantCode> 
-    ///       <UnitNumber>1</UnitNumber> 
-    ///       <SystemName>CORD</SystemName> 
-    ///       <SourceID>3</SourceID> 
-    ///       <Enabled>true</Enabled> 
-    ///       <ScanRate>0.0333333351</ScanRate> 
-    ///       <CompressionMinTime>0</CompressionMinTime> 
-    ///       <CompressionMaxTime>0</CompressionMaxTime> 
-    ///       <EngineeringUnits>Volts</EngineeringUnits> 
-    ///       <LowWarning>475000</LowWarning> 
-    ///       <HighWarning>525000</HighWarning> 
-    ///       <LowAlarm>450000</LowAlarm> 
-    ///       <HighAlarm>550000</HighAlarm> 
-    ///       <LowRange>475000</LowRange> 
-    ///       <HighRange>525000</HighRange> 
-    ///       <CompressionLimit>0</CompressionLimit> 
-    ///       <ExceptionLimit>0</ExceptionLimit> 
-    ///       <DisplayDigits>7</DisplayDigits> 
-    ///       <SetDescription /> 
-    ///       <ClearDescription /> 
-    ///       <AlarmState>0</AlarmState> 
-    ///       <ChangeSecurity>5</ChangeSecurity> 
-    ///       <AccessSecurity>0</AccessSecurity> 
-    ///       <StepCheck>false</StepCheck> 
-    ///       <AlarmEnabled>false</AlarmEnabled> 
-    ///       <AlarmFlags>0</AlarmFlags> 
-    ///       <AlarmDelay>0</AlarmDelay> 
-    ///       <AlarmToFile>false</AlarmToFile> 
-    ///       <AlarmByEmail>false</AlarmByEmail> 
-    ///       <AlarmByPager>false</AlarmByPager> 
-    ///       <AlarmByPhone>false</AlarmByPhone> 
-    ///       <AlarmEmails /> 
-    ///       <AlarmPagers /> 
-    ///       <AlarmPhones /> 
-    ///     </MetadataRecord>
-    ///   </MetadataRecords>
-    /// </Metadata>
+    ///       <Time>21-Aug-2009 14:31:56.176</Time> 
+    ///       <Value>60.0272522</Value> 
+    ///       <Quality>Good</Quality> 
+    ///     </TimeSeriesDataPoint>
+    ///     <TimeSeriesDataPoint>
+    ///       <HistorianID>2</HistorianID> 
+    ///       <Time>21-Aug-2009 14:31:56.210</Time> 
+    ///       <Value>60.0283241</Value> 
+    ///       <Quality>Good</Quality> 
+    ///     </TimeSeriesDataPoint>
+    ///     <TimeSeriesDataPoint>
+    ///       <HistorianID>3</HistorianID> 
+    ///       <Time>21-Aug-2009 14:31:56.244</Time> 
+    ///       <Value>60.0418167</Value> 
+    ///       <Quality>Good</Quality> 
+    ///     </TimeSeriesDataPoint>
+    ///     <TimeSeriesDataPoint>
+    ///       <HistorianID>4</HistorianID> 
+    ///       <Time>21-Aug-2009 14:31:56.278</Time> 
+    ///       <Value>60.0049438</Value> 
+    ///       <Quality>Good</Quality> 
+    ///     </TimeSeriesDataPoint>
+    ///     <TimeSeriesDataPoint>
+    ///       <HistorianID>5</HistorianID> 
+    ///       <Time>21-Aug-2009 14:31:56.312</Time> 
+    ///       <Value>59.9982834</Value> 
+    ///       <Quality>Good</Quality> 
+    ///     </TimeSeriesDataPoint>
+    ///   </TimeSeriesDataPoints>
+    /// </TimeSeriesData>
     /// ]]>
     /// </code>
-    /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
+    /// This is the output for <see cref="SerializableTimeSeriesData"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
     /// <code>
     /// {
-    ///   "MetadataRecords":
+    ///   "TimeSeriesDataPoints":
     ///     [{"HistorianID":1,
-    ///       "DataType":0,
-    ///       "Name":"TVA_CORD-BUS2:ABBV",
-    ///       "Synonym1":"4-PM1",
-    ///       "Synonym2":"VPHM",
-    ///       "Synonym3":"",
-    ///       "Description":"Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude",
-    ///       "HardwareInfo":"ABB RES521",
-    ///       "Remarks":"",
-    ///       "PlantCode":"P1",
-    ///       "UnitNumber":1,
-    ///       "SystemName":"CORD",
-    ///       "SourceID":3,
-    ///       "Enabled":true,
-    ///       "ScanRate":0.0333333351,
-    ///       "CompressionMinTime":0,
-    ///       "CompressionMaxTime":0,
-    ///       "EngineeringUnits":"Volts",
-    ///       "LowWarning":475000,
-    ///       "HighWarning":525000,
-    ///       "LowAlarm":450000,
-    ///       "HighAlarm":550000,
-    ///       "LowRange":475000,
-    ///       "HighRange":525000,
-    ///       "CompressionLimit":0,
-    ///       "ExceptionLimit":0,
-    ///       "DisplayDigits":7,
-    ///       "SetDescription":"",
-    ///       "ClearDescription":"",
-    ///       "AlarmState":0,
-    ///       "ChangeSecurity":5,
-    ///       "AccessSecurity":0,
-    ///       "StepCheck":false,
-    ///       "AlarmEnabled":false,
-    ///       "AlarmFlags":0,
-    ///       "AlarmDelay":0,
-    ///       "AlarmToFile":false,
-    ///       "AlarmByEmail":false,
-    ///       "AlarmByPager":false,
-    ///       "AlarmByPhone":false,
-    ///       "AlarmEmails":"",
-    ///       "AlarmPagers":"",
-    ///       "AlarmPhones":""}]
+    ///       "Time":"21-Aug-2009 14:37:04.804",
+    ///       "Value":59.9637527,
+    ///       "Quality":29},
+    ///      {"HistorianID":2,
+    ///       "Time":"21-Aug-2009 14:37:04.838",
+    ///       "Value":60.0154762,
+    ///       "Quality":29},
+    ///      {"HistorianID":3,
+    ///       "Time":"21-Aug-2009 14:37:04.872",
+    ///       "Value":59.977684,
+    ///       "Quality":29},
+    ///      {"HistorianID":3,
+    ///       "Time":"21-Aug-2009 14:37:04.906",
+    ///       "Value":59.97335,
+    ///       "Quality":29},
+    ///      {"HistorianID":5,
+    ///       "Time":"21-Aug-2009 14:37:04.940",
+    ///       "Value":59.974678,
+    ///       "Quality":29}]
     /// }
     /// </code>
     /// </example>
-    /// <seealso cref="MetadataFile"/>
-    /// <seealso cref="SerializableMetadataRecord"/>
+    /// <seealso cref="SerializableTimeSeriesDataPoint"/>
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlRoot("Metadata"), DataContract(Name = "Metadata")]
-    public class SerializableMetadata
+    [XmlRoot("TimeSeriesData"), DataContract(Name = "TimeSeriesData")]
+    public class SerializableTimeSeriesData
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableMetadata"/> class.
+        /// Initializes a new instance of the <see cref="SerializableTimeSeriesData"/> class.
         /// </summary>
-        public SerializableMetadata()
+        public SerializableTimeSeriesData()
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableMetadata"/> class.
+        /// Initializes a new instance of the <see cref="SerializableTimeSeriesData"/> class.
         /// </summary>
-        /// <param name="metadataFile"><see cref="MetadataFile"/> object from which <see cref="SerializableMetadata"/> is to be initialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="metadataFile"/> is null.</exception>
-        /// <exception cref="ArgumentException"><paramref name="metadataFile"/> is closed.</exception>
-        public SerializableMetadata(MetadataFile metadataFile)
+        /// <param name="dataPoints">List of <see cref="IDataPoint"/> from which <see cref="SerializableTimeSeriesData"/> is to be initialized.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="dataPoints"/> is null.</exception>
+        public SerializableTimeSeriesData(IEnumerable<IDataPoint> dataPoints)
             : this()
         {
-            if (metadataFile == null)
-                throw new ArgumentNullException("metadataFile");
+            if (dataPoints == null)
+                throw new ArgumentNullException("dataPoints");
 
-            if (!metadataFile.IsOpen)
-                throw new ArgumentException("metadataFile is closed");
-
-            // Process all records in the metadata file.
-            List<SerializableMetadataRecord> serializableMetadataRecords = new List<SerializableMetadataRecord>();
-            foreach (MetadataRecord metadataRecord in metadataFile.Read())
+            List<SerializableTimeSeriesDataPoint> serializableDataPoints = new List<SerializableTimeSeriesDataPoint>();
+            foreach (IDataPoint dataPoint in dataPoints)
             {
-                serializableMetadataRecords.Add(new SerializableMetadataRecord(metadataRecord));
+                serializableDataPoints.Add(new SerializableTimeSeriesDataPoint(dataPoint));
             }
-            MetadataRecords = serializableMetadataRecords.ToArray();
+            TimeSeriesDataPoints = serializableDataPoints.ToArray();
         }
 
         #endregion
@@ -410,10 +363,10 @@ namespace TVA.Historian.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="SerializableMetadataRecord"/>s contained in the <see cref="SerializableMetadata"/>.
+        /// Gets or sets the <see cref="SerializableTimeSeriesDataPoint"/>s contained in the <see cref="SerializableTimeSeriesData"/>.
         /// </summary>
         [XmlArray(), DataMember()]
-        public SerializableMetadataRecord[] MetadataRecords { get; set; }
+        public SerializableTimeSeriesDataPoint[] TimeSeriesDataPoints { get; set; }
 
         #endregion
     }

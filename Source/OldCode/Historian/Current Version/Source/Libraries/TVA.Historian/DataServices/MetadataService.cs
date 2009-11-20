@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  TimeSeriesDataService.cs - Gbtc
+//  MetadataService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,11 +8,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/01/2009 - Pinal C. Patel
+//  08/28/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/10/2009 - Pinal C. Patel
-//       Modified the logic in ReadCurrentTimeSeriesData() overloads to remove try-catch and check for 
-//       null reference instead.
+//       Modified ReadMetadata() overloads to remove try-catch and check for null reference instead.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
@@ -239,24 +238,24 @@ using System.Collections.Generic;
 using System.ServiceModel;
 using TVA.Historian.Files;
 
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
     /// <summary>
-    /// Represents a REST web service for time-series data.
+    /// Represents a REST web service for historian metadata.
     /// </summary>
-    /// <seealso cref="SerializableTimeSeriesData"/>
+    /// <seealso cref="SerializableMetadata"/>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Multiple)]
-    public class TimeSeriesDataService : Service, ITimeSeriesDataService
+    public class MetadataService : DataService, IMetadataService
     {
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TimeSeriesDataService"/> class.
+        /// Initializes a new instance of the <see cref="MetadataService"/> class.
         /// </summary>
-        public TimeSeriesDataService()
+        public MetadataService()
             :base()
         {
-            ServiceUri = "http://localhost:5152/historian";
+            ServiceUri = "http://localhost:5151/historian";
         }
 
         #endregion
@@ -264,116 +263,84 @@ namespace TVA.Historian.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="Service.Archive"/>.
+        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
-        /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
-        public void WriteTimeSeriesDataAsXml(SerializableTimeSeriesData data)
+        /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
+        public void WriteMetadataAsXml(SerializableMetadata metadata)
         {
-            WriteTimeSeriesData(data);
+            WriteMetadata(metadata);
         }
 
         /// <summary>
-        /// Writes <paramref name="data"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="Service.Archive"/>.
+        /// Writes <paramref name="metadata"/> received in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
-        /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
-        public void WriteTimeSeriesDataAsJson(SerializableTimeSeriesData data)
+        /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
+        public void WriteMetadataAsJson(SerializableMetadata metadata)
         {
-            WriteTimeSeriesData(data);
+            WriteMetadata(metadata);
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
-        /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsXml(string idList)
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadAllMetadataAsXml()
         {
-            return ReadCurrentTimeSeriesData(idList);
+            return ReadMetadata();
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
-        /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
-        /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsXml(string fromID, string toID)
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadSelectMetadataAsXml(string idList)
         {
-            return ReadCurrentTimeSeriesData(fromID, toID);
+            return ReadMetadata(idList);
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
         /// </summary>
-        /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsJson(string idList)
+        /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadRangeMetadataAsXml(string fromID, string toID)
         {
-            return ReadCurrentTimeSeriesData(idList);
+            return ReadMetadata(fromID, toID);
         }
 
         /// <summary>
-        /// Reads current time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
+        /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
-        /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
-        /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsJson(string fromID, string toID)
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadAllMetadataAsJson()
         {
-            return ReadCurrentTimeSeriesData(fromID, toID);
+            return ReadMetadata();
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
-        /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsXml(string idList, string startTime, string endTime)
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadSelectMetadataAsJson(string idList)
         {
-            return ReadHistoricTimeSeriesData(idList, startTime, endTime);
+            return ReadMetadata(idList);
         }
 
         /// <summary>
-        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Xml"/> format.
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
         /// </summary>
-        /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsXml(string fromID, string toID, string startTime, string endTime)
+        /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        public SerializableMetadata ReadRangeMetadataAsJson(string fromID, string toID)
         {
-            return ReadHistoricTimeSeriesData(fromID, toID, startTime, endTime);
+            return ReadMetadata(fromID, toID);
         }
 
-        /// <summary>
-        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
-        /// </summary>
-        /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJson(string idList, string startTime, string endTime)
-        {
-            return ReadHistoricTimeSeriesData(idList, startTime, endTime);
-        }
-
-        /// <summary>
-        /// Reads historic time-series data from the <see cref="Service.Archive"/> and sends it in <see cref="System.ServiceModel.Web.WebMessageFormat.Json"/> format.
-        /// </summary>
-        /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
-        /// <param name="startTime">Start time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <param name="endTime">End time in <see cref="String"/> format of the timespan for which historic time-series data is to be read.</param>
-        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
-        public SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsJson(string fromID, string toID, string startTime, string endTime)
-        {
-            return ReadHistoricTimeSeriesData(fromID, toID, startTime, endTime);
-        }
-
-        private void WriteTimeSeriesData(SerializableTimeSeriesData data)
+        private void WriteMetadata(SerializableMetadata metadata)
         {
             try
             {
@@ -385,21 +352,21 @@ namespace TVA.Historian.Services
                 if (Archive == null)
                     throw new ArgumentNullException("Archive");
 
-                // Write all time-series data to the archive.
-                foreach (SerializableTimeSeriesDataPoint point in data.TimeSeriesDataPoints)
+                // Write all metadata records to the archive.
+                foreach (SerializableMetadataRecord record in metadata.MetadataRecords)
                 {
-                    Archive.WriteData(point.Deflate());
+                    Archive.WriteMetaData(record.HistorianID, record.Deflate().BinaryImage);
                 }
             }
             catch (Exception ex)
             {
                 // Notify about the encountered processing exception.
-                OnServiceProcessError(ex);
+                OnServiceProcessException(ex);
                 throw;
             }
         }
 
-        private SerializableTimeSeriesData ReadCurrentTimeSeriesData(string idList)
+        private SerializableMetadata ReadMetadata()
         {
             try
             {
@@ -411,83 +378,34 @@ namespace TVA.Historian.Services
                 if (Archive == null)
                     throw new ArgumentNullException("Archive");
 
-                // Read current time-series data from the archive.
+                // Read all metadata records from the archive.
                 int id = 0;
                 byte[] buffer = null;
-                StateRecord state = null;
-                SerializableTimeSeriesData data = new SerializableTimeSeriesData();
-                List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
-                foreach (string singleID in idList.Split(',', ';'))
+                SerializableMetadata metadata = new SerializableMetadata();
+                List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
+                while (true)
                 {
-                    buffer = Archive.ReadStateData(id = int.Parse(singleID));
+                    buffer = Archive.ReadMetaData(++id);
                     if (buffer == null)
-                    {
-                        // ID is invalid.
-                        continue;
-                    }
+                        // No more records.
+                        break;
                     else
-                    {
                         // Add to resultset.
-                        state = new StateRecord(id, buffer, 0, buffer.Length);
-                        points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
-                    }
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
-                data.TimeSeriesDataPoints = points.ToArray();
+                metadata.MetadataRecords = records.ToArray();
 
-                return data;
+                return metadata;
             }
             catch (Exception ex)
             {
                 // Notify about the encountered processing exception.
-                OnServiceProcessError(ex);
+                OnServiceProcessException(ex);
                 throw;
             }
         }
 
-        private SerializableTimeSeriesData ReadCurrentTimeSeriesData(string fromID, string toID)
-        {
-            try
-            {
-                // Ensure that reading data is allowed.
-                if (!CanRead)
-                    throw new InvalidOperationException("Read operation is prohibited");
-                // Ensure that data archive is available.
-                if (Archive == null)
-                    throw new ArgumentNullException("Archive");
-
-                // Read current time-series data from the archive.
-                byte[] buffer = null;
-                StateRecord state = null;
-                SerializableTimeSeriesData data = new SerializableTimeSeriesData();
-                List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
-                for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
-                {
-                    buffer = Archive.ReadStateData(id);
-                    if (buffer == null)
-                    {
-                        // ID is invalid.
-                        continue;
-                    }
-                    else
-                    {
-                        // Add to resultset.
-                        state = new StateRecord(id, buffer, 0, buffer.Length);
-                        points.Add(new SerializableTimeSeriesDataPoint(state.CurrentData));
-                    }
-                }
-                data.TimeSeriesDataPoints = points.ToArray();
-
-                return data;
-            }
-            catch (Exception ex)
-            {
-                // Notify about the encountered processing exception.
-                OnServiceProcessError(ex);
-                throw;
-            }
-        }
-
-        private SerializableTimeSeriesData ReadHistoricTimeSeriesData(string idList, string startTime, string endTime)
+        private SerializableMetadata ReadMetadata(string idList)
         {
             try
             {
@@ -499,31 +417,34 @@ namespace TVA.Historian.Services
                 if (Archive == null)
                     throw new ArgumentNullException("Archive");
 
-                // Read historic time-series data from the archive.
+                // Read specified metadata records from the archive.
                 int id = 0;
-                SerializableTimeSeriesData data = new SerializableTimeSeriesData();
-                List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
+                byte[] buffer = null;
+                SerializableMetadata metadata = new SerializableMetadata();
+                List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 foreach (string singleID in idList.Split(',', ';'))
                 {
-                    id = int.Parse(singleID);
-                    foreach (IDataPoint point in Archive.ReadData(id, startTime, endTime))
-                    {
-                        points.Add(new SerializableTimeSeriesDataPoint(point));
-                    }
+                    buffer = Archive.ReadMetaData(id = int.Parse(singleID));
+                    if (buffer == null)
+                        // ID is invalid.
+                        continue;
+                    else
+                        // Add to resultset.
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
-                data.TimeSeriesDataPoints = points.ToArray();
+                metadata.MetadataRecords = records.ToArray();
 
-                return data;
+                return metadata;
             }
             catch (Exception ex)
             {
                 // Notify about the encountered processing exception.
-                OnServiceProcessError(ex);
+                OnServiceProcessException(ex);
                 throw;
             }
         }
 
-        private SerializableTimeSeriesData ReadHistoricTimeSeriesData(string fromID, string toID, string startTime, string endTime)
+        private SerializableMetadata ReadMetadata(string fromID, string toID)
         {
             try
             {
@@ -535,24 +456,28 @@ namespace TVA.Historian.Services
                 if (Archive == null)
                     throw new ArgumentNullException("Archive");
 
-                // Read historic time-series data from the archive.
-                SerializableTimeSeriesData data = new SerializableTimeSeriesData();
-                List<SerializableTimeSeriesDataPoint> points = new List<SerializableTimeSeriesDataPoint>();
+                // Read specified metadata records from the archive.
+                byte[] buffer = null;
+                SerializableMetadata metadata = new SerializableMetadata();
+                List<SerializableMetadataRecord> records = new List<SerializableMetadataRecord>();
                 for (int id = int.Parse(fromID); id <= int.Parse(toID); id++)
                 {
-                    foreach (IDataPoint point in Archive.ReadData(id, startTime, endTime))
-                    {
-                        points.Add(new SerializableTimeSeriesDataPoint(point));
-                    }
+                    buffer = Archive.ReadMetaData(id);
+                    if (buffer == null)
+                        // ID is invalid.
+                        continue;
+                    else
+                        // Add to resultset.
+                        records.Add(new SerializableMetadataRecord(new MetadataRecord(id, buffer, 0, buffer.Length)));
                 }
-                data.TimeSeriesDataPoints = points.ToArray();
+                metadata.MetadataRecords = records.ToArray();
 
-                return data;
+                return metadata;
             }
             catch (Exception ex)
             {
                 // Notify about the encountered processing exception.
-                OnServiceProcessError(ex);
+                OnServiceProcessException(ex);
                 throw;
             }
         }

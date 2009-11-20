@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SerializableTimeSeriesDataPoint.cs - Gbtc
+//  ITimeSeriesDataService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/21/2009 - Pinal C. Patel
+//  09/01/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
@@ -231,119 +231,119 @@
 */
 #endregion
 
-using System;
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
-using TVA.Historian.Files;
+using System.ServiceModel;
+using System.ServiceModel.Web;
 
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
     /// <summary>
-    /// Represents a time-series data-point that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
+    /// Defines a REST web service for time-series data.
     /// </summary>
-    /// <example>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="XmlSerializer"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <TimeSeriesDataPoint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-    ///   HistorianID="1" Time="21-Aug-2009 14:21:23.236" Value="60.0419579" Quality="Good" />
-    /// ]]>
-    /// </code>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <TimeSeriesDataPoint xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
-    ///   <HistorianID>1</HistorianID>
-    ///   <Time>21-Aug-2009 14:21:54.612</Time>
-    ///   <Value>60.025547</Value>
-    ///   <Quality>Good</Quality>
-    /// </TimeSeriesDataPoint>
-    /// ]]>
-    /// </code>
-    /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>:
-    /// <code>
-    /// {
-    ///   "HistorianID":1,
-    ///   "Time":"21-Aug-2009 14:22:26.971",
-    ///   "Value":59.9974136,
-    ///   "Quality":29
-    /// }
-    /// </code>
-    /// </example>
-    /// <seealso cref="IDataPoint"/>
-    /// <seealso cref="XmlSerializer"/>
-    /// <seealso cref="DataContractSerializer"/>
-    /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlType("TimeSeriesDataPoint"), DataContract(Name = "TimeSeriesDataPoint")]
-    public class SerializableTimeSeriesDataPoint
+    /// <seealso cref="SerializableTimeSeriesData"/>
+    [ServiceContract()]
+    public interface ITimeSeriesDataService
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
-        /// </summary>
-        public SerializableTimeSeriesDataPoint()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializableTimeSeriesDataPoint"/> class.
-        /// </summary>
-        /// <param name="dataPoint"><see cref="IDataPoint"/> from which <see cref="SerializableTimeSeriesDataPoint"/> is to be initialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="dataPoint"/> is null.</exception>
-        public SerializableTimeSeriesDataPoint(IDataPoint dataPoint)
-        {
-            if (dataPoint == null)
-                throw new ArgumentNullException("dataPoint");
-
-            HistorianID = dataPoint.HistorianID;
-            Time = dataPoint.Time.ToString();
-            Value = dataPoint.Value;
-            Quality = dataPoint.Quality;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.HistorianID"/>.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
-        public int HistorianID { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="String"/> representation of <see cref="IDataPoint.Time"/>.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
-        public string Time { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.Value"/>.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
-        public float Value { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDataPoint.Quality"/>.
-        /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
-        public Quality Quality { get; set; }
-
-        #endregion
-
         #region [ Methods ]
 
         /// <summary>
-        /// Returns an <see cref="IDataPoint"/> object for this <see cref="SerializableTimeSeriesDataPoint"/>.
+        /// Writes <paramref name="data"/> received in <see cref="WebMessageFormat.Xml"/> format to the <see cref="DataService.Archive"/>.
         /// </summary>
-        /// <returns>An <see cref="IDataPoint"/> object.</returns>
-        public IDataPoint Deflate()
-        {
-            // TODO: Eliminate the need for this by modifying ArchiveFile to use IDataPoint internally.
-            return new ArchiveDataPoint(HistorianID, TimeTag.Parse(Time), Value, Quality);
-        }
+        /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
+        [OperationContract(), 
+        WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/write/xml")]
+        void WriteTimeSeriesDataAsXml(SerializableTimeSeriesData data);
+
+        /// <summary>
+        /// Writes <paramref name="data"/> received in <see cref="WebMessageFormat.Json"/> format to the <see cref="DataService.Archive"/>.
+        /// </summary>
+        /// <param name="data">An <see cref="SerializableTimeSeriesData"/> object.</param>
+        [OperationContract(), 
+        WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/write/json")]
+        void WriteTimeSeriesDataAsJson(SerializableTimeSeriesData data);
+
+        /// <summary>
+        /// Reads current time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/current/{idList}/xml")]
+        SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsXml(string idList);
+
+        /// <summary>
+        /// Reads current time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/current/{fromID}-{toID}/xml")]
+        SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsXml(string fromID, string toID);
+
+        /// <summary>
+        /// Reads current time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which current time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/current/{idList}/json")]
+        SerializableTimeSeriesData ReadSelectCurrentTimeSeriesDataAsJson(string idList);
+
+        /// <summary>
+        /// Reads current time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which current time-series data is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which current time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/current/{fromID}-{toID}/json")]
+        SerializableTimeSeriesData ReadRangeCurrentTimeSeriesDataAsJson(string fromID, string toID);
+
+        /// <summary>
+        /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/historic/{idList}/{startTime}/{endTime}/xml")]
+        SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsXml(string idList, string startTime, string endTime);
+
+        /// <summary>
+        /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/timeseriesdata/read/historic/{fromID}-{toID}/{startTime}/{endTime}/xml")]
+        SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsXml(string fromID, string toID, string startTime, string endTime);
+
+        /// <summary>
+        /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/historic/{idList}/{startTime}/{endTime}/json")]
+        SerializableTimeSeriesData ReadSelectHistoricTimeSeriesDataAsJson(string idList, string startTime, string endTime);
+
+        /// <summary>
+        /// Reads historic time-series data from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which historic time-series data is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which historic time-series data is to be read.</param>
+        /// <param name="startTime">Start time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <param name="endTime">End time in <see cref="System.String"/> format of the timespan for which historic time-series data is to be read.</param>
+        /// <returns>An <see cref="SerializableTimeSeriesData"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/timeseriesdata/read/historic/{fromID}-{toID}/{startTime}/{endTime}/json")]
+        SerializableTimeSeriesData ReadRangeHistoricTimeSeriesDataAsJson(string fromID, string toID, string startTime, string endTime);
 
         #endregion
     }

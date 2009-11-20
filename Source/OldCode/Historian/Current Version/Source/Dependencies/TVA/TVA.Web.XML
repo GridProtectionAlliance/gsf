@@ -1,0 +1,256 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TVA.Web</name>
+    </assembly>
+    <members>
+        <member name="T:TVA.Web.Services.DataFlowDirection">
+            <summary>
+            Indicates the direction in which data will be flowing from a web service.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.DataFlowDirection.Incoming">
+            <summary>
+            Data will be flowing in to the web service.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.DataFlowDirection.Outgoing">
+            <summary>
+            Data will be flowing out from the web service.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.DataFlowDirection.BothWays">
+            <summary>
+            Data will be flowing both in and out from the web service.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Services.IRestService">
+            <summary>
+            Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
+            </summary>
+        </member>
+        <member name="E:TVA.Web.Services.IRestService.ServiceHostCreated">
+            <summary>
+            Occurs when the <see cref="P:TVA.Web.Services.IRestService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.IRestService.ServiceUri"/>.
+            </summary>
+        </member>
+        <member name="E:TVA.Web.Services.IRestService.ServiceHostStarted">
+            <summary>
+            Occurs when the <see cref="P:TVA.Web.Services.IRestService.ServiceHost"/> can process requests via all of its endpoints.
+            </summary>
+        </member>
+        <member name="E:TVA.Web.Services.IRestService.ServiceProcessException">
+            <summary>
+            Occurs when an <see cref="T:System.Exception"/> is encountered when processing a request.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.IRestService.ServiceUri">
+            <summary>
+            Gets or sets the URI where the web service is to be hosted.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.IRestService.ServiceContract">
+            <summary>
+            Gets or sets the contract interface implemented by the web service.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.IRestService.ServiceDataFlow">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Web.Services.DataFlowDirection"/> of the web service.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.IRestService.ServiceHost">
+            <summary>
+            Gets the <see cref="T:System.ServiceModel.Web.WebServiceHost"/> hosting the web service.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Services.NamespaceDoc">
+            <summary>
+            Contains classes and interfaces that provide the basic infrastructure for writting web services.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Services.RestService">
+            <summary>
+            A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.#ctor">
+            <summary>
+            Initializes a new instance of the web service.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.Finalize">
+            <summary>
+            Releases the unmanaged resources before the web service is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.Dispose">
+            <summary>
+            Releases all the resources used by the web service.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.Initialize">
+            <summary>
+            Initializes the web service.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.SaveSettings">
+            <summary>
+            Saves web service settings to the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Web.Services.RestService.LoadSettings">
+            <summary>
+            Loads saved web service settings from the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Web.Services.RestService.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the web service and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.OnServiceHostCreated">
+            <summary>
+            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.OnServiceHostStarted">
+            <summary>
+            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceHostStarted"/> event.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Services.RestService.OnServiceProcessException(System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceProcessException"/> event.
+            </summary>
+            <param name="exception"><see cref="T:System.Exception"/> to sent to <see cref="E:TVA.Web.Services.RestService.ServiceProcessException"/> event.</param>
+        </member>
+        <member name="E:TVA.Web.Services.RestService.ServiceHostCreated">
+            <summary>
+            Occurs when the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.RestService.ServiceUri"/>.
+            </summary>
+            <remarks>
+            When <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event is fired, changes like adding new endpoints can be made to the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/>.
+            </remarks>
+        </member>
+        <member name="E:TVA.Web.Services.RestService.ServiceHostStarted">
+            <summary>
+            Occurs when the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> has can process requests via all of its endpoints.
+            </summary>
+        </member>
+        <member name="E:TVA.Web.Services.RestService.ServiceProcessException">
+            <summary>
+            Occurs when an <see cref="T:System.Exception"/> is encountered when processing a request.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the exception encountered when processing a request.
+            </remarks>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.ServiceUri">
+            <summary>
+            Gets or sets the URI where the web service is to be hosted.
+            </summary>
+            <remarks>
+            Set <see cref="P:TVA.Web.Services.RestService.ServiceUri"/> to a null or empty string to disable web service hosting.
+            </remarks>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.ServiceContract">
+            <summary>
+            Gets or sets the contract interface implemented by the web service.
+            </summary>
+            <remarks>
+            This is the <see cref="P:System.Type.FullName"/> of the contract interface implemented by the web service.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.ServiceDataFlow">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Web.Services.DataFlowDirection"/> of the web service.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.Enabled">
+            <summary>
+            Gets or sets a boolean value that indicates whether the web service is currently enabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.PersistSettings">
+            <summary>
+            Gets or sets a boolean value that indicates whether the web service settings are to be saved to the config file.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.SettingsCategory">
+            <summary>
+            Gets or sets the category under which the web service settings are to be saved to the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.ServiceHost">
+            <summary>
+            Gets the <see cref="T:System.ServiceModel.Web.WebServiceHost"/> hosting the web service.
+            </summary>
+            <remarks>
+            By default, the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> only has <see cref="T:System.ServiceModel.WebHttpBinding"/> endpoint at the <see cref="P:TVA.Web.Services.RestService.ServiceUri"/>. 
+            Additional endpoints can be added to the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> when <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event is fired.
+            </remarks>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.CanRead">
+            <summary>
+            Gets a boolean value that indicates whether data can be requested from the web service.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.CanWrite">
+            <summary>
+            Gets a boolean value that indicates whether data can be published to the web service.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Services.SerializationFormat">
+            <summary>
+            Indicates the format of <see cref="T:System.Object"/> serialization or deserialization.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.SerializationFormat.Json">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.Json.DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.SerializationFormat.PoxAsmx">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Xml.Serialization.XmlSerializer"/> to ASMX (.NET Web Service) compatible XML (eXtensible Markup Language) format.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.Services.SerializationFormat.PoxRest">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.DataContractSerializer"/> to REST (Representational State Transfer) compatible XML (eXtensible Markup Language) format.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Services.Serialization">
+            <summary>
+            Helper class to serialize and deserialize <see cref="T:System.Object"/>s to web service compatible <see cref="T:TVA.Web.Services.SerializationFormat"/>s.
+            </summary>
+            <seealso cref="T:TVA.Web.Services.SerializationFormat"/>
+        </member>
+        <member name="M:TVA.Web.Services.Serialization.Serialize``1(System.IO.Stream@,``0,TVA.Web.Services.SerializationFormat)">
+            <summary>
+            Serializes an <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+            <param name="serializedOutput"><see cref="T:System.IO.Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
+            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.Web.Services.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
+        <member name="M:TVA.Web.Services.Serialization.Deserialize``1(System.IO.Stream,TVA.Web.Services.SerializationFormat)">
+            <summary>
+            Deserializes a serialized <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
+            <param name="serializedObject"><see cref="T:System.IO.Stream"/> contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.Web.Services.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+            <returns>The deserialized <see cref="T:System.Object"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
+    </members>
+</doc>

@@ -18,6 +18,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A
 		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
 		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
 		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
+		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
+		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{CC049F97-6B48-499F-A7F9-67EA1FC95983}"

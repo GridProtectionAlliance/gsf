@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IService.cs - Gbtc
+//  DataServices.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/21/2009 - Pinal C. Patel
+//  08/31/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
@@ -231,86 +231,12 @@
 */
 #endregion
 
-using System;
-using System.ServiceModel.Web;
-using TVA.Configuration;
-
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
-    #region [ Enumerations ]
-
     /// <summary>
-    /// Indicates the direction in which data will be flowing from a web service.
+    /// A class that loads all of the <see cref="IDataService">data web services</see>.
     /// </summary>
-    public enum DataFlowDirection
+    public class DataServices : AdapterLoader<IDataService>
     {
-        /// <summary>
-        /// Data will be flowing in to the web service.
-        /// </summary>
-        Incoming,
-        /// <summary>
-        /// Data will be flowing out from the web service.
-        /// </summary>
-        Outgoing,
-        /// <summary>
-        /// Data will be flowing both in and out from the web service.
-        /// </summary>
-        BothWays
-    }
-
-    #endregion
-
-    /// <summary>
-    /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
-    /// </summary>
-    public interface IService : ISupportLifecycle, IPersistSettings
-    {
-        #region [ Members ]
-
-        /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> has been created for the specified <see cref="ServiceUri"/>.
-        /// </summary>
-        event EventHandler ServiceHostCreated;
-
-        /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> can process requests via all of its endpoints.
-        /// </summary>
-        event EventHandler ServiceHostStarted;
-
-        /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered when processing a request.
-        /// </summary>
-        event EventHandler<EventArgs<Exception>> ServiceProcessError;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="IArchive"/> used by the web service for its data.
-        /// </summary>
-        IArchive Archive { get; set; }
-
-        /// <summary>
-        /// Gets or sets the URI where the web service is to be hosted.
-        /// </summary>
-        string ServiceUri { get; set; }
-
-        /// <summary>
-        /// Gets or sets the contract interface implemented by the web service.
-        /// </summary>
-        string ServiceContract { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="DataFlowDirection"/> of the web service.
-        /// </summary>
-        DataFlowDirection ServiceDataFlow { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="WebServiceHost"/> hosting the web service.
-        /// </summary>
-        WebServiceHost ServiceHost { get; }
-
-        #endregion
     }
 }

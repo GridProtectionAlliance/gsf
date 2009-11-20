@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  Services.cs - Gbtc
+//  IMetadataService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/31/2009 - Pinal C. Patel
+//  08/28/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
@@ -231,12 +231,90 @@
 */
 #endregion
 
-namespace TVA.Historian.Services
+using System.ServiceModel;
+using System.ServiceModel.Web;
+
+namespace TVA.Historian.DataServices
 {
     /// <summary>
-    /// A class that loads all of the <see cref="IService">web services</see>.
+    /// Defines a REST web service for historian metadata.
     /// </summary>
-    public class Services : AdapterLoader<IService>
+    /// <seealso cref="SerializableMetadata"/>
+    [ServiceContract()]
+    public interface IMetadataService
     {
+        #region [ Methods ]
+
+        /// <summary>
+        /// Writes <paramref name="metadata"/> received in <see cref="WebMessageFormat.Xml"/> format to the <see cref="DataService.Archive"/>.
+        /// </summary>
+        /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
+        [OperationContract(), 
+        WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/write/xml")]
+        void WriteMetadataAsXml(SerializableMetadata metadata);
+
+        /// <summary>
+        /// Writes <paramref name="metadata"/> received in <see cref="WebMessageFormat.Json"/> format to the <see cref="DataService.Archive"/>.
+        /// </summary>
+        /// <param name="metadata">An <see cref="SerializableMetadata"/> object.</param>
+        [OperationContract(), 
+        WebInvoke(Method = "POST", RequestFormat = WebMessageFormat.Json, UriTemplate = "/metadata/write/json")]
+        void WriteMetadataAsJson(SerializableMetadata metadata);
+
+        /// <summary>
+        /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/xml")]
+        SerializableMetadata ReadAllMetadataAsXml();
+
+        /// <summary>
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/{idList}/xml")]
+        SerializableMetadata ReadSelectMetadataAsXml(string idList);
+
+        /// <summary>
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Xml"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Xml, UriTemplate = "/metadata/read/{fromID}-{toID}/xml")]
+        SerializableMetadata ReadRangeMetadataAsXml(string fromID, string toID);
+
+        /// <summary>
+        /// Reads all metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/json")]
+        SerializableMetadata ReadAllMetadataAsJson();
+
+        /// <summary>
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="idList">A comma or semi-colon delimited list of IDs for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/{idList}/json")]
+        SerializableMetadata ReadSelectMetadataAsJson(string idList);
+
+        /// <summary>
+        /// Reads a subset of metadata from the <see cref="DataService.Archive"/> and sends it in <see cref="WebMessageFormat.Json"/> format.
+        /// </summary>
+        /// <param name="fromID">Starting ID in the ID range for which metadata is to be read.</param>
+        /// <param name="toID">Ending ID in the ID range for which metadata is to be read.</param>
+        /// <returns>An <see cref="SerializableMetadata"/> object.</returns>
+        [OperationContract(), 
+        WebGet(ResponseFormat = WebMessageFormat.Json, UriTemplate = "/metadata/read/{fromID}-{toID}/json")]
+        SerializableMetadata ReadRangeMetadataAsJson(string fromID, string toID);
+
+        #endregion
     }
 }

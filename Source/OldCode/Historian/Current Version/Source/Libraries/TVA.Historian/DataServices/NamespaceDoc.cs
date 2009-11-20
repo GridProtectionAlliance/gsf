@@ -231,10 +231,10 @@
 
 using System.Runtime.CompilerServices;
 
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
     /// <summary>
-    /// Contains classes that define the fundamental web services for a historian.
+    /// Contains classes that define the fundamental data web services for a historian.
     /// </summary>
     [CompilerGenerated()]
     class NamespaceDoc

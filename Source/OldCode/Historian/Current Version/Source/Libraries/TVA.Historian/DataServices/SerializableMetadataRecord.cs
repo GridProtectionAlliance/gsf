@@ -238,7 +238,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TVA.Historian.Files;
 
-namespace TVA.Historian.Services
+namespace TVA.Historian.DataServices
 {
     /// <summary>
     /// Represents a flattened <see cref="MetadataRecord"/> that can be serialized using <see cref="XmlSerializer"/>, <see cref="DataContractSerializer"/> or <see cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>.
