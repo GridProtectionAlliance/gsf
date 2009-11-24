@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/24/2009 - Pinal C. Patel
+//       Changed the default state for m_initializeWaitHandle to not signaled.
 //
 //*******************************************************************************************************
 
@@ -296,7 +298,7 @@ namespace TVA.Measurements.Routing
         /// </summary>
         protected ActionAdapterBase()
         {
-            m_initializeWaitHandle = new ManualResetEvent(true);
+            m_initializeWaitHandle = new ManualResetEvent(false);
         }
 
         #endregion
