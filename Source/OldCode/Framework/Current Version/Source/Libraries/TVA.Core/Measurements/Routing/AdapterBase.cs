@@ -14,6 +14,9 @@
 //       Added new header and license agreement.
 //  11/12/2009 - J. Ritchie Carroll
 //       Made input and output measurement defintions optionally applicable to all adapters.
+//  11/25/2009 - Pinal C. Patel
+//       Added WaitForInitialize() overloaded methods.
+//       Changed the default state for m_initializeWaitHandle to not signaled.
 //
 //*******************************************************************************************************
 
@@ -292,7 +295,7 @@ namespace TVA.Measurements.Routing
         protected AdapterBase()
         {
             m_name = this.GetType().Name;
-            m_initializeWaitHandle = new ManualResetEvent(true);
+            m_initializeWaitHandle = new ManualResetEvent(false);
         }
 
         /// <summary>
@@ -711,6 +714,23 @@ namespace TVA.Measurements.Routing
 
             // If no input measurements are defined we must assume user wants to accept all measurements - yikes!
             return true;
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter is <see cref="Initialized"/>.
+        /// </summary>
+        protected virtual void WaitForInitialize()
+        {
+            WaitForInitialize(Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        protected virtual void WaitForInitialize(int timeout)
+        {
+            m_initializeWaitHandle.WaitOne(timeout);
         }
 
         /// <summary>

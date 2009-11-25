@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  11/24/2009 - Pinal C. Patel
 //       Changed the default state for m_initializeWaitHandle to not signaled.
+//  11/25/2009 - Pinal C. Patel
+//       Added WaitForInitialize() overloaded methods.
 //
 //*******************************************************************************************************
 
@@ -800,6 +802,23 @@ namespace TVA.Measurements.Routing
             }
 
             return (index == minNeeded);
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
+        /// </summary>
+        protected virtual void WaitForInitialize()
+        {
+            WaitForInitialize(Timeout.Infinite);
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        protected virtual void WaitForInitialize(int timeout)
+        {
+            m_initializeWaitHandle.WaitOne(timeout);
         }
 
         /// <summary>
