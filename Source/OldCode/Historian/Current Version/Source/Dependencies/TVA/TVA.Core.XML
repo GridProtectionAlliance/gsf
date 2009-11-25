@@ -15584,6 +15584,17 @@
             </para>
             </remarks>
         </member>
+        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+        </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})">
             <summary>
             Raises the <see cref="E:TVA.Measurements.Routing.ActionAdapterBase.NewMeasurements"/> event.
@@ -16171,6 +16182,17 @@
             </summary>
             <param name="item">Primary key of measurement to find.</param>
             <returns>true if specified measurement key is defined in <see cref="P:TVA.Measurements.Routing.AdapterBase.InputMeasurementKeys"/>.</returns>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.WaitForInitialize">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TVA.Measurements.Routing.AdapterBase.Initialized"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TVA.Measurements.Routing.AdapterBase.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.OnStatusMessage(System.String)">
             <summary>
