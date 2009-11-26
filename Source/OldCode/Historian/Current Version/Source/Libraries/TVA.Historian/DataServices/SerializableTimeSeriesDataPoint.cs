@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/26/2009 - Pinal C. Patel
+//       Removed Namespace from DataContract serialization.
 //
 //*******************************************************************************************************
 
@@ -253,7 +255,7 @@ namespace TVA.Historian.DataServices
     /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
     /// <code>
     /// <![CDATA[
-    /// <TimeSeriesDataPoint xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    /// <TimeSeriesDataPoint xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <HistorianID>1</HistorianID>
     ///   <Time>21-Aug-2009 14:21:54.612</Time>
     ///   <Value>60.025547</Value>
@@ -275,7 +277,7 @@ namespace TVA.Historian.DataServices
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlType("TimeSeriesDataPoint"), DataContract(Name = "TimeSeriesDataPoint")]
+    [XmlType("TimeSeriesDataPoint"), DataContract(Name = "TimeSeriesDataPoint", Namespace = "")]
     public class SerializableTimeSeriesDataPoint
     {
         #region [ Constructors ]

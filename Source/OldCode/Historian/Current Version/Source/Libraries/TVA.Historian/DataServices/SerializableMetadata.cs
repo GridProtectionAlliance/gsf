@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/26/2009 - Pinal C. Patel
+//       Removed Namespace from DataContract serialization.
 //
 //*******************************************************************************************************
 
@@ -263,7 +265,7 @@ namespace TVA.Historian.DataServices
     /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="DataContractSerializer"/>:
     /// <code>
     /// <![CDATA[
-    /// <Metadata xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    /// <Metadata xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <MetadataRecords>
     ///     <MetadataRecord>
     ///       <HistorianID>1</HistorianID> 
@@ -369,7 +371,7 @@ namespace TVA.Historian.DataServices
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlRoot("Metadata"), DataContract(Name = "Metadata")]
+    [XmlRoot("Metadata"), DataContract(Name = "Metadata", Namespace = "")]
     public class SerializableMetadata
     {
         #region [ Constructors ]

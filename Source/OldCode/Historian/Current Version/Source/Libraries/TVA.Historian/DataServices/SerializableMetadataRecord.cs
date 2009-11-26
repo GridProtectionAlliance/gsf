@@ -14,6 +14,8 @@
 //       Set the order of property serialization/deserialization for DataMember attribute.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/26/2009 - Pinal C. Patel
+//       Removed Namespace from DataContract serialization.
 //
 //*******************************************************************************************************
 
@@ -258,7 +260,7 @@ namespace TVA.Historian.DataServices
     /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="DataContractSerializer"/>:
     /// <code>
     /// <![CDATA[
-    /// <MetadataRecord xmlns="http://schemas.datacontract.org/2004/07/TVA.Historian.Services" xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+    /// <MetadataRecord xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <HistorianID>1</HistorianID> 
     ///   <DataType>0</DataType> 
     ///   <Name>TVA_CORD-BUS2:ABBV</Name> 
@@ -358,7 +360,7 @@ namespace TVA.Historian.DataServices
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlType("MetadataRecord"), DataContract(Name = "MetadataRecord")]
+    [XmlType("MetadataRecord"), DataContract(Name = "MetadataRecord", Namespace = "")]
     public class SerializableMetadataRecord
     {
         #region [ Constructors ]
