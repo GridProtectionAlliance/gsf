@@ -14,6 +14,8 @@
 //       Modified configuration of the default WebHttpBinding to enable receiving of large payloads.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/27/2009 - Pinal C. Patel
+//       Fixed bug in the initialization of service contract name.
 //
 //*******************************************************************************************************
 
@@ -293,7 +295,7 @@ namespace TVA.Web.Services
         protected RestService()
         {
             Type type = this.GetType();
-            m_serviceContract = type.Namespace + ".I" + type.Name + ", " + type.Assembly.ManifestModule.Name.Replace(".dll", "");
+            m_serviceContract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
             m_serviceDataFlow = DataFlowDirection.BothWays;
             m_persistSettings = true;
             m_settingsCategory = type.Name;
