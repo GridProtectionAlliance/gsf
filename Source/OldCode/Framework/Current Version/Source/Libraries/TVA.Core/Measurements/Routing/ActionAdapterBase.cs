@@ -429,8 +429,13 @@ namespace TVA.Measurements.Routing
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                m_inputMeasurementKeysHash.Sort();
+                if (value != null)
+                {
+                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
+                    m_inputMeasurementKeysHash.Sort();
+                }
+                else
+                    m_inputMeasurementKeysHash = null;
             }
         }
 
@@ -442,7 +447,7 @@ namespace TVA.Measurements.Routing
             get
             {
                 // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1)
+                if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys != null)
                     return InputMeasurementKeys.Length;
                 
                 return m_minimumMeasurementsToUse;
@@ -712,7 +717,15 @@ namespace TVA.Measurements.Routing
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            return string.Format("Total input measurements: {0}, total output measurements: {1}", (InputMeasurementKeys == null ? 0 : InputMeasurementKeys.Length), (OutputMeasurements == null ? 0 : OutputMeasurements.Length)).PadLeft(maxLength);
+            int inputCount = 0, outputCount = 0;
+
+            if (InputMeasurementKeys != null)
+                inputCount = InputMeasurementKeys.Length;
+
+            if (OutputMeasurements != null)
+                outputCount = OutputMeasurements.Length;
+
+            return string.Format("Total input measurements: {0}, total output measurements: {1}", inputCount, outputCount).PadLeft(maxLength);
         }
 
         /// <summary>
@@ -785,19 +798,33 @@ namespace TVA.Measurements.Routing
             int index = 0, minNeeded = MinimumMeasurementsToUse;
             IDictionary<MeasurementKey, IMeasurement> frameMeasurements = frame.Measurements;
             MeasurementKey[] measurementKeys = InputMeasurementKeys;
-            IMeasurement measurement;
 
             if (measurements == null || measurements.Length < minNeeded)
                 measurements = new IMeasurement[minNeeded];
 
-            // Loop through all input measurements to see if they exist in this frame
-            for (int x = 0; x < measurementKeys.Length; x++)
+            if (measurementKeys == null)
             {
-                if (frameMeasurements.TryGetValue(measurementKeys[x], out measurement))
+                // No input measurements are defined, just get first set of measurements in this frame
+                foreach (IMeasurement measurement in frameMeasurements.Values)
                 {
                     measurements[index++] = measurement;
                     if (index == minNeeded)
                         break;
+                }
+            }
+            else
+            {
+                // Loop through all input measurements to see if they exist in this frame
+                IMeasurement measurement;
+
+                for (int x = 0; x < measurementKeys.Length; x++)
+                {
+                    if (frameMeasurements.TryGetValue(measurementKeys[x], out measurement))
+                    {
+                        measurements[index++] = measurement;
+                        if (index == minNeeded)
+                            break;
+                    }
                 }
             }
 

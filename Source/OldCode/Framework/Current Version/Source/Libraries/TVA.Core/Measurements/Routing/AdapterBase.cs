@@ -458,8 +458,13 @@ namespace TVA.Measurements.Routing
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
-                m_inputMeasurementKeysHash.Sort();
+                if (value != null)
+                {
+                    m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
+                    m_inputMeasurementKeysHash.Sort();
+                }
+                else
+                    m_inputMeasurementKeysHash = null;
             }
         }
 
