@@ -16,6 +16,8 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/01/2009 - Pinal C. Patel
+//       Modified ActiveDataBlockIndex to default to -1 for values that are less than 0.
 //
 //*******************************************************************************************************
 
@@ -389,7 +391,7 @@ namespace TVA.Historian.Files
             set
             {
                 if (value < 0)
-                    m_activeDataBlockIndex = value;
+                    m_activeDataBlockIndex = -1;
                 else
                     m_activeDataBlockIndex = value + 1;
             }

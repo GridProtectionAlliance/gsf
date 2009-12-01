@@ -47,6 +47,10 @@
 //       Removed unused/unnecessary event raised during the write process.
 //  11/06/2009 - Pinal C. Patel
 //       Modified Read() and Write() methods to wait on the rollover process.
+//  12/01/2009 - Pinal C. Patel
+//       Removed unused RolloverOnFull property.
+//       Fixed a bug in the rollover process that is encountered only when dependency files are 
+//       configured to not load records in memory.
 //
 //*******************************************************************************************************
 
@@ -403,11 +407,6 @@ namespace TVA.Historian.Files
         public const int DefaultDataBlockSize = 8;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="RolloverOnFull"/> property.
-        /// </summary>
-        public const bool DefaultRolloverOnFull = true;
-
-        /// <summary>
         /// Specifies the default value for the <see cref="RolloverPreparationThreshold"/> property.
         /// </summary>
         public const int DefaultRolloverPreparationThreshold = 75;
@@ -634,7 +633,6 @@ namespace TVA.Historian.Files
         private double m_fileSize;
         private FileAccess m_fileAccessMode;
         private int m_dataBlockSize;
-        private bool m_rolloverOnFull;
         private short m_rolloverPreparationThreshold;
         private string m_archiveOffloadLocation;
         private int m_archiveOffloadCount;
@@ -688,7 +686,6 @@ namespace TVA.Historian.Files
             m_fileSize = DefaultFileSize;
             m_fileAccessMode = DefaultFileAccessMode;
             m_dataBlockSize = DefaultDataBlockSize;
-            m_rolloverOnFull = DefaultRolloverOnFull;
             m_rolloverPreparationThreshold = DefaultRolloverPreparationThreshold;
             m_archiveOffloadLocation = DefaultArchiveOffloadLocation;
             m_archiveOffloadCount = DefaultArchiveOffloadCount;
@@ -864,24 +861,6 @@ namespace TVA.Historian.Files
                     throw new ArgumentException("Value must be positive");
 
                 m_dataBlockSize = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the current <see cref="ArchiveFile"/> will rollover to a new <see cref="ArchiveFile"/> when full.
-        /// </summary>
-        [Category("Rollover"),
-        DefaultValue(DefaultRolloverOnFull),
-        Description("Indicates whether the current ArchiveFile will rollover to a new ArchiveFile when full.")]
-        public bool RolloverOnFull
-        {
-            get
-            {
-                return m_rolloverOnFull;
-            }
-            set
-            {
-                m_rolloverOnFull = value;
             }
         }
 
@@ -1483,8 +1462,6 @@ namespace TVA.Historian.Files
                 element.Update(m_fileSize, element.Description, element.Encrypted);
                 element = settings["DataBlockSize", true];
                 element.Update(m_dataBlockSize, element.Description, element.Encrypted);
-                element = settings["RolloverOnFull", true];
-                element.Update(m_rolloverOnFull, element.Description, element.Encrypted);
                 element = settings["RolloverPreparationThreshold", true];
                 element.Update(m_rolloverPreparationThreshold, element.Description, element.Encrypted);
                 element = settings["ArchiveOffloadLocation", true];
@@ -1525,7 +1502,6 @@ namespace TVA.Historian.Files
                 settings.Add("FileType", m_fileType, "Type (Active; Standby; Historic) of the file.");
                 settings.Add("FileSize", m_fileSize, "Size (in MB) of the file.");
                 settings.Add("DataBlockSize", m_dataBlockSize, "Size (in KB) of the data blocks in the file.");
-                settings.Add("RolloverOnFull", m_rolloverOnFull, "True if rollover of the file is to be performed when it is full; otherwise False.");
                 settings.Add("RolloverPreparationThreshold", m_rolloverPreparationThreshold, "Percentage file full when the rollover preparation should begin.");
                 settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
                 settings.Add("ArchiveOffloadCount", m_archiveOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
@@ -1539,7 +1515,6 @@ namespace TVA.Historian.Files
                 FileType = settings["FileType"].ValueAs(m_fileType);
                 FileSize = settings["FileSize"].ValueAs(m_fileSize);
                 DataBlockSize = settings["DataBlockSize"].ValueAs(m_dataBlockSize);
-                RolloverOnFull = settings["RolloverOnFull"].ValueAs(m_rolloverOnFull);
                 RolloverPreparationThreshold = settings["RolloverPreparationThreshold"].ValueAs(m_rolloverPreparationThreshold);
                 ArchiveOffloadLocation = settings["ArchiveOffloadLocation"].ValueAs(m_archiveOffloadLocation);
                 ArchiveOffloadCount = settings["ArchiveOffloadCount"].ValueAs(m_archiveOffloadCount);
@@ -1744,6 +1719,7 @@ namespace TVA.Historian.Files
                     m_stateFile.Write(state.HistorianID, state);
                 }
                 m_fat.FileEndTime = endTime;
+                m_stateFile.Save();
                 Save();
 
                 // Clear all of the cached data blocks.
@@ -2731,8 +2707,8 @@ namespace TVA.Historian.Files
             foreach (int pointID in sortedDataPoints.Keys)
             {
                 // Initialize local variables.
-                MetadataRecord metadata = m_metadataFile.Read(pointID);
                 StateRecord state = m_stateFile.Read(pointID);
+                MetadataRecord metadata = m_metadataFile.Read(pointID);
 
                 IDataPoint dataPoint;
                 for (int i = 0; i < sortedDataPoints[pointID].Count; i++)
@@ -3005,23 +2981,18 @@ namespace TVA.Historian.Files
                             }
                             else
                             {
-                                // File is full, rollover if configured.
-                                OnFileFull();
+                                OnFileFull();   // Current file is full.
 
-                                if (m_rolloverOnFull)
+                                m_fat.DataPointsReceived--;
+                                while (true)
                                 {
-                                    while (true)
-                                    {
-                                        Rollover(); // Start rollover.
-                                        if (m_rolloverWaitHandle.WaitOne(1, false))
-                                        {
-                                            break; // Rollover is successful.
-                                        }
-                                    }
+                                    Rollover(); // Rollover current file.
+                                    if (m_rolloverWaitHandle.WaitOne(1, false))
+                                        break;  // Rollover is successful.
                                 }
 
-                                // Process the current data point again.
-                                i--;
+                                i--;                                // Process current data point again.
+                                system = m_intercomFile.Read(1);    // Re-read modified intercom record.
                                 continue;
                             }
                         }
