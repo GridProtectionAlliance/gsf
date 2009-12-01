@@ -14,6 +14,8 @@
 //       Modified configuration of the default WebHttpBinding to enable receiving of large payloads.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/01/2009 - Pinal C. Patel
+//       Added a default protected constructor.
 //
 //*******************************************************************************************************
 
@@ -246,6 +248,18 @@ namespace TVA.Historian.DataServices
 
         // Fields
         private IArchive m_archive;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of historian data web service.
+        /// </summary>
+        protected DataService()
+            : base()
+        {
+        }
 
         #endregion
 
