@@ -29,6 +29,8 @@
 //       Added extensions for ODBC providers.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/02/2009 - Stephen C. Wills
+//       Added disposal of database command objects.
 //
 //*******************************************************************************************************
 
@@ -307,10 +309,12 @@ namespace TVA.Data
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
         public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
         {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandTimeout = timeout;
-            return command.ExecuteNonQuery();
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandTimeout = timeout;
+                return command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -335,10 +339,12 @@ namespace TVA.Data
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
-            OleDbCommand command = new OleDbCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteNonQuery();
+            using (OleDbCommand command = new OleDbCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -363,10 +369,12 @@ namespace TVA.Data
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
-            OdbcCommand command = new OdbcCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteNonQuery();
+            using (OdbcCommand command = new OdbcCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -391,10 +399,12 @@ namespace TVA.Data
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
-            SqlCommand command = new SqlCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteNonQuery();
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteNonQuery();
+            }
         }
 
 
@@ -438,10 +448,12 @@ namespace TVA.Data
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
         public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, CommandBehavior behavior, int timeout) where TConnection : IDbConnection
         {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandTimeout = timeout;
-            return command.ExecuteReader(behavior);
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandTimeout = timeout;
+                return command.ExecuteReader(behavior);
+            }
         }
 
         /// <summary>
@@ -467,10 +479,12 @@ namespace TVA.Data
         /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
         public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
-            OleDbCommand command = new OleDbCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteReader(behavior);
+            using (OleDbCommand command = new OleDbCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteReader(behavior);
+            }
         }
 
         /// <summary>
@@ -496,10 +510,12 @@ namespace TVA.Data
         /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
         public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
-            OdbcCommand command = new OdbcCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteReader(behavior);
+            using (OdbcCommand command = new OdbcCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteReader(behavior);
+            }
         }
 
         /// <summary>
@@ -525,10 +541,12 @@ namespace TVA.Data
         /// <returns>A <see cref="SqlDataReader"/> object.</returns>
         public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
-            SqlCommand command = new SqlCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteReader(behavior);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteReader(behavior);
+            }
         }
 
         #endregion
@@ -559,10 +577,12 @@ namespace TVA.Data
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
         public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
         {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandTimeout = timeout;
-            return command.ExecuteScalar();
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandTimeout = timeout;
+                return command.ExecuteScalar();
+            }
         }
 
         /// <summary>
@@ -589,10 +609,12 @@ namespace TVA.Data
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
-            OleDbCommand command = new OleDbCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteScalar();
+            using (OleDbCommand command = new OleDbCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteScalar();
+            }
         }
 
         /// <summary>
@@ -619,10 +641,12 @@ namespace TVA.Data
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
-            OdbcCommand command = new OdbcCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteScalar();
+            using (OdbcCommand command = new OdbcCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteScalar();
+            }
         }
 
         /// <summary>
@@ -649,10 +673,12 @@ namespace TVA.Data
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
-            SqlCommand command = new SqlCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            return command.ExecuteScalar();
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                return command.ExecuteScalar();
+            }
         }
 
         #endregion
@@ -1104,13 +1130,15 @@ namespace TVA.Data
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
-            OleDbCommand command = new OleDbCommand(sql, connection);
-            command.PopulateParameters(parameters);
-            OleDbDataAdapter dataAdapter = new OleDbDataAdapter(command);
-            DataSet data = new DataSet("Temp");
-            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+            using (OleDbCommand command = new OleDbCommand(sql, connection))
+            {
+                command.PopulateParameters(parameters);
+                OleDbDataAdapter dataAdapter = new OleDbDataAdapter(command);
+                DataSet data = new DataSet("Temp");
+                dataAdapter.Fill(data, startRow, maxRows, "Table1");
 
-            return data;
+                return data;
+            }
         }
 
         /// <summary>
@@ -1166,13 +1194,15 @@ namespace TVA.Data
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
-            OdbcCommand command = new OdbcCommand(sql, connection);
-            command.PopulateParameters(parameters);
-            OdbcDataAdapter dataAdapter = new OdbcDataAdapter(command);
-            DataSet data = new DataSet("Temp");
-            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+            using (OdbcCommand command = new OdbcCommand(sql, connection))
+            {
+                command.PopulateParameters(parameters);
+                OdbcDataAdapter dataAdapter = new OdbcDataAdapter(command);
+                DataSet data = new DataSet("Temp");
+                dataAdapter.Fill(data, startRow, maxRows, "Table1");
 
-            return data;
+                return data;
+            }
         }
 
         /// <summary>
@@ -1228,14 +1258,16 @@ namespace TVA.Data
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this SqlConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
-            SqlCommand command = new SqlCommand(sql, connection);
-            command.CommandTimeout = timeout;
-            command.PopulateParameters(parameters);
-            SqlDataAdapter dataAdapter = new SqlDataAdapter(command);
-            DataSet data = new DataSet("Temp");
-            dataAdapter.Fill(data, startRow, maxRows, "Table1");
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandTimeout = timeout;
+                command.PopulateParameters(parameters);
+                SqlDataAdapter dataAdapter = new SqlDataAdapter(command);
+                DataSet data = new DataSet("Temp");
+                dataAdapter.Fill(data, startRow, maxRows, "Table1");
 
-            return data;
+                return data;
+            }
         }
 
         /// <summary>
@@ -1262,14 +1294,16 @@ namespace TVA.Data
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
         {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandTimeout = timeout;
-            IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(dataAdapterType, command);
-            DataSet data = new DataSet("Temp");
-            dataAdapter.Fill(data);
+            using (IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = sql;
+                command.CommandTimeout = timeout;
+                IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(dataAdapterType, command);
+                DataSet data = new DataSet("Temp");
+                dataAdapter.Fill(data);
 
-            return data;
+                return data;
+            }
         }
 
         #endregion
