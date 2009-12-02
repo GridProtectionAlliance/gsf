@@ -51,6 +51,9 @@
 //       Removed unused RolloverOnFull property.
 //       Fixed a bug in the rollover process that is encountered only when dependency files are 
 //       configured to not load records in memory.
+//  12/02/2009 - Pinal C. Patel
+//       Modified Status property to show the total number of historic archive files.
+//       Fixed a bug in the update of historic archive file list.
 //
 //*******************************************************************************************************
 
@@ -1221,6 +1224,15 @@ namespace TVA.Historian.Files
                     status.Append("          Averaging window: ");
                     status.Append(statistics.AveragingWindow.ToString());
                     status.AppendLine();
+                    if (m_historicArchiveFiles != null)
+                    {
+                        status.Append("    Historic archive files: ");
+                        lock (m_historicArchiveFiles)
+                        {
+                            status.Append(m_historicArchiveFiles.Count);
+                        }
+                        status.AppendLine();
+                    }
                 }
 
                 return status.ToString();
@@ -3184,9 +3196,8 @@ namespace TVA.Historian.Files
 
         private void FileWatcher_Created(object sender, FileSystemEventArgs e)
         {
-            if (IsOpen)
+            if (m_historicArchiveFiles != null)
             {
-                // Attempt to update the historic file list only if the current file is open.
                 bool historicFileListUpdated = false;
                 Info historicFileInfo = GetHistoricFileInfo(e.FullPath);
                 lock (m_historicArchiveFiles)
@@ -3206,9 +3217,8 @@ namespace TVA.Historian.Files
 
         private void FileWatcher_Deleted(object sender, FileSystemEventArgs e)
         {
-            if (IsOpen)
+            if (m_historicArchiveFiles != null)
             {
-                // Attempt to update the historic file list only if the current file is open.
                 bool historicFileListUpdated = false;
                 Info historicFileInfo = GetHistoricFileInfo(e.FullPath);
                 lock (m_historicArchiveFiles)
@@ -3228,9 +3238,8 @@ namespace TVA.Historian.Files
 
         private void FileWatcher_Renamed(object sender, RenamedEventArgs e)
         {
-            if (IsOpen)
+            if (m_historicArchiveFiles != null)
             {
-                // Attempt to update the historic file list only if the current file is open.
                 if (string.Compare(FilePath.GetExtension(e.OldFullPath), FileExtension, true) == 0)
                 {
                     try

@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  11/26/2009 - Pinal C. Patel
 //       Removed Namespace from DataContract serialization.
+//  12/02/2009 - Pinal C. Patel
+//       Changed the default format of Time to be cross-culture compatible.
 //
 //*******************************************************************************************************
 
@@ -249,7 +251,7 @@ namespace TVA.Historian.DataServices
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <TimeSeriesDataPoint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-    ///   HistorianID="1" Time="21-Aug-2009 14:21:23.236" Value="60.0419579" Quality="Good" />
+    ///   HistorianID="1" Time="2009-08-21 14:21:23.236" Value="60.0419579" Quality="Good" />
     /// ]]>
     /// </code>
     /// This is the output for <see cref="SerializableTimeSeriesDataPoint"/> serialized using <see cref="DataContractSerializer"/>:
@@ -257,7 +259,7 @@ namespace TVA.Historian.DataServices
     /// <![CDATA[
     /// <TimeSeriesDataPoint xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <HistorianID>1</HistorianID>
-    ///   <Time>21-Aug-2009 14:21:54.612</Time>
+    ///   <Time>2009-08-21 14:21:54.612</Time>
     ///   <Value>60.025547</Value>
     ///   <Quality>Good</Quality>
     /// </TimeSeriesDataPoint>
@@ -267,7 +269,7 @@ namespace TVA.Historian.DataServices
     /// <code>
     /// {
     ///   "HistorianID":1,
-    ///   "Time":"21-Aug-2009 14:22:26.971",
+    ///   "Time":"2009-08-21 14:22:26.971",
     ///   "Value":59.9974136,
     ///   "Quality":29
     /// }
@@ -300,7 +302,7 @@ namespace TVA.Historian.DataServices
                 throw new ArgumentNullException("dataPoint");
 
             HistorianID = dataPoint.HistorianID;
-            Time = dataPoint.Time.ToString();
+            Time = dataPoint.Time.ToString("yyyy-MM-dd HH:mm:ss.fff");
             Value = dataPoint.Value;
             Quality = dataPoint.Quality;
         }
