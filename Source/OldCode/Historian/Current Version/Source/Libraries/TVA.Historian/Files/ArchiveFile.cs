@@ -54,6 +54,8 @@
 //  12/02/2009 - Pinal C. Patel
 //       Modified Status property to show the total number of historic archive files.
 //       Fixed a bug in the update of historic archive file list.
+//  12/03/2009 - Pinal C. Patel
+//       Updated Read() to incorporate changes made to ArchiveFileAllocationTable.FindDataBlocks().
 //
 //*******************************************************************************************************
 
@@ -1995,46 +1997,24 @@ namespace TVA.Historian.Files
                     dataBlocks = file.Fat.FindDataBlocks(historianID, startTime, endTime);
                     if (dataBlocks.Count > 0)
                     {
-                        // Data block before the first data block matching the search criteria might contain some data 
-                        // for the specified search criteria, so look for such a data block and process its data.
-                        lock (file.Fat.DataBlockPointers)
-                        {
-                            for (int i = dataBlocks[0].Index - 1; i >= 0; i--)
-                            {
-                                if (file.Fat.DataBlockPointers[i].HistorianID == historianID)
-                                {
-                                    foreach (ArchiveDataPoint data in file.Fat.DataBlockPointers[i].DataBlock.Read())
-                                    {
-                                        if (data.Time >= startTime)
-                                            yield return data;
-                                    }
-
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Read data from rest of the data blocks and scan the last data block for data matching the
-                        // the search criteria as it may contain data beyond the timespan specified in the search.
+                        // Read data from all matching data blocks.
                         for (int i = 0; i < dataBlocks.Count; i++)
                         {
-                            if (i < dataBlocks.Count - 1)
+                            if (i == 0 || i == dataBlocks.Count - 1)
                             {
-                                // Read all the data.
+                                // Scan for data through first and last data blocks.
                                 foreach (ArchiveDataPoint data in dataBlocks[i].Read())
                                 {
-                                    yield return data;
+                                    if (data.Time >= startTime && data.Time <= endTime)
+                                        yield return data;
                                 }
                             }
                             else
                             {
-                                // Scan through the data block.
+                                // Read all of the data from rest of the data blocks.
                                 foreach (ArchiveDataPoint data in dataBlocks[i].Read())
                                 {
-                                    if (data.Time <= endTime)
-                                        yield return data;
-                                    else
-                                        yield break;
+                                    yield return data;
                                 }
                             }
                         }

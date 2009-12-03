@@ -26,6 +26,9 @@
 //       Added new header and license agreement.
 //  09/23/2009 - Pinal C. Patel
 //       Edited code comments.
+//  12/03/2009 - Pinal C. Patel
+//       Modified FindDataBlocks() to accurately find matching data blocks even when the specified 
+//       search timespan is a sub-second range.
 //
 //*******************************************************************************************************
 
@@ -731,6 +734,23 @@ namespace TVA.Historian.Files
                 m_searchEndTime = (endTime != null ? endTime : TimeTag.MaxValue);
 
                 blockPointers = m_dataBlockPointers.FindAll(FindDataBlockPointer);
+
+                if (!(m_searchStartTime == TimeTag.MinValue || m_searchEndTime == TimeTag.MaxValue))
+                {
+                    // Look for pointer to data block on the borders of the specified range which may contain data.
+                    // There are 2 different search criteria for this:
+                    // 1) If matching data block pointers have been found, then find data block pointer before the 
+                    //    first matching data block pointer.
+                    // OR
+                    // 2) Find the last data block pointer in the time range of TimeTag.MinValue to m_searchEndTime.
+                    m_searchStartTime = TimeTag.MinValue;
+                    if (blockPointers.Count > 0)
+                        m_searchEndTime = new TimeTag(blockPointers[0].StartTime.Value - 1);
+
+                    ArchiveDataBlockPointer match = m_dataBlockPointers.FindLast(FindDataBlockPointer);
+                    if (match != null)
+                        blockPointers.Insert(0, match);
+                }
             }
 
             // Build a list of data blocks that correspond to the found data block pointers.
