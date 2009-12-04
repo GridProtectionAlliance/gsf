@@ -35,6 +35,8 @@
 //       Removed MinimumRecordCount property - not very useful.
 //  09/17/2009 - Pinal C. Patel
 //       Added exception handling to event handlers.
+//  12/04/2009 - Pinal C. Patel
+//       Fixed thread synchronization bug in ReadFromDisk().
 //
 //*******************************************************************************************************
 
@@ -1557,14 +1559,13 @@ namespace TVA.IO
         /// <returns>Record from the disk.</returns>
         private T ReadFromDisk(int recordIndex)
         {
+            T newRecord = CreateNewRecord(recordIndex);
             lock (m_fileData)
             {
                 m_fileData.Seek((recordIndex - 1) * m_recordBuffer.Length, SeekOrigin.Begin);
                 m_fileData.Read(m_recordBuffer, 0, m_recordBuffer.Length);
+                newRecord.Initialize(m_recordBuffer, 0, m_recordBuffer.Length);
             }
-
-            T newRecord = CreateNewRecord(recordIndex);
-            newRecord.Initialize(m_recordBuffer, 0, m_recordBuffer.Length);
 
             return newRecord;
         }
