@@ -456,8 +456,8 @@ namespace TVA.Communication
             m_serialClient.Provider.PortName = m_connectData["port"];
             m_serialClient.Provider.BaudRate = int.Parse(m_connectData["baudrate"]);
             m_serialClient.Provider.DataBits = int.Parse(m_connectData["databits"]);
-            m_serialClient.Provider.Parity = (Parity)(Enum.Parse(typeof(Parity), m_connectData["parity"]));
-            m_serialClient.Provider.StopBits = (StopBits)(Enum.Parse(typeof(StopBits), m_connectData["stopbits"]));
+            m_serialClient.Provider.Parity = (Parity)(Enum.Parse(typeof(Parity), m_connectData["parity"], true));
+            m_serialClient.Provider.StopBits = (StopBits)(Enum.Parse(typeof(StopBits), m_connectData["stopbits"], true));
 
             if (m_connectData.ContainsKey("dtrenable"))
                 m_serialClient.Provider.DtrEnable = m_connectData["dtrenable"].ParseBoolean();
