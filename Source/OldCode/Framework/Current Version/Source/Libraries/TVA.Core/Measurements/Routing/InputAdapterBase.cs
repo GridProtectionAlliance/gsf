@@ -383,7 +383,8 @@ namespace TVA.Measurements.Routing
         public override void Start()
         {
             // Make sure we are disconnected before attempting a connection
-            Stop();
+            if(Enabled)
+                Stop();
 
             base.Start();
 
