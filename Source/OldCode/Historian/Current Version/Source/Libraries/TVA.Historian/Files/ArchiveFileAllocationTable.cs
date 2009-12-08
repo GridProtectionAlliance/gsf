@@ -279,7 +279,7 @@ namespace TVA.Historian.Files
         private int m_dataBlockCount;
         private List<ArchiveDataBlockPointer> m_dataBlockPointers;
         private ArchiveFile m_parent;
-        private int m_searchHistorianID;     // <=|
+        private int m_searchHistorianID;    // <=|
         private TimeTag m_searchStartTime;  // <=| Used for finding data block pointer in m_dataBlockPointers
         private TimeTag m_searchEndTime;    // <=|
 

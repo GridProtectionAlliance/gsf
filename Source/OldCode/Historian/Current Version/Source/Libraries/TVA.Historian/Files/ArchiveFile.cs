@@ -56,6 +56,8 @@
 //       Fixed a bug in the update of historic archive file list.
 //  12/03/2009 - Pinal C. Patel
 //       Updated Read() to incorporate changes made to ArchiveFileAllocationTable.FindDataBlocks().
+//  12/08/2009 - Pinal C. Patel
+//       Modified to save the FAT at the end of rollover process.
 //
 //*******************************************************************************************************
 
@@ -1780,6 +1782,7 @@ namespace TVA.Historian.Files
                 {
                     OpenStream();
                     m_fat.FileStartTime = endTime;
+                    m_fat.Save();
 
                     // Notify server that rollover is complete.
                     system.RolloverInProgress = false;
