@@ -13,6 +13,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/09/2009 - Pinal C. Patel
+//       Modified StartTransfer() to open local file in read-only mode for uploads.
 //
 //*******************************************************************************************************
 
@@ -293,7 +295,6 @@ namespace TVA.Net.Ftp
         private long m_totalBytesTransfered;
         private int m_transferedPercentage;
         private TransferDirection m_transferDirection;
-        private FileMode m_localFileOpenMode;
         private FtpAsyncResult m_transferResult;
 
         #endregion
@@ -313,13 +314,11 @@ namespace TVA.Net.Ftp
             {
                 m_streamCopyRoutine = LocalToRemote;
                 m_ftpFileCommandRoutine = m_session.ControlChannel.STOR;
-                m_localFileOpenMode = FileMode.Open;
             }
             else
             {
                 m_streamCopyRoutine = RemoteToLocal;
                 m_ftpFileCommandRoutine = m_session.ControlChannel.RETR;
-                m_localFileOpenMode = FileMode.Create;
             }
         }
 
@@ -415,7 +414,10 @@ namespace TVA.Net.Ftp
 
                 m_session.Host.OnBeginFileTransfer(m_localFile, m_remoteFile, m_transferDirection);
 
-                localStream = new FileStream(m_localFile, m_localFileOpenMode);
+                if (m_transferDirection == TransferDirection.Download)
+                    localStream = new FileStream(m_localFile, FileMode.OpenOrCreate);
+                else
+                    localStream = new FileStream(m_localFile, FileMode.Open, FileAccess.Read);
                 remoteStream = m_session.ControlChannel.GetPassiveDataStream(m_transferDirection);
 
                 m_ftpFileCommandRoutine(m_remoteFile);
