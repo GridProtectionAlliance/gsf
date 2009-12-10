@@ -16,6 +16,10 @@
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
 //       Modified ProcessAdapter() to instantiate types with a default public contructor only.
+//  12/10/2009 - Pinal C. Patel
+//       Added new AdapterCreated event.
+//       Implemented IProvideStatus interface.
+//       Enhanced the implementation of Enabled property.
 //
 //*******************************************************************************************************
 
@@ -240,6 +244,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
+using System.Text;
 using TVA.Collections;
 using TVA.IO;
 
@@ -249,11 +254,19 @@ namespace TVA
     /// Represents a generic loader of adapters.
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of adapters to be loaded.</typeparam>
-    public class AdapterLoader<T> : ISupportLifecycle
+    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
 
         // Events
+
+        /// <summary>
+        /// Occurs when a new adapter is found and instantiated.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the adapter that was created.
+        /// </remarks>
+        public event EventHandler<EventArgs<T>> AdapterCreated;
 
         /// <summary>
         /// Occurs when a new adapter is loaded to the <see cref="Adapters"/> list.
@@ -295,6 +308,8 @@ namespace TVA
         private ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
         private ProcessQueue<object> m_operationQueue;
+        private Dictionary<Type, bool> m_enabledStates;
+        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -314,6 +329,7 @@ namespace TVA
             m_adapterWatcher = new FileSystemWatcher();
             m_adapterWatcher.Created += AdapterWatcher_Created;
             m_operationQueue = ProcessQueue<object>.CreateRealTimeQueue(ExecuteOperation);
+            m_enabledStates = new Dictionary<Type, bool>();
         }
 
         /// <summary>
@@ -339,7 +355,7 @@ namespace TVA
         {
             get
             {
-                return m_adapterDirectory;
+                return FilePath.GetAbsolutePath(m_adapterDirectory);
             }
             set
             {
@@ -372,25 +388,57 @@ namespace TVA
         {
             get
             {
-                if (!m_watchForAdapters)
-                    return m_initialized;
-                else
-                    return m_adapterWatcher.EnableRaisingEvents;
+                return m_enabled;
             }
             set
             {
-                if (m_initialized)
+                if (!m_initialized && value)
                 {
-                    // Start or stop watching for adapters.
-                    if (m_watchForAdapters)
-                        m_adapterWatcher.EnableRaisingEvents = value;
+                    // Initialize if uninitialized when enabled.
+                    Initialize();
                 }
                 else
                 {
-                    // Initialize if uninitialized when enabled.
-                    if (value)
-                        Initialize();
+                    // Change current state of various components.
+                    if (value && !m_enabled)
+                    {
+                        // Enable - restore previously saved state.
+                        m_adapterWatcher.EnableRaisingEvents = m_enabledStates[m_adapterWatcher.GetType()];
+                        m_operationQueue.Enabled = m_enabledStates[m_operationQueue.GetType()];
+
+                        bool savedState;
+                        ISupportLifecycle implementingAdapter;
+                        lock (m_adapters)
+                        {
+                            foreach (T adapter in m_adapters)
+                            {
+                                implementingAdapter = adapter as ISupportLifecycle;
+                                if (implementingAdapter != null && 
+                                    m_enabledStates.TryGetValue(implementingAdapter.GetType(), out savedState))
+                                    implementingAdapter.Enabled = savedState;
+                            }
+                        }
+                    }
+                    else if (!value && m_enabled)
+                    {
+                        // Disable - save current state and disable.
+                        SaveCurrentState();
+                        m_adapterWatcher.EnableRaisingEvents = false;
+                        m_operationQueue.Enabled = false;
+
+                        ISupportLifecycle implementingAdapter;
+                        lock (m_adapters)
+                        {
+                            foreach (T adapter in m_adapters)
+                            {
+                                implementingAdapter = adapter as ISupportLifecycle;
+                                if (implementingAdapter != null)
+                                    implementingAdapter.Enabled = false;
+                            }
+                        }
+                    }
                 }
+                m_enabled = value;
             }
         }
 
@@ -406,11 +454,66 @@ namespace TVA
         }
 
         /// <summary>
+        /// Gets the unique identifier of the <see cref="AdapterLoader{T}"/>.
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return this.GetType().Name;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="AdapterLoader{T}"/>.
+        /// </summary>
+        public string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                status.Append("             Adapters type: ");
+                status.Append(typeof(T).Name);
+                status.AppendLine();
+                status.Append("        Adapters directory: ");
+                status.Append(FilePath.TrimFileName(AdapterDirectory, 30));
+                status.AppendLine();
+                status.Append("           Dynamic loading: ");
+                status.Append(m_adapterWatcher.EnableRaisingEvents ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("          Operations queue: ");
+                status.Append(m_operationQueue.Enabled ? "Enabled" : "Disabled");
+                status.AppendLine();
+                IProvideStatus implementingAdapter;
+                lock (m_adapters)
+                {
+                    status.Append("     Total loaded adapters: ");
+                    status.Append(m_adapters.Count);
+                    status.AppendLine();
+                    foreach (T adapter in m_adapters)
+                    {
+                        implementingAdapter = adapter as IProvideStatus;
+                        if (implementingAdapter != null)
+                        {
+                            status.AppendLine();
+                            status.Append("              Adapter name: ");
+                            status.Append(implementingAdapter.GetType().Name);
+                            status.AppendLine();
+                            status.Append(implementingAdapter.Status);
+                        }
+                    }
+                }
+
+                return status.ToString();
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="FileSystemWatcher"/> object watching for new adapter assemblies added at runtime.
         /// </summary>
         protected FileSystemWatcher AdapterWatcher
         {
-            get 
+            get
             {
                 return m_adapterWatcher;
             }
@@ -421,7 +524,7 @@ namespace TVA
         /// </summary>
         protected ProcessQueue<object> OperationQueue
         {
-            get 
+            get
             {
                 return m_operationQueue;
             }
@@ -430,7 +533,7 @@ namespace TVA
         #endregion
 
         #region [ Methods ]
-        
+
         /// <summary>
         /// Releases all the resources used by the <see cref="AdapterLoader{T}"/>.
         /// </summary>
@@ -447,10 +550,7 @@ namespace TVA
         {
             if (!m_initialized)
             {
-                if (string.IsNullOrEmpty(m_adapterDirectory))
-                    Initialize(typeof(T).LoadImplementations(FilePath.GetAbsolutePath("*.*")));
-                else
-                    Initialize(typeof(T).LoadImplementations(FilePath.GetAbsolutePath(Path.Combine(m_adapterDirectory, "*.*"))));
+                Initialize(typeof(T).LoadImplementations(Path.Combine(AdapterDirectory, "*.*")));
             }
         }
 
@@ -471,16 +571,16 @@ namespace TVA
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
-                    m_adapterWatcher.Path = FilePath.GetAbsolutePath(m_adapterDirectory);
+                    m_adapterWatcher.Path = AdapterDirectory;
                     m_adapterWatcher.Filter = "*.dll";
                     m_adapterWatcher.EnableRaisingEvents = true;
                 }
 
-                // Start process queue.
-                m_operationQueue.Start();
+                // Save current state.
+                SaveCurrentState();
 
-                // Initialize only once.
-                m_initialized = true;
+                m_enabled = true;       // Mark as enabled.
+                m_initialized = true;   // Initialize only once.
             }
         }
 
@@ -496,6 +596,7 @@ namespace TVA
                 {
                     // Instantiate adapter instance.
                     T adapter = (T)(Activator.CreateInstance(adapterType));
+                    OnAdapterCreated(adapter);
 
                     // Initialize adapter if supported.
                     ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
@@ -540,6 +641,9 @@ namespace TVA
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        if (m_enabledStates != null)
+                            m_enabledStates.Clear();
+
                         if (m_operationQueue != null)
                             m_operationQueue.Dispose();
 
@@ -554,13 +658,13 @@ namespace TVA
                             lock (m_adapters)
                             {
                                 T adapter;
-                                IDisposable disposableAdapter;
+                                IDisposable implementingAdapter;
                                 while (m_adapters.GetEnumerator().MoveNext())
                                 {
                                     adapter = m_adapters[0];
-                                    disposableAdapter = adapter as IDisposable;
-                                    if (disposableAdapter != null)
-                                        disposableAdapter.Dispose();
+                                    implementingAdapter = adapter as IDisposable;
+                                    if (implementingAdapter != null)
+                                        implementingAdapter.Dispose();
 
                                     m_adapters.Remove(adapter);
                                 }
@@ -571,9 +675,20 @@ namespace TVA
                 }
                 finally
                 {
+                    m_enabled = false;  // Mark as disabled.
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="AdapterCreated"/> event.
+        /// </summary>
+        /// <param name="adapter">Adapter instance to send to <see cref="AdapterCreated"/> event.</param>
+        protected virtual void OnAdapterCreated(T adapter)
+        {
+            if (AdapterCreated != null)
+                AdapterCreated(this, new EventArgs<T>(adapter));
         }
 
         /// <summary>
@@ -616,6 +731,23 @@ namespace TVA
         {
             if (OperationExecutionException != null)
                 OperationExecutionException(this, new EventArgs<T, Exception>(adapter, exception));
+        }
+
+        private void SaveCurrentState()
+        {
+            m_enabledStates[m_adapterWatcher.GetType()] = m_adapterWatcher.EnableRaisingEvents;
+            m_enabledStates[m_operationQueue.GetType()] = m_operationQueue.Enabled;
+
+            ISupportLifecycle implementingAdapter;
+            lock (m_adapters)
+            {
+                foreach (T adapter in m_adapters)
+                {
+                    implementingAdapter = adapter as ISupportLifecycle;
+                    if (implementingAdapter != null)
+                        m_enabledStates[implementingAdapter.GetType()] = implementingAdapter.Enabled;
+                }
+            }
         }
 
         private void ExecuteOperation(object[] data)
