@@ -12,6 +12,9 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/10/2009 - Pinal C. Patel
+//       Override Initialize() to start OperationQueue.
+//       Modified RefreshOne() take in the name of the provider to use for refreshing the metadata.
 //
 //*******************************************************************************************************
 
@@ -244,7 +247,16 @@ namespace TVA.Historian.MetadataProviders
         #region [ Methods ]
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> for all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
+        /// Initializes the <see cref="MetadataProviders"/>.
+        /// </summary>
+        public override void Initialize()
+        {
+            base.Initialize();
+            OperationQueue.Start();
+        }
+
+        /// <summary>
+        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
         public void RefreshAll()
         {
@@ -252,21 +264,12 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> for the first of all loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
+        /// <see cref="IMetadataProvider.Refresh()"/>es the <see cref="IMetadataProvider.Metadata"/> using the specified <paramref name="provider"/> from the loaded metadata provider <see cref="AdapterLoader{T}.Adapters"/>.
         /// </summary>
-        public void RefreshOne()
+        /// <param name="provider">Name of the <see cref="IMetadataProvider"/> to use for the <see cref="IMetadataProvider.Refresh()"/>.</param>
+        public void RefreshOne(string provider)
         {
-            lock (Adapters)
-            {
-                foreach (IMetadataProvider adapter in Adapters)
-                {
-                    if (adapter.Enabled)
-                    {
-                        OperationQueue.Add(adapter.GetType().Name);
-                        return;
-                    }
-                }
-            }
+            OperationQueue.Add(provider);
         }
 
         /// <summary>
@@ -276,8 +279,9 @@ namespace TVA.Historian.MetadataProviders
         /// <param name="data"><see cref="System.Reflection.MemberInfo.Name"/> of the <paramref name="adapter"/>.</param>
         protected override void ExecuteAdapterOperation(IMetadataProvider adapter, object data)
         {
-            if (string.IsNullOrEmpty(Convert.ToString(data)) ||
-                string.Compare(data.ToString(), adapter.GetType().Name, true) == 0)
+            if (adapter.Enabled && 
+                (string.IsNullOrEmpty(Convert.ToString(data)) || 
+                 string.Compare(data.ToString(), adapter.GetType().Name, true) == 0))
             {
                 adapter.Refresh();
             }

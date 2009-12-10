@@ -59,6 +59,22 @@
             disabled and resume processing when the object is enabled.
             </remarks>
         </member>
+        <member name="T:TVA.IProvideStatus">
+            <summary>
+            Defines an interface for any object to allow it to provide a name and status
+            that can be displayed for informational purposes.
+            </summary>
+        </member>
+        <member name="P:TVA.IProvideStatus.Name">
+            <summary>
+            Gets the name of the object providing status information.
+            </summary>
+        </member>
+        <member name="P:TVA.IProvideStatus.Status">
+            <summary>
+            Gets the current status details about object providing status information.
+            </summary>
+        </member>
         <member name="M:TVA.AdapterLoader`1.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.AdapterLoader`1"/> class.
@@ -105,6 +121,12 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
+        <member name="M:TVA.AdapterLoader`1.OnAdapterCreated(`0)">
+            <summary>
+            Raises the <see cref="E:TVA.AdapterLoader`1.AdapterCreated"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.AdapterCreated"/> event.</param>
+        </member>
         <member name="M:TVA.AdapterLoader`1.OnAdapterLoaded(`0)">
             <summary>
             Raises the <see cref="E:TVA.AdapterLoader`1.AdapterLoaded"/> event.
@@ -130,6 +152,14 @@
             </summary>
             <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.OperationExecutionException"/> event.</param>
             <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.AdapterLoader`1.OperationExecutionException"/> event.</param>
+        </member>
+        <member name="E:TVA.AdapterLoader`1.AdapterCreated">
+            <summary>
+            Occurs when a new adapter is found and instantiated.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was created.
+            </remarks>
         </member>
         <member name="E:TVA.AdapterLoader`1.AdapterLoaded">
             <summary>
@@ -187,6 +217,16 @@
         <member name="P:TVA.AdapterLoader`1.Adapters">
             <summary>
             Gets a list of adapters loaded from the <see cref="P:TVA.AdapterLoader`1.AdapterDirectory"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.AdapterLoader`1.Name">
+            <summary>
+            Gets the unique identifier of the <see cref="T:TVA.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.AdapterLoader`1.Status">
+            <summary>
+            Gets the descriptive status of the <see cref="T:TVA.AdapterLoader`1"/>.
             </summary>
         </member>
         <member name="P:TVA.AdapterLoader`1.AdapterWatcher">
@@ -3374,22 +3414,6 @@
             (e.g., CreateAsynchronousQueue, CreateSynchronousQueue, etc.)</para>
             <para>Note that the <see cref="T:TVA.Collections.ProcessQueue`1"/> will not start processing until the Start method is called.</para>
             </remarks>
-        </member>
-        <member name="T:TVA.IProvideStatus">
-            <summary>
-            Defines an interface for any object to allow it to provide a name and status
-            that can be displayed for informational purposes.
-            </summary>
-        </member>
-        <member name="P:TVA.IProvideStatus.Name">
-            <summary>
-            Gets the name of the object providing status information.
-            </summary>
-        </member>
-        <member name="P:TVA.IProvideStatus.Status">
-            <summary>
-            Gets the current status details about object providing status information.
-            </summary>
         </member>
         <member name="F:TVA.Collections.ProcessQueue`1.DefaultProcessInterval">
             <summary>Default processing interval (in milliseconds).</summary>
@@ -14204,9 +14228,15 @@
             <param name="frame"><see cref="T:TVA.Measurements.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TVA.Measurements.ConcentratorBase.LagTime"/> that are ready for processing.</param>
             <param name="index">Index of <see cref="T:TVA.Measurements.IFrame"/> within a second ranging from zero to <c><see cref="P:TVA.Measurements.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
             <remarks>
+            <para>
             If user implemented publication function consistently exceeds available publishing time (i.e., <c>1 / <see cref="P:TVA.Measurements.ConcentratorBase.FramesPerSecond"/></c> seconds),
             concentration will fall behind. A small amount of this time is required by the <see cref="T:TVA.Measurements.ConcentratorBase"/> for processing overhead, so actual total time
             available for user function process will always be slightly less than <c>1 / <see cref="P:TVA.Measurements.ConcentratorBase.FramesPerSecond"/></c> seconds.
+            </para>
+            <para>
+            Only one publication function runs at any given time. If one concentrator falls behind, it will block all other concentrators until it catches up.
+            It is highly recommended that implementations run within the available publishing time.
+            </para>
             </remarks>
         </member>
         <member name="M:TVA.Measurements.ConcentratorBase.CreateNewFrame(TVA.Ticks)">
