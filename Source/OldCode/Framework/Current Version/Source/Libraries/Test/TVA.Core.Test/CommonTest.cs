@@ -229,16 +229,22 @@
 */
 #endregion
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using TVA;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TVA.Core.Test
 {
     [TestClass()]
     public class CommonTest
     {
+        #region [ Members ]
+
+        // Fields
         private TestContext m_testContext;
+
+        #endregion
+
+        #region [ Properties ]
 
         public TestContext TestContext
         {
@@ -251,6 +257,10 @@ namespace TVA.Core.Test
                 m_testContext = value;
             }
         }
+
+        #endregion
+
+        #region [ Methods ]
 
         [TestMethod()]
         public void IsReferenceTest()
@@ -336,5 +346,7 @@ namespace TVA.Core.Test
         {
             Assert.AreEqual(1, Common.Min(1, 2, 3));
         }
+
+        #endregion      
     }
 }
