@@ -614,6 +614,17 @@ namespace TVA
             }
         }
 
+        /// <summary>
+        /// Gets <see cref="System.EventArgs"/> specified in <see cref="Start(System.EventArgs)"/> used to pass into <see cref="Tick"/> event.
+        /// </summary>
+        public EventArgs EventArgs
+        {
+            get
+            {
+                return m_eventArgs;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]

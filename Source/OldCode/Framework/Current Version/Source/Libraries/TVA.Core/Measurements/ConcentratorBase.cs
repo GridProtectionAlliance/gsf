@@ -283,6 +283,17 @@ namespace TVA.Measurements
     {        
         #region [ Members ]
 
+        // Nested Types
+        private class TimerState
+        {
+            public PrecisionTimer Timer;
+            public int FramesPerSecond;
+            public int FrameIndex;
+            public int[] FramePeriods;
+            public int LastFramePeriod;
+            public int ReferenceCount;
+        }
+
         // Events
 
         /// <summary>
@@ -319,12 +330,11 @@ namespace TVA.Measurements
         // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
         private PrecisionTimer m_publicationTimer;          // High precision timer used for frame processing
+        private Thread m_publicationThread;                 // Thread that actually handles frame publication
+        private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
         private decimal m_ticksPerFrame;                    // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
-        private int[] m_framePeriods;                       // Evenly distributed waiting times, in whole milliseconds, per frame
-        private int m_lastFramePeriod;                      // Tracks last frame period
-        private int m_frameIndex;                           // Determines current frame index
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
@@ -375,10 +385,14 @@ namespace TVA.Measurements
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);
 
-            // Create high precision timer used for frame processing
-            m_publicationTimer = new PrecisionTimer();
-            m_publicationTimer.AutoReset = true;
-            m_publicationTimer.Tick += PublishFrames;
+            // Create publication wait handle
+            m_publicationWaitHandle = new AutoResetEvent(false);
+
+            // Create publication thread - this may be one of the few times when you can
+            // accurately argue that you need high priority thread scheduling...
+            m_publicationThread = new Thread(PublishFrames);
+            m_publicationThread.Priority = ThreadPriority.Highest;
+            m_publicationThread.Start();
 
             // This timer monitors the total number of unpublished samples every second. This is a useful statistic
             // to monitor: if total number of unpublished samples exceed lag time, measurement concentration could
@@ -608,21 +622,54 @@ namespace TVA.Measurements
                 if (value < 1)
                     throw new ArgumentOutOfRangeException("value", "Frames per second must be greater than 0");
 
-                m_framesPerSecond = value;
-                m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
-
-                if (m_frameQueue != null)
-                    m_frameQueue.TicksPerFrame = m_ticksPerFrame;
-
-                // Calculate new wait time periods for new number of frames per second
-                int[] framePeriods = new int[m_framesPerSecond];
-
-                for (int frameIndex = 0; frameIndex < m_framesPerSecond; frameIndex++)
+                if (m_framesPerSecond != value)
                 {
-                    framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(m_framesPerSecond, frameIndex);
-                }
+                    // Unsubscribe from last timer event, if any
+                    if (m_publicationTimer != null)
+                        DetachFromPublicationTimer(m_framesPerSecond);
 
-                Interlocked.Exchange(ref m_framePeriods, framePeriods);
+                    m_framesPerSecond = value;
+                    m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
+
+                    if (m_frameQueue != null)
+                        m_frameQueue.TicksPerFrame = m_ticksPerFrame;
+
+                    lock (m_precisionTimers)
+                    {
+                        TimerState state;
+
+                        // See if precision timer exists for this frame rate
+                        if (!m_precisionTimers.TryGetValue(value, out state))
+                        {
+                            // Create a new timer state which includes a high-precision timer for frame processing
+                            state = new TimerState();
+                            state.Timer = new PrecisionTimer();
+                            state.Timer.AutoReset = true;
+                            state.FramesPerSecond = value;
+                            state.FrameIndex = 0;
+                            state.FramePeriods = new int[value];
+
+                            // Calculate new wait time periods for new number of frames per second
+                            for (int frameIndex = 0; frameIndex < value; frameIndex++)
+                            {
+                                state.FramePeriods[frameIndex] = CalcWaitTimeForFrameIndex(value, frameIndex);
+                            }
+
+                            state.LastFramePeriod = state.FramePeriods[state.FrameIndex];
+                            state.Timer.Period = state.LastFramePeriod;
+
+                            // Attach static handler to handle period assignments
+                            state.Timer.Tick += SetTimerPeriod;
+
+                            // Add timer for given rate to static collection
+                            m_precisionTimers.Add(value, state);
+                        }
+
+                        // Subscribe to new tick event
+                        m_publicationTimer = state.Timer;
+                        AttachToPublicationTimer(value);
+                    }
+                }
             }
         }
 
@@ -1022,10 +1069,21 @@ namespace TVA.Measurements
                     {
                         if (m_publicationTimer != null)
                         {
-                            m_publicationTimer.Tick -= PublishFrames;
-                            m_publicationTimer.Dispose();
+                            DetachFromPublicationTimer(m_framesPerSecond);
                         }
                         m_publicationTimer = null;
+
+                        if (m_publicationThread != null)
+                        {
+                            m_publicationThread.Abort();
+                        }
+                        m_publicationThread = null;
+
+                        if (m_publicationWaitHandle != null)
+                        {
+                            m_publicationWaitHandle.Close();
+                        }
+                        m_publicationWaitHandle = null;
 
                         if (m_frameQueue != null)
                         {
@@ -1068,6 +1126,9 @@ namespace TVA.Measurements
         /// </remarks>
         public virtual void Start()
         {
+            if (m_publicationTimer == null)
+                throw new InvalidOperationException("Publication timer was not initialized, concentrator cannot start");
+
             if (!m_enabled)
             {
                 // Reset statistics
@@ -1087,10 +1148,9 @@ namespace TVA.Measurements
                 m_frameQueue.Clear();
 
                 // Start real-time frame publication
-                m_frameIndex = 0;
-                m_lastFramePeriod = m_framePeriods[m_frameIndex];
-                m_publicationTimer.Period = m_lastFramePeriod;
-                m_publicationTimer.Start();
+
+                // TODO: How to do?
+
                 m_monitorTimer.Start();
             }
 
@@ -1106,9 +1166,14 @@ namespace TVA.Measurements
             {
                 m_enabled = false;
 
-                m_publicationTimer.Stop();
-                m_monitorTimer.Stop();
-                m_frameQueue.Clear();
+                if (m_publicationTimer != null)
+                    m_publicationTimer.Stop();
+                
+                if (m_monitorTimer != null)
+                    m_monitorTimer.Stop();
+                
+                if (m_frameQueue != null)
+                    m_frameQueue.Clear();
 
 #if UseHighResolutionTime
                 m_stopTime = PrecisionTimer.UtcNow.Ticks;
@@ -1421,109 +1486,112 @@ namespace TVA.Measurements
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
+        // Tick handler for precision timer simply signals waiting thread to publish
+        private void StartFramePublication(object sender, EventArgs e)
+        {
+            m_publicationWaitHandle.Set();
+        }
+        
         // Member variables being updated in this method are only updated here so we don't worry about atomic operations on
         // these variables. This method is the PrecisionTimer's "Tick" event delegate handler.
-        private void PublishFrames(object sender, EventArgs e)
+        private void PublishFrames()
         {
             IFrame frame;
             Ticks timestamp, distance;
-            int frameIndex, period;
-            decimal timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
+            int frameIndex;
+            decimal timeOffset;
 
-            // First things first, prepare timer period for next call...
-            m_frameIndex++;
-
-            if (m_frameIndex >= m_framesPerSecond)
-                m_frameIndex = 0;
-
-            // Get the frame period for this frame index
-            period = m_framePeriods[m_frameIndex];
-
-            // We only update timer period if it has changed since last call. Note that this is necessary since
-            // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
-            if (m_lastFramePeriod != period)
-                m_publicationTimer.Period = period;
-
-            m_lastFramePeriod = period;
-
-            // Keep publishing frames so long as they are ready for publication. This handles case where
-            // system may be falling behind because user function is taking too long - exit when no
-            // other frames are available to process
-
+            // Keep thread alive...
             while (true)
             {
-                try
+                // Keep publishing frames so long as they are ready for publication. This handles case where
+                // system may be falling behind because user function is taking too long - exit when no
+                // other frames are available to process
+                while (m_enabled)
                 {
-                    // Get top frame
-                    frame = m_frameQueue.Head;
-
-                    if (frame == null)
+                    try
                     {
-                        // No frame ready to publish, exit
+                        // Get time offset
+                        timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
+
+                        // Get top frame
+                        frame = m_frameQueue.Head;
+
+                        if (frame == null)
+                        {
+                            // No frame ready to publish, exit
+                            break;
+                        }
+                        else
+                        {
+                            // Get ticks for this frame
+                            timestamp = frame.Timestamp;
+
+                            // See if any lagtime needs to pass before we begin publishing,
+                            // distance is calculated in ticks
+                            distance = m_lagTicks - (RealTime - timestamp);
+
+                            // Exit if it's not time to publish
+                            if (distance > 0)
+                                break;
+
+                            // Mark start time for publication
+#if UseHighResolutionTime
+                            distance = PrecisionTimer.UtcNow.Ticks;
+#else
+                            distance = DateTime.UtcNow.Ticks;
+#endif
+
+                            // Calculate index of this frame within its second - note that we have to calculate this
+                            // value instead of using m_frameIndex since it is is possible for multiple frames to be
+                            // published within one frame period if the system is stressed
+                            frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + timeOffset) / m_ticksPerFrame);
+
+                            // Mark the frame as published to prevent any further sorting into this frame
+                            lock (frame.Measurements)
+                            {
+                                // Setting this flag is in a critcal section to ensure that
+                                // sorting into this frame has ceased prior to publication...
+                                frame.Published = true;
+                            }
+
+                            try
+                            {
+                                // Publish the current frame (i.e., call user implemented publication function)
+                                PublishFrame(frame, frameIndex);
+                            }
+                            finally
+                            {
+                                // Remove the frame from the queue whether it is successfully published or not
+                                m_frameQueue.Pop();
+
+                                // Update publication statistics
+                                m_publishedFrames++;
+                                m_publishedMeasurements += frame.PublishedMeasurements;
+
+                                // Track total publication time
+#if UseHighResolutionTime
+                                m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
+#else
+                                m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
+#endif
+                            }
+                        }
+                    }
+                    catch (ThreadAbortException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Not stopping for exceptions - but we'll let user know there are issues...
+                        OnProcessException(ex);
                         break;
                     }
-                    else
-                    {
-                        // Get ticks for this frame
-                        timestamp = frame.Timestamp;
-
-                        // See if any lagtime needs to pass before we begin publishing,
-                        // distance is calculated in ticks
-                        distance = m_lagTicks - (RealTime - timestamp);
-
-                        // Exit if it's not time to publish
-                        if (distance > 0)
-                            break;
-
-                        // Mark start time for publication
-#if UseHighResolutionTime
-                        distance = PrecisionTimer.UtcNow.Ticks;
-#else
-                        distance = DateTime.UtcNow.Ticks;
-#endif
-
-                        // Calculate index of this frame within its second - note that we have to calculate this
-                        // value instead of using m_frameIndex since it is is possible for multiple frames to be
-                        // published within one frame period if the system is stressed
-                        frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + timeOffset) / m_ticksPerFrame);
-
-                        // Mark the frame as published to prevent any further sorting into this frame
-                        lock (frame.Measurements)
-                        {
-                            // Setting this flag is in a critcal section to ensure that
-                            // sorting into this frame has ceased prior to publication...
-                            frame.Published = true;
-                        }
-
-                        try
-                        {
-                            // Publish the current frame (i.e., call user implemented publication function)
-                            PublishFrame(frame, frameIndex);
-                        }
-                        finally
-                        {
-                            // Remove the frame from the queue whether it is successfully published or not
-                            m_frameQueue.Pop();
-
-                            // Update publication statistics
-                            m_publishedFrames++;
-                            m_publishedMeasurements += frame.PublishedMeasurements;
-
-                            // Track total publication time
-#if UseHighResolutionTime
-                            m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
-#else
-                            m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
-#endif
-                        }
-                    }
                 }
-                catch (Exception ex)
-                {
-                    // Not stopping for exceptions - but we'll let user know there are issues...
-                    OnProcessException(ex);
-                    break;
-                }
+
+                // Wait for next publication signal
+                m_publicationWaitHandle.WaitOne();
             }
         }
 
@@ -1537,6 +1605,92 @@ namespace TVA.Measurements
 
             if (UnpublishedSamples != null)
                 UnpublishedSamples(this, new EventArgs<int>(secondsOfData));
+        }
+
+        // Handle attach to publication timer
+        private void AttachToPublicationTimer(int framesPerSecond)
+        {
+            TimerState state;
+
+            lock (m_precisionTimers)
+            {
+                if (m_precisionTimers.TryGetValue(framesPerSecond, out state))
+                {
+                    // Attach current instance method "StartFramePublication" to static timer event list
+                    state.Timer.Tick += StartFramePublication;
+
+                    // If reference count is currently zero and we are attaching, then we start timer
+                    if (state.ReferenceCount == 0)
+                        state.Timer.Start(new EventArgs<TimerState>(state));
+
+                    // Increment reference count
+                    state.ReferenceCount++;
+                }
+            }
+        }
+
+        // Handle detach from publication timer
+        private void DetachFromPublicationTimer(int framesPerSecond)
+        {
+            TimerState state;
+
+            lock (m_precisionTimers)
+            {
+                if (m_precisionTimers.TryGetValue(framesPerSecond, out state))
+                {
+                    // Detach current instance method "StartFramePublication" from static timer event list
+                    state.Timer.Tick -= StartFramePublication;
+
+                    // Decrement reference count
+                    state.ReferenceCount--;
+
+                    if (state.ReferenceCount == 0)
+                        state.Timer.Stop();
+                }
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static Dictionary<int, TimerState> m_precisionTimers;
+
+        // Static Constructor
+        static ConcentratorBase()
+        {
+            m_precisionTimers = new Dictionary<int, TimerState>();
+        }
+
+        // Static Methods
+
+        // Handler to assign next timer period
+        private static void SetTimerPeriod(object sender, EventArgs e)
+        {
+            EventArgs<TimerState> eventArgs = e as EventArgs<TimerState>;
+
+            if (eventArgs != null)
+            {
+                TimerState state = eventArgs.Argument;
+                int period;
+
+                // First things first, prepare timer period for next call...
+                state.FrameIndex++;
+
+                if (state.FrameIndex >= state.FramesPerSecond)
+                    state.FrameIndex = 0;
+
+                // Get the frame period for this frame index
+                period = state.FramePeriods[state.FrameIndex];
+
+                // We only update timer period if it has changed since last call. Note that this is necessary since
+                // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
+                if (state.LastFramePeriod != period)
+                    state.Timer.Period = period;
+
+                state.LastFramePeriod = period;
+            }
         }
 
         // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
@@ -1587,5 +1741,6 @@ namespace TVA.Measurements
         }
 
         #endregion
+        
     }
 }
