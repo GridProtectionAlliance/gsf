@@ -261,6 +261,7 @@ namespace ConfigCrypter
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.GroupBoxConfiguration = new System.Windows.Forms.GroupBox();
             this.LinkLabelCopy = new System.Windows.Forms.LinkLabel();
@@ -273,6 +274,9 @@ namespace ConfigCrypter
             this.LabelKey = new System.Windows.Forms.Label();
             this.RadioButtonDecrypt = new System.Windows.Forms.RadioButton();
             this.RadioButtonEncrypt = new System.Windows.Forms.RadioButton();
+            this.LinkLabelImportIV = new System.Windows.Forms.LinkLabel();
+            this.LinkLabelExportIV = new System.Windows.Forms.LinkLabel();
+            this.toolTipProvider = new System.Windows.Forms.ToolTip(this.components);
             this.GroupBoxConfiguration.SuspendLayout();
             this.GroupBoxSettings.SuspendLayout();
             this.SuspendLayout();
@@ -345,6 +349,8 @@ namespace ConfigCrypter
             // 
             this.GroupBoxSettings.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.GroupBoxSettings.Controls.Add(this.LinkLabelExportIV);
+            this.GroupBoxSettings.Controls.Add(this.LinkLabelImportIV);
             this.GroupBoxSettings.Controls.Add(this.TextBoxKey);
             this.GroupBoxSettings.Controls.Add(this.LabelKey);
             this.GroupBoxSettings.Controls.Add(this.RadioButtonDecrypt);
@@ -398,6 +404,32 @@ namespace ConfigCrypter
             this.RadioButtonEncrypt.UseVisualStyleBackColor = true;
             this.RadioButtonEncrypt.CheckedChanged += new System.EventHandler(this.RadioButtonEncrypt_CheckedChanged);
             // 
+            // LinkLabelImportIV
+            // 
+            this.LinkLabelImportIV.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.LinkLabelImportIV.AutoSize = true;
+            this.LinkLabelImportIV.Location = new System.Drawing.Point(178, 14);
+            this.LinkLabelImportIV.Name = "LinkLabelImportIV";
+            this.LinkLabelImportIV.Size = new System.Drawing.Size(39, 13);
+            this.LinkLabelImportIV.TabIndex = 1001;
+            this.LinkLabelImportIV.TabStop = true;
+            this.LinkLabelImportIV.Text = "Import";
+            this.toolTipProvider.SetToolTip(this.LinkLabelImportIV, "Imports the Key IV (Initialization Vector) from the clipboard.");
+            this.LinkLabelImportIV.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelImportIV_LinkClicked);
+            // 
+            // LinkLabelExportIV
+            // 
+            this.LinkLabelExportIV.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.LinkLabelExportIV.AutoSize = true;
+            this.LinkLabelExportIV.Location = new System.Drawing.Point(223, 14);
+            this.LinkLabelExportIV.Name = "LinkLabelExportIV";
+            this.LinkLabelExportIV.Size = new System.Drawing.Size(39, 13);
+            this.LinkLabelExportIV.TabIndex = 1002;
+            this.LinkLabelExportIV.TabStop = true;
+            this.LinkLabelExportIV.Text = "Export";
+            this.toolTipProvider.SetToolTip(this.LinkLabelExportIV, "Exports the Key IV (Initialization Vector) to the clipboard.");
+            this.LinkLabelExportIV.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.LinkLabelExportIV_LinkClicked);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -434,6 +466,9 @@ namespace ConfigCrypter
         private System.Windows.Forms.RadioButton RadioButtonEncrypt;
         private System.Windows.Forms.TextBox TextBoxKey;
         private System.Windows.Forms.Label LabelKey;
+        private System.Windows.Forms.LinkLabel LinkLabelExportIV;
+        private System.Windows.Forms.LinkLabel LinkLabelImportIV;
+        private System.Windows.Forms.ToolTip toolTipProvider;
     }
 }
 
