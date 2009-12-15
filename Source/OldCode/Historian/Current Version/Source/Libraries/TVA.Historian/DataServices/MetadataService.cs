@@ -14,6 +14,8 @@
 //       Modified ReadMetadata() overloads to remove try-catch and check for null reference instead.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/15/2009 - Pinal C. Patel
+//       Changed the default port for the service from 5151 to 6151.
 //
 //*******************************************************************************************************
 
@@ -255,7 +257,7 @@ namespace TVA.Historian.DataServices
         public MetadataService()
             :base()
         {
-            ServiceUri = "http://localhost:5151/historian";
+            ServiceUri = "http://localhost:6151/historian";
         }
 
         #endregion

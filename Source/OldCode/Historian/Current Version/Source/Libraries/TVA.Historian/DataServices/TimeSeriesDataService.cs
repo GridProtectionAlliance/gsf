@@ -15,6 +15,8 @@
 //       null reference instead.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/15/2009 - Pinal C. Patel
+//       Changed the default port for the service from 5152 to 6152.
 //
 //*******************************************************************************************************
 
@@ -256,7 +258,7 @@ namespace TVA.Historian.DataServices
         public TimeSeriesDataService()
             :base()
         {
-            ServiceUri = "http://localhost:5152/historian";
+            ServiceUri = "http://localhost:6152/historian";
         }
 
         #endregion
