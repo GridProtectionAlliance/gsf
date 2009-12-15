@@ -651,14 +651,26 @@ namespace TVA.Measurements.Routing
         public virtual void Initialize()
         {
             Initialized = false;
+            string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
 
             Dictionary<string, string> settings = Settings;
             string setting;
 
             // Load required parameters
-            base.FramesPerSecond = int.Parse(settings["framesPerSecond"]);
-            base.LagTime = double.Parse(settings["lagTime"]);
-            base.LeadTime = double.Parse(settings["leadTime"]);
+            if (!settings.TryGetValue("framesPerSecond", out setting))
+                throw new ArgumentException(string.Format(errorMessage, "framesPerSecond"));
+
+            base.FramesPerSecond = int.Parse(setting);
+
+            if (!settings.TryGetValue("lagTime", out setting))
+                throw new ArgumentException(string.Format(errorMessage, "lagTime"));
+
+            base.LagTime = double.Parse(setting);
+
+            if (!settings.TryGetValue("leadTime", out setting))
+                throw new ArgumentException(string.Format(errorMessage, "leadTime"));
+
+            base.LeadTime = double.Parse(setting);
 
             // Load optional parameters
             if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
