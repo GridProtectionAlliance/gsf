@@ -1488,6 +1488,26 @@ namespace TVA
         }
 
         /// <summary>
+        /// Returns incremented value.
+        /// </summary>
+        /// <param name="value">The operand.</param>
+        /// <returns><see cref="UInt24"/> result of increment.</returns>
+        public static UInt24 operator ++(UInt24 value)
+        {
+            return (UInt24)(value + 1);
+        }
+
+        /// <summary>
+        /// Returns decremented value.
+        /// </summary>
+        /// <param name="value">The operand.</param>
+        /// <returns><see cref="UInt24"/> result of decrement.</returns>
+        public static UInt24 operator --(UInt24 value)
+        {
+            return (UInt24)(value - 1);
+        }
+
+        /// <summary>
         /// Returns computed product of values.
         /// </summary>
         /// <param name="value1"><see cref="UInt24"/> left hand operand.</param>

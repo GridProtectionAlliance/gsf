@@ -1470,6 +1470,26 @@ namespace TVA
         }
 
         /// <summary>
+        /// Returns incremented value.
+        /// </summary>
+        /// <param name="value">The operand.</param>
+        /// <returns>Int24 result of increment.</returns>
+        public static Int24 operator ++(Int24 value)
+        {
+            return (Int24)(value + 1);
+        }
+
+        /// <summary>
+        /// Returns decremented value.
+        /// </summary>
+        /// <param name="value">The operand.</param>
+        /// <returns>Int24 result of decrement.</returns>
+        public static Int24 operator --(Int24 value)
+        {
+            return (Int24)(value - 1);
+        }
+
+        /// <summary>
         /// Returns computed product of values.
         /// </summary>
         /// <param name="value1"><see cref="Int24"/> value as left hand operand.</param>
