@@ -364,7 +364,7 @@ namespace TVA.Measurements.Routing
         /// </list>
         /// </para>
         /// <para>
-        /// Note that expectedFramesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
+        /// Note that framesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
         /// </para>
         /// </remarks>
         public virtual string ConnectionString
