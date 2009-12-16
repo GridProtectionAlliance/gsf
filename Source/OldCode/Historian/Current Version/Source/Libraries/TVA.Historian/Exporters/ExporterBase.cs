@@ -21,6 +21,10 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/16/2009 - Pinal C. Patel
+//       Modified to use new DataListener.DataExtracted event instead of using 
+//       DataListener.Parser.DataParsed event and manually extracting time-series data points.
+//       Exposed the process queue used for processing real-time exports as a protected member.
 //
 //*******************************************************************************************************
 
@@ -250,7 +254,6 @@ using System.Linq;
 using System.Timers;
 using TVA.Collections;
 using TVA.Historian.Files;
-using TVA.Historian.Packets;
 
 namespace TVA.Historian.Exporters
 {
@@ -276,8 +279,8 @@ namespace TVA.Historian.Exporters
             /// </summary>
             /// <param name="export">The <see cref="Export"/> to which the <paramref name="data"/> belongs.</param>
             /// <param name="listener">The <see cref="DataListener"/> that provided the <paramref name="data"/>.</param>
-            /// <param name="data">The real-time data packets received by the <paramref name="listener"/>.</param>
-            public RealTimeData(Export export, DataListener listener, IList<IPacket> data)
+            /// <param name="data">The real-time time-series data received by the <paramref name="listener"/>.</param>
+            public RealTimeData(Export export, DataListener listener, IList<IDataPoint> data)
             {
                 this.Export = export;
                 this.Listener = listener;
@@ -295,9 +298,9 @@ namespace TVA.Historian.Exporters
             public DataListener Listener;
 
             /// <summary>
-            /// Gets or sets the real-time data packets received by the <see cref="Listener"/>.
+            /// Gets or sets the real-time time-series data received by the <see cref="Listener"/>.
             /// </summary>
-            public IList<IPacket> Data;
+            public IList<IDataPoint> Data;
         }
 
         // Constants
@@ -346,8 +349,8 @@ namespace TVA.Historian.Exporters
         private Action<Export> m_exportRemovedHandler;
         private Action<Export> m_exportUpdatedHandler;
         private Timer m_exportTimer;
-        private ProcessQueue<RealTimeData> m_realTimeQueue;
-        private ProcessQueue<Export> m_nonRealTimeQueue;
+        private ProcessQueue<RealTimeData> m_realTimeExportQueue;
+        private ProcessQueue<Export> m_nonRealTimeExportQueue;
         private bool m_disposed;
 
         #endregion
@@ -367,12 +370,12 @@ namespace TVA.Historian.Exporters
             m_listeners.CollectionChanged += Listeners_CollectionChanged;
             m_exportTimer = new Timer(1000);
             m_exportTimer.Elapsed += ExportTimer_Elapsed;
-            m_realTimeQueue = ProcessQueue<RealTimeData>.CreateRealTimeQueue(ProcessRealTimeExports);
-            m_nonRealTimeQueue = ProcessQueue<Export>.CreateRealTimeQueue(ProcessExport);
+            m_realTimeExportQueue = ProcessQueue<RealTimeData>.CreateRealTimeQueue(ProcessRealTimeExports);
+            m_nonRealTimeExportQueue = ProcessQueue<Export>.CreateRealTimeQueue(ProcessExport);
 
             m_exportTimer.Start();
-            m_realTimeQueue.Start();
-            m_nonRealTimeQueue.Start();
+            m_realTimeExportQueue.Start();
+            m_nonRealTimeExportQueue.Start();
         }
 
         /// <summary>
@@ -479,6 +482,17 @@ namespace TVA.Historian.Exporters
             }
         }
 
+        /// <summary>
+        /// Gets the internal <see cref="ProcessQueue{T}"/> used for processing <see cref="Exports"/> defined as <see cref="ExportType.RealTime"/>.
+        /// </summary>
+        protected ProcessQueue<RealTimeData> RealTimeExportQueue 
+        {
+            get
+            {
+                return m_realTimeExportQueue;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -520,7 +534,7 @@ namespace TVA.Historian.Exporters
             Export export = FindExport(exportName);
             if (export != null)
                 // Queue the export for processing regardless of its type.
-                m_nonRealTimeQueue.Add(export);
+                m_nonRealTimeExportQueue.Add(export);
             else
                 throw new InvalidOperationException(string.Format("Export \"{0}\" does not exist", exportName));
         }
@@ -588,11 +602,11 @@ namespace TVA.Historian.Exporters
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_realTimeQueue != null)
-                            m_realTimeQueue.Dispose();
+                        if (m_realTimeExportQueue != null)
+                            m_realTimeExportQueue.Dispose();
 
-                        if (m_nonRealTimeQueue != null)
-                            m_nonRealTimeQueue.Dispose();
+                        if (m_nonRealTimeExportQueue != null)
+                            m_nonRealTimeExportQueue.Dispose();
 
                         if (m_exportTimer != null)
                         {
@@ -670,11 +684,11 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Handles the event that get raised when the <see cref="DataListener.Parser"/> of one of the <see cref="Listeners"/> finishes parsing real-time packets.
+        /// Handles the <see cref="DataListener.DataExtracted"/> event for all the <see cref="Listeners"/>.
         /// </summary>
-        /// <param name="sender"><see cref="DataListener"/> object whose <see cref="DataListener.Parser"/> finished parsing real-time packets.</param>
-        /// <param name="e"><see cref="EventArgs{T1,T2}"/> object where <see cref="EventArgs{T1,T2}.Argument2"/> is the collection of parsed real-time packets.</param>
-        protected virtual void HandleParserDataParsed(object sender, EventArgs<Guid, IList<IPacket>> e)
+        /// <param name="sender"><see cref="DataListener"/> object that raised the event.</param>
+        /// <param name="e"><see cref="EventArgs{T}"/> object where <see cref="EventArgs{T}.Argument"/> is the collection of real-time time-sereis data received.</param>
+        protected virtual void ProcessRealTimeData(object sender, EventArgs<IList<IDataPoint>> e)
         {
             DataListener listener = (DataListener)sender;
             List<Export> exportsList = new List<Export>();
@@ -691,7 +705,7 @@ namespace TVA.Historian.Exporters
                 {
                     // This export is configured to be processed in real-time and has one or more records 
                     // from this listener to be exported, so we'll queue the real-time data for processing.
-                    m_realTimeQueue.Add(new RealTimeData(export, listener, e.Argument2));
+                    m_realTimeExportQueue.Add(new RealTimeData(export, listener, e.Argument));
                 }
             }
 
@@ -699,11 +713,14 @@ namespace TVA.Historian.Exporters
             // Doing so also prevents running out-of-memory that could be caused by exporters taking longer than
             // normal to process its exports. Longer than normal processing time will back-log processing to a
             // point that it might become impossible to catch-up because of the rate at which data may be parsed.
-            while (m_realTimeQueue.Count > MaximumQueuedRequest)
+            int drops = 0;
+            while (m_realTimeExportQueue.Count > MaximumQueuedRequest)
             {
-                m_realTimeQueue.RemoveAt(0);
-                OnStatusUpdate("Dropped queued real-time export data to prevent flooding.");
+                m_realTimeExportQueue.RemoveAt(0);
+                drops++;
             }
+            if (drops > 0)
+                OnStatusUpdate(string.Format("Dropped {0} time-series data points to prevent flooding.", drops));
         }
 
         /// <summary>
@@ -823,7 +840,6 @@ namespace TVA.Historian.Exporters
         private void ProcessRealTimeExports(RealTimeData[] items)
         {
             IList<ExportRecord> exportRecords;
-            IEnumerable<IDataPoint> dataPoints;
             foreach (RealTimeData item in items)
             {
                 try
@@ -834,27 +850,15 @@ namespace TVA.Historian.Exporters
                     if (exportRecords.Count == 1 && exportRecords[0].Identifier == -1)
                     {
                         // Include all data from the listener.
-                        foreach (IPacket packet in item.Data)
-                        {
-                            dataPoints = packet.ExtractTimeSeriesData();
-                            if (dataPoints != null)
-                                filteredData.AddRange(dataPoints);
-                        }
+                        filteredData.AddRange(item.Data);
                     }
                     else
                     {
                         // Export data for selected records only (filtered).
-                        foreach (IPacket packet in item.Data)
+                        foreach (IDataPoint dataPoint in item.Data)
                         {
-                            dataPoints = packet.ExtractTimeSeriesData();
-                            if (dataPoints != null)
-                            {
-                                foreach (IDataPoint dataPoint in dataPoints)
-                                {
-                                    if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
-                                        filteredData.Add(dataPoint);
-                                }
-                            }
+                            if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
+                                filteredData.Add(dataPoint);
                         }
                     }
 
@@ -881,7 +885,7 @@ namespace TVA.Historian.Exporters
             {
                 if (export.Type == ExportType.Intervaled && export.ShouldProcess())
                 {
-                    m_nonRealTimeQueue.Add(export);
+                    m_nonRealTimeExportQueue.Add(export);
                 }
             }
         }
@@ -951,14 +955,14 @@ namespace TVA.Historian.Exporters
                     // Register event handler.
                     foreach (DataListener listener in e.NewItems)
                     {
-                        listener.Parser.DataParsed += HandleParserDataParsed;
+                        listener.DataExtracted += ProcessRealTimeData;
                     }
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     // Unregister event handler.
                     foreach (DataListener listener in e.NewItems)
                     {
-                        listener.Parser.DataParsed -= HandleParserDataParsed;
+                        listener.DataExtracted -= ProcessRealTimeData;
                     }
                     break;
                 default:

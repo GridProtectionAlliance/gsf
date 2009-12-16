@@ -16,6 +16,8 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/16/2009 - Pinal C. Patel
+//       Modified to use the process queue exposed by the base class for processing real-time data.
 //
 //*******************************************************************************************************
 
@@ -241,8 +243,6 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Threading;
-using TVA.Collections;
-using TVA.Historian.Packets;
 
 namespace TVA.Historian.Exporters
 {
@@ -307,7 +307,6 @@ namespace TVA.Historian.Exporters
 
         // Fields
         private Dictionary<string, DataSet> m_rawData;
-        private ProcessQueue<RealTimeData> m_realTimeQueue;
 
         #endregion
 
@@ -329,12 +328,11 @@ namespace TVA.Historian.Exporters
             : base(name)
         {
             m_rawData = new Dictionary<string, DataSet>();
-            m_realTimeQueue = ProcessQueue<RealTimeData>.CreateRealTimeQueue(ProcessData);
-            m_realTimeQueue.Start();
 
             // Register handlers.
             ExportAddedHandler = CreateBuffer;
             ExportRemovedHandler = RemoveBuffer;
+            RealTimeExportQueue.ProcessItemsFunction = ProcessRealTimeExport;
         }
 
         #endregion
@@ -404,11 +402,11 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Handles the event that get raised when the <see cref="DataListener.Parser"/> of one of the <see cref="ExporterBase.Listeners"/> finishes parsing real-time packets.
+        /// Handles the <see cref="DataListener.DataExtracted"/> event for all the <see cref="ExporterBase.Listeners"/>.
         /// </summary>
-        /// <param name="sender"><see cref="DataListener"/> object whose <see cref="DataListener.Parser"/> finished parsing real-time packets.</param>
-        /// <param name="e"><see cref="EventArgs{T1,T2}"/> object where <see cref="EventArgs{T1,T2}.Argument2"/> is the collection of parsed real-time packets.</param>
-        protected override void HandleParserDataParsed(object sender, EventArgs<Guid, IList<IPacket>> e)
+        /// <param name="sender"><see cref="DataListener"/> object that raised the event.</param>
+        /// <param name="e"><see cref="EventArgs{T}"/> object where <see cref="EventArgs{T}.Argument"/> is the collection of real-time time-sereis data received.</param>
+        protected override void ProcessRealTimeData(object sender, EventArgs<IList<IDataPoint>> e)
         {
             DataListener listener = (DataListener)sender;
             List<Export> exportsList = new List<Export>();
@@ -424,7 +422,7 @@ namespace TVA.Historian.Exporters
             foreach (Export export in exportsList)
             {
                 if (export.FindRecords(listener.ID).Count > 0 && export.Type != ExportType.RealTime)
-                    m_realTimeQueue.Add(new RealTimeData(export, listener, e.Argument2));
+                    RealTimeExportQueue.Add(new RealTimeData(export, listener, e.Argument));
             }
         }
 
@@ -445,11 +443,10 @@ namespace TVA.Historian.Exporters
             return data;
         }
 
-        private void ProcessData(RealTimeData[] items)
+        private void ProcessRealTimeExport(RealTimeData[] items)
         {
             DataSet rawData;
             IList<ExportRecord> exportRecords;
-            IEnumerable<IDataPoint> dataPoints;
             foreach (RealTimeData item in items)
             {
                 try
@@ -470,16 +467,9 @@ namespace TVA.Historian.Exporters
                             {
                                 try
                                 {
-                                    foreach (IPacket packet in item.Data)
+                                    foreach (IDataPoint dataPoint in item.Data)
                                     {
-                                        dataPoints = packet.ExtractTimeSeriesData();
-                                        if (dataPoints != null)
-                                        {
-                                            foreach (IDataPoint dataPoint in dataPoints)
-                                            {
-                                                rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
-                                            }
-                                        }
+                                        rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                     }
                                 }
                                 catch (Exception)
@@ -500,17 +490,10 @@ namespace TVA.Historian.Exporters
                             {
                                 try
                                 {
-                                    foreach (IPacket packet in item.Data)
+                                    foreach (IDataPoint dataPoint in item.Data)
                                     {
-                                        dataPoints = packet.ExtractTimeSeriesData();
-                                        if (dataPoints != null)
-                                        {
-                                            foreach (IDataPoint dataPoint in dataPoints)
-                                            {
-                                                if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
-                                                    rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
-                                            }
-                                        }
+                                        if (exportRecords.FirstOrDefault(record => record.Identifier == dataPoint.HistorianID) != null)
+                                            rawData.Tables[0].Rows.Add(item.Listener.ID, dataPoint.HistorianID, dataPoint.Time.ToString(), dataPoint.Value, (int)dataPoint.Quality);
                                     }
                                 }
                                 catch (Exception)
