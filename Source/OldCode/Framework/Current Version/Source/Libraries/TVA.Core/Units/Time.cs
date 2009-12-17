@@ -459,7 +459,7 @@ namespace TVA.Units
         /// </returns>
         public override string ToString()
         {
-            return ToTicks().ToString();
+            return ToTicks().ToElapsedTimeString();
         }
 
         /// <summary>
@@ -474,7 +474,7 @@ namespace TVA.Units
         /// </returns>
         public string ToString(int secondPrecision)
         {
-            return ToTicks().ToString(secondPrecision);
+            return ToTicks().ToElapsedTimeString(secondPrecision);
         }
 
         /// <summary>
@@ -498,7 +498,7 @@ namespace TVA.Units
         /// </returns>
         public string ToString(int secondPrecision, string[] timeNames)
         {
-            return ToTicks().ToString(secondPrecision, timeNames);
+            return ToTicks().ToElapsedTimeString(secondPrecision, timeNames);
         }
 
         #region [ Numeric Interface Implementations ]

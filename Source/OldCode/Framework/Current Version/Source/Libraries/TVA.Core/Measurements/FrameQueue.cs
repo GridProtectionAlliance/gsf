@@ -249,12 +249,12 @@ namespace TVA.Measurements
         // Fields
         private ConcentratorBase m_parent;              // Reference to parent concentrator instance
         private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<Ticks, IFrame> m_frameHash;  // This list not guaranteed to be sorted, but used for fast frame lookup
-        private Ticks m_publishedTicks;                 // Timstamp of last published frame
+        private Dictionary<long, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
+        private long m_publishedTicks;                  // Timstamp of last published frame
         private IFrame m_head;                          // Reference to current top of the frame collection
         private IFrame m_last;                          // Reference to last published frame
         private long m_timeResolution;                  // Cached time resolution (max sorting resolution in ticks)
-        private decimal m_ticksPerFrame;                // Cached ticks per frame
+        private double m_ticksPerFrame;                 // Cached ticks per frame
         private bool m_disposed;                        // Object disposed flag
 
         #endregion
@@ -272,7 +272,7 @@ namespace TVA.Measurements
 
             m_parent = parent;
             m_frameList = new LinkedList<IFrame>();
-            m_frameHash = new Dictionary<Ticks, IFrame>(initialCapacity);
+            m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
             m_ticksPerFrame = parent.TicksPerFrame;
         }
 
@@ -287,7 +287,22 @@ namespace TVA.Measurements
         #endregion
 
         #region [ Properties ]
-        
+
+        /// <summary>
+        /// Gets or sets number of ticks per frame to be used by <see cref="FrameQueue"/>.
+        /// </summary>
+        public double TicksPerFrame
+        {
+            get
+            {
+                return m_ticksPerFrame;
+            }
+            set
+            {
+                m_ticksPerFrame = value;
+            }
+        }
+
         /// <summary>
         /// Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
         /// </summary>
@@ -300,21 +315,6 @@ namespace TVA.Measurements
             set
             {
                 m_timeResolution = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets number of ticks per frame to be used by <see cref="FrameQueue"/>.
-        /// </summary>
-        public decimal TicksPerFrame
-        {
-            get
-            {
-                return m_ticksPerFrame;
-            }
-            set
-            {
-                m_ticksPerFrame = value;
             }
         }
 
@@ -454,7 +454,7 @@ namespace TVA.Measurements
         /// Gets <see cref="IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="IFrame"/> exists for
         /// the specified timestamp, one will be created.
         /// </summary>
-        /// <param name="timestamp">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
+        /// <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
         /// <remarks>
         /// Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
         /// is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
@@ -462,15 +462,28 @@ namespace TVA.Measurements
         /// <see cref="ConcentratorBase.FramesPerSecond"/> of the parent <see cref="ConcentratorBase"/> implementation.
         /// </remarks>
         /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
-        public IFrame GetFrame(Ticks timestamp)
+        public IFrame GetFrame(long ticks)
         {
             // Calculate destination ticks for this frame
-            long ticks = (long)timestamp;
-            long baseTicks = ticks - ticks % Ticks.PerSecond;
-            long resolutionTicks = (m_timeResolution > 1 ? baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution : ticks + 1);
-            Ticks destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
+            long baseTicks, resolutionTicks, destinationTicks;
             IFrame frame = null;
             bool nodeAdded = false;
+
+            // Baseline timestamp to the top of the second
+            baseTicks = ticks - ticks % Ticks.PerSecond;
+
+            // See if a maximum time resolution was specified
+            if (m_timeResolution > 1)
+            {
+                // Truncate timestamp to time resolution (i.e., remove fractional time)
+                resolutionTicks = baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution;
+
+                // Align timestamp to nearest frame (i.e., put timestamp in the correct bucket)
+                destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
+            }
+            else
+                destinationTicks = ticks;
+
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > m_publishedTicks)
@@ -519,78 +532,6 @@ namespace TVA.Measurements
             return frame;
         }
 
-        #region [ Possible Future Optimization ]
-
-        //Private Sub LoadFramesProc()
-
-        //    'Dim framesPerSecond As Integer = CInt(CDec(TicksPerSecond) / m_ticksPerFrame)
-        //    Dim x, destinationTicks As Long
-        //    Dim frame As IFrame
-        //    Dim frameIndex As Integer
-
-        //    Do While True
-        //        ' Attempt a lock, no need to wait...
-        //        If Monitor.TryEnter(m_frames) Then
-        //            Try
-        //                ' We have a lock now, so let's check to see if we need to add some frames,
-        //                ' we'll try to keep a full second's worth of future frames out there
-        //                frame = Nothing
-
-        //                For x = m_currentTicks To m_currentTicks + TicksPerSecond Step m_ticksPerFrame
-        //                    destinationTicks = CLng(x / m_ticksPerFrame) * m_ticksPerFrame
-        //                    frameIndex = m_frames.BinarySearch(New Frame(destinationTicks))
-
-        //                    If frameIndex < 0 Then
-        //                        ' Didn't find frame for this timestamp so we create one
-        //                        frame = m_createNewFrameFunction(destinationTicks)
-        //                        m_frames.Add(frame)
-        //                    End If
-        //                Next
-
-        //                If frame IsNot Nothing Then
-        //                    If m_tail Is Nothing OrElse frame.CompareTo(m_tail) > 0 Then
-        //                        m_tail = frame
-        //                    Else
-        //                        m_frames.Sort()
-        //                    End If
-
-        //                    If m_head Is Nothing AndAlso m_frames.Count = 1 Then m_head = m_tail
-        //                End If
-        //            Finally
-        //                Monitor.Exit(m_frames)
-        //            End Try
-        //        End If
-
-        //        ' This is a lazy process, we are always snoozing and trying again...
-        //        Thread.Sleep(10)
-        //    Loop
-
-        //End Sub
-
-        #endregion
-
         #endregion
     }
 }
-
-#region [ Old Code ]
-
-///// <summary>
-///// Gets or sets the create frame function delegate used by <see cref="FrameQueue"/>.
-///// </summary>
-///// <remarks>
-///// Function signature: <see cref="IFrame"/> CreateFrame(long ticks).
-///// </remarks>
-//public Func<long, IFrame> CreateNewFrameFunction
-//{
-//    get
-//    {
-//        return m_createNewFrameFunction;
-//    }
-//    set
-//    {
-//        m_createNewFrameFunction = value;
-//    }
-//}
-
-#endregion

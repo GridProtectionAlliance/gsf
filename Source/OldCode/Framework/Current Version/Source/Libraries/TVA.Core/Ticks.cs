@@ -313,8 +313,8 @@ namespace TVA
     /// you needed to directly represent time in high-resolution, i.e., time with subsecond accuracy, using an object that will
     /// act like a long integer but handle time conversions. <see cref="Ticks"/> can also represent a "time period" (e.g., the
     /// number of ticks elapsed since a process started) and thus can also be used like a <see cref="TimeSpan"/>; when used in
-    /// this manner the <see cref="Ticks.ToString()"/> method can be used to convert the <see cref="Ticks"/> value into a handy
-    /// textual representation of elapsed years, days, hours, minutes and seconds.
+    /// this manner the <see cref="Ticks.ToElapsedTimeString()"/> method can be used to convert the <see cref="Ticks"/> value
+    /// into a handy textual representation of elapsed years, days, hours, minutes and seconds.
     /// </para>
     /// <para>
     /// This class behaves just like an <see cref="Int64"/> representing a time in ticks; it is implictly castable to and from
@@ -650,21 +650,74 @@ namespace TVA
         }
 
         /// <summary>
+        /// Converts the value of the <see cref="Ticks"/> value to its equivalent <see cref="DateTime"/> string representation.
+        /// </summary>
+        /// <returns>A <see cref="DateTime"/> string representation of the <see cref="Ticks"/> value.</returns>
+        public override string ToString()
+        {
+            return ((DateTime)this).ToString();
+        }
+
+        /// <summary>
+        /// Converts the <see cref="Ticks"/> value to its equivalent string representation, using
+        /// the specified <see cref="DateTime"/> format.
+        /// </summary>
+        /// <param name="format">A format string.</param>
+        /// <returns>
+        /// The string representation of the value of this instance as specified by format.
+        /// </returns>
+        public string ToString(string format)
+        {
+            return ((DateTime)this).ToString(format);
+        }
+
+        /// <summary>
+        /// Converts the <see cref="Ticks"/> value to its equivalent string representation, using
+        /// the specified culture-specific <see cref="DateTime"/> format information.
+        /// </summary>
+        /// <param name="provider">
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
+        /// </param>
+        /// <returns>
+        /// The string representation of the value of this instance as specified by provider.
+        /// </returns>
+        public string ToString(IFormatProvider provider)
+        {
+            return ((DateTime)this).ToString(provider);
+        }
+
+        /// <summary>
+        /// Converts the <see cref="Ticks"/> value to its equivalent string representation, using
+        /// specified format and culture-specific <see cref="DateTime"/> format information.
+        /// </summary>
+        /// <param name="format">A format specification.</param>
+        /// <param name="provider">
+        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
+        /// </param>
+        /// <returns>
+        /// The string representation of the value of this instance as specified by format and provider.
+        /// </returns>
+        public string ToString(string format, IFormatProvider provider)
+        {
+            return ((DateTime)this).ToString(format, provider);
+        }
+
+        /// <summary>
         /// Converts the <see cref="Ticks"/> value into a textual representation of years, days, hours,
         /// minutes and seconds.
         /// </summary>
         /// <remarks>
         /// Note that this ToString overload will not display fractional seconds. To allow display of
         /// fractional seconds, or completely remove second resolution from the textual representation,
-        /// use the <see cref="Ticks.ToString(int)"/> overload instead.
+        /// use the <see cref="Ticks.ToElapsedTimeString(int)"/> overload instead.
         /// </remarks>
         /// <returns>
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        public override string ToString()
+        public string ToElapsedTimeString()
         {
-            return ToString(0, m_timeNames);
+            return ToElapsedTimeString(0, m_timeNames);
         }
 
         /// <summary>
@@ -677,12 +730,12 @@ namespace TVA
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        public string ToString(int secondPrecision)
+        public string ToElapsedTimeString(int secondPrecision)
         {
             if (secondPrecision < 0)
-                return ToString(secondPrecision, m_timeNamesNoSeconds);
+                return ToElapsedTimeString(secondPrecision, m_timeNamesNoSeconds);
             else
-                return ToString(secondPrecision, m_timeNames);
+                return ToElapsedTimeString(secondPrecision, m_timeNames);
         }
 
         /// <summary>
@@ -704,7 +757,7 @@ namespace TVA
         /// The string representation of the value of this instance, consisting of the number of
         /// years, days, hours, minutes and seconds represented by this value.
         /// </returns>
-        public string ToString(int secondPrecision, string[] timeNames)
+        public string ToElapsedTimeString(int secondPrecision, string[] timeNames)
         {
             // One year of seconds estimated for display use as 365.2425 days, i.e., 31556952 seconds
             const int SecondsPerYear = 31556952;
@@ -1002,50 +1055,6 @@ namespace TVA
         public override int GetHashCode()
         {
             return m_value.GetHashCode();
-        }
-
-        /// <summary>
-        /// Converts this value to its equivalent string representation, using
-        /// the specified format.
-        /// </summary>
-        /// <param name="format">A format string.</param>
-        /// <returns>
-        /// The string representation of the value of this instance as specified by format.
-        /// </returns>
-        public string ToString(string format)
-        {
-            return m_value.ToString(format);
-        }
-
-        /// <summary>
-        /// Converts this value to its equivalent string representation, using
-        /// the specified culture-specific format information.
-        /// </summary>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
-        /// </param>
-        /// <returns>
-        /// The string representation of the value of this instance as specified by provider.
-        /// </returns>
-        public string ToString(IFormatProvider provider)
-        {
-            return m_value.ToString(provider);
-        }
-
-        /// <summary>
-        /// Converts this value to its equivalent string representation, using
-        /// specified format and culture-specific format information.
-        /// </summary>
-        /// <param name="format">A format specification.</param>
-        /// <param name="provider">
-        /// A <see cref="System.IFormatProvider"/> that supplies culture-specific formatting information.
-        /// </param>
-        /// <returns>
-        /// The string representation of the value of this instance as specified by format and provider.
-        /// </returns>
-        public string ToString(string format, IFormatProvider provider)
-        {
-            return m_value.ToString(format, provider);
         }
 
         /// <summary>

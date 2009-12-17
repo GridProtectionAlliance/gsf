@@ -32,6 +32,10 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/15/2009 - J. Ritchie Carroll
+//       The PrecisionTimer, based on the Windows multimedia timer, is restricted to 16 active instances
+//       per process, so concentrator was rearchitected to use one static timer per frame rate so that
+//       the system can can support 16 different active frame rates for any number of concentrators.
 //
 //*******************************************************************************************************
 
@@ -280,18 +284,250 @@ namespace TVA.Measurements
     /// </remarks>
     [CLSCompliant(false)]
     public abstract class ConcentratorBase : IDisposable
-    {        
+    {
         #region [ Members ]
 
         // Nested Types
-        private class TimerState
+
+        /// <summary>
+        /// Frame rate timer.
+        /// </summary>
+        /// <remarks>
+        /// One static instance of this internal class is created per encountered frame rate.
+        /// </remarks>
+        private class FrameRateTimer : IDisposable
         {
-            public PrecisionTimer Timer;
-            public int FramesPerSecond;
-            public int FrameIndex;
-            public int[] FramePeriods;
-            public int LastFramePeriod;
-            public int ReferenceCount;
+            #region [ Members ]
+
+            // Fields
+            private PrecisionTimer m_timer;
+            private int m_framesPerSecond;
+            private int[] m_framePeriods;
+            private int m_frameIndex;
+            private int m_lastFramePeriod;
+            private int m_referenceCount;
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Create a new <see cref="FrameRateTimer"/> class.
+            /// </summary>
+            /// <param name="framesPerSecond">Desired frame rate for <see cref="PrecisionTimer"/>.</param>
+            public FrameRateTimer(int framesPerSecond)
+            {
+                // Create a new precision timer for this timer state
+                m_timer = new PrecisionTimer();
+                m_timer.AutoReset = true;
+
+                // Attach handler for timer period assignments
+                m_timer.Tick += SetTimerPeriod;
+
+                m_framesPerSecond = framesPerSecond;
+                m_framePeriods = new int[framesPerSecond];
+
+                // Calculate new wait time periods for new number of frames per second
+                for (int frameIndex = 0; frameIndex < framesPerSecond; frameIndex++)
+                {
+                    m_framePeriods[frameIndex] = CalcWaitTimeForFrameIndex(frameIndex);
+                }
+
+                // Establish initial timer period
+                m_lastFramePeriod = m_framePeriods[0];
+                m_timer.Period = m_lastFramePeriod;
+
+                // Start timer
+                m_timer.Start();
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources before the <see cref="FrameRateTimer"/> object is reclaimed by <see cref="GC"/>.
+            /// </summary>
+            ~FrameRateTimer()
+            {
+                Dispose(false);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets <see cref="PrecisionTimer"/> instance for this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            public PrecisionTimer Timer
+            {
+                get
+                {
+                    return m_timer;
+                }
+            }
+
+            /// <summary>
+            /// Gets frames per second for this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            public int FramesPerSecond
+            {
+                get
+                {
+                    return m_framesPerSecond;
+                }
+            }
+
+            /// <summary>
+            /// Gets array of frame periods for this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            public int[] FramePeriods
+            {
+                get
+                {
+                    return m_framePeriods;
+                }
+            }
+
+            /// <summary>
+            /// Gets reference count for this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            public int ReferenceCount
+            {
+                get
+                {
+                    return m_referenceCount;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="FrameRateTimer"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="FrameRateTimer"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                        {
+                            if (m_timer != null)
+                            {
+                                m_timer.Tick -= SetTimerPeriod;
+                                m_timer.Dispose();
+                            }
+                            m_timer = null;
+                        }
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Adds a reference to this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            /// <param name="tickFunction">Tick function to add to event list.</param>
+            public void AddReference(EventHandler tickFunction)
+            {
+                m_timer.Tick += tickFunction;
+                m_referenceCount++;
+            }
+
+            /// <summary>
+            /// Removes a reference to this <see cref="FrameRateTimer"/>.
+            /// </summary>
+            /// <param name="tickFunction">Tick function to remove from event list.</param>
+            public void RemoveReference(EventHandler tickFunction)
+            {
+                m_timer.Tick -= tickFunction;
+                m_referenceCount--;
+            }
+
+            // Handler to assign next timer period
+            private void SetTimerPeriod(object sender, EventArgs e)
+            {
+                int period;
+
+                // First things first, prepare timer period for next call...
+                m_frameIndex++;
+
+                if (m_frameIndex >= m_framesPerSecond)
+                    m_frameIndex = 0;
+
+                // Get the frame period for this frame index
+                period = m_framePeriods[m_frameIndex];
+
+                // We only update timer period if it has changed since last call. Note that this is necessary since
+                // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
+                if (m_lastFramePeriod != period)
+                    Timer.Period = period;
+
+                m_lastFramePeriod = period;
+            }
+
+            // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
+            // so we use this function to evenly distribute integer based millisecond wait times across a second.
+            private int CalcWaitTimeForFrameIndex(int frameIndex)
+            {
+                // Jian Zuo...
+                int millisecondsWaitTime;
+                int frameRate;
+                int deficit;
+
+                frameRate = (int)(Math.Round(1000.0D / m_framesPerSecond));
+                deficit = 1000 - frameRate * m_framesPerSecond;
+
+                if (deficit == 0)
+                {
+                    millisecondsWaitTime = frameRate;
+                }
+                else
+                {
+                    if (frameIndex == 0)
+                    {
+                        millisecondsWaitTime = frameRate;
+                    }
+                    else if (frameIndex == m_framesPerSecond - 1)
+                    {
+                        millisecondsWaitTime = frameRate + (deficit > 0 ? 1 : -1);
+                    }
+                    else
+                    {
+                        double interval = m_framesPerSecond / Math.Abs((double)deficit);
+                        double pre_dis = mod_dis(frameIndex - 1, interval);
+                        double cur_dis = mod_dis(frameIndex, interval);
+                        double next_dis = mod_dis(frameIndex + 1, interval);
+
+                        millisecondsWaitTime = frameRate + ((cur_dis <= pre_dis && cur_dis < next_dis) ? (deficit > 0 ? 1 : -1) : 0);
+                    }
+                }
+
+                return millisecondsWaitTime;
+            }
+
+            private double mod_dis(int framesIndex, double interval)
+            {
+                double dis2 = (framesIndex + 1) % interval;
+                double dis1 = interval - dis2;
+                return (dis1 < dis2 ? dis1 : dis2);
+            }
+
+            #endregion
         }
 
         // Events
@@ -329,15 +565,16 @@ namespace TVA.Measurements
 
         // Fields
         private FrameQueue m_frameQueue;                    // Queue of frames to be published
-        private PrecisionTimer m_publicationTimer;          // High precision timer used for frame processing
-        private Thread m_publicationThread;                 // Thread that actually handles frame publication
+        private Thread m_publicationThread;                 // Thread that handles frame publication
         private AutoResetEvent m_publicationWaitHandle;     // Interframe publication wait handle
+        private bool m_attachedToFrameRateTimer;            // Flag that tracks if instance is attached to a frame rate timer
         private System.Timers.Timer m_monitorTimer;         // Sample monitor - tracks total number of unpublished frames
         private int m_framesPerSecond;                      // Frames per second
-        private decimal m_ticksPerFrame;                    // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
+        private double m_ticksPerFrame;                     // Frame rate - we use a 64-bit scaled integer to avoid round-off errors in calculations
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
+        private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
@@ -515,56 +752,6 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
-        /// </summary>
-        /// <remarks>
-        /// <list type="table">
-        ///     <listheader>
-        ///         <term>Desired maximum resolution</term>
-        ///         <description>Value to assign</description>
-        ///     </listheader>
-        ///     <item>
-        ///         <term>Seconds</term>
-        ///         <description><see cref="Ticks.PerSecond"/></description>
-        ///     </item>
-        ///     <item>
-        ///         <term>Milliseconds</term>
-        ///         <description><see cref="Ticks.PerMillisecond"/></description>
-        ///     </item>
-        ///     <item>
-        ///         <term>Microseconds</term>
-        ///         <description><see cref="Ticks.PerMicrosecond"/></description>
-        ///     </item>
-        ///     <item>
-        ///         <term>100-Nanoseconds</term>
-        ///         <description>0</description>
-        ///     </item>
-        /// </list>
-        /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds).
-        /// Assigning values values greater than <see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks.PerSecond"/> since maximum
-        /// possible concentrator resolution is one second (i.e., 1 frame per second).
-        /// </remarks>
-        public long TimeResolution
-        {
-            get
-            {
-                return m_timeResolution;
-            }
-            set
-            {
-                if (value < 0)
-                    m_timeResolution = 0;
-                if (value > Ticks.PerSecond)
-                    m_timeResolution = Ticks.PerSecond;
-                else
-                    m_timeResolution = value;
-
-                // Assign desired time resolution to frame queue
-                m_frameQueue.TimeResolution = m_timeResolution;
-            }
-        }
-
-        /// <summary>
         /// Gets or sets flag to start tracking the absolute latest received measurement values.
         /// </summary>
         /// <remarks>
@@ -624,59 +811,79 @@ namespace TVA.Measurements
 
                 if (m_framesPerSecond != value)
                 {
-                    // Unsubscribe from last timer event, if any
-                    if (m_publicationTimer != null)
-                        DetachFromPublicationTimer(m_framesPerSecond);
+                    // Unsubscribe from last frame rate timer, if any
+                    DetachFromFrameRateTimer(m_framesPerSecond);
 
                     m_framesPerSecond = value;
-                    m_ticksPerFrame = (decimal)Ticks.PerSecond / (decimal)m_framesPerSecond;
+                    m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
                     if (m_frameQueue != null)
                         m_frameQueue.TicksPerFrame = m_ticksPerFrame;
 
-                    lock (m_precisionTimers)
-                    {
-                        TimerState state;
-
-                        // See if precision timer exists for this frame rate
-                        if (!m_precisionTimers.TryGetValue(value, out state))
-                        {
-                            // Create a new timer state which includes a high-precision timer for frame processing
-                            state = new TimerState();
-                            state.Timer = new PrecisionTimer();
-                            state.Timer.AutoReset = true;
-                            state.FramesPerSecond = value;
-                            state.FrameIndex = 0;
-                            state.FramePeriods = new int[value];
-
-                            // Calculate new wait time periods for new number of frames per second
-                            for (int frameIndex = 0; frameIndex < value; frameIndex++)
-                            {
-                                state.FramePeriods[frameIndex] = CalcWaitTimeForFrameIndex(value, frameIndex);
-                            }
-
-                            state.LastFramePeriod = state.FramePeriods[state.FrameIndex];
-                            state.Timer.Period = state.LastFramePeriod;
-
-                            // Attach static handler to handle period assignments
-                            state.Timer.Tick += SetTimerPeriod;
-
-                            // Add timer for given rate to static collection
-                            m_precisionTimers.Add(value, state);
-                        }
-
-                        // Subscribe to new tick event
-                        m_publicationTimer = state.Timer;
-                        AttachToPublicationTimer(value);
-                    }
+                    // Subscribe to frame rate timer, creating it if it doesn't exist
+                    AttachToFrameRateTimer(m_framesPerSecond);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
+        /// </summary>
+        /// <remarks>
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Desired maximum resolution</term>
+        ///         <description>Value to assign</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term>Seconds</term>
+        ///         <description><see cref="Ticks"/>.<see cref="Ticks.PerSecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Milliseconds</term>
+        ///         <description><see cref="Ticks"/>.<see cref="Ticks.PerMillisecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>Microseconds</term>
+        ///         <description><see cref="Ticks"/>.<see cref="Ticks.PerMicrosecond"/></description>
+        ///     </item>
+        ///     <item>
+        ///         <term>100-Nanoseconds</term>
+        ///         <description>0</description>
+        ///     </item>
+        /// </list>
+        /// Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds). Assigning
+        /// values values greater than <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/> will be set to <see cref="Ticks"/>.<see cref="Ticks.PerSecond"/>
+        /// since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
+        /// </remarks>
+        public long TimeResolution
+        {
+            get
+            {
+                return m_timeResolution;
+            }
+            set
+            {
+                if (value < 0)
+                    m_timeResolution = 0;
+                if (value > Ticks.PerSecond)
+                    m_timeResolution = Ticks.PerSecond;
+                else
+                    m_timeResolution = value;
+
+                // Calculate half the distance of the time resolution for use as an offset
+                m_timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
+
+                // Assign desired time resolution to frame queue
+                if (m_frameQueue != null)
+                    m_frameQueue.TimeResolution = m_timeResolution;
             }
         }
 
         /// <summary>
         /// Gets the number of ticks per frame.
         /// </summary>
-        public decimal TicksPerFrame
+        public double TicksPerFrame
         {
             get
             {
@@ -922,7 +1129,7 @@ namespace TVA.Measurements
         /// If user publication function, <see cref="ConcentratorBase.PublishFrame"/>, consistently exceeds available publishing time
         /// (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c>), concentration will fall behind.
         /// </remarks>
-        public Time AveratePublicationTimePerFrame
+        public Time AveragePublicationTimePerFrame
         {
             get
             {
@@ -994,9 +1201,9 @@ namespace TVA.Measurements
                 status.AppendLine();
                 status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
                 status.AppendLine();
-                status.AppendFormat("  Average publication time: {0} milliseconds", (AveratePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
+                status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
-                status.AppendFormat(" User function utilization: {0} of available time used", ((decimal)1.0 - (m_ticksPerFrame - (decimal)AveratePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
+                status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_totalMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
@@ -1010,6 +1217,21 @@ namespace TVA.Measurements
                 status.AppendLine();
                 status.AppendFormat("    Actual mean frame rate: {0} frames/sec", (m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
+
+                lock (m_frameRateTimers)
+                {
+                    FrameRateTimer timer;
+
+                    if (m_frameRateTimers.TryGetValue(m_framesPerSecond, out timer))
+                    {
+                        status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond);
+                        status.AppendLine();
+                    }
+
+                    status.AppendFormat("   Total frame rate timers: {0}", m_frameRateTimers.Count);
+                    status.AppendLine();
+                }
+
                 status.AppendFormat("        Queued frame count: {0}", m_frameQueue.Count);
                 status.AppendLine();
                 status.Append("      Last published frame: ");
@@ -1067,11 +1289,7 @@ namespace TVA.Measurements
                 {
                     if (disposing)
                     {
-                        if (m_publicationTimer != null)
-                        {
-                            DetachFromPublicationTimer(m_framesPerSecond);
-                        }
-                        m_publicationTimer = null;
+                        DetachFromFrameRateTimer(m_framesPerSecond);
 
                         if (m_publicationThread != null)
                         {
@@ -1126,9 +1344,6 @@ namespace TVA.Measurements
         /// </remarks>
         public virtual void Start()
         {
-            if (m_publicationTimer == null)
-                throw new InvalidOperationException("Publication timer was not initialized, concentrator cannot start");
-
             if (!m_enabled)
             {
                 // Reset statistics
@@ -1146,15 +1361,11 @@ namespace TVA.Measurements
                 m_startTime = DateTime.UtcNow.Ticks;
 #endif
                 m_frameQueue.Clear();
+                m_monitorTimer.Start();
 
                 // Start real-time frame publication
-
-                // TODO: How to do?
-
-                m_monitorTimer.Start();
+                m_enabled = true;
             }
-
-            m_enabled = true;
         }
 
         /// <summary>
@@ -1166,12 +1377,9 @@ namespace TVA.Measurements
             {
                 m_enabled = false;
 
-                if (m_publicationTimer != null)
-                    m_publicationTimer.Stop();
-                
                 if (m_monitorTimer != null)
                     m_monitorTimer.Stop();
-                
+
                 if (m_frameQueue != null)
                     m_frameQueue.Clear();
 
@@ -1486,20 +1694,20 @@ namespace TVA.Measurements
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
-        // Tick handler for precision timer simply signals waiting thread to publish
+        // Tick handler for frame rate timer simply signals waiting thread to publish
         private void StartFramePublication(object sender, EventArgs e)
         {
-            m_publicationWaitHandle.Set();
+            if (m_enabled)
+                m_publicationWaitHandle.Set();
         }
-        
-        // Member variables being updated in this method are only updated here so we don't worry about atomic operations on
-        // these variables. This method is the PrecisionTimer's "Tick" event delegate handler.
+
+        // Member variables being updated in this method are only updated here so we don't worry about
+        // atomic operations on these variables.
         private void PublishFrames()
         {
             IFrame frame;
             Ticks timestamp, distance;
             int frameIndex;
-            decimal timeOffset;
 
             // Keep thread alive...
             while (true)
@@ -1511,9 +1719,6 @@ namespace TVA.Measurements
                 {
                     try
                     {
-                        // Get time offset
-                        timeOffset = (m_timeResolution > 1 ? m_timeResolution / 2 : 1);
-
                         // Get top frame
                         frame = m_frameQueue.Head;
 
@@ -1545,7 +1750,7 @@ namespace TVA.Measurements
                             // Calculate index of this frame within its second - note that we have to calculate this
                             // value instead of using m_frameIndex since it is is possible for multiple frames to be
                             // published within one frame period if the system is stressed
-                            frameIndex = (int)(((decimal)timestamp.DistanceBeyondSecond() + timeOffset) / m_ticksPerFrame);
+                            frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
                             // Mark the frame as published to prevent any further sorting into this frame
                             lock (frame.Measurements)
@@ -1607,45 +1812,52 @@ namespace TVA.Measurements
                 UnpublishedSamples(this, new EventArgs<int>(secondsOfData));
         }
 
-        // Handle attach to publication timer
-        private void AttachToPublicationTimer(int framesPerSecond)
+        // Handle attach to frame rate timer
+        private void AttachToFrameRateTimer(int framesPerSecond)
         {
-            TimerState state;
-
-            lock (m_precisionTimers)
+            lock (m_frameRateTimers)
             {
-                if (m_precisionTimers.TryGetValue(framesPerSecond, out state))
+                FrameRateTimer timer;
+
+                // Get static frame rate timer for given frames per second creating it if needed
+                if (!m_frameRateTimers.TryGetValue(framesPerSecond, out timer))
                 {
-                    // Attach current instance method "StartFramePublication" to static timer event list
-                    state.Timer.Tick += StartFramePublication;
+                    // Create a new frame rate timer which includes a high-precision timer for frame processing
+                    timer = new FrameRateTimer(framesPerSecond);
 
-                    // If reference count is currently zero and we are attaching, then we start timer
-                    if (state.ReferenceCount == 0)
-                        state.Timer.Start(new EventArgs<TimerState>(state));
-
-                    // Increment reference count
-                    state.ReferenceCount++;
+                    // Add timer state for given rate to static collection
+                    m_frameRateTimers.Add(framesPerSecond, timer);
                 }
+
+                // Increment reference count and attach instance method "StartFramePublication" to static timer event list
+                timer.AddReference(StartFramePublication);
+                m_attachedToFrameRateTimer = true;
             }
         }
 
-        // Handle detach from publication timer
-        private void DetachFromPublicationTimer(int framesPerSecond)
+        // Handle detach from frame rate timer
+        private void DetachFromFrameRateTimer(int framesPerSecond)
         {
-            TimerState state;
-
-            lock (m_precisionTimers)
+            lock (m_frameRateTimers)
             {
-                if (m_precisionTimers.TryGetValue(framesPerSecond, out state))
+                if (m_attachedToFrameRateTimer)
                 {
-                    // Detach current instance method "StartFramePublication" from static timer event list
-                    state.Timer.Tick -= StartFramePublication;
+                    FrameRateTimer timer;
 
-                    // Decrement reference count
-                    state.ReferenceCount--;
+                    // Look up static frame rate timer for given frames per second
+                    if (m_frameRateTimers.TryGetValue(framesPerSecond, out timer))
+                    {
+                        // Decrement reference count and detach instance method "StartFramePublication" from static timer event list
+                        timer.RemoveReference(StartFramePublication);
+                        m_attachedToFrameRateTimer = false;
 
-                    if (state.ReferenceCount == 0)
-                        state.Timer.Stop();
+                        // If timer is no longer being referenced we stop it and remove it from static collection
+                        if (timer.ReferenceCount == 0)
+                        {
+                            timer.Dispose();
+                            m_frameRateTimers.Remove(framesPerSecond);
+                        }
+                    }
                 }
             }
         }
@@ -1655,92 +1867,14 @@ namespace TVA.Measurements
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<int, TimerState> m_precisionTimers;
+        private static Dictionary<int, FrameRateTimer> m_frameRateTimers;
 
         // Static Constructor
         static ConcentratorBase()
         {
-            m_precisionTimers = new Dictionary<int, TimerState>();
-        }
-
-        // Static Methods
-
-        // Handler to assign next timer period
-        private static void SetTimerPeriod(object sender, EventArgs e)
-        {
-            EventArgs<TimerState> eventArgs = e as EventArgs<TimerState>;
-
-            if (eventArgs != null)
-            {
-                TimerState state = eventArgs.Argument;
-                int period;
-
-                // First things first, prepare timer period for next call...
-                state.FrameIndex++;
-
-                if (state.FrameIndex >= state.FramesPerSecond)
-                    state.FrameIndex = 0;
-
-                // Get the frame period for this frame index
-                period = state.FramePeriods[state.FrameIndex];
-
-                // We only update timer period if it has changed since last call. Note that this is necessary since
-                // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
-                if (state.LastFramePeriod != period)
-                    state.Timer.Period = period;
-
-                state.LastFramePeriod = period;
-            }
-        }
-
-        // Wait times are not necessarily perfectly even (e.g., at 30 samples per second wait time per frame is 33.333... milliseconds)
-        // so we use this function to evenly distribute integer based millisecond wait times across a second.
-        private static int CalcWaitTimeForFrameIndex(int framesPerSecond, int frameIndex)
-        {
-            // Jian Zuo...
-            int millisecondsWaitTime;
-            int frameRate;
-            int deficit;
-
-            frameRate = (int)(Math.Round(1000.0D / framesPerSecond));
-            deficit = 1000 - frameRate * framesPerSecond;
-
-            if (deficit == 0)
-            {
-                millisecondsWaitTime = frameRate;
-            }
-            else
-            {
-                if (frameIndex == 0)
-                {
-                    millisecondsWaitTime = frameRate;
-                }
-                else if (frameIndex == framesPerSecond - 1)
-                {
-                    millisecondsWaitTime = frameRate + (deficit > 0 ? 1 : -1);
-                }
-                else
-                {
-                    double interval = framesPerSecond / Math.Abs((double)deficit);
-                    double pre_dis = mod_dis(frameIndex - 1, interval);
-                    double cur_dis = mod_dis(frameIndex, interval);
-                    double next_dis = mod_dis(frameIndex + 1, interval);
-
-                    millisecondsWaitTime = frameRate + ((cur_dis <= pre_dis && cur_dis < next_dis) ? (deficit > 0 ? 1 : -1) : 0);
-                }
-            }
-
-            return millisecondsWaitTime;
-        }
-
-        private static double mod_dis(int framesIndex, double interval)
-        {
-            double dis2 = (framesIndex + 1) % interval;
-            double dis1 = interval - dis2;
-            return (dis1 < dis2 ? dis1 : dis2);
+            m_frameRateTimers = new Dictionary<int, FrameRateTimer>();
         }
 
         #endregion
-        
     }
 }
