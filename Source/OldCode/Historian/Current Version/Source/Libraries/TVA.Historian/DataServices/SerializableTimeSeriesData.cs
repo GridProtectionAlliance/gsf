@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  11/26/2009 - Pinal C. Patel
 //       Removed Namespace from DataContract serialization.
+//  12/17/2009 - Pinal C. Patel
+//       Updated the serialization definition for XmlSerializer.
 //
 //*******************************************************************************************************
 
@@ -329,7 +331,7 @@ namespace TVA.Historian.DataServices
     /// <seealso cref="XmlSerializer"/>
     /// <seealso cref="DataContractSerializer"/>
     /// <seealso cref="System.Runtime.Serialization.Json.DataContractJsonSerializer"/>
-    [XmlRoot("TimeSeriesData"), DataContract(Name = "TimeSeriesData", Namespace = "")]
+    [XmlType("TimeSeriesData"), DataContract(Name = "TimeSeriesData", Namespace = "")]
     public class SerializableTimeSeriesData
     {
         #region [ Constructors ]
