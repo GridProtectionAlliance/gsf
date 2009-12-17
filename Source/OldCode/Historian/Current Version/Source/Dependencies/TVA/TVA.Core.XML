@@ -11687,6 +11687,20 @@
             <param name="value2">Right hand operand.</param>
             <returns>Integer result of subtraction.</returns>
         </member>
+        <member name="M:TVA.Int24.op_Increment(TVA.Int24)">
+            <summary>
+            Returns incremented value.
+            </summary>
+            <param name="value">The operand.</param>
+            <returns>Int24 result of increment.</returns>
+        </member>
+        <member name="M:TVA.Int24.op_Decrement(TVA.Int24)">
+            <summary>
+            Returns decremented value.
+            </summary>
+            <param name="value">The operand.</param>
+            <returns>Int24 result of decrement.</returns>
+        </member>
         <member name="M:TVA.Int24.op_Multiply(TVA.Int24,TVA.Int24)">
             <summary>
             Returns computed product of values.
@@ -14352,38 +14366,6 @@
             </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         </member>
-        <member name="P:TVA.Measurements.ConcentratorBase.TimeResolution">
-            <summary>
-            Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
-            </summary>
-            <remarks>
-            <list type="table">
-                <listheader>
-                    <term>Desired maximum resolution</term>
-                    <description>Value to assign</description>
-                </listheader>
-                <item>
-                    <term>Seconds</term>
-                    <description><see cref="F:TVA.Ticks.PerSecond"/></description>
-                </item>
-                <item>
-                    <term>Milliseconds</term>
-                    <description><see cref="F:TVA.Ticks.PerMillisecond"/></description>
-                </item>
-                <item>
-                    <term>Microseconds</term>
-                    <description><see cref="F:TVA.Ticks.PerMicrosecond"/></description>
-                </item>
-                <item>
-                    <term>100-Nanoseconds</term>
-                    <description>0</description>
-                </item>
-            </list>
-            Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds).
-            Assigning values values greater than <see cref="F:TVA.Ticks.PerSecond"/> will be set to <see cref="F:TVA.Ticks.PerSecond"/> since maximum
-            possible concentrator resolution is one second (i.e., 1 frame per second).
-            </remarks>
-        </member>
         <member name="P:TVA.Measurements.ConcentratorBase.TrackLatestMeasurements">
             <summary>
             Gets or sets flag to start tracking the absolute latest received measurement values.
@@ -14409,6 +14391,38 @@
             </summary>
             <remarks>
             Valid frame rates for a <see cref="T:TVA.Measurements.ConcentratorBase"/> are greater than 0 frames per second.
+            </remarks>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.TimeResolution">
+            <summary>
+            Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
+            </summary>
+            <remarks>
+            <list type="table">
+                <listheader>
+                    <term>Desired maximum resolution</term>
+                    <description>Value to assign</description>
+                </listheader>
+                <item>
+                    <term>Seconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/></description>
+                </item>
+                <item>
+                    <term>Milliseconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerMillisecond"/></description>
+                </item>
+                <item>
+                    <term>Microseconds</term>
+                    <description><see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerMicrosecond"/></description>
+                </item>
+                <item>
+                    <term>100-Nanoseconds</term>
+                    <description>0</description>
+                </item>
+            </list>
+            Assigning values less than zero will be set to zero since minimum possible concentrator resolution is one tick (100-nanoseconds). Assigning
+            values values greater than <see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/> will be set to <see cref="T:TVA.Ticks"/>.<see cref="F:TVA.Ticks.PerSecond"/>
+            since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
             </remarks>
         </member>
         <member name="P:TVA.Measurements.ConcentratorBase.TicksPerFrame">
@@ -14507,7 +14521,7 @@
             Gets the total number of seconds frames have spent in the publication process since concentrator started.
             </summary>
         </member>
-        <member name="P:TVA.Measurements.ConcentratorBase.AveratePublicationTimePerFrame">
+        <member name="P:TVA.Measurements.ConcentratorBase.AveragePublicationTimePerFrame">
             <summary>
             Gets the average required frame publication time, in seconds.
             </summary>
@@ -14524,6 +14538,68 @@
         <member name="P:TVA.Measurements.ConcentratorBase.FrameQueue">
             <summary>
             Gets a reference to the <see cref="P:TVA.Measurements.ConcentratorBase.FrameQueue"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Measurements.ConcentratorBase.FrameRateTimer">
+            <summary>
+            Frame rate timer.
+            </summary>
+            <remarks>
+            One static instance of this internal class is created per encountered frame rate.
+            </remarks>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.#ctor(System.Int32)">
+            <summary>
+            Create a new <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/> class.
+            </summary>
+            <param name="framesPerSecond">Desired frame rate for <see cref="T:TVA.PrecisionTimer"/>.</param>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.AddReference(System.EventHandler)">
+            <summary>
+            Adds a reference to this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
+            </summary>
+            <param name="tickFunction">Tick function to add to event list.</param>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.FrameRateTimer.RemoveReference(System.EventHandler)">
+            <summary>
+            Removes a reference to this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
+            </summary>
+            <param name="tickFunction">Tick function to remove from event list.</param>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.FrameRateTimer.Timer">
+            <summary>
+            Gets <see cref="T:TVA.PrecisionTimer"/> instance for this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.FrameRateTimer.FramesPerSecond">
+            <summary>
+            Gets frames per second for this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.FrameRateTimer.FramePeriods">
+            <summary>
+            Gets array of frame periods for this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.FrameRateTimer.ReferenceCount">
+            <summary>
+            Gets reference count for this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
             </summary>
         </member>
         <member name="T:TVA.Measurements.Frame">
@@ -14760,12 +14836,12 @@
             Removes current <see cref="P:TVA.Measurements.FrameQueue.Head"/> frame from the <see cref="T:TVA.Measurements.FrameQueue"/> after it has been processed and assigns a new <see cref="P:TVA.Measurements.FrameQueue.Head"/>.
             </summary>
         </member>
-        <member name="M:TVA.Measurements.FrameQueue.GetFrame(TVA.Ticks)">
+        <member name="M:TVA.Measurements.FrameQueue.GetFrame(System.Int64)">
             <summary>
             Gets <see cref="T:TVA.Measurements.IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="T:TVA.Measurements.IFrame"/> exists for
             the specified timestamp, one will be created.
             </summary>
-            <param name="timestamp">Timestamp, in ticks, for which to get or create <see cref="T:TVA.Measurements.IFrame"/>.</param>
+            <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="T:TVA.Measurements.IFrame"/>.</param>
             <remarks>
             Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
             is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
@@ -14774,14 +14850,14 @@
             </remarks>
             <returns>An existing or new <see cref="T:TVA.Measurements.IFrame"/> from the queue for the specified timestamp.</returns>
         </member>
-        <member name="P:TVA.Measurements.FrameQueue.TimeResolution">
-            <summary>
-            Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
-            </summary>
-        </member>
         <member name="P:TVA.Measurements.FrameQueue.TicksPerFrame">
             <summary>
             Gets or sets number of ticks per frame to be used by <see cref="T:TVA.Measurements.FrameQueue"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.FrameQueue.TimeResolution">
+            <summary>
+            Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
             </summary>
         </member>
         <member name="P:TVA.Measurements.FrameQueue.Head">
@@ -15720,7 +15796,7 @@
             </list>
             </para>
             <para>
-            Note that expectedFramesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
+            Note that framesPerSecond, lagTime and leadTime are required parameters, all other parameters are optional.
             </para>
             </remarks>
         </member>
@@ -23264,7 +23340,7 @@
         </member>
         <member name="M:TVA.PrecisionTimer.Start(System.EventArgs)">
             <summary>
-            Starts the <see cref="T:TVA.PrecisionTimer"/> with the specified <see cref="T:System.EventArgs"/>.
+            Starts the <see cref="T:TVA.PrecisionTimer"/> with the specified <see cref="P:TVA.PrecisionTimer.EventArgs"/>.
             </summary>
             <param name="userArgs">User defined event arguments to pass into raised <see cref="T:TVA.Ticks"/> event.</param>
             <exception cref="T:System.ObjectDisposedException">
@@ -23368,6 +23444,11 @@
         <member name="P:TVA.PrecisionTimer.IsRunning">
             <summary>
             Gets a value indicating whether the <see cref="T:TVA.PrecisionTimer"/> is running.
+            </summary>
+        </member>
+        <member name="P:TVA.PrecisionTimer.EventArgs">
+            <summary>
+            Gets <see cref="T:System.EventArgs"/> specified in <see cref="M:TVA.PrecisionTimer.Start(System.EventArgs)"/> used to pass into <see cref="E:TVA.PrecisionTimer.Tick"/> event.
             </summary>
         </member>
         <member name="P:TVA.PrecisionTimer.UtcNow">
@@ -25885,8 +25966,8 @@
             you needed to directly represent time in high-resolution, i.e., time with subsecond accuracy, using an object that will
             act like a long integer but handle time conversions. <see cref="T:TVA.Ticks"/> can also represent a "time period" (e.g., the
             number of ticks elapsed since a process started) and thus can also be used like a <see cref="T:System.TimeSpan"/>; when used in
-            this manner the <see cref="M:TVA.Ticks.ToString"/> method can be used to convert the <see cref="T:TVA.Ticks"/> value into a handy
-            textual representation of elapsed years, days, hours, minutes and seconds.
+            this manner the <see cref="M:TVA.Ticks.ToElapsedTimeString"/> method can be used to convert the <see cref="T:TVA.Ticks"/> value
+            into a handy textual representation of elapsed years, days, hours, minutes and seconds.
             </para>
             <para>
             This class behaves just like an <see cref="T:System.Int64"/> representing a time in ticks; it is implictly castable to and from
@@ -26106,20 +26187,61 @@
         </member>
         <member name="M:TVA.Ticks.ToString">
             <summary>
+            Converts the value of the <see cref="T:TVA.Ticks"/> value to its equivalent <see cref="T:System.DateTime"/> string representation.
+            </summary>
+            <returns>A <see cref="T:System.DateTime"/> string representation of the <see cref="T:TVA.Ticks"/> value.</returns>
+        </member>
+        <member name="M:TVA.Ticks.ToString(System.String)">
+            <summary>
+            Converts the <see cref="T:TVA.Ticks"/> value to its equivalent string representation, using
+            the specified <see cref="T:System.DateTime"/> format.
+            </summary>
+            <param name="format">A format string.</param>
+            <returns>
+            The string representation of the value of this instance as specified by format.
+            </returns>
+        </member>
+        <member name="M:TVA.Ticks.ToString(System.IFormatProvider)">
+            <summary>
+            Converts the <see cref="T:TVA.Ticks"/> value to its equivalent string representation, using
+            the specified culture-specific <see cref="T:System.DateTime"/> format information.
+            </summary>
+            <param name="provider">
+            A <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.
+            </param>
+            <returns>
+            The string representation of the value of this instance as specified by provider.
+            </returns>
+        </member>
+        <member name="M:TVA.Ticks.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            Converts the <see cref="T:TVA.Ticks"/> value to its equivalent string representation, using
+            specified format and culture-specific <see cref="T:System.DateTime"/> format information.
+            </summary>
+            <param name="format">A format specification.</param>
+            <param name="provider">
+            A <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.
+            </param>
+            <returns>
+            The string representation of the value of this instance as specified by format and provider.
+            </returns>
+        </member>
+        <member name="M:TVA.Ticks.ToElapsedTimeString">
+            <summary>
             Converts the <see cref="T:TVA.Ticks"/> value into a textual representation of years, days, hours,
             minutes and seconds.
             </summary>
             <remarks>
             Note that this ToString overload will not display fractional seconds. To allow display of
             fractional seconds, or completely remove second resolution from the textual representation,
-            use the <see cref="M:TVA.Ticks.ToString(System.Int32)"/> overload instead.
+            use the <see cref="M:TVA.Ticks.ToElapsedTimeString(System.Int32)"/> overload instead.
             </remarks>
             <returns>
             The string representation of the value of this instance, consisting of the number of
             years, days, hours, minutes and seconds represented by this value.
             </returns>
         </member>
-        <member name="M:TVA.Ticks.ToString(System.Int32)">
+        <member name="M:TVA.Ticks.ToElapsedTimeString(System.Int32)">
             <summary>
             Converts the <see cref="T:TVA.Ticks"/> value into a textual representation of years, days, hours,
             minutes and seconds with the specified number of fractional digits.
@@ -26131,7 +26253,7 @@
             years, days, hours, minutes and seconds represented by this value.
             </returns>
         </member>
-        <member name="M:TVA.Ticks.ToString(System.Int32,System.String[])">
+        <member name="M:TVA.Ticks.ToElapsedTimeString(System.Int32,System.String[])">
             <summary>
             Converts the <see cref="T:TVA.Ticks"/> value into a textual representation of years, days, hours,
             minutes and seconds with the specified number of fractional digits given string array of
@@ -26264,41 +26386,6 @@
             </summary>
             <returns>
             A 32-bit signed integer hash code.
-            </returns>
-        </member>
-        <member name="M:TVA.Ticks.ToString(System.String)">
-            <summary>
-            Converts this value to its equivalent string representation, using
-            the specified format.
-            </summary>
-            <param name="format">A format string.</param>
-            <returns>
-            The string representation of the value of this instance as specified by format.
-            </returns>
-        </member>
-        <member name="M:TVA.Ticks.ToString(System.IFormatProvider)">
-            <summary>
-            Converts this value to its equivalent string representation, using
-            the specified culture-specific format information.
-            </summary>
-            <param name="provider">
-            A <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.
-            </param>
-            <returns>
-            The string representation of the value of this instance as specified by provider.
-            </returns>
-        </member>
-        <member name="M:TVA.Ticks.ToString(System.String,System.IFormatProvider)">
-            <summary>
-            Converts this value to its equivalent string representation, using
-            specified format and culture-specific format information.
-            </summary>
-            <param name="format">A format specification.</param>
-            <param name="provider">
-            A <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.
-            </param>
-            <returns>
-            The string representation of the value of this instance as specified by format and provider.
             </returns>
         </member>
         <member name="M:TVA.Ticks.GetTypeCode">
@@ -27521,6 +27608,20 @@
             <param name="value1"><see cref="T:TVA.UInt24"/> left hand operand.</param>
             <param name="value2"><see cref="T:System.UInt32"/> right hand operand.</param>
             <returns><see cref="T:System.UInt32"/> value as result of subtraction operation.</returns>
+        </member>
+        <member name="M:TVA.UInt24.op_Increment(TVA.UInt24)">
+            <summary>
+            Returns incremented value.
+            </summary>
+            <param name="value">The operand.</param>
+            <returns><see cref="T:TVA.UInt24"/> result of increment.</returns>
+        </member>
+        <member name="M:TVA.UInt24.op_Decrement(TVA.UInt24)">
+            <summary>
+            Returns decremented value.
+            </summary>
+            <param name="value">The operand.</param>
+            <returns><see cref="T:TVA.UInt24"/> result of decrement.</returns>
         </member>
         <member name="M:TVA.UInt24.op_Multiply(TVA.UInt24,TVA.UInt24)">
             <summary>
