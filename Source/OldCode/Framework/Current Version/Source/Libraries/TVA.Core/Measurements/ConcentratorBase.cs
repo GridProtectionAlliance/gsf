@@ -617,7 +617,7 @@ namespace TVA.Measurements
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Create a new queue for managing real-time frames
-            m_frameQueue = new FrameQueue(this);
+            m_frameQueue = new FrameQueue(this.CreateNewFrame);
 
             // Set minimum timer resolution to one millisecond to improve timer accuracy
             PrecisionTimer.SetMinimumTimerResolution(1);

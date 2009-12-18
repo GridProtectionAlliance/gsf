@@ -243,19 +243,22 @@ namespace TVA.Measurements
     /// </summary>
     [CLSCompliant(false)]
     public class FrameQueue : IDisposable
-    {            
+    {
         #region [ Members ]
 
+        // Delegates
+        internal delegate IFrame CreateNewFrameFunction(Ticks timestamp);
+
         // Fields
-        private ConcentratorBase m_parent;              // Reference to parent concentrator instance
-        private LinkedList<IFrame> m_frameList;         // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<long, IFrame> m_frameHash;   // This list not guaranteed to be sorted, but used for fast frame lookup
-        private long m_publishedTicks;                  // Timstamp of last published frame
-        private IFrame m_head;                          // Reference to current top of the frame collection
-        private IFrame m_last;                          // Reference to last published frame
-        private long m_timeResolution;                  // Cached time resolution (max sorting resolution in ticks)
-        private double m_ticksPerFrame;                 // Cached ticks per frame
-        private bool m_disposed;                        // Object disposed flag
+        private CreateNewFrameFunction m_createNewFrame;    // Frame creation function
+        private LinkedList<IFrame> m_frameList;             // We keep this list sorted by timestamp so frames are processed in order
+        private Dictionary<long, IFrame> m_frameHash;       // This list not guaranteed to be sorted, but used for fast frame lookup
+        private long m_publishedTicks;                      // Timstamp of last published frame
+        private IFrame m_head;                              // Reference to current top of the frame collection
+        private IFrame m_last;                              // Reference to last published frame
+        private long m_timeResolution;                      // Cached time resolution (max sorting resolution in ticks)
+        private double m_ticksPerFrame;                     // Cached ticks per frame
+        private bool m_disposed;                            // Object disposed flag
 
         #endregion
 
@@ -264,16 +267,11 @@ namespace TVA.Measurements
         /// <summary>
         /// Creates a new <see cref="FrameQueue"/>.
         /// </summary>
-        /// <param name="parent">Reference to parent concentrator instance.</param>
-        internal FrameQueue(ConcentratorBase parent)
+        internal FrameQueue(CreateNewFrameFunction createNewFrame)
         {
-            // Calculate initial dictionary capacity based on concentrator specifications
-            int initialCapacity = (int)((1.0D + parent.LagTime + parent.LeadTime) * parent.FramesPerSecond);
-
-            m_parent = parent;
+            m_createNewFrame = createNewFrame;
             m_frameList = new LinkedList<IFrame>();
-            m_frameHash = new Dictionary<long, IFrame>(initialCapacity);
-            m_ticksPerFrame = parent.TicksPerFrame;
+            m_frameHash = new Dictionary<long, IFrame>();
         }
 
         /// <summary>
@@ -395,7 +393,7 @@ namespace TVA.Measurements
 
                         m_frameHash = null;
 
-                        m_parent = null;
+                        m_createNewFrame = null;
                         m_head = null;
                         m_last = null;
                     }
@@ -469,12 +467,12 @@ namespace TVA.Measurements
             IFrame frame = null;
             bool nodeAdded = false;
 
-            // Baseline timestamp to the top of the second
-            baseTicks = ticks - ticks % Ticks.PerSecond;
-
             // See if a maximum time resolution was specified
             if (m_timeResolution > 1)
             {
+                // Baseline timestamp to the top of the second
+                baseTicks = ticks - ticks % Ticks.PerSecond;
+
                 // Truncate timestamp to time resolution (i.e., remove fractional time)
                 resolutionTicks = baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution;
 
@@ -496,7 +494,7 @@ namespace TVA.Measurements
                         return frame;
 
                     // Didn't find frame for this timestamp so we create one
-                    frame = m_parent.CreateNewFrame(destinationTicks);
+                    frame = m_createNewFrame(destinationTicks);
 
                     if (m_frameList.Count > 0)
                     {
