@@ -14804,11 +14804,10 @@
             Represents a real-time queue of <see cref="T:TVA.Measurements.IFrame"/> instances used by the <see cref="T:TVA.Measurements.ConcentratorBase"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Measurements.FrameQueue.#ctor(TVA.Measurements.ConcentratorBase)">
+        <member name="M:TVA.Measurements.FrameQueue.#ctor(TVA.Measurements.FrameQueue.CreateNewFrameFunction)">
             <summary>
             Creates a new <see cref="T:TVA.Measurements.FrameQueue"/>.
             </summary>
-            <param name="parent">Reference to parent concentrator instance.</param>
         </member>
         <member name="M:TVA.Measurements.FrameQueue.Finalize">
             <summary>
