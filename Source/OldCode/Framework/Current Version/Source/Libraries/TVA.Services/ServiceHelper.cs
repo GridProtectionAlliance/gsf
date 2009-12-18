@@ -46,6 +46,8 @@
 //       Added new header and license agreement.
 //  10/23/2009 - Pinal C. Patel
 //       Modified UpdateStatus() method to allow the type of update to be specified.
+//  12/18/2009 - Pinal C. Patel
+//       Added message flooding control to UpdateStatus().
 //
 //*******************************************************************************************************
 
@@ -282,6 +284,7 @@ using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
 using TVA.Scheduling;
+using TVA.Collections;
 
 namespace TVA.Services
 {
@@ -348,12 +351,37 @@ namespace TVA.Services
     {
         #region [ Members ]
 
+        // Nested Types
+        private class StatusUpdate
+        {
+            public StatusUpdate(Guid client, UpdateType type, string message)
+            {
+                this.Client = client;
+                this.Type = type;
+                this.Message = message;
+            }
+
+            public Guid Client;
+            public UpdateType Type;
+            public string Message;
+        }
+
         // Constants
 
         /// <summary>
         /// Specifies the default value for the <see cref="LogStatusUpdates"/> property.
         /// </summary>
         public const bool DefaultLogStatusUpdates = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaxStatusUpdatesLength"/> property.
+        /// </summary>
+        public const int DefaultMaxStatusUpdatesLength = 8192;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaxStatusUpdatesFrequency"/> property.
+        /// </summary>
+        public const int DefaultMaxStatusUpdatesFrequency = 30;
 
         /// <summary>
         /// Specifies the default value for the <see cref="MonitorServiceHealth"/> property.
@@ -479,6 +507,8 @@ namespace TVA.Services
 
         // Fields
         private bool m_logStatusUpdates;
+        private int m_maxStatusUpdatesLength;
+        private int m_maxStatusUpdatesFrequency;
         private bool m_monitorServiceHealth;
         private int m_requestHistoryLimit;
         private bool m_supportTelnetSessions;
@@ -499,12 +529,15 @@ namespace TVA.Services
         private List<ClientRequestInfo> m_clientRequestHistory;
         private List<ClientRequestHandler> m_clientRequestHandlers;
         private Dictionary<ISupportLifecycle, bool> m_componentEnabledStates;
+        private ProcessQueue<StatusUpdate> m_statusUpdateQueue;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
         private bool m_suppressUpdates;
         private Guid m_remoteCommandClientID;
         private Process m_remoteCommandProcess;
+        private Ticks m_lastStatusUpdateTime;
+        private int m_statusUpdatesDisplayed;
 
         #endregion
 
@@ -516,7 +549,10 @@ namespace TVA.Services
         public ServiceHelper()
             : base()
         {
+            m_telnetSessionPassword = "s3cur3";
             m_logStatusUpdates = DefaultLogStatusUpdates;
+            m_maxStatusUpdatesLength = DefaultMaxStatusUpdatesLength;
+            m_maxStatusUpdatesFrequency = DefaultMaxStatusUpdatesFrequency;
             m_monitorServiceHealth = DefaultMonitorServiceHealth;
             m_requestHistoryLimit = DefaultRequestHistoryLimit;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
@@ -530,23 +566,26 @@ namespace TVA.Services
             m_serviceComponents = new List<object>();
             m_clientRequestHandlers = new List<ClientRequestHandler>();
             m_componentEnabledStates = new Dictionary<ISupportLifecycle, bool>();
-            m_telnetSessionPassword = "s3cur3";
 
             // Components
+            m_statusUpdateQueue = ProcessQueue<StatusUpdate>.CreateSynchronousQueue(ProcessStatusUpdates);
+            m_statusUpdateQueue.Name = "StatusUpdateQueue";
+            m_statusUpdateQueue.ProcessException += StatusUpdateQueue_ProcessException;
+
             m_statusLog = new LogFile();
-            m_statusLog.LogException += StatusLog_LogException;
             m_statusLog.FileName = "StatusLog.txt";
             m_statusLog.SettingsCategory = "StatusLog";
+            m_statusLog.LogException += StatusLog_LogException;
 
             m_processScheduler = new ScheduleManager();
-            m_processScheduler.ScheduleDue += Scheduler_ScheduleDue;
             m_processScheduler.SettingsCategory = "ProcessScheduler";
+            m_processScheduler.ScheduleDue += Scheduler_ScheduleDue;
 
             m_errorLogger = new ErrorLogger();
-            m_errorLogger.LoggingException += ErrorLogger_LoggingException;
             m_errorLogger.ExitOnUnhandledException = false;
             m_errorLogger.SettingsCategory = "ErrorLogger";
             m_errorLogger.ErrorLog.SettingsCategory = "ErrorLog";
+            m_errorLogger.LoggingException += ErrorLogger_LoggingException;
         }
 
         /// <summary>
@@ -568,7 +607,7 @@ namespace TVA.Services
         /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(UpdateType,string,object[])"/> 
         /// or <see cref="UpdateStatus(Guid,UpdateType,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
         /// </summary>
-        [Category("Settings"),
+        [Category("Updates"),
         DefaultValue(DefaultLogStatusUpdates),
         Description("Indicates whether messages sent using UpdateStatus() method overloads are to be logged to the StatusLog.")]
         public bool LogStatusUpdates
@@ -580,6 +619,50 @@ namespace TVA.Services
             set
             {
                 m_logStatusUpdates = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value being assigned is negative or zero.</exception>
+        [Category("Updates"),
+        DefaultValue(DefaultMaxStatusUpdatesLength),
+        Description("Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.")]
+        public int MaxStatusUpdatesLength 
+        {
+            get
+            {
+                return m_maxStatusUpdatesLength;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Value must be positive");
+
+                m_maxStatusUpdatesLength = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.
+        /// </summary>
+        /// <exception cref="ArgumentException">The value being assigned is negative or zero.</exception>
+        [Category("Updates"),
+        DefaultValue(DefaultMaxStatusUpdatesFrequency),
+        Description("Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.")]
+        public int MaxStatusUpdatesFrequency
+        {
+            get
+            {
+                return m_maxStatusUpdatesFrequency;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Value must be positive");
+
+                m_maxStatusUpdatesFrequency = value;
             }
         }
 
@@ -645,7 +728,7 @@ namespace TVA.Services
         /// Gets or sets a comma or semicolon delimited list of user logins allowed to connect to the <see cref="ServiceHelper"/>.
         /// </summary>
         /// <remarks>Use '*' to allow access to any remote user.</remarks>
-        /// <exception cref="ArgumentException">The value being assigned is a null or empty string.</exception>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Security"),
         DefaultValue(DefaultAllowedRemoteUsers),
         Description("Comma or semicolon delimited list of user logins allowed to connect to the ServiceHelper.")]
@@ -658,7 +741,7 @@ namespace TVA.Services
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentException();
+                    throw new ArgumentNullException("AllowedRemoteUsers");
 
                 m_allowedRemoteUsers = value;
             }
@@ -1083,6 +1166,10 @@ namespace TVA.Services
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 element = settings["LogStatusUpdates", true];
                 element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
+                element = settings["MaxStatusUpdatesLength", true];
+                element.Update(m_maxStatusUpdatesLength, element.Description, element.Encrypted);
+                element = settings["MaxStatusUpdatesFrequency", true];
+                element.Update(m_maxStatusUpdatesFrequency, element.Description, element.Encrypted);
                 element = settings["MonitorServiceHealth", true];
                 element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
                 element = settings["RequestHistoryLimit", true];
@@ -1131,6 +1218,8 @@ namespace TVA.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
+                settings.Add("MaxStatusUpdatesLength", m_maxStatusUpdatesLength, "Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.");
+                settings.Add("MaxStatusUpdatesFrequency", m_maxStatusUpdatesFrequency, "Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
                 settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
@@ -1139,6 +1228,8 @@ namespace TVA.Services
                 if (settings["TelnetSessionPassword"] != null)
                     m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
+                MaxStatusUpdatesLength = settings["MaxStatusUpdatesLength"].ValueAs(m_maxStatusUpdatesLength);
+                MaxStatusUpdatesFrequency = settings["MaxStatusUpdatesFrequency"].ValueAs(m_maxStatusUpdatesFrequency);
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
                 SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
@@ -1215,19 +1306,18 @@ namespace TVA.Services
             m_serviceComponents.Add(m_errorLogger);
             m_serviceComponents.Add(m_errorLogger.ErrorLog);
             m_serviceComponents.Add(m_remotingServer);
+            m_serviceComponents.Add(m_statusUpdateQueue);
 
             // Open log file if file logging is enabled.
             if (m_logStatusUpdates)
                 m_statusLog.Open();
 
-            // Start the scheduler if it is not running.
-            if (!m_processScheduler.IsRunning)
-                m_processScheduler.Start();
+            // Start all of the core components.
+            m_statusUpdateQueue.Start();
+            m_processScheduler.Start();
+            m_remotingServer.Start();
 
-            // Start the remoting server if it is not running.
-            if (m_remotingServer.CurrentState == ServerState.NotRunning)
-                m_remotingServer.Start();
-
+            m_enabled = true;
             OnServiceStarted();
         }
 
@@ -1246,8 +1336,8 @@ namespace TVA.Services
                     process.Abort();
             }
 
-            // Set flag to prevent status updates from being posted from other threads, at this point this might cause exceptions.
-            m_suppressUpdates = true;
+            m_enabled = false;          // Mark as disabled.
+            m_suppressUpdates = true;   // Suppress status updates.
 
             OnServiceStopped();
         }
@@ -1450,15 +1540,8 @@ namespace TVA.Services
         {
             if (!m_suppressUpdates)
             {
-                // Prepare the message.
-                message = string.Format(message, args);
-
-                // Send the status update to specified client(s)
-                SendUpdateClientStatusResponse(client, type, message);
-
-                // Log the status update to the log file if logging is enabled.
-                if (m_logStatusUpdates)
-                    m_statusLog.WriteTimestampedLine(message);
+                // Queue the status update for processing.
+                m_statusUpdateQueue.Add(new StatusUpdate(client, type, string.Format(message, args)));
             }
         }
 
@@ -1674,6 +1757,13 @@ namespace TVA.Services
                             m_remoteCommandProcess.Dispose();
                         }
 
+                        if (m_statusUpdateQueue != null)
+                        {
+                            m_statusUpdateQueue.ProcessException -= StatusUpdateQueue_ProcessException;
+                            m_statusUpdateQueue.Flush();
+                            m_statusUpdateQueue.Dispose();
+                        }
+
                         // Service processes are created and owned by remoting server, so we dispose them
                         if (m_processes != null)
                         {
@@ -1696,6 +1786,51 @@ namespace TVA.Services
                     m_disposed = true;          // Prevent duplicate dispose.
                 }
             }
+        }
+
+        private void ProcessStatusUpdates(StatusUpdate[] items)
+        {
+            bool displayUpdate = false;
+            int suppressedUpdates = 0;
+            foreach (StatusUpdate item in items)
+            {
+                if ((DateTime.Now.Ticks - m_lastStatusUpdateTime).ToSeconds() > 1)
+                {
+                    displayUpdate = true;
+                    m_statusUpdatesDisplayed = 1;
+                    m_lastStatusUpdateTime = DateTime.Now.Ticks;
+                }
+                else
+                {
+                    displayUpdate = m_statusUpdatesDisplayed <= m_maxStatusUpdatesFrequency;
+                    m_statusUpdatesDisplayed++;
+                }
+
+                // Send the status update to specified client(s).
+                if (displayUpdate)
+                {
+                    if (item.Message.Length <= m_maxStatusUpdatesLength)
+                    {
+                        SendUpdateClientStatusResponse(item.Client, item.Type, item.Message);
+                    }
+                    else
+                    {
+                        SendUpdateClientStatusResponse(item.Client, item.Type, item.Message.TruncateRight(m_maxStatusUpdatesLength));
+                        SendUpdateClientStatusResponse(item.Client, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update character(s) from being displayed to avoid flooding.\r\n\r\n", item.Message.Length - m_maxStatusUpdatesLength));
+                    }
+                }
+                else
+                {
+                    suppressedUpdates++;
+                }
+
+                // Log the status update to the log file if logging is enabled.
+                if (m_logStatusUpdates)
+                    m_statusLog.WriteTimestampedLine(item.Message);
+            }
+
+            if (suppressedUpdates > 0)
+                SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update(s) from being displayed to avoid flooding.\r\n\r\n", suppressedUpdates));
         }
 
         private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
@@ -1733,6 +1868,11 @@ namespace TVA.Services
             // Start the process execution if it exists.
             if (scheduledProcess != null)
                 scheduledProcess.Start();
+        }
+
+        private void StatusUpdateQueue_ProcessException(object sender, EventArgs<Exception> e)
+        {
+            m_errorLogger.Log(e.Argument);
         }
 
         private void StatusLog_LogException(object sender, EventArgs<System.Exception> e)
