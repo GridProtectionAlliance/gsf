@@ -63,9 +63,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{8A27F7
 		openPDC.snk = openPDC.snk
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodePlex", "CodePlex", "{22E38E2F-EB8B-451B-97B0-9C162717A064}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SoftwareApproach", "SoftwareApproach", "{22E38E2F-EB8B-451B-97B0-9C162717A064}"
 	ProjectSection(SolutionItems) = preProject
-		Dependencies\CodePlex\SoftwareApproach.TestingExtensions.dll = Dependencies\CodePlex\SoftwareApproach.TestingExtensions.dll
+		Dependencies\SoftwareApproach\SoftwareApproach.TestingExtensions.dll = Dependencies\SoftwareApproach\SoftwareApproach.TestingExtensions.dll
 	EndProjectSection
 EndProject
 Global
