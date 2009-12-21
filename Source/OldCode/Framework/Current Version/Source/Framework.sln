@@ -63,6 +63,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{8A27F7
 		openPDC.snk = openPDC.snk
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CodePlex", "CodePlex", "{22E38E2F-EB8B-451B-97B0-9C162717A064}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\CodePlex\SoftwareApproach.TestingExtensions.dll = Dependencies\CodePlex\SoftwareApproach.TestingExtensions.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 16
@@ -204,6 +209,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C9556EF5-7671-4E99-AC5B-BE6743E16EDF} = {13006BBE-434A-4027-940B-EAD752844137}
+		{22E38E2F-EB8B-451B-97B0-9C162717A064} = {13006BBE-434A-4027-940B-EAD752844137}
 		{B7E96B17-85C7-42C2-A5B0-DB6FAF6E5FAB} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
 		{2B2EB9BE-E6A9-406F-BFE6-FF46DD6BD264} = {D7805B20-D771-4546-90DD-CD98C4BA4436}
