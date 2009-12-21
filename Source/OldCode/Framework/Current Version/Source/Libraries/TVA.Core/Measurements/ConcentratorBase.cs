@@ -1606,15 +1606,9 @@ namespace TVA.Measurements
         /// <param name="frame"><see cref="IFrame"/> of measurements with the same timestamp that arrived within <see cref="ConcentratorBase.LagTime"/> that are ready for processing.</param>
         /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         /// <remarks>
-        /// <para>
         /// If user implemented publication function consistently exceeds available publishing time (i.e., <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds),
         /// concentration will fall behind. A small amount of this time is required by the <see cref="ConcentratorBase"/> for processing overhead, so actual total time
         /// available for user function process will always be slightly less than <c>1 / <see cref="ConcentratorBase.FramesPerSecond"/></c> seconds.
-        /// </para>
-        /// <para>
-        /// Only one publication function runs at any given time. If one concentrator falls behind, it will block all other concentrators until it catches up.
-        /// It is highly recommended that implementations run within the available publishing time.
-        /// </para>
         /// </remarks>
         protected abstract void PublishFrame(IFrame frame, int index);
 
