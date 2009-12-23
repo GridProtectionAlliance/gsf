@@ -811,7 +811,10 @@ namespace TVA.Measurements.Routing
             Match filterMatch;
 
             value = value.Trim();
-            filterMatch = m_filterExpression.Match(value);
+            lock (m_filterExpression)
+            {
+                filterMatch = m_filterExpression.Match(value);
+            }
 
             if (filterMatch.Success)
             {
@@ -849,7 +852,10 @@ namespace TVA.Measurements.Routing
             Match filterMatch;
 
             value = value.Trim();
-            filterMatch = m_filterExpression.Match(value);
+            lock (m_filterExpression)
+            {
+                filterMatch = m_filterExpression.Match(value);
+            }
 
             if (filterMatch.Success)
             {

@@ -288,7 +288,6 @@ namespace TVA.Measurements.Routing
         private IMeasurement[] m_outputMeasurements;
         private int m_minimumMeasurementsToUse;
         private ManualResetEvent m_initializeWaitHandle;
-        private Regex m_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private bool m_disposed;
 
         #endregion
