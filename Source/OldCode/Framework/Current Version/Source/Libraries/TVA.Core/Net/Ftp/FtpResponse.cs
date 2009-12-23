@@ -13,6 +13,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/23/2009 - Pinal C. Patel
+//       Modified the message in the exception thrown when no data is available on the wire to be read.
 //
 //*******************************************************************************************************
 
@@ -252,6 +254,7 @@ using System.Collections;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System;
 
 namespace TVA.Net.Ftp
 {
@@ -404,7 +407,6 @@ namespace TVA.Net.Ftp
         private char ReadAppendChar(NetworkStream stream, StringBuilder toAppend)
         {
             int i = stream.ReadByte();
-
             if (i > -1)
             {
                 char c = Encoding.ASCII.GetChars(new byte[] { (byte)i })[0];
@@ -413,7 +415,7 @@ namespace TVA.Net.Ftp
             }
             else
             {
-                throw new EndOfStreamException("Attempt to read past end of stream");
+                throw new TimeoutException("Server failed to respond in a timely manner");
             }
         }
 
@@ -424,7 +426,7 @@ namespace TVA.Net.Ftp
             while (true)
             {
                 // Read until carriage return received
-                while (ReadAppendChar(stream, response) != '\r') {}
+                while (ReadAppendChar(stream, response) != '\r') { }
 
                 // Skip thru any extra carriage returns
                 while (ReadAppendChar(stream, response) == '\r') { }
