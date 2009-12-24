@@ -15,6 +15,8 @@
 //       Added new header and license agreement.
 //  12/23/2009 - Pinal C. Patel
 //       Modified the message in the exception thrown when no data is available on the wire to be read.
+//  12/24/2009 - Pinal C. Patel
+//       Changed to wait indefinitely on a response from the server - need to introduce a timeout.
 //
 //*******************************************************************************************************
 
@@ -407,7 +409,7 @@ namespace TVA.Net.Ftp
         private char ReadAppendChar(NetworkStream stream, StringBuilder toAppend)
         {
             int i = stream.ReadByte();
-            if (i > -1)
+            if (i >= 0)
             {
                 char c = Encoding.ASCII.GetChars(new byte[] { (byte)i })[0];
                 toAppend.Append(c);
@@ -415,7 +417,7 @@ namespace TVA.Net.Ftp
             }
             else
             {
-                throw new TimeoutException("Server failed to respond in a timely manner");
+                return '\0';
             }
         }
 
