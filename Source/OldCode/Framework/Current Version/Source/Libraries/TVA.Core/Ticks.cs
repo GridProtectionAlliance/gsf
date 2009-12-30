@@ -1525,6 +1525,20 @@ namespace TVA
         }
 
         /// <summary>
+        /// Converts <paramref name="value"/>, in 100-nanosecond tick intervals, to microseconds.
+        /// </summary>
+        /// <param name="value">Number of ticks to convert to microseconds.</param>
+        /// <returns>Number microseconds represented by specified <paramref name="value"/> in ticks.</returns>
+        /// <remarks>
+        /// If <paramref name="value"/> represents an instant in time, returned value will represent the number of microseconds
+        /// that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public static double ToMicroseconds(Ticks value)
+        {
+            return value / (double)Ticks.PerMicrosecond;
+        }
+
+        /// <summary>
         /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in seconds.
         /// </summary>
         /// <param name="value">New <see cref="Ticks"/> value in seconds.</param>
@@ -1542,6 +1556,16 @@ namespace TVA
         public static Ticks FromMilliseconds(double value)
         {
             return new Ticks((long)(value * Ticks.PerMillisecond));
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="Ticks"/> from the specified <paramref name="value"/> in microseconds.
+        /// </summary>
+        /// <param name="value">New <see cref="Ticks"/> value in microseconds.</param>
+        /// <returns>New <see cref="Ticks"/> object from the specified <paramref name="value"/> in microseconds.</returns>
+        public static Ticks FromMicroseconds(double value)
+        {
+            return new Ticks((long)(value * Ticks.PerMicrosecond));
         }
 
         /// <summary>
