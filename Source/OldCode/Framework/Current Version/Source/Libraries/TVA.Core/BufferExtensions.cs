@@ -16,6 +16,15 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/31/2009 - Andrew K. Hill
+//       Modified the following methods per unit testing:
+//       BlockCopy(byte[], int, int)
+//       Combine(byte[], byte[])
+//       Combine(byte[], int, int, byte[], int, int)
+//       Combine(byte[][])
+//       IndexOfSequence(byte[], byte[])
+//       IndexOfSequence(byte[], byte[], int)
+//       IndexOfSequence(byte[], byte[], int, int)
 //
 //*******************************************************************************************************
 
@@ -258,6 +267,9 @@ namespace TVA
         /// </exception>
         public static byte[] BlockCopy(this byte[] source, int startIndex, int length)
         {
+            if (source == null)
+                throw new ArgumentNullException("source");
+
             if (startIndex < 0)
                 throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
 
@@ -282,6 +294,12 @@ namespace TVA
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[] source, byte[] other)
         {
+            if (source == null)
+                throw new ArgumentNullException("source");
+
+            if (other == null)
+                throw new ArgumentNullException("other");
+
             return source.Combine(0, source.Length, other, 0, other.Length);
         }
 
@@ -303,6 +321,12 @@ namespace TVA
         /// </exception>
         public static byte[] Combine(this byte[] source, int sourceOffset, int sourceCount, byte[] other, int otherOffset, int otherCount)
         {
+            if (source == null)
+                throw new ArgumentNullException("source");
+
+            if (other == null)
+                throw new ArgumentNullException("other");
+
             if (sourceOffset < 0)
                 throw new ArgumentOutOfRangeException("sourceOffset", "cannot be negative");
 
@@ -326,6 +350,10 @@ namespace TVA
 
             if (otherOffset + otherCount > other.Length)
                 throw new ArgumentOutOfRangeException("otherCount", "exceeds other buffer size");
+
+            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+            // if ((int.MaxValue - sourceCount - otherCount) < 0)
+            //    throw new ArgumentOutOfRangeException("sourceCount + otherCount", "exceeds maximum buffer size");
 
             // Combine buffers together as a single image
             byte[] combinedBuffer = new byte[sourceCount + otherCount];
@@ -382,11 +410,17 @@ namespace TVA
         /// <returns>Combined buffers.</returns>
         public static byte[] Combine(this byte[][] buffers)
         {
+            if (buffers == null)
+                throw new ArgumentNullException("buffers");
+
             MemoryStream combinedBuffer = new MemoryStream();
 
             // Combine all currently queued buffers
             for (int x = 0; x < buffers.Length; x++)
             {
+                if (buffers[x] == null)
+                    throw new ArgumentNullException("buffers[" + x + "]");
+
                 combinedBuffer.Write(buffers[x], 0, buffers[x].Length);
             }
 
@@ -402,6 +436,12 @@ namespace TVA
         /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind)
         {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            if (bytesToFind == null)
+                throw new ArgumentNullException("bytesToFind");
+
             return buffer.IndexOfSequence(bytesToFind, 0, buffer.Length);
         }
 
@@ -414,6 +454,12 @@ namespace TVA
         /// <returns>The zero-based index of the first occurance of the sequence of <paramref name="bytesToFind"/> in the <paramref name="buffer"/>, if found; otherwise, -1.</returns>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex)
         {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
+            if (bytesToFind == null)
+                throw new ArgumentNullException("bytesToFind");
+
             return buffer.IndexOfSequence(bytesToFind, startIndex, buffer.Length - startIndex);
         }
 
@@ -434,6 +480,9 @@ namespace TVA
         /// </exception>
         public static int IndexOfSequence(this byte[] buffer, byte[] bytesToFind, int startIndex, int length)
         {
+            if (buffer == null)
+                throw new ArgumentNullException("buffer");
+
             if (bytesToFind == null || bytesToFind.Length == 0)
                 throw new ArgumentNullException("bytesToFind");
 
@@ -448,6 +497,10 @@ namespace TVA
 
             if (startIndex + length > buffer.Length)
                 throw new ArgumentOutOfRangeException("length", "exceeds buffer size");
+
+            // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+            // if ((int.MaxValue - startIndex - length) < 0)
+            //    throw new ArgumentOutOfRangeException("startIndex + length", "exceeds maximum buffer size");            
 
             // Search for first byte in the sequence, if this doesn't exist then sequence doesn't exist
             int index = Array.IndexOf(buffer, bytesToFind[0], startIndex, length);
@@ -467,7 +520,8 @@ namespace TVA
                             // If sequence doesn't match, search for next first-byte
                             if (buffer[index + x] != bytesToFind[x])
                             {
-                                index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
+                                //index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index - startIndex));
+                                index = Array.IndexOf(buffer, bytesToFind[0], index + 1, length - (index + 1));
                                 break;
                             }
 
@@ -636,6 +690,14 @@ namespace TVA
 
                 if (otherOffset + count > other.Length)
                     throw new ArgumentOutOfRangeException("count", "exceeds other buffer size");
+
+                // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+                // if ((int.MaxValue - sourceOffset - count) < 0)
+                //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
+
+                // Overflow is possible, but unlikely.  Therefore, this is omitted for performance
+                // if ((int.MaxValue - otherOffset - count) < 0)
+                //    throw new ArgumentOutOfRangeException("sourceOffset + count", "exceeds maximum buffer size");
 
                 int comparision = 0;
 

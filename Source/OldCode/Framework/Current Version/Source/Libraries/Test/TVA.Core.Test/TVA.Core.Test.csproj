@@ -35,10 +35,22 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Pex.Framework, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Pex.Linq, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.Stubs.Framework, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Pex.Framework, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\Microsoft\Microsoft.Pex.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Pex.Linq, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\Microsoft\Microsoft.Pex.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Stubs.Framework, Version=0.20.41218.2, Culture=neutral, PublicKeyToken=76a274db078248c8, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\Microsoft\Microsoft.Stubs.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Dependencies\Microsoft\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+    </Reference>
     <Reference Include="SoftwareApproach.TestingExtensions, Version=1.0.0.0, Culture=neutral, PublicKeyToken=8643fe5b014704ca, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\Dependencies\SoftwareApproach\SoftwareApproach.TestingExtensions.dll</HintPath>
@@ -67,6 +79,46 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BufferExtensionsTest.BlockCopy.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine01.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine02.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine03.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine04.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.Combine05.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.CompareTo.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.CompareTo01.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.cs" />
+    <Compile Include="BufferExtensionsTest.IndexOfSequence.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.IndexOfSequence01.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.IndexOfSequence02.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="BufferExtensionsTest.IndexOfSequencePartial.g.cs">
+      <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
+    </Compile>
     <Compile Include="CommonTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\PexAssemblyInfo.cs" />

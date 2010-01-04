@@ -5,6 +5,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencie
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{C9556EF5-7671-4E99-AC5B-BE6743E16EDF}"
 	ProjectSection(SolutionItems) = preProject
+		Dependencies\Microsoft\Microsoft.Pex.Framework.dll = Dependencies\Microsoft\Microsoft.Pex.Framework.dll
+		Dependencies\Microsoft\Microsoft.Pex.Linq.dll = Dependencies\Microsoft\Microsoft.Pex.Linq.dll
+		Dependencies\Microsoft\Microsoft.Stubs.Framework.dll = Dependencies\Microsoft\Microsoft.Stubs.Framework.dll
+		Dependencies\Microsoft\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll = Dependencies\Microsoft\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
 		Dependencies\Microsoft\Microsoft.Web.Services3.dll = Dependencies\Microsoft\Microsoft.Web.Services3.dll
 	EndProjectSection
 EndProject
