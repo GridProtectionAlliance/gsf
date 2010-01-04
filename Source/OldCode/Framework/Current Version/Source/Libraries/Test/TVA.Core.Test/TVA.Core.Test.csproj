@@ -119,6 +119,22 @@
     <Compile Include="BufferExtensionsTest.IndexOfSequencePartial.g.cs">
       <DependentUpon>BufferExtensionsTest.cs</DependentUpon>
     </Compile>
+    <Compile Include="CharExtensionsTest.cs" />
+    <Compile Include="CharExtensionsTest.IsAny.g.cs">
+      <DependentUpon>CharExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CharExtensionsTest.IsInRange.g.cs">
+      <DependentUpon>CharExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CharExtensionsTest.IsNumeric.g.cs">
+      <DependentUpon>CharExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CharExtensionsTest.IsWordTerminator.g.cs">
+      <DependentUpon>CharExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="CharExtensionsTest.RegexEncode.g.cs">
+      <DependentUpon>CharExtensionsTest.cs</DependentUpon>
+    </Compile>
     <Compile Include="CommonTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\PexAssemblyInfo.cs" />

@@ -14,6 +14,9 @@
 //       Updated comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/04/2010 - Andrew K. Hill
+//       Modified the following methods per unit testing:
+//       IsAny(char, IEnumerable<char>)
 //
 //*******************************************************************************************************
 
@@ -304,6 +307,9 @@ namespace TVA
         /// <returns>Boolean value indicating a that the character is in the array.</returns>
         public static bool IsAny(this char value, IEnumerable<char> testChars)
         {
+            if (testChars == null)
+                throw new ArgumentNullException("testChars");
+
             foreach (char c in testChars)
             {
                 if (value == c)
