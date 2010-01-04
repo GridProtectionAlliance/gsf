@@ -41,6 +41,9 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/04/2010 - J. Ritchie Carroll
+//       Removed hard thread abort from shutdown which will allow current processing items
+//       to complete before terminating thread.
 //
 //*******************************************************************************************************
 
@@ -1311,10 +1314,8 @@ namespace TVA.Collections
 
             if (m_processingIsRealTime)
             {
-                // Stops real-time processing thread.
-                if (m_realTimeProcessThread != null)
-                    m_realTimeProcessThread.Abort();
-
+                // Remove reference to process thread - it will stop gracefully after it has finished processing
+                // current set of items since enabled is false...
                 m_realTimeProcessThread = null;
             }
             else
@@ -1670,7 +1671,7 @@ namespace TVA.Collections
         private void RealTimeThreadProc()
         {
             // Creates a real-time processing loop that will process items as quickly as possible.
-            while (true)
+            while (m_enabled)
             {
                 if (m_processItemsFunction == null)
                 {
