@@ -20,6 +20,14 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/06/2010 - Andrew K. Hill
+//       Modified the following methods per unit testing:
+//       LocalTimeTo(DateTime, string)
+//       LocalTimeTo(DateTime, TimeZoneInfo)
+//       UniversalTimeTo(DateTime, string)
+//       UniversalTimeTo(DateTime, TimeZoneInfo)
+//       TimeZoneToTimeZone(DateTime, string, string)
+//       TimeZoneToTimeZone(DateTime, TimeZoneInfo, TimeZoneInfo)
 //
 //*******************************************************************************************************
 
@@ -405,6 +413,9 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeTo(this DateTime timestamp, string destinationTimeZoneStandardName)
         {
+            if (destinationTimeZoneStandardName == null)
+                throw new ArgumentNullException("destinationTimeZoneStandardName");
+
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
 
@@ -416,6 +427,9 @@ namespace TVA
         /// </returns>
         public static DateTime LocalTimeTo(this DateTime timestamp, TimeZoneInfo destinationTimeZone)
         {
+            if (destinationTimeZone == null)
+                throw new ArgumentNullException("destinationTimeZone");
+
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.Local, destinationTimeZone);
         }
 
@@ -468,6 +482,9 @@ namespace TVA
         /// <returns>The timestamp in the specified time zone.</returns>
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, string destinationTimeZoneStandardName)
         {
+            if (destinationTimeZoneStandardName == null)
+                throw new ArgumentNullException("destinationTimeZoneStandardName");
+
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
 
@@ -480,6 +497,9 @@ namespace TVA
         /// <returns>The timestamp in the specified time zone.</returns>
         public static DateTime UniversalTimeTo(this DateTime universalTimestamp, TimeZoneInfo destinationTimeZone)
         {
+            if (destinationTimeZone == null)
+                throw new ArgumentNullException("destinationTimeZone");
+
             return TimeZoneInfo.ConvertTime(universalTimestamp, TimeZoneInfo.Utc, destinationTimeZone);
         }
 
@@ -493,6 +513,12 @@ namespace TVA
         /// </returns>
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, string sourceTimeZoneStandardName, string destinationTimeZoneStandardName)
         {
+            if (sourceTimeZoneStandardName == null)
+                throw new ArgumentNullException("sourceTimeZoneStandardName");
+
+            if (destinationTimeZoneStandardName == null)
+                throw new ArgumentNullException("destinationTimeZoneStandardName");
+
             return TimeZoneInfo.ConvertTime(timestamp, TimeZoneInfo.FindSystemTimeZoneById(sourceTimeZoneStandardName), TimeZoneInfo.FindSystemTimeZoneById(destinationTimeZoneStandardName));
         }
 
@@ -506,6 +532,12 @@ namespace TVA
         /// </returns>
         public static DateTime TimeZoneToTimeZone(this DateTime timestamp, TimeZoneInfo sourceTimeZone, TimeZoneInfo destinationTimeZone)
         {
+            if (sourceTimeZone == null)
+                throw new ArgumentNullException("sourceTimeZone");
+
+            if (destinationTimeZone == null)
+                throw new ArgumentNullException("destinationTimeZone");
+
             return TimeZoneInfo.ConvertTime(timestamp, sourceTimeZone, destinationTimeZone);
         }
 

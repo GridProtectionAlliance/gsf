@@ -136,6 +136,73 @@
       <DependentUpon>CharExtensionsTest.cs</DependentUpon>
     </Compile>
     <Compile Include="CommonTest.cs" />
+    <Compile Include="DateTimeExtensionsTest.AbbreviatedMonthName.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.AbbreviatedWeekdayName.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.BaselinedTimestamp.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.cs" />
+    <Compile Include="DateTimeExtensionsTest.DistanceBeyondSecond.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeIsValid.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeTo.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeToCentralTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeToEasternTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeToMountainTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeToPacificTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.LocalTimeToUniversalTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.MonthName.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.ShortWeekdayName.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.TimeIsValid.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.TimeZoneToTimeZone.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UniversalTimeTo.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UniversalTimeToCentralTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UniversalTimeToEasternTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UniversalTimeToMountainTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UniversalTimeToPacificTime.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.UtcTimeIsValid.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DateTimeExtensionsTest.WeekdayName.g.cs">
+      <DependentUpon>DateTimeExtensionsTest.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\PexAssemblyInfo.cs" />
   </ItemGroup>
