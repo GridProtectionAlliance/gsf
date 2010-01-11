@@ -45,6 +45,15 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/11/2010 - Galen K. Riley
+//      Bug fixes for unit tests:
+//      ConvertToType - Fix to throw ArgumentNullException instead of NullReferenceException for null value
+//      ConvertToType - Handling failed conversions better. Calling ConvertToType<int>("\0") returns properly
+//      JoinKeyValuePairs - Fix to throw ArgumentNullException instead of NullReferenceException
+//      ReplaceCharacters - Fix to throw ArgumentNullException instead of NullReferenceException for null replacementCharacter
+//      RemoveCharacters - Fix to throw ArgumentNullException instead of NullReferenceException for null characterTestFunction
+//      ReplaceCrLfs - Fix to throw ArgumentNullException instead of NullReferenceException for null value
+//      RegexDecode - Fix to throw ArgumentNullException instead of NullReferenceException for null value
 //
 //*******************************************************************************************************
 
@@ -543,7 +552,7 @@ namespace TVA
         /// encountered <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
         public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter, char startValueDelimeter, char endValueDelimeter)
         {
-            if (value == null)
+            if (value == (string)null)
                 throw new ArgumentNullException("value");
 
             if (parameterDelimeter == keyValueDelimeter || 
