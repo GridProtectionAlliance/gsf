@@ -255,7 +255,20 @@ Public Class MeasurementExporter
                                 If referenceAngle Is Nothing Then
                                     fileData.Append(measurementValue)
                                 Else
-                                    fileData.Append(referenceAngle.AdjustedValue - measurementValue)
+                                    ' Apply angle wrapping algorithm
+                                    Dim dis0 As Double = Math.Abs(measurementValue - referenceAngle.AdjustedValue)
+                                    Dim dis1 As Double = Math.Abs(measurementValue - referenceAngle.AdjustedValue + 360.0)
+                                    Dim dis2 As Double = Math.Abs(measurementValue - referenceAngle.AdjustedValue - 360.0)
+
+                                    If (dis0 < dis1) And (dis0 < dis2) Then
+                                        measurementValue = measurementValue - referenceAngle.AdjustedValue
+                                    ElseIf (dis1 < dis2) Then
+                                        measurementValue = measurementValue - referenceAngle.AdjustedValue + 360.0
+                                    Else
+                                        measurementValue = measurementValue - referenceAngle.AdjustedValue - 360.0
+                                    End If
+
+                                    fileData.Append(measurementValue)
                                 End If
                             ElseIf String.Compare(signalType, "VPHM") = 0 Then
                                 ' Voltage from PMU's is line-to-neutral volts, we convert this to line-to-line kilovolts
