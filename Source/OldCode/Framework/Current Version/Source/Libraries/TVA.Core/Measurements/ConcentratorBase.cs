@@ -605,7 +605,6 @@ namespace TVA.Measurements
         /// Concentration will not begin until consumer "Starts" concentrator (i.e., calling <see cref="ConcentratorBase.Start"/> method or setting
         /// <c><see cref="ConcentratorBase.Enabled"/> = true</c>).
         /// </remarks>
-        /// <exception cref="ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
         protected ConcentratorBase()
         {
 #if UseHighResolutionTime

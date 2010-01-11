@@ -297,9 +297,13 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Creates a new <see cref="ActionAdapterBase"/>.
         /// </summary>
-        protected ActionAdapterBase()
+        protected ActionAdapterBase() : base()
         {
+            // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
+            
+            // For most implementations millisecond resolution will be sufficient
+            base.TimeResolution = Ticks.PerMillisecond;
         }
 
         #endregion

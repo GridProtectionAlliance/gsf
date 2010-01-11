@@ -467,21 +467,18 @@ namespace TVA.Measurements
             IFrame frame = null;
             bool nodeAdded = false;
 
+            // Baseline timestamp to the top of the second
+            baseTicks = ticks - ticks % Ticks.PerSecond;
+
             // See if a maximum time resolution was specified
             if (m_timeResolution > 1)
-            {
-                // Baseline timestamp to the top of the second
-                baseTicks = ticks - ticks % Ticks.PerSecond;
-
                 // Truncate timestamp to time resolution (i.e., remove fractional time)
                 resolutionTicks = baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution;
-
-                // Align timestamp to nearest frame (i.e., put timestamp in the correct bucket)
-                destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
-            }
             else
-                destinationTicks = ticks;
+                resolutionTicks = ticks;
 
+            // Align timestamp to nearest frame (i.e., put timestamp in the correct bucket)
+            destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > m_publishedTicks)
