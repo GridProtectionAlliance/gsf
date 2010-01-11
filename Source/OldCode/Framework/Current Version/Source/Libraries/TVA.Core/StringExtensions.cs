@@ -335,7 +335,19 @@ namespace TVA
         /// </remarks>
         public static T ConvertToType<T>(this string value)
         {
-            T obj = (T)value.ConvertToType(typeof(T));
+            // <pex>
+            if (value == (string)null)
+                throw new ArgumentNullException("value");
+            // </pex>
+
+            T obj = default(T);
+
+            try
+            {
+                // This does not result in null for all failed conversions
+                obj = (T)value.ConvertToType(typeof(T));
+            }
+            catch (Exception){}
 
             if (obj == null)
                 obj = default(T);
@@ -394,6 +406,9 @@ namespace TVA
         /// <remarks>Returns a single element array with an empty string if source string is null or empty.</remarks>
         public static string[] GetSegments(this string value, int segmentSize)
         {
+            if (segmentSize <= 0)
+                throw new ArgumentOutOfRangeException("segmentSize", "segmentSize must be greater than zero.");
+
             if (string.IsNullOrEmpty(value)) return new string[] { "" };
 
             int totalSegments = (int)Math.Ceiling(value.Length / (double)segmentSize);
@@ -429,6 +444,10 @@ namespace TVA
         /// <returns>A string of key-value pairs.</returns>
         public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter, char keyValueDelimeter)
         {
+            // <pex>
+            if (pairs == (Dictionary<string, string>)null)
+                throw new ArgumentNullException("pairs");
+            // </pex>
             StringBuilder result = new StringBuilder();
             
             foreach (string key in pairs.Keys)
@@ -650,6 +669,10 @@ namespace TVA
         /// <remarks>Allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160)).</remarks>
         public static string ReplaceCharacters(this string value, char replacementCharacter, Func<char, bool> characterTestFunction)
 		{
+            // <pex>
+            if (characterTestFunction == (Func<char, bool>)null)
+                throw new ArgumentNullException("characterTestFunction");
+            // </pex>
 			if (string.IsNullOrEmpty(value)) return "";
 			
 			StringBuilder result = new StringBuilder();
@@ -676,6 +699,10 @@ namespace TVA
         /// <returns>Returns <paramref name="value" /> with all characters passing delegate test removed.</returns>
         public static string RemoveCharacters(this string value, Func<char, bool> characterTestFunction)
 		{
+            // <pex>
+            if (characterTestFunction == (Func<char, bool>)null)
+                throw new ArgumentNullException("characterTestFunction");
+            // </pex>
 			if (string.IsNullOrEmpty(value)) return "";
 			
 			StringBuilder result = new StringBuilder();
@@ -765,6 +792,10 @@ namespace TVA
         /// <remarks>Allows you to specify a replacement character (e.g., you may want to use a non-breaking space: Convert.ToChar(160)).</remarks>
         public static string ReplaceCrLfs(this string value, char replacementCharacter)
         {
+            // <pex>
+            if (value == (string)null)
+                throw new ArgumentNullException("value");
+            // </pex>
             return value.Replace(Environment.NewLine, replacementCharacter.ToString()).ReplaceCharacters(replacementCharacter, c => c == '\r' || c == '\n');
         }
 
@@ -1050,6 +1081,10 @@ namespace TVA
         /// <returns>Standard Unicode character representation of specified Regular Expression character.</returns>
         public static char RegexDecode(this string value)
         {
+            // <pex>
+            if (value == (string)null)
+                throw new ArgumentNullException("value");
+            // </pex>
             return Convert.ToChar(Convert.ToUInt16(value.Replace("\\u", "0x"), 16));
         }
 
