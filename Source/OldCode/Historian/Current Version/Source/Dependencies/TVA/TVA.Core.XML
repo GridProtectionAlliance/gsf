@@ -14150,7 +14150,6 @@
             Concentration will not begin until consumer "Starts" concentrator (i.e., calling <see cref="M:TVA.Measurements.ConcentratorBase.Start"/> method or setting
             <c><see cref="P:TVA.Measurements.ConcentratorBase.Enabled"/> = true</c>).
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">Specified argument is outside of allowed value range (see remarks).</exception>
         </member>
         <member name="M:TVA.Measurements.ConcentratorBase.#ctor(System.Int32,System.Double,System.Double)">
             <summary>
@@ -26635,6 +26634,17 @@
             that have elapsed since 12:00:00 midnight, January 1, 0001.
             </remarks>
         </member>
+        <member name="M:TVA.Ticks.ToMicroseconds(TVA.Ticks)">
+            <summary>
+            Converts <paramref name="value"/>, in 100-nanosecond tick intervals, to microseconds.
+            </summary>
+            <param name="value">Number of ticks to convert to microseconds.</param>
+            <returns>Number microseconds represented by specified <paramref name="value"/> in ticks.</returns>
+            <remarks>
+            If <paramref name="value"/> represents an instant in time, returned value will represent the number of microseconds
+            that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
         <member name="M:TVA.Ticks.FromSeconds(System.Double)">
             <summary>
             Creates a new <see cref="T:TVA.Ticks"/> from the specified <paramref name="value"/> in seconds.
@@ -26648,6 +26658,13 @@
             </summary>
             <param name="value">New <see cref="T:TVA.Ticks"/> value in milliseconds.</param>
             <returns>New <see cref="T:TVA.Ticks"/> object from the specified <paramref name="value"/> in milliseconds.</returns>
+        </member>
+        <member name="M:TVA.Ticks.FromMicroseconds(System.Double)">
+            <summary>
+            Creates a new <see cref="T:TVA.Ticks"/> from the specified <paramref name="value"/> in microseconds.
+            </summary>
+            <param name="value">New <see cref="T:TVA.Ticks"/> value in microseconds.</param>
+            <returns>New <see cref="T:TVA.Ticks"/> object from the specified <paramref name="value"/> in microseconds.</returns>
         </member>
         <member name="M:TVA.Ticks.Parse(System.String)">
             <summary>
