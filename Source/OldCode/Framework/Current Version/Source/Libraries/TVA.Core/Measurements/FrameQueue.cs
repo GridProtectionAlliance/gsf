@@ -14,6 +14,9 @@
 //       Converted to C#.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/13/2010 - Stephen C. Wills
+//       Developed an alternate frame destination timestamp selection algorithm which performs better
+//       in more cases (e.g., at higher than millisecond resolutions).
 //
 //*******************************************************************************************************
 
@@ -463,22 +466,39 @@ namespace TVA.Measurements
         public IFrame GetFrame(long ticks)
         {
             // Calculate destination ticks for this frame
-            long baseTicks, resolutionTicks, destinationTicks;
             IFrame frame = null;
             bool nodeAdded = false;
+            long baseTicks, ticksBeyondSecond, destinationTicks, nextDestinationTicks;
+            double nearestDestinationTicks;
 
             // Baseline timestamp to the top of the second
             baseTicks = ticks - ticks % Ticks.PerSecond;
 
-            // See if a maximum time resolution was specified
-            if (m_timeResolution > 1)
-                // Truncate timestamp to time resolution (i.e., remove fractional time)
-                resolutionTicks = baseTicks + ((ticks - baseTicks) / m_timeResolution) * m_timeResolution;
-            else
-                resolutionTicks = ticks;
+            // Remove the seconds from ticks
+            ticksBeyondSecond = ticks - baseTicks;
 
-            // Align timestamp to nearest frame (i.e., put timestamp in the correct bucket)
-            destinationTicks = baseTicks + (long)(Math.Ceiling((resolutionTicks - baseTicks) / m_ticksPerFrame) * m_ticksPerFrame);
+            // Round down to the nearest frame timestamp
+            nearestDestinationTicks = (long)(ticksBeyondSecond / m_ticksPerFrame) * m_ticksPerFrame;
+
+            // The desired frame has either the previously calculated timestamp or the next timestamp
+            nextDestinationTicks = (long)(nearestDestinationTicks + TicksPerFrame);
+
+            // Figure out which of the two calculated frame timestamps correspond to the desired frame
+            if (m_timeResolution <= 1)
+            {
+                if (nextDestinationTicks <= ticksBeyondSecond)
+                    nearestDestinationTicks = nextDestinationTicks;
+            }
+            else
+            {
+                // If, after translating nextDestinationTicks to the time resolution, it is less than
+                // or equal to ticks, nextDestinationTicks is the desired frame
+                if ((nextDestinationTicks / m_timeResolution) * m_timeResolution <= ticksBeyondSecond)
+                    nearestDestinationTicks = nextDestinationTicks;
+            }
+
+            // Convert the destination timestamp to an integer
+            destinationTicks = baseTicks + (long)nearestDestinationTicks;
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > m_publishedTicks)
