@@ -261,6 +261,7 @@ namespace TVA.Measurements
         private IFrame m_last;                              // Reference to last published frame
         private long m_timeResolution;                      // Cached time resolution (max sorting resolution in ticks)
         private double m_ticksPerFrame;                     // Cached ticks per frame
+        private int m_framesPerSecond;                      // Cached frames per second
         private bool m_disposed;                            // Object disposed flag
 
         #endregion
@@ -301,6 +302,7 @@ namespace TVA.Measurements
             set
             {
                 m_ticksPerFrame = value;
+                m_framesPerSecond = (int)(Ticks.PerSecond / value);
             }
         }
 
@@ -468,8 +470,7 @@ namespace TVA.Measurements
             // Calculate destination ticks for this frame
             IFrame frame = null;
             bool nodeAdded = false;
-            long baseTicks, ticksBeyondSecond, destinationTicks, nextDestinationTicks;
-            double nearestDestinationTicks;
+            long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
 
             // Baseline timestamp to the top of the second
             baseTicks = ticks - ticks % Ticks.PerSecond;
@@ -477,28 +478,34 @@ namespace TVA.Measurements
             // Remove the seconds from ticks
             ticksBeyondSecond = ticks - baseTicks;
 
-            // Round down to the nearest frame timestamp
-            nearestDestinationTicks = (long)(ticksBeyondSecond / m_ticksPerFrame) * m_ticksPerFrame;
+            // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
+            // rounded down to the nearest frame
+            frameIndex = (long)(ticksBeyondSecond / m_ticksPerFrame);
 
-            // The desired frame has either the previously calculated timestamp or the next timestamp
-            nextDestinationTicks = (long)(nearestDestinationTicks + TicksPerFrame);
+            // Calculate the timestamp of the nearest frame rounded up
+            nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / m_framesPerSecond;
 
-            // Figure out which of the two calculated frame timestamps correspond to the desired frame
+            // Determine whether the desired frame is the nearest
+            // frame rounded down or the nearest frame rounded up
             if (m_timeResolution <= 1)
             {
                 if (nextDestinationTicks <= ticksBeyondSecond)
-                    nearestDestinationTicks = nextDestinationTicks;
+                    destinationTicks = nextDestinationTicks;
+                else
+                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
             }
             else
             {
                 // If, after translating nextDestinationTicks to the time resolution, it is less than
-                // or equal to ticks, nextDestinationTicks is the desired frame
+                // or equal to ticks, nextDestinationTicks corresponds to the desired frame
                 if ((nextDestinationTicks / m_timeResolution) * m_timeResolution <= ticksBeyondSecond)
-                    nearestDestinationTicks = nextDestinationTicks;
+                    destinationTicks = nextDestinationTicks;
+                else
+                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
             }
 
-            // Convert the destination timestamp to an integer
-            destinationTicks = baseTicks + (long)nearestDestinationTicks;
+            // Recover the seconds that were removed
+            destinationTicks += baseTicks;
 
             // Make sure ticks are newer than latest published ticks...
             if (destinationTicks > m_publishedTicks)
