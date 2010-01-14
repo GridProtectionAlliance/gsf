@@ -817,7 +817,7 @@ namespace TVA.Measurements
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
                     if (m_frameQueue != null)
-                        m_frameQueue.TicksPerFrame = m_ticksPerFrame;
+                        m_frameQueue.FramesPerSecond = m_framesPerSecond;
 
                     // Subscribe to frame rate timer, creating it if it doesn't exist
                     AttachToFrameRateTimer(m_framesPerSecond);
