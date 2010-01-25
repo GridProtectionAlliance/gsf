@@ -123,6 +123,7 @@
     <Compile Include="ErrorManagement\NamespaceDoc.cs" />
     <Compile Include="ErrorManagement\SmtpTraceListener.cs" />
     <Compile Include="EventArgs.cs" />
+    <Compile Include="FastObjectFactory.cs" />
     <Compile Include="IdentifiableItem.cs" />
     <Compile Include="Identity\NamespaceDoc.cs" />
     <Compile Include="Identity\UserInfo.cs" />

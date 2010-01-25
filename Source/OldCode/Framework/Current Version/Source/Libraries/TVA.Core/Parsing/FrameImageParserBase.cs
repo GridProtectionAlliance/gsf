@@ -277,11 +277,8 @@ namespace TVA.Parsing
         {
             public Type RuntimeType;
             public TTypeIdentifier TypeID;
-            public DefaultConstructor CreateNew;
+            public Func<TOutputType> CreateNew;
         }
-
-        // Delegates
-        private delegate TOutputType DefaultConstructor();
 
         // Events
 
@@ -407,10 +404,7 @@ namespace TVA.Parsing
             base.Start();
 
             ConstructorInfo typeCtor = null;
-            AssemblyBuilder asmBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName("FrameParser"), AssemblyBuilderAccess.Run);
-            ModuleBuilder modBuilder = asmBuilder.DefineDynamicModule("Helper");
-            TypeBuilder typeBuilder = modBuilder.DefineType("ClassFactory");
-            List<TypeInfo> outputTypes = new List<TypeInfo>(); // Temporarily hold output types until their IDs are determined.
+            List<TypeInfo> outputTypes = new List<TypeInfo>();  // Temporarily hold output types until their IDs are determined.
 
             foreach (Type asmType in implementations)
             {
@@ -432,30 +426,11 @@ namespace TVA.Parsing
                     //      - type is related to class or interface specified for the output
                     TypeInfo outputType = new TypeInfo();
                     outputType.RuntimeType = asmType;
-
-                    // We employ the best peforming way of instantiating objects using reflection.
-                    // See: http://blogs.msdn.com/haibo_luo/archive/2005/11/17/494009.aspx
-
-                    // Invokation approach: Reflection.Emit + Delegate
-                    MethodBuilder dynamicTypeCtor = typeBuilder.DefineMethod(asmType.Name, MethodAttributes.Public | MethodAttributes.Static, asmType, Type.EmptyTypes);
-                    ILGenerator ilGen = dynamicTypeCtor.GetILGenerator();
-                    ilGen.Emit(OpCodes.Nop);
-                    ilGen.Emit(OpCodes.Newobj, typeCtor);
-                    ilGen.Emit(OpCodes.Ret);
+                    outputType.CreateNew = FastObjectFactory.GetCreateObjectFunction<TOutputType>(asmType);
 
                     // We'll hold all of the matching types in this list temporarily until their IDs are determined.
                     outputTypes.Add(outputType);
                 }
-            }
-
-            // The reason we have to do this here is because we can create a type only once. This is the type
-            // that has all the constructors created above for the various class matching the requirements for
-            // the output type.
-            Type bakedType = typeBuilder.CreateType(); // This can be done only once!
-
-            foreach (TypeInfo outputType in outputTypes)
-            {
-                outputType.CreateNew = (DefaultConstructor)(Delegate.CreateDelegate(typeof(DefaultConstructor), bakedType.GetMethod(outputType.RuntimeType.Name)));
             }
 
             foreach (TypeInfo outputType in outputTypes)
