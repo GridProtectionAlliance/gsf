@@ -72,9 +72,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SoftwareApproach", "Softwar
 		Dependencies\SoftwareApproach\SoftwareApproach.TestingExtensions.dll = Dependencies\SoftwareApproach\SoftwareApproach.TestingExtensions.dll
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ConfigurationEditor", "ConfigurationEditor", "{273A4FFB-FC4C-47C2-AB0F-9124B07998D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationEditor", "Tools\ConfigurationEditor\ConfigurationEditor\ConfigurationEditor.csproj", "{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 16
+		SccNumberOfProjects = 17
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs07.codeplex.com/
 		SccLocalPath0 = .
@@ -138,6 +142,10 @@ Global
 		SccProjectTopLevelParentUniqueName15 = Framework.sln
 		SccProjectName15 = Libraries/Test/TVA.Windows.Test
 		SccLocalPath15 = Libraries\\Test\\TVA.Windows.Test
+		SccProjectUniqueName16 = Tools\\ConfigurationEditor\\ConfigurationEditor\\ConfigurationEditor.csproj
+		SccProjectTopLevelParentUniqueName16 = Framework.sln
+		SccProjectName16 = Tools/ConfigurationEditor/ConfigurationEditor
+		SccLocalPath16 = Tools\\ConfigurationEditor\\ConfigurationEditor
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Framework.vsmdi
@@ -207,6 +215,10 @@ Global
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -230,7 +242,9 @@ Global
 		{7708DB97-99C1-4596-B44F-5BFE4E664015} = {C3058807-1DFE-4681-BBBC-959BE6A84E10}
 		{35027A69-1A76-4312-B57B-F5826F0B87AF} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57} = {6C78685B-1653-43B5-98C8-0470A173A848}
+		{273A4FFB-FC4C-47C2-AB0F-9124B07998D1} = {6C78685B-1653-43B5-98C8-0470A173A848}
 		{6BFB4BFD-6906-4E92-8078-3AB5641AAFAB} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
 		{216C7D13-CB2B-4E98-87D5-D8CA53FE97F7} = {1C4124EF-0F9C-47B9-B1CB-B2CA39AB0E57}
+		{129F9272-157F-4A37-B0A4-0F9E5E4A0FE6} = {273A4FFB-FC4C-47C2-AB0F-9124B07998D1}
 	EndGlobalSection
 EndGlobal
