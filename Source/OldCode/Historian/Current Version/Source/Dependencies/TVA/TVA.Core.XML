@@ -10476,6 +10476,50 @@
             <param name="argument3">The third data argument for the event.</param>
             <param name="argument4">The fourth data argument for the event.</param>
         </member>
+        <member name="T:TVA.FastObjectFactory`1">
+            <summary>
+            Quickly creates new objects based on specified type.
+            </summary>
+            <typeparam name="T">Type of object to create quickly.</typeparam>
+            <remarks>
+            You can use the alternate <see cref="T:TVA.FastObjectFactory"/> implementation if you only have the <see cref="T:System.Type"/> of
+            an object available (such as when you are using reflection).
+            </remarks>
+        </member>
+        <member name="P:TVA.FastObjectFactory`1.CreateObjectFunction">
+            <summary>
+            Gets delegate that quickly creates new instance of the specfied type.
+            </summary>
+        </member>
+        <member name="T:TVA.FastObjectFactory">
+            <summary>
+            Quickly creates new objects based on specified type.
+            </summary>
+            <remarks>
+            <see cref="T:TVA.FastObjectFactory"/> should be used when you only have the <see cref="T:System.Type"/> of an object available (such as when you are
+            using reflection), otherwise you should use then generic <see cref="T:TVA.FastObjectFactory`1"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.FastObjectFactory.GetCreateObjectFunction(System.Type)">
+            <summary>
+            Gets delegate that creates new instance of the <paramref name="objType"/>.
+            </summary>
+            <param name="objType">Type of object to create quickly.</param>
+            <returns>Delegate to use to quickly create new objects.</returns>
+            <exception cref="T:System.InvalidOperationException"><paramref name="objType"/> does not support parameterless public constructor.</exception>
+        </member>
+        <member name="M:TVA.FastObjectFactory.GetCreateObjectFunction``1(System.Type)">
+            <summary>
+            Gets delegate of specified return type that creates new instance of the <paramref name="objType"/>.
+            </summary>
+            <param name="objType">Type of object to create quickly.</param>
+            <typeparam name="T">Type of returned object function used to create objects quickly.</typeparam>
+            <returns>Delegate to use to quickly create new objects.</returns>
+            <exception cref="T:System.InvalidOperationException">
+            <paramref name="objType"/> does not support parameterless public constructor -or- 
+            <paramref name="objType"/> is not a subclass or interface implementation of function type definition.
+            </exception>
+        </member>
         <member name="T:TVA.IdentifiableItem`2">
             <summary>
             Represents an identifiable item.
@@ -14842,10 +14886,13 @@
             </remarks>
             <returns>An existing or new <see cref="T:TVA.Measurements.IFrame"/> from the queue for the specified timestamp.</returns>
         </member>
-        <member name="P:TVA.Measurements.FrameQueue.TicksPerFrame">
+        <member name="P:TVA.Measurements.FrameQueue.FramesPerSecond">
             <summary>
-            Gets or sets number of ticks per frame to be used by <see cref="T:TVA.Measurements.FrameQueue"/>.
+            Gets or sets the number of frames per second to be used by <see cref="T:TVA.Measurements.FrameQueue"/>.
             </summary>
+            <remarks>
+            Valid frame rates are greater than 0 frames per second.
+            </remarks>
         </member>
         <member name="P:TVA.Measurements.FrameQueue.TimeResolution">
             <summary>
