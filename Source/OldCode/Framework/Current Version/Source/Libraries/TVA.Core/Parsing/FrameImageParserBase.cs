@@ -484,6 +484,9 @@ namespace TVA.Parsing
             }
             else
             {
+                // Report unrecognized output type
+                OnOutputTypeNotFound(commonHeader.TypeID);
+
                 // We encountered an unrecognized data type that cannot be parsed
                 if (ProtocolUsesSyncBytes)
                 {
@@ -497,7 +500,6 @@ namespace TVA.Parsing
                 
                 // Without synchronization bytes we have no choice but to move onto the next buffer of data :(
                 parsedLength = length;
-                OnOutputTypeNotFound(commonHeader.TypeID);
                 OnDataDiscarded(buffer.BlockCopy(offset, length));
             }
 
