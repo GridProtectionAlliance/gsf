@@ -388,7 +388,7 @@ namespace TVA.IO.Checksums
 				throw new ArgumentOutOfRangeException("offset");
 
 			ushort temp;
-			for (int i = offset; i < count; i++)
+			for (int i = 0; i < count; i++)
 			{
                 temp = (ushort)(buffer[offset + i] & 0x00FF);
                 temp = (ushort)(crc ^ temp);
