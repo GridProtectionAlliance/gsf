@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
 //       Renamed ConnectString to ConnectionString.
+//  02/03/2010 - Pinal C. Patel
+//       Disabled the encryption of ConnectionString when persisted to the config file.
 //
 //*******************************************************************************************************
 
@@ -343,7 +345,7 @@ namespace TVA.Historian.MetadataProviders
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the OLE DB data store of metadata.", true);
+                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the OLE DB data store of metadata.");
                 settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the OLE DB data store.");
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
                 SelectString = settings["SelectString"].ValueAs(m_selectString);

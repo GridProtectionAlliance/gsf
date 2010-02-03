@@ -14,6 +14,8 @@
 //       Renamed ConnectString to ConnectionString.
 //  12/11/2009 - Pinal C. Patel
 //       Disabled the encryption of DataProviderString when persisted to the config file.
+//  02/03/2010 - Pinal C. Patel
+//       Disabled the encryption of ConnectionString when persisted to the config file.
 //
 //*******************************************************************************************************
 
@@ -394,7 +396,7 @@ namespace TVA.Historian.MetadataProviders
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the ADO.NET based data store of metadata.", true);
+                settings.Add("ConnectionString", m_connectionString, "Connection string for connecting to the ADO.NET based data store of metadata.");
                 settings.Add("DataProviderString", m_dataProviderString, "The ADO.NET data provider assembly type creation string used to create a connection to the data store of metadata.");
                 settings.Add("SelectString", m_selectString, "SELECT statement for retrieving metadata from the ADO.NET based data store.");
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
