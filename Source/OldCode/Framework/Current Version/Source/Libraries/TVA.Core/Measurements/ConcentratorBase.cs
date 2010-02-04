@@ -32,7 +32,7 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  12/15/2009 - J. Ritchie Carroll
+//  12/15/2009 - J. Ritchie Carroll, Stephen C. Wills
 //       The PrecisionTimer, based on the Windows multimedia timer, is restricted to 16 active instances
 //       per process, so concentrator was rearchitected to use one static timer per frame rate so that
 //       the system can can support 16 different active frame rates for any number of concentrators.
@@ -280,6 +280,13 @@ namespace TVA.Measurements
     /// allowing any needed time for possible network congestion.  Lead time should be defined as your
     /// confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
     /// trust that your local clock is within plus or minus 2 seconds of real-time.)
+    /// </para>
+    /// <para>
+    /// This concentrator is designed to sort measurements being transmitted in real-time for data being
+    /// sent at rates of at least 1 sample per second. Slower rates (e.g., once every few seconds) are not
+    /// supported since sorting data at these speeds would be trivial. There is no defined maximum number
+    /// of supported samples per second - but keep in mind that CPU utilization will increase as the
+    /// measurement volume and frame rate increase.
     /// </para>
     /// </remarks>
     [CLSCompliant(false)]
@@ -1699,7 +1706,8 @@ namespace TVA.Measurements
         private void PublishFrames()
         {
             IFrame frame;
-            Ticks timestamp, distance;
+            Ticks timestamp;
+            long startTime;
             int frameIndex;
 
             // Keep thread alive...
@@ -1726,18 +1734,15 @@ namespace TVA.Measurements
                             timestamp = frame.Timestamp;
 
                             // See if any lagtime needs to pass before we begin publishing,
-                            // distance is calculated in ticks
-                            distance = m_lagTicks - (RealTime - timestamp);
-
-                            // Exit if it's not time to publish
-                            if (distance > 0)
+                            // exiting if it's not time to publish
+                            if (m_lagTicks - (RealTime - timestamp) > 0)
                                 break;
 
                             // Mark start time for publication
 #if UseHighResolutionTime
-                            distance = PrecisionTimer.UtcNow.Ticks;
+                            startTime = PrecisionTimer.UtcNow.Ticks;
 #else
-                            distance = DateTime.UtcNow.Ticks;
+                            startTime = DateTime.UtcNow.Ticks;
 #endif
 
                             // Calculate index of this frame within its second - note that we have to calculate this
@@ -1769,7 +1774,7 @@ namespace TVA.Measurements
 
                                 // Track total publication time
 #if UseHighResolutionTime
-                                m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - distance;
+                                m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - startTime;
 #else
                                 m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
 #endif
