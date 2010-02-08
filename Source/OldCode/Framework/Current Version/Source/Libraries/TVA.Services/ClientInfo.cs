@@ -20,6 +20,8 @@
 //       Modified identity token generation to use the new ClientHelper.AuthenticationInput property.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  02/08/2010 - Pinal C. Patel
+//       Corrected the assignment of ClientName property for web applications.
 //
 //*******************************************************************************************************
 
@@ -242,7 +244,7 @@
 using System;
 using System.IO;
 using System.Runtime.Serialization;
-using System.Web;
+using System.Web.Hosting;
 using System.Xml;
 using Microsoft.Web.Services3.Security;
 using Microsoft.Web.Services3.Security.Tokens;
@@ -304,9 +306,16 @@ namespace TVA.Services
 
             // Get the type of client application.
             if (ClientType == ApplicationType.WindowsCui || ClientType == ApplicationType.WindowsGui)
+            {
                 m_clientName = AppDomain.CurrentDomain.FriendlyName;
+            }
             else if (ClientType == ApplicationType.Web)
-                m_clientName = HttpContext.Current.Request.ApplicationPath;
+            {
+                if (HostingEnvironment.ApplicationVirtualPath == "/")
+                    m_clientName = HostingEnvironment.SiteName;
+                else
+                    m_clientName = HostingEnvironment.ApplicationVirtualPath.Trim('/');
+            }
 
             // Initialize the serialized identity token.
             m_serializedIdentityToken = string.Empty;
