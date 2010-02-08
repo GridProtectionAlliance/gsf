@@ -14184,6 +14184,13 @@
             confidence in the accuracy of your local clock (e.g., if you set lead time to 2, this means you
             trust that your local clock is within plus or minus 2 seconds of real-time.)
             </para>
+            <para>
+            This concentrator is designed to sort measurements being transmitted in real-time for data being
+            sent at rates of at least 1 sample per second. Slower rates (e.g., once every few seconds) are not
+            supported since sorting data at these speeds would be trivial. There is no defined maximum number
+            of supported samples per second - but keep in mind that CPU utilization will increase as the
+            measurement volume and frame rate increase.
+            </para>
             </remarks>
         </member>
         <member name="M:TVA.Measurements.ConcentratorBase.#ctor">
