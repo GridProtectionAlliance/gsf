@@ -28,6 +28,8 @@
 //       Added LoggingException event to notify about exceptions encountered when logging exceptions.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  02/11/2010 - Pinal C. Patel
+//       Added OS version to the system information being logged.
 //
 //*******************************************************************************************************
 
@@ -1847,6 +1849,8 @@ namespace TVA.ErrorManagement
                     info.AppendLine();
                     info.AppendFormat("Machine IP:            {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
                     info.AppendLine();
+                    info.AppendFormat("Machine OS:            {0}", Environment.OSVersion.VersionString);
+                    info.AppendLine();
                     if (includeUserInfo)
                     {
                         UserInfo currentUserInfo = UserInfo.CurrentUserInfo;
@@ -1865,6 +1869,8 @@ namespace TVA.ErrorManagement
                     info.AppendFormat("Server Name:           {0}", Environment.MachineName);
                     info.AppendLine();
                     info.AppendFormat("Server IP:             {0}", Dns.GetHostEntry(Environment.MachineName).AddressList[0].ToString());
+                    info.AppendLine();
+                    info.AppendFormat("Server OS:             {0}", Environment.OSVersion.VersionString);
                     info.AppendLine();
                     if (includeUserInfo)
                     {
