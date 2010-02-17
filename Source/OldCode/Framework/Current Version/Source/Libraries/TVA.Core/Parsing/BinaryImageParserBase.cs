@@ -550,7 +550,7 @@ namespace TVA.Parsing
                     if (syncBytesPosition > -1)
                     {
                         StreamInitialized = true;
-                        ParseBuffer(buffer, syncBytesPosition, count - syncBytesPosition);
+                        ParseBuffer(buffer, syncBytesPosition, count - (syncBytesPosition - offset));
                     }
                 }
 
@@ -643,6 +643,8 @@ namespace TVA.Parsing
         // Parse buffer image - user implements protocol specific "ParseFrame" function to extract data from image
         private void ParseBuffer(byte[] buffer, int offset, int count)
         {
+            int endOfBuffer = 0;
+
             try
             {
                 // Prepend any left over buffer data from last parse call
@@ -655,7 +657,7 @@ namespace TVA.Parsing
                     UnparsedBuffer = null;
                 }
 
-                int endOfBuffer = offset + count - 1;
+                endOfBuffer = offset + count - 1;
                 int parsedFrameLength = 0;
 
                 // Move through buffer parsing all available frames
@@ -703,7 +705,7 @@ namespace TVA.Parsing
                     else
                     {
                         // If not, save off remaining buffer to prepend onto next read
-                        UnparsedBuffer = buffer.BlockCopy(offset, count - offset);
+                        UnparsedBuffer = buffer.BlockCopy(offset, endOfBuffer - offset + 1);
                         break;
                     }
                 }
@@ -714,8 +716,10 @@ namespace TVA.Parsing
                 StreamInitialized = !ProtocolUsesSyncBytes;
                 UnparsedBuffer = null;
 
-                if (offset < count)
-                    OnDataDiscarded(buffer.BlockCopy(offset, count - offset));
+                if (endOfBuffer != 0)
+                    count = endOfBuffer - offset + 1;
+
+                OnDataDiscarded(buffer.BlockCopy(offset, count));
 
                 OnParsingException(ex);
             }
