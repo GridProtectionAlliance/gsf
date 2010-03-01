@@ -470,7 +470,7 @@ namespace ConfigurationEditor
 				//Save a backup version
 				xmlDoc.Save(configurationFile + ".bak");
 				//Populate our property collection. 
-				PropertyDescriptorCollection props = properties.GetProperties();
+				PropertyDescriptorCollection props = properties.GetProperties();							
 
 				foreach (string section in m_categorizedSections)
 				{
@@ -513,9 +513,22 @@ namespace ConfigurationEditor
 			XmlNodeList nodes = xmlDoc.SelectNodes("configuration/categorizedSettings/" + sectionName + "/add");
 			for (int i = 0; i < nodes.Count; i++)
 			{
+				DynamicProperty property = null;
 
 				//Find the property in the property collection with the same name as the current node in the Xml document
-				DynamicProperty property = (DynamicProperty)props[nodes[i].Attributes["name"].Value];
+				//and same category as sectionName
+				foreach (PropertyDescriptor pd in props)
+				{
+					if (pd.Category == sectionName && pd.Name == nodes[i].Attributes["name"].Value)
+					{
+						property = (DynamicProperty)pd;
+						break;
+					}						
+				}
+
+				////Find the property in the property collection with the same name as the current node in the Xml document
+				//DynamicProperty property = (DynamicProperty)props[nodes[i].Attributes["name"].Value];
+
 				if (property != null)
 				{
 					//Set the node value to the property value which will have been set in the Property grid.							
@@ -533,6 +546,9 @@ namespace ConfigurationEditor
 						}
 					}
 				}
+
+
+
 			}
 		}
 
