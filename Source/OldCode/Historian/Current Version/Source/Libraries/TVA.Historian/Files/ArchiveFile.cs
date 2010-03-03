@@ -58,6 +58,8 @@
 //       Updated Read() to incorporate changes made to ArchiveFileAllocationTable.FindDataBlocks().
 //  12/08/2009 - Pinal C. Patel
 //       Modified to save the FAT at the end of rollover process.
+//  03/03/2010 - Pinal C. Patel
+//       Added MaxHistoricArchiveFiles property to limit the number of history files to be kept.
 //
 //*******************************************************************************************************
 
@@ -434,6 +436,11 @@ namespace TVA.Historian.Files
         public const int DefaultArchiveOffloadThreshold = 90;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="MaxHistoricArchiveFiles"/> property.
+        /// </summary>
+        public const int DefaultMaxHistoricArchiveFiles = -1;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="LeadTimeTolerance"/> property.
         /// </summary>
         public const int DefaultLeadTimeTolerance = 15;
@@ -610,7 +617,7 @@ namespace TVA.Historian.Files
         [Category("Data"),
         Description("Occurs when IDataPoint that belongs to a historic ArchiveFile is received for archival.")]
         public event EventHandler<EventArgs<IDataPoint>> HistoricDataReceived;
-        
+
         /// <summary>
         /// Occurs when misaligned (by time) <see cref="IDataPoint"/> is received for archival.
         /// </summary>
@@ -644,6 +651,7 @@ namespace TVA.Historian.Files
         private string m_archiveOffloadLocation;
         private int m_archiveOffloadCount;
         private short m_archiveOffloadThreshold;
+        private int m_maxHistoricArchiveFiles;
         private double m_leadTimeTolerance;
         private bool m_compressData;
         private bool m_discardOutOfSequenceData;
@@ -697,6 +705,7 @@ namespace TVA.Historian.Files
             m_archiveOffloadLocation = DefaultArchiveOffloadLocation;
             m_archiveOffloadCount = DefaultArchiveOffloadCount;
             m_archiveOffloadThreshold = DefaultArchiveOffloadThreshold;
+            m_maxHistoricArchiveFiles = DefaultMaxHistoricArchiveFiles;
             m_leadTimeTolerance = DefaultLeadTimeTolerance;
             m_compressData = DefaultCompressData;
             m_discardOutOfSequenceData = DefaultDiscardOutOfSequenceData;
@@ -953,7 +962,31 @@ namespace TVA.Historian.Files
 
                 m_archiveOffloadThreshold = value;
             }
-        }      
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of historic <see cref="ArchiveFile"/>s to be kept at both the primary and offload locations combined.
+        /// </summary>
+        /// <remarks>
+        /// Set <see cref="MaxHistoricArchiveFiles"/> to -1 to keep historic <see cref="ArchiveFile"/>s indefinately.
+        /// </remarks>
+        [Category("Archive"),
+        DefaultValue(DefaultMaxHistoricArchiveFiles),
+        Description("Gets or sets the maximum number of historic ArchiveFiles to be kept at both the primary and offload locations combined.")]
+        public int MaxHistoricArchiveFiles
+        {
+            get
+            {
+                return m_maxHistoricArchiveFiles;
+            }
+            set
+            {
+                if (value < 1)
+                    m_maxHistoricArchiveFiles = -1;
+                else
+                    m_maxHistoricArchiveFiles = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the number of minutes by which incoming <see cref="ArchiveDataPoint"/> can be ahead of local system clock and still be considered valid.
@@ -1305,12 +1338,12 @@ namespace TVA.Historian.Files
                     if (m_currentDataQueue.RunTime >= 1)
                     {
                         statistics.AveragingWindow = m_currentDataQueue.RunTime;
-                        statistics.AverageWriteSpeed = (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems - 
-                                                             (m_historicDataQueue.CurrentStatistics.TotalProcessedItems + 
-                                                              m_historicDataQueue.CurrentStatistics.QueueCount + 
-                                                              m_historicDataQueue.CurrentStatistics.ItemsBeingProcessed + 
-                                                              m_outOfSequenceDataQueue.CurrentStatistics.TotalProcessedItems + 
-                                                              m_outOfSequenceDataQueue.CurrentStatistics.QueueCount + 
+                        statistics.AverageWriteSpeed = (int)((m_currentDataQueue.CurrentStatistics.TotalProcessedItems -
+                                                             (m_historicDataQueue.CurrentStatistics.TotalProcessedItems +
+                                                              m_historicDataQueue.CurrentStatistics.QueueCount +
+                                                              m_historicDataQueue.CurrentStatistics.ItemsBeingProcessed +
+                                                              m_outOfSequenceDataQueue.CurrentStatistics.TotalProcessedItems +
+                                                              m_outOfSequenceDataQueue.CurrentStatistics.QueueCount +
                                                               m_outOfSequenceDataQueue.CurrentStatistics.ItemsBeingProcessed)) / (long)statistics.AveragingWindow);
                     }
                 }
@@ -1486,6 +1519,8 @@ namespace TVA.Historian.Files
                 element.Update(m_archiveOffloadCount, element.Description, element.Encrypted);
                 element = settings["ArchiveOffloadThreshold", true];
                 element.Update(m_archiveOffloadThreshold, element.Description, element.Encrypted);
+                element = settings["MaxHistoricArchiveFiles", true];
+                element.Update(m_maxHistoricArchiveFiles, element.Description, element.Encrypted);
                 element = settings["LeadTimeTolerance", true];
                 element.Update(m_leadTimeTolerance, element.Description, element.Encrypted);
                 element = settings["CompressData", true];
@@ -1522,6 +1557,7 @@ namespace TVA.Historian.Files
                 settings.Add("ArchiveOffloadLocation", m_archiveOffloadLocation, "Path to the location where historic files are to be moved when disk start getting full.");
                 settings.Add("ArchiveOffloadCount", m_archiveOffloadCount, "Number of files that are to be moved to the offload location when the disk starts getting full.");
                 settings.Add("ArchiveOffloadThreshold", m_archiveOffloadThreshold, "Percentage disk full when the historic files should be moved to the offload location.");
+                settings.Add("MaxHistoricArchiveFiles", m_maxHistoricArchiveFiles, "Maximum number of historic files to be kept at both the primary and offload locations combined.");
                 settings.Add("LeadTimeTolerance", m_leadTimeTolerance, "Number of minutes by which incoming data points can be ahead of local system clock and still be considered valid.");
                 settings.Add("CompressData", m_compressData, "True if compression is to be performed on the incoming data points; otherwise False.");
                 settings.Add("DiscardOutOfSequenceData", m_discardOutOfSequenceData, "True if out-of-sequence data points are to be discarded; otherwise False.");
@@ -1535,6 +1571,7 @@ namespace TVA.Historian.Files
                 ArchiveOffloadLocation = settings["ArchiveOffloadLocation"].ValueAs(m_archiveOffloadLocation);
                 ArchiveOffloadCount = settings["ArchiveOffloadCount"].ValueAs(m_archiveOffloadCount);
                 ArchiveOffloadThreshold = settings["ArchiveOffloadThreshold"].ValueAs(m_archiveOffloadThreshold);
+                MaxHistoricArchiveFiles = settings["MaxHistoricArchiveFiles"].ValueAs(m_maxHistoricArchiveFiles);
                 LeadTimeTolerance = settings["LeadTimeTolerance"].ValueAs(m_leadTimeTolerance);
                 CompressData = settings["CompressData"].ValueAs(m_compressData);
                 DiscardOutOfSequenceData = settings["DiscardOutOfSequenceData"].ValueAs(m_discardOutOfSequenceData);
@@ -2406,7 +2443,7 @@ namespace TVA.Historian.Files
 
         private void SyncStateFile()
         {
-            if (m_stateFile.IsOpen && m_metadataFile.IsOpen && 
+            if (m_stateFile.IsOpen && m_metadataFile.IsOpen &&
                 m_stateFile.FileAccessMode != FileAccess.Read &&
                 m_metadataFile.RecordsOnDisk > m_stateFile.RecordsOnDisk)
             {
@@ -3192,9 +3229,7 @@ namespace TVA.Historian.Files
                     }
                 }
                 if (historicFileListUpdated)
-                {
                     OnHistoricFileListUpdated();
-                }
             }
         }
 
@@ -3213,9 +3248,7 @@ namespace TVA.Historian.Files
                     }
                 }
                 if (historicFileListUpdated)
-                {
                     OnHistoricFileListUpdated();
-                }
             }
         }
 
@@ -3238,9 +3271,7 @@ namespace TVA.Historian.Files
                             }
                         }
                         if (historicFileListUpdated)
-                        {
                             OnHistoricFileListUpdated();
-                        }
                     }
                     catch (Exception)
                     {
@@ -3264,14 +3295,43 @@ namespace TVA.Historian.Files
                             }
                         }
                         if (historicFileListUpdated)
-                        {
                             OnHistoricFileListUpdated();
-                        }
                     }
                     catch (Exception)
                     {
                         // Ignore any exception we might encounter if a historic archive file is being renamed to
                         // something else. This might happen if someone is renaming files manually.
+                    }
+                }
+
+                if (m_maxHistoricArchiveFiles >= 1)
+                {
+                    // Get a local copy of all the historic archive files.
+                    List<Info> allHistoricFiles = null;
+                    lock (m_historicArchiveFiles)
+                    {
+                        allHistoricFiles = new List<Info>(m_historicArchiveFiles);
+                    }
+
+                    // Start deleting historic files from oldest to newest.
+                    if (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
+                    {
+                        allHistoricFiles.Sort();
+                        while (allHistoricFiles.Count > m_maxHistoricArchiveFiles)
+                        {
+                            try
+                            {
+                                if (File.Exists(allHistoricFiles[0].FileName))
+                                    File.Delete(allHistoricFiles[0].FileName);
+                            }
+                            catch
+                            {
+                            }
+                            finally
+                            {
+                                allHistoricFiles.RemoveAt(0);
+                            }
+                        }
                     }
                 }
             }
