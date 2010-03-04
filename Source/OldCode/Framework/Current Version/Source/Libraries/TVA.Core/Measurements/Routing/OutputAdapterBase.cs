@@ -12,6 +12,9 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/04/2010 - Pinal C. Patel
+//       Updated QueueMeasurementsForProcessing() method to apply filtering to incoming measurements
+//       based on InputMeasurementKeys when specified.
 //
 //*******************************************************************************************************
 
@@ -609,18 +612,31 @@ namespace TVA.Measurements.Routing
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (m_sourceIDs == null)
+            if (m_sourceIDs != null)
+                // Filter measurements to list of specified source IDs
+                measurements = measurements.Where(measurement => m_sourceIDs.BinarySearch(measurement.Source, StringComparer.CurrentCultureIgnoreCase) > -1);
+
+            if (InputMeasurementKeys == null)
             {
-                // Apply no filter to measurements
+                // No further filtering of incoming measurement required
                 m_measurementQueue.AddRange(measurements);
                 IncrementProcessedMeasurements(measurements.Count());
             }
             else
             {
-                // Filter measurements to list of specified source IDs
-                IEnumerable<IMeasurement> filteredMeasurements = measurements.Where(measurement => m_sourceIDs.BinarySearch(measurement.Source, StringComparer.CurrentCultureIgnoreCase) > -1);
-                m_measurementQueue.AddRange(filteredMeasurements);
-                IncrementProcessedMeasurements(filteredMeasurements.Count());
+                // Filter measurements down to specified input measurements
+                List<IMeasurement> filteredMeasurements = new List<IMeasurement>();
+                foreach (IMeasurement measurement in measurements)
+                {
+                    if (IsInputMeasurement(measurement.Key))
+                        filteredMeasurements.Add(measurement);
+                }
+
+                if (filteredMeasurements.Count > 0)
+                {
+                    m_measurementQueue.AddRange(filteredMeasurements);
+                    IncrementProcessedMeasurements(filteredMeasurements.Count());
+                }
             }
         }
 
