@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 
 public class RawDataPoint
 {
+	
 	public static int length = 10;
 	
 	protected int _timestampOffset;
