@@ -38,6 +38,8 @@
 //       Fixed bug introduced by marking the type as enabled upon initialization (Initialize()).
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/11/2010 - Pinal C. Patel
+//       Modified AuthenticateUser() to return IPrincipal of the authenticated user instead of boolean.
 //
 //*******************************************************************************************************
 
@@ -1002,7 +1004,7 @@ namespace TVA.Identity
         ///         string password = "password";
         ///        
         ///         // Authenticate user credentials.
-        ///         if (UserInfo.AuthenticateUser(domain, username, password))
+        ///         if (UserInfo.AuthenticateUser(domain, username, password) != null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
@@ -1012,7 +1014,7 @@ namespace TVA.Identity
         /// }
         /// </code>
         /// </example>
-        public static bool AuthenticateUser(string domain, string username, string password)
+        public static IPrincipal AuthenticateUser(string domain, string username, string password)
         {
             string errorMessage;
             return AuthenticateUser(domain, username, password, out errorMessage);
@@ -1042,7 +1044,7 @@ namespace TVA.Identity
         ///         string errorMessage;
         ///
         ///         // Authenticate user credentials.
-        ///         if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage))
+        ///         if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
         ///             Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
         ///         else
         ///             Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
@@ -1052,29 +1054,32 @@ namespace TVA.Identity
         /// }
         /// </code>
         /// </example>
-        public static bool AuthenticateUser(string domain, string username, string password, out string errorMessage)
+        public static IPrincipal AuthenticateUser(string domain, string username, string password, out string errorMessage)
         {
             IntPtr tokenHandle = IntPtr.Zero;
-            bool authenticated;
-
             try
             {
                 errorMessage = null;
 
-                // Call LogonUser to attempt authentication
-                authenticated = LogonUser(username, domain, password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, out tokenHandle);
-
-                if (!authenticated)
+                // Call Win32 LogonUser method.
+                if (LogonUser(username, domain, password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
+                {
+                    // Create a windows principal of the authenticated user.
+                    return new WindowsPrincipal(new WindowsIdentity(tokenHandle));
+                }
+                else
+                {
+                    // Get the error encountered when authenticating the user.
                     errorMessage = WindowsApi.GetLastErrorMessage();
+                    return null;
+                }
             }
             finally
             {
-                // Free the token
+                // Free the token.
                 if (tokenHandle != IntPtr.Zero)
                     CloseHandle(tokenHandle);
             }
-
-            return authenticated;
         }
 
         /// <summary>
@@ -1117,10 +1122,7 @@ namespace TVA.Identity
                     throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - {2}", domain, username, WindowsApi.GetLastErrorMessage()));
 
                 if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
-                {
-                    CloseHandle(tokenHandle);
                     throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - Exception thrown while trying to duplicate token", domain, username));
-                }
 
                 // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation.
                 impersonatedUser = WindowsIdentity.Impersonate(dupeTokenHandle);
