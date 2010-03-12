@@ -15,6 +15,8 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/12/2010 - Pinal C. Patel
+//       Added the implementation of IFormattable interface.
 //
 //*******************************************************************************************************
 
@@ -278,7 +280,7 @@ namespace TVA
     /// Represents tha base class for alternate timetag implementations.
     /// </summary>
     [Serializable()]
-    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>
+    public abstract class TimeTagBase : ISerializable, IComparable, IComparable<TimeTagBase>, IComparable<DateTime>, IEquatable<TimeTagBase>, IEquatable<DateTime>, IFormattable
     {
         #region [ Members ]
 
@@ -387,9 +389,31 @@ namespace TVA
         /// </summary>
         /// <param name="format">Format of text output.</param>
         /// <returns><see cref="string"/> of textual representation for timetag.</returns>
-        public string ToString(string format)
+        public virtual string ToString(string format)
         {
             return ToDateTime().ToString(format);
+        }
+
+        /// <summary>
+        /// Returns textual representation for timetag using the specified <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="provider">An <see cref="IFormatProvider"/> that supplies culture-specific formatting information.</param>
+        /// <returns><see cref="string"/> of textual representation for timetag.</returns>
+        public virtual string ToString(IFormatProvider provider)
+        {
+            return ToDateTime().ToString(provider);
+        }
+
+        /// <summary>
+        /// Returns textual representation for timetag in the specified <paramref name="format"/> using 
+        /// the specified <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="format">Format of text output.</param>
+        /// <param name="provider">An <see cref="IFormatProvider"/> that supplies culture-specific formatting information.</param>
+        /// <returns><see cref="string"/> of textual representation for timetag.</returns>
+        public virtual string ToString(string format, IFormatProvider provider)
+        {
+            return ToDateTime().ToString(format, provider);
         }
 
         /// <summary>
