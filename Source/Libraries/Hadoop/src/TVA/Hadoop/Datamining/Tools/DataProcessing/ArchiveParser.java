@@ -5,15 +5,14 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Calendar;
 
-import TVA.Hadoop.MapReduce.Historian.File.StandardPointFile;
+import TVA.Hadoop.Datamining.File.ArchiveFileReader;
+import TVA.Hadoop.Datamining.File.DataBlockDescription;
 
 public class ArchiveParser
 {
-	private LocalArchiveFile m_fileHandler;
+	private ArchiveFileReader m_fileHandler;
 	
 	// These point IDs correspond to frequency measurements
 	private int[] m_pointIds = {
@@ -41,28 +40,27 @@ public class ArchiveParser
 		m_pointIds = interestingPointIds;
 	}
 	
-	public int GetBlockPointTypeID( int blockIndex )
+	public int GetBlockPointTypeID( int blockIndex ) throws Exception
 	{
-		return this.m_fileHandler.FAT._BlockMap.GetBlockPointerByIndex(blockIndex).iPointID;
+		return this.m_fileHandler.getBlockMap().getBlockDescriptions().get(blockIndex).getPointId();
 	}
 	
-	private int ParseBlock( int blockIndex )
+	private int ParseBlock( int blockIndex ) throws Exception
 	{
-		this.m_fileHandler.ParseBlock(blockIndex);
+		this.m_fileHandler.parseBlock(blockIndex);
 		
 		// return block point id
 		return GetBlockPointTypeID(blockIndex);
 	}
 	
-	public void ParsePointId(File inFile, int pointId, File outFile) throws IOException
+	public void ParsePointId(File inFile, int pointId, File outFile) throws Exception
 	{
 		// parse all blocks with a given point id in the open file/folder, write to fileName
 		if( inFile.isFile() )
 		{
-			m_fileHandler = new LocalArchiveFile(inFile.getPath());
-			m_fileHandler.ReadFAT();
+			m_fileHandler = new ArchiveFileReader(inFile);
 			
-			for( int blockIndex = 0; blockIndex < m_fileHandler.FAT._EventBlockCount; blockIndex++ )
+			for( int blockIndex = 0; blockIndex < m_fileHandler.getFAT().getDataBlockCount(); blockIndex++ )
 			{
 				if( pointId == this.GetBlockPointTypeID(blockIndex) )
 					InsertBlockInCsv(blockIndex, outFile);
@@ -74,15 +72,14 @@ public class ArchiveParser
 				ParsePointId(file, pointId, outFile);
 		}
 	}
-	public void ParseAllBlocks(File inFile, File outFolder) throws IOException
+	public void ParseAllBlocks(File inFile, File outFolder) throws Exception
 	{
 		// parse all blocks in the open file/folder, write to fileName
 		if( inFile.isFile() )
 		{
-			m_fileHandler = new LocalArchiveFile(inFile.getPath());
-			m_fileHandler.ReadFAT();
+			m_fileHandler = new ArchiveFileReader(inFile);
 			
-			for( int blockIndex = 0; blockIndex < m_fileHandler.FAT._EventBlockCount; blockIndex++ )
+			for( int blockIndex = 0; blockIndex < m_fileHandler.getFAT().getDataBlockCount(); blockIndex++ )
 				InsertBlockInCsv(blockIndex, new File(outFolder.getAbsoluteFile() + "/" + GetBlockPointTypeID(blockIndex) + ".csv"));
 		}
 		else
@@ -91,15 +88,14 @@ public class ArchiveParser
 				ParseAllBlocks(file, outFolder);
 		}
 	}
-	public void ParseInterestingBlocks(File inFile, File outFolder) throws IOException
+	public void ParseInterestingBlocks(File inFile, File outFolder) throws Exception
 	{
 		// parse all "interesting" blocks in the open file/folder, write to fileName
 		if( inFile.isFile() )
 		{
-			m_fileHandler = new LocalArchiveFile(inFile.getPath());
-			m_fileHandler.ReadFAT();
+			m_fileHandler = new ArchiveFileReader(inFile);
 			
-			for( int blockIndex = 0; blockIndex < m_fileHandler.FAT._EventBlockCount; blockIndex++ )
+			for( int blockIndex = 0; blockIndex < m_fileHandler.getFAT().getDataBlockCount(); blockIndex++ )
 			{
 				if( IsBlockInteresting(blockIndex) )
 					InsertBlockInCsv(blockIndex, new File(outFolder.getAbsoluteFile() + "/" + GetBlockPointTypeID(blockIndex) + ".csv"));
@@ -112,21 +108,23 @@ public class ArchiveParser
 		}
 	}
 	
-	public void WriteFile( String fileName ) throws IOException
+	public void WriteFile( String fileName ) throws Exception
 	{
 		BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
 		
-		for( int i = 0; i < m_fileHandler.arPoints.size(); i++ )
-			writer.write(m_fileHandler.arPoints.get(i).GetCalendar().getTimeInMillis() + ",");
+		DataBlockDescription blockDescrip = m_fileHandler.getCurrentBlock().getBlockDescription();
+		
+		for( int i = 0; i < m_fileHandler.getCurrentBlock().getPointCount(); i++ )
+			writer.write(m_fileHandler.getCurrentBlock().getPoints().get(i).getRealTimeInMillis(blockDescrip) + ",");
 		
 		writer.write(System.getProperty("line.separator"));
 		
-		for( int i = 0; i < m_fileHandler.arPoints.size(); i++ )
-			writer.write(m_fileHandler.arPoints.get(i).Value + ",");
+		for( int i = 0; i < m_fileHandler.getCurrentBlock().getPointCount(); i++ )
+			writer.write(m_fileHandler.getCurrentBlock().getPoints().get(i).getValue() + ",");
 		
 		writer.write(System.getProperty("line.separator"));
 		
-		writer.write((m_fileHandler.arPoints.get(m_fileHandler.arPoints.size()-1).GetCalendar().getTimeInMillis() - m_fileHandler.arPoints.get(0).GetCalendar().getTimeInMillis())/(double) 1000.0 + " seconds");
+		writer.write((m_fileHandler.getCurrentBlock().getPoints().get(m_fileHandler.getCurrentBlock().getPointCount()-1).getRealTimeInMillis(blockDescrip) - m_fileHandler.getCurrentBlock().getPoints().get(0).getRealTimeInMillis(blockDescrip))/(double) 1000.0 + " seconds");
 		
 		writer.write(System.getProperty("line.separator") + System.getProperty("line.separator"));
 		
@@ -134,7 +132,7 @@ public class ArchiveParser
 	}
 	
 	// TODO: Optimize this method to touch disk less, very slow now
-	private int InsertBlockInCsv( int blockIndex, File file ) throws IOException
+	private int InsertBlockInCsv( int blockIndex, File file ) throws Exception
 	{
 		file.createNewFile();
 		File tempFile = new File(file.getPath() + "_temp");
@@ -144,7 +142,7 @@ public class ArchiveParser
 		int pointId = ParseBlock(blockIndex);
 		
 		// grab the points in this block, they are sorted coming out of the file
-		ArrayList<StandardPointFile> points = m_fileHandler.arPoints;
+		DataBlockDescription blockDescrip = m_fileHandler.getCurrentBlock().getBlockDescription();
 		int pointIndex = 0;
 		
 		// open the file
@@ -156,14 +154,14 @@ public class ArchiveParser
 		BufferedWriter tempWriter = new BufferedWriter(new FileWriter(tempFile, true), 1024*1024*32);
 		
 		// read file
-		while(pointIndex < points.size()-1 && (fileLineSaved && line != null) || ((line = fileReader.readLine()) != null))
+		while(pointIndex < m_fileHandler.getCurrentBlock().getPointCount()-1 && (fileLineSaved && line != null) || ((line = fileReader.readLine()) != null))
 		{
 			fileLineSaved = false;
 			
 			long lineTimestamp = Long.parseLong(line.split(",")[0]);
 			float lineValue = Float.parseFloat(line.split(",")[1]);
 			
-			if( lineTimestamp < points.get(pointIndex).GetCalendar().getTimeInMillis() )
+			if( lineTimestamp < m_fileHandler.getCurrentBlock().getPoints().get(pointIndex).getRealTimeInMillis(blockDescrip) )
 			{
 				// write the point from the existing file first
 				tempWriter.write(Long.toString(lineTimestamp));
@@ -176,9 +174,9 @@ public class ArchiveParser
 			else
 			{
 				// write the point we just read from the block first
-				tempWriter.write(Long.toString(points.get(pointIndex).GetCalendar().getTimeInMillis()));
+				tempWriter.write(Long.toString(m_fileHandler.getCurrentBlock().getPoints().get(pointIndex).getRealTimeInMillis(blockDescrip)));
 				tempWriter.write(",");
-				tempWriter.write(Float.toString(points.get(pointIndex).Value));
+				tempWriter.write(Float.toString(m_fileHandler.getCurrentBlock().getPoints().get(pointIndex).getValue()));
 				tempWriter.write(System.getProperty("line.separator"));
 				
 				pointIndex++;
@@ -186,7 +184,7 @@ public class ArchiveParser
 		}
 		
 		// one of the sets is complete, write the other one
-		if( pointIndex >= points.size() )
+		if( pointIndex >= m_fileHandler.getCurrentBlock().getPointCount() )
 		{
 			// we're out of points, copy the rest of the file over
 			while((line = fileReader.readLine()) != null)
@@ -195,12 +193,12 @@ public class ArchiveParser
 		else
 		{
 			// we've read the whole file, write the rest of the points
-			while( pointIndex < points.size() )
+			while( pointIndex < m_fileHandler.getCurrentBlock().getPointCount() )
 			{
 				// write the point we just read from the block first
-				tempWriter.write(Long.toString(points.get(pointIndex).GetCalendar().getTimeInMillis()));
+				tempWriter.write(Long.toString(m_fileHandler.getCurrentBlock().getPoints().get(pointIndex).getRealTimeInMillis(blockDescrip)));
 				tempWriter.write(",");
-				tempWriter.write(Float.toString(points.get(pointIndex).Value));
+				tempWriter.write(Float.toString(m_fileHandler.getCurrentBlock().getPoints().get(pointIndex).getValue()));
 				tempWriter.write(System.getProperty("line.separator"));
 				
 				pointIndex++;
@@ -218,7 +216,7 @@ public class ArchiveParser
 		return pointId;
 	}
 	
-	private boolean IsBlockInteresting(int blockIndex)
+	private boolean IsBlockInteresting(int blockIndex) throws Exception
 	{
 		for( int i = 0; i < m_pointIds.length; i++ )
 		{
@@ -233,9 +231,9 @@ public class ArchiveParser
 	 * Usage examples.
 	 * 
 	 * @param args
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public static void main( String[] args ) throws IOException
+	public static void main( String[] args ) throws Exception
 	{
 		long start = Calendar.getInstance().getTimeInMillis();
 		ArchiveParser parser = new ArchiveParser();

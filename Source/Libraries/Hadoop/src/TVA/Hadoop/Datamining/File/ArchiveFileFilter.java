@@ -20,7 +20,6 @@ public class ArchiveFileFilter
 		
 		ArchiveFileReader reader = new ArchiveFileReader(_inFile);
 		ArchiveFileWriter writer = new ArchiveFileWriter(_outFile, reader.getFAT().getStartTime());
-		writer.initializeBlockMap(reader.getBlockMap().getHeader());
 		
 		for(int i = 0; i < reader.getFAT().getDataBlockCount(); i++)
 		{

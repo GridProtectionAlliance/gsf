@@ -5,7 +5,6 @@ import java.nio.ByteOrder;
 
 public class RawDataPoint
 {
-	
 	public static int length = 10;
 	
 	protected int _timestampOffset;
@@ -36,6 +35,20 @@ public class RawDataPoint
 			throw new Exception("This point has not been initialized yet.");
 		
 		return _value;
+	}
+	
+	public long getRealTimeInMillis(DataBlockDescription ref) throws Exception
+	{
+		// seconds into long datatype
+		long time = (long) this._timestampOffset;
+		// convert seconds to millis
+		time *= 1000;		
+				
+		// millis stored in flags
+		int millis = this._flags;
+		millis = millis >> 5;
+		
+		return ArchiveEpoch.base.getTimeInMillis() + time + (long) millis + ref.getBaseTimestamp();
 	}
 	
 	public byte[] Serialize() throws Exception

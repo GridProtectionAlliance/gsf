@@ -20,7 +20,19 @@ public class FileAllocationTable
 		_pointsReceived = _pointsArchived = 0;
 		
 		// typical
-		_dataBlockSize = 8 * 1024;
+		_dataBlockSize = 8;
+		
+		_dataBlockCount = 0;
+	}
+	
+	public FileAllocationTable(double startTime, int dataBlockSize)
+	{
+		_fileStartTime = startTime; 
+		_fileEndTime = 0;
+		_pointsReceived = _pointsArchived = 0;
+		
+		// typical
+		_dataBlockSize = dataBlockSize;
 		
 		_dataBlockCount = 0;
 	}
@@ -49,6 +61,10 @@ public class FileAllocationTable
 	{
 		return _dataBlockSize;
 	}
+	public int getDataBlockSizeInBytes()
+	{
+		return _dataBlockSize * 1024;
+	}
 	
 	public int getDataBlockCount()
 	{
@@ -57,7 +73,7 @@ public class FileAllocationTable
 	
 	public int getBlockMapLength()
 	{
-		return _dataBlockCount * _dataBlockSize;
+		return 10 + _dataBlockCount * DataBlockDescription.length;
 	}
 	
 	public void incrementPointsReceived()

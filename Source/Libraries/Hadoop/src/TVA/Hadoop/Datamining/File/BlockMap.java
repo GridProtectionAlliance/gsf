@@ -9,39 +9,51 @@ public class BlockMap
 	private byte[] _header = new byte[10];
 	ArrayList<DataBlockDescription> _descriptions;
 	
-	private boolean _isValid = false;
-	
-	public byte[] getHeader() throws Exception
+	public BlockMap()
 	{
-		if(!_isValid)
-			throw new Exception("This object has not been initialized yet.");
-		
-		return _header;
+		_descriptions = new ArrayList<DataBlockDescription>();
 	}
 	
 	public ArrayList<DataBlockDescription> getBlockDescriptions() throws Exception
-	{
-		if(!_isValid)
-			throw new Exception("This object has not been initialized yet.");
-		
+	{		
 		return _descriptions;
 	}
 	
 	public void addBlockDescription(DataBlockDescription blockDescription) throws Exception
-	{
-		if(!_isValid)
-			throw new Exception("This object has not been initialized yet.");
-		
+	{		
 		_descriptions.add(blockDescription);
+	}
+	
+	public void printPointIds() throws Exception
+	{
+		for(int i = 0; i < _descriptions.size(); i++)
+			System.out.print(_descriptions.get(i).getPointId() + ",");
+	}
+	
+	/**
+	 * Header provides legacy support to serialize arrays in vb6
+	 */
+	private void calculateHeader()
+	{
+		ByteBuffer buffer = ByteBuffer.allocate(_header.length);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		
+		// 1 dimension descriptor
+		buffer.putShort((short)1);
+		
+		// length
+		buffer.putInt(_descriptions.size());
+		
+		// VB6 arrays are 1 based
+		buffer.putInt(1);
 	}
 	
 	public byte[] Serialize() throws Exception
 	{
-		if(!_isValid)
-			throw new Exception("This object has not been initialized yet.");
-		
 		ByteBuffer buffer = ByteBuffer.allocate(_header.length + DataBlockDescription.length*_descriptions.size());
 		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		
+		calculateHeader();
 		buffer.put(_header);
 		
 		for (DataBlockDescription blockDescription : _descriptions)
@@ -65,8 +77,6 @@ public class BlockMap
 			buffer.get(descripBuffer);
 			blockMap._descriptions.add(DataBlockDescription.Deserialize(descripBuffer));
 		}
-
-		blockMap._isValid = true;
 		
 		return blockMap;
 	}

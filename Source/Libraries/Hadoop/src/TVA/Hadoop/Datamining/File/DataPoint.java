@@ -4,17 +4,20 @@ public class DataPoint extends RawDataPoint
 {
 	protected DataBlockDescription _blockDescrip;
 	
-	public long getRealTimeInMillis(DataBlockDescription ref)
+	public static DataPoint convert(DataBlockDescription blockDescription, RawDataPoint point)
 	{
-		// seconds into long datatype
-		long time = (long) this._timestampOffset;
-		// convert seconds to millis
-		time *= 1000;		
-				
-		// millis stored in flags
-		int millis = this._flags;
-		millis = millis >> 5;
+		DataPoint convertedPoint = new DataPoint();
+		convertedPoint._blockDescrip = blockDescription;
+		convertedPoint._flags = point._flags;
+		convertedPoint._isValid = point._isValid;
+		convertedPoint._timestampOffset = point._timestampOffset;
+		convertedPoint._value = point._value;
 		
-		return ArchiveEpoch.base.getTimeInMillis() + time + (long) millis;
+		return convertedPoint;
+	}
+	
+	public DataBlockDescription getBlockDescription()
+	{
+		return _blockDescrip;
 	}
 }

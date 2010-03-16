@@ -63,11 +63,6 @@ public class ArchiveFileWriter
 		}
 	}
 	
-	public void initializeBlockMap(byte[] header)
-	{
-		_blockMap = new BlockMap(header);
-	}
-	
 	private void initializeNewBlock(DataBlockDescription blockDescription) throws Exception
 	{
 		_currentBlock = new DataBlock(_fat.getDataBlockSizeInBytes());
