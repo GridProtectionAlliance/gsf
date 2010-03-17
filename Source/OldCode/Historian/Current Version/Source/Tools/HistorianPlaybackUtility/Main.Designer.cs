@@ -28,508 +28,863 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.folderBrowserDialog = new System.Windows.Forms.FolderBrowserDialog();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.groupBoxTransmit = new System.Windows.Forms.GroupBox();
-            this.checkBoxRepeat = new System.Windows.Forms.CheckBox();
-            this.radioButtonPlaybackFullspeed = new System.Windows.Forms.RadioButton();
-            this.textBoxPort = new System.Windows.Forms.TextBox();
-            this.labelPort = new System.Windows.Forms.Label();
-            this.textBoxServer = new System.Windows.Forms.TextBox();
-            this.labelServer = new System.Windows.Forms.Label();
-            this.comboBoxProtocol = new System.Windows.Forms.ComboBox();
-            this.labelProtocol = new System.Windows.Forms.Label();
-            this.textBoxPlaybackSampleRate = new System.Windows.Forms.TextBox();
-            this.radioButtonPlaybackControlled = new System.Windows.Forms.RadioButton();
-            this.groupBoxFiles = new System.Windows.Forms.GroupBox();
-            this.linkLabelSecondaryArchive = new System.Windows.Forms.LinkLabel();
-            this.textBoxSecondaryArchive = new System.Windows.Forms.TextBox();
-            this.labelSecondaryArchive = new System.Windows.Forms.Label();
-            this.linkLabelPrimaryArchive = new System.Windows.Forms.LinkLabel();
-            this.textBoxPrimaryArchive = new System.Windows.Forms.TextBox();
-            this.labelPrimaryArchive = new System.Windows.Forms.Label();
-            this.groupBoxData = new System.Windows.Forms.GroupBox();
-            this.linkLabelFind = new System.Windows.Forms.LinkLabel();
-            this.linkLabelClear = new System.Windows.Forms.LinkLabel();
-            this.textBoxSearch = new System.Windows.Forms.TextBox();
-            this.dateTimePickerEndTime = new System.Windows.Forms.DateTimePicker();
-            this.dateTimePickerStartTime = new System.Windows.Forms.DateTimePicker();
-            this.labelEndTime = new System.Windows.Forms.Label();
-            this.labelStartTime = new System.Windows.Forms.Label();
-            this.checkedListBoxPointIDs = new System.Windows.Forms.CheckedListBox();
-            this.groupBoxMessages = new System.Windows.Forms.GroupBox();
-            this.textBoxMessages = new System.Windows.Forms.TextBox();
-            this.buttonStart = new System.Windows.Forms.Button();
-            this.buttonStop = new System.Windows.Forms.Button();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.Panel2.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
-            this.groupBoxTransmit.SuspendLayout();
-            this.groupBoxFiles.SuspendLayout();
-            this.groupBoxData.SuspendLayout();
-            this.groupBoxMessages.SuspendLayout();
+            this.FolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
+            this.SplitContainerFull = new System.Windows.Forms.SplitContainer();
+            this.SplitContainerTop = new System.Windows.Forms.SplitContainer();
+            this.InputSelectionContainer = new System.Windows.Forms.GroupBox();
+            this.SearchPhraseClear = new System.Windows.Forms.LinkLabel();
+            this.SearchPhraseFind = new System.Windows.Forms.LinkLabel();
+            this.ArchiveLocationBrowse = new System.Windows.Forms.LinkLabel();
+            this.SearchPhraseLabel = new System.Windows.Forms.Label();
+            this.SearchPhraseInput = new System.Windows.Forms.TextBox();
+            this.EndTimeInput = new System.Windows.Forms.DateTimePicker();
+            this.ArchiveLocationInput = new System.Windows.Forms.TextBox();
+            this.ArchiveLocationLabel = new System.Windows.Forms.Label();
+            this.StartTimeInput = new System.Windows.Forms.DateTimePicker();
+            this.EndTimeLabel = new System.Windows.Forms.Label();
+            this.StartTimeLabel = new System.Windows.Forms.Label();
+            this.IDInput = new System.Windows.Forms.CheckedListBox();
+            this.OutputSelectionContainer = new System.Windows.Forms.GroupBox();
+            this.OutputCannelTabs = new System.Windows.Forms.TabControl();
+            this.TCPSettingsTab = new System.Windows.Forms.TabPage();
+            this.TCPPortInput = new System.Windows.Forms.TextBox();
+            this.TCPPortLabel = new System.Windows.Forms.Label();
+            this.TCPServerInput = new System.Windows.Forms.TextBox();
+            this.TCPServerLabel = new System.Windows.Forms.Label();
+            this.UDPSettingsTab = new System.Windows.Forms.TabPage();
+            this.UDPPortInput = new System.Windows.Forms.TextBox();
+            this.UDPPortLabel = new System.Windows.Forms.Label();
+            this.UDPServerInput = new System.Windows.Forms.TextBox();
+            this.UDPServerLabel = new System.Windows.Forms.Label();
+            this.FileSettingsTab = new System.Windows.Forms.TabPage();
+            this.FileNameBrowse = new System.Windows.Forms.Button();
+            this.FileNameInput = new System.Windows.Forms.TextBox();
+            this.FileNameLabel = new System.Windows.Forms.Label();
+            this.SerialSettingsTab = new System.Windows.Forms.TabPage();
+            this.SerialRtsEnable = new System.Windows.Forms.CheckBox();
+            this.SerialDtrEnable = new System.Windows.Forms.CheckBox();
+            this.SerialDataBitsInput = new System.Windows.Forms.TextBox();
+            this.SerialDataBitsLabel = new System.Windows.Forms.Label();
+            this.SerialStopBitsInput = new System.Windows.Forms.ComboBox();
+            this.SerialStopBitsLabel = new System.Windows.Forms.Label();
+            this.SerialParityInput = new System.Windows.Forms.ComboBox();
+            this.SerialParityLabel = new System.Windows.Forms.Label();
+            this.SerialBaudRateInput = new System.Windows.Forms.ComboBox();
+            this.SerialBaudRateLabel = new System.Windows.Forms.Label();
+            this.SerialPortInput = new System.Windows.Forms.ComboBox();
+            this.SerialPortLabel = new System.Windows.Forms.Label();
+            this.ProcessingSpeedContainer = new System.Windows.Forms.Panel();
+            this.ProcessDataFullSpeed = new System.Windows.Forms.RadioButton();
+            this.ProcessDataAtIntervalSampleRate = new System.Windows.Forms.TextBox();
+            this.ProcessDataAtInterval = new System.Windows.Forms.RadioButton();
+            this.RepeatDataProcessing = new System.Windows.Forms.CheckBox();
+            this.ProcessDataInParallel = new System.Windows.Forms.CheckBox();
+            this.OutputFormatContainer = new System.Windows.Forms.Panel();
+            this.OutputPlainTextDataFormat = new System.Windows.Forms.RichTextBox();
+            this.OutputPlainTextData = new System.Windows.Forms.RadioButton();
+            this.OutputBinaryData = new System.Windows.Forms.RadioButton();
+            this.OutputChannelLabel = new System.Windows.Forms.Label();
+            this.MessagesContainer = new System.Windows.Forms.GroupBox();
+            this.MessagesOutput = new System.Windows.Forms.TextBox();
+            this.StartProcessing = new System.Windows.Forms.Button();
+            this.StopProcessing = new System.Windows.Forms.Button();
+            this.SaveFile = new System.Windows.Forms.SaveFileDialog();
+            this.SplitContainerFull.Panel1.SuspendLayout();
+            this.SplitContainerFull.Panel2.SuspendLayout();
+            this.SplitContainerFull.SuspendLayout();
+            this.SplitContainerTop.Panel1.SuspendLayout();
+            this.SplitContainerTop.Panel2.SuspendLayout();
+            this.SplitContainerTop.SuspendLayout();
+            this.InputSelectionContainer.SuspendLayout();
+            this.OutputSelectionContainer.SuspendLayout();
+            this.OutputCannelTabs.SuspendLayout();
+            this.TCPSettingsTab.SuspendLayout();
+            this.UDPSettingsTab.SuspendLayout();
+            this.FileSettingsTab.SuspendLayout();
+            this.SerialSettingsTab.SuspendLayout();
+            this.ProcessingSpeedContainer.SuspendLayout();
+            this.OutputFormatContainer.SuspendLayout();
+            this.MessagesContainer.SuspendLayout();
             this.SuspendLayout();
             // 
-            // splitContainer1
+            // SplitContainerFull
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitContainer1.IsSplitterFixed = true;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.SplitContainerFull.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SplitContainerFull.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.SplitContainerFull.IsSplitterFixed = true;
+            this.SplitContainerFull.Location = new System.Drawing.Point(0, 0);
+            this.SplitContainerFull.Name = "SplitContainerFull";
+            this.SplitContainerFull.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
-            // splitContainer1.Panel1
+            // SplitContainerFull.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.splitContainer2);
+            this.SplitContainerFull.Panel1.Controls.Add(this.SplitContainerTop);
             // 
-            // splitContainer1.Panel2
+            // SplitContainerFull.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.groupBoxMessages);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonStart);
-            this.splitContainer1.Panel2.Controls.Add(this.buttonStop);
-            this.splitContainer1.Size = new System.Drawing.Size(692, 566);
-            this.splitContainer1.SplitterDistance = 277;
-            this.splitContainer1.TabIndex = 0;
+            this.SplitContainerFull.Panel2.Controls.Add(this.MessagesContainer);
+            this.SplitContainerFull.Panel2.Controls.Add(this.StartProcessing);
+            this.SplitContainerFull.Panel2.Controls.Add(this.StopProcessing);
+            this.SplitContainerFull.Size = new System.Drawing.Size(692, 566);
+            this.SplitContainerFull.SplitterDistance = 324;
+            this.SplitContainerFull.TabIndex = 0;
             // 
-            // splitContainer2
+            // SplitContainerTop
             // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.IsSplitterFixed = true;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
+            this.SplitContainerTop.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.SplitContainerTop.IsSplitterFixed = true;
+            this.SplitContainerTop.Location = new System.Drawing.Point(0, 0);
+            this.SplitContainerTop.Name = "SplitContainerTop";
             // 
-            // splitContainer2.Panel1
+            // SplitContainerTop.Panel1
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.groupBoxTransmit);
-            this.splitContainer2.Panel1.Controls.Add(this.groupBoxFiles);
+            this.SplitContainerTop.Panel1.Controls.Add(this.InputSelectionContainer);
             // 
-            // splitContainer2.Panel2
+            // SplitContainerTop.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.groupBoxData);
-            this.splitContainer2.Size = new System.Drawing.Size(692, 277);
-            this.splitContainer2.SplitterDistance = 346;
-            this.splitContainer2.TabIndex = 0;
+            this.SplitContainerTop.Panel2.Controls.Add(this.OutputSelectionContainer);
+            this.SplitContainerTop.Size = new System.Drawing.Size(692, 324);
+            this.SplitContainerTop.SplitterDistance = 346;
+            this.SplitContainerTop.TabIndex = 0;
             // 
-            // groupBoxTransmit
+            // InputSelectionContainer
             // 
-            this.groupBoxTransmit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputSelectionContainer.Controls.Add(this.SearchPhraseClear);
+            this.InputSelectionContainer.Controls.Add(this.SearchPhraseFind);
+            this.InputSelectionContainer.Controls.Add(this.ArchiveLocationBrowse);
+            this.InputSelectionContainer.Controls.Add(this.SearchPhraseLabel);
+            this.InputSelectionContainer.Controls.Add(this.SearchPhraseInput);
+            this.InputSelectionContainer.Controls.Add(this.EndTimeInput);
+            this.InputSelectionContainer.Controls.Add(this.ArchiveLocationInput);
+            this.InputSelectionContainer.Controls.Add(this.ArchiveLocationLabel);
+            this.InputSelectionContainer.Controls.Add(this.StartTimeInput);
+            this.InputSelectionContainer.Controls.Add(this.EndTimeLabel);
+            this.InputSelectionContainer.Controls.Add(this.StartTimeLabel);
+            this.InputSelectionContainer.Controls.Add(this.IDInput);
+            this.InputSelectionContainer.Location = new System.Drawing.Point(12, 12);
+            this.InputSelectionContainer.Name = "InputSelectionContainer";
+            this.InputSelectionContainer.Size = new System.Drawing.Size(328, 309);
+            this.InputSelectionContainer.TabIndex = 1001;
+            this.InputSelectionContainer.TabStop = false;
+            this.InputSelectionContainer.Text = "Input Selection";
+            // 
+            // SearchPhraseClear
+            // 
+            this.SearchPhraseClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseClear.AutoSize = true;
+            this.SearchPhraseClear.Location = new System.Drawing.Point(265, 59);
+            this.SearchPhraseClear.Name = "SearchPhraseClear";
+            this.SearchPhraseClear.Size = new System.Drawing.Size(32, 13);
+            this.SearchPhraseClear.TabIndex = 4;
+            this.SearchPhraseClear.TabStop = true;
+            this.SearchPhraseClear.Text = "Clear";
+            this.SearchPhraseClear.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.SearchPhraseClear_LinkClicked);
+            // 
+            // SearchPhraseFind
+            // 
+            this.SearchPhraseFind.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseFind.AutoSize = true;
+            this.SearchPhraseFind.Location = new System.Drawing.Point(298, 59);
+            this.SearchPhraseFind.Name = "SearchPhraseFind";
+            this.SearchPhraseFind.Size = new System.Drawing.Size(27, 13);
+            this.SearchPhraseFind.TabIndex = 3;
+            this.SearchPhraseFind.TabStop = true;
+            this.SearchPhraseFind.Text = "Find";
+            this.SearchPhraseFind.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.SearchPhraseFind_LinkClicked);
+            // 
+            // ArchiveLocationBrowse
+            // 
+            this.ArchiveLocationBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ArchiveLocationBrowse.AutoSize = true;
+            this.ArchiveLocationBrowse.Location = new System.Drawing.Point(283, 17);
+            this.ArchiveLocationBrowse.Name = "ArchiveLocationBrowse";
+            this.ArchiveLocationBrowse.Size = new System.Drawing.Size(42, 13);
+            this.ArchiveLocationBrowse.TabIndex = 1;
+            this.ArchiveLocationBrowse.TabStop = true;
+            this.ArchiveLocationBrowse.Text = "Browse";
+            this.ArchiveLocationBrowse.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.ArchiveLocationBrowse_LinkClicked);
+            // 
+            // SearchPhraseLabel
+            // 
+            this.SearchPhraseLabel.AutoSize = true;
+            this.SearchPhraseLabel.Location = new System.Drawing.Point(6, 59);
+            this.SearchPhraseLabel.Name = "SearchPhraseLabel";
+            this.SearchPhraseLabel.Size = new System.Drawing.Size(80, 13);
+            this.SearchPhraseLabel.TabIndex = 13;
+            this.SearchPhraseLabel.Text = "Search Phrase:";
+            // 
+            // SearchPhraseInput
+            // 
+            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseInput.Location = new System.Drawing.Point(6, 75);
+            this.SearchPhraseInput.Name = "SearchPhraseInput";
+            this.SearchPhraseInput.Size = new System.Drawing.Size(316, 21);
+            this.SearchPhraseInput.TabIndex = 2;
+            this.SearchPhraseInput.TextChanged += new System.EventHandler(this.SearchPhraseInput_TextChanged);
+            this.SearchPhraseInput.Leave += new System.EventHandler(this.SearchPhraseInput_Leave);
+            this.SearchPhraseInput.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchPhraseInput_MouseClick);
+            // 
+            // EndTimeInput
+            // 
+            this.EndTimeInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EndTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
+            this.EndTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.EndTimeInput.Location = new System.Drawing.Point(177, 277);
+            this.EndTimeInput.Name = "EndTimeInput";
+            this.EndTimeInput.Size = new System.Drawing.Size(145, 21);
+            this.EndTimeInput.TabIndex = 7;
+            // 
+            // ArchiveLocationInput
+            // 
+            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ArchiveLocationInput.Location = new System.Drawing.Point(6, 33);
+            this.ArchiveLocationInput.Name = "ArchiveLocationInput";
+            this.ArchiveLocationInput.Size = new System.Drawing.Size(316, 21);
+            this.ArchiveLocationInput.TabIndex = 0;
+            this.ArchiveLocationInput.TextChanged += new System.EventHandler(this.ArchiveLocationInput_TextChanged);
+            // 
+            // ArchiveLocationLabel
+            // 
+            this.ArchiveLocationLabel.AutoSize = true;
+            this.ArchiveLocationLabel.Location = new System.Drawing.Point(6, 17);
+            this.ArchiveLocationLabel.Name = "ArchiveLocationLabel";
+            this.ArchiveLocationLabel.Size = new System.Drawing.Size(90, 13);
+            this.ArchiveLocationLabel.TabIndex = 0;
+            this.ArchiveLocationLabel.Text = "Archive Location:";
+            // 
+            // StartTimeInput
+            // 
+            this.StartTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
+            this.StartTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
+            this.StartTimeInput.Location = new System.Drawing.Point(6, 277);
+            this.StartTimeInput.Name = "StartTimeInput";
+            this.StartTimeInput.Size = new System.Drawing.Size(145, 21);
+            this.StartTimeInput.TabIndex = 6;
+            // 
+            // EndTimeLabel
+            // 
+            this.EndTimeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.EndTimeLabel.AutoSize = true;
+            this.EndTimeLabel.Location = new System.Drawing.Point(174, 261);
+            this.EndTimeLabel.Name = "EndTimeLabel";
+            this.EndTimeLabel.Size = new System.Drawing.Size(97, 13);
+            this.EndTimeLabel.TabIndex = 0;
+            this.EndTimeLabel.Text = "End Time (in GMT):";
+            // 
+            // StartTimeLabel
+            // 
+            this.StartTimeLabel.AutoSize = true;
+            this.StartTimeLabel.Location = new System.Drawing.Point(3, 261);
+            this.StartTimeLabel.Name = "StartTimeLabel";
+            this.StartTimeLabel.Size = new System.Drawing.Size(103, 13);
+            this.StartTimeLabel.TabIndex = 0;
+            this.StartTimeLabel.Text = "Start Time (in GMT):";
+            // 
+            // IDInput
+            // 
+            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.IDInput.CheckOnClick = true;
+            this.IDInput.FormattingEnabled = true;
+            this.IDInput.HorizontalScrollbar = true;
+            this.IDInput.Location = new System.Drawing.Point(6, 102);
+            this.IDInput.Name = "IDInput";
+            this.IDInput.Size = new System.Drawing.Size(316, 148);
+            this.IDInput.TabIndex = 5;
+            // 
+            // OutputSelectionContainer
+            // 
+            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputSelectionContainer.Controls.Add(this.OutputCannelTabs);
+            this.OutputSelectionContainer.Controls.Add(this.ProcessingSpeedContainer);
+            this.OutputSelectionContainer.Controls.Add(this.RepeatDataProcessing);
+            this.OutputSelectionContainer.Controls.Add(this.ProcessDataInParallel);
+            this.OutputSelectionContainer.Controls.Add(this.OutputFormatContainer);
+            this.OutputSelectionContainer.Controls.Add(this.OutputChannelLabel);
+            this.OutputSelectionContainer.Location = new System.Drawing.Point(3, 12);
+            this.OutputSelectionContainer.Name = "OutputSelectionContainer";
+            this.OutputSelectionContainer.Size = new System.Drawing.Size(328, 309);
+            this.OutputSelectionContainer.TabIndex = 1001;
+            this.OutputSelectionContainer.TabStop = false;
+            this.OutputSelectionContainer.Text = "Output Selection";
+            // 
+            // OutputCannelTabs
+            // 
+            this.OutputCannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputCannelTabs.Controls.Add(this.TCPSettingsTab);
+            this.OutputCannelTabs.Controls.Add(this.UDPSettingsTab);
+            this.OutputCannelTabs.Controls.Add(this.FileSettingsTab);
+            this.OutputCannelTabs.Controls.Add(this.SerialSettingsTab);
+            this.OutputCannelTabs.Location = new System.Drawing.Point(6, 33);
+            this.OutputCannelTabs.Name = "OutputCannelTabs";
+            this.OutputCannelTabs.SelectedIndex = 0;
+            this.OutputCannelTabs.Size = new System.Drawing.Size(317, 109);
+            this.OutputCannelTabs.TabIndex = 8;
+            // 
+            // TCPSettingsTab
+            // 
+            this.TCPSettingsTab.Controls.Add(this.TCPPortInput);
+            this.TCPSettingsTab.Controls.Add(this.TCPPortLabel);
+            this.TCPSettingsTab.Controls.Add(this.TCPServerInput);
+            this.TCPSettingsTab.Controls.Add(this.TCPServerLabel);
+            this.TCPSettingsTab.Location = new System.Drawing.Point(4, 22);
+            this.TCPSettingsTab.Name = "TCPSettingsTab";
+            this.TCPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.TCPSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.TCPSettingsTab.TabIndex = 0;
+            this.TCPSettingsTab.Text = "TCP";
+            this.TCPSettingsTab.UseVisualStyleBackColor = true;
+            // 
+            // TCPPortInput
+            // 
+            this.TCPPortInput.Location = new System.Drawing.Point(197, 6);
+            this.TCPPortInput.Name = "TCPPortInput";
+            this.TCPPortInput.Size = new System.Drawing.Size(50, 21);
+            this.TCPPortInput.TabIndex = 10;
+            this.TCPPortInput.Text = "8989";
+            // 
+            // TCPPortLabel
+            // 
+            this.TCPPortLabel.AutoSize = true;
+            this.TCPPortLabel.Location = new System.Drawing.Point(160, 9);
+            this.TCPPortLabel.Name = "TCPPortLabel";
+            this.TCPPortLabel.Size = new System.Drawing.Size(31, 13);
+            this.TCPPortLabel.TabIndex = 19;
+            this.TCPPortLabel.Text = "Port:";
+            // 
+            // TCPServerInput
+            // 
+            this.TCPServerInput.Location = new System.Drawing.Point(52, 6);
+            this.TCPServerInput.Name = "TCPServerInput";
+            this.TCPServerInput.Size = new System.Drawing.Size(100, 21);
+            this.TCPServerInput.TabIndex = 9;
+            this.TCPServerInput.Text = "localhost";
+            // 
+            // TCPServerLabel
+            // 
+            this.TCPServerLabel.AutoSize = true;
+            this.TCPServerLabel.Location = new System.Drawing.Point(3, 9);
+            this.TCPServerLabel.Name = "TCPServerLabel";
+            this.TCPServerLabel.Size = new System.Drawing.Size(43, 13);
+            this.TCPServerLabel.TabIndex = 18;
+            this.TCPServerLabel.Text = "Server:";
+            // 
+            // UDPSettingsTab
+            // 
+            this.UDPSettingsTab.Controls.Add(this.UDPPortInput);
+            this.UDPSettingsTab.Controls.Add(this.UDPPortLabel);
+            this.UDPSettingsTab.Controls.Add(this.UDPServerInput);
+            this.UDPSettingsTab.Controls.Add(this.UDPServerLabel);
+            this.UDPSettingsTab.Location = new System.Drawing.Point(4, 22);
+            this.UDPSettingsTab.Name = "UDPSettingsTab";
+            this.UDPSettingsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.UDPSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.UDPSettingsTab.TabIndex = 1;
+            this.UDPSettingsTab.Text = "UDP";
+            this.UDPSettingsTab.UseVisualStyleBackColor = true;
+            // 
+            // UDPPortInput
+            // 
+            this.UDPPortInput.Location = new System.Drawing.Point(197, 6);
+            this.UDPPortInput.Name = "UDPPortInput";
+            this.UDPPortInput.Size = new System.Drawing.Size(50, 21);
+            this.UDPPortInput.TabIndex = 12;
+            this.UDPPortInput.Text = "8989";
+            // 
+            // UDPPortLabel
+            // 
+            this.UDPPortLabel.AutoSize = true;
+            this.UDPPortLabel.Location = new System.Drawing.Point(160, 9);
+            this.UDPPortLabel.Name = "UDPPortLabel";
+            this.UDPPortLabel.Size = new System.Drawing.Size(31, 13);
+            this.UDPPortLabel.TabIndex = 27;
+            this.UDPPortLabel.Text = "Port:";
+            // 
+            // UDPServerInput
+            // 
+            this.UDPServerInput.Location = new System.Drawing.Point(52, 6);
+            this.UDPServerInput.Name = "UDPServerInput";
+            this.UDPServerInput.Size = new System.Drawing.Size(100, 21);
+            this.UDPServerInput.TabIndex = 11;
+            this.UDPServerInput.Text = "localhost";
+            // 
+            // UDPServerLabel
+            // 
+            this.UDPServerLabel.AutoSize = true;
+            this.UDPServerLabel.Location = new System.Drawing.Point(3, 9);
+            this.UDPServerLabel.Name = "UDPServerLabel";
+            this.UDPServerLabel.Size = new System.Drawing.Size(43, 13);
+            this.UDPServerLabel.TabIndex = 26;
+            this.UDPServerLabel.Text = "Server:";
+            // 
+            // FileSettingsTab
+            // 
+            this.FileSettingsTab.Controls.Add(this.FileNameBrowse);
+            this.FileSettingsTab.Controls.Add(this.FileNameInput);
+            this.FileSettingsTab.Controls.Add(this.FileNameLabel);
+            this.FileSettingsTab.Location = new System.Drawing.Point(4, 22);
+            this.FileSettingsTab.Name = "FileSettingsTab";
+            this.FileSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.FileSettingsTab.TabIndex = 2;
+            this.FileSettingsTab.Text = "File";
+            this.FileSettingsTab.UseVisualStyleBackColor = true;
+            // 
+            // FileNameBrowse
+            // 
+            this.FileNameBrowse.Location = new System.Drawing.Point(240, 6);
+            this.FileNameBrowse.Name = "FileNameBrowse";
+            this.FileNameBrowse.Size = new System.Drawing.Size(63, 23);
+            this.FileNameBrowse.TabIndex = 14;
+            this.FileNameBrowse.Text = "Browse";
+            this.FileNameBrowse.UseVisualStyleBackColor = true;
+            this.FileNameBrowse.Click += new System.EventHandler(this.FileNameBrowse_Click);
+            // 
+            // FileNameInput
+            // 
+            this.FileNameInput.Location = new System.Drawing.Point(60, 6);
+            this.FileNameInput.Name = "FileNameInput";
+            this.FileNameInput.Size = new System.Drawing.Size(172, 21);
+            this.FileNameInput.TabIndex = 13;
+            this.FileNameInput.Text = "output.dat";
+            // 
+            // FileNameLabel
+            // 
+            this.FileNameLabel.AutoSize = true;
+            this.FileNameLabel.Location = new System.Drawing.Point(3, 9);
+            this.FileNameLabel.Name = "FileNameLabel";
+            this.FileNameLabel.Size = new System.Drawing.Size(53, 13);
+            this.FileNameLabel.TabIndex = 21;
+            this.FileNameLabel.Text = "Filename:";
+            // 
+            // SerialSettingsTab
+            // 
+            this.SerialSettingsTab.Controls.Add(this.SerialRtsEnable);
+            this.SerialSettingsTab.Controls.Add(this.SerialDtrEnable);
+            this.SerialSettingsTab.Controls.Add(this.SerialDataBitsInput);
+            this.SerialSettingsTab.Controls.Add(this.SerialDataBitsLabel);
+            this.SerialSettingsTab.Controls.Add(this.SerialStopBitsInput);
+            this.SerialSettingsTab.Controls.Add(this.SerialStopBitsLabel);
+            this.SerialSettingsTab.Controls.Add(this.SerialParityInput);
+            this.SerialSettingsTab.Controls.Add(this.SerialParityLabel);
+            this.SerialSettingsTab.Controls.Add(this.SerialBaudRateInput);
+            this.SerialSettingsTab.Controls.Add(this.SerialBaudRateLabel);
+            this.SerialSettingsTab.Controls.Add(this.SerialPortInput);
+            this.SerialSettingsTab.Controls.Add(this.SerialPortLabel);
+            this.SerialSettingsTab.Location = new System.Drawing.Point(4, 22);
+            this.SerialSettingsTab.Name = "SerialSettingsTab";
+            this.SerialSettingsTab.Size = new System.Drawing.Size(309, 83);
+            this.SerialSettingsTab.TabIndex = 3;
+            this.SerialSettingsTab.Text = "Serial";
+            this.SerialSettingsTab.UseVisualStyleBackColor = true;
+            // 
+            // SerialRtsEnable
+            // 
+            this.SerialRtsEnable.AutoSize = true;
+            this.SerialRtsEnable.Location = new System.Drawing.Point(264, 60);
+            this.SerialRtsEnable.Name = "SerialRtsEnable";
+            this.SerialRtsEnable.Size = new System.Drawing.Size(45, 17);
+            this.SerialRtsEnable.TabIndex = 30;
+            this.SerialRtsEnable.Text = "RTS";
+            this.SerialRtsEnable.UseVisualStyleBackColor = true;
+            // 
+            // SerialDtrEnable
+            // 
+            this.SerialDtrEnable.AutoSize = true;
+            this.SerialDtrEnable.Location = new System.Drawing.Point(222, 60);
+            this.SerialDtrEnable.Name = "SerialDtrEnable";
+            this.SerialDtrEnable.Size = new System.Drawing.Size(46, 17);
+            this.SerialDtrEnable.TabIndex = 29;
+            this.SerialDtrEnable.Text = "DTR";
+            this.SerialDtrEnable.UseVisualStyleBackColor = true;
+            // 
+            // SerialDataBitsInput
+            // 
+            this.SerialDataBitsInput.Location = new System.Drawing.Point(222, 31);
+            this.SerialDataBitsInput.Name = "SerialDataBitsInput";
+            this.SerialDataBitsInput.Size = new System.Drawing.Size(76, 21);
+            this.SerialDataBitsInput.TabIndex = 28;
+            this.SerialDataBitsInput.Text = "8";
+            // 
+            // SerialDataBitsLabel
+            // 
+            this.SerialDataBitsLabel.AutoSize = true;
+            this.SerialDataBitsLabel.Location = new System.Drawing.Point(164, 34);
+            this.SerialDataBitsLabel.Name = "SerialDataBitsLabel";
+            this.SerialDataBitsLabel.Size = new System.Drawing.Size(54, 13);
+            this.SerialDataBitsLabel.TabIndex = 8;
+            this.SerialDataBitsLabel.Text = "Data Bits:";
+            // 
+            // SerialStopBitsInput
+            // 
+            this.SerialStopBitsInput.FormattingEnabled = true;
+            this.SerialStopBitsInput.Items.AddRange(new object[] {
+            "None",
+            "One",
+            "Two",
+            "OnePointFive"});
+            this.SerialStopBitsInput.Location = new System.Drawing.Point(222, 6);
+            this.SerialStopBitsInput.Name = "SerialStopBitsInput";
+            this.SerialStopBitsInput.Size = new System.Drawing.Size(76, 21);
+            this.SerialStopBitsInput.TabIndex = 7;
+            // 
+            // SerialStopBitsLabel
+            // 
+            this.SerialStopBitsLabel.AutoSize = true;
+            this.SerialStopBitsLabel.Location = new System.Drawing.Point(163, 9);
+            this.SerialStopBitsLabel.Name = "SerialStopBitsLabel";
+            this.SerialStopBitsLabel.Size = new System.Drawing.Size(53, 13);
+            this.SerialStopBitsLabel.TabIndex = 6;
+            this.SerialStopBitsLabel.Text = "Stop Bits:";
+            // 
+            // SerialParityInput
+            // 
+            this.SerialParityInput.FormattingEnabled = true;
+            this.SerialParityInput.Items.AddRange(new object[] {
+            "None",
+            "Odd",
+            "Even",
+            "Mark",
+            "Space"});
+            this.SerialParityInput.Location = new System.Drawing.Point(70, 56);
+            this.SerialParityInput.Name = "SerialParityInput";
+            this.SerialParityInput.Size = new System.Drawing.Size(76, 21);
+            this.SerialParityInput.TabIndex = 5;
+            // 
+            // SerialParityLabel
+            // 
+            this.SerialParityLabel.AutoSize = true;
+            this.SerialParityLabel.Location = new System.Drawing.Point(25, 60);
+            this.SerialParityLabel.Name = "SerialParityLabel";
+            this.SerialParityLabel.Size = new System.Drawing.Size(39, 13);
+            this.SerialParityLabel.TabIndex = 4;
+            this.SerialParityLabel.Text = "Parity:";
+            // 
+            // SerialBaudRateInput
+            // 
+            this.SerialBaudRateInput.FormattingEnabled = true;
+            this.SerialBaudRateInput.Items.AddRange(new object[] {
+            "115200",
+            "57600",
+            "38400",
+            "19200",
+            "9600",
+            "4800",
+            "2400",
+            "1200"});
+            this.SerialBaudRateInput.Location = new System.Drawing.Point(70, 31);
+            this.SerialBaudRateInput.Name = "SerialBaudRateInput";
+            this.SerialBaudRateInput.Size = new System.Drawing.Size(76, 21);
+            this.SerialBaudRateInput.TabIndex = 3;
+            // 
+            // SerialBaudRateLabel
+            // 
+            this.SerialBaudRateLabel.AutoSize = true;
+            this.SerialBaudRateLabel.Location = new System.Drawing.Point(3, 34);
+            this.SerialBaudRateLabel.Name = "SerialBaudRateLabel";
+            this.SerialBaudRateLabel.Size = new System.Drawing.Size(61, 13);
+            this.SerialBaudRateLabel.TabIndex = 2;
+            this.SerialBaudRateLabel.Text = "Baud Rate:";
+            // 
+            // SerialPortInput
+            // 
+            this.SerialPortInput.FormattingEnabled = true;
+            this.SerialPortInput.Location = new System.Drawing.Point(70, 6);
+            this.SerialPortInput.Name = "SerialPortInput";
+            this.SerialPortInput.Size = new System.Drawing.Size(76, 21);
+            this.SerialPortInput.TabIndex = 1;
+            // 
+            // SerialPortLabel
+            // 
+            this.SerialPortLabel.AutoSize = true;
+            this.SerialPortLabel.Location = new System.Drawing.Point(33, 10);
+            this.SerialPortLabel.Name = "SerialPortLabel";
+            this.SerialPortLabel.Size = new System.Drawing.Size(31, 13);
+            this.SerialPortLabel.TabIndex = 0;
+            this.SerialPortLabel.Text = "Port:";
+            // 
+            // ProcessingSpeedContainer
+            // 
+            this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataFullSpeed);
+            this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataAtIntervalSampleRate);
+            this.ProcessingSpeedContainer.Controls.Add(this.ProcessDataAtInterval);
+            this.ProcessingSpeedContainer.Location = new System.Drawing.Point(5, 212);
+            this.ProcessingSpeedContainer.Name = "ProcessingSpeedContainer";
+            this.ProcessingSpeedContainer.Size = new System.Drawing.Size(317, 44);
+            this.ProcessingSpeedContainer.TabIndex = 1001;
+            // 
+            // ProcessDataFullSpeed
+            // 
+            this.ProcessDataFullSpeed.AutoSize = true;
+            this.ProcessDataFullSpeed.Checked = true;
+            this.ProcessDataFullSpeed.Location = new System.Drawing.Point(3, 3);
+            this.ProcessDataFullSpeed.Name = "ProcessDataFullSpeed";
+            this.ProcessDataFullSpeed.Size = new System.Drawing.Size(178, 17);
+            this.ProcessDataFullSpeed.TabIndex = 18;
+            this.ProcessDataFullSpeed.TabStop = true;
+            this.ProcessDataFullSpeed.Text = "Process data as fast as possible";
+            this.ProcessDataFullSpeed.UseVisualStyleBackColor = true;
+            this.ProcessDataFullSpeed.CheckedChanged += new System.EventHandler(this.ProcessDataFullSpeed_CheckedChanged);
+            // 
+            // ProcessDataAtIntervalSampleRate
+            // 
+            this.ProcessDataAtIntervalSampleRate.Enabled = false;
+            this.ProcessDataAtIntervalSampleRate.Location = new System.Drawing.Point(102, 21);
+            this.ProcessDataAtIntervalSampleRate.Name = "ProcessDataAtIntervalSampleRate";
+            this.ProcessDataAtIntervalSampleRate.Size = new System.Drawing.Size(30, 21);
+            this.ProcessDataAtIntervalSampleRate.TabIndex = 27;
+            this.ProcessDataAtIntervalSampleRate.Text = "0";
+            // 
+            // ProcessDataAtInterval
+            // 
+            this.ProcessDataAtInterval.AutoSize = true;
+            this.ProcessDataAtInterval.Location = new System.Drawing.Point(3, 23);
+            this.ProcessDataAtInterval.Name = "ProcessDataAtInterval";
+            this.ProcessDataAtInterval.Size = new System.Drawing.Size(233, 17);
+            this.ProcessDataAtInterval.TabIndex = 19;
+            this.ProcessDataAtInterval.Text = "Process data at             samples per second";
+            this.ProcessDataAtInterval.UseVisualStyleBackColor = true;
+            this.ProcessDataAtInterval.CheckedChanged += new System.EventHandler(this.ProcessDataAtInterval_CheckedChanged);
+            // 
+            // RepeatDataProcessing
+            // 
+            this.RepeatDataProcessing.AutoSize = true;
+            this.RepeatDataProcessing.Location = new System.Drawing.Point(8, 281);
+            this.RepeatDataProcessing.Name = "RepeatDataProcessing";
+            this.RepeatDataProcessing.Size = new System.Drawing.Size(218, 17);
+            this.RepeatDataProcessing.TabIndex = 21;
+            this.RepeatDataProcessing.Text = "Repeat processing of data until stopped";
+            this.RepeatDataProcessing.UseVisualStyleBackColor = true;
+            // 
+            // ProcessDataInParallel
+            // 
+            this.ProcessDataInParallel.AutoSize = true;
+            this.ProcessDataInParallel.Location = new System.Drawing.Point(8, 262);
+            this.ProcessDataInParallel.Name = "ProcessDataInParallel";
+            this.ProcessDataInParallel.Size = new System.Drawing.Size(211, 17);
+            this.ProcessDataInParallel.TabIndex = 20;
+            this.ProcessDataInParallel.Text = "Process selected data points in parallel";
+            this.ProcessDataInParallel.UseVisualStyleBackColor = true;
+            // 
+            // OutputFormatContainer
+            // 
+            this.OutputFormatContainer.Controls.Add(this.OutputPlainTextDataFormat);
+            this.OutputFormatContainer.Controls.Add(this.OutputPlainTextData);
+            this.OutputFormatContainer.Controls.Add(this.OutputBinaryData);
+            this.OutputFormatContainer.Location = new System.Drawing.Point(5, 144);
+            this.OutputFormatContainer.Name = "OutputFormatContainer";
+            this.OutputFormatContainer.Size = new System.Drawing.Size(317, 65);
+            this.OutputFormatContainer.TabIndex = 1001;
+            // 
+            // OutputPlainTextDataFormat
+            // 
+            this.OutputPlainTextDataFormat.Location = new System.Drawing.Point(21, 40);
+            this.OutputPlainTextDataFormat.Name = "OutputPlainTextDataFormat";
+            this.OutputPlainTextDataFormat.Size = new System.Drawing.Size(292, 22);
+            this.OutputPlainTextDataFormat.TabIndex = 17;
+            this.OutputPlainTextDataFormat.Text = "";
+            // 
+            // OutputPlainTextData
+            // 
+            this.OutputPlainTextData.AutoSize = true;
+            this.OutputPlainTextData.Location = new System.Drawing.Point(4, 23);
+            this.OutputPlainTextData.Name = "OutputPlainTextData";
+            this.OutputPlainTextData.Size = new System.Drawing.Size(179, 17);
+            this.OutputPlainTextData.TabIndex = 16;
+            this.OutputPlainTextData.TabStop = true;
+            this.OutputPlainTextData.Text = "Output data in plain-text format";
+            this.OutputPlainTextData.UseVisualStyleBackColor = true;
+            this.OutputPlainTextData.CheckedChanged += new System.EventHandler(this.OutputPlainTextData_CheckedChanged);
+            // 
+            // OutputBinaryData
+            // 
+            this.OutputBinaryData.AutoSize = true;
+            this.OutputBinaryData.Checked = true;
+            this.OutputBinaryData.Location = new System.Drawing.Point(4, 3);
+            this.OutputBinaryData.Name = "OutputBinaryData";
+            this.OutputBinaryData.Size = new System.Drawing.Size(163, 17);
+            this.OutputBinaryData.TabIndex = 15;
+            this.OutputBinaryData.TabStop = true;
+            this.OutputBinaryData.Text = "Output data in binary format";
+            this.OutputBinaryData.UseVisualStyleBackColor = true;
+            this.OutputBinaryData.CheckedChanged += new System.EventHandler(this.OutputBinaryData_CheckedChanged);
+            // 
+            // OutputChannelLabel
+            // 
+            this.OutputChannelLabel.AutoSize = true;
+            this.OutputChannelLabel.Location = new System.Drawing.Point(7, 17);
+            this.OutputChannelLabel.Name = "OutputChannelLabel";
+            this.OutputChannelLabel.Size = new System.Drawing.Size(87, 13);
+            this.OutputChannelLabel.TabIndex = 19;
+            this.OutputChannelLabel.Text = "Output Channel:\r\n";
+            // 
+            // MessagesContainer
+            // 
+            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxTransmit.Controls.Add(this.checkBoxRepeat);
-            this.groupBoxTransmit.Controls.Add(this.radioButtonPlaybackFullspeed);
-            this.groupBoxTransmit.Controls.Add(this.textBoxPort);
-            this.groupBoxTransmit.Controls.Add(this.labelPort);
-            this.groupBoxTransmit.Controls.Add(this.textBoxServer);
-            this.groupBoxTransmit.Controls.Add(this.labelServer);
-            this.groupBoxTransmit.Controls.Add(this.comboBoxProtocol);
-            this.groupBoxTransmit.Controls.Add(this.labelProtocol);
-            this.groupBoxTransmit.Controls.Add(this.textBoxPlaybackSampleRate);
-            this.groupBoxTransmit.Controls.Add(this.radioButtonPlaybackControlled);
-            this.groupBoxTransmit.Location = new System.Drawing.Point(12, 131);
-            this.groupBoxTransmit.Name = "groupBoxTransmit";
-            this.groupBoxTransmit.Size = new System.Drawing.Size(331, 140);
-            this.groupBoxTransmit.TabIndex = 1002;
-            this.groupBoxTransmit.TabStop = false;
-            this.groupBoxTransmit.Text = "Transmit";
+            this.MessagesContainer.Controls.Add(this.MessagesOutput);
+            this.MessagesContainer.Location = new System.Drawing.Point(12, 3);
+            this.MessagesContainer.Name = "MessagesContainer";
+            this.MessagesContainer.Size = new System.Drawing.Size(669, 198);
+            this.MessagesContainer.TabIndex = 1001;
+            this.MessagesContainer.TabStop = false;
+            this.MessagesContainer.Text = "Messages";
             // 
-            // checkBoxRepeat
+            // MessagesOutput
             // 
-            this.checkBoxRepeat.AutoSize = true;
-            this.checkBoxRepeat.Location = new System.Drawing.Point(9, 111);
-            this.checkBoxRepeat.Name = "checkBoxRepeat";
-            this.checkBoxRepeat.Size = new System.Drawing.Size(226, 17);
-            this.checkBoxRepeat.TabIndex = 17;
-            this.checkBoxRepeat.Text = "Repeat transmission of data until stopped";
-            this.checkBoxRepeat.UseVisualStyleBackColor = true;
+            this.MessagesOutput.BackColor = System.Drawing.SystemColors.WindowText;
+            this.MessagesOutput.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.MessagesOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.MessagesOutput.ForeColor = System.Drawing.SystemColors.Window;
+            this.MessagesOutput.Location = new System.Drawing.Point(3, 17);
+            this.MessagesOutput.Multiline = true;
+            this.MessagesOutput.Name = "MessagesOutput";
+            this.MessagesOutput.ReadOnly = true;
+            this.MessagesOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.MessagesOutput.Size = new System.Drawing.Size(663, 178);
+            this.MessagesOutput.TabIndex = 0;
             // 
-            // radioButtonPlaybackFullspeed
+            // StartProcessing
             // 
-            this.radioButtonPlaybackFullspeed.AutoSize = true;
-            this.radioButtonPlaybackFullspeed.Checked = true;
-            this.radioButtonPlaybackFullspeed.Location = new System.Drawing.Point(9, 65);
-            this.radioButtonPlaybackFullspeed.Name = "radioButtonPlaybackFullspeed";
-            this.radioButtonPlaybackFullspeed.Size = new System.Drawing.Size(182, 17);
-            this.radioButtonPlaybackFullspeed.TabIndex = 14;
-            this.radioButtonPlaybackFullspeed.TabStop = true;
-            this.radioButtonPlaybackFullspeed.Text = "Transmit data as fast as possible";
-            this.radioButtonPlaybackFullspeed.UseVisualStyleBackColor = true;
+            this.StartProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartProcessing.Location = new System.Drawing.Point(603, 207);
+            this.StartProcessing.Name = "StartProcessing";
+            this.StartProcessing.Size = new System.Drawing.Size(75, 23);
+            this.StartProcessing.TabIndex = 22;
+            this.StartProcessing.Text = "Start";
+            this.StartProcessing.UseVisualStyleBackColor = true;
+            this.StartProcessing.Click += new System.EventHandler(this.StartProcessing_Click);
             // 
-            // textBoxPort
+            // StopProcessing
             // 
-            this.textBoxPort.Location = new System.Drawing.Point(196, 34);
-            this.textBoxPort.Name = "textBoxPort";
-            this.textBoxPort.Size = new System.Drawing.Size(50, 21);
-            this.textBoxPort.TabIndex = 13;
+            this.StopProcessing.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.StopProcessing.Location = new System.Drawing.Point(603, 207);
+            this.StopProcessing.Name = "StopProcessing";
+            this.StopProcessing.Size = new System.Drawing.Size(75, 23);
+            this.StopProcessing.TabIndex = 22;
+            this.StopProcessing.Text = "Stop";
+            this.StopProcessing.UseVisualStyleBackColor = true;
+            this.StopProcessing.Click += new System.EventHandler(this.StopProcessing_Click);
             // 
-            // labelPort
+            // SaveFile
             // 
-            this.labelPort.AutoSize = true;
-            this.labelPort.Location = new System.Drawing.Point(193, 18);
-            this.labelPort.Name = "labelPort";
-            this.labelPort.Size = new System.Drawing.Size(31, 13);
-            this.labelPort.TabIndex = 0;
-            this.labelPort.Text = "Port:";
-            // 
-            // textBoxServer
-            // 
-            this.textBoxServer.Location = new System.Drawing.Point(78, 34);
-            this.textBoxServer.Name = "textBoxServer";
-            this.textBoxServer.Size = new System.Drawing.Size(100, 21);
-            this.textBoxServer.TabIndex = 12;
-            // 
-            // labelServer
-            // 
-            this.labelServer.AutoSize = true;
-            this.labelServer.Location = new System.Drawing.Point(75, 18);
-            this.labelServer.Name = "labelServer";
-            this.labelServer.Size = new System.Drawing.Size(43, 13);
-            this.labelServer.TabIndex = 0;
-            this.labelServer.Text = "Server:";
-            // 
-            // comboBoxProtocol
-            // 
-            this.comboBoxProtocol.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboBoxProtocol.FormattingEnabled = true;
-            this.comboBoxProtocol.Location = new System.Drawing.Point(9, 34);
-            this.comboBoxProtocol.Name = "comboBoxProtocol";
-            this.comboBoxProtocol.Size = new System.Drawing.Size(50, 21);
-            this.comboBoxProtocol.TabIndex = 11;
-            // 
-            // labelProtocol
-            // 
-            this.labelProtocol.AutoSize = true;
-            this.labelProtocol.Location = new System.Drawing.Point(6, 18);
-            this.labelProtocol.Name = "labelProtocol";
-            this.labelProtocol.Size = new System.Drawing.Size(50, 13);
-            this.labelProtocol.TabIndex = 0;
-            this.labelProtocol.Text = "Protocol:";
-            // 
-            // textBoxPlaybackSampleRate
-            // 
-            this.textBoxPlaybackSampleRate.Location = new System.Drawing.Point(111, 86);
-            this.textBoxPlaybackSampleRate.Name = "textBoxPlaybackSampleRate";
-            this.textBoxPlaybackSampleRate.Size = new System.Drawing.Size(30, 21);
-            this.textBoxPlaybackSampleRate.TabIndex = 16;
-            // 
-            // radioButtonPlaybackControlled
-            // 
-            this.radioButtonPlaybackControlled.AutoSize = true;
-            this.radioButtonPlaybackControlled.Location = new System.Drawing.Point(9, 88);
-            this.radioButtonPlaybackControlled.Name = "radioButtonPlaybackControlled";
-            this.radioButtonPlaybackControlled.Size = new System.Drawing.Size(237, 17);
-            this.radioButtonPlaybackControlled.TabIndex = 15;
-            this.radioButtonPlaybackControlled.Text = "Transmit data at             samples per second";
-            this.radioButtonPlaybackControlled.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxFiles
-            // 
-            this.groupBoxFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxFiles.Controls.Add(this.linkLabelSecondaryArchive);
-            this.groupBoxFiles.Controls.Add(this.textBoxSecondaryArchive);
-            this.groupBoxFiles.Controls.Add(this.labelSecondaryArchive);
-            this.groupBoxFiles.Controls.Add(this.linkLabelPrimaryArchive);
-            this.groupBoxFiles.Controls.Add(this.textBoxPrimaryArchive);
-            this.groupBoxFiles.Controls.Add(this.labelPrimaryArchive);
-            this.groupBoxFiles.Location = new System.Drawing.Point(12, 12);
-            this.groupBoxFiles.Name = "groupBoxFiles";
-            this.groupBoxFiles.Size = new System.Drawing.Size(331, 112);
-            this.groupBoxFiles.TabIndex = 1000;
-            this.groupBoxFiles.TabStop = false;
-            this.groupBoxFiles.Text = "Files";
-            // 
-            // linkLabelSecondaryArchive
-            // 
-            this.linkLabelSecondaryArchive.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.linkLabelSecondaryArchive.AutoSize = true;
-            this.linkLabelSecondaryArchive.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.linkLabelSecondaryArchive.Location = new System.Drawing.Point(285, 65);
-            this.linkLabelSecondaryArchive.Name = "linkLabelSecondaryArchive";
-            this.linkLabelSecondaryArchive.Size = new System.Drawing.Size(42, 13);
-            this.linkLabelSecondaryArchive.TabIndex = 4;
-            this.linkLabelSecondaryArchive.TabStop = true;
-            this.linkLabelSecondaryArchive.Text = "Browse";
-            this.linkLabelSecondaryArchive.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSecondaryArchive_LinkClicked);
-            // 
-            // textBoxSecondaryArchive
-            // 
-            this.textBoxSecondaryArchive.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSecondaryArchive.Location = new System.Drawing.Point(8, 81);
-            this.textBoxSecondaryArchive.Name = "textBoxSecondaryArchive";
-            this.textBoxSecondaryArchive.Size = new System.Drawing.Size(316, 21);
-            this.textBoxSecondaryArchive.TabIndex = 3;
-            this.textBoxSecondaryArchive.TextChanged += new System.EventHandler(this.textBoxSecondaryArchive_TextChanged);
-            // 
-            // labelSecondaryArchive
-            // 
-            this.labelSecondaryArchive.AutoSize = true;
-            this.labelSecondaryArchive.Location = new System.Drawing.Point(6, 65);
-            this.labelSecondaryArchive.Name = "labelSecondaryArchive";
-            this.labelSecondaryArchive.Size = new System.Drawing.Size(144, 13);
-            this.labelSecondaryArchive.TabIndex = 0;
-            this.labelSecondaryArchive.Text = "Secondary Archive Location:";
-            // 
-            // linkLabelPrimaryArchive
-            // 
-            this.linkLabelPrimaryArchive.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.linkLabelPrimaryArchive.AutoSize = true;
-            this.linkLabelPrimaryArchive.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.linkLabelPrimaryArchive.Location = new System.Drawing.Point(285, 17);
-            this.linkLabelPrimaryArchive.Name = "linkLabelPrimaryArchive";
-            this.linkLabelPrimaryArchive.Size = new System.Drawing.Size(42, 13);
-            this.linkLabelPrimaryArchive.TabIndex = 2;
-            this.linkLabelPrimaryArchive.TabStop = true;
-            this.linkLabelPrimaryArchive.Text = "Browse";
-            this.linkLabelPrimaryArchive.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelPrimaryArchive_LinkClicked);
-            // 
-            // textBoxPrimaryArchive
-            // 
-            this.textBoxPrimaryArchive.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxPrimaryArchive.Location = new System.Drawing.Point(9, 33);
-            this.textBoxPrimaryArchive.Name = "textBoxPrimaryArchive";
-            this.textBoxPrimaryArchive.Size = new System.Drawing.Size(315, 21);
-            this.textBoxPrimaryArchive.TabIndex = 1;
-            this.textBoxPrimaryArchive.TextChanged += new System.EventHandler(this.textBoxPrimaryArchive_TextChanged);
-            // 
-            // labelPrimaryArchive
-            // 
-            this.labelPrimaryArchive.AutoSize = true;
-            this.labelPrimaryArchive.Location = new System.Drawing.Point(6, 17);
-            this.labelPrimaryArchive.Name = "labelPrimaryArchive";
-            this.labelPrimaryArchive.Size = new System.Drawing.Size(129, 13);
-            this.labelPrimaryArchive.TabIndex = 0;
-            this.labelPrimaryArchive.Text = "Primary Archive Location:";
-            // 
-            // groupBoxData
-            // 
-            this.groupBoxData.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxData.Controls.Add(this.linkLabelFind);
-            this.groupBoxData.Controls.Add(this.linkLabelClear);
-            this.groupBoxData.Controls.Add(this.textBoxSearch);
-            this.groupBoxData.Controls.Add(this.dateTimePickerEndTime);
-            this.groupBoxData.Controls.Add(this.dateTimePickerStartTime);
-            this.groupBoxData.Controls.Add(this.labelEndTime);
-            this.groupBoxData.Controls.Add(this.labelStartTime);
-            this.groupBoxData.Controls.Add(this.checkedListBoxPointIDs);
-            this.groupBoxData.Location = new System.Drawing.Point(3, 12);
-            this.groupBoxData.Name = "groupBoxData";
-            this.groupBoxData.Size = new System.Drawing.Size(328, 259);
-            this.groupBoxData.TabIndex = 1001;
-            this.groupBoxData.TabStop = false;
-            this.groupBoxData.Text = "Data";
-            // 
-            // linkLabelFind
-            // 
-            this.linkLabelFind.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.linkLabelFind.AutoSize = true;
-            this.linkLabelFind.Location = new System.Drawing.Point(229, 17);
-            this.linkLabelFind.Name = "linkLabelFind";
-            this.linkLabelFind.Size = new System.Drawing.Size(41, 13);
-            this.linkLabelFind.TabIndex = 6;
-            this.linkLabelFind.TabStop = true;
-            this.linkLabelFind.Text = "Find All";
-            this.linkLabelFind.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelFind_LinkClicked);
-            // 
-            // linkLabelClear
-            // 
-            this.linkLabelClear.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.linkLabelClear.AutoSize = true;
-            this.linkLabelClear.Location = new System.Drawing.Point(276, 17);
-            this.linkLabelClear.Name = "linkLabelClear";
-            this.linkLabelClear.Size = new System.Drawing.Size(46, 13);
-            this.linkLabelClear.TabIndex = 7;
-            this.linkLabelClear.TabStop = true;
-            this.linkLabelClear.Text = "Clear All";
-            this.linkLabelClear.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelClear_LinkClicked);
-            // 
-            // textBoxSearch
-            // 
-            this.textBoxSearch.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxSearch.Location = new System.Drawing.Point(9, 14);
-            this.textBoxSearch.Name = "textBoxSearch";
-            this.textBoxSearch.Size = new System.Drawing.Size(214, 21);
-            this.textBoxSearch.TabIndex = 5;
-            this.textBoxSearch.TextChanged += new System.EventHandler(this.textBoxSearch_TextChanged);
-            this.textBoxSearch.Leave += new System.EventHandler(this.textBoxSearch_Leave);
-            this.textBoxSearch.MouseClick += new System.Windows.Forms.MouseEventHandler(this.textBoxSearch_MouseClick);
-            // 
-            // dateTimePickerEndTime
-            // 
-            this.dateTimePickerEndTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.dateTimePickerEndTime.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
-            this.dateTimePickerEndTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePickerEndTime.Location = new System.Drawing.Point(174, 225);
-            this.dateTimePickerEndTime.Name = "dateTimePickerEndTime";
-            this.dateTimePickerEndTime.Size = new System.Drawing.Size(145, 21);
-            this.dateTimePickerEndTime.TabIndex = 10;
-            // 
-            // dateTimePickerStartTime
-            // 
-            this.dateTimePickerStartTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.dateTimePickerStartTime.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
-            this.dateTimePickerStartTime.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
-            this.dateTimePickerStartTime.Location = new System.Drawing.Point(9, 225);
-            this.dateTimePickerStartTime.Name = "dateTimePickerStartTime";
-            this.dateTimePickerStartTime.Size = new System.Drawing.Size(145, 21);
-            this.dateTimePickerStartTime.TabIndex = 9;
-            // 
-            // labelEndTime
-            // 
-            this.labelEndTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelEndTime.AutoSize = true;
-            this.labelEndTime.Location = new System.Drawing.Point(171, 209);
-            this.labelEndTime.Name = "labelEndTime";
-            this.labelEndTime.Size = new System.Drawing.Size(97, 13);
-            this.labelEndTime.TabIndex = 0;
-            this.labelEndTime.Text = "End Time (in GMT):";
-            // 
-            // labelStartTime
-            // 
-            this.labelStartTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelStartTime.AutoSize = true;
-            this.labelStartTime.Location = new System.Drawing.Point(6, 209);
-            this.labelStartTime.Name = "labelStartTime";
-            this.labelStartTime.Size = new System.Drawing.Size(103, 13);
-            this.labelStartTime.TabIndex = 0;
-            this.labelStartTime.Text = "Start Time (in GMT):";
-            // 
-            // checkedListBoxPointIDs
-            // 
-            this.checkedListBoxPointIDs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.checkedListBoxPointIDs.CheckOnClick = true;
-            this.checkedListBoxPointIDs.FormattingEnabled = true;
-            this.checkedListBoxPointIDs.HorizontalScrollbar = true;
-            this.checkedListBoxPointIDs.Location = new System.Drawing.Point(9, 42);
-            this.checkedListBoxPointIDs.Name = "checkedListBoxPointIDs";
-            this.checkedListBoxPointIDs.Size = new System.Drawing.Size(313, 164);
-            this.checkedListBoxPointIDs.TabIndex = 8;
-            // 
-            // groupBoxMessages
-            // 
-            this.groupBoxMessages.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxMessages.Controls.Add(this.textBoxMessages);
-            this.groupBoxMessages.Location = new System.Drawing.Point(12, 3);
-            this.groupBoxMessages.Name = "groupBoxMessages";
-            this.groupBoxMessages.Size = new System.Drawing.Size(669, 241);
-            this.groupBoxMessages.TabIndex = 1004;
-            this.groupBoxMessages.TabStop = false;
-            this.groupBoxMessages.Text = "Messages";
-            // 
-            // textBoxMessages
-            // 
-            this.textBoxMessages.BackColor = System.Drawing.SystemColors.WindowText;
-            this.textBoxMessages.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBoxMessages.Font = new System.Drawing.Font("Courier New", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBoxMessages.ForeColor = System.Drawing.SystemColors.Window;
-            this.textBoxMessages.Location = new System.Drawing.Point(3, 17);
-            this.textBoxMessages.Multiline = true;
-            this.textBoxMessages.Name = "textBoxMessages";
-            this.textBoxMessages.ReadOnly = true;
-            this.textBoxMessages.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBoxMessages.Size = new System.Drawing.Size(663, 221);
-            this.textBoxMessages.TabIndex = 0;
-            // 
-            // buttonStart
-            // 
-            this.buttonStart.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStart.Location = new System.Drawing.Point(603, 250);
-            this.buttonStart.Name = "buttonStart";
-            this.buttonStart.Size = new System.Drawing.Size(75, 23);
-            this.buttonStart.TabIndex = 17;
-            this.buttonStart.Text = "Start";
-            this.buttonStart.UseVisualStyleBackColor = true;
-            this.buttonStart.Click += new System.EventHandler(this.buttonStart_Click);
-            // 
-            // buttonStop
-            // 
-            this.buttonStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonStop.Location = new System.Drawing.Point(603, 250);
-            this.buttonStop.Name = "buttonStop";
-            this.buttonStop.Size = new System.Drawing.Size(75, 23);
-            this.buttonStop.TabIndex = 17;
-            this.buttonStop.Text = "Stop";
-            this.buttonStop.UseVisualStyleBackColor = true;
-            this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
+            this.SaveFile.Filter = "All Files (*.*)|*.*";
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(692, 566);
-            this.Controls.Add(this.splitContainer1);
+            this.Controls.Add(this.SplitContainerFull);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MinimumSize = new System.Drawing.Size(700, 600);
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Historian Playback Utility";
+            this.Text = "Historian Playback Utility v{0}";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.ResumeLayout(false);
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.Panel2.ResumeLayout(false);
-            this.splitContainer2.ResumeLayout(false);
-            this.groupBoxTransmit.ResumeLayout(false);
-            this.groupBoxTransmit.PerformLayout();
-            this.groupBoxFiles.ResumeLayout(false);
-            this.groupBoxFiles.PerformLayout();
-            this.groupBoxData.ResumeLayout(false);
-            this.groupBoxData.PerformLayout();
-            this.groupBoxMessages.ResumeLayout(false);
-            this.groupBoxMessages.PerformLayout();
+            this.SplitContainerFull.Panel1.ResumeLayout(false);
+            this.SplitContainerFull.Panel2.ResumeLayout(false);
+            this.SplitContainerFull.ResumeLayout(false);
+            this.SplitContainerTop.Panel1.ResumeLayout(false);
+            this.SplitContainerTop.Panel2.ResumeLayout(false);
+            this.SplitContainerTop.ResumeLayout(false);
+            this.InputSelectionContainer.ResumeLayout(false);
+            this.InputSelectionContainer.PerformLayout();
+            this.OutputSelectionContainer.ResumeLayout(false);
+            this.OutputSelectionContainer.PerformLayout();
+            this.OutputCannelTabs.ResumeLayout(false);
+            this.TCPSettingsTab.ResumeLayout(false);
+            this.TCPSettingsTab.PerformLayout();
+            this.UDPSettingsTab.ResumeLayout(false);
+            this.UDPSettingsTab.PerformLayout();
+            this.FileSettingsTab.ResumeLayout(false);
+            this.FileSettingsTab.PerformLayout();
+            this.SerialSettingsTab.ResumeLayout(false);
+            this.SerialSettingsTab.PerformLayout();
+            this.ProcessingSpeedContainer.ResumeLayout(false);
+            this.ProcessingSpeedContainer.PerformLayout();
+            this.OutputFormatContainer.ResumeLayout(false);
+            this.OutputFormatContainer.PerformLayout();
+            this.MessagesContainer.ResumeLayout(false);
+            this.MessagesContainer.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.SplitContainer splitContainer2;
-        private System.Windows.Forms.GroupBox groupBoxMessages;
-        private System.Windows.Forms.TextBox textBoxMessages;
-        private System.Windows.Forms.Button buttonStart;
-        private System.Windows.Forms.GroupBox groupBoxTransmit;
-        private System.Windows.Forms.TextBox textBoxPlaybackSampleRate;
-        private System.Windows.Forms.RadioButton radioButtonPlaybackControlled;
-        private System.Windows.Forms.RadioButton radioButtonPlaybackFullspeed;
-        private System.Windows.Forms.TextBox textBoxPort;
-        private System.Windows.Forms.Label labelPort;
-        private System.Windows.Forms.TextBox textBoxServer;
-        private System.Windows.Forms.Label labelServer;
-        private System.Windows.Forms.ComboBox comboBoxProtocol;
-        private System.Windows.Forms.Label labelProtocol;
-        private System.Windows.Forms.GroupBox groupBoxFiles;
-        private System.Windows.Forms.LinkLabel linkLabelSecondaryArchive;
-        private System.Windows.Forms.TextBox textBoxSecondaryArchive;
-        private System.Windows.Forms.Label labelSecondaryArchive;
-        private System.Windows.Forms.LinkLabel linkLabelPrimaryArchive;
-        private System.Windows.Forms.TextBox textBoxPrimaryArchive;
-        private System.Windows.Forms.Label labelPrimaryArchive;
-        private System.Windows.Forms.GroupBox groupBoxData;
-        private System.Windows.Forms.LinkLabel linkLabelFind;
-        private System.Windows.Forms.LinkLabel linkLabelClear;
-        private System.Windows.Forms.TextBox textBoxSearch;
-        private System.Windows.Forms.CheckedListBox checkedListBoxPointIDs;
-        private System.Windows.Forms.DateTimePicker dateTimePickerEndTime;
-        private System.Windows.Forms.DateTimePicker dateTimePickerStartTime;
-        private System.Windows.Forms.Label labelEndTime;
-        private System.Windows.Forms.Label labelStartTime;
-        private System.Windows.Forms.Button buttonStop;
-        private System.Windows.Forms.CheckBox checkBoxRepeat;
+        private System.Windows.Forms.FolderBrowserDialog FolderBrowser;
+        private System.Windows.Forms.SplitContainer SplitContainerFull;
+        private System.Windows.Forms.SplitContainer SplitContainerTop;
+        private System.Windows.Forms.GroupBox MessagesContainer;
+        private System.Windows.Forms.TextBox MessagesOutput;
+        private System.Windows.Forms.Button StartProcessing;
+        private System.Windows.Forms.Button StopProcessing;
+        private System.Windows.Forms.GroupBox InputSelectionContainer;
+        private System.Windows.Forms.LinkLabel SearchPhraseClear;
+        private System.Windows.Forms.LinkLabel SearchPhraseFind;
+        private System.Windows.Forms.LinkLabel ArchiveLocationBrowse;
+        private System.Windows.Forms.Label SearchPhraseLabel;
+        private System.Windows.Forms.TextBox SearchPhraseInput;
+        private System.Windows.Forms.DateTimePicker EndTimeInput;
+        private System.Windows.Forms.TextBox ArchiveLocationInput;
+        private System.Windows.Forms.Label ArchiveLocationLabel;
+        private System.Windows.Forms.DateTimePicker StartTimeInput;
+        private System.Windows.Forms.Label EndTimeLabel;
+        private System.Windows.Forms.Label StartTimeLabel;
+        private System.Windows.Forms.CheckedListBox IDInput;
+        private System.Windows.Forms.GroupBox OutputSelectionContainer;
+        private System.Windows.Forms.CheckBox RepeatDataProcessing;
+        private System.Windows.Forms.CheckBox ProcessDataInParallel;
+        private System.Windows.Forms.Panel OutputFormatContainer;
+        private System.Windows.Forms.RadioButton OutputPlainTextData;
+        private System.Windows.Forms.RadioButton OutputBinaryData;
+        private System.Windows.Forms.Label OutputChannelLabel;
+        private System.Windows.Forms.TabControl OutputCannelTabs;
+        private System.Windows.Forms.TabPage TCPSettingsTab;
+        private System.Windows.Forms.TextBox TCPPortInput;
+        private System.Windows.Forms.Label TCPPortLabel;
+        private System.Windows.Forms.TextBox TCPServerInput;
+        private System.Windows.Forms.Label TCPServerLabel;
+        private System.Windows.Forms.TabPage UDPSettingsTab;
+        private System.Windows.Forms.TextBox UDPPortInput;
+        private System.Windows.Forms.Label UDPPortLabel;
+        private System.Windows.Forms.TextBox UDPServerInput;
+        private System.Windows.Forms.Label UDPServerLabel;
+        private System.Windows.Forms.TabPage FileSettingsTab;
+        private System.Windows.Forms.Button FileNameBrowse;
+        private System.Windows.Forms.TextBox FileNameInput;
+        private System.Windows.Forms.Label FileNameLabel;
+        private System.Windows.Forms.Panel ProcessingSpeedContainer;
+        private System.Windows.Forms.RadioButton ProcessDataFullSpeed;
+        private System.Windows.Forms.TextBox ProcessDataAtIntervalSampleRate;
+        private System.Windows.Forms.RadioButton ProcessDataAtInterval;
+        private System.Windows.Forms.RichTextBox OutputPlainTextDataFormat;
+        private System.Windows.Forms.TabPage SerialSettingsTab;
+        private System.Windows.Forms.ComboBox SerialPortInput;
+        private System.Windows.Forms.Label SerialPortLabel;
+        private System.Windows.Forms.CheckBox SerialRtsEnable;
+        private System.Windows.Forms.CheckBox SerialDtrEnable;
+        private System.Windows.Forms.TextBox SerialDataBitsInput;
+        private System.Windows.Forms.Label SerialDataBitsLabel;
+        private System.Windows.Forms.ComboBox SerialStopBitsInput;
+        private System.Windows.Forms.Label SerialStopBitsLabel;
+        private System.Windows.Forms.ComboBox SerialParityInput;
+        private System.Windows.Forms.Label SerialParityLabel;
+        private System.Windows.Forms.ComboBox SerialBaudRateInput;
+        private System.Windows.Forms.Label SerialBaudRateLabel;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ComboBox comboBox5;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ComboBox comboBox6;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.SaveFileDialog SaveFile;
     }
 }
 

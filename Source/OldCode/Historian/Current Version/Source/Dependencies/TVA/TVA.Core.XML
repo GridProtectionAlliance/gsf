@@ -10702,7 +10702,7 @@
                      string password = "password";
                     
                      // Authenticate user credentials.
-                     if (UserInfo.AuthenticateUser(domain, username, password))
+                     if (UserInfo.AuthenticateUser(domain, username, password) != null)
                          Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
                      else
                          Console.WriteLine("Failed to authenticate user \"{0}\\{1}\".", domain, username);
@@ -10738,7 +10738,7 @@
                      string errorMessage;
             
                      // Authenticate user credentials.
-                     if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage))
+                     if (UserInfo.AuthenticateUser(domain, username, password, out errorMessage) != null)
                          Console.WriteLine("Successfully authenticated user \"{0}\\{1}\".", domain, username);
                      else
                          Console.WriteLine("Failed to authenticate user \"{0}\\{1}\" due to exception: {2}", domain, username, errorMessage);
@@ -21992,6 +21992,22 @@
             Returns textual representation for timetag in the specified <paramref name="format"/>.
             </summary>
             <param name="format">Format of text output.</param>
+            <returns><see cref="T:System.String"/> of textual representation for timetag.</returns>
+        </member>
+        <member name="M:TVA.TimeTagBase.ToString(System.IFormatProvider)">
+            <summary>
+            Returns textual representation for timetag using the specified <paramref name="provider"/>.
+            </summary>
+            <param name="provider">An <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.</param>
+            <returns><see cref="T:System.String"/> of textual representation for timetag.</returns>
+        </member>
+        <member name="M:TVA.TimeTagBase.ToString(System.String,System.IFormatProvider)">
+            <summary>
+            Returns textual representation for timetag in the specified <paramref name="format"/> using 
+            the specified <paramref name="provider"/>.
+            </summary>
+            <param name="format">Format of text output.</param>
+            <param name="provider">An <see cref="T:System.IFormatProvider"/> that supplies culture-specific formatting information.</param>
             <returns><see cref="T:System.String"/> of textual representation for timetag.</returns>
         </member>
         <member name="M:TVA.TimeTagBase.CompareTo(TVA.TimeTagBase)">

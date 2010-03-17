@@ -16,6 +16,8 @@
 //       Added contructor that takes in IMeasurement.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/15/2010 - Pinal C. Patel
+//       Implemented IFormattable.ToString() overloads.
 //
 //*******************************************************************************************************
 
@@ -236,6 +238,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 using TVA.Measurements;
 
 namespace TVA.Historian.Files
@@ -247,7 +250,7 @@ namespace TVA.Historian.Files
     /// <seealso cref="ArchiveFileAllocationTable"/>
     /// <seealso cref="ArchiveDataBlock"/>
     /// <seealso cref="ArchiveDataBlockPointer"/>
-    public class ArchiveDataPoint : IDataPoint, IComparable
+    public class ArchiveDataPoint : IDataPoint
     {
         // **************************************************************************************************
         // *                                        Binary Structure                                        *
@@ -430,8 +433,8 @@ namespace TVA.Historian.Files
         {
             get
             {
-                return ((m_time == TimeTag.MinValue) && 
-                        (m_value == default(float)) && 
+                return ((m_time == TimeTag.MinValue) &&
+                        (m_value == default(float)) &&
                         (Quality == Quality.Unknown));
             }
         }
@@ -496,7 +499,7 @@ namespace TVA.Historian.Files
             {
                 // Binary image has sufficient data.
                 Flags = EndianOrder.LittleEndian.ToInt16(binaryImage, startIndex + 4);
-                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex  + 6);
+                Value = EndianOrder.LittleEndian.ToSingle(binaryImage, startIndex + 6);
                 Time = new TimeTag(EndianOrder.LittleEndian.ToInt32(binaryImage, startIndex) +          // Seconds
                                       ((double)(m_flags.GetMaskedValue(MillisecondMask) >> 5) / 1000)); // Milliseconds
 
@@ -551,7 +554,38 @@ namespace TVA.Historian.Files
         /// <returns>A <see cref="string"/> value.</returns>
         public override string ToString()
         {
-            return string.Format("ID={0}; Time={1}; Value={2}; Quality={3}", m_historianID, m_time, m_value, Quality);
+            return ToString(null, null);
+        }
+
+        public virtual string ToString(string format)
+        {
+            return ToString(format, null);
+        }
+
+        public virtual string ToString(IFormatProvider provider)
+        {
+            return ToString(null, provider);
+        }
+
+        public virtual string ToString(string format, IFormatProvider provider)
+        {
+            if (provider == null)
+                provider = CultureInfo.CurrentCulture;
+
+            switch (format)
+            {
+                case "I":
+                    return m_historianID.ToString(provider);
+                case "T":
+                    return m_time.ToString(provider);
+                case "V":
+                    return m_value.ToString(provider);
+                case "Q":
+                    return Quality.ToString();
+                default:
+                    return string.Format("ID={0}; Time={1}; Value={2}; Quality={3}",
+                                         m_historianID.ToString(provider), m_time.ToString(provider), m_value.ToString(provider), Quality.ToString());
+            }
         }
 
         /// <summary>

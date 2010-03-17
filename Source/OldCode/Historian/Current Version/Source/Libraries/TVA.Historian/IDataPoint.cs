@@ -14,6 +14,8 @@
 //       Converted to C#.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/12/2010 - Pinal C. Patel
+//       Updated to inherit from IComparable and IFormattable interfaces.
 //
 //*******************************************************************************************************
 
@@ -233,6 +235,7 @@
 */
 #endregion
 
+using System;
 using TVA.Parsing;
 
 namespace TVA.Historian
@@ -373,7 +376,7 @@ namespace TVA.Historian
     /// </summary>
     /// <seealso cref="TimeTag"/>
     /// <seealso cref="Quality"/>
-    public interface IDataPoint : ISupportBinaryImage
+    public interface IDataPoint : ISupportBinaryImage, IComparable, IFormattable
     {
         #region [ Properties ]
 
