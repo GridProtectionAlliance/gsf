@@ -230,7 +230,7 @@
             // EndTimeInput
             // 
             this.EndTimeInput.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.EndTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
+            this.EndTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss";
             this.EndTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.EndTimeInput.Location = new System.Drawing.Point(177, 277);
             this.EndTimeInput.Name = "EndTimeInput";
@@ -258,7 +258,7 @@
             // 
             // StartTimeInput
             // 
-            this.StartTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss tt";
+            this.StartTimeInput.CustomFormat = "MM/dd/yyyy HH:mm:ss";
             this.StartTimeInput.Format = System.Windows.Forms.DateTimePickerFormat.Custom;
             this.StartTimeInput.Location = new System.Drawing.Point(6, 277);
             this.StartTimeInput.Name = "StartTimeInput";
@@ -271,18 +271,18 @@
             this.EndTimeLabel.AutoSize = true;
             this.EndTimeLabel.Location = new System.Drawing.Point(174, 261);
             this.EndTimeLabel.Name = "EndTimeLabel";
-            this.EndTimeLabel.Size = new System.Drawing.Size(97, 13);
+            this.EndTimeLabel.Size = new System.Drawing.Size(96, 13);
             this.EndTimeLabel.TabIndex = 0;
-            this.EndTimeLabel.Text = "End Time (in GMT):";
+            this.EndTimeLabel.Text = "End Time (in UTC):";
             // 
             // StartTimeLabel
             // 
             this.StartTimeLabel.AutoSize = true;
             this.StartTimeLabel.Location = new System.Drawing.Point(3, 261);
             this.StartTimeLabel.Name = "StartTimeLabel";
-            this.StartTimeLabel.Size = new System.Drawing.Size(103, 13);
+            this.StartTimeLabel.Size = new System.Drawing.Size(102, 13);
             this.StartTimeLabel.TabIndex = 0;
-            this.StartTimeLabel.Text = "Start Time (in GMT):";
+            this.StartTimeLabel.Text = "Start Time (in UTC):";
             // 
             // IDInput
             // 

@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  03/17/2010 - Pinal C. Patel
 //       Updated to include File and Serial output options and option to format plain text output.
+//  03/19/2010 - Pinal C. Patel
+//       Modified to work with a live archive.
 //
 //*******************************************************************************************************
 
@@ -244,6 +246,7 @@ using TVA.Configuration;
 using TVA.Historian;
 using TVA.Historian.Files;
 using TVA.Historian.Packets;
+using TVA.IO;
 using TVA.Reflection;
 
 namespace HistorianPlaybackUtility
@@ -275,10 +278,10 @@ namespace HistorianPlaybackUtility
         }
 
         // Constants
-        private const string ArchiveFileName = "{0}_archive.d";
-        private const string MetadataFileName = "{0}_dbase.dat";
-        private const string StateFileName = "startup.dat";
-        private const string IntercomFileName = "scratch.dat";
+        private const string ArchiveFileName = "{0}{1}_archive.d";
+        private const string MetadataFileName = "{0}{1}_dbase.dat";
+        private const string StateFileName = "{0}{1}_startup.dat";
+        private const string IntercomFileName = "{0}scratch.dat";
         private const string WatermarkText = "Enter search phrase";
 
         // Fields
@@ -286,6 +289,8 @@ namespace HistorianPlaybackUtility
         private List<Thread> m_activeThreads;
         private ArchiveFile m_archiveFile;
         private IClient m_transmitClient;
+        private System.Timers.Timer m_rollverWatcher;
+        private ManualResetEvent m_rolloverWaitHandle;
 
         #endregion
 
@@ -307,18 +312,25 @@ namespace HistorianPlaybackUtility
             SerialBaudRateInput.SelectedIndex = 4;
             SerialParityInput.SelectedIndex = 0;
             SerialStopBitsInput.SelectedIndex = 1;
-            this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(2));
+            this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(3));
 
             // Initialize member variables.
             m_activeThreads = new List<Thread>();
             m_archiveFile = new ArchiveFile();
             m_archiveFile.StateFile = new StateFile();
+            m_archiveFile.StateFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.IntercomFile = new IntercomFile();
+            m_archiveFile.IntercomFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.MetadataFile = new MetadataFile();
             m_archiveFile.MetadataFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
             m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
+            m_rollverWatcher = new System.Timers.Timer();
+            m_rollverWatcher.Interval = 1000;
+            m_rollverWatcher.Elapsed += RollverWatcher_Elapsed;
+            m_rollverWatcher.Start();
+            m_rolloverWaitHandle = new ManualResetEvent(true);
         }
 
         #endregion
@@ -381,8 +393,10 @@ namespace HistorianPlaybackUtility
                             foreach (IDataPoint sample in data)
                             {
                                 m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage, 0, PacketType1.ByteCount);
-                                Thread.Sleep(sleepTime);
                                 count++;
+                                if (!m_rolloverWaitHandle.WaitOne(0))
+                                    break;                  // Abort for rollover.
+                                Thread.Sleep(sleepTime);    // Sleep for throttling.
                             }
                         }
                         else
@@ -392,8 +406,10 @@ namespace HistorianPlaybackUtility
                             {
                                 buffer = Encoding.ASCII.GetBytes(string.Format(dataFormat, sample, sample, sample, sample));
                                 m_transmitClient.SendAsync(buffer, 0, buffer.Length);
-                                Thread.Sleep(sleepTime);
                                 count++;
+                                if (!m_rolloverWaitHandle.WaitOne(0))
+                                    break;                  // Abort for rollover.
+                                Thread.Sleep(sleepTime);    // Sleep for throttling.
                             }
                         }
                         ShowUpdateMessage("Processed {0} measurements for point {1}.", count, id);
@@ -457,6 +473,12 @@ namespace HistorianPlaybackUtility
 
             if (m_transmitClient != null)
                 m_transmitClient.Dispose();
+
+            if (m_rollverWatcher != null)
+                m_rollverWatcher.Dispose();
+
+            if (m_rolloverWaitHandle != null)
+                m_rolloverWaitHandle.Close();
         }
 
         private void ArchiveLocationBrowse_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -478,13 +500,14 @@ namespace HistorianPlaybackUtility
                     if (matches.Length > 0)
                     {
                         // Capture the instance name.
-                        string instanceName = matches[0].Split('_')[0];
+                        string folder = FilePath.GetDirectoryName(matches[0]);
+                        string instance = FilePath.GetFileName(matches[0]).Split('_')[0];
 
                         // Capture active archive.
                         m_archiveFile.FileName = matches[0];
-                        m_archiveFile.StateFile.FileName = StateFileName;
-                        m_archiveFile.IntercomFile.FileName = IntercomFileName;
-                        m_archiveFile.MetadataFile.FileName = string.Format(MetadataFileName, instanceName);
+                        m_archiveFile.StateFile.FileName = string.Format(StateFileName, folder, instance);
+                        m_archiveFile.IntercomFile.FileName = string.Format(IntercomFileName, folder);
+                        m_archiveFile.MetadataFile.FileName = string.Format(MetadataFileName, folder, instance);
 
                         // Open the active archive.
                         m_archiveFile.Open();
@@ -731,6 +754,28 @@ namespace HistorianPlaybackUtility
             ShowUpdateMessage("Completed building list of historic archive files.");
         }
 
+        private void RollverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (m_archiveFile.IntercomFile.IsOpen)
+            {
+                IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
+                // Pause processing.
+                if (record.RolloverInProgress && m_archiveFile.IsOpen)
+                {
+                    m_rolloverWaitHandle.Reset();
+                    m_archiveFile.Close();
+                    ShowUpdateMessage("Archive rollover in progress...");
+                }
+                // Resume processing.
+                if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
+                {
+                    m_archiveFile.Open();
+                    m_rolloverWaitHandle.Set();
+                    ShowUpdateMessage("Archive rollover complete!");
+                }
+            }
+        }
+        
         #endregion
 
         #endregion

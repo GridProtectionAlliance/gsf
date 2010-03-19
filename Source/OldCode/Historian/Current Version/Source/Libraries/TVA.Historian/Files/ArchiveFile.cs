@@ -60,6 +60,9 @@
 //       Modified to save the FAT at the end of rollover process.
 //  03/03/2010 - Pinal C. Patel
 //       Added MaxHistoricArchiveFiles property to limit the number of history files to be kept.
+//  03/18/2010 - Pinal C. Patel
+//       Modified ReadData() to use the current ArchiveFile instance for reading data from the current
+//       file instead of creating a new instance to avoid complications when rolling over to a new file.
 //
 //*******************************************************************************************************
 
@@ -2024,15 +2027,25 @@ namespace TVA.Historian.Files
             // Read data from all qualifying files.
             foreach (Info dataFile in dataFiles)
             {
-                ArchiveFile file = new ArchiveFile();
+                ArchiveFile file =  null;
                 IList<ArchiveDataBlock> dataBlocks;
                 try
                 {
-                    file.FileName = dataFile.FileName;
-                    file.StateFile = m_stateFile;
-                    file.IntercomFile = m_intercomFile;
-                    file.MetadataFile = m_metadataFile;
-                    file.Open();
+                    if (dataFile.FileName == m_fileName)
+                    {
+                        // Read data from current file.
+                        file = this;
+                    }
+                    else
+                    {
+                        // Read data from historic file.
+                        file = new ArchiveFile();
+                        file.FileName = dataFile.FileName;
+                        file.StateFile = m_stateFile;
+                        file.IntercomFile = m_intercomFile;
+                        file.MetadataFile = m_metadataFile;
+                        file.Open();
+                    }
 
                     dataBlocks = file.Fat.FindDataBlocks(historianID, startTime, endTime);
                     if (dataBlocks.Count > 0)
@@ -2062,10 +2075,8 @@ namespace TVA.Historian.Files
                 }
                 finally
                 {
-                    if (file.IsOpen)
-                    {
+                    if (file != null && file != this && file.IsOpen)
                         file.Close();
-                    }
                 }
             }
         }
