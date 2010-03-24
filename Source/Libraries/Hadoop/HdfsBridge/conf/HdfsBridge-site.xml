@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!-- 
+	#uncomment this to run ftp server
+	port = 2222
+	data-ports = 2223-2225
+	
+	#uncomment this to run ssl ftp server
+	#ssl-port = 2226
+	#ssl-data-ports = 2227-2229
+	
+	# hdfs uri
+	hdfs-uri = hdfs://socdvmhdfs1:9000
+	
+	
+	# have to be a user which runs HDFS
+	# this allows you to start ftp server as a root to use 21 port
+	# and use hdfs as a superuser
+	superuser = hadoop
+
+
+ -->
+
+<configuration>
+
+  <property>
+    <name>hadoop.hdfs.uri</name>
+    <value>hdfs://socdvmhdfs1:9000</value>
+    <description></description>
+  </property>
+
+  <property>
+    <name>hadoop.hdfs.superuser</name>
+    <value>hadoop</value>
+    <description></description>
+  </property>
+
+  
+  <property>
+    <name>openpdc.hdfsbridge.port</name>
+    <value>3000</value>
+    <description></description>
+  </property>
+
+  <property>
+    <name>openpdc.hdfsbridge.data_ports</name>
+    <value>3001-3003</value>
+    <description></description>
+  </property>
+
+
+  
+</configuration>  
