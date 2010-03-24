@@ -2305,6 +2305,18 @@
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Communication.TcpClient.ValidServerRegex">
+            <summary>
+            Regular expression used to validate the server property in <see cref="P:TVA.Communication.ClientBase.ConnectionString"/>.
+            </summary>
+            <remarks>
+            Matches the following valid input:
+            - localhost:80
+            - 127.0.0.1:80
+            - [::1]:80
+            - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+            </remarks>
+        </member>
         <member name="M:TVA.Communication.TcpClient.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Communication.TcpClient"/> class.
@@ -2978,6 +2990,18 @@
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
             </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpClient.ValidServerRegex">
+            <summary>
+            Regular expression used to validate the server property in <see cref="P:TVA.Communication.ClientBase.ConnectionString"/>.
+            </summary>
+            <remarks>
+            Matches the following valid input:
+            - localhost:80
+            - 127.0.0.1:80
+            - [::1]:80
+            - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+            </remarks>
         </member>
         <member name="F:TVA.Communication.UdpClient.SIO_UDP_CONNRESET">
             <summary>

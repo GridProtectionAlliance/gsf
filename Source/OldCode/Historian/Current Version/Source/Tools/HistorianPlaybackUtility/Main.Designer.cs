@@ -879,11 +879,6 @@
         private System.Windows.Forms.Label SerialParityLabel;
         private System.Windows.Forms.ComboBox SerialBaudRateInput;
         private System.Windows.Forms.Label SerialBaudRateLabel;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ComboBox comboBox5;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.ComboBox comboBox6;
-        private System.Windows.Forms.Label label6;
         private System.Windows.Forms.SaveFileDialog SaveFile;
     }
 }

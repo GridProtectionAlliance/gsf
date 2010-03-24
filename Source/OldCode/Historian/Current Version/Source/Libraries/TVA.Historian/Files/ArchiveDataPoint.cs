@@ -557,16 +557,33 @@ namespace TVA.Historian.Files
             return ToString(null, null);
         }
 
+        /// <summary>
+        /// Returns the text representation of <see cref="ArchiveDataPoint"/> object in the specified <paramref name="format"/>.
+        /// </summary>
+        /// <param name="format">Format of text output (I for ID, T for Time, V for Value, Q for Quality).</param>
+        /// <returns>A <see cref="string"/> value.</returns>
         public virtual string ToString(string format)
         {
             return ToString(format, null);
         }
 
+        /// <summary>
+        /// Returns the text representation of <see cref="ArchiveDataPoint"/> object using the specified <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="provider">An <see cref="IFormatProvider"/> that supplies culture-specific formatting information.</param>
+        /// <returns>A <see cref="string"/> value.</returns>
         public virtual string ToString(IFormatProvider provider)
         {
             return ToString(null, provider);
         }
 
+        /// <summary>
+        /// Returns the text representation of <see cref="ArchiveDataPoint"/> object in the specified <paramref name="format"/> 
+        /// using the specified <paramref name="provider"/>.
+        /// </summary>
+        /// <param name="format">Format of text output (I for ID, T for Time, V for Value, Q for Quality).</param>
+        /// <param name="provider">An <see cref="IFormatProvider"/> that supplies culture-specific formatting information.</param>
+        /// <returns>A <see cref="string"/> value.</returns>
         public virtual string ToString(string format, IFormatProvider provider)
         {
             if (provider == null)
