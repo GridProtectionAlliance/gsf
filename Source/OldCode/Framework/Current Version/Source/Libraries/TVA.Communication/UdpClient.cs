@@ -33,6 +33,9 @@
 //  11/17/2009 - Pinal C. Patel
 //       Fixed a bug in the creation of random server endpoint when server endpoint information is 
 //       omitted from the ConnectionString.
+//  03/24/2010 - Pinal C. Patel
+//       Updated the interpretation of server property in ConnectionString to correctly interpret 
+//       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
 //
 //*******************************************************************************************************
 
@@ -257,6 +260,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace TVA.Communication
@@ -356,6 +360,18 @@ namespace TVA.Communication
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888; Port=8989";
+
+        /// <summary>
+        /// Regular expression used to validate the server property in <see cref="ClientBase.ConnectionString"/>.
+        /// </summary>
+        /// <remarks>
+        /// Matches the following valid input:
+        /// - localhost:80
+        /// - 127.0.0.1:80
+        /// - [::1]:80
+        /// - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+        /// </remarks>
+        private const string ValidServerRegex = @"(?<host>.+)\:(?<port>\d+$)";
 
         /// <summary>
         /// Specifies the constant to be used for disabling <see cref="SocketError.ConnectionReset"/> when endpoint is not listening.
@@ -483,9 +499,9 @@ namespace TVA.Communication
             if (m_connectData.ContainsKey("server"))
             {
                 // Client has a server endpoint specified.
-                string[] parts = m_connectData["server"].Split(':');
-                if (parts.Length == 2)
-                    m_udpServer = Transport.CreateEndPoint(parts[0], int.Parse(parts[1]));
+                Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
+                if (serverMatch != Match.Empty)
+                    m_udpServer = Transport.CreateEndPoint(serverMatch.Groups["host"].Value, int.Parse(serverMatch.Groups["port"].Value));
                 else
                     throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
             }
@@ -625,6 +641,7 @@ namespace TVA.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
+            // Inject 'interface' property if missing.
             if (!m_connectData.ContainsKey("interface"))
                 m_connectData.Add("interface", string.Empty);
 
@@ -635,11 +652,13 @@ namespace TVA.Communication
                 m_connectData.Add("port", m_connectData["localport"]);
 
             if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
-                m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["remoteport"];
+                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["remoteport"]);
 
+            // Check if 'port' property is missing.
             if (!m_connectData.ContainsKey("port"))
                 throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
 
+            // Check if 'port' property is valid.
             if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
         }

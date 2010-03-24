@@ -26,6 +26,9 @@
 //       Added support to specify a specific interface address on a multiple interface machine.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  03/24/2010 - Pinal C. Patel
+//       Updated the interpretation of server property in ConnectionString to correctly interpret 
+//       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
 //
 //*******************************************************************************************************
 
@@ -249,6 +252,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 using TVA.Configuration;
 
@@ -342,6 +346,18 @@ namespace TVA.Communication
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888";
+
+        /// <summary>
+        /// Regular expression used to validate the server property in <see cref="ClientBase.ConnectionString"/>.
+        /// </summary>
+        /// <remarks>
+        /// Matches the following valid input:
+        /// - localhost:80
+        /// - 127.0.0.1:80
+        /// - [::1]:80
+        /// - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+        /// </remarks>
+        private const string ValidServerRegex = @"(?<host>.+)\:(?<port>\d+$)";
 
         // Fields
         private bool m_payloadAware;
@@ -521,8 +537,8 @@ namespace TVA.Communication
                     m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp);
 
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
-                string[] parts = m_connectData["server"].Split(':');
-                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(parts[0], int.Parse(parts[1])), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
+                Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
+                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(serverMatch.Groups["host"].Value, int.Parse(serverMatch.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
             }
             else
             {
@@ -541,22 +557,27 @@ namespace TVA.Communication
         {
             m_connectData = connectionString.ParseKeyValuePairs();
 
+            // Inject 'interface' property if missing.
             if (!m_connectData.ContainsKey("interface"))
                 m_connectData.Add("interface", string.Empty);
+
+            // Check if 'server' property is missing.
+            if (!m_connectData.ContainsKey("server"))
+                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
 
             // Backwards compatibility adjustments.
             // New Format: Server=localhost:8888
             // Old Format: Server=localhost; Port=8888
-            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("port"))
-                m_connectData["server"] = m_connectData["server"] + ":" + m_connectData["port"];
+            if (m_connectData.ContainsKey("port"))
+                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
 
-            if (!m_connectData.ContainsKey("server"))
-                throw new ArgumentException(string.Format("Server property is missing (Example: {0})", DefaultConnectionString));
+            // Check if 'server' property is valid.
+            Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
 
-            if (!m_connectData["server"].Contains(":"))
+            if (serverMatch == Match.Empty)
                 throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
 
-            if (!Transport.IsPortNumberValid(m_connectData["server"].Split(':')[1]))
+            if (!Transport.IsPortNumberValid(serverMatch.Groups["port"].Value))
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 
