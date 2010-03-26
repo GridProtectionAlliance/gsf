@@ -1250,7 +1250,7 @@ namespace TVA.Measurements
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
-                status.AppendFormat(" Publish ahead of lag-time: {0}", (m_discardedMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("  Pre-lag-time publication: {0}", (m_framesAheadOfSchedule / (double)m_publishedFrames).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
