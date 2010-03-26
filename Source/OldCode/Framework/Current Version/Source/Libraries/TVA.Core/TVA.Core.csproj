@@ -175,6 +175,7 @@
     <Compile Include="Measurements\Routing\AdapterCollectionBase.cs" />
     <Compile Include="Measurements\Routing\AdapterCommandAttribute.cs" />
     <Compile Include="Measurements\Routing\AllAdaptersCollection.cs" />
+    <Compile Include="Measurements\Routing\FacileActionAdapterBase.cs" />
     <Compile Include="Measurements\Routing\IActionAdapter.cs" />
     <Compile Include="Measurements\Routing\IAdapter.cs" />
     <Compile Include="Measurements\Routing\IAdapterCollection.cs" />
