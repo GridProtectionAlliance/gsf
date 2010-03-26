@@ -448,6 +448,7 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 										
 										if ( iNNClassValue == 1) {
 											iOscillationsFound++;
+											output.collect( new Text("1"), new LongWritable( oWindow.getFirst().GetCalendar().getTimeInMillis() ) );
 										}
 										
 							
@@ -456,6 +457,7 @@ public class SlidingTSClassifier_kNN extends Configured implements Tool {
 										e.printStackTrace();
 									}			    		
 				
+									
 					    			
 				    			iBucketWindowsProcessed++;		        			
 			        			
