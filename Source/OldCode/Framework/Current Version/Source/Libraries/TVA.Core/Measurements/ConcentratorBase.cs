@@ -589,11 +589,14 @@ namespace TVA.Measurements
         private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
+        private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
+        private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_processedMeasurements;               // Total number of measurements ever requested for sorting
         private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
         private long m_discardedMeasurements;               // Total number of discarded measurements
         private long m_publishedMeasurements;               // Total number of published measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
+        private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
         private Ticks m_totalPublishTime;                   // Total cumulative frame user function publication time (in ticks) - used to calculate average
         private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
@@ -620,6 +623,7 @@ namespace TVA.Measurements
             m_realTime = DateTime.UtcNow.Ticks;
 #endif
             m_allowSortsByArrival = true;
+            m_allowPreemptivePublishing = true;
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Create a new queue for managing real-time frames
@@ -894,6 +898,39 @@ namespace TVA.Measurements
             get
             {
                 return m_ticksPerFrame;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the expected number of measurements to be assigned to a single frame.
+        /// </summary>
+        public int ExpectedMeasurements
+        {
+            get
+            {
+                return m_expectedMeasurements;
+            }
+            set
+            {
+                m_expectedMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that allows system to preemptively publish frames assuming all <see cref="ExpectedMeasurements"/> have arrived.
+        /// </summary>
+        /// <remarks>
+        /// In order for this property to used, the <see cref="ExpectedMeasurements"/> must be defined.
+        /// </remarks>
+        public bool AllowPreemptivePublishing
+        {
+            get
+            {
+                return m_allowPreemptivePublishing;
+            }
+            set
+            {
+                m_allowPreemptivePublishing = value;
             }
         }
 
@@ -1185,6 +1222,10 @@ namespace TVA.Measurements
                 }
                 status.AppendFormat(" Allowing sorts by arrival: {0}", m_allowSortsByArrival);
                 status.AppendLine();
+                status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
+                status.AppendLine();
+                status.AppendFormat("     Expected measurements: {0} / frame", m_expectedMeasurements);
+                status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Published measurements: {0}", m_publishedMeasurements);
@@ -1208,6 +1249,8 @@ namespace TVA.Measurements
                 status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
+                status.AppendLine();
+                status.AppendFormat(" Publish ahead of lag-time: {0}", (m_discardedMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
@@ -1358,6 +1401,7 @@ namespace TVA.Measurements
                 m_discardedMeasurements = 0;
                 m_publishedMeasurements = 0;
                 m_missedSortsByTimeout = 0;
+                m_framesAheadOfSchedule = 0;
                 m_publishedFrames = 0;
                 m_totalPublishTime = 0;
                 m_stopTime = 0;
@@ -1694,6 +1738,16 @@ namespace TVA.Measurements
                 ProcessException(this, new EventArgs<Exception>(ex));
         }
 
+        /// <summary>
+        /// Raises the <see cref="UnpublishedSamples"/> event.
+        /// </summary>
+        /// <param name="seconds">Total number of unpublished seconds of data.</param>
+        protected virtual void OnUnpublishedSamples(int seconds)
+        {
+            if (UnpublishedSamples != null)
+                UnpublishedSamples(this, new EventArgs<int>(seconds));
+        }
+
         // Tick handler for frame rate timer simply signals waiting thread to publish
         private void StartFramePublication(object sender, EventArgs e)
         {
@@ -1736,7 +1790,18 @@ namespace TVA.Measurements
                             // See if any lagtime needs to pass before we begin publishing,
                             // exiting if it's not time to publish
                             if (m_lagTicks - (RealTime - timestamp) > 0)
-                                break;
+                            {
+                                // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
+                                // an expected number of measurements per-frame have been defined and the frame has received this
+                                // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
+                                // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
+                                // frame as soon as the expected data has arrived.
+                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.Measurements.Count < m_expectedMeasurements)
+                                    break;
+
+                                // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
+                                m_framesAheadOfSchedule++;
+                            }
 
                             // Mark start time for publication
 #if UseHighResolutionTime
@@ -1806,8 +1871,7 @@ namespace TVA.Measurements
             if (secondsOfData < 0)
                 secondsOfData = 0;
 
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(this, new EventArgs<int>(secondsOfData));
+            OnUnpublishedSamples(secondsOfData);
         }
 
         // Handle attach to frame rate timer
