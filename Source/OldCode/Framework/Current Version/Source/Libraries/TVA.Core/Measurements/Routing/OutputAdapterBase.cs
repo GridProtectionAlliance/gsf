@@ -237,7 +237,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using TVA.Collections;
@@ -257,9 +256,6 @@ namespace TVA.Measurements.Routing
 	{
         #region [ Members ]
 
-        // Constants
-        private const int ProcessedMeasurementInterval = 100000;
-
         // Events
 
         /// <summary>
@@ -278,7 +274,6 @@ namespace TVA.Measurements.Routing
 
         // Fields
         private ProcessQueue<IMeasurement> m_measurementQueue;
-        private long m_processedMeasurements;
         private List<string> m_sourceIDs;
         private System.Timers.Timer m_connectionTimer;
         private System.Timers.Timer m_monitorTimer;
@@ -330,17 +325,6 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_measurementQueue.RequeueOnException = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the total number of measurements processed thus far by the <see cref="OutputAdapterBase"/>.
-        /// </summary>
-        public virtual long ProcessedMeasurements
-        {
-            get
-            {
-                return m_processedMeasurements;
             }
         }
 
@@ -428,11 +412,11 @@ namespace TVA.Measurements.Routing
                 status.Append(base.Status);
                 status.AppendFormat("     Source ID filter list: {0}", (m_sourceIDs == null ? "[No filter applied]" : m_sourceIDs.ToDelimitedString(',')));
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements);
-                status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
                 status.AppendFormat("     Output is for archive: {0}", OutputIsForArchive);
+                status.AppendLine();
+                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
                 status.Append(m_measurementQueue.Status);
 
@@ -508,10 +492,6 @@ namespace TVA.Measurements.Routing
         /// </summary>		
         public override void Start()
         {
-            // Make sure we are disconnected before attempting a connection
-            if(Enabled)
-                Stop();
-
             base.Start();
 
             // Start the connection cycle
@@ -770,19 +750,6 @@ namespace TVA.Measurements.Routing
         private void m_measurementQueue_ProcessException(object sender, EventArgs<Exception> e)
         {
             OnProcessException(e.Argument);
-        }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        private void IncrementProcessedMeasurements(long totalAdded)
-        {
-            // Check to see if total number of added points will exceed process interval used to show periodic
-            // messages of how many points have been archived so far...
-            bool showMessage = m_processedMeasurements + totalAdded >= (m_processedMeasurements / ProcessedMeasurementInterval + 1) * ProcessedMeasurementInterval;
-
-            m_processedMeasurements += totalAdded;
-
-            if (showMessage)
-                OnStatusMessage(string.Format("{0:N0} measurements have been queued for processing so far...", m_processedMeasurements));
         }
 
         #endregion

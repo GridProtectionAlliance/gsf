@@ -242,6 +242,7 @@ using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace TVA.Measurements.Routing
 {
@@ -252,6 +253,9 @@ namespace TVA.Measurements.Routing
     public abstract class AdapterBase : IAdapter
 	{
         #region [ Members ]
+
+        // Constants
+        private const int DefaultMeasurementReportingInterval = 100000;
 
         // Events
 
@@ -281,6 +285,8 @@ namespace TVA.Measurements.Routing
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
+        private long m_processedMeasurements;
+        private int m_measurementReportingInterval;
         private bool m_enabled;
         private bool m_initialized;
         private bool m_disposed;
@@ -469,6 +475,35 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Gets the total number of measurements handled thus far by the <see cref="AdapterBase"/>.
+        /// </summary>
+        public virtual long ProcessedMeasurements
+        {
+            get
+            {
+                return m_processedMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the measurement reporting interval.
+        /// </summary>
+        /// <remarks>
+        /// This is used to determined how many measurements should be processed before reporting status.
+        /// </remarks>
+        public virtual int MeasurementReportingInterval
+        {
+            get
+            {
+                return m_measurementReportingInterval;
+            }
+            set
+            {
+                m_measurementReportingInterval = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets flag indicating if the adapter has been initialized successfully.
         /// </summary>
         public virtual bool Initialized
@@ -535,12 +570,22 @@ namespace TVA.Measurements.Routing
                 const int MaxMeasurementsToShow = 10;
 
                 StringBuilder status = new StringBuilder();
+                DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("    Referenced data source: {0}, {1} tables", DataSource.DataSetName, DataSource.Tables.Count);
+                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
+                if (dataSource != null)
+                {
+                    status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
+                    status.AppendLine();
+                }
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
+                status.AppendLine();
+                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendLine();
+                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
                 status.AppendFormat("                Adpater ID: {0}", ID);
                 status.AppendLine();
@@ -676,6 +721,10 @@ namespace TVA.Measurements.Routing
         [AdapterCommand("Starts the adapter, if it is not already running.")]
         public virtual void Start()
         {
+            // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
+            if (Enabled)
+                Stop();
+
             // Wait for adapter intialization to complete...
             m_initializeWaitHandle.WaitOne();
             m_enabled = true;
@@ -770,6 +819,28 @@ namespace TVA.Measurements.Routing
         {
             if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
+        }
+
+        /// <summary>
+        /// Safely increments the total processed measurements.
+        /// </summary>
+        /// <param name="totalAdded"></param>
+        [MethodImpl(MethodImplOptions.Synchronized)]        
+        protected virtual void IncrementProcessedMeasurements(long totalAdded)
+        {
+            // Check to see if total number of added points will exceed process interval used to show periodic
+            // messages of how many points have been archived so far...
+            int interval = MeasurementReportingInterval;
+
+            if (interval > 0)
+            {
+                bool showMessage = m_processedMeasurements + totalAdded >= (m_processedMeasurements / interval + 1) * interval;
+
+                m_processedMeasurements += totalAdded;
+
+                if (showMessage)
+                    OnStatusMessage("{0:N0} measurements have been processed so far...", m_processedMeasurements);
+            }
         }
 
         #endregion

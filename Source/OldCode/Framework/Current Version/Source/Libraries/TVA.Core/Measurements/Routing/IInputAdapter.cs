@@ -249,10 +249,5 @@ namespace TVA.Measurements.Routing
         /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
         /// </remarks>
         event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
-
-        /// <summary>
-        /// Gets the total number of measurements received thus far by the <see cref="IInputAdapter"/>.
-        /// </summary>
-        long ReceivedMeasurements { get; }
 	}	
 }

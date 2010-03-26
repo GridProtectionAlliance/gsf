@@ -233,7 +233,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
@@ -250,9 +249,6 @@ namespace TVA.Measurements.Routing
 	{
         #region [ Members ]
 
-        // Constants
-        private const int ReceivedMeasurementInterval = 100000;
-
         // Events
 
         /// <summary>
@@ -264,7 +260,6 @@ namespace TVA.Measurements.Routing
         public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
         // Fields
-        private long m_receivedMeasurements;
         private System.Timers.Timer m_connectionTimer;
         private bool m_disposed;
 
@@ -288,17 +283,6 @@ namespace TVA.Measurements.Routing
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Gets the total number of measurements received thus far by the <see cref="InputAdapterBase"/>.
-        /// </summary>
-        public virtual long ReceivedMeasurements
-        {
-            get
-            {
-                return m_receivedMeasurements;
-            }
-        }
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -336,9 +320,9 @@ namespace TVA.Measurements.Routing
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
-                status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
-                status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
+                status.AppendLine();
+                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
 
                 return status.ToString();
@@ -382,10 +366,6 @@ namespace TVA.Measurements.Routing
         /// </summary>
         public override void Start()
         {
-            // Make sure we are disconnected before attempting a connection
-            if(Enabled)
-                Stop();
-
             base.Start();
 
             // Start the connection cycle
@@ -467,7 +447,7 @@ namespace TVA.Measurements.Routing
             if (NewMeasurements != null)
                 NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
 
-            IncrementReceivedMeasurements(measurements.Count);
+            IncrementProcessedMeasurements(measurements.Count);
         }
 
         /// <summary>
@@ -503,19 +483,6 @@ namespace TVA.Measurements.Routing
                 if (Enabled)
                     Start();
             }
-        }
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        private void IncrementReceivedMeasurements(long totalAdded)
-        {
-            // Check to see if total number of added points will exceed process interval used to show periodic
-            // messages of how many points have been archived so far...
-            bool showMessage = m_receivedMeasurements + totalAdded >= (m_receivedMeasurements / ReceivedMeasurementInterval + 1) * ReceivedMeasurementInterval;
-
-            m_receivedMeasurements += totalAdded;
-
-            if (showMessage)
-                OnStatusMessage("{0:N0} measurements have been received so far...", m_receivedMeasurements);
         }
 
         #endregion

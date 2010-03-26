@@ -1,17 +1,15 @@
 //*******************************************************************************************************
-//  IAdapter.cs - Gbtc
+//  FacileActionAdapterBase.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  06/01/2006 - J. Ritchie Carroll
+//  03/25/2010 - James R. Carroll
 //       Generated original version of source code.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -232,98 +230,151 @@
 #endregion
 
 using System;
-using System.Data;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 
 namespace TVA.Measurements.Routing
 {
     /// <summary>
-    /// Represents the abstract interface for any adapter.
+    /// Represents the base class for simple, non-time-aligned, action adapters.
     /// </summary>
+    /// <remarks>
+    /// This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
+    /// class needs time-aligned data for processing, the <see cref="ActionAdapterBase"/> class should be used instead.
+    /// Derived classes are expected call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
+    /// </remarks>
     [CLSCompliant(false)]
-    public interface IAdapter : ISupportLifecycle, IProvideStatus
+    public abstract class FacileActionAdapterBase : AdapterBase, IActionAdapter
 	{
+        #region [ Members ]
+
+        // Events
+
         /// <summary>
-        /// Provides status messages to consumer.
+        /// Provides new measurements from input adapter.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is new status message.
+        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
         /// </remarks>
-        event EventHandler<EventArgs<string>> StatusMessage;
+        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
 
         /// <summary>
-        /// Event is raised when there is an exception encountered while processing.
+        /// This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
         /// </summary>
         /// <remarks>
-        /// <para>
-        /// Implementations of this interface are expected to capture any exceptions that might be thrown by
-        /// user code in any processing to prevent third-party code from causing an unhandled exception
-        /// in the host.  Errors are reported via this event so host administrators will be aware of the exception.
-        /// Any needed connection cycle to data adapter should be restarted when an exception is encountered.
-        /// </para>
-        /// <para>
-        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
-        /// </para>
+        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
         /// </remarks>
-        event EventHandler<EventArgs<Exception>> ProcessException;
+        public event EventHandler<EventArgs<int>> UnpublishedSamples;
+
+        // Fields
+        private int m_framesPerSecond;
+
+        #endregion
+
+        #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
-        /// </summary>
-        DataSet DataSource { get; set; }
-
-        /// <summary>
-        /// Gets or sets key/value pair connection information specific to <see cref="IAdapter"/>.
-        /// </summary>
-        string ConnectionString { get; set; }
-
-        /// <summary>
-        /// Gets or sets name of this <see cref="IAdapter"/>.
-        /// </summary>
-        new string Name { get; set; }
-
-        /// <summary>
-        /// Gets or sets the numeric ID associated with this <see cref="IAdapter"/>.
-        /// </summary>
-        uint ID { get; set; }
-
-        /// <summary>
-        /// Gets or sets flag indicating if the adapter has been initialized successfully.
+        /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
         /// </summary>
         /// <remarks>
-        /// Implementors only need to track this value.
+        /// This value is only tracked in the <see cref="FacileActionAdapterBase"/>, derived class will determine its use.
         /// </remarks>
-        bool Initialized { get; set; }
+        public virtual int FramesPerSecond
+        {
+            get
+            {
+                return m_framesPerSecond;
+            }
+            set
+            {
+                m_framesPerSecond = value;
+            }
+        }
 
         /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
+        /// Returns the detailed status of the data input source.
         /// </summary>
-        IMeasurement[] OutputMeasurements { get; set; }
+        /// <remarks>
+        /// Derived classes should extend status with implementation specific information.
+        /// </remarks>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.AppendFormat("        Defined frame rate: {0} frames/sec", FramesPerSecond);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
-        /// Gets or sets primary keys of input measurements the action adapter expects.
+        /// Initializes <see cref="FacileActionAdapterBase"/>.
         /// </summary>
-        MeasurementKey[] InputMeasurementKeys { get; set; }
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
+            
+            if (settings.TryGetValue("framesPerSecond", out setting))
+                m_framesPerSecond = int.Parse(setting);
+        }
 
         /// <summary>
-        /// Gets the total number of measurements processed thus far by the <see cref="IAdapter"/>.
+        /// Queues a single measurement for processing.
         /// </summary>
-        long ProcessedMeasurements { get; }
+        /// <param name="measurement">Measurement to queue for processing.</param>
+        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
+        {
+            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
+        }
 
         /// <summary>
-        ///  Starts the adapter, if it is not already running.
+        /// Queues a collection of measurements for processing.
         /// </summary>
-        void Start();
+        /// <param name="measurements">Measurements to queue for processing.</param>
+        public abstract void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
 
         /// <summary>
-        /// Stops the adapter.
+        /// Raises the <see cref="NewMeasurements"/> event.
         /// </summary>
-        void Stop();
+        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        {
+            if (NewMeasurements != null)
+                NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+
+            IncrementProcessedMeasurements(measurements.Count);
+        }
 
         /// <summary>
-        /// Gets a short one-line adapter status.
+        /// Raises <see cref="AdapterBase.ProcessException"/> event.
         /// </summary>
-        /// <param name="maxLength">Maximum number of available characters for display.</param>
-        /// <returns>A short one-line summary of the current adapter status.</returns>
-        string GetShortStatus(int maxLength);
-    }
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        protected override void OnProcessException(Exception ex)
+        {
+            base.OnProcessException(ex);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="UnpublishedSamples"/> event.
+        /// </summary>
+        /// <param name="seconds">Total number of unpublished seconds of data.</param>
+        protected virtual void OnUnpublishedSamples(int seconds)
+        {
+            if (UnpublishedSamples != null)
+                UnpublishedSamples(this, new EventArgs<int>(seconds));
+        }
+
+        #endregion
+    }	
 }

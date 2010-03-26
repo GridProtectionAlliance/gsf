@@ -589,7 +589,7 @@ namespace TVA.Measurements
         private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
-        private long m_totalMeasurements;                   // Total number of measurements ever requested for sorting
+        private long m_processedMeasurements;               // Total number of measurements ever requested for sorting
         private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
         private long m_discardedMeasurements;               // Total number of discarded measurements
         private long m_publishedMeasurements;               // Total number of published measurements
@@ -1053,11 +1053,11 @@ namespace TVA.Measurements
         /// <summary>
         /// Gets the total number of measurements that have ever been requested for sorting.
         /// </summary>
-        public long TotalMeasurements
+        public long ProcessedMeasurements
         {
             get
             {
-                return m_totalMeasurements;
+                return m_processedMeasurements;
             }
         }
 
@@ -1185,7 +1185,7 @@ namespace TVA.Measurements
                 }
                 status.AppendFormat(" Allowing sorts by arrival: {0}", m_allowSortsByArrival);
                 status.AppendLine();
-                status.AppendFormat("        Total measurements: {0}", m_totalMeasurements);
+                status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Published measurements: {0}", m_publishedMeasurements);
                 status.AppendLine();
@@ -1211,11 +1211,11 @@ namespace TVA.Measurements
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_totalMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("    Total published frames: {0}", m_publishedFrames);
                 status.AppendLine();
@@ -1353,7 +1353,7 @@ namespace TVA.Measurements
             if (!m_enabled)
             {
                 // Reset statistics
-                m_totalMeasurements = 0;
+                m_processedMeasurements = 0;
                 m_measurementsSortedByArrival = 0;
                 m_discardedMeasurements = 0;
                 m_publishedMeasurements = 0;
@@ -1448,7 +1448,7 @@ namespace TVA.Measurements
             bool discardMeasurement;
 
             // Track the total number of measurements ever requested for sorting.
-            Interlocked.Add(ref m_totalMeasurements, measurements.Count());
+            Interlocked.Add(ref m_processedMeasurements, measurements.Count());
 
             // Measurements usually come in groups. This function processes all available measurements in the
             // collection here directly as an optimization which avoids the overhead of a function call for

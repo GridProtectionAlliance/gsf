@@ -701,6 +701,10 @@ namespace TVA.Measurements.Routing
         [AdapterCommand("Starts the action adapter, if it is not already running.")]
         public override void Start()
         {
+            // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
+            if (Enabled)
+                Stop();
+
             // Wait for adapter intialization to complete...
             m_initializeWaitHandle.WaitOne();
             base.Start();

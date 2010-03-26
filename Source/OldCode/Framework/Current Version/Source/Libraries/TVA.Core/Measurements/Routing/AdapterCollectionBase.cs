@@ -241,6 +241,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using TVA.IO;
+using TVA.Units;
 
 namespace TVA.Measurements.Routing
 {
@@ -279,6 +280,13 @@ namespace TVA.Measurements.Routing
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private string m_dataMember;
+        private IMeasurement[] m_outputMeasurements;
+        private MeasurementKey[] m_inputMeasurementKeys;
+        private Ticks m_lastProcessTime;
+        private Time m_totalProcessTime;
+        private long m_processedMeasurements;
+        private System.Timers.Timer m_monitorTimer;
+        private bool m_enableMonitorTimer;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -292,6 +300,14 @@ namespace TVA.Measurements.Routing
         protected AdapterCollectionBase()
         {
             m_name = this.GetType().Name;
+
+            m_monitorTimer = new System.Timers.Timer();
+            m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
+
+            // We monitor total number of processed measurements every minute
+            m_monitorTimer.Interval = 60000;
+            m_monitorTimer.AutoReset = true;
+            m_monitorTimer.Enabled = false;
         }
 
         /// <summary>
@@ -422,6 +438,56 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Gets or sets output measurements that the <see cref="AdapterCollectionBase{T}"/> will produce, if any.
+        /// </summary>
+        public virtual IMeasurement[] OutputMeasurements
+        {
+            get
+            {
+                return m_outputMeasurements;
+            }
+            set
+            {
+                m_outputMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="AdapterCollectionBase{T}"/> expects, if any.
+        /// </summary>
+        public virtual MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return m_inputMeasurementKeys;
+            }
+            set
+            {
+                m_inputMeasurementKeys = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements processed thus far by each <see cref="IAdapter"/> implementation
+        /// in the <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        public virtual long ProcessedMeasurements
+        {
+            get
+            {
+                long processedMeasurements = 0;
+
+                // Calculate new total for all archive destined output adapters
+                foreach (IAdapter item in this)
+                {
+                    processedMeasurements += item.ProcessedMeasurements;
+                }
+
+                return processedMeasurements;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets enabled state of this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
         public virtual bool Enabled
@@ -447,6 +513,21 @@ namespace TVA.Measurements.Routing
             get
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if monitor timer should be used for monitoring processed measurement statistics for the <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        protected virtual bool EnableMonitorTimer
+        {
+            get
+            {
+                return m_enableMonitorTimer;
+            }
+            set
+            {
+                m_enableMonitorTimer = value;
             }
         }
 
@@ -481,19 +562,23 @@ namespace TVA.Measurements.Routing
             get
             {
                 StringBuilder status = new StringBuilder();
+                DataSet dataSource = this.DataSource;
 
                 // Show collection status
                 status.AppendFormat("  Total adapter components: {0}", Count);
                 status.AppendLine();
-                status.AppendFormat("    Collection initialized: {0}", m_initialized);
+                status.AppendFormat("    Collection initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat(" Current operational state: {0}", (m_enabled ? "Enabled" : "Disabled"));
+                status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
-                status.AppendFormat("     Configuration defined: {0}", (m_dataSource != null));
+                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
-                status.AppendFormat("    Referenced data source: {0}, {1} tables", DataSource.DataSetName, DataSource.Tables.Count);
-                status.AppendLine();
-                status.AppendFormat("    Data source table name: {0}", m_dataMember);
+                if (dataSource != null)
+                {
+                    status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
+                    status.AppendLine();
+                }
+                status.AppendFormat("    Data source table name: {0}", DataMember);
                 status.AppendLine();
 
                 if (Count > 0)
@@ -517,7 +602,15 @@ namespace TVA.Measurements.Routing
                             status.AppendLine();
                             status.AppendFormat("Status of {0} component {1}, {2}:", typeof(T).Name, ++index, statusProvider.Name);
                             status.AppendLine();
-                            status.Append(statusProvider.Status);
+                            try
+                            {
+                                status.Append(statusProvider.Status);
+                            }
+                            catch (Exception ex)
+                            {
+                                status.AppendFormat("Failed to retrieve status due to exception: {0}", ex.Message);
+                                status.AppendLine();
+                            }
                         }
                     }
 
@@ -554,7 +647,16 @@ namespace TVA.Measurements.Routing
                 try
                 {
                     if (disposing)
+                    {
+                        if (m_monitorTimer != null)
+                        {
+                            m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
+                            m_monitorTimer.Dispose();
+                        }
+                        m_monitorTimer = null;
+
                         Clear();        // This disposes all items in collection...
+                    }
                 }
                 finally
                 {
@@ -798,6 +900,11 @@ namespace TVA.Measurements.Routing
         {
             m_enabled = true;
 
+            // Reset statistics
+            m_processedMeasurements = 0;
+            m_totalProcessTime = 0.0D;
+            m_lastProcessTime = DateTime.UtcNow.Ticks;
+
             foreach (T item in this)
             {
                 // We start items from thread pool if auto-intializing since
@@ -807,6 +914,10 @@ namespace TVA.Measurements.Routing
                 else
                     item.Start();
             }
+
+            // Start data monitor...
+            if (EnableMonitorTimer)
+                m_monitorTimer.Start();
         }
 
         // Thread pool delegate to handle item startup
@@ -836,6 +947,9 @@ namespace TVA.Measurements.Routing
             {
                 item.Stop();
             }
+
+            // Stop data monitor...
+            m_monitorTimer.Stop();
         }
 
         /// <summary>
@@ -990,6 +1104,62 @@ namespace TVA.Measurements.Routing
                 item.ProcessException -= ProcessException;
                 item.Dispose();
             }
+        }
+
+        // We monitor the total number of measurements destined for archival here...
+        private void m_monitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            StringBuilder status = new StringBuilder();
+            Ticks currentTime, totalProcessTime;
+            long totalNew, processedMeasurements = this.ProcessedMeasurements;
+
+            // Calculate time since last call
+            currentTime = DateTime.UtcNow.Ticks;
+            totalProcessTime = currentTime - m_lastProcessTime;
+            m_totalProcessTime += totalProcessTime.ToSeconds();
+            m_lastProcessTime = currentTime;
+
+            // Calculate how many new measurements have been received in the last minute...
+            totalNew = processedMeasurements - m_processedMeasurements;
+            m_processedMeasurements = processedMeasurements;
+
+            // Process statistics for 12 hours total runtime:
+            //
+            //          1              1                 1
+            // 12345678901234 12345678901234567 1234567890
+            // Time span        Measurements    Per second
+            // -------------- ----------------- ----------
+            // Entire runtime 9,999,999,999,999 99,999,999
+            // Last minute         4,985            83
+
+            status.AppendFormat("\r\nProcess statistics for {0} total runtime:\r\n\r\n", m_totalProcessTime.ToString().ToLower());
+            status.Append("Time span".PadRight(14));
+            status.Append(' ');
+            status.Append("Measurements".CenterText(17));
+            status.Append(' ');
+            status.Append("Per second".CenterText(10));
+            status.AppendLine();
+            status.Append(new string('-', 14));
+            status.Append(' ');
+            status.Append(new string('-', 17));
+            status.Append(' ');
+            status.Append(new string('-', 10));
+            status.AppendLine();
+
+            status.Append("Entire runtime".PadRight(14));
+            status.Append(' ');
+            status.Append(m_processedMeasurements.ToString("N0").CenterText(17));
+            status.Append(' ');
+            status.Append(((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0").CenterText(10));
+            status.AppendLine();
+            status.Append("Last minute".PadRight(14));
+            status.Append(' ');
+            status.Append(totalNew.ToString("N0").CenterText(17));
+            status.Append(' ');
+            status.Append(((int)(totalNew / totalProcessTime.ToSeconds())).ToString("N0").CenterText(10));
+
+            // Report updated statistics every minute...
+            OnStatusMessage(status.ToString());
         }
 
         #region [ Explicit ICollection<IAdapter> Implementation ]

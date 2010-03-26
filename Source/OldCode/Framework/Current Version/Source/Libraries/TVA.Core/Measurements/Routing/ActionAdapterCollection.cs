@@ -262,12 +262,6 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
-        // Fields
-        private IMeasurement[] m_outputMeasurements;
-        private MeasurementKey[] m_inputMeasurementKeys;
-        private int m_minimumMeasurementsToUse;
-        private int m_framesPerSecond;
-
         #endregion
 
         #region [ Constructors ]
@@ -279,74 +273,6 @@ namespace TVA.Measurements.Routing
         {
             base.Name = "Action Adapter Collection";
             base.DataMember = "ActionAdapters";
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
-        /// </summary>
-        public virtual IMeasurement[] OutputMeasurements
-        {
-            get
-            {
-                return m_outputMeasurements;
-            }
-            set
-            {
-                m_outputMeasurements = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the action adapter expects.
-        /// </summary>
-        public virtual MeasurementKey[] InputMeasurementKeys
-        {
-            get
-            {
-                return m_inputMeasurementKeys;
-            }
-            set
-            {
-                m_inputMeasurementKeys = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets minimum number of input measurements required for calculation.  Set to -1 to require all.
-        /// </summary>
-        public virtual int MinimumMeasurementsToUse
-        {
-            get
-            {
-                // Default to all measurements if minimum is not specified
-                if (m_minimumMeasurementsToUse < 1)
-                    return m_inputMeasurementKeys.Length;
-
-                return m_minimumMeasurementsToUse;
-            }
-            set
-            {
-                m_minimumMeasurementsToUse = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the number of frames per second.
-        /// </summary>
-        public int FramesPerSecond
-        {
-            get
-            {
-                return m_framesPerSecond;
-            }
-            set
-            {
-                m_framesPerSecond = value;
-            }
         }
 
         #endregion

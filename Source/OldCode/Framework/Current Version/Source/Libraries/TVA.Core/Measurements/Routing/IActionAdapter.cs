@@ -259,28 +259,7 @@ namespace TVA.Measurements.Routing
         event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
-        /// Gets or sets the number of frames per second.
-        /// </summary>
-        int FramesPerSecond { get; set; }
-
-        /// <summary>
-        /// Gets or sets output measurements that the action adapter will produce, if any.
-        /// </summary>
-		IMeasurement[] OutputMeasurements { get; set; }
-
-        /// <summary>
-        /// Gets or sets primary keys of input measurements the action adapter expects.
-        /// </summary>
-        MeasurementKey[] InputMeasurementKeys { get; set; }
-
-		/// <summary>
-        /// Gets or sets minimum number of input measurements required for calcualtion.  Set to -1 to require all.
-		/// </summary>
-		int MinimumMeasurementsToUse { get; set; }
-
-        /// <summary>
-        /// Queues measurements for calculation processing.  Measurements are automatically filters to the defined
-        /// <see cref="InputMeasurementKeys"/>.
+        /// Queues measurements for calculation processing.  Measurements are automatically filters to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);

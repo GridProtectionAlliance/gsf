@@ -262,13 +262,6 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         public event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
-        // Fields
-        private Ticks m_lastProcessTime;
-        private Time m_totalProcessTime;
-        private long m_processedMeasurements;
-        private System.Timers.Timer m_monitorTimer;
-        private bool m_disposed;
-
         #endregion
 
         #region [ Constructors ]
@@ -280,14 +273,6 @@ namespace TVA.Measurements.Routing
         {
             base.Name = "Output Adapter Collection";
             base.DataMember = "OutputAdapters";
-
-            m_monitorTimer = new System.Timers.Timer();
-            m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
-
-            // We monitor total number of measurements destined for archival every minute
-            m_monitorTimer.Interval = 60000;
-            m_monitorTimer.AutoReset = true;
-            m_monitorTimer.Enabled = false;
         }
 
         #endregion
@@ -295,14 +280,23 @@ namespace TVA.Measurements.Routing
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the total number of measurements processed thus far by each <see cref="IOutputAdapter"/> implementation
-        /// in the <see cref="OutputAdapterCollection"/>.
+        /// Gets the total number of measurements processed and destined for archive thus far by each
+        /// <see cref="IOutputAdapter"/> implementation in the <see cref="OutputAdapterCollection"/>.
         /// </summary>
-        public virtual long ProcessedMeasurements
+        public override long ProcessedMeasurements
         {
             get
             {
-                return m_processedMeasurements;
+                long processedMeasurements = 0;
+
+                // Calculate new total for all archive destined output adapters
+                foreach (IOutputAdapter item in this)
+                {
+                    if (item.OutputIsForArchive)
+                        processedMeasurements += item.ProcessedMeasurements;
+                }
+
+                return processedMeasurements;
             }
         }
 
@@ -327,61 +321,6 @@ namespace TVA.Measurements.Routing
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="OutputAdapterCollection"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_monitorTimer != null)
-                        {
-                            m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
-                            m_monitorTimer.Dispose();
-                        }
-                        m_monitorTimer = null;
-                    }
-                }
-                finally
-                {
-                    base.Dispose(disposing);    // Call base class Dispose().
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
-        /// Starts each <see cref="IOutputAdapter"/> implementation in this <see cref="OutputAdapterCollection"/>.
-        /// </summary>
-        public override void Start()
-        {
-            // Reset statistics
-            m_processedMeasurements = 0;
-            m_totalProcessTime = 0.0D;
-            m_lastProcessTime = DateTime.UtcNow.Ticks;
-            
-            // Start data monitor...
-            m_monitorTimer.Start();
-
-            base.Start();
-        }
-
-        /// <summary>
-        /// Stops each <see cref="IOutputAdapter"/> implementation in this <see cref="OutputAdapterCollection"/>.
-        /// </summary>
-        public override void Stop()
-        {
-            // Stop data monitor...
-            m_monitorTimer.Stop();
-
-            base.Stop();
-        }
 
         /// <summary>
         /// Queues a collection of measurements for processing to each <see cref="IOutputAdapter"/> implementation in
@@ -450,69 +389,6 @@ namespace TVA.Measurements.Routing
                 item.UnprocessedMeasurements -= UnprocessedMeasurements;
                 base.DisposeItem(item);
             }
-        }
-
-        // We monitor the total number of measurements destined for archival here...
-        private void m_monitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            StringBuilder status = new StringBuilder();
-            Ticks currentTime, totalProcessTime;
-            long totalNew, processedMeasurements = 0;
-
-            // Calculate time since last call
-            currentTime = DateTime.UtcNow.Ticks;
-            totalProcessTime = currentTime - m_lastProcessTime;
-            m_totalProcessTime += totalProcessTime.ToSeconds();
-            m_lastProcessTime = currentTime;
-
-            // Calculate new total for all archive destined output adapters
-            foreach (IOutputAdapter item in this)
-            {
-                if (item.OutputIsForArchive)
-                    processedMeasurements += item.ProcessedMeasurements;
-            }
-
-            // Calculate how many new measurements have been received in the last minute...
-            totalNew = processedMeasurements - m_processedMeasurements;
-            m_processedMeasurements = processedMeasurements;
-
-            // Archive Statistics:
-            //
-            //          1              1                 1
-            // 12345678901234 12345678901234567 1234567890
-            // Time span        Measurements    Per second
-            // -------------- ----------------- ----------
-            // Entire runtime 9,999,999,999,999 99,999,999
-            // Last minute         4,985            83
-
-            status.AppendFormat("\r\nArchive Statistics for {0} total runtime:\r\n\r\n", m_totalProcessTime.ToString().ToLower());
-            status.Append("Time span".PadRight(14));
-            status.Append(' ');
-            status.Append("Measurements".CenterText(17));
-            status.Append(' ');
-            status.Append("Per second".CenterText(10));
-            status.AppendLine();
-            status.Append(new string('-', 14));
-            status.Append(' ');
-            status.Append(new string('-', 17));
-            status.Append(' ');
-            status.Append(new string('-', 10));
-            status.AppendLine();
-
-            status.Append("Entire runtime".PadRight(14));
-            status.Append(' ');
-            status.Append(m_processedMeasurements.ToString("N0").CenterText(17));
-            status.Append(' ');
-            status.Append(((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0").CenterText(10));
-            status.AppendLine();
-            status.Append("Last minute".PadRight(14));
-            status.Append(' ');
-            status.Append(totalNew.ToString("N0").CenterText(17));
-            status.Append(' ');
-            status.Append(((int)(totalNew / totalProcessTime.ToSeconds())).ToString("N0").CenterText(10));
-
-            // Report updated statistics every minute...
-            OnStatusMessage(status.ToString());
         }
 
         #endregion

@@ -257,11 +257,6 @@ namespace TVA.Measurements.Routing
         event EventHandler<EventArgs<int>> UnprocessedMeasurements;
 
         /// <summary>
-        /// Gets the total number of measurements processed thus far by the <see cref="IOutputAdapter"/>.
-        /// </summary>
-        long ProcessedMeasurements { get; }
-
-        /// <summary>
         /// Returns a flag that determines if measurements sent to this <see cref="IOutputAdapter"/> are
         /// destined for archival.
         /// </summary>
