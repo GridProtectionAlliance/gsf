@@ -436,9 +436,16 @@ namespace TVA.Measurements.Routing
                 {
                     m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
                     m_inputMeasurementKeysHash.Sort();
+
+                    // The input measurements typically define the "expected measurements" of the action adapter, so
+                    // we use the number of these items to define the expected measurement count
+                    ExpectedMeasurements = m_inputMeasurementKeysHash.Count;
                 }
                 else
+                {
                     m_inputMeasurementKeysHash = null;
+                    ExpectedMeasurements = 0;
+                }
             }
         }
 
@@ -536,9 +543,15 @@ namespace TVA.Measurements.Routing
 				const int MaxMeasurementsToShow = 10;
 				
 				StringBuilder status = new StringBuilder();
+                DataSet dataSource = this.DataSource;
 
-                status.AppendFormat("    Referenced data source: {0}, {1} tables", DataSource.DataSetName, DataSource.Tables.Count);
+                status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
+                if (dataSource != null)
+                {
+                    status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
+                    status.AppendLine();
+                }
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
@@ -693,6 +706,9 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("timeResolution", out setting))
                 TimeResolution = long.Parse(setting);
+
+            if (settings.TryGetValue("allowPreemptivePublishing", out setting))
+                AllowPreemptivePublishing = setting.ParseBoolean();
         }
 
         /// <summary>
