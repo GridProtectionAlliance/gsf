@@ -611,7 +611,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int16"/>.</returns>
         public static implicit operator BinaryValue(Int16 value)
         {
-            return new BinaryValue(TypeCode.Int16, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Int16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -633,7 +633,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BinaryValue(UInt16 value)
         {
-            return new BinaryValue(TypeCode.UInt16, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.UInt16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -653,7 +653,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int24"/>.</returns>
         public static implicit operator BinaryValue(Int24 value)
         {
-            return new BinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -675,7 +675,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BinaryValue(UInt24 value)
         {
-            return new BinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -695,7 +695,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int32"/>.</returns>
         public static implicit operator BinaryValue(Int32 value)
         {
-            return new BinaryValue(TypeCode.Int32, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Int32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -717,7 +717,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BinaryValue(UInt32 value)
         {
-            return new BinaryValue(TypeCode.UInt32, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.UInt32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -737,7 +737,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Int64"/>.</returns>
         public static implicit operator BinaryValue(Int64 value)
         {
-            return new BinaryValue(TypeCode.Int64, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Int64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -759,7 +759,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator BinaryValue(UInt64 value)
         {
-            return new BinaryValue(TypeCode.UInt64, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.UInt64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -779,7 +779,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Single"/>.</returns>
         public static implicit operator BinaryValue(Single value)
         {
-            return new BinaryValue(TypeCode.Single, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Single, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -799,7 +799,7 @@ namespace TVA
         /// <returns>A <see cref="BinaryValue"/> representation of <see cref="Double"/>.</returns>
         public static implicit operator BinaryValue(Double value)
         {
-            return new BinaryValue(TypeCode.Double, m_endianOrder.GetBytes(value));
+            return new BinaryValue(TypeCode.Double, s_endianOrder.GetBytes(value));
         }
 
         #endregion
@@ -808,7 +808,7 @@ namespace TVA
 
         static BinaryValue()
         {
-            m_endianOrder = NativeEndianOrder.Default;
+            s_endianOrder = NativeEndianOrder.Default;
         }
 
         #endregion

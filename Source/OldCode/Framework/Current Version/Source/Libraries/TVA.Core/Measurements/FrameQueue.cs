@@ -575,23 +575,23 @@ namespace TVA.Measurements
         //{
         //    public class Program
         //    {
-        //        private static long m_timeResolution;
-        //        private static long m_framesPerSecond;
-        //        private static double m_ticksPerFrame;
-        //        private static double m_millisecondsPerFrame;
+        //        private static long s_timeResolution;
+        //        private static long s_framesPerSecond;
+        //        private static double s_ticksPerFrame;
+        //        private static double s_millisecondsPerFrame;
 
         //        public static void Main(string[] args)
         //        {
-        //            m_framesPerSecond = 30;
-        //            m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
-        //            m_timeResolution = Ticks.PerMillisecond;
-        //            m_millisecondsPerFrame = 1000.0 / m_framesPerSecond;
+        //            s_framesPerSecond = 30;
+        //            s_ticksPerFrame = Ticks.PerSecond / (double)s_framesPerSecond;
+        //            s_timeResolution = Ticks.PerMillisecond;
+        //            s_millisecondsPerFrame = 1000.0 / s_framesPerSecond;
 
         //            Ticks sourceTime = ((Ticks)DateTime.Now).BaselinedTimestamp(BaselineTimeInterval.Second);
 
-        //            for (int i = 0; i < m_framesPerSecond; i++)
+        //            for (int i = 0; i < s_framesPerSecond; i++)
         //            {
-        //                int milliseconds = (int)(m_millisecondsPerFrame * i);
+        //                int milliseconds = (int)(s_millisecondsPerFrame * i);
         //                long longTicks = ((new DateTime(sourceTime)).AddMilliseconds((double)milliseconds)).Ticks;
         //                long destination = GetFrame(longTicks);
         //                Console.WriteLine(string.Format("{0} - {1:000} ms : {2} - {3:000} ms", longTicks, milliseconds, destination, (new DateTime(destination)).Millisecond));
@@ -601,33 +601,33 @@ namespace TVA.Measurements
         //            double ticks = Ticks.PerSecond;
 
         //            // Test truncated timestamps
-        //            for (int i = 0; i < m_framesPerSecond; i++)
+        //            for (int i = 0; i < s_framesPerSecond; i++)
         //            {
-        //                long longTicks = (long)(ticks / m_timeResolution) * m_timeResolution;
+        //                long longTicks = (long)(ticks / s_timeResolution) * s_timeResolution;
         //                Console.WriteLine(string.Format("{0} : {1}", longTicks, GetFrame(longTicks)));
-        //                ticks += m_ticksPerFrame;
+        //                ticks += s_ticksPerFrame;
         //            }
         //            Console.WriteLine();
 
         //            ticks = 2 * Ticks.PerSecond;
 
         //            // Test rounded timestamps
-        //            for (int i = 0; i < m_framesPerSecond; i++)
+        //            for (int i = 0; i < s_framesPerSecond; i++)
         //            {
-        //                long longTicks = (long)Math.Round(ticks / m_timeResolution) * m_timeResolution;
+        //                long longTicks = (long)Math.Round(ticks / s_timeResolution) * s_timeResolution;
         //                Console.WriteLine(string.Format("{0} : {1}", longTicks, GetFrame(longTicks)));
-        //                ticks += m_ticksPerFrame;
+        //                ticks += s_ticksPerFrame;
         //            }
         //            Console.WriteLine();
 
         //            ticks = 3 * Ticks.PerSecond;
 
         //            // Test upper range limits
-        //            for (int i = 0; i < m_framesPerSecond; i++)
+        //            for (int i = 0; i < s_framesPerSecond; i++)
         //            {
-        //                ticks += m_ticksPerFrame;
-        //                long longTicks = (long)(ticks / m_timeResolution) * m_timeResolution;
-        //                longTicks -= m_timeResolution;
+        //                ticks += s_ticksPerFrame;
+        //                long longTicks = (long)(ticks / s_timeResolution) * s_timeResolution;
+        //                longTicks -= s_timeResolution;
         //                Console.WriteLine(string.Format("{0} : {1}", longTicks, GetFrame(longTicks)));
         //            }
         //            Console.ReadLine();
@@ -643,30 +643,30 @@ namespace TVA.Measurements
         //            // Remove the seconds from ticks
         //            ticksBeyondSecond = ticks - baseTicks;
 
-        //            // Calculate a frame index between 0 and m_framesPerSecond-1, corresponding to ticks
+        //            // Calculate a frame index between 0 and s_framesPerSecond-1, corresponding to ticks
         //            // rounded down to the nearest frame
-        //            frameIndex = (long)(ticksBeyondSecond / m_ticksPerFrame);
+        //            frameIndex = (long)(ticksBeyondSecond / s_ticksPerFrame);
 
         //            // Calculate the timestamp of the nearest frame rounded up
-        //            nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / m_framesPerSecond;
+        //            nextDestinationTicks = (frameIndex + 1) * Ticks.PerSecond / s_framesPerSecond;
 
         //            // Determine whether the desired frame is the nearest
         //            // frame rounded down or the nearest frame rounded up
-        //            if (m_timeResolution <= 1)
+        //            if (s_timeResolution <= 1)
         //            {
         //                if (nextDestinationTicks <= ticksBeyondSecond)
         //                    destinationTicks = nextDestinationTicks;
         //                else
-        //                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
+        //                    destinationTicks = frameIndex * Ticks.PerSecond / s_framesPerSecond;
         //            }
         //            else
         //            {
         //                // If, after translating nextDestinationTicks to the time resolution, it is less than
         //                // or equal to ticks, nextDestinationTicks corresponds to the desired frame
-        //                if ((nextDestinationTicks / m_timeResolution) * m_timeResolution <= ticksBeyondSecond)
+        //                if ((nextDestinationTicks / s_timeResolution) * s_timeResolution <= ticksBeyondSecond)
         //                    destinationTicks = nextDestinationTicks;
         //                else
-        //                    destinationTicks = frameIndex * Ticks.PerSecond / m_framesPerSecond;
+        //                    destinationTicks = frameIndex * Ticks.PerSecond / s_framesPerSecond;
         //            }
 
         //            // Recover the seconds that were removed

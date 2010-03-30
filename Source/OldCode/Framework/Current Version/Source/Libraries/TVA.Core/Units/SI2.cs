@@ -284,19 +284,19 @@ namespace TVA.Units
     public static class SI2
     {
         // Common unit factor SI names
-        private static string[] m_names = new string[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
+        private static string[] s_names = new string[] { "kilo", "mega", "giga", "tera", "peta", "exa" };
 
         // Common unit factor SI symbols
-        private static string[] m_symbols = new string[] { "K", "M", "G", "T", "P", "E", };
+        private static string[] s_symbols = new string[] { "K", "M", "G", "T", "P", "E", };
 
         // IEC unit factor SI names
-        private static string[] m_iecNames = new string[] { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
+        private static string[] s_iecNames = new string[] { "kibi", "mebi", "gibi", "tebi", "pebi", "exbi" };
 
         // IEC unit factor SI symbols
-        private static string[] m_iecSymbols = new string[] { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", };
+        private static string[] s_iecSymbols = new string[] { "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", };
 
         // Unit factor SI factors
-        private static long[] m_factors = new long[] { Kilo, Mega, Giga, Tera, Peta, Exa };
+        private static long[] s_factors = new long[] { Kilo, Mega, Giga, Tera, Peta, Exa };
 
         /// <summary>
         /// 1 exa, binary (E) = 1,152,921,504,606,846,976
@@ -401,7 +401,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_names;
+                return s_names;
             }
         }
 
@@ -412,7 +412,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_symbols;
+                return s_symbols;
             }
         }
 
@@ -423,7 +423,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_iecNames;
+                return s_iecNames;
             }
         }
 
@@ -434,7 +434,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_iecSymbols;
+                return s_iecSymbols;
             }
         }
 
@@ -445,7 +445,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_factors;
+                return s_factors;
             }
         }
 
@@ -478,7 +478,7 @@ namespace TVA.Units
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(long totalUnits, string format, string unitName)
         {
-            return ToScaledString(totalUnits, format, unitName, m_symbols);
+            return ToScaledString(totalUnits, format, unitName, s_symbols);
         }
 
         /// <summary>
@@ -505,7 +505,7 @@ namespace TVA.Units
             else
                 format = "0";
 
-            return ToScaledString(totalUnits, format, unitName, m_symbols);
+            return ToScaledString(totalUnits, format, unitName, s_symbols);
         }
         /// <summary>
         /// Turns the given number of units (e.g., bytes) into a textual representation with an appropriate unit scaling
@@ -536,7 +536,7 @@ namespace TVA.Units
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledIECString(long totalUnits, string format, string unitName)
         {
-            return ToScaledString(totalUnits, format, unitName, m_iecSymbols);
+            return ToScaledString(totalUnits, format, unitName, s_iecSymbols);
         }
 
         /// <summary>
@@ -563,7 +563,7 @@ namespace TVA.Units
             else
                 format = "0";
 
-            return ToScaledString(totalUnits, format, unitName, m_iecSymbols);
+            return ToScaledString(totalUnits, format, unitName, s_iecSymbols);
         }
 
         /// <summary>
@@ -586,10 +586,10 @@ namespace TVA.Units
 
             double factor;
 
-            for (int i = m_factors.Length - 1; i >= 0; i--)
+            for (int i = s_factors.Length - 1; i >= 0; i--)
             {
                 // See if total number of units ranges in the specified factor range
-                factor = totalUnits / (double)m_factors[i];
+                factor = totalUnits / (double)s_factors[i];
 
                 if (factor >= 1.0D)
                 {

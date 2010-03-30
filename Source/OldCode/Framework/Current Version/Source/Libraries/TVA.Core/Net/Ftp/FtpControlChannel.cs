@@ -519,7 +519,7 @@ namespace TVA.Net.Ftp
             if (m_lastResponse.Code != 257)
                 throw new FtpCommandException("Cannot get current directory.", m_lastResponse);
 
-            Match m = m_pwdExpression.Match(m_lastResponse.Message);
+            Match m = s_pwdExpression.Match(m_lastResponse.Message);
             return m.Groups[2].Value;
         }
 
@@ -646,7 +646,7 @@ namespace TVA.Net.Ftp
 
             if (m_lastResponse.Code == FtpResponse.EnterPassiveMode)
             {
-                string[] numbers = m_regularExpression.Match(m_lastResponse.Message).Groups[2].Value.Split(',');
+                string[] numbers = s_regularExpression.Match(m_lastResponse.Message).Groups[2].Value.Split(',');
                 return int.Parse(numbers[4]) * 256 + int.Parse(numbers[5]);
             }
             else
@@ -660,8 +660,8 @@ namespace TVA.Net.Ftp
         #region [ Static ]
 
         // Static Fields
-        private static Regex m_regularExpression = new Regex("(\\()(.*)(\\))");
-        private static Regex m_pwdExpression = new Regex("(\")(.*)(\")");
+        private static Regex s_regularExpression = new Regex("(\\()(.*)(\\))");
+        private static Regex s_pwdExpression = new Regex("(\")(.*)(\")");
 
         #endregion
     }

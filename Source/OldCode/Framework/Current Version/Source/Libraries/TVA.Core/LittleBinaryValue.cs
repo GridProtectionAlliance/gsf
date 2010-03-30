@@ -611,7 +611,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Int16"/>.</returns>
         public static implicit operator LittleBinaryValue(Int16 value)
         {
-            return new LittleBinaryValue(TypeCode.Int16, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Int16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -633,7 +633,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt16 value)
         {
-            return new LittleBinaryValue(TypeCode.UInt16, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.UInt16, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -653,7 +653,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Int24"/>.</returns>
         public static implicit operator LittleBinaryValue(Int24 value)
         {
-            return new LittleBinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -675,7 +675,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt24 value)
         {
-            return new LittleBinaryValue(TypeCode.Empty, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Empty, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -695,7 +695,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Int32"/>.</returns>
         public static implicit operator LittleBinaryValue(Int32 value)
         {
-            return new LittleBinaryValue(TypeCode.Int32, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Int32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -717,7 +717,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt32 value)
         {
-            return new LittleBinaryValue(TypeCode.UInt32, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.UInt32, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -737,7 +737,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Int64"/>.</returns>
         public static implicit operator LittleBinaryValue(Int64 value)
         {
-            return new LittleBinaryValue(TypeCode.Int64, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Int64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -759,7 +759,7 @@ namespace TVA
         [CLSCompliant(false)]
         public static implicit operator LittleBinaryValue(UInt64 value)
         {
-            return new LittleBinaryValue(TypeCode.UInt64, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.UInt64, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -779,7 +779,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Single"/>.</returns>
         public static implicit operator LittleBinaryValue(Single value)
         {
-            return new LittleBinaryValue(TypeCode.Single, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Single, s_endianOrder.GetBytes(value));
         }
 
         /// <summary>
@@ -799,7 +799,7 @@ namespace TVA
         /// <returns>A <see cref="LittleBinaryValue"/> representation of <see cref="Double"/>.</returns>
         public static implicit operator LittleBinaryValue(Double value)
         {
-            return new LittleBinaryValue(TypeCode.Double, m_endianOrder.GetBytes(value));
+            return new LittleBinaryValue(TypeCode.Double, s_endianOrder.GetBytes(value));
         }
 
         #endregion
@@ -808,7 +808,7 @@ namespace TVA
 
         static LittleBinaryValue()
         {
-            m_endianOrder = LittleEndianOrder.Default;
+            s_endianOrder = LittleEndianOrder.Default;
         }
 
         #endregion

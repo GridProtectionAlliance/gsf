@@ -304,20 +304,20 @@ namespace TVA.ErrorManagement
     ///
     /// class Program
     /// {
-    ///     static ErrorLogger m_logger;
+    ///     static ErrorLogger s_logger;
     ///
     ///     static Program()
     ///     {
-    ///         m_logger = new ErrorLogger();
-    ///         m_logger.LogToUI = true;                    // Show exception info on the UI.
-    ///         m_logger.LogToFile = true;                  // Log exception info to a file.
-    ///         m_logger.LogToEmail = true;                 // Send exception info in an e-mail.
-    ///         m_logger.LogToEventLog = true;              // Log exception info to the event log.
-    ///         m_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
-    ///         m_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
-    ///         m_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
-    ///         m_logger.PersistSettings = true;            // Save settings to the config file.
-    ///         m_logger.Initialize();                      // Initialize ErrorLogger component for use.
+    ///         s_logger = new ErrorLogger();
+    ///         s_logger.LogToUI = true;                    // Show exception info on the UI.
+    ///         s_logger.LogToFile = true;                  // Log exception info to a file.
+    ///         s_logger.LogToEmail = true;                 // Send exception info in an e-mail.
+    ///         s_logger.LogToEventLog = true;              // Log exception info to the event log.
+    ///         s_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
+    ///         s_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
+    ///         s_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
+    ///         s_logger.PersistSettings = true;            // Save settings to the config file.
+    ///         s_logger.Initialize();                      // Initialize ErrorLogger component for use.
     ///     }
     ///
     ///     static void Main(string[] args)
@@ -332,8 +332,8 @@ namespace TVA.ErrorManagement
     ///             // When logging handled exceptions we want to disable loggers (UI logger and E-mail logger) that
     ///             // may require interaction either directly or indirectly as it can be annoying. All the loggers
     ///             // are enabled automatically after the handled exception has been logged.
-    ///             m_logger.SuppressInteractiveLogging();
-    ///             m_logger.Log(ex);
+    ///             s_logger.SuppressInteractiveLogging();
+    ///             s_logger.Log(ex);
     ///         }
     ///
     ///         int numerator = 1;

@@ -287,7 +287,7 @@ namespace TVA.Console
             SystemShutdown = 6
         }
 
-        private static ConsoleWindowEventHandler m_handler;
+        private static ConsoleWindowEventHandler s_handler;
 
         private delegate bool ConsoleWindowEventHandler(ConsoleEventType controlType);
 
@@ -344,8 +344,8 @@ namespace TVA.Console
             // Member variable is used here so that the delegate is not garbage collected by the time it is called
             // by WIN API when any of the control events take place.
             // http://forums.microsoft.com/MSDN/ShowPost.aspx?PostID=996045&SiteID=1
-            m_handler = HandleConsoleWindowEvents;
-            SetConsoleWindowEventRaising(m_handler, true);
+            s_handler = HandleConsoleWindowEvents;
+            SetConsoleWindowEventRaising(s_handler, true);
         }
 
         /// <summary>
@@ -353,8 +353,8 @@ namespace TVA.Console
         /// </summary>
         public static void DisableRaisingEvents()
         {
-            m_handler = HandleConsoleWindowEvents;
-            SetConsoleWindowEventRaising(m_handler, false);
+            s_handler = HandleConsoleWindowEvents;
+            SetConsoleWindowEventRaising(s_handler, false);
         }
 
         /// <summary>

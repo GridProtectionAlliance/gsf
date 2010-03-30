@@ -290,10 +290,10 @@ namespace TVA.Security.Cryptography
         private const string KeyIVCacheMutexName = "CryptoKeyIVCache";
 
         // Internal key and initialization vector table
-        private static Dictionary<string, byte[][]> m_keyIVTable = DeserializeKeyIVTable();
+        private static Dictionary<string, byte[][]> s_keyIVTable = DeserializeKeyIVTable();
 
         // Password hash table (run-time optimization)
-        private static Dictionary<string, string> m_passwordHash = new Dictionary<string, string>();
+        private static Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
 
         /// <summary>
         /// Imports a key and initialization vector into the local system key cache.
@@ -308,14 +308,14 @@ namespace TVA.Security.Cryptography
         {
             string hash = GetPasswordHash(password, keySize);
 
-            lock (m_keyIVTable)
+            lock (s_keyIVTable)
             {
                 string[] keyIV = keyIVText.Split('|');
                 byte[] key = Convert.FromBase64String(keyIV[0]);
                 byte[] iv = Convert.FromBase64String(keyIV[1]);
 
                 // Assign new crypto key to key table
-                m_keyIVTable[hash] = new byte[][] { key, iv };
+                s_keyIVTable[hash] = new byte[][] { key, iv };
 
                 // Queue up a serialization for this new key
                 ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
@@ -350,14 +350,14 @@ namespace TVA.Security.Cryptography
             // Suffix password with key size since same password may be in use for different key sizes
             password += keySize.ToString();
 
-            lock (m_passwordHash)
+            lock (s_passwordHash)
             {
                 // Lookup SHA-2 hash of user password in run-time cache
-                if (!m_passwordHash.TryGetValue(password, out hash))
+                if (!s_passwordHash.TryGetValue(password, out hash))
                 {
                     // Password hash doesn't exist, create one
                     hash = Convert.ToBase64String((new SHA256Managed()).ComputeHash(Encoding.Default.GetBytes(password)));
-                    m_passwordHash.Add(password, hash);
+                    s_passwordHash.Add(password, hash);
                 }
             }
 
@@ -376,10 +376,10 @@ namespace TVA.Security.Cryptography
             byte[][] keyIV;
             byte[] key, iv;
 
-            lock (m_keyIVTable)
+            lock (s_keyIVTable)
             {
                 // Lookup crypto key based on password hash in persisted key table
-                if (!m_keyIVTable.TryGetValue(hash, out keyIV))
+                if (!s_keyIVTable.TryGetValue(hash, out keyIV))
                 {
                     // Key for password hash doesn't exist, create a new one
                     AesManaged symmetricAlgorithm = new AesManaged();
@@ -393,7 +393,7 @@ namespace TVA.Security.Cryptography
                     keyIV = new byte[][] { key, iv };
 
                     // Add new crypto key to key table
-                    m_keyIVTable.Add(hash, keyIV);
+                    s_keyIVTable.Add(hash, keyIV);
 
                     // Queue up a serialization for this new key
                    ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
@@ -413,9 +413,9 @@ namespace TVA.Security.Cryptography
             byte[] serializedKeyIVTable;
 
             // Wait for thread level lock on key table (keep this outside mutex lock to avoid possible dead locks)
-            lock (m_keyIVTable)
+            lock (s_keyIVTable)
             {
-                serializedKeyIVTable = ProtectedData.Protect(Serialization.GetBytes(m_keyIVTable), null, DataProtectionScope.LocalMachine);
+                serializedKeyIVTable = ProtectedData.Protect(Serialization.GetBytes(s_keyIVTable), null, DataProtectionScope.LocalMachine);
             }
 
             try

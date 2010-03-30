@@ -349,10 +349,10 @@ namespace TVA
         // Constants
 
         // Standard time names used by ToString method
-        private static string[] m_timeNames = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
+        private static string[] s_timeNames = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 60 Seconds", "0 Seconds" };
 
         // Standard time names, without seconds, used by ToString method
-        private static string[] m_timeNamesNoSeconds = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
+        private static string[] s_timeNamesNoSeconds = new string[] { " Year", " Years", " Day", " Days", " Hour", " Hours", " Minute", " Minutes", " Second", " Seconds", "Less Than 1 Minute", "0 Minutes" };
 
         /// <summary>Number of 100-nanosecond ticks in one second.</summary>
         public const long PerSecond = 10000000L;
@@ -717,7 +717,7 @@ namespace TVA
         /// </returns>
         public string ToElapsedTimeString()
         {
-            return ToElapsedTimeString(0, m_timeNames);
+            return ToElapsedTimeString(0, s_timeNames);
         }
 
         /// <summary>
@@ -733,9 +733,9 @@ namespace TVA
         public string ToElapsedTimeString(int secondPrecision)
         {
             if (secondPrecision < 0)
-                return ToElapsedTimeString(secondPrecision, m_timeNamesNoSeconds);
+                return ToElapsedTimeString(secondPrecision, s_timeNamesNoSeconds);
             else
-                return ToElapsedTimeString(secondPrecision, m_timeNames);
+                return ToElapsedTimeString(secondPrecision, s_timeNames);
         }
 
         /// <summary>

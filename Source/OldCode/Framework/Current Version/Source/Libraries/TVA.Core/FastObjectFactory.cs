@@ -249,7 +249,7 @@ namespace TVA
     public static class FastObjectFactory<T> where T : class, new()
     {
         // Static object creation delegate specific to type T - one instance will be created per type by the compiler
-        private static Func<T> m_createObjectFunction;
+        private static Func<T> s_createObjectFunction;
 
         static FastObjectFactory()
         {
@@ -259,7 +259,7 @@ namespace TVA
             ILGenerator ilGen = dynMethod.GetILGenerator();
             ilGen.Emit(OpCodes.Newobj, objType.GetConstructor(Type.EmptyTypes));
             ilGen.Emit(OpCodes.Ret);
-            m_createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
+            s_createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace TVA
         {
             get
             {
-                return m_createObjectFunction;
+                return s_createObjectFunction;
             }
         }
     }
@@ -284,11 +284,11 @@ namespace TVA
     public static class FastObjectFactory
     {
         // We cache object creation functions by type so they are only created once
-        private static Dictionary<Type, Delegate> m_createObjectFunctions;
+        private static Dictionary<Type, Delegate> s_createObjectFunctions;
 
         static FastObjectFactory()
         {
-            m_createObjectFunctions = new Dictionary<Type, Delegate>();
+            s_createObjectFunctions = new Dictionary<Type, Delegate>();
         }
 
         /// <summary>
@@ -330,9 +330,9 @@ namespace TVA
                (typeof(T).IsInterface && objType.GetInterface(typeof(T).Name) != null))
             )
             {
-                lock (m_createObjectFunctions)
+                lock (s_createObjectFunctions)
                 {
-                    if (!m_createObjectFunctions.TryGetValue(objType, out createObjectFunction))
+                    if (!s_createObjectFunctions.TryGetValue(objType, out createObjectFunction))
                     {
                         // This is markedly faster than using Activator.CreateInstance
                         DynamicMethod dynMethod = new DynamicMethod("ctor_type$" + objType.Name, objType, null, objType);
@@ -342,7 +342,7 @@ namespace TVA
                         createObjectFunction = (Func<T>)dynMethod.CreateDelegate(typeof(Func<T>));
 
                         // Cache object creation delegate for this type
-                        m_createObjectFunctions.Add(objType, createObjectFunction);
+                        s_createObjectFunctions.Add(objType, createObjectFunction);
                     }
                 }
 

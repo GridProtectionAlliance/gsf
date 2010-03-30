@@ -771,20 +771,20 @@ namespace TVA
         #region [ Static ]
 
         // Static Fields
-        private static ByteEncoding m_hexadecimalEncoding;
-        private static ByteEncoding m_decimalEncoding;
-        private static ByteEncoding m_bigEndianBinaryEncoding;
-        private static ByteEncoding m_littleEndianBinaryEncoding;
-        private static ByteEncoding m_base64Encoding;
-        private static ByteEncoding m_asciiEncoding;
+        private static ByteEncoding s_hexadecimalEncoding;
+        private static ByteEncoding s_decimalEncoding;
+        private static ByteEncoding s_bigEndianBinaryEncoding;
+        private static ByteEncoding s_littleEndianBinaryEncoding;
+        private static ByteEncoding s_base64Encoding;
+        private static ByteEncoding s_asciiEncoding;
 
         /// <summary>Handles encoding and decoding of a byte buffer into a hexadecimal-based presentation format.</summary>
         public static ByteEncoding Hexadecimal
         {
             get
             {
-                if (m_hexadecimalEncoding == null) m_hexadecimalEncoding = new HexadecimalEncoding();
-                return m_hexadecimalEncoding;
+                if (s_hexadecimalEncoding == null) s_hexadecimalEncoding = new HexadecimalEncoding();
+                return s_hexadecimalEncoding;
             }
         }
 
@@ -793,8 +793,8 @@ namespace TVA
         {
             get
             {
-                if (m_decimalEncoding == null) m_decimalEncoding = new DecimalEncoding();
-                return m_decimalEncoding;
+                if (s_decimalEncoding == null) s_decimalEncoding = new DecimalEncoding();
+                return s_decimalEncoding;
             }
         }
 
@@ -809,8 +809,8 @@ namespace TVA
         {
             get
             {
-                if (m_bigEndianBinaryEncoding == null) m_bigEndianBinaryEncoding = new BinaryEncoding(Endianness.BigEndian);
-                return m_bigEndianBinaryEncoding;
+                if (s_bigEndianBinaryEncoding == null) s_bigEndianBinaryEncoding = new BinaryEncoding(Endianness.BigEndian);
+                return s_bigEndianBinaryEncoding;
             }
         }
 
@@ -825,8 +825,8 @@ namespace TVA
         {
             get
             {
-                if (m_littleEndianBinaryEncoding == null) m_littleEndianBinaryEncoding = new BinaryEncoding(Endianness.LittleEndian);
-                return m_littleEndianBinaryEncoding;
+                if (s_littleEndianBinaryEncoding == null) s_littleEndianBinaryEncoding = new BinaryEncoding(Endianness.LittleEndian);
+                return s_littleEndianBinaryEncoding;
             }
         }
 
@@ -835,8 +835,8 @@ namespace TVA
         {
             get
             {
-                if (m_base64Encoding == null) m_base64Encoding = new Base64Encoding();
-                return m_base64Encoding;
+                if (s_base64Encoding == null) s_base64Encoding = new Base64Encoding();
+                return s_base64Encoding;
             }
         }
 
@@ -845,8 +845,8 @@ namespace TVA
         {
             get
             {
-                if (m_asciiEncoding == null) m_asciiEncoding = new ASCIIEncoding();
-                return m_asciiEncoding;
+                if (s_asciiEncoding == null) s_asciiEncoding = new ASCIIEncoding();
+                return s_asciiEncoding;
             }
         }
 

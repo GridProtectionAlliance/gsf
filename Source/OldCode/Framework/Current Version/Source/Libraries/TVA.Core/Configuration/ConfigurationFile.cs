@@ -565,7 +565,7 @@ namespace TVA.Configuration
 
         #region [ Static ]
 
-        private static ConfigurationFile m_current;
+        private static ConfigurationFile s_current;
 
         /// <summary>
         /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
@@ -574,10 +574,10 @@ namespace TVA.Configuration
         {
             get
             {
-                if (m_current == null)
-                    m_current = new ConfigurationFile();
+                if (s_current == null)
+                    s_current = new ConfigurationFile();
                 
-                return m_current;
+                return s_current;
             }
         }
 
@@ -588,10 +588,10 @@ namespace TVA.Configuration
         {
             get
             {
-                if (m_current == null)
-                    m_current = new ConfigurationFile(ApplicationType.Web);
+                if (s_current == null)
+                    s_current = new ConfigurationFile(ApplicationType.Web);
 
-                return m_current;
+                return s_current;
             }
         }
 
@@ -602,10 +602,10 @@ namespace TVA.Configuration
         {
             get
             {
-                if (m_current == null)
-                    m_current = new ConfigurationFile(ApplicationType.WindowsGui);
+                if (s_current == null)
+                    s_current = new ConfigurationFile(ApplicationType.WindowsGui);
                 
-                return m_current;
+                return s_current;
             }
         }
 

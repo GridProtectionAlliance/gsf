@@ -750,11 +750,11 @@ namespace TVA.Reflection
         #region [ Static ]
 
         // Static Fields
-        private static AssemblyInfo m_callingAssembly;
-        private static AssemblyInfo m_entryAssembly;
-        private static AssemblyInfo m_executingAssembly;
-        private static Dictionary<string, Assembly> m_assemblyCache;
-        private static bool m_addedResolver;
+        private static AssemblyInfo s_callingAssembly;
+        private static AssemblyInfo s_entryAssembly;
+        private static AssemblyInfo s_executingAssembly;
+        private static Dictionary<string, Assembly> s_assemblyCache;
+        private static bool s_addedResolver;
 
         // Static Properties
 
@@ -763,7 +763,7 @@ namespace TVA.Reflection
         {
             get
             {
-                if (m_callingAssembly == null)
+                if (s_callingAssembly == null)
                 {
                     // We have to find the calling assembly of the caller.
                     StackTrace trace = new StackTrace();
@@ -775,13 +775,13 @@ namespace TVA.Reflection
                         if (assembly != caller && assembly != current)
                         {
                             // Assembly is neither the current assembly or the calling assembly.
-                            m_callingAssembly = new AssemblyInfo(assembly);
+                            s_callingAssembly = new AssemblyInfo(assembly);
                             break;
                         }
                     }
                 }
 
-                return m_callingAssembly;
+                return s_callingAssembly;
             }
         }
 
@@ -790,10 +790,10 @@ namespace TVA.Reflection
         {
             get
             {
-                if (m_entryAssembly == null)
-                    m_entryAssembly = new AssemblyInfo(Assembly.GetEntryAssembly());
+                if (s_entryAssembly == null)
+                    s_entryAssembly = new AssemblyInfo(Assembly.GetEntryAssembly());
 
-                return m_entryAssembly;
+                return s_entryAssembly;
             }
         }
 
@@ -802,11 +802,11 @@ namespace TVA.Reflection
         {
             get
             {
-                if (m_executingAssembly == null)
+                if (s_executingAssembly == null)
                     // Caller's assembly will be the executing assembly for the caller.
-                    m_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
+                    s_executingAssembly = new AssemblyInfo(Assembly.GetCallingAssembly());
 
-                return m_executingAssembly;
+                return s_executingAssembly;
             }
         }
 
@@ -819,10 +819,10 @@ namespace TVA.Reflection
         public static void LoadAssemblyFromResource(string assemblyName)
         {
             // Hooks into assembly resolve event for current domain so it can load assembly from embedded resource.
-            if (!m_addedResolver)
+            if (!s_addedResolver)
             {
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveAssemblyFromResource;
-                m_addedResolver = true;
+                s_addedResolver = true;
             }
 
             // Loads the assembly (This will invoke event that will resolve assembly from resource.).
@@ -834,8 +834,8 @@ namespace TVA.Reflection
             Assembly resourceAssembly;
             string shortName = e.Name.Split(',')[0];
 
-            if (m_assemblyCache == null) m_assemblyCache = new Dictionary<string, Assembly>();
-            resourceAssembly = m_assemblyCache[shortName];
+            if (s_assemblyCache == null) s_assemblyCache = new Dictionary<string, Assembly>();
+            resourceAssembly = s_assemblyCache[shortName];
 
             if (resourceAssembly == null)
             {
@@ -853,7 +853,7 @@ namespace TVA.Reflection
 
                         // Loads assembly from binary buffer.
                         resourceAssembly = Assembly.Load(buffer);
-                        m_assemblyCache.Add(shortName, resourceAssembly);
+                        s_assemblyCache.Add(shortName, resourceAssembly);
                         break;
                     }
                 }

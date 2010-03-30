@@ -884,7 +884,7 @@ namespace TVA.Net.Ftp
 
         private Match MatchingListLine(string line, ref FtpTimeStampParser.RawDataStyle tsStyle)
         {
-            Match m = m_UnixListLineStyle1.Match(line);
+            Match m = s_unixListLineStyle1.Match(line);
 
             if (m.Success)
             {
@@ -892,7 +892,7 @@ namespace TVA.Net.Ftp
                 return m;
             }
 
-            m = m_UnixListLineStyle3.Match(line);
+            m = s_unixListLineStyle3.Match(line);
 
             if (m.Success)
             {
@@ -900,7 +900,7 @@ namespace TVA.Net.Ftp
                 return m;
             }
 
-            m = m_UnixListLineStyle2.Match(line);
+            m = s_unixListLineStyle2.Match(line);
 
             if (m.Success)
             {
@@ -908,7 +908,7 @@ namespace TVA.Net.Ftp
                 return m;
             }
 
-            m = m_DosListLineStyle1.Match(line);
+            m = s_dosListLineStyle1.Match(line);
 
             if (m.Success)
             {
@@ -916,7 +916,7 @@ namespace TVA.Net.Ftp
                 return m;
             }
 
-            m = m_DosListLineStyle2.Match(line);
+            m = s_dosListLineStyle2.Match(line);
 
             if (m.Success)
             {
@@ -1069,11 +1069,11 @@ namespace TVA.Net.Ftp
         #region [ Static ]
 
         // Static Fields
-        private static Regex m_UnixListLineStyle1 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
-        private static Regex m_UnixListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
-        private static Regex m_UnixListLineStyle3 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)");
-        private static Regex m_DosListLineStyle1 = new Regex("(?<timestamp>\\d{2}\\-\\d{2}\\-\\d{2}\\s+\\d{2}:\\d{2}[Aa|Pp][mM])\\s+(?<dir>\\<\\w+\\>){0,1}(?<size>\\d+){0,1}\\s+(?<name>.+)"); // IIS FTP Service
-        private static Regex m_DosListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)"); // IIS FTP Service in Unix Mode
+        private static Regex s_unixListLineStyle1 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
+        private static Regex s_unixListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d{4})\\s+(?<name>.+)");
+        private static Regex s_unixListLineStyle3 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\d+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)");
+        private static Regex s_dosListLineStyle1 = new Regex("(?<timestamp>\\d{2}\\-\\d{2}\\-\\d{2}\\s+\\d{2}:\\d{2}[Aa|Pp][mM])\\s+(?<dir>\\<\\w+\\>){0,1}(?<size>\\d+){0,1}\\s+(?<name>.+)"); // IIS FTP Service
+        private static Regex s_dosListLineStyle2 = new Regex("(?<dir>[\\-d])(?<permission>([\\-r][\\-w][\\-xs]){3})\\s+\\d+\\s+\\w+\\s+\\w+\\s+(?<size>\\d+)\\s+(?<timestamp>\\w+\\s+\\d+\\s+\\d+:\\d+)\\s+(?<name>.+)"); // IIS FTP Service in Unix Mode
 
         #endregion
     }

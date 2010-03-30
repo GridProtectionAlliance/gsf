@@ -848,7 +848,7 @@ namespace TVA.Measurements.Routing
         #region [ Static ]
 
         // Static Fields
-        private static Regex m_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex s_filterExpression = new Regex("(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+)[ ]+ORDER[ ]+BY[ ]+(?<SortField>\\w+))|(FILTER[ ]+(?<TableName>\\w+)[ ]+WHERE[ ]+(?<Expression>.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // Static Methods
 
@@ -882,9 +882,9 @@ namespace TVA.Measurements.Routing
             Match filterMatch;
 
             value = value.Trim();
-            lock (m_filterExpression)
+            lock (s_filterExpression)
             {
-                filterMatch = m_filterExpression.Match(value);
+                filterMatch = s_filterExpression.Match(value);
             }
 
             if (filterMatch.Success)
@@ -923,9 +923,9 @@ namespace TVA.Measurements.Routing
             Match filterMatch;
 
             value = value.Trim();
-            lock (m_filterExpression)
+            lock (s_filterExpression)
             {
-                filterMatch = m_filterExpression.Match(value);
+                filterMatch = s_filterExpression.Match(value);
             }
 
             if (filterMatch.Success)

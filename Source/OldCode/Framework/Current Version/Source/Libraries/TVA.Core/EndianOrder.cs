@@ -307,7 +307,7 @@ namespace TVA
 
         #region [ Static ]
 
-        private static BigEndianOrder m_endianOrder;
+        private static BigEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="BigEndianOrder"/> class.
@@ -316,8 +316,8 @@ namespace TVA
         {
             get
             {
-                if (m_endianOrder == null) m_endianOrder = new BigEndianOrder();
-                return m_endianOrder;
+                if (s_endianOrder == null) s_endianOrder = new BigEndianOrder();
+                return s_endianOrder;
             }
         }
 
@@ -343,7 +343,7 @@ namespace TVA
 
         #region [ Static ]
 
-        private static LittleEndianOrder m_endianOrder;
+        private static LittleEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="LittleEndianOrder"/> class.
@@ -352,8 +352,8 @@ namespace TVA
         {
             get
             {
-                if (m_endianOrder == null) m_endianOrder = new LittleEndianOrder();
-                return m_endianOrder;
+                if (s_endianOrder == null) s_endianOrder = new LittleEndianOrder();
+                return s_endianOrder;
             }
         }
 
@@ -379,7 +379,7 @@ namespace TVA
 
         #region [ Static ]
 
-        private static NativeEndianOrder m_endianOrder;
+        private static NativeEndianOrder s_endianOrder;
 
         /// <summary>
         /// Returns the default instance of the <see cref="NativeEndianOrder"/> class.
@@ -388,8 +388,8 @@ namespace TVA
         {
             get
             {
-                if (m_endianOrder == null) m_endianOrder = new NativeEndianOrder();
-                return m_endianOrder;
+                if (s_endianOrder == null) s_endianOrder = new NativeEndianOrder();
+                return s_endianOrder;
             }
         }
 

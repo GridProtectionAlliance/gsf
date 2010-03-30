@@ -245,13 +245,13 @@ namespace TVA.Threading
     /// </summary>
     public static class ManagedThreads
     {
-        private static LinkedList<ManagedThread> m_queuedThreads;
-        private static LinkedList<ManagedThread> m_activeThreads;
+        private static LinkedList<ManagedThread> s_queuedThreads;
+        private static LinkedList<ManagedThread> s_activeThreads;
 
         static ManagedThreads()
         {
-            m_queuedThreads = new LinkedList<ManagedThread>();
-            m_activeThreads = new LinkedList<ManagedThread>();
+            s_queuedThreads = new LinkedList<ManagedThread>();
+            s_activeThreads = new LinkedList<ManagedThread>();
         }
 
         /// <summary>
@@ -263,10 +263,10 @@ namespace TVA.Threading
         internal static void Add(ManagedThread item)
         {
             // Standard threads are simply added to the active thread list when started
-            lock (m_queuedThreads)
+            lock (s_queuedThreads)
             {
                 item.Status = ThreadStatus.Started;
-                m_activeThreads.AddLast(item);
+                s_activeThreads.AddLast(item);
             }
         }
 
@@ -275,9 +275,9 @@ namespace TVA.Threading
         /// </summary>
         internal static void Remove(ManagedThread item)
         {
-            lock (m_queuedThreads)
+            lock (s_queuedThreads)
             {
-                m_activeThreads.Remove(item);
+                s_activeThreads.Remove(item);
             }
         }
 
@@ -289,9 +289,9 @@ namespace TVA.Threading
         /// </remarks>
         internal static void Queue(ManagedThread item)
         {
-            lock (m_queuedThreads)
+            lock (s_queuedThreads)
             {
-                m_queuedThreads.AddLast(item);
+                s_queuedThreads.AddLast(item);
             }
         }
 
@@ -304,12 +304,12 @@ namespace TVA.Threading
             ManagedThread item = null;
 
             // Transfer next queued thread to the active thread list
-            lock (m_queuedThreads)
+            lock (s_queuedThreads)
             {
-                if (m_queuedThreads.Count > 0)
+                if (s_queuedThreads.Count > 0)
                 {
-                    item = m_queuedThreads.First.Value;
-                    m_queuedThreads.RemoveFirst();
+                    item = s_queuedThreads.First.Value;
+                    s_queuedThreads.RemoveFirst();
                 }
 
                 if (item != null)
@@ -317,7 +317,7 @@ namespace TVA.Threading
                     // Capture current thread (this is owned by .NET ThreadPool)
                     item.Thread = Thread.CurrentThread;
                     item.Status = ThreadStatus.Started;
-                    m_activeThreads.AddLast(item);
+                    s_activeThreads.AddLast(item);
                 }
             }
 
@@ -387,10 +387,10 @@ namespace TVA.Threading
             {
                 List<ManagedThread> threads = new List<ManagedThread>();
 
-                lock (m_queuedThreads)
+                lock (s_queuedThreads)
                 {
-                    threads.AddRange(m_queuedThreads);
-                    threads.AddRange(m_activeThreads);
+                    threads.AddRange(s_queuedThreads);
+                    threads.AddRange(s_activeThreads);
                 }
 
                 return threads.ToArray();
@@ -410,13 +410,13 @@ namespace TVA.Threading
 
             LinkedListNode<ManagedThread> node;
 
-            lock (m_queuedThreads)
+            lock (s_queuedThreads)
             {
                 // Change thread status to aborted
                 item.Status = ThreadStatus.Aborted;
 
                 // See if item is still queued for execution in thread pool
-                node = m_queuedThreads.Find(item);
+                node = s_queuedThreads.Find(item);
 
                 // Handle abort or dequeue
                 if (node == null)
@@ -433,7 +433,7 @@ namespace TVA.Threading
                 else
                 {
                     // Remove item from queue if queued thread has yet to start
-                    m_queuedThreads.Remove(node);
+                    s_queuedThreads.Remove(node);
                 }
             }
         }

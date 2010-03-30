@@ -241,15 +241,15 @@ namespace TVA
     public static class USTimeZones
     {
         // We define a few common timezones for convenience.
-        private static TimeZoneInfo m_atlanticTimeZone;
-        private static TimeZoneInfo m_easternTimeZone;
-        private static TimeZoneInfo m_centralTimeZone;
-        private static TimeZoneInfo m_mountainTimeZone;
-        private static TimeZoneInfo m_pacificTimeZone;
-        private static TimeZoneInfo m_alaskanTimeZone;
-        private static TimeZoneInfo m_hawaiianTimeZone;
-        private static TimeZoneInfo m_westPacificTimeZone;
-        private static TimeZoneInfo m_samoaTimeZone;
+        private static TimeZoneInfo s_atlanticTimeZone;
+        private static TimeZoneInfo s_easternTimeZone;
+        private static TimeZoneInfo s_centralTimeZone;
+        private static TimeZoneInfo s_mountainTimeZone;
+        private static TimeZoneInfo s_pacificTimeZone;
+        private static TimeZoneInfo s_alaskanTimeZone;
+        private static TimeZoneInfo s_hawaiianTimeZone;
+        private static TimeZoneInfo s_westPacificTimeZone;
+        private static TimeZoneInfo s_samoaTimeZone;
 
         /// <summary>
         /// Gets the Atlantic time zone.
@@ -259,8 +259,8 @@ namespace TVA
         {
             get
             {
-                if (m_atlanticTimeZone == null) m_atlanticTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Atlantic Standard Time");
-                return m_atlanticTimeZone;
+                if (s_atlanticTimeZone == null) s_atlanticTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Atlantic Standard Time");
+                return s_atlanticTimeZone;
             }
         }
 
@@ -271,8 +271,8 @@ namespace TVA
         {
             get
             {
-                if (m_easternTimeZone == null) m_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-                return m_easternTimeZone;
+                if (s_easternTimeZone == null) s_easternTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+                return s_easternTimeZone;
             }
         }
 
@@ -283,8 +283,8 @@ namespace TVA
         {
             get
             {
-                if (m_centralTimeZone == null) m_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
-                return m_centralTimeZone;
+                if (s_centralTimeZone == null) s_centralTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time");
+                return s_centralTimeZone;
             }
         }
 
@@ -295,8 +295,8 @@ namespace TVA
         {
             get
             {
-                if (m_mountainTimeZone == null) m_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
-                return m_mountainTimeZone;
+                if (s_mountainTimeZone == null) s_mountainTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Mountain Standard Time");
+                return s_mountainTimeZone;
             }
         }
 
@@ -307,8 +307,8 @@ namespace TVA
         {
             get
             {
-                if (m_pacificTimeZone == null) m_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
-                return m_pacificTimeZone;
+                if (s_pacificTimeZone == null) s_pacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time");
+                return s_pacificTimeZone;
             }
         }
 
@@ -319,8 +319,8 @@ namespace TVA
         {
             get
             {
-                if (m_alaskanTimeZone == null) m_alaskanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Alaskan Standard Time");
-                return m_alaskanTimeZone;
+                if (s_alaskanTimeZone == null) s_alaskanTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Alaskan Standard Time");
+                return s_alaskanTimeZone;
             }
         }
 
@@ -331,8 +331,8 @@ namespace TVA
         {
             get
             {
-                if (m_hawaiianTimeZone == null) m_hawaiianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Hawaiian Standard Time");
-                return m_hawaiianTimeZone;
+                if (s_hawaiianTimeZone == null) s_hawaiianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Hawaiian Standard Time");
+                return s_hawaiianTimeZone;
             }
         }
 
@@ -347,8 +347,8 @@ namespace TVA
         {
             get
             {
-                if (m_westPacificTimeZone == null) m_westPacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("West Pacific Standard Time");
-                return m_westPacificTimeZone;
+                if (s_westPacificTimeZone == null) s_westPacificTimeZone = TimeZoneInfo.FindSystemTimeZoneById("West Pacific Standard Time");
+                return s_westPacificTimeZone;
             }
         }
 
@@ -360,8 +360,8 @@ namespace TVA
         {
             get
             {
-                if (m_samoaTimeZone == null) m_samoaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Samoa Standard Time");
-                return m_samoaTimeZone;
+                if (s_samoaTimeZone == null) s_samoaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Samoa Standard Time");
+                return s_samoaTimeZone;
             }
         }
     }

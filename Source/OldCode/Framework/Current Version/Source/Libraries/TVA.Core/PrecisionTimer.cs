@@ -749,15 +749,15 @@ namespace TVA
         #region [ Static ]
 
         // Static Fields
-        private static TimerCapabilities m_capabilities;    // Multimedia timer capabilities.
-        private static PreciseTime m_preciseTime;           // Precise time implementation.
-        private static Timer m_synchronizer;                // Lightweight timer used for precise time synchronization.
+        private static TimerCapabilities s_capabilities;    // Multimedia timer capabilities.
+        private static PreciseTime s_preciseTime;           // Precise time implementation.
+        private static Timer s_synchronizer;                // Lightweight timer used for precise time synchronization.
 
         // Static Constructor
         static PrecisionTimer()
         {
             // Get multimedia timer capabilities
-            timeGetDevCaps(ref m_capabilities, Marshal.SizeOf(m_capabilities));
+            timeGetDevCaps(ref s_capabilities, Marshal.SizeOf(s_capabilities));
         }
 
         // Static Properties
@@ -782,10 +782,10 @@ namespace TVA
             get
             {
                 // Setup a new precise time class at first call
-                if (m_preciseTime == null)
+                if (s_preciseTime == null)
                     InitializePreciseTime();
 
-                return m_preciseTime.UtcNow;
+                return s_preciseTime.UtcNow;
             }
         }
 
@@ -819,7 +819,7 @@ namespace TVA
         {
             get
             {
-                return m_capabilities;
+                return s_capabilities;
             }
         }
 
@@ -872,19 +872,19 @@ namespace TVA
             const int synchronizationPeriod = 10;
 
             // Create a new precise time class
-            m_preciseTime = new PreciseTime(synchronizationPeriod);
+            s_preciseTime = new PreciseTime(synchronizationPeriod);
 
             // We setup a lightweight timer that will make sure precise time mechanism gets
             // called regularly, in case user doesn't, so it can maintain synchronization
-            m_synchronizer = new Timer(synchronizationPeriod * 1000.0D);
-            m_synchronizer.Elapsed += m_synchronizer_Elapsed;
-            m_synchronizer.Start();
+            s_synchronizer = new Timer(synchronizationPeriod * 1000.0D);
+            s_synchronizer.Elapsed += s_synchronizer_Elapsed;
+            s_synchronizer.Start();
         }
 
         // We make sure and call PreciseTime.UtcNow regularly so it can maintain synchronization
-        private static void m_synchronizer_Elapsed(object sender, ElapsedEventArgs e)
+        private static void s_synchronizer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            DateTime now = m_preciseTime.UtcNow;
+            DateTime now = s_preciseTime.UtcNow;
         }
 
         // Gets timer capabilities.

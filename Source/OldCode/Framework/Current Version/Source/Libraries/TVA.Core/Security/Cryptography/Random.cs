@@ -245,7 +245,7 @@ namespace TVA.Security.Cryptography
     /// </summary>
     public static class Random
     {
-        private static RNGCryptoServiceProvider m_randomNumberGenerator = new RNGCryptoServiceProvider();
+        private static RNGCryptoServiceProvider s_randomNumberGenerator = new RNGCryptoServiceProvider();
 
         /// <summary>
         /// Generates a cryptographically strong double-precision floating-point random number between zero and one.
@@ -304,7 +304,7 @@ namespace TVA.Security.Cryptography
         /// <exception cref="System.ArgumentNullException">buffer is null.</exception>
         public static void GetBytes(byte[] buffer)
         {
-            m_randomNumberGenerator.GetBytes(buffer);
+            s_randomNumberGenerator.GetBytes(buffer);
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[1];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return (value[0] % 2 == 0 ? true : false);
             }
@@ -333,7 +333,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[1];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return value[0];
             }
@@ -364,7 +364,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[2];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt16(value, 0);
             }
@@ -396,7 +396,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[2];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt16(value, 0);
             }
@@ -428,7 +428,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[3];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return Int24.GetValue(value, 0);
             }
@@ -460,7 +460,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[3];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return UInt24.GetValue(value, 0);
             }
@@ -492,7 +492,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[4];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt32(value, 0);
             }
@@ -524,7 +524,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[4];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt32(value, 0);
             }
@@ -556,7 +556,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[8];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToInt64(value, 0);
             }
@@ -588,7 +588,7 @@ namespace TVA.Security.Cryptography
             {
                 byte[] value = new byte[8];
 
-                m_randomNumberGenerator.GetBytes(value);
+                s_randomNumberGenerator.GetBytes(value);
 
                 return BitConverter.ToUInt64(value, 0);
             }

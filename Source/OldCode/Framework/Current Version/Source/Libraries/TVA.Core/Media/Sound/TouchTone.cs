@@ -421,8 +421,8 @@ namespace TVA.Media.Sound
                 m_key = value;
 
                 // Define touch tone frequencies for given key
-                LowFrequency = m_lowTouchTones[(int)m_key / 3];
-                HighFrequency = m_highTouchTones[(int)m_key % 3];
+                LowFrequency = s_lowTouchTones[(int)m_key / 3];
+                HighFrequency = s_highTouchTones[(int)m_key % 3];
             }
         }
 
@@ -431,14 +431,14 @@ namespace TVA.Media.Sound
         #region [ Static ]
 
         // Static Fields
-        private static double[] m_lowTouchTones;
-        private static double[] m_highTouchTones;
+        private static double[] s_lowTouchTones;
+        private static double[] s_highTouchTones;
 
         // Static Constructor
         static TouchTone()
         {
-            m_lowTouchTones = new double[] { 697, 770, 852, 941 };
-            m_highTouchTones = new double[] { 1209, 1336, 1477 };
+            s_lowTouchTones = new double[] { 697, 770, 852, 941 };
+            s_highTouchTones = new double[] { 1209, 1336, 1477 };
         }
 
         // Static Methods

@@ -281,13 +281,13 @@ namespace TVA.Units
     public static class SI
     {
         // Unit factor SI names
-        private static string[] m_names = new string[] { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
+        private static string[] s_names = new string[] { "yocto", "zepto", "atto", "femto", "pico", "nano", "micro", "milli", "centi", "deci", "deca", "hecto", "kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta" };
 
         // Unit factor SI symbols
-        private static string[] m_symbols = new string[] { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
+        private static string[] s_symbols = new string[] { "y", "z", "a", "f", "p", "n", "µ", "m", "c", "d", "da", "h", "k", "M", "G", "T", "P", "E", "Z", "Y" };
         
         // Unit factor SI factors
-        private static double[] m_factors = new double[] { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
+        private static double[] s_factors = new double[] { Yocto, Zepto, Atto, Femto, Pico, Nano, Micro, Milli, Centi, Deci, Deca, Hecto, Kilo, Mega, Giga, Tera, Peta, Exa, Zetta, Yotta };
 
         /// <summary>
         /// SI prefix Y, 10^24
@@ -396,7 +396,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_names;
+                return s_names;
             }
         }
 
@@ -407,7 +407,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_symbols;
+                return s_symbols;
             }
         }
 
@@ -418,7 +418,7 @@ namespace TVA.Units
         {
             get
             {
-                return m_factors;
+                return s_factors;
             }
         }
 
@@ -449,7 +449,7 @@ namespace TVA.Units
         /// <returns>A <see cref="String"/> representation of the number of units.</returns>
         public static string ToScaledString(double totalUnits, string format, string unitName)
         {
-            return ToScaledString(totalUnits, format, unitName, m_symbols);
+            return ToScaledString(totalUnits, format, unitName, s_symbols);
         }
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace TVA.Units
             else
                 format = "0";
 
-            return ToScaledString(totalUnits, format, unitName, m_symbols);
+            return ToScaledString(totalUnits, format, unitName, s_symbols);
         }
 
         /// <summary>
@@ -498,10 +498,10 @@ namespace TVA.Units
 
             double factor;
 
-            for (int i = m_factors.Length - 1; i >= 0; i--)
+            for (int i = s_factors.Length - 1; i >= 0; i--)
             {
                 // See if total number of units ranges in the specified factor range
-                factor = totalUnits / m_factors[i];
+                factor = totalUnits / s_factors[i];
 
                 if (factor >= 1.0D)
                 {

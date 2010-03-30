@@ -266,27 +266,27 @@ namespace TVA.IO
     ///
     /// class Program
     /// {
-    ///     static MultipleDestinationExporter m_exporter;
+    ///     static MultipleDestinationExporter s_exporter;
     ///
     ///     static void Main(string[] args)
     ///     {
-    ///         m_exporter = new MultipleDestinationExporter();
-    ///         m_exporter.Initialized += m_exporter_Initialized;
+    ///         s_exporter = new MultipleDestinationExporter();
+    ///         s_exporter.Initialized += s_exporter_Initialized;
     ///         ExportDestination[] defaultDestinations = new ExportDestination[] 
     ///         {
     ///             new ExportDestination(@"\\server1\share\exportFile.txt", false, "domain", "user1", "password1"), 
     ///             new ExportDestination(@"\\server2\share\exportFile.txt", false, "domain", "user2", "password2")
     ///         };
     ///         // Initialize with the destinations where data is to be exported.
-    ///         m_exporter.Initialize(defaultDestinations);
+    ///         s_exporter.Initialize(defaultDestinations);
     ///
     ///         Console.ReadLine();
     ///     }
     ///
-    ///     static void m_exporter_Initialized(object sender, EventArgs e)
+    ///     static void s_exporter_Initialized(object sender, EventArgs e)
     ///     {
     ///         // Export data to all defined locations after initialization.
-    ///         m_exporter.ExportData("TEST DATA");
+    ///         s_exporter.ExportData("TEST DATA");
     ///     }
     /// }
     /// </code>

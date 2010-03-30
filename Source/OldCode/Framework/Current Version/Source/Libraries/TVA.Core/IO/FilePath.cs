@@ -293,7 +293,7 @@ namespace TVA.IO
 
         // Fields
 
-        private static string m_fileNameCharPattern;
+        private static string s_fileNameCharPattern;
 
         #endregion
 
@@ -318,7 +318,7 @@ namespace TVA.IO
             }
 
             pattern.Append("]");
-            m_fileNameCharPattern = pattern.ToString();
+            s_fileNameCharPattern = pattern.ToString();
         }
 
         #endregion
@@ -490,8 +490,8 @@ namespace TVA.IO
             // Replaces wildcard file patterns with their equivalent regular expression.
             fileSpec = fileSpec.Replace("\\", "\\u005C"); // Backslash in Regex means special sequence. Here, we really want a backslash.
             fileSpec = fileSpec.Replace(".", "\\u002E"); // Dot in Regex means any character. Here, we really want a dot.
-            fileSpec = fileSpec.Replace("?", m_fileNameCharPattern);
-            fileSpec = fileSpec.Replace("*", "(" + m_fileNameCharPattern + ")*");
+            fileSpec = fileSpec.Replace("?", s_fileNameCharPattern);
+            fileSpec = fileSpec.Replace("*", "(" + s_fileNameCharPattern + ")*");
 
             return "^" + fileSpec + "$";
         }

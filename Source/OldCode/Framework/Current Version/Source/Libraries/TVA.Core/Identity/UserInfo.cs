@@ -905,7 +905,7 @@ namespace TVA.Identity
         #region [ Static ]
 
         // Static Fields
-        private static UserInfo m_currentUserInfo;
+        private static UserInfo s_currentUserInfo;
 
         [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -942,10 +942,10 @@ namespace TVA.Identity
         {
             get
             {
-                if (m_currentUserInfo == null)
-                    m_currentUserInfo = new UserInfo(CurrentUserID);
+                if (s_currentUserInfo == null)
+                    s_currentUserInfo = new UserInfo(CurrentUserID);
 
-                return m_currentUserInfo;
+                return s_currentUserInfo;
             }
         }
 

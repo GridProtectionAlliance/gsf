@@ -1041,7 +1041,7 @@ namespace TVA.Measurements
         /// value to validate the latest measured timestamp. If the newest received measurement timestamp gets too old or creeps
         /// too far into the future (both validated + and - against defined lead time property value), we will fall back on local
         /// system time. Note that this creates a dependency on a fairly accurate local clock - the smaller the lead time deviation
-        /// tolerance, the better the needed local clock acuracy. For example, a lead time deviation tolerance of a few seconds
+        /// tolerance, the better the needed local clock accuracy. For example, a lead time deviation tolerance of a few seconds
         /// might only require keeping the local clock synchronized to an NTP time source; but, a sub-second tolerance would
         /// require that the local clock be very close to GPS time.
         /// </remarks>
@@ -1267,17 +1267,17 @@ namespace TVA.Measurements
                 status.AppendFormat("    Actual mean frame rate: {0} frames/sec", (m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
 
-                lock (m_frameRateTimers)
+                lock (s_frameRateTimers)
                 {
                     FrameRateTimer timer;
 
-                    if (m_frameRateTimers.TryGetValue(m_framesPerSecond, out timer))
+                    if (s_frameRateTimers.TryGetValue(m_framesPerSecond, out timer))
                     {
                         status.AppendFormat("     Timer reference count: {0} concentrator{1} for the {2}fps timer", timer.ReferenceCount, timer.ReferenceCount > 1 ? "s" : "", m_framesPerSecond);
                         status.AppendLine();
                     }
 
-                    status.AppendFormat("   Total frame rate timers: {0}", m_frameRateTimers.Count);
+                    status.AppendFormat("   Total frame rate timers: {0}", s_frameRateTimers.Count);
                     status.AppendLine();
                 }
 
@@ -1877,18 +1877,18 @@ namespace TVA.Measurements
         // Handle attach to frame rate timer
         private void AttachToFrameRateTimer(int framesPerSecond)
         {
-            lock (m_frameRateTimers)
+            lock (s_frameRateTimers)
             {
                 FrameRateTimer timer;
 
                 // Get static frame rate timer for given frames per second creating it if needed
-                if (!m_frameRateTimers.TryGetValue(framesPerSecond, out timer))
+                if (!s_frameRateTimers.TryGetValue(framesPerSecond, out timer))
                 {
                     // Create a new frame rate timer which includes a high-precision timer for frame processing
                     timer = new FrameRateTimer(framesPerSecond);
 
                     // Add timer state for given rate to static collection
-                    m_frameRateTimers.Add(framesPerSecond, timer);
+                    s_frameRateTimers.Add(framesPerSecond, timer);
                 }
 
                 // Increment reference count and attach instance method "StartFramePublication" to static timer event list
@@ -1900,14 +1900,14 @@ namespace TVA.Measurements
         // Handle detach from frame rate timer
         private void DetachFromFrameRateTimer(int framesPerSecond)
         {
-            lock (m_frameRateTimers)
+            lock (s_frameRateTimers)
             {
                 if (m_attachedToFrameRateTimer)
                 {
                     FrameRateTimer timer;
 
                     // Look up static frame rate timer for given frames per second
-                    if (m_frameRateTimers.TryGetValue(framesPerSecond, out timer))
+                    if (s_frameRateTimers.TryGetValue(framesPerSecond, out timer))
                     {
                         // Decrement reference count and detach instance method "StartFramePublication" from static timer event list
                         timer.RemoveReference(StartFramePublication);
@@ -1917,7 +1917,7 @@ namespace TVA.Measurements
                         if (timer.ReferenceCount == 0)
                         {
                             timer.Dispose();
-                            m_frameRateTimers.Remove(framesPerSecond);
+                            s_frameRateTimers.Remove(framesPerSecond);
                         }
                     }
                 }
@@ -1929,12 +1929,12 @@ namespace TVA.Measurements
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<int, FrameRateTimer> m_frameRateTimers;
+        private static Dictionary<int, FrameRateTimer> s_frameRateTimers;
 
         // Static Constructor
         static ConcentratorBase()
         {
-            m_frameRateTimers = new Dictionary<int, FrameRateTimer>();
+            s_frameRateTimers = new Dictionary<int, FrameRateTimer>();
         }
 
         #endregion

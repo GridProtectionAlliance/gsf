@@ -1313,13 +1313,13 @@ namespace TVA.Media.Music
         #region [ Static ]
 
         // Static Fields
-        static private int m_lastNamedValueIndex;
+        static private int s_lastNamedValueIndex;
 
         // Static Constructor
         static Note()
         {
             // Compute last index of note value enumeration
-            m_lastNamedValueIndex = Enum.GetValues(typeof(NoteValue)).Length - 1;
+            s_lastNamedValueIndex = Enum.GetValues(typeof(NoteValue)).Length - 1;
         }
 
         // Static Methods
@@ -1337,8 +1337,8 @@ namespace TVA.Media.Music
             if (result < 0)
                 return 0;
             
-            if (result > m_lastNamedValueIndex)
-                return m_lastNamedValueIndex;
+            if (result > s_lastNamedValueIndex)
+                return s_lastNamedValueIndex;
 
             return result;
         }

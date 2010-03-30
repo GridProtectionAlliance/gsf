@@ -323,7 +323,7 @@ namespace TVA.Scheduling
         /// Initializes a new instance of the <see cref="Schedule"/> class.
         /// </summary>
         public Schedule()
-            : this("Schedule" + (++m_instances))
+            : this("Schedule" + (++s_instances))
         { 
         }
 
@@ -606,7 +606,7 @@ namespace TVA.Scheduling
         #region [ Static ]
 
         // Static Fields
-        private static int m_instances;
+        private static int s_instances;
 
         #endregion
         

@@ -378,7 +378,7 @@ namespace TVA
         public Int16 ToInt16()
         {
             ValidateBufferLength(TypeCode.Int16, sizeof(Int16));
-            return m_endianOrder.ToInt16(m_buffer, 0);
+            return s_endianOrder.ToInt16(m_buffer, 0);
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ namespace TVA
         public UInt16 ToUInt16()
         {
             ValidateBufferLength(TypeCode.UInt16, sizeof(UInt16));
-            return m_endianOrder.ToUInt16(m_buffer, 0);
+            return s_endianOrder.ToUInt16(m_buffer, 0);
         }
 
         /// <summary>
@@ -404,7 +404,7 @@ namespace TVA
             if (m_buffer.Length < 3)
                 throw new InvalidOperationException("Binary value buffer is too small to represent a Int24 - buffer length needs to be at least 3");
 
-            return m_endianOrder.ToInt24(m_buffer, 0);
+            return s_endianOrder.ToInt24(m_buffer, 0);
         }
 
         /// <summary>
@@ -419,7 +419,7 @@ namespace TVA
             if (m_buffer.Length < 3)
                 throw new InvalidOperationException("Binary value buffer is too small to represent a UInt24 - buffer length needs to be at least 3");
 
-            return m_endianOrder.ToUInt24(m_buffer, 0);
+            return s_endianOrder.ToUInt24(m_buffer, 0);
         }
 
         /// <summary>
@@ -430,7 +430,7 @@ namespace TVA
         public Int32 ToInt32()
         {
             ValidateBufferLength(TypeCode.Int32, sizeof(Int32));
-            return m_endianOrder.ToInt32(m_buffer, 0);
+            return s_endianOrder.ToInt32(m_buffer, 0);
         }
 
         /// <summary>
@@ -442,7 +442,7 @@ namespace TVA
         public UInt32 ToUInt32()
         {
             ValidateBufferLength(TypeCode.UInt32, sizeof(UInt32));
-            return m_endianOrder.ToUInt32(m_buffer, 0);
+            return s_endianOrder.ToUInt32(m_buffer, 0);
         }
 
         /// <summary>
@@ -453,7 +453,7 @@ namespace TVA
         public Int64 ToInt64()
         {
             ValidateBufferLength(TypeCode.Int64, sizeof(Int64));
-            return m_endianOrder.ToInt64(m_buffer, 0);
+            return s_endianOrder.ToInt64(m_buffer, 0);
         }
 
         /// <summary>
@@ -465,7 +465,7 @@ namespace TVA
         public UInt64 ToUInt64()
         {
             ValidateBufferLength(TypeCode.UInt64, sizeof(UInt64));
-            return m_endianOrder.ToUInt64(m_buffer, 0);
+            return s_endianOrder.ToUInt64(m_buffer, 0);
         }
 
         /// <summary>
@@ -476,7 +476,7 @@ namespace TVA
         public Single ToSingle()
         {
             ValidateBufferLength(TypeCode.Single, sizeof(Single));
-            return m_endianOrder.ToSingle(m_buffer, 0);
+            return s_endianOrder.ToSingle(m_buffer, 0);
         }
 
         /// <summary>
@@ -487,7 +487,7 @@ namespace TVA
         public Double ToDouble()
         {
             ValidateBufferLength(TypeCode.Double, sizeof(Double));
-            return m_endianOrder.ToDouble(m_buffer, 0);
+            return s_endianOrder.ToDouble(m_buffer, 0);
         }
 
         private void ValidateBufferLength(TypeCode typeCode, int size)
@@ -505,7 +505,7 @@ namespace TVA
         /// <summary>
         /// <see cref="EndianOrder"/> instance used to transpose byte order of derived implementation of <see cref="BinaryValueBase{TEndianOrder}"/>.
         /// </summary>
-        protected static TEndianOrder m_endianOrder;
+        protected static TEndianOrder s_endianOrder;
 
         #endregion
     }
