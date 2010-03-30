@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("1.1.13.42799")]
+[assembly: AssemblyVersion("1.1.14.42854")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
