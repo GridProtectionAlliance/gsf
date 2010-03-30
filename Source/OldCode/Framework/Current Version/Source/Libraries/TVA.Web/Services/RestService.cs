@@ -16,6 +16,8 @@
 //       Added new header and license agreement.
 //  11/27/2009 - Pinal C. Patel
 //       Fixed bug in the initialization of service contract name.
+//  03/30/2010 - Pinal C. Patel
+//       Updated CanRead and CanWrite to not include Enabled in its evaluation.
 //
 //*******************************************************************************************************
 
@@ -240,7 +242,6 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using TVA.Configuration;
-using TVA.Reflection;
 
 namespace TVA.Web.Services
 {
@@ -439,8 +440,8 @@ namespace TVA.Web.Services
         {
             get
             {
-                if (m_enabled && 
-                    (m_serviceDataFlow == DataFlowDirection.Outgoing || m_serviceDataFlow == DataFlowDirection.BothWays))
+                if (m_serviceDataFlow == DataFlowDirection.Outgoing || 
+                    m_serviceDataFlow == DataFlowDirection.BothWays)
                     return true;
                 else
                     return false;
@@ -454,8 +455,8 @@ namespace TVA.Web.Services
         {
             get
             {
-                if (m_enabled && 
-                    (m_serviceDataFlow == DataFlowDirection.Incoming || m_serviceDataFlow == DataFlowDirection.BothWays))
+                if (m_serviceDataFlow == DataFlowDirection.Incoming || 
+                    m_serviceDataFlow == DataFlowDirection.BothWays)
                     return true;
                 else
                     return false;
