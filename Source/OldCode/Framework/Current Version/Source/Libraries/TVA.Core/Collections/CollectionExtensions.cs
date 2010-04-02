@@ -32,6 +32,8 @@
 //       Added new header and license agreement.
 //  11/17/2009 - Pinal C. Patel
 //       Added generic UpdateRange() extension method for IList<T>.
+//  03/31/2009 - J. Ritchie Carroll
+//       Added Majority() and Minority() extension methods to IEnumerable<T>.
 //
 //*******************************************************************************************************
 
@@ -254,6 +256,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TVA.Collections
@@ -263,6 +266,83 @@ namespace TVA.Collections
     /// </summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Returns the majority value in the collection, or default value if no item represents the majority.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <param name="source">An enumeration over which to find the majority element.</param>
+        /// <returns>The majority value in the collection.</returns>
+        public static T Majority<T>(this IEnumerable<T> source)
+        {
+            T majority = default(T);
+
+            if (source != null && source.Count() > 1)
+            {
+                Dictionary<T, int> itemCounts = new Dictionary<T, int>();
+                int count;
+
+                // Count each number of items in the list
+                foreach (T item in source)
+                {
+                    if (itemCounts.TryGetValue(item, out count))
+                    {
+                        count++;
+                        itemCounts[item] = count;
+                    }
+                    else
+                        itemCounts.Add(item, 1);
+                }
+
+                // Find the largest number of items in the list
+                KeyValuePair<T, int> maxItem = itemCounts.Max((a, b) => (a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0)));
+
+                // If item with largest count has a plural majority, then it is the majority item
+                if (maxItem.Value > 1)
+                    majority = maxItem.Key;
+            }
+            else
+                majority = source.FirstOrDefault();
+
+            return majority;
+        }
+
+        /// <summary>
+        /// Returns the minority value in the collection, or default value if no item represents the minority.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of elements in the <paramref name="source"/>.</typeparam>
+        /// <param name="source">An enumeration over which to find the minority element.</param>
+        /// <returns>The minority value in the collection.</returns>
+        public static T Minority<T>(this IEnumerable<T> source)
+        {
+            T minority = default(T);
+
+            if (source != null && source.Count() > 1)
+            {
+                Dictionary<T, int> itemCounts = new Dictionary<T, int>();
+                int count;
+
+                // Count each number of items in the list
+                foreach (T item in source)
+                {
+                    if (itemCounts.TryGetValue(item, out count))
+                    {
+                        count++;
+                        itemCounts[item] = count;
+                    }
+                    else
+                        itemCounts.Add(item, 1);
+                }
+
+                // Find the smallest number of items in the list
+                KeyValuePair<T, int> minItem = itemCounts.Min((a, b) => (a.Value < b.Value ? -1 : (a.Value > b.Value ? 1 : 0)));
+                minority = minItem.Key;
+            }
+            else
+                minority = source.FirstOrDefault();
+
+            return minority;
+        }
+
         /// <summary>
         /// Adds the specified <paramref name="items"/> to the <paramref name="collection"/>.
         /// </summary>
@@ -306,9 +386,9 @@ namespace TVA.Collections
             List<T> result = new List<T>();
 
             for (int i = index; i < index + count; i++)
-			{
+            {
                 result.Add(collection[i]);
-			}
+            }
 
             return result;
         }

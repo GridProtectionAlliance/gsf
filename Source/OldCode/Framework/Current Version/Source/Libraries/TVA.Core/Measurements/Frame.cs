@@ -254,7 +254,7 @@ namespace TVA.Measurements
         // Fields
         private Ticks m_timestamp;                                          // Time, represented as 100-nanosecond ticks, of this frame of data
         private bool m_published;                                           // Determines if this frame of data has been published
-        private int m_publishedMeasurements;                                // Total measurements published by this frame
+        private int m_sortedMeasurements;                                   // Total measurements sorted into this frame
         private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
         private IMeasurement m_lastSortedMeasurement;                       // Last measurement sorted into this frame
 
@@ -270,7 +270,7 @@ namespace TVA.Measurements
         {
             m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
-            m_publishedMeasurements = -1;
+            m_sortedMeasurements = -1;
         }
 
         /// <summary>
@@ -282,7 +282,7 @@ namespace TVA.Measurements
         {
             m_timestamp = timestamp;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
-            m_publishedMeasurements = -1;
+            m_sortedMeasurements = -1;
         }
 
         #endregion
@@ -292,7 +292,7 @@ namespace TVA.Measurements
         /// <summary>
         /// Keyed measurements in this <see cref="Frame"/>.
         /// </summary>
-        public virtual IDictionary<MeasurementKey, IMeasurement> Measurements
+        public IDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
             {
@@ -303,7 +303,7 @@ namespace TVA.Measurements
         /// <summary>
         /// Gets or sets published state of this <see cref="Frame"/>.
         /// </summary>
-        public virtual bool Published
+        public bool Published
         {
             get
             {
@@ -316,23 +316,23 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets or sets total number of measurements that have been published for this <see cref="Frame"/>.
+        /// Gets or sets total number of measurements that have been sorted into this <see cref="Frame"/>.
         /// </summary>
         /// <remarks>
         /// If this property has not been assigned a value, the property will return measurement count.
         /// </remarks>
-        public virtual int PublishedMeasurements
+        public int SortedMeasurements
         {
             get
             {
-                if (m_publishedMeasurements == -1)
+                if (m_sortedMeasurements == -1)
                     return m_measurements.Count;
 
-                return m_publishedMeasurements;
+                return m_sortedMeasurements;
             }
             set
             {
-                m_publishedMeasurements = value;
+                m_sortedMeasurements = value;
             }
         }
 
@@ -357,7 +357,7 @@ namespace TVA.Measurements
         /// <summary>
         /// Gets or sets reference to last measurement that was sorted into this <see cref="Frame"/>.
         /// </summary>
-        public virtual IMeasurement LastSortedMeasurement
+        public IMeasurement LastSortedMeasurement
         {
             get
             {
@@ -382,11 +382,9 @@ namespace TVA.Measurements
         /// <returns>A cloned <see cref="Frame"/>.</returns>
         public virtual Frame Clone()
         {
-            IDictionary<MeasurementKey, IMeasurement> measurements = Measurements;
-
-            lock (measurements)
+            lock (m_measurements)
             {
-                return new Frame(m_timestamp, measurements);
+                return new Frame(m_timestamp, m_measurements);
             }
         }
 

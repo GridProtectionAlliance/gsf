@@ -236,7 +236,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using TVA.Collections;
 
 namespace TVA.Measurements
 {
@@ -260,6 +263,7 @@ namespace TVA.Measurements
         private double m_multiplier;
         private bool m_valueQualityIsGood;
         private bool m_timestampQualityIsGood;
+        private MeasurementValueFilterFunction m_measurementValueFilter;
 
         #endregion
 
@@ -556,6 +560,21 @@ namespace TVA.Measurements
             }
         }
 
+        /// <summary>
+        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        public virtual MeasurementValueFilterFunction MeasurementValueFilter
+        {
+            get
+            {
+                return m_measurementValueFilter;
+            }
+            set
+            {
+                m_measurementValueFilter = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -606,11 +625,11 @@ namespace TVA.Measurements
         /// </summary>
         /// <param name="other">The <see cref="IMeasurement"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-        /// <remarks>This implementation of a basic measurement compares itself by value.</remarks>
+        /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(IMeasurement other)
         {
             if ((object)other != null)
-                return m_value.CompareTo(other.Value);
+                return GetHashCode().CompareTo(other.GetHashCode());
 
             return 1;
         }
@@ -621,7 +640,7 @@ namespace TVA.Measurements
         /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="Measurement"/>.</param>
         /// <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
         /// <exception cref="ArgumentException"><paramref name="obj"/> is not an <see cref="IMeasurement"/>.</exception>
-        /// <remarks>This implementation of a basic measurement compares itself by value.</remarks>
+        /// <remarks>Measurement implementations should compare by hash code.</remarks>
         public int CompareTo(object obj)
         {
             IMeasurement other = obj as IMeasurement;
@@ -639,7 +658,7 @@ namespace TVA.Measurements
         /// <remarks>Hash code based on value of measurement.</remarks>
         public override int GetHashCode()
         {
-            return m_value.GetHashCode();
+            return m_key.GetHashCode();
         }
 
         #endregion
@@ -770,6 +789,26 @@ namespace TVA.Measurements
                 else
                     return string.Format("{0} [{1}]", tagName, keyText);
             }
+        }
+
+        /// <summary>
+        /// Calculates an average of the specified sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
+        /// <returns>Average of the specified sequence of <see cref="IMeasurement"/> values.</returns>
+        public static double AverageValueFilter(IEnumerable<IMeasurement> source)
+        {
+            return source.Select(m => m.Value).Average();
+        }
+
+        /// <summary>
+        /// Returns the majority value of the specified sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to run calculation.</param>
+        /// <returns>Majority value of the specified sequence of <see cref="IMeasurement"/> values.</returns>
+        public static double MajorityValueFilter(IEnumerable<IMeasurement> source)
+        {
+            return source.Select(m => m.Value).Majority();
         }
 
         #endregion

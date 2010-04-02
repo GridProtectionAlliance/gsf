@@ -236,6 +236,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
@@ -498,6 +499,56 @@ namespace TVA.Measurements
                 return new MeasurementKey(uint.Parse(elem[1].Trim()), elem[0].Trim());
 
             throw new FormatException("The value is not in the correct format for a MeasurementKey value");
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// Represents an instance of the <see cref="IEqualityComparer{T}"/> for a <see cref="MeasurementKey"/>.
+    /// </summary>
+    [CLSCompliant(false)]
+    public class MeasurementKeyComparer : IEqualityComparer<MeasurementKey>
+    {
+        #region [ Methods ]
+
+        /// <summary>
+        /// Determines whether the specified objects are equal.
+        /// </summary>
+        /// <param name="x">The first <see cref="MeasurementKey"/> to compare.</param>
+        /// <param name="y">The second <see cref="MeasurementKey"/> to compare.</param>
+        /// <returns>true if the specified objects are equal; otherwise, false.</returns>
+        public bool Equals(MeasurementKey x, MeasurementKey y)
+        {
+            return x.Equals(y);
+        }
+
+        /// <summary>
+        /// Returns a hash code for the specified object.
+        /// </summary>
+        /// <param name="obj">The <see cref="MeasurementKey"/> for which a hash code is to be returned.</param>
+        /// <returns>A hash code for the specified object.</returns>
+        public int GetHashCode(MeasurementKey obj)
+        {
+            return obj.GetHashCode();
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        private static MeasurementKeyComparer s_comparer;
+
+        /// <summary>
+        /// Returns the default instance of the <see cref="MeasurementKeyComparer"/> class.
+        /// </summary>
+        public static MeasurementKeyComparer Default
+        {
+            get
+            {
+                if (s_comparer == null) s_comparer = new MeasurementKeyComparer();
+                return s_comparer;
+            }
         }
 
         #endregion

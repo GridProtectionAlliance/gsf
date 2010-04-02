@@ -36,6 +36,8 @@
 //       The PrecisionTimer, based on the Windows multimedia timer, is restricted to 16 active instances
 //       per process, so concentrator was rearchitected to use one static timer per frame rate so that
 //       the system can can support 16 different active frame rates for any number of concentrators.
+//  03/31/2010 - J. Ritchie Carroll
+//       Modified concentrator to handle various downsampling operations.
 //
 //*******************************************************************************************************
 
@@ -267,6 +269,38 @@ using TVA.Units;
 
 namespace TVA.Measurements
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Downsampling method enumeration.
+    /// </summary>
+    public enum DownsamplingMethod
+    {
+        /// <summary>
+        /// Downsamples to the last measurement received.
+        /// </summary>
+        /// <remarks>
+        /// Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+        /// </remarks>
+        LastReceived,
+        /// <summary>
+        /// Downsamples to the measurement closest to frame time.
+        /// </summary>
+        /// <remarks>
+        /// This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+        /// </remarks>
+        Closest,
+        /// <summary>
+        /// Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+        /// </summary>
+        /// <remarks>
+        /// This option will produce the best result but has a processing penalty.
+        /// </remarks>
+        Filtered
+    }
+
+    #endregion
+
     /// <summary>
     /// Measurement concentrator base class.
     /// </summary>
@@ -581,20 +615,24 @@ namespace TVA.Measurements
         private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
         private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
+        private DownsamplingMethod m_downsamplingMethod;    // Downsampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
         private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
+        private bool m_ignoreBadTimestamps;                 // Determines whether or not to ignore bad timestamps when sorting measurements
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
         private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
         private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
-        private long m_processedMeasurements;               // Total number of measurements ever requested for sorting
-        private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
+        private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
+        private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
         private long m_discardedMeasurements;               // Total number of discarded measurements
+        private long m_measurementsSortedByArrival;         // Total number of measurements that were sorted by arrival
         private long m_publishedMeasurements;               // Total number of published measurements
+        private long m_downsampledMeasurements;             // Total number of downsampled measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
@@ -624,6 +662,7 @@ namespace TVA.Measurements
 #endif
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;
+            m_downsamplingMethod = DownsamplingMethod.LastReceived;
             m_latestMeasurements = new ImmediateMeasurements(this);
 
             // Create a new queue for managing real-time frames
@@ -798,7 +837,10 @@ namespace TVA.Measurements
         {
             get
             {
-                return m_frameQueue.Last;
+                if (m_frameQueue != null)
+                    return m_frameQueue.Last;
+
+                return null;
             }
         }
 
@@ -887,6 +929,28 @@ namespace TVA.Measurements
                 // Assign desired time resolution to frame queue
                 if (m_frameQueue != null)
                     m_frameQueue.TimeResolution = m_timeResolution;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="TVA.Measurements.DownsamplingMethod"/> to be used by the concentrator.
+        /// </summary>
+        /// <remarks>
+        /// The downsampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
+        /// </remarks>
+        public DownsamplingMethod DownsamplingMethod
+        {
+            get
+            {
+                return m_downsamplingMethod;
+            }
+            set
+            {
+                m_downsamplingMethod = value;
+
+                // Assign desired downsampling method to frame queue
+                if (m_frameQueue != null)
+                    m_frameQueue.DownsamplingMethod = m_downsamplingMethod;
             }
         }
 
@@ -988,13 +1052,34 @@ namespace TVA.Measurements
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if bad timestamps (as determined by measurement's timestamp quality)
+        /// should be ignored when sorting measurements.
+        /// </summary>
+        /// <remarks>
+        /// Setting this property to <c>true</c> forces system to use timestamps as-is without checking quality.
+        /// If this property is <c>true</c>, it will supercede operation of <see cref="AllowSortsByArrival"/>.
+        /// </remarks>
+        public bool IgnoreBadTimestamps
+        {
+            get
+            {
+                return m_ignoreBadTimestamps;
+            }
+            set
+            {
+                m_ignoreBadTimestamps = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps
         /// to be sorted by arrival time.
         /// </summary>
         /// <remarks>
         /// Value defaults to <c>true</c>, so any incoming measurement with a bad timestamp quality will be sorted
         /// according to its arrival time. Setting the property to <c>false</c> will cause all measurements with a
-        /// bad timestamp quality to be discarded.
+        /// bad timestamp quality to be discarded. This property will only be considered when
+        /// <see cref="IgnoreBadTimestamps"/> is <c>false</c>.
         /// </remarks>
         public bool AllowSortsByArrival
         {
@@ -1088,7 +1173,18 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets the total number of measurements that have ever been requested for sorting.
+        /// Gets the total number of measurements ever requested for sorting.
+        /// </summary>
+        public long ReceivedMeasurements
+        {
+            get
+            {
+                return m_receivedMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of measurements successfully sorted.
         /// </summary>
         public long ProcessedMeasurements
         {
@@ -1188,7 +1284,7 @@ namespace TVA.Measurements
             get
             {
                 StringBuilder status = new StringBuilder();
-                IFrame lastFrame = m_frameQueue.Last;
+                IFrame lastFrame = LastFrame;
 #if UseHighResolutionTime
                 DateTime currentTime = PrecisionTimer.UtcNow;
 #else
@@ -1205,6 +1301,8 @@ namespace TVA.Measurements
                 status.AppendLine();
                 status.AppendFormat("   Maximum time resolution: {0} ticks", m_timeResolution);
                 status.AppendLine();
+                status.AppendFormat("       Downsampling method: {0}", m_downsamplingMethod);
+                status.AppendLine();
                 status.AppendFormat("    Local clock time (UTC): {0}", currentTime.ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 status.AppendLine();
                 status.AppendFormat("  Using clock as real-time: {0}", m_useLocalClockAsRealTime);
@@ -1220,17 +1318,23 @@ namespace TVA.Measurements
                     status.Append(" second deviation from latest time");
                     status.AppendLine();
                 }
-                status.AppendFormat(" Allowing sorts by arrival: {0}", m_allowSortsByArrival);
+                status.AppendFormat("     Ignore bad timestamps: {0}", m_ignoreBadTimestamps);
+                status.AppendLine();
+                status.AppendFormat("    Allow sorts by arrival: {0}", m_ignoreBadTimestamps ? false : m_allowSortsByArrival);
                 status.AppendLine();
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
                 status.AppendLine();
-                status.AppendFormat("     Expected measurements: {0} / frame", m_expectedMeasurements);
+                status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
                 status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements);
                 status.AppendLine();
+                status.AppendFormat("    Discarded measurements: {0}", m_discardedMeasurements);
+                status.AppendLine();
+                status.AppendFormat("  Downsampled measurements: {0}", m_downsampledMeasurements);
+                status.AppendLine();
                 status.AppendFormat("    Published measurements: {0}", m_publishedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Discarded measurements: {0}", m_discardedMeasurements);
+                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", m_publishedFrames * m_expectedMeasurements, m_expectedMeasurements);
                 status.AppendLine();
                 status.Append("Last discarded measurement: ");
                 if (m_lastDiscardedMeasurement == null)
@@ -1244,21 +1348,23 @@ namespace TVA.Measurements
                     status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                 }
                 status.AppendLine();
-                status.AppendFormat("    Total sorts by arrival: {0}", m_measurementsSortedByArrival);
-                status.AppendLine();
-                status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
-                status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
                 status.AppendFormat("  Pre-lag-time publication: {0}", (m_framesAheadOfSchedule / (double)m_publishedFrames).ToString("##0.0000%"));
+                status.AppendLine();
+                status.AppendFormat("  Downsampling application: {0}", (m_downsampledMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("    Total sorts by arrival: {0}", m_measurementsSortedByArrival);
                 status.AppendLine();
-                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_receivedMeasurements).ToString("##0.0000%"));
+                status.AppendLine();
+                status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
+                status.AppendLine();
+                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_processedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("    Total published frames: {0}", m_publishedFrames);
                 status.AppendLine();
@@ -1299,17 +1405,6 @@ namespace TVA.Measurements
                 status.AppendLine();
 
                 return status.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Gets a reference to the <see cref="FrameQueue"/>.
-        /// </summary>
-        protected FrameQueue FrameQueue
-        {
-            get
-            {
-                return m_frameQueue;
             }
         }
 
@@ -1395,15 +1490,8 @@ namespace TVA.Measurements
         {
             if (!m_enabled)
             {
-                // Reset statistics
-                m_processedMeasurements = 0;
-                m_measurementsSortedByArrival = 0;
-                m_discardedMeasurements = 0;
-                m_publishedMeasurements = 0;
-                m_missedSortsByTimeout = 0;
-                m_framesAheadOfSchedule = 0;
-                m_publishedFrames = 0;
-                m_totalPublishTime = 0;
+                ResetStatistics();
+
                 m_stopTime = 0;
 #if UseHighResolutionTime
                 m_startTime = PrecisionTimer.UtcNow.Ticks;
@@ -1439,6 +1527,24 @@ namespace TVA.Measurements
                 m_stopTime = DateTime.UtcNow.Ticks;
 #endif
             }
+        }
+
+        /// <summary>
+        /// Resets the statistics of the concentrator.
+        /// </summary>
+        public virtual void ResetStatistics()
+        {
+            m_receivedMeasurements = 0;
+            m_processedMeasurements = 0;
+            m_discardedMeasurements = 0;
+            m_downsampledMeasurements = 0;
+            m_publishedMeasurements = 0;
+            m_measurementsSortedByArrival = 0;
+            m_missedSortsByTimeout = 0;
+            m_framesAheadOfSchedule = 0;
+            m_publishedFrames = 0;
+            m_totalPublishTime = 0;
+            m_lastDiscardedMeasurement = null;
         }
 
         /// <summary>
@@ -1486,13 +1592,13 @@ namespace TVA.Measurements
             // easier to maintain, but to reduce function calls (and hence save time) the decision was made to
             // put the code into one larger more complex function...
 
-            IFrame frame = null;
+            TrackingFrame frame = null;
             Ticks timestamp = 0, lastTimestamp = 0;
             double distance;
             bool discardMeasurement;
 
-            // Track the total number of measurements ever requested for sorting.
-            Interlocked.Add(ref m_processedMeasurements, measurements.Count());
+            // Track the total number of measurements ever received for sorting.
+            Interlocked.Add(ref m_receivedMeasurements, measurements.Count());
 
             // Measurements usually come in groups. This function processes all available measurements in the
             // collection here directly as an optimization which avoids the overhead of a function call for
@@ -1503,7 +1609,7 @@ namespace TVA.Measurements
                 discardMeasurement = false;
 
                 // Check for a bad measurement timestamp.
-                if (!measurement.TimestampQualityIsGood)
+                if (!m_ignoreBadTimestamps && !measurement.TimestampQualityIsGood)
                 {
                     if (m_allowSortsByArrival)
                     {
@@ -1566,24 +1672,40 @@ namespace TVA.Measurements
                     }
                     else
                     {
-                        // Assign new measurement to its frame using user customizable function.
-                        if (AssignMeasurementToFrame(frame, measurement))
+                        // Derive new measurement value applying any needed downsampling
+                        IMeasurement derivedMeasurement = frame.DeriveMeasurementValue(measurement);
+
+                        if (derivedMeasurement == null)
                         {
-                            frame.LastSortedMeasurement = measurement;
+                            // Count this as a discarded measurement if downsampling derivation was not applied.
+                            discardMeasurement = true;
                         }
                         else
                         {
-                            // Track the total number of measurements that failed to sort because the
-                            // system ran out of time.
-                            Interlocked.Increment(ref m_missedSortsByTimeout);
+                            IFrame sourceFrame = frame.SourceFrame;
 
-                            // Count this as a discarded measurement if it was never assigned to the frame.
-                            discardMeasurement = true;
+                            // Assign derived measurement to its source frame using user customizable function.
+                            if (AssignMeasurementToFrame(sourceFrame, derivedMeasurement))
+                            {
+                                sourceFrame.LastSortedMeasurement = derivedMeasurement;
+
+                                // Track the total number of measurements successfully requested for sorting.
+                                Interlocked.Increment(ref m_processedMeasurements);
+                            }
+                            else
+                            {
+                                // Track the total number of measurements that failed to sort because the
+                                // system ran out of time.
+                                Interlocked.Increment(ref m_missedSortsByTimeout);
+
+                                // Count this as a discarded measurement if it was never assigned to the frame.
+                                discardMeasurement = true;
+                            }
+
+                            // If enabled, concentrator will track the absolute latest measurement values.
+                            if (m_trackLatestMeasurements)
+                                m_latestMeasurements.UpdateMeasurementValue(derivedMeasurement);
                         }
-
-                        // If enabled, concentrator will track the absolute latest measurement values.
-                        if (m_trackLatestMeasurements)
-                            m_latestMeasurements.UpdateMeasurementValue(measurement);
                     }
                 }
 
@@ -1796,7 +1918,7 @@ namespace TVA.Measurements
                                 // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
                                 // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
                                 // frame as soon as the expected data has arrived.
-                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.Measurements.Count < m_expectedMeasurements)
+                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.SortedMeasurements < m_expectedMeasurements)
                                     break;
 
                                 // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
@@ -1835,7 +1957,8 @@ namespace TVA.Measurements
 
                                 // Update publication statistics
                                 m_publishedFrames++;
-                                m_publishedMeasurements += frame.PublishedMeasurements;
+                                m_publishedMeasurements += frame.SortedMeasurements;
+                                m_downsampledMeasurements += m_frameQueue.LastDownsampledMeasurements;
 
                                 // Track total publication time
 #if UseHighResolutionTime

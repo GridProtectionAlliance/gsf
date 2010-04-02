@@ -343,13 +343,13 @@ namespace TVA.ErrorManagement
 
         #region [ Static ]
 
-        private static ErrorLogger m_logger;
+        private static ErrorLogger s_logger;
 
         static ErrorModule()
         {
-            m_logger = new ErrorLogger();
-            m_logger.PersistSettings = true;
-            m_logger.Initialize();          // Initialize error logger for use.
+            s_logger = new ErrorLogger();
+            s_logger.PersistSettings = true;
+            s_logger.Initialize();          // Initialize error logger for use.
         }
 
         /// <summary>
@@ -388,7 +388,7 @@ namespace TVA.ErrorManagement
         {
             get 
             {
-                return m_logger;
+                return s_logger;
             }
         }
 

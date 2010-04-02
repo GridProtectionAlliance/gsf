@@ -1,5 +1,5 @@
 //*******************************************************************************************************
-//  FacileActionAdapterBase.cs - Gbtc
+//  TrackingFrame.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/25/2010 - James R. Carroll
+//  03/31/2010 - James R. Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -231,84 +231,79 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+using System.Linq;
+using TVA.Collections;
 
-namespace TVA.Measurements.Routing
+namespace TVA.Measurements
 {
     /// <summary>
-    /// Represents the base class for simple, non-time-aligned, action adapters.
+    /// <see cref="IFrame"/> container used to track <see cref="IMeasurement"/> values for downsampling.
     /// </summary>
-    /// <remarks>
-    /// This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
-    /// class needs time-aligned data for processing, the <see cref="ActionAdapterBase"/> class should be used instead.
-    /// Derived classes are expected call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
-    /// </remarks>
-    [CLSCompliant(false)]
-    public abstract class FacileActionAdapterBase : AdapterBase, IActionAdapter
-	{
+    internal class TrackingFrame
+    {
         #region [ Members ]
 
-        // Events
-
-        /// <summary>
-        /// Provides new measurements from action adapter.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
-        /// </remarks>
-        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
-
-        /// <summary>
-        /// This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EventArgs{T}.Argument"/> is the total number of unpublished seconds of data.
-        /// </remarks>
-        public event EventHandler<EventArgs<int>> UnpublishedSamples;
-
         // Fields
-        private int m_framesPerSecond;
+        private IFrame m_sourceFrame;
+        private long m_timestamp;
+        private DownsamplingMethod m_downsamplingMethod;
+        private Dictionary<MeasurementKey, List<IMeasurement>> m_measurements;
+        private long m_derivedMeasurements;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Constructs a new <see cref="TrackingFrame"/> given the specified parameters.
+        /// </summary>
+        /// <param name="sourceFrame">Source <see cref="IFrame"/> to track.</param>
+        /// <param name="downsamplingMethod"><see cref="DownsamplingMethod"/> to apply.</param>
+        public TrackingFrame(IFrame sourceFrame, DownsamplingMethod downsamplingMethod)
+        {
+            m_sourceFrame = sourceFrame;
+            m_timestamp = sourceFrame.Timestamp;
+            m_downsamplingMethod = downsamplingMethod;
+
+            if (downsamplingMethod != DownsamplingMethod.LastReceived)
+                m_measurements = new Dictionary<MeasurementKey, List<IMeasurement>>();
+        }
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the frames per second to be used by the <see cref="FacileActionAdapterBase"/>.
+        /// Gets instance of <see cref="IFrame"/> being tracked.
         /// </summary>
-        /// <remarks>
-        /// This value is only tracked in the <see cref="FacileActionAdapterBase"/>, derived class will determine its use.
-        /// </remarks>
-        public virtual int FramesPerSecond
+        public IFrame SourceFrame
         {
             get
             {
-                return m_framesPerSecond;
-            }
-            set
-            {
-                m_framesPerSecond = value;
+                return m_sourceFrame;
             }
         }
 
         /// <summary>
-        /// Returns the detailed status of the data input source.
+        /// Gets timestamp of <see cref="IFrame"/> being tracked.
         /// </summary>
-        /// <remarks>
-        /// Derived classes should extend status with implementation specific information.
-        /// </remarks>
-        public override string Status
+        public long Timestamp
         {
             get
             {
-                StringBuilder status = new StringBuilder();
+                return m_timestamp;
+            }
+        }
 
-                status.Append(base.Status);
-                status.AppendFormat("        Defined frame rate: {0} frames/sec", FramesPerSecond);
-                status.AppendLine();
-
-                return status.ToString();
+        /// <summary>
+        /// Total number of measurements downsampled by <see cref="TrackingFrame"/>.
+        /// </summary>
+        public long DownsampledMeasurements
+        {
+            get
+            {
+                // Only measurements that came in after initial sorts were downsampled...
+                return m_derivedMeasurements - m_sourceFrame.SortedMeasurements;
             }
         }
 
@@ -317,64 +312,115 @@ namespace TVA.Measurements.Routing
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes <see cref="FacileActionAdapterBase"/>.
+        /// Derives measurement value, downsampling if needed.
         /// </summary>
-        public override void Initialize()
+        /// <param name="measurement">New <see cref="IMeasurement"/> value.</param>
+        /// <returns>New derived <see cref="IMeasurement"/> value, or null if value should not be assigned to <see cref="IFrame"/>.</returns>
+        public IMeasurement DeriveMeasurementValue(IMeasurement measurement)
         {
-            base.Initialize();
-
-            Dictionary<string, string> settings = Settings;
-            string setting;
+            IMeasurement derivedMeasurement;
+            List<IMeasurement> m_values;
             
-            if (settings.TryGetValue("framesPerSecond", out setting))
-                m_framesPerSecond = int.Parse(setting);
-        }
+            switch (m_downsamplingMethod)
+            {
+                case DownsamplingMethod.LastReceived:
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
 
-        /// <summary>
-        /// Queues a single measurement for processing.
-        /// </summary>
-        /// <param name="measurement">Measurement to queue for processing.</param>
-        public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
-        {
-            QueueMeasurementsForProcessing(new IMeasurement[] { measurement });
-        }
+                    // This is the simplest case, just apply latest value
+                    return measurement;
+                case DownsamplingMethod.Closest:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
+                        {
+                            // Get first tracked value (should only be one for "Closest")
+                            derivedMeasurement = m_values[0];
 
-        /// <summary>
-        /// Queues a collection of measurements for processing.
-        /// </summary>
-        /// <param name="measurements">Measurements to queue for processing.</param>
-        public abstract void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
+                            if (derivedMeasurement != null)
+                            {
+                                // Determine if new measurement's timestamp is closer to frame
+                                if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
+                                {
+                                    // This measurement came in out-of-order and is closer to frame timestamp, so 
+                                    // we sort this measurement instead of the original
+                                    m_values[0] = measurement;
+                                    
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
 
-        /// <summary>
-        /// Raises the <see cref="NewMeasurements"/> event.
-        /// </summary>
-        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
-        {
-            if (NewMeasurements != null)
-                NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+                                    return measurement;
+                                }
 
-            IncrementProcessedMeasurements(measurements.Count);
-        }
+                                // Prior measurement is closer to frame than new one
+                                return null;
+                            }
+                        }                       
+                    }
 
-        /// <summary>
-        /// Raises <see cref="AdapterBase.ProcessException"/> event.
-        /// </summary>
-        /// <param name="ex">Processing <see cref="Exception"/>.</param>
-        protected override void OnProcessException(Exception ex)
-        {
-            base.OnProcessException(ex);
-        }
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
 
-        /// <summary>
-        /// Raises the <see cref="UnpublishedSamples"/> event.
-        /// </summary>
-        /// <param name="seconds">Total number of unpublished seconds of data.</param>
-        protected virtual void OnUnpublishedSamples(int seconds)
-        {
-            if (UnpublishedSamples != null)
-                UnpublishedSamples(this, new EventArgs<int>(seconds));
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
+
+                    return measurement;
+                case DownsamplingMethod.Filtered:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
+                        {
+                            // Get first tracked value
+                            derivedMeasurement = m_values[0];
+
+                            if (derivedMeasurement != null)
+                            {
+                                // Get function defined for measurement value filtering
+                                MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
+
+                                // Default to average value filter if none is specified
+                                if (measurementValueFilter == null)
+                                    measurementValueFilter = Measurement.AverageValueFilter;
+
+                                // Add new measurement to tracking collection
+                                if (measurement != null)
+                                    m_values.Add(measurement);
+
+                                // Perform filter calculation as specified by device measurement
+                                if (m_values.Count > 1)
+                                {
+                                    derivedMeasurement.Value = measurementValueFilter(m_values);
+
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
+
+                                    return derivedMeasurement;
+                                }
+
+                                // No change from existing measurement
+                                return null;
+                            }
+                        }
+                    }
+
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
+
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
+
+                    return measurement;
+            }
+
+            return null;
         }
 
         #endregion
-    }	
+    }
 }

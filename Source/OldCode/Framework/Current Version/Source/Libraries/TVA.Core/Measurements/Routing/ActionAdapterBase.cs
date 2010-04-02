@@ -439,7 +439,7 @@ namespace TVA.Measurements.Routing
 
                     // The input measurements typically define the "expected measurements" of the action adapter, so
                     // we use the number of these items to define the expected measurement count
-                    ExpectedMeasurements = m_inputMeasurementKeysHash.Count;
+                    ExpectedMeasurements = m_inputMeasurementKeys.Length;
                 }
                 else
                 {
@@ -692,6 +692,9 @@ namespace TVA.Measurements.Routing
             if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
                 base.UseLocalClockAsRealTime = setting.ParseBoolean();
 
+            if (settings.TryGetValue("ignoreBadTimestamps", out setting))
+                base.IgnoreBadTimestamps = setting.ParseBoolean();
+
             if (settings.TryGetValue("allowSortsByArrival", out setting))
                 base.AllowSortsByArrival = setting.ParseBoolean();
 
@@ -709,6 +712,9 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("allowPreemptivePublishing", out setting))
                 AllowPreemptivePublishing = setting.ParseBoolean();
+
+            if (settings.TryGetValue("downsamplingMethod", out setting))
+                DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
         }
 
         /// <summary>
@@ -733,6 +739,18 @@ namespace TVA.Measurements.Routing
         public override void Stop()
         {
             base.Stop();
+        }
+
+        /// <summary>
+        /// Resets the statistics of the <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        [AdapterCommand("Resets the statistics of the action adapter.")]
+        public override void ResetStatistics()
+        {
+            base.ResetStatistics();
+
+            if (Enabled)
+                OnStatusMessage("Action adapter concentration statistics have been reset.");
         }
 
         /// <summary>

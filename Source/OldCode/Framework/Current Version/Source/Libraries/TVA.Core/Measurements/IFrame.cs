@@ -258,12 +258,12 @@ namespace TVA.Measurements
         bool Published { get; set; }
 
         /// <summary>
-        /// Gets or sets total number of measurements that have been published for this <see cref="IFrame"/>.
+        /// Gets or sets total number of measurements that have been sorted into this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
         /// If this property has not been assigned a value, implementors should return measurement count.
         /// </remarks>
-        int PublishedMeasurements { get; set; }
+        int SortedMeasurements { get; set; }
 
         /// <summary>
         /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.

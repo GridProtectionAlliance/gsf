@@ -161,6 +161,7 @@
     <Compile Include="ISupportLifecycle.cs" />
     <Compile Include="LittleBinaryValue.cs" />
     <Compile Include="Measurements\ConcentratorBase.cs" />
+    <Compile Include="Measurements\TrackingFrame.cs" />
     <Compile Include="Measurements\Frame.cs" />
     <Compile Include="Measurements\FrameQueue.cs" />
     <Compile Include="Measurements\IFrame.cs" />

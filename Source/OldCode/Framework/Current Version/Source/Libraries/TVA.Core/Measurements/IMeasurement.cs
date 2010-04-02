@@ -234,9 +234,17 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace TVA.Measurements
 {
+    /// <summary>
+    /// Method signature for function used to apply a value filter over a sequence of <see cref="IMeasurement"/> values.
+    /// </summary>
+    /// <param name="source">Sequence of <see cref="IMeasurement"/> values over which to apply filter.</param>
+    /// <returns>Result of filter applied to sequence of <see cref="IMeasurement"/> values.</returns>
+    public delegate double MeasurementValueFilterFunction(IEnumerable<IMeasurement> source);
+
     /// <summary>
     /// Represents an interface for an abstract measurement value measured by a device at an extact time.
     /// </summary>
@@ -328,5 +336,17 @@ namespace TVA.Measurements
         /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
         /// </summary>
         bool TimestampQualityIsGood { get; set; }
+
+        /// <summary>
+        /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
+        /// </summary>
+        MeasurementValueFilterFunction MeasurementValueFilter { get; set; }
+
+        /// <summary>
+        /// Get the hash code for the <see cref="IMeasurement"/>.<see cref="MeasurementKey"/>.
+        /// </summary>
+        /// <returns>Hash code for the <see cref="IMeasurement"/>.<see cref="MeasurementKey"/>.</returns>
+        /// <remarks>Implementors should always return the hash code based on <see cref="MeasurementKey"/> of measurement.</remarks>
+        int GetHashCode();
     }
 }

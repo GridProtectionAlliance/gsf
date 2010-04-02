@@ -713,6 +713,11 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("outputMeasurements", out setting))
                 OutputMeasurements = AdapterBase.ParseOutputMeasurements(DataSource, setting);
+
+            if (settings.TryGetValue("measurementReportingInterval", out setting))
+                MeasurementReportingInterval = int.Parse(setting);
+            else
+                MeasurementReportingInterval = DefaultMeasurementReportingInterval;
         }
 
         /// <summary>

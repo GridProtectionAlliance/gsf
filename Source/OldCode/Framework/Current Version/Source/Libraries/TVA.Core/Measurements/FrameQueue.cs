@@ -17,6 +17,8 @@
 //  01/13/2010 - Stephen C. Wills
 //       Developed an alternate frame destination timestamp selection algorithm which performs better
 //       in more cases (e.g., at higher than millisecond resolutions).
+//  03/31/2010 - J. Ritchie Carroll
+//       Modified frame queue to wrap IFrame's in a tracking frame used for downsampling operations.
 //
 //*******************************************************************************************************
 
@@ -242,10 +244,9 @@ using System.Collections.Generic;
 namespace TVA.Measurements
 {
     /// <summary>
-    /// Represents a real-time queue of <see cref="IFrame"/> instances used by the <see cref="ConcentratorBase"/> class.
+    /// Represents a real-time queue of <see cref="TrackingFrame"/> instances used by the <see cref="ConcentratorBase"/> class.
     /// </summary>
-    [CLSCompliant(false)]
-    public class FrameQueue : IDisposable
+    internal class FrameQueue : IDisposable
     {
         #region [ Members ]
 
@@ -253,16 +254,17 @@ namespace TVA.Measurements
         internal delegate IFrame CreateNewFrameFunction(Ticks timestamp);
 
         // Fields
-        private CreateNewFrameFunction m_createNewFrame;    // Frame creation function
-        private LinkedList<IFrame> m_frameList;             // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<long, IFrame> m_frameHash;       // This list not guaranteed to be sorted, but used for fast frame lookup
-        private long m_publishedTicks;                      // Timstamp of last published frame
-        private IFrame m_head;                              // Reference to current top of the frame collection
-        private IFrame m_last;                              // Reference to last published frame
-        private int m_framesPerSecond;                      // Cached frames per second
-        private double m_ticksPerFrame;                     // Cached ticks per frame
-        private long m_timeResolution;                      // Cached time resolution (max sorting resolution in ticks)
-        private bool m_disposed;                            // Object disposed flag
+        private CreateNewFrameFunction m_createNewFrame;        // IFrame creation function
+        private LinkedList<TrackingFrame> m_frameList;          // We keep this list sorted by timestamp so frames are processed in order
+        private Dictionary<long, TrackingFrame> m_frameHash;    // This list not guaranteed to be sorted, but used for fast frame lookup
+        private long m_publishedTicks;                          // Timstamp of last published frame
+        private TrackingFrame m_head;                           // Reference to current top of the frame collection
+        private TrackingFrame m_last;                           // Reference to last published frame
+        private int m_framesPerSecond;                          // Cached frames per second
+        private double m_ticksPerFrame;                         // Cached ticks per frame
+        private long m_timeResolution;                          // Cached time resolution (max sorting resolution in ticks)
+        private DownsamplingMethod m_downsamplingMethod;        // Cached downsampling method
+        private bool m_disposed;                                // Object disposed flag
 
         #endregion
 
@@ -274,8 +276,9 @@ namespace TVA.Measurements
         internal FrameQueue(CreateNewFrameFunction createNewFrame)
         {
             m_createNewFrame = createNewFrame;
-            m_frameList = new LinkedList<IFrame>();
-            m_frameHash = new Dictionary<long, IFrame>();
+            m_frameList = new LinkedList<TrackingFrame>();
+            m_frameHash = new Dictionary<long, TrackingFrame>();
+            m_downsamplingMethod = DownsamplingMethod.LastReceived;
         }
 
         /// <summary>
@@ -329,10 +332,25 @@ namespace TVA.Measurements
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="TVA.Measurements.DownsamplingMethod"/> to be used by the <see cref="FrameQueue"/>.
+        /// </summary>
+        public DownsamplingMethod DownsamplingMethod
+        {
+            get
+            {
+                return m_downsamplingMethod;
+            }
+            set
+            {
+                m_downsamplingMethod = value;
+            }
+        }
+
+        /// <summary>
         /// Returns the next <see cref="IFrame"/> in the <see cref="FrameQueue"/>, if any.
         /// </summary>
         /// <remarks>
-        /// This property is tracked separately from the internal <see cref="IFrame"/> collection, as a
+        /// This property is tracked separately from the internal <see cref="TrackingFrame"/> collection, as a
         /// result this property may be called at any time without a locking penalty.
         /// </remarks>
         public IFrame Head
@@ -340,7 +358,10 @@ namespace TVA.Measurements
             get
             {
                 // We track the head separately to avoid sync-lock on frame list to safely access first item...
-                return m_head;
+                if (m_head != null)
+                    return m_head.SourceFrame;
+
+                return null;
             }
         }
 
@@ -355,12 +376,29 @@ namespace TVA.Measurements
         {
             get
             {
-                return m_last;
+                if (m_last != null)
+                    return m_last.SourceFrame;
+
+                return null;
             }
         }
 
         /// <summary>
-        /// Returns the total number of <see cref="IFrame"/>'s currently in the <see cref="FrameQueue"/>.
+        /// Gets total number of downsampled measurements from last published frame.
+        /// </summary>
+        public long LastDownsampledMeasurements
+        {
+            get
+            {
+                if (m_last != null)
+                    return m_last.DownsampledMeasurements;
+
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Returns the total number of frames in the <see cref="FrameQueue"/>.
         /// </summary>
         public int Count
         {
@@ -448,7 +486,7 @@ namespace TVA.Measurements
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
             lock (m_frameList)
             {
-                LinkedListNode<IFrame> nextNode = m_frameList.First.Next;
+                LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
 
                 // If next frame is available, go ahead and assign it...
                 if (nextNode != null)
@@ -461,21 +499,20 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets <see cref="IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="IFrame"/> exists for
+        /// Gets <see cref="TrackingFrame"/> from the queue with the specified timestamp, in ticks.  If no frame exists for
         /// the specified timestamp, one will be created.
         /// </summary>
-        /// <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="IFrame"/>.</param>
+        /// <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="TrackingFrame"/>.</param>
         /// <remarks>
-        /// Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
-        /// is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
-        /// will be returned. Note that frame returned will be "best-fit" for given timestamp based on the number of 
-        /// <see cref="ConcentratorBase.FramesPerSecond"/> of the parent <see cref="ConcentratorBase"/> implementation.
+        /// Ticks can be any point in time so long time requested is greater than time of last published frame; this queue is
+        /// used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null will
+        /// be returned. Note that frame returned will be "best-fit" for given timestamp based on <see cref="FramesPerSecond"/>.
         /// </remarks>
-        /// <returns>An existing or new <see cref="IFrame"/> from the queue for the specified timestamp.</returns>
-        public IFrame GetFrame(long ticks)
+        /// <returns>An existing or new <see cref="TrackingFrame"/> from the queue for the specified timestamp.</returns>
+        public TrackingFrame GetFrame(long ticks)
         {
             // Calculate destination ticks for this frame
-            IFrame frame = null;
+            TrackingFrame frame = null;
             bool nodeAdded = false;
             long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
 
@@ -525,12 +562,12 @@ namespace TVA.Measurements
                         return frame;
 
                     // Didn't find frame for this timestamp so we create one
-                    frame = m_createNewFrame(destinationTicks);
+                    frame = new TrackingFrame(m_createNewFrame(destinationTicks), m_downsamplingMethod);
 
                     if (m_frameList.Count > 0)
                     {
                         // Insert frame into proper sorted position...
-                        LinkedListNode<IFrame> node = m_frameList.Last;
+                        LinkedListNode<TrackingFrame> node = m_frameList.Last;
 
                         do
                         {
