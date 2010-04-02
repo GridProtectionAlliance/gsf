@@ -747,50 +747,50 @@
             
             class Program
             {
-                static FileClient m_client;
+                static FileClient s_client;
             
                 static void Main(string[] args)
                 {
                     // Initialize the client.
-                    m_client = new FileClient(@"File=c:\File.txt");
-                    m_client.Initialize();
+                    s_client = new FileClient(@"File=c:\File.txt");
+                    s_client.Initialize();
                     // Register event handlers.
-                    m_client.ConnectionAttempt += m_client_ConnectionAttempt;
-                    m_client.ConnectionEstablished += m_client_ConnectionEstablished;
-                    m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-                    m_client.SendDataComplete += m_client_SendDataComplete;
+                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+                    s_client.SendDataComplete += s_client_SendDataComplete;
                     // Connect the client.
-                    m_client.Connect();
+                    s_client.Connect();
             
                     // Write user input to the file.
                     string input;
                     while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
                     {
-                        m_client.Send(input + "\r\n");
+                        s_client.Send(input + "\r\n");
                     }
             
                     // Disconnect the client on shutdown.
-                    m_client.Disconnect();
+                    s_client.Disconnect();
                 }
             
-                static void m_client_ConnectionAttempt(object sender, EventArgs e)
+                static void s_client_ConnectionAttempt(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client is connecting to file.");
                 }
             
-                static void m_client_ConnectionEstablished(object sender, EventArgs e)
+                static void s_client_ConnectionEstablished(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client connected to file.");
                 }
             
-                static void m_client_ConnectionTerminated(object sender, EventArgs e)
+                static void s_client_ConnectionTerminated(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client disconnected from file.");
                 }
             
-                static void m_client_SendDataComplete(object sender, EventArgs e)
+                static void s_client_SendDataComplete(object sender, EventArgs e)
                 {
-                    Console.WriteLine(string.Format("Sent data - {0}", m_client.TextEncoding.GetString(m_client.Client.SendBuffer)));
+                    Console.WriteLine(string.Format("Sent data - {0}", s_client.TextEncoding.GetString(s_client.Client.SendBuffer)));
                 }
             }
             </code>
@@ -801,46 +801,46 @@
             
             class Program
             {
-                static FileClient m_client;
+                static FileClient s_client;
             
                 static void Main(string[] args)
                 {
                     // Initialize the client.
-                    m_client = new FileClient(@"File=c:\File.txt");
-                    m_client.Initialize();
+                    s_client = new FileClient(@"File=c:\File.txt");
+                    s_client.Initialize();
                     // Register event handlers.
-                    m_client.ConnectionAttempt += m_client_ConnectionAttempt;
-                    m_client.ConnectionEstablished += m_client_ConnectionEstablished;
-                    m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-                    m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+                    s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
                     // Connect the client.
-                    m_client.Connect();
+                    s_client.Connect();
             
                     // Wait for client to read data.
                     Console.ReadLine();
             
                     // Disconnect the client on shutdown.
-                    m_client.Disconnect();
+                    s_client.Disconnect();
                 }
             
-                static void m_client_ConnectionAttempt(object sender, EventArgs e)
+                static void s_client_ConnectionAttempt(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client is connecting to file.");
                 }
             
-                static void m_client_ConnectionEstablished(object sender, EventArgs e)
+                static void s_client_ConnectionEstablished(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client connected to file.");
                 }
             
-                static void m_client_ConnectionTerminated(object sender, EventArgs e)
+                static void s_client_ConnectionTerminated(object sender, EventArgs e)
                 {
                     Console.WriteLine("Client disconnected from file.");
                 }
             
-                static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+                static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
                 {
-                    Console.WriteLine(string.Format("Received data - {0}", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+                    Console.WriteLine(string.Format("Received data - {0}", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
                 }
             }
             </code>

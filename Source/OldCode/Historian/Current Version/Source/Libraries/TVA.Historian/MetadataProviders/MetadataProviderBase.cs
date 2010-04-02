@@ -18,6 +18,8 @@
 //       Throwing ArgumentNullException exception in Refresh() if Metadata is null.
 //  11/05/2009 - Pinal C. Patel
 //       Modified to abort refresh operation during dispose.
+//  03/30/2010 - Pinal C. Patel
+//       Corrected the usage of Enabled in Refresh().
 //
 //*******************************************************************************************************
 
@@ -520,11 +522,11 @@ namespace TVA.Historian.MetadataProviders
         /// <exception cref="ArgumentNullException"><see cref="Metadata"/> is null.</exception>
         public bool Refresh()
         {
-            if (m_metadata == null)
-                throw new ArgumentNullException("Metadata");
-
             if (!m_enabled || (m_refreshThread != null && m_refreshThread.IsAlive))
                 return false;
+
+            if (m_metadata == null)
+                throw new ArgumentNullException("Metadata");
 
             m_refreshThread = new Thread(RefreshInternal);
             m_refreshThread.Start();

@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  11/17/2009 - Pinal C. Patel
 //       Made Initialize(), SaveSettings() and LoadSettings() overridable in a derived class.
+//  03/30/2010 - Pinal C. Patel
+//       Corrected the usage of Enabled in Replicate().
 //
 //*******************************************************************************************************
 
@@ -503,14 +505,14 @@ namespace TVA.Historian.Replication
         /// <exception cref="ArgumentNullException"><see cref="ArchiveLocation"/> or <see cref="ReplicaLocation"/> is null or empty string.</exception>
         public bool Replicate()
         {
+            if (!m_enabled || (m_replicationThread != null && m_replicationThread.IsAlive))
+                return false;
+
             if (string.IsNullOrEmpty(m_archiveLocation))
                 throw new ArgumentNullException("ArchiveLocation");
 
             if (string.IsNullOrEmpty(m_replicaLocation))
                 throw new ArgumentNullException("ReplicaLocation");
-
-            if (!m_enabled || (m_replicationThread != null && m_replicationThread.IsAlive))
-                return false;
 
             m_replicationThread = new Thread(ReplicateInternal);
             m_replicationThread.Start();

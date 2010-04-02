@@ -16,6 +16,8 @@
 //       Added new header and license agreement.
 //  12/15/2009 - Pinal C. Patel
 //       Changed the default port for the service from 5151 to 6151.
+//  03/30/2010 - Pinal C. Patel
+//       Added check to verify that the service is enabled before processing incoming requests.
 //
 //*******************************************************************************************************
 
@@ -346,6 +348,10 @@ namespace TVA.Historian.DataServices
         {
             try
             {
+                // Abort if services is not enabled.
+                if (!Enabled)
+                    return;
+
                 // Ensure that writing data is allowed.
                 if (!CanWrite)
                     throw new InvalidOperationException("Write operation is prohibited");
@@ -372,6 +378,10 @@ namespace TVA.Historian.DataServices
         {
             try
             {
+                // Abort if services is not enabled.
+                if (!Enabled)
+                    return null;
+
                 // Ensure that reading data is allowed.
                 if (!CanRead)
                     throw new InvalidOperationException("Read operation is prohibited");
@@ -411,6 +421,10 @@ namespace TVA.Historian.DataServices
         {
             try
             {
+                // Abort if services is not enabled.
+                if (!Enabled)
+                    return null;
+
                 // Ensure that reading data is allowed.
                 if (!CanRead)
                     throw new InvalidOperationException("Read operation is prohibited");
@@ -450,6 +464,10 @@ namespace TVA.Historian.DataServices
         {
             try
             {
+                // Abort if services is not enabled.
+                if (!Enabled)
+                    return null;
+
                 // Ensure that reading data is allowed.
                 if (!CanRead)
                     throw new InvalidOperationException("Read operation is prohibited");

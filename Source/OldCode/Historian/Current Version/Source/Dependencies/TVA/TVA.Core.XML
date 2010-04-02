@@ -341,7 +341,7 @@
             <returns>A double-precision floating point number, accounting for <see cref="T:TVA.EndianOrder"/>,  converted from the <see cref="P:TVA.BinaryValueBase`1.Buffer"/>.</returns>
             <exception cref="T:System.InvalidOperationException">Binary value buffer is too small to represent requested type.</exception>
         </member>
-        <member name="F:TVA.BinaryValueBase`1.m_endianOrder">
+        <member name="F:TVA.BinaryValueBase`1.s_endianOrder">
             <summary>
             <see cref="T:TVA.EndianOrder"/> instance used to transpose byte order of derived implementation of <see cref="T:TVA.BinaryValueBase`1"/>.
             </summary>
@@ -2977,6 +2977,22 @@
             <summary>
             Defines extension functions related to manipulation of arrays and collections.
             </summary>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Majority``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Returns the majority value in the collection, or default value if no item represents the majority.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
+            <param name="source">An enumeration over which to find the majority element.</param>
+            <returns>The majority value in the collection.</returns>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Minority``1(System.Collections.Generic.IEnumerable{``0})">
+            <summary>
+            Returns the minority value in the collection, or default value if no item represents the minority.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of elements in the <paramref name="source"/>.</typeparam>
+            <param name="source">An enumeration over which to find the minority element.</param>
+            <returns>The minority value in the collection.</returns>
         </member>
         <member name="M:TVA.Collections.CollectionExtensions.AddRange``1(System.Collections.Generic.IList{``0},System.Collections.Generic.IEnumerable{``0})">
             <summary>
@@ -9701,20 +9717,20 @@
             
              class Program
              {
-                 static ErrorLogger m_logger;
+                 static ErrorLogger s_logger;
             
                  static Program()
                  {
-                     m_logger = new ErrorLogger();
-                     m_logger.LogToUI = true;                    // Show exception info on the UI.
-                     m_logger.LogToFile = true;                  // Log exception info to a file.
-                     m_logger.LogToEmail = true;                 // Send exception info in an e-mail.
-                     m_logger.LogToEventLog = true;              // Log exception info to the event log.
-                     m_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
-                     m_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
-                     m_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
-                     m_logger.PersistSettings = true;            // Save settings to the config file.
-                     m_logger.Initialize();                      // Initialize ErrorLogger component for use.
+                     s_logger = new ErrorLogger();
+                     s_logger.LogToUI = true;                    // Show exception info on the UI.
+                     s_logger.LogToFile = true;                  // Log exception info to a file.
+                     s_logger.LogToEmail = true;                 // Send exception info in an e-mail.
+                     s_logger.LogToEventLog = true;              // Log exception info to the event log.
+                     s_logger.LogToScreenshot = true;            // Take a screenshot of desktop on exception.
+                     s_logger.ContactEmail = "dev@email.com";    // Provide an e-mail address.
+                     s_logger.HandleUnhandledException = true;   // Configure to handle unhandled exceptions.
+                     s_logger.PersistSettings = true;            // Save settings to the config file.
+                     s_logger.Initialize();                      // Initialize ErrorLogger component for use.
                  }
             
                  static void Main(string[] args)
@@ -9729,8 +9745,8 @@
                          // When logging handled exceptions we want to disable loggers (UI logger and E-mail logger) that
                          // may require interaction either directly or indirectly as it can be annoying. All the loggers
                          // are enabled automatically after the handled exception has been logged.
-                         m_logger.SuppressInteractiveLogging();
-                         m_logger.Log(ex);
+                         s_logger.SuppressInteractiveLogging();
+                         s_logger.Log(ex);
                      }
             
                      int numerator = 1;
@@ -13689,27 +13705,27 @@
             
              class Program
              {
-                 static MultipleDestinationExporter m_exporter;
+                 static MultipleDestinationExporter s_exporter;
             
                  static void Main(string[] args)
                  {
-                     m_exporter = new MultipleDestinationExporter();
-                     m_exporter.Initialized += m_exporter_Initialized;
+                     s_exporter = new MultipleDestinationExporter();
+                     s_exporter.Initialized += s_exporter_Initialized;
                      ExportDestination[] defaultDestinations = new ExportDestination[] 
                      {
                          new ExportDestination(@"\\server1\share\exportFile.txt", false, "domain", "user1", "password1"), 
                          new ExportDestination(@"\\server2\share\exportFile.txt", false, "domain", "user2", "password2")
                      };
                      // Initialize with the destinations where data is to be exported.
-                     m_exporter.Initialize(defaultDestinations);
+                     s_exporter.Initialize(defaultDestinations);
             
                      Console.ReadLine();
                  }
             
-                 static void m_exporter_Initialized(object sender, EventArgs e)
+                 static void s_exporter_Initialized(object sender, EventArgs e)
                  {
                      // Export data to all defined locations after initialization.
-                     m_exporter.ExportData("TEST DATA");
+                     s_exporter.ExportData("TEST DATA");
                  }
              }
              </code>
@@ -14169,6 +14185,35 @@
             <param name="value"><see cref="T:System.Double"/> to convert to <see cref="T:TVA.LittleBinaryValue"/>.</param>
             <returns>A <see cref="T:TVA.LittleBinaryValue"/> representation of <see cref="T:System.Double"/>.</returns>
         </member>
+        <member name="T:TVA.Measurements.DownsamplingMethod">
+            <summary>
+            Downsampling method enumeration.
+            </summary>
+        </member>
+        <member name="F:TVA.Measurements.DownsamplingMethod.LastReceived">
+            <summary>
+            Downsamples to the last measurement received.
+            </summary>
+            <remarks>
+            Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+            </remarks>
+        </member>
+        <member name="F:TVA.Measurements.DownsamplingMethod.Closest">
+            <summary>
+            Downsamples to the measurement closest to frame time.
+            </summary>
+            <remarks>
+            This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+            </remarks>
+        </member>
+        <member name="F:TVA.Measurements.DownsamplingMethod.Filtered">
+            <summary>
+            Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+            </summary>
+            <remarks>
+            This option will produce the best result but has a processing penalty.
+            </remarks>
+        </member>
         <member name="T:TVA.Measurements.ConcentratorBase">
             <summary>
             Measurement concentrator base class.
@@ -14256,6 +14301,11 @@
         <member name="M:TVA.Measurements.ConcentratorBase.Stop">
             <summary>
             Stops the concentrator.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.ResetStatistics">
+            <summary>
+            Resets the statistics of the concentrator.
             </summary>
         </member>
         <member name="M:TVA.Measurements.ConcentratorBase.SecondsFromRealTime(TVA.Ticks)">
@@ -14351,6 +14401,12 @@
             <remarks>
             Allows derived classes to raise a processing exception.
             </remarks>
+        </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.OnUnpublishedSamples(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.ConcentratorBase.UnpublishedSamples"/> event.
+            </summary>
+            <param name="seconds">Total number of unpublished seconds of data.</param>
         </member>
         <member name="E:TVA.Measurements.ConcentratorBase.UnpublishedSamples">
             <summary>
@@ -14469,10 +14525,31 @@
             since maximum possible concentrator resolution is one second (i.e., 1 frame per second).
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.DownsamplingMethod">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Measurements.DownsamplingMethod"/> to be used by the concentrator.
+            </summary>
+            <remarks>
+            The downsampling method determines the algorithm to use if input is being received at a higher-resolution than the defined output.
+            </remarks>
+        </member>
         <member name="P:TVA.Measurements.ConcentratorBase.TicksPerFrame">
             <summary>
             Gets the number of ticks per frame.
             </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.ExpectedMeasurements">
+            <summary>
+            Gets or sets the expected number of measurements to be assigned to a single frame.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.AllowPreemptivePublishing">
+            <summary>
+            Gets or sets flag that allows system to preemptively publish frames assuming all <see cref="P:TVA.Measurements.ConcentratorBase.ExpectedMeasurements"/> have arrived.
+            </summary>
+            <remarks>
+            In order for this property to used, the <see cref="P:TVA.Measurements.ConcentratorBase.ExpectedMeasurements"/> must be defined.
+            </remarks>
         </member>
         <member name="P:TVA.Measurements.ConcentratorBase.Enabled">
             <summary>
@@ -14489,6 +14566,16 @@
             Gets the total amount of time, in seconds, that the concentrator has been active.
             </summary>
         </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.IgnoreBadTimestamps">
+            <summary>
+            Gets or sets flag that determines if bad timestamps (as determined by measurement's timestamp quality)
+            should be ignored when sorting measurements.
+            </summary>
+            <remarks>
+            Setting this property to <c>true</c> forces system to use timestamps as-is without checking quality.
+            If this property is <c>true</c>, it will supercede operation of <see cref="P:TVA.Measurements.ConcentratorBase.AllowSortsByArrival"/>.
+            </remarks>
+        </member>
         <member name="P:TVA.Measurements.ConcentratorBase.AllowSortsByArrival">
             <summary>
             Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps
@@ -14497,7 +14584,8 @@
             <remarks>
             Value defaults to <c>true</c>, so any incoming measurement with a bad timestamp quality will be sorted
             according to its arrival time. Setting the property to <c>false</c> will cause all measurements with a
-            bad timestamp quality to be discarded.
+            bad timestamp quality to be discarded. This property will only be considered when
+            <see cref="P:TVA.Measurements.ConcentratorBase.IgnoreBadTimestamps"/> is <c>false</c>.
             </remarks>
         </member>
         <member name="P:TVA.Measurements.ConcentratorBase.UseLocalClockAsRealTime">
@@ -14524,14 +14612,19 @@
             value to validate the latest measured timestamp. If the newest received measurement timestamp gets too old or creeps
             too far into the future (both validated + and - against defined lead time property value), we will fall back on local
             system time. Note that this creates a dependency on a fairly accurate local clock - the smaller the lead time deviation
-            tolerance, the better the needed local clock acuracy. For example, a lead time deviation tolerance of a few seconds
+            tolerance, the better the needed local clock accuracy. For example, a lead time deviation tolerance of a few seconds
             might only require keeping the local clock synchronized to an NTP time source; but, a sub-second tolerance would
             require that the local clock be very close to GPS time.
             </remarks>
         </member>
-        <member name="P:TVA.Measurements.ConcentratorBase.TotalMeasurements">
+        <member name="P:TVA.Measurements.ConcentratorBase.ReceivedMeasurements">
             <summary>
-            Gets the total number of measurements that have ever been requested for sorting.
+            Gets the total number of measurements ever requested for sorting.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.ProcessedMeasurements">
+            <summary>
+            Gets the total number of measurements successfully sorted.
             </summary>
         </member>
         <member name="P:TVA.Measurements.ConcentratorBase.DiscardedMeasurements">
@@ -14577,11 +14670,6 @@
         <member name="P:TVA.Measurements.ConcentratorBase.Status">
             <summary>
             Gets current detailed state and status of concentrator for display purposes.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.ConcentratorBase.FrameQueue">
-            <summary>
-            Gets a reference to the <see cref="P:TVA.Measurements.ConcentratorBase.FrameQueue"/>.
             </summary>
         </member>
         <member name="T:TVA.Measurements.ConcentratorBase.FrameRateTimer">
@@ -14646,6 +14734,40 @@
             Gets reference count for this <see cref="T:TVA.Measurements.ConcentratorBase.FrameRateTimer"/>.
             </summary>
         </member>
+        <member name="T:TVA.Measurements.TrackingFrame">
+            <summary>
+            <see cref="T:TVA.Measurements.IFrame"/> container used to track <see cref="T:TVA.Measurements.IMeasurement"/> values for downsampling.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.TrackingFrame.#ctor(TVA.Measurements.IFrame,TVA.Measurements.DownsamplingMethod)">
+            <summary>
+            Constructs a new <see cref="T:TVA.Measurements.TrackingFrame"/> given the specified parameters.
+            </summary>
+            <param name="sourceFrame">Source <see cref="T:TVA.Measurements.IFrame"/> to track.</param>
+            <param name="downsamplingMethod"><see cref="T:TVA.Measurements.DownsamplingMethod"/> to apply.</param>
+        </member>
+        <member name="M:TVA.Measurements.TrackingFrame.DeriveMeasurementValue(TVA.Measurements.IMeasurement)">
+            <summary>
+            Derives measurement value, downsampling if needed.
+            </summary>
+            <param name="measurement">New <see cref="T:TVA.Measurements.IMeasurement"/> value.</param>
+            <returns>New derived <see cref="T:TVA.Measurements.IMeasurement"/> value, or null if value should not be assigned to <see cref="T:TVA.Measurements.IFrame"/>.</returns>
+        </member>
+        <member name="P:TVA.Measurements.TrackingFrame.SourceFrame">
+            <summary>
+            Gets instance of <see cref="T:TVA.Measurements.IFrame"/> being tracked.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.TrackingFrame.Timestamp">
+            <summary>
+            Gets timestamp of <see cref="T:TVA.Measurements.IFrame"/> being tracked.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.TrackingFrame.DownsampledMeasurements">
+            <summary>
+            Total number of measurements downsampled by <see cref="T:TVA.Measurements.TrackingFrame"/>.
+            </summary>
+        </member>
         <member name="T:TVA.Measurements.Frame">
             <summary>
             Implementation of a basic <see cref="T:TVA.Measurements.IFrame"/>.
@@ -14672,9 +14794,9 @@
             Gets or sets published state of this <see cref="T:TVA.Measurements.IFrame"/>.
             </summary>
         </member>
-        <member name="P:TVA.Measurements.IFrame.PublishedMeasurements">
+        <member name="P:TVA.Measurements.IFrame.SortedMeasurements">
             <summary>
-            Gets or sets total number of measurements that have been published for this <see cref="T:TVA.Measurements.IFrame"/>.
+            Gets or sets total number of measurements that have been sorted into this <see cref="T:TVA.Measurements.IFrame"/>.
             </summary>
             <remarks>
             If this property has not been assigned a value, implementors should return measurement count.
@@ -14822,9 +14944,9 @@
             Gets or sets published state of this <see cref="T:TVA.Measurements.Frame"/>.
             </summary>
         </member>
-        <member name="P:TVA.Measurements.Frame.PublishedMeasurements">
+        <member name="P:TVA.Measurements.Frame.SortedMeasurements">
             <summary>
-            Gets or sets total number of measurements that have been published for this <see cref="T:TVA.Measurements.Frame"/>.
+            Gets or sets total number of measurements that have been sorted into this <see cref="T:TVA.Measurements.Frame"/>.
             </summary>
             <remarks>
             If this property has not been assigned a value, the property will return measurement count.
@@ -14845,7 +14967,7 @@
         </member>
         <member name="T:TVA.Measurements.FrameQueue">
             <summary>
-            Represents a real-time queue of <see cref="T:TVA.Measurements.IFrame"/> instances used by the <see cref="T:TVA.Measurements.ConcentratorBase"/> class.
+            Represents a real-time queue of <see cref="T:TVA.Measurements.TrackingFrame"/> instances used by the <see cref="T:TVA.Measurements.ConcentratorBase"/> class.
             </summary>
         </member>
         <member name="M:TVA.Measurements.FrameQueue.#ctor(TVA.Measurements.FrameQueue.CreateNewFrameFunction)">
@@ -14881,17 +15003,16 @@
         </member>
         <member name="M:TVA.Measurements.FrameQueue.GetFrame(System.Int64)">
             <summary>
-            Gets <see cref="T:TVA.Measurements.IFrame"/> from the queue with the specified timestamp, in ticks.  If no <see cref="T:TVA.Measurements.IFrame"/> exists for
+            Gets <see cref="T:TVA.Measurements.TrackingFrame"/> from the queue with the specified timestamp, in ticks.  If no frame exists for
             the specified timestamp, one will be created.
             </summary>
-            <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="T:TVA.Measurements.IFrame"/>.</param>
+            <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="T:TVA.Measurements.TrackingFrame"/>.</param>
             <remarks>
-            Ticks can be any point in time so long time requested is greater than time of last published frame; this queue
-            is used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null
-            will be returned. Note that frame returned will be "best-fit" for given timestamp based on the number of 
-            <see cref="P:TVA.Measurements.ConcentratorBase.FramesPerSecond"/> of the parent <see cref="T:TVA.Measurements.ConcentratorBase"/> implementation.
+            Ticks can be any point in time so long time requested is greater than time of last published frame; this queue is
+            used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null will
+            be returned. Note that frame returned will be "best-fit" for given timestamp based on <see cref="P:TVA.Measurements.FrameQueue.FramesPerSecond"/>.
             </remarks>
-            <returns>An existing or new <see cref="T:TVA.Measurements.IFrame"/> from the queue for the specified timestamp.</returns>
+            <returns>An existing or new <see cref="T:TVA.Measurements.TrackingFrame"/> from the queue for the specified timestamp.</returns>
         </member>
         <member name="P:TVA.Measurements.FrameQueue.FramesPerSecond">
             <summary>
@@ -14906,12 +15027,17 @@
             Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
             </summary>
         </member>
+        <member name="P:TVA.Measurements.FrameQueue.DownsamplingMethod">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Measurements.DownsamplingMethod"/> to be used by the <see cref="T:TVA.Measurements.FrameQueue"/>.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.FrameQueue.Head">
             <summary>
             Returns the next <see cref="T:TVA.Measurements.IFrame"/> in the <see cref="T:TVA.Measurements.FrameQueue"/>, if any.
             </summary>
             <remarks>
-            This property is tracked separately from the internal <see cref="T:TVA.Measurements.IFrame"/> collection, as a
+            This property is tracked separately from the internal <see cref="T:TVA.Measurements.TrackingFrame"/> collection, as a
             result this property may be called at any time without a locking penalty.
             </remarks>
         </member>
@@ -14924,10 +15050,22 @@
             result this property may be called at any time without a locking penalty.
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.FrameQueue.LastDownsampledMeasurements">
+            <summary>
+            Gets total number of downsampled measurements from last published frame.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.FrameQueue.Count">
             <summary>
-            Returns the total number of <see cref="T:TVA.Measurements.IFrame"/>'s currently in the <see cref="T:TVA.Measurements.FrameQueue"/>.
+            Returns the total number of frames in the <see cref="T:TVA.Measurements.FrameQueue"/>.
             </summary>
+        </member>
+        <member name="T:TVA.Measurements.MeasurementValueFilterFunction">
+            <summary>
+            Method signature for function used to apply a value filter over a sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.
+            </summary>
+            <param name="source">Sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values over which to apply filter.</param>
+            <returns>Result of filter applied to sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.</returns>
         </member>
         <member name="T:TVA.Measurements.IMeasurement">
             <summary>
@@ -14936,6 +15074,13 @@
             <remarks>
             This interface abstractly represents a measured value at an exact time interval.
             </remarks>
+        </member>
+        <member name="M:TVA.Measurements.IMeasurement.GetHashCode">
+            <summary>
+            Get the hash code for the <see cref="T:TVA.Measurements.IMeasurement"/>.<see cref="T:TVA.Measurements.MeasurementKey"/>.
+            </summary>
+            <returns>Hash code for the <see cref="T:TVA.Measurements.IMeasurement"/>.<see cref="T:TVA.Measurements.MeasurementKey"/>.</returns>
+            <remarks>Implementors should always return the hash code based on <see cref="T:TVA.Measurements.MeasurementKey"/> of measurement.</remarks>
         </member>
         <member name="P:TVA.Measurements.IMeasurement.ID">
             <summary>
@@ -15018,6 +15163,11 @@
         <member name="P:TVA.Measurements.IMeasurement.TimestampQualityIsGood">
             <summary>
             Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="T:TVA.Measurements.IMeasurement"/> is good.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.IMeasurement.MeasurementValueFilter">
+            <summary>
+            Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.
             </summary>
         </member>
         <member name="T:TVA.Measurements.ImmediateMeasurements">
@@ -15213,7 +15363,7 @@
             </summary>
             <param name="other">The <see cref="T:TVA.Measurements.IMeasurement"/> to compare with the current <see cref="T:TVA.Measurements.Measurement"/>.</param>
             <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-            <remarks>This implementation of a basic measurement compares itself by value.</remarks>
+            <remarks>Measurement implementations should compare by hash code.</remarks>
         </member>
         <member name="M:TVA.Measurements.Measurement.CompareTo(System.Object)">
             <summary>
@@ -15222,7 +15372,7 @@
             <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:TVA.Measurements.Measurement"/>.</param>
             <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
             <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TVA.Measurements.IMeasurement"/>.</exception>
-            <remarks>This implementation of a basic measurement compares itself by value.</remarks>
+            <remarks>Measurement implementations should compare by hash code.</remarks>
         </member>
         <member name="M:TVA.Measurements.Measurement.GetHashCode">
             <summary>
@@ -15310,6 +15460,20 @@
             <param name="measurement"><see cref="T:TVA.Measurements.IMeasurement"/> to convert to a <see cref="T:System.String"/> representation.</param>
             <returns>A <see cref="T:System.String"/> that represents the specified <see cref="T:TVA.Measurements.IMeasurement"/>.</returns>
         </member>
+        <member name="M:TVA.Measurements.Measurement.AverageValueFilter(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Calculates an average of the specified sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.
+            </summary>
+            <param name="source">Sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values over which to run calculation.</param>
+            <returns>Average of the specified sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.</returns>
+        </member>
+        <member name="M:TVA.Measurements.Measurement.MajorityValueFilter(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Returns the majority value of the specified sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.
+            </summary>
+            <param name="source">Sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values over which to run calculation.</param>
+            <returns>Majority value of the specified sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.</returns>
+        </member>
         <member name="P:TVA.Measurements.Measurement.ID">
             <summary>
             Gets or sets the numeric ID of this <see cref="T:TVA.Measurements.Measurement"/>.
@@ -15385,6 +15549,11 @@
         <member name="P:TVA.Measurements.Measurement.TimestampQualityIsGood">
             <summary>
             Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="T:TVA.Measurements.Measurement"/> is good.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Measurement.MeasurementValueFilter">
+            <summary>
+            Gets or sets function used to apply a downsampling filter over a sequence of <see cref="T:TVA.Measurements.IMeasurement"/> values.
             </summary>
         </member>
         <member name="T:TVA.Measurements.MeasurementKey">
@@ -15517,6 +15686,31 @@
             This value is typically used to track the archive name in which the measurement, that this <see cref="T:TVA.Measurements.MeasurementKey"/> represents, is stored.
             </remarks>
         </member>
+        <member name="T:TVA.Measurements.MeasurementKeyComparer">
+            <summary>
+            Represents an instance of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/> for a <see cref="T:TVA.Measurements.MeasurementKey"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.MeasurementKeyComparer.Equals(TVA.Measurements.MeasurementKey,TVA.Measurements.MeasurementKey)">
+            <summary>
+            Determines whether the specified objects are equal.
+            </summary>
+            <param name="x">The first <see cref="T:TVA.Measurements.MeasurementKey"/> to compare.</param>
+            <param name="y">The second <see cref="T:TVA.Measurements.MeasurementKey"/> to compare.</param>
+            <returns>true if the specified objects are equal; otherwise, false.</returns>
+        </member>
+        <member name="M:TVA.Measurements.MeasurementKeyComparer.GetHashCode(TVA.Measurements.MeasurementKey)">
+            <summary>
+            Returns a hash code for the specified object.
+            </summary>
+            <param name="obj">The <see cref="T:TVA.Measurements.MeasurementKey"/> for which a hash code is to be returned.</param>
+            <returns>A hash code for the specified object.</returns>
+        </member>
+        <member name="P:TVA.Measurements.MeasurementKeyComparer.Default">
+            <summary>
+            Returns the default instance of the <see cref="T:TVA.Measurements.MeasurementKeyComparer"/> class.
+            </summary>
+        </member>
         <member name="T:TVA.Measurements.NamespaceDoc">
             <summary>
             Contains classes used to abstractly define measured values and provide mechanisms for concentrating streaming measurements.
@@ -15611,10 +15805,24 @@
             Implementors only need to track this value.
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.OutputMeasurements">
+            <summary>
+            Gets or sets output measurements that the action adapter will produce, if any.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the action adapter expects.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.ProcessedMeasurements">
+            <summary>
+            Gets the total number of measurements processed thus far by the <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
+            </summary>
+        </member>
         <member name="M:TVA.Measurements.Routing.IActionAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
             <summary>
-            Queues measurements for calculation processing.  Measurements are automatically filters to the defined
-            <see cref="P:TVA.Measurements.Routing.IActionAdapter.InputMeasurementKeys"/>.
+            Queues measurements for calculation processing.  Measurements are automatically filters to the defined <see cref="P:TVA.Measurements.Routing.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         </member>
@@ -15633,26 +15841,6 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
             </remarks>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IActionAdapter.FramesPerSecond">
-            <summary>
-            Gets or sets the number of frames per second.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IActionAdapter.OutputMeasurements">
-            <summary>
-            Gets or sets output measurements that the action adapter will produce, if any.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IActionAdapter.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the action adapter expects.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IActionAdapter.MinimumMeasurementsToUse">
-            <summary>
-            Gets or sets minimum number of input measurements required for calcualtion.  Set to -1 to require all.
-            </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.#ctor">
             <summary>
@@ -15678,6 +15866,11 @@
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.Stop">
             <summary>
             Stops the <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.ResetStatistics">
+            <summary>
+            Resets the statistics of the <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.SetInitializedState(System.Boolean)">
@@ -16176,6 +16369,22 @@
             ID column type should be integer based, all other column types are expected to be string based.
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.OutputMeasurements">
+            <summary>
+            Gets or sets output measurements that the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> will produce, if any.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> expects, if any.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.ProcessedMeasurements">
+            <summary>
+            Gets the total number of measurements processed thus far by each <see cref="T:TVA.Measurements.Routing.IAdapter"/> implementation
+            in the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.Enabled">
             <summary>
             Gets or sets enabled state of this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
@@ -16184,6 +16393,11 @@
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.IsReadOnly">
             <summary>
             Gets a value indicating whether the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> is read-only.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.EnableMonitorTimer">
+            <summary>
+            Gets or sets flag that determines if monitor timer should be used for monitoring processed measurement statistics for the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.AutoInitialize">
@@ -16253,26 +16467,6 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
             </remarks>
-        </member>
-        <member name="P:TVA.Measurements.Routing.ActionAdapterCollection.OutputMeasurements">
-            <summary>
-            Gets or sets output measurements that the action adapter will produce, if any.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.ActionAdapterCollection.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the action adapter expects.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.ActionAdapterCollection.MinimumMeasurementsToUse">
-            <summary>
-            Gets or sets minimum number of input measurements required for calculation.  Set to -1 to require all.
-            </summary>
-        </member>
-        <member name="P:TVA.Measurements.Routing.ActionAdapterCollection.FramesPerSecond">
-            <summary>
-            Gets or sets the number of frames per second.
-            </summary>
         </member>
         <member name="T:TVA.Measurements.Routing.AdapterBase">
             <summary>
@@ -16367,6 +16561,12 @@
             Raises <see cref="E:TVA.Measurements.Routing.AdapterBase.ProcessException"/> event.
             </summary>
             <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterBase.IncrementProcessedMeasurements(System.Int64)">
+            <summary>
+            Safely increments the total processed measurements.
+            </summary>
+            <param name="totalAdded"></param>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String)">
             <summary>
@@ -16483,6 +16683,19 @@
             Gets or sets primary keys of input measurements the <see cref="T:TVA.Measurements.Routing.AdapterBase"/> expects, if any.
             </summary>
         </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.ProcessedMeasurements">
+            <summary>
+            Gets the total number of measurements handled thus far by the <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.MeasurementReportingInterval">
+            <summary>
+            Gets or sets the measurement reporting interval.
+            </summary>
+            <remarks>
+            This is used to determined how many measurements should be processed before reporting status.
+            </remarks>
+        </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.Initialized">
             <summary>
             Gets or sets flag indicating if the adapter has been initialized successfully.
@@ -16582,6 +16795,82 @@
             will be available when the collections are being created.
             </remarks>
         </member>
+        <member name="T:TVA.Measurements.Routing.FacileActionAdapterBase">
+            <summary>
+            Represents the base class for simple, non-time-aligned, action adapters.
+            </summary>
+            <remarks>
+            This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
+            class needs time-aligned data for processing, the <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/> class should be used instead.
+            Derived classes are expected call <see cref="M:TVA.Measurements.Routing.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})"/> for any new measurements that may get created.
+            </remarks>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.Initialize">
+            <summary>
+            Initializes <see cref="T:TVA.Measurements.Routing.FacileActionAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.QueueMeasurementForProcessing(TVA.Measurements.IMeasurement)">
+            <summary>
+            Queues a single measurement for processing.
+            </summary>
+            <param name="measurement">Measurement to queue for processing.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Measurements to queue for processing.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.Routing.FacileActionAdapterBase.NewMeasurements"/> event.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TVA.Measurements.Routing.AdapterBase.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.OnUnpublishedSamples(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.Routing.FacileActionAdapterBase.UnpublishedSamples"/> event.
+            </summary>
+            <param name="seconds">Total number of unpublished seconds of data.</param>
+        </member>
+        <member name="E:TVA.Measurements.Routing.FacileActionAdapterBase.NewMeasurements">
+            <summary>
+            Provides new measurements from action adapter.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.Routing.FacileActionAdapterBase.UnpublishedSamples">
+            <summary>
+            This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
+            </remarks>
+        </member>
+        <member name="P:TVA.Measurements.Routing.FacileActionAdapterBase.FramesPerSecond">
+            <summary>
+            Gets or sets the frames per second to be used by the <see cref="T:TVA.Measurements.Routing.FacileActionAdapterBase"/>.
+            </summary>
+            <remarks>
+            This value is only tracked in the <see cref="T:TVA.Measurements.Routing.FacileActionAdapterBase"/>, derived class will determine its use.
+            </remarks>
+        </member>
+        <member name="P:TVA.Measurements.Routing.FacileActionAdapterBase.Status">
+            <summary>
+            Returns the detailed status of the data input source.
+            </summary>
+            <remarks>
+            Derived classes should extend status with implementation specific information.
+            </remarks>
+        </member>
         <member name="T:TVA.Measurements.Routing.IInputAdapter">
             <summary>
             Represents the abstract interface for any incoming adapter.
@@ -16594,11 +16883,6 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
             </remarks>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IInputAdapter.ReceivedMeasurements">
-            <summary>
-            Gets the total number of measurements received thus far by the <see cref="T:TVA.Measurements.Routing.IInputAdapter"/>.
-            </summary>
         </member>
         <member name="T:TVA.Measurements.Routing.InputAdapterBase">
             <summary>
@@ -16682,11 +16966,6 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
             </remarks>
         </member>
-        <member name="P:TVA.Measurements.Routing.InputAdapterBase.ReceivedMeasurements">
-            <summary>
-            Gets the total number of measurements received thus far by the <see cref="T:TVA.Measurements.Routing.InputAdapterBase"/>.
-            </summary>
-        </member>
         <member name="P:TVA.Measurements.Routing.InputAdapterBase.UseAsyncConnect">
             <summary>
             Gets flag that determines if the data input connects asynchronously.
@@ -16718,22 +16997,6 @@
             Creates a new <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/>.
             </summary>
         </member>
-        <member name="M:TVA.Measurements.Routing.InputAdapterCollection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.Measurements.Routing.InputAdapterCollection.Start">
-            <summary>
-            Starts each <see cref="T:TVA.Measurements.Routing.IInputAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Measurements.Routing.InputAdapterCollection.Stop">
-            <summary>
-            Stops each <see cref="T:TVA.Measurements.Routing.IInputAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/>.
-            </summary>
-        </member>
         <member name="M:TVA.Measurements.Routing.InputAdapterCollection.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})">
             <summary>
             Raises the <see cref="E:TVA.Measurements.Routing.InputAdapterCollection.NewMeasurements"/> event.
@@ -16759,12 +17022,6 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is collection of new measurements for host to process.
             </remarks>
-        </member>
-        <member name="P:TVA.Measurements.Routing.InputAdapterCollection.ReceivedMeasurements">
-            <summary>
-            Gets the total number of measurements received thus far by each <see cref="T:TVA.Measurements.Routing.IInputAdapter"/> implementation
-            in the <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/>.
-            </summary>
         </member>
         <member name="T:TVA.Measurements.Routing.IOutputAdapter">
             <summary>
@@ -16799,11 +17056,6 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
             </para>
             </remarks>
-        </member>
-        <member name="P:TVA.Measurements.Routing.IOutputAdapter.ProcessedMeasurements">
-            <summary>
-            Gets the total number of measurements processed thus far by the <see cref="T:TVA.Measurements.Routing.IOutputAdapter"/>.
-            </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.IOutputAdapter.OutputIsForArchive">
             <summary>
@@ -16997,11 +17249,6 @@
             queue if an exception occurs while processing.  Defaults to false.
             </summary>
         </member>
-        <member name="P:TVA.Measurements.Routing.OutputAdapterBase.ProcessedMeasurements">
-            <summary>
-            Gets the total number of measurements processed thus far by the <see cref="T:TVA.Measurements.Routing.OutputAdapterBase"/>.
-            </summary>
-        </member>
         <member name="P:TVA.Measurements.Routing.OutputAdapterBase.SourceIDs">
             <summary>
             Gets or sets <see cref="T:TVA.Measurements.IMeasurement"/> source ID's used to filter output measurements.
@@ -17052,22 +17299,6 @@
         <member name="M:TVA.Measurements.Routing.OutputAdapterCollection.#ctor">
             <summary>
             Creates a new <see cref="T:TVA.Measurements.Routing.InputAdapterCollection"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Measurements.Routing.OutputAdapterCollection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Measurements.Routing.OutputAdapterCollection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.Measurements.Routing.OutputAdapterCollection.Start">
-            <summary>
-            Starts each <see cref="T:TVA.Measurements.Routing.IOutputAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.OutputAdapterCollection"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Measurements.Routing.OutputAdapterCollection.Stop">
-            <summary>
-            Stops each <see cref="T:TVA.Measurements.Routing.IOutputAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.OutputAdapterCollection"/>.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.OutputAdapterCollection.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
@@ -17123,8 +17354,8 @@
         </member>
         <member name="P:TVA.Measurements.Routing.OutputAdapterCollection.ProcessedMeasurements">
             <summary>
-            Gets the total number of measurements processed thus far by each <see cref="T:TVA.Measurements.Routing.IOutputAdapter"/> implementation
-            in the <see cref="T:TVA.Measurements.Routing.OutputAdapterCollection"/>.
+            Gets the total number of measurements processed and destined for archive thus far by each
+            <see cref="T:TVA.Measurements.Routing.IOutputAdapter"/> implementation in the <see cref="T:TVA.Measurements.Routing.OutputAdapterCollection"/>.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.OutputAdapterCollection.OutputIsForArchive">
