@@ -16770,17 +16770,22 @@
             <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
             <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
         </member>
+        <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryInitializeAdapterByID(System.UInt32)">
+            <summary>
+            Attempts to initialize (or reinitialize) an individual <see cref="T:TVA.Measurements.Routing.IAdapter"/> based on its ID from any collection.
+            </summary>
+            <param name="id">The numeric ID associated with the <see cref="T:TVA.Measurements.Routing.IAdapter"/> to be initialized.</param>
+            <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
+            <remarks>
+            This method traverses all collections looking for an adapter with the specified ID.
+            </remarks>
+        </member>
         <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryCreateAdapter(System.Data.DataRow,TVA.Measurements.Routing.IAdapterCollection@)">
             <summary>
             This method is not implemented in <see cref="T:TVA.Measurements.Routing.AllAdaptersCollection"/>.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryGetAdapterByID(System.UInt32,TVA.Measurements.Routing.IAdapterCollection@)">
-            <summary>
-            This method is not implemented in <see cref="T:TVA.Measurements.Routing.AllAdaptersCollection"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryInitializeAdapterByID(System.UInt32)">
             <summary>
             This method is not implemented in <see cref="T:TVA.Measurements.Routing.AllAdaptersCollection"/>.
             </summary>
