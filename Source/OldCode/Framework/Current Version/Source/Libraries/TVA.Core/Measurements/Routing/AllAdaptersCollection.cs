@@ -315,6 +315,25 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Attempts to initialize (or reinitialize) an individual <see cref="IAdapter"/> based on its ID from any collection.
+        /// </summary>
+        /// <param name="id">The numeric ID associated with the <see cref="IAdapter"/> to be initialized.</param>
+        /// <returns><c>true</c> if item was successfully initialized; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// This method traverses all collections looking for an adapter with the specified ID.
+        /// </remarks>
+        public override bool TryInitializeAdapterByID(uint id)
+        {
+            foreach (IAdapterCollection collection in this)
+            {
+                if (collection.TryInitializeAdapterByID(id))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// This method is not implemented in <see cref="AllAdaptersCollection"/>.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -328,15 +347,6 @@ namespace TVA.Measurements.Routing
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool TryGetAdapterByID(uint ID, out IAdapterCollection adapter)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// This method is not implemented in <see cref="AllAdaptersCollection"/>.
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public override bool TryInitializeAdapterByID(uint id)
         {
             throw new NotImplementedException();
         }
