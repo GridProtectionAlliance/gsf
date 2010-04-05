@@ -856,23 +856,17 @@ namespace TVA.Measurements.Routing
 
                             if (oldAdapter.ID == id)
                             {
-                                // Cache original running state
-                                bool enabled = oldAdapter.Enabled;
-
                                 // Stop old item
                                 oldAdapter.Stop();
 
                                 // Dispose old item, initialize new item
                                 this[i] = newAdapter;
 
-                                // If old item was running, start new item
-                                if (enabled)
-                                {
-                                    if (AutoInitialize)
-                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                                    else
-                                        newAdapter.Start();
-                                }
+                                // Start new item
+                                if (AutoInitialize)
+                                    ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                                else
+                                    newAdapter.Start();
 
                                 foundItem = true;
                                 break;
@@ -881,7 +875,16 @@ namespace TVA.Measurements.Routing
 
                         // Add item to collection if it didn't exist
                         if (!foundItem)
+                        {
+                            // Add new adapter to the collection
                             Add(newAdapter);
+
+                            // Start new item
+                            if (AutoInitialize)
+                                ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                            else
+                                newAdapter.Start();
+                        }
 
                         return true;
                     }
