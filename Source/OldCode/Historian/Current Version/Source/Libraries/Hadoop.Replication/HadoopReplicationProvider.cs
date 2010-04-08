@@ -42,7 +42,7 @@ using TVA.IO.Checksums;
 using TVA.Net.Ftp;
 using TVA.Units;
 
-namespace NERC.PCS.Replication
+namespace Hadoop.Replication
 {
     /// <summary>
     /// Represents a provider of replication for the <see cref="TVA.Historian.IArchive"/> to Hadoop using FTP channel.
