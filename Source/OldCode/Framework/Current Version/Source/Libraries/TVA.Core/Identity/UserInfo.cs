@@ -40,6 +40,9 @@
 //       Added new header and license agreement.
 //  03/11/2010 - Pinal C. Patel
 //       Modified AuthenticateUser() to return IPrincipal of the authenticated user instead of boolean.
+//  04/07/2010 - Pinal C. Patel
+//       Updated the timeout prevention logic used in GetUserProperty() to work correctly when 
+//       privileged identity is specified for Active Directory operations.
 //
 //*******************************************************************************************************
 
@@ -306,6 +309,17 @@ namespace TVA.Identity
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
+        /// </summary>
+        public const bool DefaultPersistSettings = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
+        /// </summary>
+        public const string DefaultSettingsCategory = "ActiveDirectory";
+
         private const int LOGON32_PROVIDER_DEFAULT = 0;
         private const int LOGON32_LOGON_INTERACTIVE = 2;
         private const int LOGON32_LOGON_NETWORK = 3;
@@ -364,7 +378,8 @@ namespace TVA.Identity
         /// </summary>
         private UserInfo()
         {
-            m_settingsCategory = this.GetType().Name;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
         }
 
         /// <summary>
@@ -835,11 +850,6 @@ namespace TVA.Identity
             WindowsImpersonationContext currentContext = null;
             try
             {
-                // Allow lookup to logged-on domain only to prevent timeouts.
-                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0 ||
-                    string.Compare(Environment.MachineName, Environment.UserDomainName, true) == 0)
-                    return string.Empty;
-
                 // Initialize if uninitialized.
                 Initialize();
 
@@ -856,6 +866,11 @@ namespace TVA.Identity
                                                      m_privilegedUserName,
                                                      m_privilegedPassword);
                 }
+
+                // Allow lookup to logged-on domain only to prevent timeouts.
+                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0 ||
+                    string.Compare(Environment.MachineName, Environment.UserDomainName, true) == 0)
+                    return string.Empty;
 
                 if (m_userEntry == null)
                     return string.Empty;
