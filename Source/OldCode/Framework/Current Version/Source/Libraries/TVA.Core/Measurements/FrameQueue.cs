@@ -624,6 +624,21 @@ namespace TVA.Measurements
         //            s_timeResolution = Ticks.PerMillisecond;
         //            s_millisecondsPerFrame = 1000.0 / s_framesPerSecond;
 
+        //            // Test BPA PDCstream style milliseconds
+        //            DateTime currentTime = DateTime.Now;
+        //            int[] bpaMilliseconds = new int[] { 000, 033, 066, 100, 133, 166, 200, 233, 266, 300, 333, 366, 400, 433, 466, 500, 533, 566, 599, 633, 666, 699, 733, 766, 800, 833, 866, 900, 933, 966 };
+
+        //            s_timeResolution = Ticks.PerMillisecond * 33;
+        //            Console.WriteLine("BPA millisecond sorting test, TimeResolution = {0}", s_timeResolution);
+
+        //            for (int i = 0; i < bpaMilliseconds.Length; i++)
+        //            {
+        //                long longTicks = (new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, currentTime.Hour, currentTime.Minute, currentTime.Second, bpaMilliseconds[i])).Ticks;
+        //                long destination = GetFrame(longTicks);
+        //                Console.WriteLine(string.Format("{0:000} ms : {1:000} ms", bpaMilliseconds[i], (new DateTime(destination)).Millisecond));
+        //            }
+
+        //            s_timeResolution = Ticks.PerMillisecond;
         //            Ticks sourceTime = ((Ticks)DateTime.Now).BaselinedTimestamp(BaselineTimeInterval.Second);
 
         //            for (int i = 0; i < s_framesPerSecond; i++)
