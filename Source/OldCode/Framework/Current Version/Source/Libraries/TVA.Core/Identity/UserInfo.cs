@@ -722,10 +722,10 @@ namespace TVA.Identity
                             m_userEntry = result.GetDirectoryEntry();
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
                     m_userEntry = null;
-                    throw;
+                    throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}\\{1}'", m_domain, m_username), ex);
                 }
                 finally
                 {

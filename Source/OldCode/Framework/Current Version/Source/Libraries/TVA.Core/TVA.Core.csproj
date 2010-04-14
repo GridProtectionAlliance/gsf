@@ -127,6 +127,7 @@
     <Compile Include="IdentifiableItem.cs" />
     <Compile Include="Identity\NamespaceDoc.cs" />
     <Compile Include="Identity\UserInfo.cs" />
+    <Compile Include="InitializationException.cs" />
     <Compile Include="Int24.cs" />
     <Compile Include="Interop\IniFile.cs" />
     <Compile Include="Interop\NamespaceDoc.cs" />
