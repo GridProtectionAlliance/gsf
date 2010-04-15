@@ -287,8 +287,8 @@ namespace TVA.Configuration
                 if (base[configProperty] != null)
                 {
                     settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
+                    settingsCategory.SetCryptoKey(m_cryptoKey);
                 }
-                settingsCategory.SetCryptoKey(m_cryptoKey);
 
                 return settingsCategory;
             }

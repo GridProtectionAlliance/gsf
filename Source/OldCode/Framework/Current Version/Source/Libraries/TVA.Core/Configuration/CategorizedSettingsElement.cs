@@ -24,6 +24,8 @@
 //       Reviewed code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/15/2010 - Pinal C. Patel
+//       Modified property setters to update the internal property bag only if values have changed.
 //
 //*******************************************************************************************************
 
@@ -351,6 +353,10 @@ namespace TVA.Configuration
             }
             set
             {
+                // Continue only if values are different.
+                if (value.ToNonNullString().Equals(ValueAs(string.Empty)))
+                    return;
+
                 base["value"] = EncryptValue(value);
             }
         }
@@ -368,6 +374,10 @@ namespace TVA.Configuration
             }
             set
             {
+                // Continue only if values are different.
+                if (value.ToNonNullString().Equals(Description))
+                    return;
+
                 base["description"] = value;
             }
         }
@@ -385,6 +395,10 @@ namespace TVA.Configuration
             }
             set
             {
+                // Continue only if values are different.
+                if (value.Equals(Encrypted))
+                    return;
+
                 string elementValue = this.Value;   // Gets the decrypted value if encrypted.
                 base["encrypted"] = value;
                 this.Value = elementValue;          // This will cause encryption to be performed if required.
