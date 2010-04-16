@@ -52,26 +52,24 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TVA.Communication, Version=1.0.44.38951, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=1.1.17.43549, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Core, Version=1.0.44.38951, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
+    <Reference Include="TVA.Core, Version=1.1.17.43549, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="TVA.Historian, Version=1.0.28.38839, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\TVA\TVA.Historian.dll</HintPath>
-    </Reference>
-    <Reference Include="TVA.Web, Version=1.0.44.38951, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\TVA\TVA.Web.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HadoopReplicationProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TVA.Historian\TVA.Historian.csproj">
+      <Project>{7E1ABF87-8936-44E5-85C0-37044E0D3877}</Project>
+      <Name>TVA.Historian</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
