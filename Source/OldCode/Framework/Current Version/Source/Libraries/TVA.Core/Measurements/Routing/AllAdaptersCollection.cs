@@ -294,15 +294,15 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Attempts to get any adapter in all collections with the specified <paramref name="ID"/>.
         /// </summary>
-        /// <param name="ID">ID of adapter to get.</param>
+        /// <param name="id">ID of adapter to get.</param>
         /// <param name="adapter">Adapter reference if found; otherwise null.</param>
         /// <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
         /// <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
-        public bool TryGetAnyAdapterByID(uint ID, out IAdapter adapter, out IAdapterCollection adapterCollection)
+        public bool TryGetAnyAdapterByID(uint id, out IAdapter adapter, out IAdapterCollection adapterCollection)
         {
             foreach (IAdapterCollection collection in this)
             {
-                if (collection.TryGetAdapterByID(ID, out adapter))
+                if (collection.TryGetAdapterByID(id, out adapter))
                 {
                     adapterCollection = collection;
                     return true;

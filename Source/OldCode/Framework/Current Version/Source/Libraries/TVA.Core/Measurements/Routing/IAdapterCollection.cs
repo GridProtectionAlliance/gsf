@@ -257,10 +257,10 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="ID"/>.
         /// </summary>
-        /// <param name="ID">ID of adapter to get.</param>
+        /// <param name="id">ID of adapter to get.</param>
         /// <param name="adapter">Adapter reference if found; otherwise null.</param>
         /// <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
-        bool TryGetAdapterByID(uint ID, out IAdapter adapter);
+        bool TryGetAdapterByID(uint id, out IAdapter adapter);
 
         /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="name"/>.

@@ -277,6 +277,7 @@ namespace TVA.Measurements.Routing
         private uint m_id;
         private bool m_initialized;
         private string m_connectionString;
+        private IAdapterCollection m_parent;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private string m_dataMember;
@@ -385,6 +386,17 @@ namespace TVA.Measurements.Routing
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
+            }
+        }
+
+        /// <summary>
+        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
+        /// </summary>
+        public virtual IAdapterCollection Parent
+        {
+            get
+            {
+                return m_parent;
             }
         }
 
@@ -568,6 +580,8 @@ namespace TVA.Measurements.Routing
                 status.AppendFormat("  Total adapter components: {0}", Count);
                 status.AppendLine();
                 status.AppendFormat("    Collection initialized: {0}", Initialized);
+                status.AppendLine();
+                status.AppendFormat("         Parent collection: {0}", Parent == null ? "Undefined" : Parent.Name);
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
@@ -770,12 +784,12 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="ID"/>.
         /// </summary>
-        /// <param name="ID">ID of adapter to get.</param>
+        /// <param name="id">ID of adapter to get.</param>
         /// <param name="adapter">Adapter reference if found; otherwise null.</param>
         /// <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
-        public virtual bool TryGetAdapterByID(uint ID, out T adapter)
+        public virtual bool TryGetAdapterByID(uint id, out T adapter)
         {
-            return TryGetAdapter<uint>(ID, (item, value) => item.ID == value, out adapter);
+            return TryGetAdapter<uint>(id, (item, value) => item.ID == value, out adapter);
         }
 
         /// <summary>
@@ -812,10 +826,10 @@ namespace TVA.Measurements.Routing
         }
 
         // Explicit IAdapter implementation of TryGetAdapterByID
-        bool IAdapterCollection.TryGetAdapterByID(uint ID, out IAdapter adapter)
+        bool IAdapterCollection.TryGetAdapterByID(uint id, out IAdapter adapter)
         {
             T adapterT;
-            bool result = TryGetAdapterByID(ID, out adapterT);
+            bool result = TryGetAdapterByID(id, out adapterT);
             adapter = adapterT as IAdapter;
             return result;
         }
@@ -955,6 +969,12 @@ namespace TVA.Measurements.Routing
             m_monitorTimer.Stop();
         }
 
+        // Assigns the reference to the parent adapter collection that will contain this adapter collection, if any.
+        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        {
+            m_parent = parent;
+        }
+
         /// <summary>
         /// Gets a short one-line status of this <see cref="AdapterBase"/>.
         /// </summary>
@@ -1067,6 +1087,9 @@ namespace TVA.Measurements.Routing
                 item.StatusMessage += StatusMessage;
                 item.ProcessException += ProcessException;
 
+                // Associate parent collection
+                item.AssignParentCollection(this);
+
                 // If automatically initializing new elements, handle object initialization from
                 // thread pool so it can take needed amount of time
                 if (AutoInitialize)
@@ -1105,6 +1128,10 @@ namespace TVA.Measurements.Routing
                 // Un-wire events
                 item.StatusMessage -= StatusMessage;
                 item.ProcessException -= ProcessException;
+
+                // Dissociate parent collection
+                item.AssignParentCollection(null);
+
                 item.Dispose();
             }
         }

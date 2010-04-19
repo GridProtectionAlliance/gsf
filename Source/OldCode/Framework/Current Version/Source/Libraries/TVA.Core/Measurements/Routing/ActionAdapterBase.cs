@@ -280,6 +280,7 @@ namespace TVA.Measurements.Routing
         private string m_name;
         private uint m_id;
         private string m_connectionString;
+        private IAdapterCollection m_parent;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private bool m_initialized;
@@ -385,6 +386,17 @@ namespace TVA.Measurements.Routing
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
+            }
+        }
+
+        /// <summary>
+        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        public virtual IAdapterCollection Parent
+        {
+            get
+            {
+                return m_parent;
             }
         }
 
@@ -553,6 +565,8 @@ namespace TVA.Measurements.Routing
                     status.AppendLine();
                 }
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
+                status.AppendLine();
+                status.AppendFormat("         Parent collection: {0}", Parent == null ? "Undefined" : Parent.Name);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
@@ -739,6 +753,12 @@ namespace TVA.Measurements.Routing
         public override void Stop()
         {
             base.Stop();
+        }
+
+        // Assigns the reference to the parent adapter collection that will contain this adapter.
+        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        {
+            m_parent = parent;
         }
 
         /// <summary>

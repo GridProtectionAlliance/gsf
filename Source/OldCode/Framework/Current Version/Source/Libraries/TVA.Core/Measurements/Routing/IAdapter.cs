@@ -277,6 +277,11 @@ namespace TVA.Measurements.Routing
         string ConnectionString { get; set; }
 
         /// <summary>
+        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// </summary>
+        IAdapterCollection Parent { get; }
+
+        /// <summary>
         /// Gets or sets name of this <see cref="IAdapter"/>.
         /// </summary>
         new string Name { get; set; }
@@ -325,5 +330,10 @@ namespace TVA.Measurements.Routing
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current adapter status.</returns>
         string GetShortStatus(int maxLength);
+
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// </summary>
+        void AssignParentCollection(IAdapterCollection parent);
     }
 }
