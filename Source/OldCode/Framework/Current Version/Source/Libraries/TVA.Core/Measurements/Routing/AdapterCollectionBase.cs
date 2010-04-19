@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/19/2009 - J. Ritchie Carroll
+//       Added parent adapter collection property.
 //
 //*******************************************************************************************************
 
@@ -240,6 +242,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using TVA.Collections;
 using TVA.IO;
 using TVA.Units;
 
@@ -390,13 +393,13 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
+        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
         /// </summary>
-        public virtual IAdapterCollection Parent
+        public ReadOnlyCollection<IAdapter> Parent
         {
             get
             {
-                return m_parent;
+                return new ReadOnlyCollection<IAdapter>(m_parent);
             }
         }
 
@@ -581,7 +584,7 @@ namespace TVA.Measurements.Routing
                 status.AppendLine();
                 status.AppendFormat("    Collection initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", Parent == null ? "Undefined" : Parent.Name);
+                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
@@ -1192,7 +1195,7 @@ namespace TVA.Measurements.Routing
             OnStatusMessage(status.ToString());
         }
 
-        #region [ Explicit ICollection<IAdapter> Implementation ]
+        #region [ Explicit IList<IAdapter> Implementation ]
 
         void ICollection<IAdapter>.Add(IAdapter item)
         {
@@ -1219,6 +1222,28 @@ namespace TVA.Measurements.Routing
             foreach (IAdapter item in this)
             {
                 yield return item;
+            }
+        }
+
+        int IList<IAdapter>.IndexOf(IAdapter item)
+        {
+            return this.IndexOf((T)item);
+        }
+
+        void IList<IAdapter>.Insert(int index, IAdapter item)
+        {
+            this.Insert(index, (T)item);
+        }
+
+        IAdapter IList<IAdapter>.this[int index]
+        {
+            get
+            {
+                return this[index];
+            }
+            set
+            {
+                this[index] = (T)value;
             }
         }
 

@@ -38,6 +38,9 @@
 //       the system can can support 16 different active frame rates for any number of concentrators.
 //  03/31/2010 - J. Ritchie Carroll
 //       Modified concentrator to handle various downsampling operations.
+//  04/19/2010 - J. Ritchie Carroll
+//       Added a discarded measurement event to allow adapters to apply special handling to discarded
+//       measurements if needed.
 //
 //*******************************************************************************************************
 
@@ -593,6 +596,14 @@ namespace TVA.Measurements
         /// </para>
         /// </remarks>
         public event EventHandler<EventArgs<Exception>> ProcessException;
+
+        /// <summary>
+        /// This event is raised if there are any measurements being discarded during the sorting process.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
+        /// </remarks>
+        public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         /// <summary>
         /// Raised, for the benefit of dependent classes, when lag time is updated.
@@ -1593,6 +1604,7 @@ namespace TVA.Measurements
             // put the code into one larger more complex function...
 
             TrackingFrame frame = null;
+            List<IMeasurement> discardedMeasurements = null;
             Ticks timestamp = 0, lastTimestamp = 0;
             double distance;
             bool discardMeasurement;
@@ -1714,6 +1726,13 @@ namespace TVA.Measurements
                     // This measurement was marked to be discarded.
                     Interlocked.Increment(ref m_discardedMeasurements);
                     m_lastDiscardedMeasurement = measurement;
+
+                    // Make sure discarded measurement collection exists
+                    if (discardedMeasurements == null)
+                        discardedMeasurements = new List<IMeasurement>();
+
+                    // Add discarded measurement to local collection
+                    discardedMeasurements.Add(measurement);
                 }
                 else
                 {
@@ -1769,6 +1788,10 @@ namespace TVA.Measurements
                     }
                 }
             }
+
+            // Provide discarded measurements to consumers, if any
+            if (discardedMeasurements != null)
+                OnDiscardingMeasurements(discardedMeasurements);
         }
 
         /// <summary>
@@ -1854,7 +1877,7 @@ namespace TVA.Measurements
         /// <remarks>
         /// Allows derived classes to raise a processing exception.
         /// </remarks>
-        protected void OnProcessException(Exception ex)
+        protected virtual void OnProcessException(Exception ex)
         {
             if (ProcessException != null)
                 ProcessException(this, new EventArgs<Exception>(ex));
@@ -1868,6 +1891,19 @@ namespace TVA.Measurements
         {
             if (UnpublishedSamples != null)
                 UnpublishedSamples(this, new EventArgs<int>(seconds));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DiscardingMeasurements"/> event.
+        /// </summary>
+        /// <param name="measurements">Enumeration of <see cref="IMeasurement"/> values being discarded.</param>
+        /// <remarks>
+        /// Allows derived classes to raise a discarding measurements event.
+        /// </remarks>
+        protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
+        {
+            if (DiscardingMeasurements != null)
+                DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
         }
 
         // Tick handler for frame rate timer simply signals waiting thread to publish

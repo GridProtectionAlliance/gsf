@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/19/2009 - J. Ritchie Carroll
+//       Added parent adapter collection property.
 //
 //*******************************************************************************************************
 
@@ -232,6 +234,7 @@
 #endregion
 
 using System;
+using System.Collections.ObjectModel;
 using System.Data;
 
 namespace TVA.Measurements.Routing
@@ -277,9 +280,9 @@ namespace TVA.Measurements.Routing
         string ConnectionString { get; set; }
 
         /// <summary>
-        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
         /// </summary>
-        IAdapterCollection Parent { get; }
+        ReadOnlyCollection<IAdapter> Parent { get; }
 
         /// <summary>
         /// Gets or sets name of this <see cref="IAdapter"/>.

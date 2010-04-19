@@ -16,6 +16,8 @@
 //       Changed the default state for m_initializeWaitHandle to not signaled.
 //  11/25/2009 - Pinal C. Patel
 //       Added WaitForInitialize() overloaded methods.
+//  04/19/2009 - J. Ritchie Carroll
+//       Added parent adapter collection property.
 //
 //*******************************************************************************************************
 
@@ -237,6 +239,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -390,13 +393,13 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Gets the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="ActionAdapterBase"/>.
+        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="ActionAdapterBase"/>.
         /// </summary>
-        public virtual IAdapterCollection Parent
+        public ReadOnlyCollection<IAdapter> Parent
         {
             get
             {
-                return m_parent;
+                return new ReadOnlyCollection<IAdapter>(m_parent);
             }
         }
 
@@ -566,7 +569,7 @@ namespace TVA.Measurements.Routing
                 }
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
-                status.AppendFormat("         Parent collection: {0}", Parent == null ? "Undefined" : Parent.Name);
+                status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();

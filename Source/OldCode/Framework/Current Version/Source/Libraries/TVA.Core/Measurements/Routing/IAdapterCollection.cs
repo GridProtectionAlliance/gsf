@@ -241,7 +241,7 @@ namespace TVA.Measurements.Routing
     /// Represents the abstract interface for a collection of adapters.
     /// </summary>
     [CLSCompliant(false)]
-    public interface IAdapterCollection : IAdapter, ICollection<IAdapter>
+    public interface IAdapterCollection : IAdapter, IList<IAdapter>
 	{
         /// <summary>
         /// Gets or sets specific data member (e.g., table name) in <see cref="IAdapter.DataSource"/> used to initialize this <see cref="IAdapterCollection"/>.
