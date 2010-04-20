@@ -395,9 +395,9 @@ namespace TVA.Configuration
                 }
             }
 
-            public void WriteSetting(string category, string name, string value)
+            public void Write(string category, string name, string value)
             {
-                XmlNode node = m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
+                XmlNode node = GetSetting(category, name);
                 if (node != null)
                 {
                     // Setting exists so update it.
@@ -414,15 +414,20 @@ namespace TVA.Configuration
                 m_settingsModified = true;
             }
 
-            public string ReadSetting(string category, string name, string defaultValue)
+            public string Read(string category, string name, string defaultValue)
             {
-                XmlNode node = m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
+                XmlNode node = GetSetting(category, name);
                 if (node != null)
                     // Setting exists so return its value.
                     return node.Attributes["value"].Value;
                 else
                     // Setting doesn't exist so return the default.
                     return defaultValue;
+            }
+
+            public XmlNode GetSetting(string category, string name)
+            {
+                return m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
             }
         }
 

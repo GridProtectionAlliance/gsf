@@ -330,7 +330,6 @@ namespace TVA.Configuration
             m_category = category;
             this.Name = name;
             m_cryptoKey = DefaultCryptoKey;
-            Update(DefaultValue, DefaultDescription, DefaultEncrypted, DefaultScope);
         }
 
         #endregion
@@ -373,7 +372,7 @@ namespace TVA.Configuration
         /// Gets or sets the value of the setting.
         /// </summary>
         /// <returns>The value of the setting.</returns>
-        [ConfigurationProperty("value", IsRequired = true)]
+        [ConfigurationProperty("value", IsRequired = true, DefaultValue = DefaultValue)]
         public string Value
         {
             get
@@ -381,7 +380,7 @@ namespace TVA.Configuration
                 string value = (string)base["value"];
                 if (Scope == SettingScope.User)
                     // Setting is user specific so retrive value from user settings store.
-                    value = Category.Section.File.UserSettings.ReadSetting(Category.Name, Name, value);
+                    value = Category.Section.File.UserSettings.Read(Category.Name, Name, value);
 
                 return DecryptValue(value);
             }
@@ -392,12 +391,12 @@ namespace TVA.Configuration
                     return;
 
                 value = EncryptValue(value);
-                if (Scope == SettingScope.Application || string.Compare(Value, DefaultValue) == 0)
+                if (Scope == SettingScope.Application || Category[Name] == null)
                     // Setting is application wide or is being added for the first time.
                     base["value"] = value;
                 else
                     // Setting is user specific so update setting in user settings store.
-                    Category.Section.File.UserSettings.WriteSetting(Category.Name, Name, value);
+                    Category.Section.File.UserSettings.Write(Category.Name, Name, value);
             }
         }
 
@@ -405,7 +404,7 @@ namespace TVA.Configuration
         /// Gets or sets the description of the setting.
         /// </summary>
         /// <returns>The description of the setting.</returns>
-        [ConfigurationProperty("description", IsRequired = true)]
+        [ConfigurationProperty("description", IsRequired = true, DefaultValue = DefaultDescription)]
         public string Description
         {
             get
@@ -426,7 +425,7 @@ namespace TVA.Configuration
         /// Gets or sets a boolean value that indicates whether the setting value is to be encrypted.
         /// </summary>
         /// <returns>true, if the setting value is to be encrypted; otherwise false.</returns>
-        [ConfigurationProperty("encrypted", IsRequired = true)]
+        [ConfigurationProperty("encrypted", IsRequired = true, DefaultValue = DefaultEncrypted)]
         public bool Encrypted
         {
             get
