@@ -20,6 +20,8 @@
 //       Reviewed code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/20/2010 - Pinal C. Patel
+//       Added new Name and Section properties for the purpose of managing user scope setting.
 //
 //*******************************************************************************************************
 
@@ -252,11 +254,43 @@ namespace TVA.Configuration
         #region [ Members ]
 
         // Fields
+        private string m_name;
         private string m_cryptoKey;
+        private CategorizedSettingsSection m_section;
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the name of the <see cref="CategorizedSettingsElementCollection"/>.
+        /// </summary>
+        public string Name
+        {
+            get
+            {
+                return m_name;
+            }
+            internal set
+            {
+                m_name = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="CategorizedSettingsSection"/> to which this <see cref="CategorizedSettingsElementCollection"/> belongs.
+        /// </summary>
+        public CategorizedSettingsSection Section 
+        {
+            get
+            {
+                return m_section;
+            }
+            internal set
+            {
+                m_section = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="CategorizedSettingsElement"/> object at the specified index.
@@ -354,7 +388,7 @@ namespace TVA.Configuration
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, object value)
         {
-            Add(name, value.ToString());
+            Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -364,7 +398,7 @@ namespace TVA.Configuration
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, string value)
         {
-            Add(name, value, false);
+            Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -375,7 +409,7 @@ namespace TVA.Configuration
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, object value, bool encryptValue)
         {
-            Add(name, value.ToString(), encryptValue);
+            Add(name, value, CategorizedSettingsElement.DefaultDescription, encryptValue, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -386,7 +420,7 @@ namespace TVA.Configuration
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, string value, bool encryptValue)
         {
-            Add(name, value, "", encryptValue);
+            Add(name, value, CategorizedSettingsElement.DefaultDescription, encryptValue, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -397,7 +431,7 @@ namespace TVA.Configuration
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, object value, string description)
         {
-            Add(name, value.ToString(), description);
+            Add(name, value, description, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -408,7 +442,7 @@ namespace TVA.Configuration
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, string value, string description)
         {
-            Add(name, value, description, false);
+            Add(name, value, description, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -420,7 +454,7 @@ namespace TVA.Configuration
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, object value, string description, bool encryptValue)
         {
-            Add(name, value.ToString(), description, encryptValue);
+            Add(name, value, description, encryptValue, CategorizedSettingsElement.DefaultScope);
         }
 
         /// <summary>
@@ -432,7 +466,47 @@ namespace TVA.Configuration
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         public void Add(string name, string value, string description, bool encryptValue)
         {
-            Add(new CategorizedSettingsElement(name, value, description, encryptValue));
+            Add(name, value, description, encryptValue, CategorizedSettingsElement.DefaultScope);
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
+        /// </summary>
+        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
+        /// /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
+        public void Add(string name, object value, string description, bool encryptValue, SettingScope scope)
+        {
+            if (base.BaseGet(name) == null)
+            {
+                // Add the element only if it does not exist.
+                CategorizedSettingsElement setting = new CategorizedSettingsElement(this, name);
+                setting.Update(value, description, encryptValue, scope);
+
+                Add(setting);
+            }
+        }
+
+        /// <summary>
+        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
+        /// </summary>
+        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
+        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
+        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
+        public void Add(string name, string value, string description, bool encryptValue, SettingScope scope)
+        {
+            if (base.BaseGet(name) == null)
+            {
+                // Add the element only if it does not exist.
+                CategorizedSettingsElement setting = new CategorizedSettingsElement(this, name);
+                setting.Update(value, description, encryptValue, scope);
+
+                Add(setting);
+            }
         }
 
         /// <summary>
@@ -443,7 +517,8 @@ namespace TVA.Configuration
         {
             if (base.BaseGet(setting.Name) == null)
             {
-                // Adds the element only if it does not exist.
+                // Add the element only if it does not exist.
+                setting.Category = this;
                 setting.SetCryptoKey(m_cryptoKey);
                 base.BaseAdd(setting);
             }
@@ -493,7 +568,7 @@ namespace TVA.Configuration
         /// <returns>Instance of <see cref="CategorizedSettingsElement"/>.</returns>
         protected override ConfigurationElement CreateNewElement()
         {
-            return new CategorizedSettingsElement();
+            return new CategorizedSettingsElement(this);
         }
 
         /// <summary>
@@ -503,7 +578,7 @@ namespace TVA.Configuration
         /// <returns>Instance of <see cref="CategorizedSettingsElement"/>.</returns>
         protected override ConfigurationElement CreateNewElement(string elementName)
         {
-            return new CategorizedSettingsElement(elementName);
+            return new CategorizedSettingsElement(this, elementName);
         }
 
         /// <summary>
@@ -516,6 +591,6 @@ namespace TVA.Configuration
             return ((CategorizedSettingsElement)element).Name;
         }
 
-        #endregion      
+        #endregion
     }
 }

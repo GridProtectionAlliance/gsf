@@ -27,6 +27,9 @@
 //       specific type of application (i.e. Web or Windows).
 //       Modified GetConfiguration() to remove dependency on HttpContext.Current to avoid exception in
 //       async web application operations where HttpContext.Current is null.
+//  04/20/2010 - Pinal C. Patel
+//       Added static Open() method as the only way of retrieving a ConfigurationFile instance.
+//       Added internal UserConfigurationFile class for accessing and updating user scope settings.
 //
 //*******************************************************************************************************
 
@@ -247,7 +250,9 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Text;
 using System.Web.Configuration;
 using System.Web.Hosting;
@@ -348,6 +353,79 @@ namespace TVA.Configuration
     {
         #region [ Members ]
 
+        // Nested Types
+
+        internal class UserConfigurationFile
+        {
+            private string m_fileName;
+            private XmlDocument m_settings;
+            private bool m_settingsModified;
+
+            private const string RootNode = "settings";
+            private const string Filename = "Settings.xml";
+
+            public UserConfigurationFile()
+            {
+                m_settings = new XmlDocument();
+                m_fileName = Path.Combine(FilePath.GetApplicationDataFolder(), Filename);
+                if (File.Exists(m_fileName))
+                {
+                    // Load existing settings.
+                    m_settings.Load(m_fileName);
+                }
+                else
+                {
+                    // Create new settings file.
+                    m_settings.AppendChild(m_settings.CreateNode(XmlNodeType.XmlDeclaration, null, null));
+                    m_settings.AppendChild(m_settings.CreateElement(RootNode));
+                }
+            }
+
+            public void Save(bool force)
+            {
+                if (force || m_settingsModified)
+                {
+                    // Create directory if missing.
+                    string folder = FilePath.GetDirectoryName(m_fileName);
+                    if (!Directory.Exists(folder))
+                        Directory.CreateDirectory(folder);
+
+                    // Save settings to the file.
+                    m_settings.Save(m_fileName);
+                }
+            }
+
+            public void WriteSetting(string category, string name, string value)
+            {
+                XmlNode node = m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
+                if (node != null)
+                {
+                    // Setting exists so update it.
+                    node.SetAttributeValue("value", value);
+                }
+                else
+                {
+                    // Setting doesn't exist so add it.
+                    XmlNode setting = m_settings.CreateElement("add");
+                    setting.SetAttributeValue("name", name);
+                    setting.SetAttributeValue("value", value);
+                    m_settings.GetXmlNode(category).AppendChild(setting);
+                }
+                m_settingsModified = true;
+            }
+
+            public string ReadSetting(string category, string name, string defaultValue)
+            {
+                XmlNode node = m_settings.SelectSingleNode(string.Format("{0}/{1}/add[@name='{2}']", RootNode, category, name));
+                if (node != null)
+                    // Setting exists so return its value.
+                    return node.Attributes["value"].Value;
+                else
+                    // Setting doesn't exist so return the default.
+                    return defaultValue;
+            }
+        }
+
         // Constants
         private const string CustomSectionName = "categorizedSettings";
         private const string CustomSectionType = "TVA.Configuration.CategorizedSettingsSection, TVA.Core";
@@ -355,6 +433,7 @@ namespace TVA.Configuration
         // Fields
         private string m_cryptoKey;
         private System.Configuration.Configuration m_configuration;
+        private UserConfigurationFile m_userConfiguration;
 
         #endregion
 
@@ -362,52 +441,34 @@ namespace TVA.Configuration
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
-        /// </summary>
-        public ConfigurationFile()
-            : this(string.Empty)
+        /// </summary>        
+        internal ConfigurationFile(string configFilePath)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
-        /// </summary>
-        /// <param name="appType">One of the <see cref="ApplicationType"/> values.</param>
-        public ConfigurationFile(ApplicationType appType)
-            : this(string.Empty, appType)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
-        /// </summary>
-        /// <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
-        public ConfigurationFile(string configFilePath)
-            : this(configFilePath, TVA.Common.GetApplicationType())
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ConfigurationFile"/> class.
-        /// </summary>
-        /// <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
-        /// <param name="appType">One of the <see cref="ApplicationType"/> values.</param>
-        public ConfigurationFile(string configFilePath, ApplicationType appType)
-        {
-            m_configuration = GetConfiguration(configFilePath, appType);
+            m_configuration = GetConfiguration(configFilePath);
             if (m_configuration.HasFile)
-            {
                 ValidateConfigurationFile(m_configuration.FilePath);
-            }
             else
-            {
                 CreateConfigurationFile(m_configuration.FilePath);
-            }
-            m_configuration = GetConfiguration(configFilePath, appType);
+
+            m_configuration = GetConfiguration(configFilePath);
+            m_userConfiguration = new UserConfigurationFile();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the name and path of the config file represented by this <see cref="ConfigurationFile"/> object.
+        /// </summary>
+        /// <returns>Name and path of the config file.</returns>
+        public string FileName
+        {
+            get
+            {
+                return m_configuration.FilePath;
+            }
+        }
 
         /// <summary>
         /// Gets the <see cref="CategorizedSettingsSection"/> object representing settings under the 
@@ -419,6 +480,7 @@ namespace TVA.Configuration
             get
             {
                 CategorizedSettingsSection settings = (CategorizedSettingsSection)m_configuration.GetSection(CustomSectionName);
+                settings.File = this;
                 settings.SetCryptoKey(m_cryptoKey);
                 return settings;
             }
@@ -451,14 +513,13 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Gets the name and path of the config file represented by this <see cref="ConfigurationFile"/> object.
+        /// Gets the <see cref="UserConfigurationFile"/> where user specific settings are saved.
         /// </summary>
-        /// <returns>Name and path of the config file.</returns>
-        public string FileName
+        internal UserConfigurationFile UserSettings
         {
             get
             {
-                return m_configuration.FilePath;
+                return m_userConfiguration;
             }
         }
 
@@ -481,6 +542,7 @@ namespace TVA.Configuration
         public void Save(ConfigurationSaveMode saveMode)
         {
             m_configuration.Save(saveMode);
+            m_userConfiguration.Save(saveMode == ConfigurationSaveMode.Full);
         }
 
         /// <summary>
@@ -501,13 +563,14 @@ namespace TVA.Configuration
             m_cryptoKey = cryptoKey;
         }
 
-        private System.Configuration.Configuration GetConfiguration(string configFilePath, ApplicationType appType)
+        private System.Configuration.Configuration GetConfiguration(string configFilePath)
         {
+            ApplicationType appType = Common.GetApplicationType();
             System.Configuration.Configuration configuration = null;
 
             if (configFilePath != null)
             {
-                if (string.IsNullOrEmpty(configFilePath) || FilePath.GetExtension(configFilePath) == ".config")
+                if (string.IsNullOrEmpty(configFilePath) || string.Compare(FilePath.GetExtension(configFilePath), ".config", true) == 0)
                 {
                     // PCP - 12/12/2006: Using the TrimEnd function to get the correct value that needs to be passed
                     // to the method call for getting the Configuration object. The previous method (String.TrimEnd())
@@ -516,7 +579,7 @@ namespace TVA.Configuration
                     {
                         case ApplicationType.WindowsCui:
                         case ApplicationType.WindowsGui:
-                            configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config"));
+                            configuration = ConfigurationManager.OpenExeConfiguration(TrimEnd(configFilePath, ".config").EnsureEnd(".exe"));
                             break;
                         case ApplicationType.Web:
                             if (string.IsNullOrEmpty(configFilePath))
@@ -561,67 +624,8 @@ namespace TVA.Configuration
             }
         }
 
-        #endregion
-
-        #region [ Static ]
-
-        private static ConfigurationFile s_current;
-
-        /// <summary>
-        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
-        /// </summary>
-        public static ConfigurationFile Current
-        {
-            get
-            {
-                if (s_current == null)
-                    s_current = new ConfigurationFile();
-                
-                return s_current;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Web application.
-        /// </summary>
-        public static ConfigurationFile CurrentWeb
-        {
-            get
-            {
-                if (s_current == null)
-                    s_current = new ConfigurationFile(ApplicationType.Web);
-
-                return s_current;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows application.
-        /// </summary>
-        public static ConfigurationFile CurrentWin
-        {
-            get
-            {
-                if (s_current == null)
-                    s_current = new ConfigurationFile(ApplicationType.WindowsGui);
-                
-                return s_current;
-            }
-        }
-
-        // Trim suffix from end of string
-        private static string TrimEnd(string stringToTrim, string textToTrim)
-        {
-            int trimEndIndex = stringToTrim.LastIndexOf(textToTrim);
-
-            if (trimEndIndex == -1)
-                trimEndIndex = stringToTrim.Length;
-
-            return stringToTrim.Substring(0, trimEndIndex);
-        }
-
         // Validate configuration file
-        private static void ValidateConfigurationFile(string configFilePath)
+        private void ValidateConfigurationFile(string configFilePath)
         {
             if (!string.IsNullOrEmpty(configFilePath))
             {
@@ -663,6 +667,64 @@ namespace TVA.Configuration
             {
                 throw (new ArgumentNullException("configFilePath", "Path of configuration file path cannot be null"));
             }
+        }
+
+        // Trim suffix from end of string
+        private string TrimEnd(string stringToTrim, string textToTrim)
+        {
+            int trimEndIndex = stringToTrim.LastIndexOf(textToTrim, StringComparison.CurrentCultureIgnoreCase);
+
+            if (trimEndIndex == -1)
+                trimEndIndex = stringToTrim.Length;
+
+            return stringToTrim.Substring(0, trimEndIndex);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static Dictionary<string, ConfigurationFile> s_configFiles;
+
+        // Static Constructor
+
+        static ConfigurationFile()
+        {
+            s_configFiles = new Dictionary<string, ConfigurationFile>(StringComparer.CurrentCultureIgnoreCase);
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets the <see cref="ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
+        /// </summary>
+        public static ConfigurationFile Current
+        {
+            get
+            {
+                return Open(string.Empty);
+            }
+        }
+
+        // Static Methods
+
+        /// <summary>
+        /// Opens application config file at the specified <paramref name="configFilePath"/>.
+        /// </summary>
+        /// <param name="configFilePath">Path of the config file that belongs to a Windows or Web application.</param>
+        /// <returns>An <see cref="ConfigurationFile"/> object.</returns>
+        public static ConfigurationFile Open(string configFilePath)
+        {
+            ConfigurationFile configFile;
+            lock (s_configFiles)
+            {
+                // Retrieve config file from cache if present or else add it for subsequent uses.
+                if (!s_configFiles.TryGetValue(configFilePath, out configFile))
+                    s_configFiles.Add(configFilePath, configFile = new ConfigurationFile(configFilePath));
+            }
+
+            return configFile;
         }
 
         #endregion

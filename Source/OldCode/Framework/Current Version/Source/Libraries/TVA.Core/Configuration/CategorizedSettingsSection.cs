@@ -18,6 +18,8 @@
 //       Reviewed code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/20/2010 - Pinal C. Patel
+//       Added new File property for the purpose of managing user scope setting.
 //
 //*******************************************************************************************************
 
@@ -237,6 +239,7 @@
 */
 #endregion
 
+using System;
 using System.Configuration;
 using System.IO;
 using System.Xml;
@@ -256,20 +259,40 @@ namespace TVA.Configuration
 
         // Fields
         private string m_cryptoKey;
+        private ConfigurationFile m_file;
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets the <see cref="ConfigurationFile"/> to which this <see cref="CategorizedSettingsSection"/> belongs.
+        /// </summary>
+        public ConfigurationFile File 
+        {
+            get
+            {
+                return m_file;
+            }
+            internal set
+            {
+                m_file = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under the specified category name.
         /// </summary>
         /// <param name="name">Name of the category whose settings are to be retrieved.</param>
         /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the specified category name.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
         public new CategorizedSettingsElementCollection this[string name]
         {
             get
             {
+                if (string.IsNullOrEmpty(name))
+                    throw new ArgumentNullException("name");
+
                 // We will add the requested category to the default properties collection, so that when
                 // the settings are saved off to the config file, all of the categories under which
                 // settings may be saved are processed and saved to the config file. This is essentially
@@ -277,8 +300,7 @@ namespace TVA.Configuration
                 // Make the first letter of category name lower case, if not already.
                 char[] nameChars = name.ToCharArray();
                 nameChars[0] = char.ToLower(nameChars[0]);
-                // Do not allow spaces in the category name, so that underlying .Net configuration API does not
-                // break.
+                // Do not allow spaces in the name so that underlying .Net configuration API does not break.
                 name = (new string(nameChars)).RemoveWhiteSpace();
                 ConfigurationProperty configProperty = new ConfigurationProperty(name, typeof(CategorizedSettingsElementCollection));
 
@@ -287,6 +309,8 @@ namespace TVA.Configuration
                 if (base[configProperty] != null)
                 {
                     settingsCategory = (CategorizedSettingsElementCollection)base[configProperty];
+                    settingsCategory.Name = name;
+                    settingsCategory.Section = this;
                     settingsCategory.SetCryptoKey(m_cryptoKey);
                 }
 

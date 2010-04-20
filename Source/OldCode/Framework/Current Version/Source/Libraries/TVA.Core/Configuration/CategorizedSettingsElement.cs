@@ -26,6 +26,10 @@
 //       Added new header and license agreement.
 //  04/15/2010 - Pinal C. Patel
 //       Modified property setters to update the internal property bag only if values have changed.
+//  04/20/2010 - Pinal C. Patel
+//       Added new Category property for the purpose of managing user scope setting.
+//       Removed publicly accessible constructors for managability.
+//       Added Scope property as a way of identifying user scope settings.
 //
 //*******************************************************************************************************
 
@@ -251,6 +255,25 @@ using TVA.Security.Cryptography;
 
 namespace TVA.Configuration
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Specifies the scope of a setting represented by <see cref="CategorizedSettingsElement"/>.
+    /// </summary>
+    public enum SettingScope
+    {
+        /// <summary>
+        /// Settings is intended for user specific use.
+        /// </summary>
+        User,
+        /// <summary>
+        /// Settings is intended for application wide use.
+        /// </summary>
+        Application
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a settings entry in the config file.
     /// </summary>
@@ -259,10 +282,32 @@ namespace TVA.Configuration
         #region [ Members ]
 
         // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Value"/> property.
+        /// </summary>
+        public const string DefaultValue = "";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Description"/> property.
+        /// </summary>
+        public const string DefaultDescription = "";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Encrypted"/> property.
+        /// </summary>
+        public const bool DefaultEncrypted = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="Scope"/> property.
+        /// </summary>
+        public const SettingScope DefaultScope = SettingScope.Application;
+
         private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
 
         // Fields
         private string m_cryptoKey;
+        private CategorizedSettingsElementCollection m_category;
 
         #endregion
 
@@ -271,57 +316,41 @@ namespace TVA.Configuration
         /// <summary>
         /// Required by the configuration API and is for internal use only.
         /// </summary>
-        internal CategorizedSettingsElement()
-            : this("")
+        internal CategorizedSettingsElement(CategorizedSettingsElementCollection category)
+            : this(category, "")
         {
         }
 
         /// <summary>
         /// Required by the configuration API and is for internal use only.
         /// </summary>
-        internal CategorizedSettingsElement(string name)
-            : this(name, "")
+        internal CategorizedSettingsElement(CategorizedSettingsElementCollection category, string name)
+            : base()
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CategorizedSettingsElement"/> class.
-        /// </summary>
-        /// <param name="name">The identifier of the setting.</param>
-        /// <param name="value">The value of the setting.</param>
-        public CategorizedSettingsElement(string name, string value)
-            : this(name, value, "")
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CategorizedSettingsElement"/> class.
-        /// </summary>
-        /// <param name="name">The identifier of the setting.</param>
-        /// <param name="value">The value of the setting.</param>
-        /// <param name="description">The description of the setting.</param>
-        public CategorizedSettingsElement(string name, string value, string description)
-            : this(name, value, description, false)
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CategorizedSettingsElement"/> class.
-        /// </summary>
-        /// <param name="name">The identifier of the setting.</param>
-        /// <param name="value">The value of the setting.</param>
-        /// <param name="description">The description of the setting.</param>
-        /// <param name="encrypted">true if the setting value is to be encrypted; otherwise false.</param>
-        public CategorizedSettingsElement(string name, string value, string description, bool encrypted)
-        {
-            m_cryptoKey = DefaultCryptoKey;
+            m_category = category;
             this.Name = name;
-            Update(value, description, encrypted);
+            m_cryptoKey = DefaultCryptoKey;
+            Update(DefaultValue, DefaultDescription, DefaultEncrypted, DefaultScope);
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="CategorizedSettingsElementCollection"/> to which this <see cref="CategorizedSettingsElement"/> belongs.
+        /// </summary>
+        public CategorizedSettingsElementCollection Category
+        {
+            get
+            {
+                return m_category;
+            }
+            internal set
+            {
+                m_category = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the identifier of the setting.
@@ -349,15 +378,26 @@ namespace TVA.Configuration
         {
             get
             {
-                return DecryptValue((string)base["value"]);
+                string value = (string)base["value"];
+                if (Scope == SettingScope.User)
+                    // Setting is user specific so retrive value from user settings store.
+                    value = Category.Section.File.UserSettings.ReadSetting(Category.Name, Name, value);
+
+                return DecryptValue(value);
             }
             set
             {
                 // Continue only if values are different.
-                if (value.ToNonNullString().Equals(ValueAs(string.Empty)))
+                if (value.ToNonNullString().Equals(Value))
                     return;
 
-                base["value"] = EncryptValue(value);
+                value = EncryptValue(value);
+                if (Scope == SettingScope.Application || string.Compare(Value, DefaultValue) == 0)
+                    // Setting is application wide or is being added for the first time.
+                    base["value"] = value;
+                else
+                    // Setting is user specific so update setting in user settings store.
+                    Category.Section.File.UserSettings.WriteSetting(Category.Name, Name, value);
             }
         }
 
@@ -405,6 +445,26 @@ namespace TVA.Configuration
             }
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="SettingScope"/>.
+        /// </summary>
+        [ConfigurationProperty("scope", IsRequired = false, DefaultValue = DefaultScope)]
+        public SettingScope Scope
+        {
+            get
+            {
+                return (SettingScope)base["scope"];
+            }
+            set
+            {
+                // Continue only if values are different.
+                if (value.Equals(Scope))
+                    return;
+
+                base["scope"] = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -429,10 +489,28 @@ namespace TVA.Configuration
         /// Updates setting information.
         /// </summary>
         /// <param name="value">New setting value.</param>
+        public void Update(object value)
+        {
+            Update(value, Description, Encrypted, Scope);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        public void Update(string value)
+        {
+            Update(value, Description, Encrypted, Scope);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
         /// <param name="description">New setting description.</param>
         public void Update(object value, string description)
         {
-            Update(value.ToString(), description);
+            Update(value, description, Encrypted, Scope);
         }
 
         /// <summary>
@@ -442,7 +520,7 @@ namespace TVA.Configuration
         /// <param name="description">New setting description.</param>
         public void Update(string value, string description)
         {
-            Update(value, description, Encrypted);
+            Update(value, description, Encrypted, Scope);
         }
 
         /// <summary>
@@ -453,7 +531,7 @@ namespace TVA.Configuration
         /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
         public void Update(object value, string description, bool encrypted)
         {
-            Update(value.ToString(), description, encrypted);
+            Update(value, description, encrypted, Scope);
         }
 
         /// <summary>
@@ -464,6 +542,34 @@ namespace TVA.Configuration
         /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
         public void Update(string value, string description, bool encrypted)
         {
+            Update(value, description, encrypted, Scope);
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
+        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
+        public void Update(object value, string description, bool encrypted, SettingScope scope)
+        {
+            this.Scope = scope;
+            this.Value = value.ToNonNullString();
+            this.Description = description;
+            this.Encrypted = encrypted;
+        }
+
+        /// <summary>
+        /// Updates setting information.
+        /// </summary>
+        /// <param name="value">New setting value.</param>
+        /// <param name="description">New setting description.</param>
+        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
+        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
+        public void Update(string value, string description, bool encrypted, SettingScope scope)
+        {
+            this.Scope = scope;
             this.Value = value;
             this.Description = description;
             this.Encrypted = encrypted;
@@ -809,21 +915,34 @@ namespace TVA.Configuration
 
         private string EncryptValue(string value)
         {
-            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
+            if (Encrypted && !string.IsNullOrEmpty(value))
             {
-                // Encrypts the element's value.
-                value = value.Encrypt(m_cryptoKey, CipherStrength.Aes256);
-
+                try
+                {
+                    // Encrypts the element's value.
+                    value = value.Encrypt(m_cryptoKey, CipherStrength.Aes256);
+                }
+                catch (Exception ex)
+                {
+                    throw new ConfigurationErrorsException(string.Format("Failed to encrypt '{0}'", value), ex);
+                }
             }
             return value;
         }
 
         private string DecryptValue(string value)
         {
-            if ((base["encrypted"] != null) && ((bool)base["encrypted"]))
+            if (Encrypted && !string.IsNullOrEmpty(value))
             {
-                // Decrypts the element's value.
-                return value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
+                try
+                {
+                    // Decrypts the element's value.
+                    return value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
+                }
+                catch (Exception ex)
+                {
+                    throw new ConfigurationErrorsException(string.Format("Failed to decrypt '{0}'", value), ex);
+                }
             }
 
             return value;
