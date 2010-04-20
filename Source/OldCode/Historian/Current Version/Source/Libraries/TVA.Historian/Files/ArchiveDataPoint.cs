@@ -18,6 +18,8 @@
 //       Added new header and license agreement.
 //  03/15/2010 - Pinal C. Patel
 //       Implemented IFormattable.ToString() overloads.
+//  04/20/2010 - J. Ritchie Carroll
+//       Added construction overload for IMeasurement that accepts specific quality.
 //
 //*******************************************************************************************************
 
@@ -313,16 +315,27 @@ namespace TVA.Historian.Files
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class.
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class from a <see cref="IMeasurement"/> value.
         /// </summary>
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement)
+            : this(measurement, measurement.ValueQualityIsGood ? (measurement.TimestampQualityIsGood ? Quality.Good : Quality.Old) : Quality.SuspectData)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ArchiveDataPoint"/> class from a <see cref="IMeasurement"/> value.
+        /// </summary>
+        /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
+        /// <param name="quality">Specific <see cref="Quality"/> value to apply to new <see cref="ArchiveDataPoint"/>.</param>
+        [CLSCompliant(false)]
+        public ArchiveDataPoint(IMeasurement measurement, Quality quality)
             : this((int)measurement.ID)
         {
             this.Time = new TimeTag((DateTime)measurement.Timestamp);
             this.Value = (float)measurement.AdjustedValue;
-            this.Quality = (measurement.TimestampQualityIsGood && measurement.ValueQualityIsGood ? Quality.Good : Quality.SuspectData);
+            this.Quality = quality;
         }
 
         /// <summary>
