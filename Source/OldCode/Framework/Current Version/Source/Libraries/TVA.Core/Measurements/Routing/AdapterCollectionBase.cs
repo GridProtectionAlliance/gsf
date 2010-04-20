@@ -393,7 +393,7 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterCollectionBase{T}"/>, if any.
+        /// Gets a read-only reference to the collection that contains this <see cref="AdapterCollectionBase{T}"/>, if any.
         /// </summary>
         public ReadOnlyCollection<IAdapter> Parent
         {
@@ -717,9 +717,14 @@ namespace TVA.Measurements.Routing
                     if (TryCreateAdapter(adapterRow, out item))
                         Add(item);
                 }
-            }
 
-            m_initialized = true;
+                m_initialized = true;
+            }
+            else
+            {
+                m_initialized = false;
+                throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", m_dataMember, Name));
+            }
         }
 
         /// <summary>
@@ -927,12 +932,20 @@ namespace TVA.Measurements.Routing
 
             foreach (T item in this)
             {
-                // We start items from thread pool if auto-intializing since
-                // start will block and wait for initialization to complete
-                if (AutoInitialize)
-                    ThreadPool.QueueUserWorkItem(StartItem, item);
-                else
-                    item.Start();
+                try
+                {
+                    // We start items from thread pool if auto-intializing since
+                    // start will block and wait for initialization to complete
+                    if (AutoInitialize)
+                        ThreadPool.QueueUserWorkItem(StartItem, item);
+                    else
+                        item.Start();
+                }
+                catch (Exception ex)
+                {
+                    // We report any errors encountered during type creation...
+                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
+                }
             }
 
             // Start data monitor...
@@ -952,7 +965,7 @@ namespace TVA.Measurements.Routing
             catch (Exception ex)
             {
                 // We report any errors encountered during startup...
-                OnProcessException(ex);
+                OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
             }
         }
 
@@ -1131,6 +1144,10 @@ namespace TVA.Measurements.Routing
                 // Un-wire events
                 item.StatusMessage -= StatusMessage;
                 item.ProcessException -= ProcessException;
+
+                // Make sure initialization handles are cleared in case any failed
+                // initializations are still pending
+                item.Initialized = true;
 
                 // Dissociate parent collection
                 item.AssignParentCollection(null);

@@ -280,7 +280,7 @@ namespace TVA.Measurements.Routing
         string ConnectionString { get; set; }
 
         /// <summary>
-        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// Gets a read-only reference to the collection that contains this <see cref="IAdapter"/>.
         /// </summary>
         ReadOnlyCollection<IAdapter> Parent { get; }
 

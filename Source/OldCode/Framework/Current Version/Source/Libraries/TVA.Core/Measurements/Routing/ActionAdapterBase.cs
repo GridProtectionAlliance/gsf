@@ -286,12 +286,13 @@ namespace TVA.Measurements.Routing
         private IAdapterCollection m_parent;
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
-        private bool m_initialized;
+        private int m_initializationTimeout;
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
         private int m_minimumMeasurementsToUse;
         private ManualResetEvent m_initializeWaitHandle;
+        private bool m_initialized;
         private bool m_disposed;
 
         #endregion
@@ -393,7 +394,7 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Gets a read-only reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="ActionAdapterBase"/>.
+        /// Gets a read-only reference to the collection that contains this <see cref="ActionAdapterBase"/>.
         /// </summary>
         public ReadOnlyCollection<IAdapter> Parent
         {
@@ -415,6 +416,24 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_dataSource = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
+        /// </summary>
+        /// <remarks>
+        /// Set to <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// </remarks>
+        public virtual int InitializationTimeout
+        {
+            get
+            {
+                return m_initializationTimeout;
+            }
+            set
+            {
+                m_initializationTimeout = value;
             }
         }
 
@@ -567,6 +586,8 @@ namespace TVA.Measurements.Routing
                     status.AppendFormat("    Referenced data source: {0}, {1} tables", dataSource.DataSetName, dataSource.Tables.Count);
                     status.AppendLine();
                 }
+                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
+                status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
                 status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
@@ -684,9 +705,9 @@ namespace TVA.Measurements.Routing
         public virtual void Initialize()
         {
             Initialized = false;
-            string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
 
             Dictionary<string, string> settings = Settings;
+            string errorMessage = "{0} is missing from Settings - Example: framesPerSecond=30; lagTime=3; leadTime=1";
             string setting;
 
             // Load required parameters
@@ -714,6 +735,11 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("allowSortsByArrival", out setting))
                 base.AllowSortsByArrival = setting.ParseBoolean();
+
+            if (settings.TryGetValue("initializationTimeout", out setting))
+                InitializationTimeout = int.Parse(setting);
+            else
+                InitializationTimeout = 5000;
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
@@ -745,8 +771,10 @@ namespace TVA.Measurements.Routing
                 Stop();
 
             // Wait for adapter intialization to complete...
-            m_initializeWaitHandle.WaitOne();
-            base.Start();
+            if (WaitForInitialize(InitializationTimeout))
+                base.Start();
+            else
+                OnProcessException(new TimeoutException("Failed to start action adapter due to timeout waiting for initialization."));
         }
 
         /// <summary>
@@ -910,18 +938,11 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
         /// </summary>
-        protected virtual void WaitForInitialize()
-        {
-            WaitForInitialize(Timeout.Infinite);
-        }
-
-        /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
-        /// </summary>
         /// <param name="timeout">The number of milliseconds to wait.</param>
-        protected virtual void WaitForInitialize(int timeout)
+        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        protected virtual bool WaitForInitialize(int timeout)
         {
-            m_initializeWaitHandle.WaitOne(timeout);
+            return m_initializeWaitHandle.WaitOne(timeout);
         }
 
         /// <summary>

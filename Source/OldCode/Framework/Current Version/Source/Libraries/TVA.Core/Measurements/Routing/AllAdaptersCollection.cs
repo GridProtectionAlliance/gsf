@@ -287,7 +287,14 @@ namespace TVA.Measurements.Routing
         {
             foreach (IAdapterCollection item in this)
             {
-                item.Initialize();
+                try
+                {
+                    item.Initialize();
+                }
+                catch (Exception ex)
+                {
+                    OnProcessException(ex);
+                }
             }
         }
 
