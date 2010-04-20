@@ -26,6 +26,8 @@
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
 //       Modified GetAbsolutePath() to remove dependency on HttpContext.Current.
+//  04/19/2010 - Pinal C. Patel
+//       Added GetApplicationDataFolder() method.
 //
 //*******************************************************************************************************
 
@@ -561,6 +563,29 @@ namespace TVA.IO
             }
 
             return RemovePathSuffix(filePath);
+        }
+
+        /// <summary>
+        /// Gets the path to the folder where data related to the current application can be stored.
+        /// </summary>
+        /// <returns>Path to the folder where data related to the current application can be stored.</returns>
+        public static string GetApplicationDataFolder()
+        {
+            ApplicationType platform = Common.GetApplicationType();
+            string rootFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            if (platform == ApplicationType.Web)
+            {
+                // Treat web application special.
+                if (HostingEnvironment.ApplicationVirtualPath == "/")
+                    return Path.Combine(rootFolder, HostingEnvironment.SiteName);
+                else
+                    return Path.Combine(rootFolder, HostingEnvironment.ApplicationVirtualPath.Trim('/'));
+            }
+            else
+            {
+                // Use entry assembly for everything else.
+                return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
+            }
         }
 
         /// <summary>
