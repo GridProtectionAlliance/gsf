@@ -259,6 +259,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -746,7 +747,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -1031,45 +1032,40 @@ namespace TVA.IO
 
         /// <summary>
         /// Saves settings of the file to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName", true];
-                element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileAccessMode", true];
-                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
-                element = settings["AutoSaveInterval", true];
-                element.Update(m_autoSaveInterval, element.Description, element.Encrypted);
-                element = settings["LoadOnOpen", true];
-                element.Update(m_loadOnOpen, element.Description, element.Encrypted);
-                element = settings["SaveOnClose", true];
-                element.Update(m_saveOnClose, element.Description, element.Encrypted);
-                element = settings["ReloadOnModify", true];
-                element.Update(m_reloadOnModify, element.Description, element.Encrypted);
+                settings["FileName", true].Update(m_fileName);
+                settings["FileAccessMode", true].Update(m_fileAccessMode);
+                settings["AutoSaveInterval", true].Update(m_autoSaveInterval);
+                settings["LoadOnOpen", true].Update(m_loadOnOpen);
+                settings["SaveOnClose", true].Update(m_saveOnClose);
+                settings["ReloadOnModify", true].Update(m_reloadOnModify);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved settings of the file from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

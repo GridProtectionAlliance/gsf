@@ -253,10 +253,8 @@
 #endregion
 
 using System.Collections;
-using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System;
 
 namespace TVA.Net.Ftp
 {

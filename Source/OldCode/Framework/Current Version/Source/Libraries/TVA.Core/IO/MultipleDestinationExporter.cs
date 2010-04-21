@@ -241,6 +241,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -484,7 +485,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -694,14 +695,15 @@ namespace TVA.IO
         /// <summary>
         /// Saves settings for the <see cref="MultipleDestinationExporter"/> object to the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -728,14 +730,15 @@ namespace TVA.IO
         /// <summary>
         /// Loads saved settings for the <see cref="MultipleDestinationExporter"/> object from the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

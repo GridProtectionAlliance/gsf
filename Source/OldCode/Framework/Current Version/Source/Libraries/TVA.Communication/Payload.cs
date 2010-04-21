@@ -238,7 +238,6 @@
 
 using System;
 using System.IO;
-using System.Text;
 using TVA.IO.Compression;
 using TVA.Security.Cryptography;
 

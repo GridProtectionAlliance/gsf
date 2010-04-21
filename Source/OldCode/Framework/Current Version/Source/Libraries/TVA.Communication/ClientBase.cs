@@ -255,6 +255,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.Text;
 using System.Threading;
@@ -789,7 +790,7 @@ namespace TVA.Communication
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -1096,53 +1097,44 @@ namespace TVA.Communication
 
         /// <summary>
         /// Saves client settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ConnectionString", true];
-                element.Update(m_connectionString, element.Description, element.Encrypted);
-                element = settings["MaxConnectionAttempts", true];
-                element.Update(m_maxConnectionAttempts, element.Description, element.Encrypted);
-                element = settings["Handshake", true];
-                element.Update(m_handshake, element.Description, element.Encrypted);
-                element = settings["HandshakeTimeout", true];
-                element.Update(m_handshakeTimeout, element.Description, element.Encrypted);
-                element = settings["SharedSecret", true];
-                element.Update(m_sharedSecret, element.Description, element.Encrypted);
-                element = settings["Encryption", true];
-                element.Update(m_encryption, element.Description, element.Encrypted);
-                element = settings["SecureSession", true];
-                element.Update(m_secureSession, element.Description, element.Encrypted);
-                element = settings["ReceiveTimeout", true];
-                element.Update(m_receiveTimeout, element.Description, element.Encrypted);
-                element = settings["ReceiveBufferSize", true];
-                element.Update(m_receiveBufferSize, element.Description, element.Encrypted);
-                element = settings["Compression", true];
-                element.Update(m_compression, element.Description, element.Encrypted);
+                settings["ConnectionString", true].Update(m_connectionString);
+                settings["MaxConnectionAttempts", true].Update(m_maxConnectionAttempts);
+                settings["Handshake", true].Update(m_handshake);
+                settings["HandshakeTimeout", true].Update(m_handshakeTimeout);
+                settings["SharedSecret", true].Update(m_sharedSecret);
+                settings["Encryption", true].Update(m_encryption);
+                settings["SecureSession", true].Update(m_secureSession);
+                settings["ReceiveTimeout", true].Update(m_receiveTimeout);
+                settings["ReceiveBufferSize", true].Update(m_receiveBufferSize);
+                settings["Compression", true].Update(m_compression);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved client settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

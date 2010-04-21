@@ -245,6 +245,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -507,7 +508,7 @@ namespace TVA.IO
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -673,25 +674,22 @@ namespace TVA.IO
         /// <summary>
         /// Saves settings for the <see cref="LogFile"/> object to the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName", true];
-                element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileSize", true];
-                element.Update(m_fileSize, element.Description, element.Encrypted);
-                element = settings["FileFullOperation", true];
-                element.Update(m_fileFullOperation, element.Description, element.Encrypted);
+                settings["FileName", true].Update(m_fileName);
+                settings["FileSize", true].Update(m_fileSize);
+                settings["FileFullOperation", true].Update(m_fileFullOperation);
                 config.Save();
             }
         }
@@ -699,14 +697,15 @@ namespace TVA.IO
         /// <summary>
         /// Loads saved settings for the <see cref="LogFile"/> object from the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

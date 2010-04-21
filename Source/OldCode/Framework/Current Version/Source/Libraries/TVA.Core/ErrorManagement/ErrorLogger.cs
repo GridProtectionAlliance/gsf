@@ -269,6 +269,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -751,7 +752,7 @@ namespace TVA.ErrorManagement
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -1133,42 +1134,30 @@ namespace TVA.ErrorManagement
         /// Saves settings for the <see cref="ErrorLogger"/> object to the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["LogToUI", true];
-                element.Update(m_logToUI, element.Description, element.Encrypted);
-                element = settings["LogToFile", true];
-                element.Update(m_logToFile, element.Description, element.Encrypted);
-                element = settings["LogToEmail", true];
-                element.Update(m_logToEmail, element.Description, element.Encrypted);
-                element = settings["LogToEventLog", true];
-                element.Update(m_logToEventLog, element.Description, element.Encrypted);
-                element = settings["LogToScreenshot", true];
-                element.Update(m_logToScreenshot, element.Description, element.Encrypted);
-                element = settings["LogUserInfo", true];
-                element.Update(m_logUserInfo, element.Description, element.Encrypted);
-                element = settings["SmtpServer", true];
-                element.Update(m_smtpServer, element.Description, element.Encrypted);
-                element = settings["ContactName", true];
-                element.Update(m_contactName, element.Description, element.Encrypted);
-                element = settings["ContactEmail", true];
-                element.Update(m_contactEmail, element.Description, element.Encrypted);
-                element = settings["ContactPhone", true];
-                element.Update(m_contactPhone, element.Description, element.Encrypted);
-                element = settings["HandleUnhandledException", true];
-                element.Update(m_handleUnhandledException, element.Description, element.Encrypted);
-                element = settings["ExitOnUnhandledException", true];
-                element.Update(m_exitOnUnhandledException, element.Description, element.Encrypted);
+                settings["LogToUI", true].Update(m_logToUI);
+                settings["LogToFile", true].Update(m_logToFile);
+                settings["LogToEmail", true].Update(m_logToEmail);
+                settings["LogToEventLog", true].Update(m_logToEventLog);
+                settings["LogToScreenshot", true].Update(m_logToScreenshot);
+                settings["LogUserInfo", true].Update(m_logUserInfo);
+                settings["SmtpServer", true].Update(m_smtpServer);
+                settings["ContactName", true].Update(m_contactName);
+                settings["ContactEmail", true].Update(m_contactEmail);
+                settings["ContactPhone", true].Update(m_contactPhone);
+                settings["HandleUnhandledException", true].Update(m_handleUnhandledException);
+                settings["ExitOnUnhandledException", true].Update(m_exitOnUnhandledException);
                 config.Save();
             }
         }
@@ -1177,13 +1166,14 @@ namespace TVA.ErrorManagement
         /// Loads saved settings for the <see cref="ErrorLogger"/> object from the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

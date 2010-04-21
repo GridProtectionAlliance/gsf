@@ -231,10 +231,8 @@
 */
 #endregion
 
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using TVA.Collections;
 
 namespace TVA.Security.Cryptography
 {

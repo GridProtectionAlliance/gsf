@@ -253,6 +253,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.Text;
 using System.Threading;
@@ -527,7 +528,7 @@ namespace TVA.Services
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -626,37 +627,36 @@ namespace TVA.Services
 
         /// <summary>
         /// Saves settings for the <see cref="ClientHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["AuthenticationMethod", true];
-                element.Update(m_authenticationMethod, element.Description, element.Encrypted);
-                element = settings["AuthenticationInput", true];
-                element.Update(m_authenticationInput, element.Description, element.Encrypted);
+                settings["AuthenticationMethod", true].Update(m_authenticationMethod);
+                settings["AuthenticationInput", true].Update(m_authenticationInput);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved settings for the <see cref="ClientHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

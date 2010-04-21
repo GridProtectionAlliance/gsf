@@ -264,6 +264,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Configuration;
 using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -445,7 +446,7 @@ namespace TVA.Identity
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException("value"));
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -741,24 +742,21 @@ namespace TVA.Identity
         /// Saves settings for the <see cref="UserInfo"/> object to the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["PrivilegedDomain", true];
-                element.Update(m_privilegedDomain, element.Description, element.Encrypted);
-                element = settings["PrivilegedUserName", true];
-                element.Update(m_privilegedUserName, element.Description, element.Encrypted);
-                element = settings["PrivilegedPassword", true];
-                element.Update(m_privilegedPassword, element.Description, element.Encrypted);
+                settings["PrivilegedDomain", true].Update(m_privilegedDomain);
+                settings["PrivilegedUserName", true].Update(m_privilegedUserName);
+                settings["PrivilegedPassword", true].Update(m_privilegedPassword);
                 config.Save();
             }
         }
@@ -767,13 +765,14 @@ namespace TVA.Identity
         /// Loads saved settings for the <see cref="UserInfo"/> object from the config file if the <see cref="PersistSettings"/> 
         /// property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

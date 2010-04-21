@@ -270,6 +270,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -278,13 +279,13 @@ using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
+using TVA.Collections;
 using TVA.Communication;
 using TVA.Configuration;
 using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
 using TVA.Scheduling;
-using TVA.Collections;
 
 namespace TVA.Services
 {
@@ -800,7 +801,7 @@ namespace TVA.Services
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw (new ArgumentNullException());
+                    throw new ArgumentNullException("value");
 
                 m_settingsCategory = value;
             }
@@ -1151,35 +1152,27 @@ namespace TVA.Services
 
         /// <summary>
         /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["LogStatusUpdates", true];
-                element.Update(m_logStatusUpdates, element.Description, element.Encrypted);
-                element = settings["MaxStatusUpdatesLength", true];
-                element.Update(m_maxStatusUpdatesLength, element.Description, element.Encrypted);
-                element = settings["MaxStatusUpdatesFrequency", true];
-                element.Update(m_maxStatusUpdatesFrequency, element.Description, element.Encrypted);
-                element = settings["MonitorServiceHealth", true];
-                element.Update(m_monitorServiceHealth, element.Description, element.Encrypted);
-                element = settings["RequestHistoryLimit", true];
-                element.Update(m_requestHistoryLimit, element.Description, element.Encrypted);
-                element = settings["SupportTelnetSessions", true];
-                element.Update(m_supportTelnetSessions, element.Description, element.Encrypted);
-                element = settings["AllowedRemoteUsers", true];
-                element.Update(m_allowedRemoteUsers, element.Description, element.Encrypted);
-                element = settings["ImpersonateRemoteUser", true];
-                element.Update(m_impersonateRemoteUser, element.Description, element.Encrypted);
+                settings["LogStatusUpdates", true].Update(m_logStatusUpdates);
+                settings["MaxStatusUpdatesLength", true].Update(m_maxStatusUpdatesLength);
+                settings["MaxStatusUpdatesFrequency", true].Update(m_maxStatusUpdatesFrequency);
+                settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
+                settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
+                settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
+                settings["AllowedRemoteUsers", true].Update(m_allowedRemoteUsers);
+                settings["ImpersonateRemoteUser", true].Update(m_impersonateRemoteUser);
                 config.Save();
             }
         }
@@ -1188,6 +1181,7 @@ namespace TVA.Services
         /// Saves settings of the <see cref="ServiceHelper"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <param name="includeServiceComponents">A boolean value that indicates whether the settings of <see cref="ServiceComponents"/> are to be saved.</param>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings(bool includeServiceComponents)
         {
             SaveSettings();
@@ -1205,14 +1199,15 @@ namespace TVA.Services
 
         /// <summary>
         /// Loads saved settings of the <see cref="ServiceHelper"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

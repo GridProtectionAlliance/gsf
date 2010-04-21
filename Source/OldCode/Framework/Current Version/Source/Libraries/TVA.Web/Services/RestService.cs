@@ -238,6 +238,7 @@
 #endregion
 
 using System;
+using System.Configuration;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
@@ -517,41 +518,38 @@ namespace TVA.Web.Services
 
         /// <summary>
         /// Saves web service settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["Enabled", true];
-                element.Update(m_enabled, element.Description, element.Encrypted);
-                element = settings["ServiceUri", true];
-                element.Update(m_serviceUri, element.Description, element.Encrypted);
-                element = settings["ServiceContract", true];
-                element.Update(m_serviceContract, element.Description, element.Encrypted);
-                element = settings["ServiceDataFlow", true];
-                element.Update(m_serviceDataFlow, element.Description, element.Encrypted);
+                settings["Enabled", true].Update(m_enabled);
+                settings["ServiceUri", true].Update(m_serviceUri);
+                settings["ServiceContract", true].Update(m_serviceContract);
+                settings["ServiceDataFlow", true].Update(m_serviceDataFlow);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved web service settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

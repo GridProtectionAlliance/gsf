@@ -717,22 +717,14 @@ namespace TVA.Communication
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["AutoRepeat", true];
-                element.Update(m_autoRepeat, element.Description, element.Encrypted);
-                element = settings["ReceiveOnDemand", true];
-                element.Update(m_receiveOnDemand, element.Description, element.Encrypted);
-                element = settings["ReceiveInterval", true];
-                element.Update(m_receiveInterval, element.Description, element.Encrypted);
-                element = settings["StartingOffset", true];
-                element.Update(m_startingOffset, element.Description, element.Encrypted);
-                element = settings["FileOpenMode", true];
-                element.Update(m_fileOpenMode, element.Description, element.Encrypted);
-                element = settings["FileShareMode", true];
-                element.Update(m_fileShareMode, element.Description, element.Encrypted);
-                element = settings["FileAccessMode", true];
-                element.Update(m_fileAccessMode, element.Description, element.Encrypted);
+                settings["AutoRepeat", true].Update(m_autoRepeat);
+                settings["ReceiveOnDemand", true].Update(m_receiveOnDemand);
+                settings["ReceiveInterval", true].Update(m_receiveInterval);
+                settings["StartingOffset", true].Update(m_startingOffset);
+                settings["FileOpenMode", true].Update(m_fileOpenMode);
+                settings["FileShareMode", true].Update(m_fileShareMode);
+                settings["FileAccessMode", true].Update(m_fileAccessMode);
                 config.Save();
             }
         }

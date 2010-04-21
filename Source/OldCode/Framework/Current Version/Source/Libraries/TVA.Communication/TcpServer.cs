@@ -249,7 +249,6 @@ using System.ComponentModel;
 using System.Net.Sockets;
 using System.Threading;
 using TVA.Configuration;
-using TVA.Security.Cryptography;
 
 namespace TVA.Communication
 {
@@ -459,10 +458,8 @@ namespace TVA.Communication
             {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["PayloadAware", true];
-                element.Update(m_payloadAware, element.Description, element.Encrypted);
+                settings["PayloadAware", true].Update(m_payloadAware);
                 config.Save();
             }
         }
