@@ -28,6 +28,8 @@
 //       Modified GetAbsolutePath() to remove dependency on HttpContext.Current.
 //  04/19/2010 - Pinal C. Patel
 //       Added GetApplicationDataFolder() method.
+//  04/21/2010 - Pinal C. Patel
+//       Updated GetApplicationDataFolder() to include the company name if available.
 //
 //*******************************************************************************************************
 
@@ -584,7 +586,10 @@ namespace TVA.IO
             else
             {
                 // Use entry assembly for everything else.
-                return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
+                if (string.IsNullOrEmpty(AssemblyInfo.EntryAssembly.Company))
+                    return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Name);
+                else
+                    return Path.Combine(rootFolder, AssemblyInfo.EntryAssembly.Company + "\\" + AssemblyInfo.EntryAssembly.Name);
             }
         }
 
