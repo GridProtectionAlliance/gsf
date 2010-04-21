@@ -418,18 +418,18 @@ namespace TVA
         // limited to classes and won't show up on native types and custom structs.
 
         /// <summary>
-        /// Converts value to string, null objects will return an empty string (""). 
+        /// Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
         /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
         public static string ToNonNullString<T>(this T value) where T : class
         {
-            return (value == null ? "" : value.ToString());
+            return (value == null || value == DBNull.Value ? "" : value.ToString());
         }
 
         /// <summary>
-        /// Converts value to string, null objects will return specified <paramref name="nonNullValue"/>.
+        /// Converts value to string, null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
@@ -441,7 +441,7 @@ namespace TVA
             if (nonNullValue == null)
                 throw new ArgumentNullException("nonNullValue");
 
-            return (value == null ? nonNullValue : value.ToString());
+            return (value == null || value == DBNull.Value ? nonNullValue : value.ToString());
         }
 
         // We handle strings as a special version of the ToNullNullString extension to handle documentation a little differently
