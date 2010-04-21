@@ -234,6 +234,7 @@
 #endregion
 
 using System;
+using System.Configuration;
 using System.Threading;
 using TVA.Configuration;
 
@@ -449,40 +450,37 @@ namespace TVA.Historian.Replication
         /// <summary>
         /// Saves replication provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["Enabled", true];
-                element.Update(m_enabled, element.Description, element.Encrypted);
-                element = settings["ArchiveLocation", true];
-                element.Update(m_archiveLocation, element.Description, element.Encrypted);
-                element = settings["ReplicaLocation", true];
-                element.Update(m_replicaLocation, element.Description, element.Encrypted);
-                element = settings["ReplicationInterval", true];
-                element.Update(m_replicationInterval, element.Description, element.Encrypted);
+                settings["Enabled", true].Update(m_enabled);
+                settings["ArchiveLocation", true].Update(m_archiveLocation);
+                settings["ReplicaLocation", true].Update(m_replicaLocation);
+                settings["ReplicationInterval", true].Update(m_replicationInterval);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved replication provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

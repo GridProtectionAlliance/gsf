@@ -315,18 +315,11 @@ namespace TVA.Historian.MetadataProviders
             base.SaveSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["ServiceUri", true];
-                element.Update(m_serviceUri, element.Description, element.Encrypted);
-                element = settings["ServiceDataFormat", true];
-                element.Update(m_serviceDataFormat, element.Description, element.Encrypted);
+                settings["ServiceUri", true].Update(m_serviceUri);
+                settings["ServiceDataFormat", true].Update(m_serviceDataFormat);
                 config.Save();
             }
         }
@@ -339,10 +332,6 @@ namespace TVA.Historian.MetadataProviders
             base.LoadSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];

@@ -249,6 +249,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Drawing;
 using System.Text;
 using System.Threading;
@@ -924,49 +925,42 @@ namespace TVA.Historian
 
         /// <summary>
         /// Saves settings for the <see cref="DataListener"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ID", true];
-                element.Update(m_id, element.Description, element.Encrypted);
-                element = settings["Server", true];
-                element.Update(m_server, element.Description, element.Encrypted);
-                element = settings["Port", true];
-                element.Update(m_port, element.Description, element.Encrypted);
-                element = settings["Protocol", true];
-                element.Update(m_protocol, element.Description, element.Encrypted);
-                element = settings["ConnectToServer", true];
-                element.Update(m_connectToServer, element.Description, element.Encrypted);
-                element = settings["CacheData", true];
-                element.Update(m_cacheData, element.Description, element.Encrypted);
-                element = settings["InitializeData", true];
-                element.Update(m_initializeData, element.Description, element.Encrypted);
-                element = settings["InitializeDataTimeout", true];
-                element.Update(m_initializeDataTimeout, element.Description, element.Encrypted);
+                settings["ID", true].Update(m_id);
+                settings["Server", true].Update(m_server);
+                settings["Port", true].Update(m_port);
+                settings["Protocol", true].Update(m_protocol);
+                settings["ConnectToServer", true].Update(m_connectToServer);
+                settings["CacheData", true].Update(m_cacheData);
+                settings["InitializeData", true].Update(m_initializeData);
+                settings["InitializeDataTimeout", true].Update(m_initializeDataTimeout);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved settings for the <see cref="DataListener"/> from the config file if the <see cref="PersistSettings"/>  property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

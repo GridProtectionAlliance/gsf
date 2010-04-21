@@ -338,20 +338,12 @@ namespace TVA.Historian.Notifiers
             base.SaveSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["EmailServer", true];
-                element.Update(m_emailServer, element.Description, element.Encrypted);
-                element = settings["EmailSender", true];
-                element.Update(m_emailSender, element.Description, element.Encrypted);
-                element = settings["EmailRecipients", true];
-                element.Update(m_emailRecipients, element.Description, element.Encrypted);
+                settings["EmailServer", true].Update(m_emailServer);
+                settings["EmailSender", true].Update(m_emailSender);
+                settings["EmailRecipients", true].Update(m_emailRecipients);
                 config.Save();
             }
         }
@@ -364,10 +356,6 @@ namespace TVA.Historian.Notifiers
             base.LoadSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];

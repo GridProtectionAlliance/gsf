@@ -6256,44 +6256,55 @@
             will serialized into the section labeled by the <see cref="P:TVA.Configuration.CategorizedSettingsBase.CategoryName"/> value.
             </remarks>
         </member>
+        <member name="T:TVA.Configuration.SettingScope">
+            <summary>
+            Specifies the scope of a setting represented by <see cref="T:TVA.Configuration.CategorizedSettingsElement"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Configuration.SettingScope.User">
+            <summary>
+            Settings is intended for user specific use.
+            </summary>
+        </member>
+        <member name="F:TVA.Configuration.SettingScope.Application">
+            <summary>
+            Settings is intended for application wide use.
+            </summary>
+        </member>
         <member name="T:TVA.Configuration.CategorizedSettingsElement">
             <summary>
             Represents a settings entry in the config file.
             </summary>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor">
+        <member name="F:TVA.Configuration.CategorizedSettingsElement.DefaultValue">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Configuration.CategorizedSettingsElement.Value"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Configuration.CategorizedSettingsElement.DefaultDescription">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Configuration.CategorizedSettingsElement.Description"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Configuration.CategorizedSettingsElement.DefaultEncrypted">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Configuration.CategorizedSettingsElement.Encrypted"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Configuration.CategorizedSettingsElement.DefaultScope">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Configuration.CategorizedSettingsElement.Scope"/> property.
+            </summary>
+        </member>
+        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(TVA.Configuration.CategorizedSettingsElementCollection)">
             <summary>
             Required by the configuration API and is for internal use only.
             </summary>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(System.String)">
+        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(TVA.Configuration.CategorizedSettingsElementCollection,System.String)">
             <summary>
             Required by the configuration API and is for internal use only.
             </summary>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> class.
-            </summary>
-            <param name="name">The identifier of the setting.</param>
-            <param name="value">The value of the setting.</param>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(System.String,System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> class.
-            </summary>
-            <param name="name">The identifier of the setting.</param>
-            <param name="value">The value of the setting.</param>
-            <param name="description">The description of the setting.</param>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.#ctor(System.String,System.String,System.String,System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> class.
-            </summary>
-            <param name="name">The identifier of the setting.</param>
-            <param name="value">The value of the setting.</param>
-            <param name="description">The description of the setting.</param>
-            <param name="encrypted">true if the setting value is to be encrypted; otherwise false.</param>
         </member>
         <member name="M:TVA.Configuration.CategorizedSettingsElement.SetCryptoKey(System.String)">
             <summary>
@@ -6301,14 +6312,13 @@
             </summary>
             <param name="cryptoKey">New crypto key.</param>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.Object,System.String)">
+        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.Object)">
             <summary>
             Updates setting information.
             </summary>
             <param name="value">New setting value.</param>
-            <param name="description">New setting description.</param>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.String,System.String)">
+        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.Object,System.String)">
             <summary>
             Updates setting information.
             </summary>
@@ -6323,13 +6333,14 @@
             <param name="description">New setting description.</param>
             <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.String,System.String,System.Boolean)">
+        <member name="M:TVA.Configuration.CategorizedSettingsElement.Update(System.Object,System.String,System.Boolean,TVA.Configuration.SettingScope)">
             <summary>
             Updates setting information.
             </summary>
             <param name="value">New setting value.</param>
             <param name="description">New setting description.</param>
             <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
+            <param name="scope">One of the <see cref="T:TVA.Configuration.SettingScope"/> values.</param>
         </member>
         <member name="M:TVA.Configuration.CategorizedSettingsElement.ValueAs``1">
             <summary>
@@ -6547,6 +6558,11 @@
             <param name="defaultValue">The default value to return if the setting value is empty.</param>
             <returns>Value as DateTime.</returns>
         </member>
+        <member name="P:TVA.Configuration.CategorizedSettingsElement.Category">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/> to which this <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> belongs.
+            </summary>
+        </member>
         <member name="P:TVA.Configuration.CategorizedSettingsElement.Name">
             <summary>
             Gets or sets the identifier of the setting.
@@ -6570,6 +6586,11 @@
             Gets or sets a boolean value that indicates whether the setting value is to be encrypted.
             </summary>
             <returns>true, if the setting value is to be encrypted; otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Configuration.CategorizedSettingsElement.Scope">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Configuration.SettingScope"/>.
+            </summary>
         </member>
         <member name="T:TVA.Configuration.CategorizedSettingsElementCollection">
             <summary>
@@ -6596,38 +6617,7 @@
             <param name="name">Name of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
             <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.String)">
-            <summary>
-            Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
-            </summary>
-            <param name="name">Name of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.Object,System.Boolean)">
-            <summary>
-            Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
-            </summary>
-            <param name="name">Name of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="encryptValue">true if the Value of <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.String,System.Boolean)">
-            <summary>
-            Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
-            </summary>
-            <param name="name">Name of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="encryptValue">true if the Value of <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        </member>
         <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.Object,System.String)">
-            <summary>
-            Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
-            </summary>
-            <param name="name">Name of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-            <param name="description">Description of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.String,System.String)">
             <summary>
             Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
             </summary>
@@ -6644,7 +6634,7 @@
             <param name="description">Description of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
             <param name="encryptValue">true if the Value of <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
         </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.String,System.String,System.Boolean)">
+        <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(System.String,System.Object,System.String,System.Boolean,TVA.Configuration.SettingScope)">
             <summary>
             Adds a new <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object if one does not exist.
             </summary>
@@ -6652,6 +6642,7 @@
             <param name="value">Value of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
             <param name="description">Description of the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</param>
             <param name="encryptValue">true if the Value of <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
+            <param name="scope">One of the <see cref="T:TVA.Configuration.SettingScope"/> values.</param>
         </member>
         <member name="M:TVA.Configuration.CategorizedSettingsElementCollection.Add(TVA.Configuration.CategorizedSettingsElement)">
             <summary>
@@ -6702,6 +6693,16 @@
             <param name="element"><see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object whose key is to be retrieved.</param>
             <returns>String key value for a <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object.</returns>
         </member>
+        <member name="P:TVA.Configuration.CategorizedSettingsElementCollection.Name">
+            <summary>
+            Gets or sets the name of the <see cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Configuration.CategorizedSettingsElementCollection.Section">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> to which this <see cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/> belongs.
+            </summary>
+        </member>
         <member name="P:TVA.Configuration.CategorizedSettingsElementCollection.Item(System.Int32)">
             <summary>
             Gets or sets the <see cref="T:TVA.Configuration.CategorizedSettingsElement"/> object at the specified index.
@@ -6745,12 +6746,18 @@
             </summary>
             <param name="reader">The <see cref="T:System.Xml.XmlReader"/> object, which reads from the configuration file.</param>
         </member>
+        <member name="P:TVA.Configuration.CategorizedSettingsSection.File">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Configuration.ConfigurationFile"/> to which this <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> belongs.
+            </summary>
+        </member>
         <member name="P:TVA.Configuration.CategorizedSettingsSection.Item(System.String)">
             <summary>
             Gets the <see cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/> object representing settings under the specified category name.
             </summary>
             <param name="name">Name of the category whose settings are to be retrieved.</param>
             <returns><see cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/> object with settings under the specified category name.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
         </member>
         <member name="P:TVA.Configuration.CategorizedSettingsSection.General">
             <summary>
@@ -6847,29 +6854,10 @@
              </code>
              </example>
         </member>
-        <member name="M:TVA.Configuration.ConfigurationFile.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.ConfigurationFile"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Configuration.ConfigurationFile.#ctor(TVA.ApplicationType)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.ConfigurationFile"/> class.
-            </summary>
-            <param name="appType">One of the <see cref="T:TVA.ApplicationType"/> values.</param>
-        </member>
         <member name="M:TVA.Configuration.ConfigurationFile.#ctor(System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Configuration.ConfigurationFile"/> class.
-            </summary>
-            <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
-        </member>
-        <member name="M:TVA.Configuration.ConfigurationFile.#ctor(System.String,TVA.ApplicationType)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Configuration.ConfigurationFile"/> class.
-            </summary>
-            <param name="configFilePath">Path of the config file that belongs to another Windows or Web application.</param>
-            <param name="appType">One of the <see cref="T:TVA.ApplicationType"/> values.</param>
+            </summary>        
         </member>
         <member name="M:TVA.Configuration.ConfigurationFile.Save">
             <summary>
@@ -6894,6 +6882,19 @@
             </summary>
             <param name="cryptoKey">New crypto key.</param>
         </member>
+        <member name="M:TVA.Configuration.ConfigurationFile.Open(System.String)">
+            <summary>
+            Opens application config file at the specified <paramref name="configFilePath"/>.
+            </summary>
+            <param name="configFilePath">Path of the config file that belongs to a Windows or Web application.</param>
+            <returns>An <see cref="T:TVA.Configuration.ConfigurationFile"/> object.</returns>
+        </member>
+        <member name="P:TVA.Configuration.ConfigurationFile.FileName">
+            <summary>
+            Gets the name and path of the config file represented by this <see cref="T:TVA.Configuration.ConfigurationFile"/> object.
+            </summary>
+            <returns>Name and path of the config file.</returns>
+        </member>
         <member name="P:TVA.Configuration.ConfigurationFile.Settings">
             <summary>
             Gets the <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> object representing settings under the 
@@ -6915,25 +6916,14 @@
             </summary>
             <returns>A <see cref="T:System.Configuration.ConnectionStringsSection"/> object.</returns>
         </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.FileName">
+        <member name="P:TVA.Configuration.ConfigurationFile.UserSettings">
             <summary>
-            Gets the name and path of the config file represented by this <see cref="T:TVA.Configuration.ConfigurationFile"/> object.
+            Gets the <see cref="T:TVA.Configuration.ConfigurationFile.UserConfigurationFile"/> where user specific settings are saved.
             </summary>
-            <returns>Name and path of the config file.</returns>
         </member>
         <member name="P:TVA.Configuration.ConfigurationFile.Current">
             <summary>
             Gets the <see cref="T:TVA.Configuration.ConfigurationFile"/> object that represents the config file of the currently executing Windows or Web application.
-            </summary>
-        </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.CurrentWeb">
-            <summary>
-            Gets the <see cref="T:TVA.Configuration.ConfigurationFile"/> object that represents the config file of the currently executing Web application.
-            </summary>
-        </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.CurrentWin">
-            <summary>
-            Gets the <see cref="T:TVA.Configuration.ConfigurationFile"/> object that represents the config file of the currently executing Windows application.
             </summary>
         </member>
         <member name="T:TVA.Configuration.EncryptSettingAttribute">
@@ -9873,12 +9863,14 @@
             Saves settings for the <see cref="T:TVA.ErrorManagement.ErrorLogger"/> object to the config file if the <see cref="P:TVA.ErrorManagement.ErrorLogger.PersistSettings"/> 
             property is set to true.
             </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.ErrorManagement.ErrorLogger.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.ErrorManagement.ErrorLogger.LoadSettings">
             <summary>
             Loads saved settings for the <see cref="T:TVA.ErrorManagement.ErrorLogger"/> object from the config file if the <see cref="P:TVA.ErrorManagement.ErrorLogger.PersistSettings"/> 
             property is set to true.
             </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.ErrorManagement.ErrorLogger.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.ErrorManagement.ErrorLogger.Log(System.Exception)">
             <summary>
@@ -10598,6 +10590,16 @@
              </code>
              </example>
         </member>
+        <member name="F:TVA.Identity.UserInfo.DefaultPersistSettings">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Identity.UserInfo.PersistSettings"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Identity.UserInfo.DefaultSettingsCategory">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Identity.UserInfo.SettingsCategory"/> property.
+            </summary>
+        </member>
         <member name="M:TVA.Identity.UserInfo.#ctor(System.String,System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Identity.UserInfo"/> class.
@@ -10636,12 +10638,14 @@
             Saves settings for the <see cref="T:TVA.Identity.UserInfo"/> object to the config file if the <see cref="P:TVA.Identity.UserInfo.PersistSettings"/> 
             property is set to true.
             </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Identity.UserInfo.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Identity.UserInfo.LoadSettings">
             <summary>
             Loads saved settings for the <see cref="T:TVA.Identity.UserInfo"/> object from the config file if the <see cref="P:TVA.Identity.UserInfo.PersistSettings"/> 
             property is set to true.
             </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Identity.UserInfo.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Identity.UserInfo.DefinePrivilegedAccount(System.String,System.String,System.String)">
              <summary>
@@ -10973,6 +10977,29 @@
             <summary>
             Gets the <see cref="T:TVA.Identity.UserInfo"/> object for the <see cref="P:TVA.Identity.UserInfo.RemoteUserID"/>.
             </summary>
+        </member>
+        <member name="T:TVA.InitializationException">
+            <summary>
+            The exception that is thrown when an object fails to initialize properly.
+            </summary>
+        </member>
+        <member name="M:TVA.InitializationException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.InitializationException"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.InitializationException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.InitializationException"/> class.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:TVA.InitializationException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.InitializationException"/> class.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="innerException">The exception that is the cause of the current exception.</param>
         </member>
         <member name="T:TVA.Int24">
             <summary>Represents a 3-byte, 24-bit signed integer.</summary>
@@ -12806,6 +12833,12 @@
             <param name="filePath">File name or relative file path.</param>
             <returns>Absolute file path for the specified file name or relative file path.</returns>
         </member>
+        <member name="M:TVA.IO.FilePath.GetApplicationDataFolder">
+            <summary>
+            Gets the path to the folder where data related to the current application can be stored.
+            </summary>
+            <returns>Path to the folder where data related to the current application can be stored.</returns>
+        </member>
         <member name="M:TVA.IO.FilePath.AddPathSuffix(System.String)">
             <summary>
             Makes sure path is suffixed with standard <see cref="F:System.IO.Path.DirectorySeparatorChar"/>.
@@ -13150,12 +13183,14 @@
         <member name="M:TVA.IO.IsamDataFileBase`1.SaveSettings">
             <summary>
             Saves settings of the file to the config file if the <see cref="P:TVA.IO.IsamDataFileBase`1.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.IsamDataFileBase`1.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.IsamDataFileBase`1.LoadSettings">
             <summary>
             Loads saved settings of the file from the config file if the <see cref="P:TVA.IO.IsamDataFileBase`1.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.IsamDataFileBase`1.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.IsamDataFileBase`1.Open">
             <summary>
@@ -13530,13 +13565,15 @@
             <summary>
             Saves settings for the <see cref="T:TVA.IO.LogFile"/> object to the config file if the <see cref="P:TVA.IO.LogFile.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.LogFile.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.LogFile.LoadSettings">
             <summary>
             Loads saved settings for the <see cref="T:TVA.IO.LogFile"/> object from the config file if the <see cref="P:TVA.IO.LogFile.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.LogFile.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.LogFile.Open">
             <summary>
@@ -13845,13 +13882,15 @@
             <summary>
             Saves settings for the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object to the config file if the <see cref="P:TVA.IO.MultipleDestinationExporter.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.MultipleDestinationExporter.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.MultipleDestinationExporter.LoadSettings">
             <summary>
             Loads saved settings for the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object from the config file if the <see cref="P:TVA.IO.MultipleDestinationExporter.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.MultipleDestinationExporter.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.IO.MultipleDestinationExporter.ExportData(System.String)">
             <summary>
@@ -14408,6 +14447,15 @@
             </summary>
             <param name="seconds">Total number of unpublished seconds of data.</param>
         </member>
+        <member name="M:TVA.Measurements.ConcentratorBase.OnDiscardingMeasurements(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.ConcentratorBase.DiscardingMeasurements"/> event.
+            </summary>
+            <param name="measurements">Enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values being discarded.</param>
+            <remarks>
+            Allows derived classes to raise a discarding measurements event.
+            </remarks>
+        </member>
         <member name="E:TVA.Measurements.ConcentratorBase.UnpublishedSamples">
             <summary>
             This event is raised every second allowing consumer to track current number of unpublished seconds of data in the queue.
@@ -14427,6 +14475,14 @@
             <para>
             Processing will not stop for any exceptions thrown by the user function, but any captured exceptions will be exposed through this event.
             </para>
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.ConcentratorBase.DiscardingMeasurements">
+            <summary>
+            This event is raised if there are any measurements being discarded during the sorting process.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
         <member name="E:TVA.Measurements.ConcentratorBase.LagTimeUpdated">
@@ -15157,12 +15213,17 @@
         </member>
         <member name="P:TVA.Measurements.IMeasurement.ValueQualityIsGood">
             <summary>
-            Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="T:TVA.Measurements.IMeasurement"/> is good.
+            Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="T:TVA.Measurements.IMeasurement"/> is good.
             </summary>
         </member>
         <member name="P:TVA.Measurements.IMeasurement.TimestampQualityIsGood">
             <summary>
-            Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="T:TVA.Measurements.IMeasurement"/> is good.
+            Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="T:TVA.Measurements.IMeasurement"/> is good.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.IMeasurement.IsDiscarded">
+            <summary>
+            Gets or sets a boolean value that determines if this <see cref="T:TVA.Measurements.IMeasurement"/> has been discarded during sorting.
             </summary>
         </member>
         <member name="P:TVA.Measurements.IMeasurement.MeasurementValueFilter">
@@ -15543,12 +15604,17 @@
         </member>
         <member name="P:TVA.Measurements.Measurement.ValueQualityIsGood">
             <summary>
-            Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="T:TVA.Measurements.Measurement"/> is good.
+            Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="T:TVA.Measurements.Measurement"/> is good.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Measurement.TimestampQualityIsGood">
             <summary>
-            Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="T:TVA.Measurements.Measurement"/> is good.
+            Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="T:TVA.Measurements.Measurement"/> is good.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Measurement.IsDiscarded">
+            <summary>
+            Gets or sets a boolean value that determines if this <see cref="T:TVA.Measurements.Measurement"/> has been discarded during sorting.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Measurement.MeasurementValueFilter">
@@ -15753,6 +15819,11 @@
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current adapter status.</returns>
         </member>
+        <member name="M:TVA.Measurements.Routing.IAdapter.AssignParentCollection(TVA.Measurements.Routing.IAdapterCollection)">
+            <summary>
+            Assigns the reference to the parent <see cref="T:TVA.Measurements.Routing.IAdapterCollection"/> that will contain this <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
+            </summary>
+        </member>
         <member name="E:TVA.Measurements.Routing.IAdapter.StatusMessage">
             <summary>
             Provides status messages to consumer.
@@ -15785,6 +15856,11 @@
         <member name="P:TVA.Measurements.Routing.IAdapter.ConnectionString">
             <summary>
             Gets or sets key/value pair connection information specific to <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.Parent">
+            <summary>
+            Gets a read-only reference to the collection that contains this <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.IAdapter.Name">
@@ -15929,16 +16005,12 @@
             </para>
             </remarks>
         </member>
-        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
-            </summary>
-        </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize(System.Int32)">
             <summary>
             Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
             </summary>
             <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})">
             <summary>
@@ -16039,10 +16111,23 @@
             </para>
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.Routing.ActionAdapterBase.Parent">
+            <summary>
+            Gets a read-only reference to the collection that contains this <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.Routing.ActionAdapterBase.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>.
             </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.ActionAdapterBase.InitializationTimeout">
+            <summary>
+            Gets or sets maximum time system will wait during <see cref="M:TVA.Measurements.Routing.ActionAdapterBase.Start"/> for initialization.
+            </summary>
+            <remarks>
+            Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
+            </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.ActionAdapterBase.OutputMeasurements">
             <summary>
@@ -16107,7 +16192,7 @@
             <summary>
             Attempts to get the adapter with the specified <paramref name="ID"/>.
             </summary>
-            <param name="ID">ID of adapter to get.</param>
+            <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
             <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
         </member>
@@ -16200,7 +16285,7 @@
             <summary>
             Attempts to get the adapter with the specified <paramref name="ID"/>.
             </summary>
-            <param name="ID">ID of adapter to get.</param>
+            <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
             <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
         </member>
@@ -16344,6 +16429,11 @@
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.ConnectionString">
             <summary>
             Gets or sets key/value pair connection information specific to this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.Parent">
+            <summary>
+            Gets a read-only reference to the collection that contains this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>, if any.
             </summary>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.DataSource">
@@ -16529,16 +16619,12 @@
             <param name="item">Primary key of measurement to find.</param>
             <returns>true if specified measurement key is defined in <see cref="P:TVA.Measurements.Routing.AdapterBase.InputMeasurementKeys"/>.</returns>
         </member>
-        <member name="M:TVA.Measurements.Routing.AdapterBase.WaitForInitialize">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TVA.Measurements.Routing.AdapterBase.Initialized"/>.
-            </summary>
-        </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.WaitForInitialize(System.Int32)">
             <summary>
             Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TVA.Measurements.Routing.AdapterBase.Initialized"/>.
             </summary>
             <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.OnStatusMessage(System.String)">
             <summary>
@@ -16668,10 +16754,23 @@
             </para>
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.Parent">
+            <summary>
+            Gets a read-only reference to the collection that contains this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.DataSource">
             <summary>
             Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.
             </summary>
+        </member>
+        <member name="P:TVA.Measurements.Routing.AdapterBase.InitializationTimeout">
+            <summary>
+            Gets or sets maximum time system will wait during <see cref="M:TVA.Measurements.Routing.AdapterBase.Start"/> for initialization.
+            </summary>
+            <remarks>
+            Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
+            </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.OutputMeasurements">
             <summary>
@@ -16765,7 +16864,7 @@
             <summary>
             Attempts to get any adapter in all collections with the specified <paramref name="ID"/>.
             </summary>
-            <param name="ID">ID of adapter to get.</param>
+            <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
             <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
             <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
@@ -24685,13 +24784,15 @@
             <summary>
             Saves settings for the <see cref="T:TVA.Scheduling.ScheduleManager"/> object to the config file if the <see cref="P:TVA.Scheduling.ScheduleManager.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Scheduling.ScheduleManager.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Scheduling.ScheduleManager.LoadSettings">
             <summary>
             Loads saved settings for the <see cref="T:TVA.Scheduling.ScheduleManager"/> object from the config file if the <see cref="P:TVA.Scheduling.ScheduleManager.PersistSettings"/> 
             property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Scheduling.ScheduleManager.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Scheduling.ScheduleManager.Start">
             <summary>

@@ -238,6 +238,7 @@
 #endregion
 
 using System;
+using System.Configuration;
 using System.Threading;
 using TVA.Configuration;
 
@@ -462,39 +463,37 @@ namespace TVA.Historian.Notifiers
 
         /// <summary>
         /// Saves notifier settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["Enabled", true];
-                element.Update(m_enabled, element.Description, element.Encrypted);
-                element = settings["NotifyTimeout", true];
-                element.Update(m_notifyTimeout, element.Description, element.Encrypted);
-                element = settings["NotifyOptions", true];
-                element.Update(m_notifyOptions, element.Description, element.Encrypted);
+                settings["Enabled", true].Update(m_enabled);
+                settings["NotifyTimeout", true].Update(m_notifyTimeout);
+                settings["NotifyOptions", true].Update(m_notifyOptions);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved notifier settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

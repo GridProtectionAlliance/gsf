@@ -214,24 +214,14 @@ namespace Hadoop.Replication
             base.SaveSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-                element = settings["BytesPerCrc32", true];
-                element.Update(m_bytesPerCrc32, element.Description, element.Encrypted);
-                element = settings["HdfsBlockSize", true];
-                element.Update(m_hdfsBlockSize, element.Description, element.Encrypted);
-                element = settings["ApplyBufferPadding", true];
-                element.Update(m_applyBufferPadding, element.Description, element.Encrypted);
-                element = settings["HashRequestAttempts", true];
-                element.Update(m_hashRequestAttempts, element.Description, element.Encrypted);
-                element = settings["HashRequestWaitTime", true];
-                element.Update(m_hashRequestWaitTime, element.Description, element.Encrypted);
+                settings["BytesPerCrc32", true].Update(m_bytesPerCrc32);
+                settings["HdfsBlockSize", true].Update(m_hdfsBlockSize);
+                settings["ApplyBufferPadding", true].Update(m_applyBufferPadding);
+                settings["HashRequestAttempts", true].Update(m_hashRequestAttempts);
+                settings["HashRequestWaitTime", true].Update(m_hashRequestWaitTime);
                 config.Save();
             }
         }
@@ -244,10 +234,6 @@ namespace Hadoop.Replication
             base.LoadSettings();
             if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(SettingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
-
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];

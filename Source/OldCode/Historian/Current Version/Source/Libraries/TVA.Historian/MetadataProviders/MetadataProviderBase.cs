@@ -240,6 +240,7 @@
 #endregion
 
 using System;
+using System.Configuration;
 using System.Threading;
 using System.Timers;
 using TVA.Configuration;
@@ -470,24 +471,21 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Saves metadata provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["Enabled", true];
-                element.Update(m_enabled, element.Description, element.Encrypted);
-                element = settings["RefreshTimeout", true];
-                element.Update(m_refreshTimeout, element.Description, element.Encrypted);
-                element = settings["RefreshInterval", true];
-                element.Update(m_refreshInterval, element.Description, element.Encrypted);
+                settings["Enabled", true].Update(m_enabled);
+                settings["RefreshTimeout", true].Update(m_refreshTimeout);
+                settings["RefreshInterval", true].Update(m_refreshInterval);
                 config.Save();
             }
         }
@@ -495,13 +493,14 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Loads saved metadata provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

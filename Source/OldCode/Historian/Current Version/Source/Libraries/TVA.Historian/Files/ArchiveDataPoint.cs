@@ -320,9 +320,7 @@ namespace TVA.Historian.Files
         /// <param name="measurement">Object that implements the <see cref="IMeasurement"/> interface.</param>
         [CLSCompliant(false)]
         public ArchiveDataPoint(IMeasurement measurement)
-            : this(measurement, measurement.ValueQualityIsGood ? (measurement.TimestampQualityIsGood ? Quality.Good : Quality.Old) : Quality.SuspectData)
-        // TODO: Pinal - please delete above local constructor call, and uncomment the following during roll down
-        // : this(measurement, measurement.IsDiscarded ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood ? (measurement.TimestampQualityIsGood ? Quality.Good : Quality.Old) : Quality.SuspectData))
+            : this(measurement, measurement.IsDiscarded ? Quality.DeletedFromProcessing : (measurement.ValueQualityIsGood ? (measurement.TimestampQualityIsGood ? Quality.Good : Quality.Old) : Quality.SuspectData))
         {
         }
 

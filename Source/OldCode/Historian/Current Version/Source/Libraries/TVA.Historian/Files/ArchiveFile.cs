@@ -285,6 +285,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -1493,61 +1494,48 @@ namespace TVA.Historian.Files
 
         /// <summary>
         /// Saves settings for the <see cref="ArchiveFile"/> to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["FileName", true];
-                element.Update(m_fileName, element.Description, element.Encrypted);
-                element = settings["FileType", true];
-                element.Update(m_fileType, element.Description, element.Encrypted);
-                element = settings["FileSize", true];
-                element.Update(m_fileSize, element.Description, element.Encrypted);
-                element = settings["DataBlockSize", true];
-                element.Update(m_dataBlockSize, element.Description, element.Encrypted);
-                element = settings["RolloverPreparationThreshold", true];
-                element.Update(m_rolloverPreparationThreshold, element.Description, element.Encrypted);
-                element = settings["ArchiveOffloadLocation", true];
-                element.Update(m_archiveOffloadLocation, element.Description, element.Encrypted);
-                element = settings["ArchiveOffloadCount", true];
-                element.Update(m_archiveOffloadCount, element.Description, element.Encrypted);
-                element = settings["ArchiveOffloadThreshold", true];
-                element.Update(m_archiveOffloadThreshold, element.Description, element.Encrypted);
-                element = settings["MaxHistoricArchiveFiles", true];
-                element.Update(m_maxHistoricArchiveFiles, element.Description, element.Encrypted);
-                element = settings["LeadTimeTolerance", true];
-                element.Update(m_leadTimeTolerance, element.Description, element.Encrypted);
-                element = settings["CompressData", true];
-                element.Update(m_compressData, element.Description, element.Encrypted);
-                element = settings["DiscardOutOfSequenceData", true];
-                element.Update(m_discardOutOfSequenceData, element.Description, element.Encrypted);
-                element = settings["CacheWrites", true];
-                element.Update(m_cacheWrites, element.Description, element.Encrypted);
-                element = settings["ConserveMemory", true];
-                element.Update(m_conserveMemory, element.Description, element.Encrypted);
+                settings["FileName", true].Update(m_fileName);
+                settings["FileType", true].Update(m_fileType);
+                settings["FileSize", true].Update(m_fileSize);
+                settings["DataBlockSize", true].Update(m_dataBlockSize);
+                settings["RolloverPreparationThreshold", true].Update(m_rolloverPreparationThreshold);
+                settings["ArchiveOffloadLocation", true].Update(m_archiveOffloadLocation);
+                settings["ArchiveOffloadCount", true].Update(m_archiveOffloadCount);
+                settings["ArchiveOffloadThreshold", true].Update(m_archiveOffloadThreshold);
+                settings["MaxHistoricArchiveFiles", true].Update(m_maxHistoricArchiveFiles);
+                settings["LeadTimeTolerance", true].Update(m_leadTimeTolerance);
+                settings["CompressData", true].Update(m_compressData);
+                settings["DiscardOutOfSequenceData", true].Update(m_discardOutOfSequenceData);
+                settings["CacheWrites", true].Update(m_cacheWrites);
+                settings["ConserveMemory", true].Update(m_conserveMemory);
                 config.Save();
             }
         }
 
         /// <summary>
         /// Loads saved settings for the <see cref="ArchiveFile"/> from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;

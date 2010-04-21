@@ -334,12 +334,14 @@
         <member name="M:TVA.Communication.ClientBase.SaveSettings">
             <summary>
             Saves client settings to the config file if the <see cref="P:TVA.Communication.ClientBase.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Communication.ClientBase.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Communication.ClientBase.LoadSettings">
             <summary>
             Loads saved client settings from the config file if the <see cref="P:TVA.Communication.ClientBase.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Communication.ClientBase.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Communication.ClientBase.Connect">
             <summary>
@@ -1750,12 +1752,14 @@
         <member name="M:TVA.Communication.ServerBase.SaveSettings">
             <summary>
             Saves server settings to the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Communication.ServerBase.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Communication.ServerBase.LoadSettings">
             <summary>
             Loads saved server settings from the config file if the <see cref="P:TVA.Communication.ServerBase.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Communication.ServerBase.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Communication.ServerBase.SendTo(System.Guid,System.String)">
             <summary>

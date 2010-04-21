@@ -4,6 +4,129 @@
         <name>TVA.Web</name>
     </assembly>
     <members>
+        <member name="T:TVA.Web.SecurityModule">
+            <summary>
+            Represents an HTTP module that can be used to enable site-wide role-based security.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultProviderType">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.ProviderType"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultError401Page">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.Error401Page"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultError403Page">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.Error403Page"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultIncludedResources">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.IncludedResources"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultExcludedResources">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.ExcludedResources"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultPersistSettings">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Web.SecurityModule.DefaultSettingsCategory">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Web.SecurityModule.SettingsCategory"/> property.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.SecurityModule"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Web.SecurityModule"/> settings to the config file if the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Web.SecurityModule.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Web.SecurityModule"/> settings from the config file if the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Web.SecurityModule.Init(System.Web.HttpApplication)">
+            <summary>
+            Initializes the <see cref="T:TVA.Web.SecurityModule"/>.
+            </summary>
+            <param name="context">An <see cref="T:System.Web.HttpApplication"/> object.</param>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.Dispose">
+            <summary>
+            Releases the resources used by <see cref="T:TVA.Web.SecurityModule"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.ProviderType">
+            <summary>
+            Gets or sets the <see cref="T:System.Type"/> based on <see cref="T:TVA.Security.SecureUser"/> to be used for enforcing security.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.Error401Page">
+            <summary>
+            Gets or sets the URL of a custom HTTP 401 error page.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.Error403Page">
+            <summary>
+            Gets or sets the URL of a custom HTTP 403 error page.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.IncludedResources">
+            <summary>
+            Gets or sets a semicolon delimited list of resources to be secured along with role names.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.ExcludedResources">
+            <summary>
+            Gets or sets a semicolon delimited list of resources to be excluded from being secured.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.PersistSettings">
+            <summary>
+            Gets or sets a boolean value that indicates whether <see cref="T:TVA.Web.SecurityModule"/> settings are to be saved to the config file.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.SettingsCategory">
+            <summary>
+            Gets or sets the category under which <see cref="T:TVA.Web.SecurityModule"/> settings are to be saved to the config file if the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        </member>
+        <member name="T:TVA.Web.SecurityModule.SessionEnabledHandler">
+            <summary>
+            A handler used to force the SessionStateModule to load session state.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.#ctor(System.Web.IHttpHandler)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.SecurityModule.SessionEnabledHandler"/> class.
+            </summary>
+            <param name="originalHandler">The original handler object.</param>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.SessionEnabledHandler.ProcessRequest(System.Web.HttpContext)">
+            <summary>
+            This method will never get called.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityModule.SessionEnabledHandler.IsReusable">
+            <summary>
+            Returns false since class has a member.
+            </summary>
+        </member>
         <member name="T:TVA.Web.Services.DataFlowDirection">
             <summary>
             Indicates the direction in which data will be flowing from a web service.
@@ -97,12 +220,14 @@
         <member name="M:TVA.Web.Services.RestService.SaveSettings">
             <summary>
             Saves web service settings to the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.RestService.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Web.Services.RestService.LoadSettings">
             <summary>
             Loads saved web service settings from the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.RestService.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Web.Services.RestService.Dispose(System.Boolean)">
             <summary>
