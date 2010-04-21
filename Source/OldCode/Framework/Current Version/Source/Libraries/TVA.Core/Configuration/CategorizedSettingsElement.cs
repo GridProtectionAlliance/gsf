@@ -28,8 +28,10 @@
 //       Modified property setters to update the internal property bag only if values have changed.
 //  04/20/2010 - Pinal C. Patel
 //       Added new Category property for the purpose of managing user scope setting.
-//       Removed publicly accessible constructors for managability.
+//       Removed publicly accessible constructors for manageability.
 //       Added Scope property as a way of identifying user scope settings.
+//  04/21/2010 - Pinal C. Patel
+//       Removed unnecessary overloads of Update() for manageability.
 //
 //*******************************************************************************************************
 
@@ -497,27 +499,8 @@ namespace TVA.Configuration
         /// Updates setting information.
         /// </summary>
         /// <param name="value">New setting value.</param>
-        public void Update(string value)
-        {
-            Update(value, Description, Encrypted, Scope);
-        }
-
-        /// <summary>
-        /// Updates setting information.
-        /// </summary>
-        /// <param name="value">New setting value.</param>
         /// <param name="description">New setting description.</param>
         public void Update(object value, string description)
-        {
-            Update(value, description, Encrypted, Scope);
-        }
-
-        /// <summary>
-        /// Updates setting information.
-        /// </summary>
-        /// <param name="value">New setting value.</param>
-        /// <param name="description">New setting description.</param>
-        public void Update(string value, string description)
         {
             Update(value, description, Encrypted, Scope);
         }
@@ -539,37 +522,11 @@ namespace TVA.Configuration
         /// <param name="value">New setting value.</param>
         /// <param name="description">New setting description.</param>
         /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
-        public void Update(string value, string description, bool encrypted)
-        {
-            Update(value, description, encrypted, Scope);
-        }
-
-        /// <summary>
-        /// Updates setting information.
-        /// </summary>
-        /// <param name="value">New setting value.</param>
-        /// <param name="description">New setting description.</param>
-        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
         /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
         public void Update(object value, string description, bool encrypted, SettingScope scope)
         {
             this.Scope = scope;
             this.Value = value.ToNonNullString();
-            this.Description = description;
-            this.Encrypted = encrypted;
-        }
-
-        /// <summary>
-        /// Updates setting information.
-        /// </summary>
-        /// <param name="value">New setting value.</param>
-        /// <param name="description">New setting description.</param>
-        /// <param name="encrypted">A boolean value that indicated whether the new setting value is to be encrypted.</param>
-        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
-        public void Update(string value, string description, bool encrypted, SettingScope scope)
-        {
-            this.Scope = scope;
-            this.Value = value;
             this.Description = description;
             this.Encrypted = encrypted;
         }
@@ -600,12 +557,13 @@ namespace TVA.Configuration
         {
             try
             {
-                if (string.IsNullOrEmpty(Value))
+                string value = Value;
+                if (string.IsNullOrEmpty(value))
                     // Value is an empty string - use default value.
                     return defaultValue;
                 else
                     // Value is not empty string - convert to target type.
-                    return Value.ConvertToType<T>();
+                    return value.ConvertToType<T>();
             }
             catch
             {
@@ -620,7 +578,7 @@ namespace TVA.Configuration
         /// <returns>Value as string.</returns>
         public string ValueAsString()
         {
-            return ValueAsString("");
+            return ValueAsString(string.Empty);
         }
 
         /// <summary>
@@ -630,12 +588,7 @@ namespace TVA.Configuration
         /// <returns>Value as string.</returns>
         public string ValueAsString(string defaultValue)
         {
-            string setting = Value;
-
-            if (string.IsNullOrEmpty(setting))
-                return defaultValue;
-            else
-                return setting;
+            return ValueAs(defaultValue);
         }
 
         /// <summary>

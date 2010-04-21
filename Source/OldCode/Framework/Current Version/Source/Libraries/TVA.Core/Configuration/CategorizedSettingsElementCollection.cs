@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  04/20/2010 - Pinal C. Patel
 //       Added new Name and Section properties for the purpose of managing user scope setting.
+//  04/21/2010 - Pinal C. Patel
+//       Removed unnecessary overloads of Add() for manageability.
 //
 //*******************************************************************************************************
 
@@ -390,39 +392,7 @@ namespace TVA.Configuration
         {
             Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        public void Add(string name, string value)
-        {
-            Add(name, value, CategorizedSettingsElement.DefaultDescription, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        public void Add(string name, object value, bool encryptValue)
-        {
-            Add(name, value, CategorizedSettingsElement.DefaultDescription, encryptValue, CategorizedSettingsElement.DefaultScope);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        public void Add(string name, string value, bool encryptValue)
-        {
-            Add(name, value, CategorizedSettingsElement.DefaultDescription, encryptValue, CategorizedSettingsElement.DefaultScope);
-        }
-
+         
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
         /// </summary>
@@ -430,17 +400,6 @@ namespace TVA.Configuration
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         public void Add(string name, object value, string description)
-        {
-            Add(name, value, description, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        public void Add(string name, string value, string description)
         {
             Add(name, value, description, CategorizedSettingsElement.DefaultEncrypted, CategorizedSettingsElement.DefaultScope);
         }
@@ -464,19 +423,7 @@ namespace TVA.Configuration
         /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
         /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        public void Add(string name, string value, string description, bool encryptValue)
-        {
-            Add(name, value, description, encryptValue, CategorizedSettingsElement.DefaultScope);
-        }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        /// /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
+        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
         public void Add(string name, object value, string description, bool encryptValue, SettingScope scope)
         {
             if (base.BaseGet(name) == null)
@@ -488,27 +435,7 @@ namespace TVA.Configuration
                 Add(setting);
             }
         }
-
-        /// <summary>
-        /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
-        /// </summary>
-        /// <param name="name">Name of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="value">Value of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="description">Description of the <see cref="CategorizedSettingsElement"/> object.</param>
-        /// <param name="encryptValue">true if the Value of <see cref="CategorizedSettingsElement"/> object is to be encrypted; otherwise false.</param>
-        /// <param name="scope">One of the <see cref="SettingScope"/> values.</param>
-        public void Add(string name, string value, string description, bool encryptValue, SettingScope scope)
-        {
-            if (base.BaseGet(name) == null)
-            {
-                // Add the element only if it does not exist.
-                CategorizedSettingsElement setting = new CategorizedSettingsElement(this, name);
-                setting.Update(value, description, encryptValue, scope);
-
-                Add(setting);
-            }
-        }
-
+           
         /// <summary>
         /// Adds a new <see cref="CategorizedSettingsElement"/> object if one does not exist.
         /// </summary>
