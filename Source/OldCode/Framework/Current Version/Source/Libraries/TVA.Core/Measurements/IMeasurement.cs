@@ -328,14 +328,19 @@ namespace TVA.Measurements
         Ticks Timestamp { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="IMeasurement"/> is good.
+        /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="IMeasurement"/> is good.
         /// </summary>
         bool ValueQualityIsGood { get; set; }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
+        /// Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
         /// </summary>
         bool TimestampQualityIsGood { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if this <see cref="IMeasurement"/> has been discarded during sorting.
+        /// </summary>
+        bool IsDiscarded { get; set; }
 
         /// <summary>
         /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.

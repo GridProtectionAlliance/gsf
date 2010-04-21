@@ -1724,8 +1724,11 @@ namespace TVA.Measurements
                 if (discardMeasurement)
                 {
                     // This measurement was marked to be discarded.
-                    Interlocked.Increment(ref m_discardedMeasurements);
+                    measurement.IsDiscarded = true;
                     m_lastDiscardedMeasurement = measurement;
+
+                    // Track total number of discarded measurements
+                    Interlocked.Increment(ref m_discardedMeasurements);
 
                     // Make sure discarded measurement collection exists
                     if (discardedMeasurements == null)

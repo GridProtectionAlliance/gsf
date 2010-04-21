@@ -263,6 +263,7 @@ namespace TVA.Measurements
         private double m_multiplier;
         private bool m_valueQualityIsGood;
         private bool m_timestampQualityIsGood;
+        private bool m_isDiscarded;
         private MeasurementValueFilterFunction m_measurementValueFilter;
 
         #endregion
@@ -531,7 +532,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the numeric value of this <see cref="Measurement"/> is good.
+        /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="Measurement"/> is good.
         /// </summary>
         public virtual bool ValueQualityIsGood
         {
@@ -546,7 +547,7 @@ namespace TVA.Measurements
         }
 
         /// <summary>
-        /// Gets or sets a boolean value determining if the quality of the timestamp of this <see cref="Measurement"/> is good.
+        /// Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="Measurement"/> is good.
         /// </summary>
         public virtual bool TimestampQualityIsGood
         {
@@ -557,6 +558,21 @@ namespace TVA.Measurements
             set
             {
                 m_timestampQualityIsGood = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that determines if this <see cref="Measurement"/> has been discarded during sorting.
+        /// </summary>
+        public virtual bool IsDiscarded
+        {
+            get
+            {
+                return m_isDiscarded;
+            }
+            set
+            {
+                m_isDiscarded = value;
             }
         }
 
