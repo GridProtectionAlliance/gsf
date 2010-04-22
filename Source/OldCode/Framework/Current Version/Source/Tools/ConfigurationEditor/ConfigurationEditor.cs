@@ -255,10 +255,18 @@ namespace ConfigurationEditor
 			get { return m_isDirty; }
 			set { m_isDirty = value; }
 		}
-		string ConfigurationFileName
+		
+        string ConfigurationFileName
 		{
-			get { return m_configurationFileName; }
-			set { m_configurationFileName = value; }
+			get
+            {
+                return m_configurationFileName;
+            }
+			set
+            {
+                m_configurationFileName = value;
+                TextBoxConfigurationFile.Text = value;
+            }
 		}
 
 		#endregion
@@ -321,10 +329,7 @@ namespace ConfigurationEditor
 			OpenFileDialogConfiguration.Filter = "Configuration Files (*.config)| *.config|All Files (*.*)|*.*";
 			DialogResult openFileDialogResult = OpenFileDialogConfiguration.ShowDialog();
 			if (openFileDialogResult == DialogResult.OK)
-			{
 				this.ConfigurationFileName = OpenFileDialogConfiguration.FileName;
-				TextBoxConfigurationFile.Text = OpenFileDialogConfiguration.FileName;
-			}
 		}
 
 		void ButtonSave_Click(object sender, EventArgs e)
@@ -446,7 +451,7 @@ namespace ConfigurationEditor
 
 			try
 			{
-				if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DefaultServiceName"]))	//then stop service, modify config file and then start service.
+				if (CheckBoxAutoRestart.Checked && !string.IsNullOrEmpty(ConfigurationManager.AppSettings["DefaultServiceName"]))	//then stop service, modify config file and then start service.
 				{
 					controller.ServiceName = ConfigurationManager.AppSettings["DefaultServiceName"];
 					if (controller.CanStop && controller.Status != ServiceControllerStatus.Stopped && controller.Status != ServiceControllerStatus.StopPending)
