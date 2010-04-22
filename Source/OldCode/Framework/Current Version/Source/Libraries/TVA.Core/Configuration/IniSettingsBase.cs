@@ -303,8 +303,8 @@ namespace TVA.Configuration
 
         // Fields
         private IniFile m_iniFile;
-        string m_sectionName;
-        bool m_useCategoryAttributes;
+        private string m_sectionName;
+        private bool m_useCategoryAttributes;
 
         #endregion
 

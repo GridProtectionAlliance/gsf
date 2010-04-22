@@ -309,8 +309,8 @@ namespace TVA.Configuration
 
         // Fields
         private ConfigurationFile m_configFile;
-        string m_categoryName;
-        bool m_useCategoryAttributes;
+        private string m_categoryName;
+        private bool m_useCategoryAttributes;
 
         #endregion
 

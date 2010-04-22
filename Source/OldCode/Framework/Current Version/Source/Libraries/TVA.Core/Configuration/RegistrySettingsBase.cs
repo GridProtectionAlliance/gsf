@@ -302,9 +302,9 @@ namespace TVA.Configuration
         #region [ Members ]
 
         // Fields
-        string m_rootPath;
-        string m_keyName;
-        bool m_useCategoryAttributes;
+        private string m_rootPath;
+        private string m_keyName;
+        private bool m_useCategoryAttributes;
 
         #endregion
 
