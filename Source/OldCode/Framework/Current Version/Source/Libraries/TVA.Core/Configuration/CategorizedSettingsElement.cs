@@ -32,6 +32,8 @@
 //       Added Scope property as a way of identifying user scope settings.
 //  04/21/2010 - Pinal C. Patel
 //       Removed unnecessary overloads of Update() for manageability.
+//  04/22/2010 - Pinal C. Patel
+//       Fixed encryption related bug introduced when adding support for user scope settings.
 //
 //*******************************************************************************************************
 
@@ -440,9 +442,7 @@ namespace TVA.Configuration
                 if (value.Equals(Encrypted))
                     return;
 
-                string elementValue = this.Value;   // Gets the decrypted value if encrypted.
                 base["encrypted"] = value;
-                this.Value = elementValue;          // This will cause encryption to be performed if required.
             }
         }
 
@@ -526,9 +526,9 @@ namespace TVA.Configuration
         public void Update(object value, string description, bool encrypted, SettingScope scope)
         {
             this.Scope = scope;
+            this.Encrypted = encrypted;
             this.Value = value.ToNonNullString();
             this.Description = description;
-            this.Encrypted = encrypted;
         }
 
         /// <summary>
