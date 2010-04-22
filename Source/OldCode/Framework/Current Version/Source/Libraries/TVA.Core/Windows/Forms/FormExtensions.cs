@@ -301,6 +301,10 @@ namespace TVA.Windows.Forms
 
             private int ValidWindowParameter(int value, int minimumValue, int maximumValue)
             {
+                // If value is at absolute limits, assume center
+                if (value == int.MinValue || value == int.MaxValue)
+                    value = (maximumValue + minimumValue) / 2;
+
                 if (value > maximumValue)
                     value = maximumValue;
 
