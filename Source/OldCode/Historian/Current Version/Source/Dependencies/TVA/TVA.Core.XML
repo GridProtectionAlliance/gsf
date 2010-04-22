@@ -5424,7 +5424,7 @@
         </member>
         <member name="M:TVA.Common.ToNonNullString``1(``0)">
             <summary>
-            Converts value to string, null objects will return an empty string (""). 
+            Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
             <param name="value">Value to convert to string.</param>
@@ -5432,7 +5432,7 @@
         </member>
         <member name="M:TVA.Common.ToNonNullString``1(``0,System.String)">
             <summary>
-            Converts value to string, null objects will return specified <paramref name="nonNullValue"/>.
+            Converts value to string, null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
             <param name="value">Value to convert to string.</param>
@@ -6227,6 +6227,14 @@
         <member name="M:TVA.Configuration.CategorizedSettingsBase.GetDescription(System.String)">
             <summary>
             Gets the description specified by <see cref="T:System.ComponentModel.DescriptionAttribute"/>, if any, applied to the specified field or property. 
+            </summary>
+            <param name="name">Field or property name.</param>
+            <returns>Description applied to specified field or property; or null if one does not exist.</returns>
+            <exception cref="T:System.ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        </member>
+        <member name="M:TVA.Configuration.CategorizedSettingsBase.GetSettingScope(System.String)">
+            <summary>
+            Gets the <see cref="T:TVA.Configuration.SettingScope"/> specified by <see cref="T:System.Configuration.UserScopedSettingAttribute"/>, if any, applied to the specified field or property. 
             </summary>
             <param name="name">Field or property name.</param>
             <returns>Description applied to specified field or property; or null if one does not exist.</returns>
