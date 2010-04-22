@@ -16,6 +16,8 @@
 //       Updated class to pick up DesctiptionAttribute and apply value to settings.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/21/2010 - J. Ritchie Carroll
+//       Added attribute check for UserScopedSetting to apply to settings.
 //
 //*******************************************************************************************************
 
@@ -237,6 +239,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Configuration;
 
 namespace TVA.Configuration
 {
@@ -458,7 +461,7 @@ namespace TVA.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            m_configFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name));
+            m_configFile.Settings[GetCategoryName(name)].Add(setting, value, GetDescription(name), GetEncryptStatus(name), GetSettingScope(name));
         }
 
         /// <summary>
@@ -532,6 +535,20 @@ namespace TVA.Configuration
                 throw new ArgumentException("name cannot be null or empty");
 
             return GetAttributeValue<DescriptionAttribute, string>(name, "", attribute => attribute.Description);
+        }
+
+        /// <summary>
+        /// Gets the <see cref="SettingScope"/> specified by <see cref="UserScopedSettingAttribute"/>, if any, applied to the specified field or property. 
+        /// </summary>
+        /// <param name="name">Field or property name.</param>
+        /// <returns>Description applied to specified field or property; or null if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="name"/> cannot be null or empty.</exception>
+        public SettingScope GetSettingScope(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentException("name cannot be null or empty");
+
+            return GetAttributeValue<UserScopedSettingAttribute, SettingScope>(name, SettingScope.Application, attribute => SettingScope.User);
         }
 
         #endregion
