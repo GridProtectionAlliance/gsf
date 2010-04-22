@@ -268,12 +268,12 @@ namespace ConfigurationEditor
 		public FormConfigurationEditor()
 		{
 			InitializeComponent();
-			this.Load += new EventHandler(FormConfigurationEditor_Load);
-			ButtonSave.Click += new EventHandler(ButtonSave_Click);
-			ButtonOpen.Click += new EventHandler(ButtonOpen_Click);
-			ButtonLoad.Click += new EventHandler(ButtonLoad_Click);
-			this.FormClosing += new FormClosingEventHandler(FormConfigurationEditor_FormClosing);
-			PropertyGridConfiguration.PropertyValueChanged += new PropertyValueChangedEventHandler(PropertyGridConfiguration_PropertyValueChanged);
+            ButtonSave.Click += ButtonSave_Click;
+			ButtonOpen.Click += ButtonOpen_Click;
+            ButtonLoad.Click += ButtonLoad_Click;
+			PropertyGridConfiguration.PropertyValueChanged += PropertyGridConfiguration_PropertyValueChanged;
+            CheckBoxAutoRestart.CheckedChanged += CheckBoxAutoRestart_CheckedChanged;
+            ButtonSaveSettings.Click += ButtonSaveSettings_Click;
 
 			if (!string.IsNullOrEmpty(ConfigurationManager.AppSettings["DefaultConfigurationFilePath"]))
 				this.ConfigurationFileName = ConfigurationManager.AppSettings["DefaultConfigurationFilePath"];
@@ -290,10 +290,14 @@ namespace ConfigurationEditor
 					e.Cancel = true;
 			}
 
-			Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-			config.AppSettings.Settings["DefaultConfigurationFilePath"].Value = this.ConfigurationFileName;
-			config.Save(ConfigurationSaveMode.Modified);
-			ConfigurationManager.RefreshSection("appSettings");
+            Configuration config = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+
+            if (!string.IsNullOrEmpty(this.ConfigurationFileName) && File.Exists(this.ConfigurationFileName) && string.Compare(config.AppSettings.Settings["DefaultConfigurationFilePath"].Value, this.ConfigurationFileName, true) != 0)
+            {
+                config.AppSettings.Settings["DefaultConfigurationFilePath"].Value = this.ConfigurationFileName;
+                config.Save(ConfigurationSaveMode.Modified);
+                ConfigurationManager.RefreshSection("appSettings");
+            }
 		}
 
 		void FormConfigurationEditor_Load(object sender, EventArgs e)
