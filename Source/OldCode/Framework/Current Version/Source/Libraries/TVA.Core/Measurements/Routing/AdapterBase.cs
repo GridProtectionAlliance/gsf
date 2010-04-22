@@ -908,6 +908,7 @@ namespace TVA.Measurements.Routing
         // Source tables are expected to have at least the following fields:
         //
         //      ID          NVARCHAR    Measurement key formatted as: ArchiveSource:PointID
+        //      SignalID    GUID        Unique identification for measurement
         //      PointTag    NVARCHAR    Point tag of measurement
         //      Adder       FLOAT       Adder to apply to value, if any (default to 0.0)
         //      Multiplier  FLOAT       Multipler to apply to value, if any (default to 1.0)
@@ -966,6 +967,7 @@ namespace TVA.Measurements.Routing
         public static IMeasurement[] ParseOutputMeasurements(DataSet dataSource, string value)
         {
             List<IMeasurement> measurements = new List<IMeasurement>();
+            Measurement measurement;
             MeasurementKey key;
             Match filterMatch;
 
@@ -984,7 +986,9 @@ namespace TVA.Measurements.Routing
                 foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
                 {
                     key = MeasurementKey.Parse(row["ID"].ToString());
-                    measurements.Add(new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString())));
+                    measurement = new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+                    measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                    measurements.Add(measurement);
                 }
             }
             else
@@ -998,6 +1002,7 @@ namespace TVA.Measurements.Routing
 
                     key = MeasurementKey.Parse(elem[0]);
 
+                    // Adder and multipler may be optionally specified
                     if (elem.Length > 1)
                         adder = double.Parse(elem[1].Trim());
                     else
@@ -1008,7 +1013,41 @@ namespace TVA.Measurements.Routing
                     else
                         multipler = 1.0D;
 
-                    measurements.Add(new Measurement(key.ID, key.Source, string.Empty, adder, multipler));
+                    // Create a new measurement for the provided field level information
+                    measurement = new Measurement(key.ID, key.Source, string.Empty, adder, multipler);
+
+                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                    try
+                    {
+                        if (dataSource.Tables.Contains("ActiveMeasurements"))
+                        {
+                            DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+
+                            if (filteredRows.Length > 0)
+                            {
+                                DataRow row = filteredRows[0];
+
+                                measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                measurement.TagName = row["PointTag"].ToNonNullString();
+
+                                // Manually specified adder and multiplier take precedence but if none were specified,
+                                // then those defined in the meta-data are used instead
+                                if (elem.Length < 3)
+                                    measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+
+                                if (elem.Length < 2)
+                                    measurement.Adder = double.Parse(row["Adder"].ToString());
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // Errors here are not catastrophic, this simply limits the available meta-data
+                        measurement.SignalID = Guid.Empty;
+                        measurement.TagName = string.Empty;
+                    }
+
+                    measurements.Add(measurement);
                 }
             }
 
