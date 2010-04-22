@@ -22,6 +22,8 @@
 //       Converted to C# extensions.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/22/2010 - Pinal C. Patel
+//       Modified SaveSize() and SaveLocation() to save information to the config file as user settings.
 //
 //*******************************************************************************************************
 
@@ -361,13 +363,7 @@ namespace TVA.Windows.Forms
         /// <param name="settingsCategory">Settings category used to persist form size information</param>
         public static void SaveSize(this Form windowsForm, string settingsCategory)
         {
-            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
-
-            if (settings[windowsForm.Name] != null)
-                settings[windowsForm.Name].Value = windowsForm.Size.ToString();
-            else
-                settings.Add(windowsForm.Name, windowsForm.Size.ToString());
-
+            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Size, "Size of the windows form.", false, SettingScope.User);
             ConfigurationFile.Current.Save();
         }
 
@@ -388,13 +384,7 @@ namespace TVA.Windows.Forms
         /// <param name="settingsCategory">Settings category used to persist form location information</param>
         public static void SaveLocation(this Form windowsForm, string settingsCategory)
         {
-            CategorizedSettingsElementCollection settings = ConfigurationFile.Current.Settings[settingsCategory];
-
-            if (settings[windowsForm.Name] != null)
-                settings[windowsForm.Name].Value = windowsForm.Location.ToString();
-            else
-                settings.Add(windowsForm.Name, windowsForm.Location.ToString());
-
+            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Location, "Location of the windows form.", false, SettingScope.User);
             ConfigurationFile.Current.Save();
         }
 
