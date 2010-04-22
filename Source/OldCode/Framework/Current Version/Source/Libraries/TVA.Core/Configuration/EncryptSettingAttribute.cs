@@ -292,6 +292,10 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets optional encryption key that will be used on a setting for added security.
         /// </summary>
+        /// <remarks>
+        /// This key is not the actual key used for encryption, it is used for hash lookup of the actual AES key.
+        /// If this key is not specified, the property name will be used for the hash lookup.
+        /// </remarks>
         public string PrivateKey
         {
             get

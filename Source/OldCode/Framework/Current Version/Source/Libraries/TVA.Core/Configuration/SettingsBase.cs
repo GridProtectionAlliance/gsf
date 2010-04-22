@@ -475,7 +475,7 @@ namespace TVA.Configuration
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("name cannot be null or empty");
 
-            return GetAttributeValue<EncryptSettingAttribute, string>(name, null, attribute => attribute.PrivateKey);
+            return GetAttributeValue<EncryptSettingAttribute, string>(name, null, attribute => attribute.PrivateKey).NotEmpty(name);
         }
 
         /// <summary>
@@ -555,7 +555,7 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, encrypt value
             if (GetEncryptStatus(name))
-                return value.Encrypt(name, CipherStrength.Aes256);
+                return value.Encrypt(GetEncryptKey(name), CipherStrength.Aes256);
 
             return value;
         }
@@ -565,7 +565,7 @@ namespace TVA.Configuration
         {
             // If encrypt attribute has been applied, decrypt value
             if (GetEncryptStatus(name))
-                return value.Decrypt(name, CipherStrength.Aes256);
+                return value.Decrypt(GetEncryptKey(name), CipherStrength.Aes256);
 
             return value;
         }
