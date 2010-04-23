@@ -593,6 +593,24 @@ namespace TVA.Configuration
         }
 
         /// <summary>
+        /// Restores the default settings of the configuration file.
+        /// </summary>
+        public virtual void RestoreDefaultSettings()
+        {
+            // Restore each field to its default value
+            ExecuteActionForFields(field => SetValue(field.Name, GetDefaultValue(field.Name)));
+
+            // Restore each property to its default value
+            ExecuteActionForProperties(property => SetValue(property.Name, GetDefaultValue(property.Name)), BindingFlags.GetProperty);
+
+            // If any values were changed, make sure they are flushed to config file
+            PersistSettings();
+
+            // Load current settings
+            Load();
+        }
+
+        /// <summary>
         /// Attempts to get best default value for given member.
         /// </summary>
         /// <param name="name">Field or property name.</param>
