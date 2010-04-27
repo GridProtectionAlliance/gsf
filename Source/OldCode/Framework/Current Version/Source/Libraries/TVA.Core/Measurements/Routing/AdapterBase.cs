@@ -316,6 +316,7 @@ namespace TVA.Measurements.Routing
         {
             m_name = this.GetType().Name;
             m_initializeWaitHandle = new ManualResetEvent(false);
+            m_settings = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -560,10 +561,13 @@ namespace TVA.Measurements.Routing
                 m_initialized = value;
 
                 // When initialization is complete we send notification
-                if (value)
-                    m_initializeWaitHandle.Set();
-                else
-                    m_initializeWaitHandle.Reset();
+                if (m_initializeWaitHandle != null)
+                {
+                    if (value)
+                        m_initializeWaitHandle.Set();
+                    else
+                        m_initializeWaitHandle.Reset();
+                }
             }
         }
 
@@ -843,7 +847,10 @@ namespace TVA.Measurements.Routing
         /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         public virtual bool WaitForInitialize(int timeout)
         {
-            return m_initializeWaitHandle.WaitOne(timeout);
+            if (m_initializeWaitHandle != null)
+                return m_initializeWaitHandle.WaitOne(timeout);
+
+            return false;
         }
 
         /// <summary>

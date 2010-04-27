@@ -285,6 +285,8 @@ namespace TVA.Measurements.Routing
         /// </summary>
         public override void Initialize()
         {
+            Initialized = false;
+
             foreach (IAdapterCollection item in this)
             {
                 try
@@ -296,6 +298,8 @@ namespace TVA.Measurements.Routing
                     OnProcessException(ex);
                 }
             }
+            
+            Initialized = true;
         }
 
         /// <summary>
