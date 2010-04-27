@@ -5929,6 +5929,11 @@
             Initializes configuration settings from derived class fields or properties.
             </summary>
         </member>
+        <member name="M:TVA.Configuration.SettingsBase.RestoreDefaultSettings">
+            <summary>
+            Restores the default settings of the configuration file.
+            </summary>
+        </member>
         <member name="M:TVA.Configuration.SettingsBase.DeriveDefaultValue(System.String,System.Object)">
             <summary>
             Attempts to get best default value for given member.
@@ -14497,6 +14502,11 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
+        <member name="E:TVA.Measurements.ConcentratorBase.Disposed">
+            <summary>
+            This event is raised when <see cref="T:TVA.Measurements.ConcentratorBase"/> is disposed.
+            </summary>
+        </member>
         <member name="E:TVA.Measurements.ConcentratorBase.LagTimeUpdated">
             <summary>
             Raised, for the benefit of dependent classes, when lag time is updated.
@@ -15836,6 +15846,17 @@
             Assigns the reference to the parent <see cref="T:TVA.Measurements.Routing.IAdapterCollection"/> that will contain this <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
             </summary>
         </member>
+        <member name="M:TVA.Measurements.Routing.IAdapter.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the current thread until the adapter is <see cref="P:TVA.Measurements.Routing.IAdapter.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+            <remarks>
+            Implementors should create a wait handle (e.g., the <see cref="T:System.Threading.ManualResetEvent"/>) so that consumers
+            can call this method and wait for the adapter intialization to complete before using the adapter.
+            </remarks>
+        </member>
         <member name="E:TVA.Measurements.Routing.IAdapter.StatusMessage">
             <summary>
             Provides status messages to consumer.
@@ -15858,6 +15879,15 @@
             <para>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
             </para>
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.Routing.IAdapter.Disposed">
+            <summary>
+            Event is raised when <see cref="T:TVA.Measurements.Routing.IAdapter"/> is disposed.
+            </summary>
+            <remarks>
+            If an adapter references another adapter by enumerating the <see cref="P:TVA.Measurements.Routing.IAdapter.Parent"/> collection, this
+            event should be monitored to release the reference.
             </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.IAdapter.DataSource">
@@ -15891,6 +15921,14 @@
             </summary>
             <remarks>
             Implementors only need to track this value.
+            </remarks>
+        </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.InitializationTimeout">
+            <summary>
+            Gets or sets maximum time system will wait during <see cref="M:TVA.Measurements.Routing.IAdapter.Start"/> for initialization.
+            </summary>
+            <remarks>
+            Implementors should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.IAdapter.OutputMeasurements">
@@ -15930,6 +15968,14 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
             </remarks>
         </member>
+        <member name="E:TVA.Measurements.Routing.IActionAdapter.DiscardingMeasurements">
+            <summary>
+            This event is raised if there are any measurements being discarded during the sorting process.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values that are being discarded during the sorting process.
+            </remarks>
+        </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.#ctor">
             <summary>
             Creates a new <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>.
@@ -15948,7 +15994,7 @@
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.Start">
             <summary>
-            Starts the <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/>, if it is not already running.
+            Starts the <see cref="T:TVA.Measurements.Routing.ActionAdapterBase"/> or restarts it if it is already running.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.Stop">
@@ -15999,6 +16045,13 @@
             <param name="item">Primary key of measurement to find.</param>
             <returns>true if specified measurement key is defined in <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.InputMeasurementKeys"/>.</returns>
         </member>
+        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.TryGetMinimumNeededMeasurements(TVA.Measurements.IFrame,TVA.Measurements.IMeasurement[]@)">
             <summary>
             Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
@@ -16016,13 +16069,6 @@
             array it must be sized to MinimumMeasurementsToUse
             </para>
             </remarks>
-        </member>
-        <member name="M:TVA.Measurements.Routing.ActionAdapterBase.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the action adapter is <see cref="P:TVA.Measurements.Routing.ActionAdapterBase.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TVA.Measurements.IMeasurement})">
             <summary>
@@ -16200,6 +16246,11 @@
             Represents the abstract interface for a collection of adapters.
             </summary>
         </member>
+        <member name="M:TVA.Measurements.Routing.IAdapterCollection.ResetStatistics">
+            <summary>
+            Resets the statistics of this collection.
+            </summary>
+        </member>
         <member name="M:TVA.Measurements.Routing.IAdapterCollection.TryGetAdapterByID(System.UInt32,TVA.Measurements.Routing.IAdapter@)">
             <summary>
             Attempts to get the adapter with the specified <paramref name="ID"/>.
@@ -16327,12 +16378,23 @@
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.Start">
             <summary>
-            Starts each <see cref="T:TVA.Measurements.Routing.IAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
+            Starts, or restarts, each <see cref="T:TVA.Measurements.Routing.IAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.Stop">
             <summary>
             Stops each <see cref="T:TVA.Measurements.Routing.IAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.SetInitializedState(System.Boolean)">
+            <summary>
+            Manually sets the intialized state of the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
+            </summary>
+            <param name="initialized">Desired initialized state.</param>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.ResetStatistics">
+            <summary>
+            Resets the statistics of this collection.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.GetShortStatus(System.Int32)">
@@ -16341,6 +16403,13 @@
             </summary>
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TVA.Measurements.Routing.AdapterBase"/>.</returns>
+        </member>
+        <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter collection is <see cref="P:TVA.Measurements.Routing.AdapterCollectionBase`1.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.OnStatusMessage(System.String)">
             <summary>
@@ -16423,6 +16492,11 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
             </remarks>
         </member>
+        <member name="E:TVA.Measurements.Routing.AdapterCollectionBase`1.Disposed">
+            <summary>
+            Event is raised when this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> is disposed or an <see cref="T:TVA.Measurements.Routing.IAdapter"/> in the collection is disposed.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.Name">
             <summary>
             Gets or sets the name of this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
@@ -16471,6 +16545,14 @@
             ID column type should be integer based, all other column types are expected to be string based.
             </remarks>
         </member>
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.InitializationTimeout">
+            <summary>
+            Gets or sets maximum time system will wait during <see cref="M:TVA.Measurements.Routing.AdapterCollectionBase`1.Start"/> for initialization.
+            </summary>
+            <remarks>
+            Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
+            </remarks>
+        </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.OutputMeasurements">
             <summary>
             Gets or sets output measurements that the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> will produce, if any.
@@ -16497,7 +16579,7 @@
             Gets a value indicating whether the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/> is read-only.
             </summary>
         </member>
-        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.EnableMonitorTimer">
+        <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.MonitorTimerEnabled">
             <summary>
             Gets or sets flag that determines if monitor timer should be used for monitoring processed measurement statistics for the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
             </summary>
@@ -16542,6 +16624,12 @@
             </summary>
             <param name="unpublishedSamples">Total number of unpublished seconds of data in the queue.</param>
         </member>
+        <member name="M:TVA.Measurements.Routing.ActionAdapterCollection.OnDiscardingMeasurements(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.Routing.ActionAdapterCollection.DiscardingMeasurements"/> event.
+            </summary>
+            <param name="measurements">Enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values being discarded.</param>
+        </member>
         <member name="M:TVA.Measurements.Routing.ActionAdapterCollection.InitializeItem(TVA.Measurements.Routing.IActionAdapter)">
             <summary>
             Wires events and initializes new <see cref="T:TVA.Measurements.Routing.IActionAdapter"/> implementation.
@@ -16568,6 +16656,14 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.Routing.ActionAdapterCollection.DiscardingMeasurements">
+            <summary>
+            This event is raised if there are any measurements being discarded during the sorting process.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
         <member name="T:TVA.Measurements.Routing.AdapterBase">
@@ -16603,7 +16699,7 @@
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.Start">
             <summary>
-            Starts the <see cref="T:TVA.Measurements.Routing.AdapterBase"/>, if it is not already running.
+            Starts the <see cref="T:TVA.Measurements.Routing.AdapterBase"/> or restarts it if it is already running.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.Stop">
@@ -16696,6 +16792,15 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.Routing.AdapterBase.Disposed">
+            <summary>
+            Event is raised when <see cref="T:TVA.Measurements.Routing.AdapterBase"/> is disposed.
+            </summary>
+            <remarks>
+            If an adapter references another adapter by enumerating the <see cref="P:TVA.Measurements.Routing.AdapterBase.Parent"/> collection, this
+            event should be monitored to release the reference.
             </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterBase.Name">
@@ -16955,6 +17060,12 @@
             </summary>
             <param name="seconds">Total number of unpublished seconds of data.</param>
         </member>
+        <member name="M:TVA.Measurements.Routing.FacileActionAdapterBase.OnDiscardingMeasurements(System.Collections.Generic.IEnumerable{TVA.Measurements.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TVA.Measurements.Routing.FacileActionAdapterBase.DiscardingMeasurements"/> event.
+            </summary>
+            <param name="measurements">Enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values being discarded.</param>
+        </member>
         <member name="E:TVA.Measurements.Routing.FacileActionAdapterBase.NewMeasurements">
             <summary>
             Provides new measurements from action adapter.
@@ -16969,6 +17080,14 @@
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
+            </remarks>
+        </member>
+        <member name="E:TVA.Measurements.Routing.FacileActionAdapterBase.DiscardingMeasurements">
+            <summary>
+            This event is raised if there are any measurements being discarded during the sorting process.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TVA.Measurements.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
         <member name="P:TVA.Measurements.Routing.FacileActionAdapterBase.FramesPerSecond">

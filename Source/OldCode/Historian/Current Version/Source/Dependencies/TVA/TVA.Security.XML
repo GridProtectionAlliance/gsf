@@ -1,0 +1,339 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TVA.Security</name>
+    </assembly>
+    <members>
+        <member name="T:TVA.Security.SecurityPrincipal">
+            <summary>
+            Inidicates the type of <see cref="T:System.Security.Principal.IPrincipal"/> and <see cref="T:System.Security.Principal.IIdentity"/> objects to be attached to threads in the 
+            <see cref="P:System.AppDomain.CurrentDomain">current application domain</see> for the purpose of implementing role-based security.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecurityPrincipal.CustomPrincipal">
+            <summary>
+            <see cref="T:TVA.Security.SecureUserPrincipal"/> and <see cref="T:TVA.Security.SecureUserIdentity"/> objects are attached to the threads.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecurityPrincipal.WindowsPrincipal">
+            <summary>
+            <see cref="T:System.Security.Principal.WindowsPrincipal"/> and <see cref="T:System.Security.Principal.WindowsIdentity"/> objects are attached to the threads.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecureUser">
+            <summary>
+            A class that provides a mechanism for securing applications using role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecureUserIdentity"/>
+            <seealso cref="T:TVA.Security.SecureUserPrincipal"/>
+        </member>
+        <member name="F:TVA.Security.SecureUser.DefaultApplicationName">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.SecureUser.ApplicationName"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecureUser.DefaultConnectionString">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.SecureUser.ConnectionString"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecureUser.DefaultSecurityPrincipal">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.SecureUser.SecurityPrincipal"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecureUser.DefaultPersistSettings">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.SecureUser.PersistSettings"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecureUser.DefaultSettingsCategory">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Security.SecureUser.SettingsCategory"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecureUser.StrongPasswordRegex">
+            <summary>
+            Regular expression used for validating the passwords of external users.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecureUser.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecureUser"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecureUser.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecureUser"/> class.
+            </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
+        </member>
+        <member name="M:TVA.Security.SecureUser.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Security.SecureUser"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecureUser.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Security.SecureUser"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecureUser.Initialize">
+            <summary>
+            Initializes the <see cref="T:TVA.Security.SecureUser"/> object.
+            </summary>
+            <remarks>
+            <see cref="M:TVA.Security.SecureUser.Initialize"/> is to be called by user-code directly only if the <see cref="T:TVA.Security.SecureUser"/> 
+            object is not consumed through the designer surface of the IDE.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.SecureUser.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Security.SecureUser"/> settings to the config file if the <see cref="P:TVA.Security.SecureUser.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Security.SecureUser.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Security.SecureUser"/> settings from the config file if the <see cref="P:TVA.Security.SecureUser.PersistSettings"/> property is set to true.
+            </summary>        
+        </member>
+        <member name="M:TVA.Security.SecureUser.RefreshData">
+            <summary>
+            Refreshes user data.
+            </summary>
+            <returns>true if user data is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecureUser.Authenticate(System.String)">
+            <summary>
+            Authenticates the user.
+            </summary>
+            <param name="password">Password to be used for authentication.</param>
+            <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecureUser.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Security.SecureUser"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Security.SecureUser.PopulateDataFromActiveDirectory">
+            <summary>
+            Retrieves user data from Active Directory.
+            </summary>
+            <returns>true if user data is retrieved, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecureUser.PopulateDataFromBackendDatabase">
+            <summary>
+            Retrieves user data from backend security datastore.
+            </summary>
+            <returns>true if user data is retrieved, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecureUser.EncryptPassword(System.String)">
+            <summary>
+            Encrypts the password to a one-way hash using the SHA1 hash algorithm.
+            </summary>
+            <param name="password">Password to be encrypted.</param>
+            <returns>Encrypted password.</returns>
+        </member>
+        <member name="P:TVA.Security.SecureUser.ApplicationName">
+            <summary>
+            Gets or sets the name of the application being secured as defined in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.ConnectionString">
+            <summary>
+            Gets or sets the connection string to be used for connection to the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.SecurityPrincipal">
+            <summary>
+            Gets or sets the <see cref="P:TVA.Security.SecureUser.SecurityPrincipal"/> to be used for enforcing role-based security.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.PersistSettings">
+            <summary>
+            Gets or sets a boolean value that indicates whether <see cref="T:TVA.Security.SecureUser"/> settings are to be saved to the config file.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.SettingsCategory">
+            <summary>
+            Gets or sets the category under which <see cref="T:TVA.Security.SecureUser"/> settings are to be saved to the config file if the <see cref="P:TVA.Security.SecureUser.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Enabled">
+            <summary>
+            Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Security.SecureUser"/> object is currently enabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Username">
+            <summary>
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Password">
+            <summary>
+            Gets the user's password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.FirstName">
+            <summary>
+            Gets the user's first name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.LastName">
+            <summary>
+            Gets the user's last name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.CompanyName">
+            <summary>
+            Gets the user's company name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.PhoneNumber">
+            <summary>
+            Gets the user's phone number.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.EmailAddress">
+            <summary>
+            Gets the user's email address.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.SecurityQuestion">
+            <summary>
+            Gets the user's security question.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.SecurityAnswer">
+            <summary>
+            Gets the user's security answer.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.PasswordChangeDataTime">
+            <summary>
+            Gets the date and time when user must change the password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.AccountCreatedDateTime">
+            <summary>
+            Gets the date and time when user account was created.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.IsDefined">
+            <summary>
+            Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.IsExternal">
+            <summary>
+            Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.IsLockedOut">
+            <summary>
+            Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.IsAuthenticated">
+            <summary>
+            Gets a boolean value indicating whether or not the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Groups">
+            <summary>
+            Gets a read-only list of all the groups the user belongs to.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Roles">
+            <summary>
+            Gets a read-only list of all the roles assigned to the user.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.WindowsPrincipal">
+            <summary>
+            Gets the original <see cref="P:TVA.Security.SecureUser.WindowsPrincipal"/> of the user if the user exists in Active Directory.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUser.Current">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Security.SecureUser"/> object of the current user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecureUserIdentity">
+            <summary>
+            A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecureUser"/>
+            <seealso cref="T:TVA.Security.SecureUserPrincipal"/>
+        </member>
+        <member name="M:TVA.Security.SecureUserIdentity.#ctor(TVA.Security.SecureUser)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecureUserIdentity"/> class.
+            </summary>
+            <param name="data">An <see cref="T:TVA.Security.SecureUser"/> object.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="data"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Security.SecureUserIdentity.op_Explicit(TVA.Security.SecureUserIdentity)~System.Security.Principal.WindowsIdentity">
+            <summary>
+            Converts <see cref="T:TVA.Security.SecureUserIdentity"/> object to <see cref="T:System.Security.Principal.WindowsIdentity"/> object.
+            </summary>
+            <param name="value">The <see cref="T:TVA.Security.SecureUserIdentity"/> object to convert.</param>
+            <returns>An <see cref="T:System.Security.Principal.WindowsIdentity"/> object if conversion is possible, otherwise null.</returns>
+        </member>
+        <member name="P:TVA.Security.SecureUserIdentity.AuthenticationType">
+            <summary>
+            Gets the type of authentication used to identify the user.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUserIdentity.IsAuthenticated">
+            <summary>
+            Gets a boolean value that indicates whether the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUserIdentity.Name">
+            <summary>
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecureUserIdentity.Data">
+            <summary>
+            Gets the <see cref="T:TVA.Security.SecureUser"/> object of the user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecureUserPrincipal">
+            <summary>
+            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecureUser"/>
+            <seealso cref="T:TVA.Security.SecureUserIdentity"/>
+        </member>
+        <member name="M:TVA.Security.SecureUserPrincipal.#ctor(TVA.Security.SecureUserIdentity)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecureUserPrincipal"/> class.
+            </summary>
+            <param name="identity">An <see cref="T:TVA.Security.SecureUserIdentity"/> object.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Security.SecureUserPrincipal.IsInRole(System.String)">
+            <summary>
+            Determines whether the user is a member of the specified <paramref name="role"/>.
+            </summary>
+            <param name="role">Name of the role to check.</param>
+            <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecureUserPrincipal.op_Explicit(TVA.Security.SecureUserPrincipal)~System.Security.Principal.WindowsPrincipal">
+            <summary>
+            Converts <see cref="T:TVA.Security.SecureUserPrincipal"/> object to <see cref="T:System.Security.Principal.WindowsPrincipal"/> object.
+            </summary>
+            <param name="value">The <see cref="T:TVA.Security.SecureUserIdentity"/> object to convert.</param>
+            <returns>An <see cref="T:System.Security.Principal.WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
+        </member>
+        <member name="P:TVA.Security.SecureUserPrincipal.Identity">
+            <summary>
+            Gets the <see cref="T:TVA.Security.SecureUserIdentity"/> object of the user.
+            </summary>
+        </member>
+    </members>
+</doc>
