@@ -3,13 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B373F64D-C79D-4C08-950D-E0018860AEBA}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{910996C6-2E4E-47C3-A000-3507E6BBA85E}"
-	ProjectSection(SolutionItems) = preProject
-		Historian.testrunconfig = Historian.testrunconfig
-		Historian.vsmdi = Historian.vsmdi
-		openPDC.snk = openPDC.snk
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{10F92F7C-6857-484D-9707-01ECE4F7467A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A1-436D-B126-018C3DEB51D4}"
@@ -38,6 +31,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistorianPlaybackUtility", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hadoop.Replication", "Libraries\Hadoop.Replication\Hadoop.Replication.csproj", "{B561487F-79CC-4982-848E-C12F44B4669C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B5ECB3FD-25C8-43AE-BB95-E89B8AA78542}"
+	ProjectSection(SolutionItems) = preProject
+		Historian.testrunconfig = Historian.testrunconfig
+		Historian.vsmdi = Historian.vsmdi
+		openPDC.snk = openPDC.snk
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 5
@@ -60,6 +60,9 @@ Global
 		SccProjectTopLevelParentUniqueName4 = Historian.sln
 		SccProjectName4 = Libraries/Hadoop.Replication
 		SccLocalPath4 = Libraries\\Hadoop.Replication
+	EndGlobalSection
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Historian.vsmdi
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
