@@ -880,6 +880,16 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        public virtual bool WaitForInitialize(int timeout)
+        {
+            return m_initializeWaitHandle.WaitOne(timeout);
+        }
+
+        /// <summary>
         /// Attempts to retrieve the minimum needed number of measurements from the frame (as specified by MinimumMeasurementsToUse)
         /// </summary>
         /// <param name="frame">Source frame for the measurements</param>
@@ -931,16 +941,6 @@ namespace TVA.Measurements.Routing
             }
 
             return (index == minNeeded);
-        }
-
-        /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the action adapter is <see cref="Initialized"/>.
-        /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        protected virtual bool WaitForInitialize(int timeout)
-        {
-            return m_initializeWaitHandle.WaitOne(timeout);
         }
 
         /// <summary>

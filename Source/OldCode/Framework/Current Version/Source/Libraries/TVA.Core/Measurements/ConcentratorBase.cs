@@ -606,6 +606,11 @@ namespace TVA.Measurements
         public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         /// <summary>
+        /// This event is raised when <see cref="ConcentratorBase"/> is disposed.
+        /// </summary>
+        public event EventHandler Disposed;
+
+        /// <summary>
         /// Raised, for the benefit of dependent classes, when lag time is updated.
         /// </summary> 
         internal event Action<double> LagTimeUpdated;
@@ -1486,6 +1491,9 @@ namespace TVA.Measurements
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }

@@ -266,6 +266,14 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         public event EventHandler<EventArgs<int>> UnpublishedSamples;
 
+        /// <summary>
+        /// This event is raised if there are any measurements being discarded during the sorting process.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
+        /// </remarks>
+        public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
+
         // Fields
         private int m_framesPerSecond;
 
@@ -372,6 +380,16 @@ namespace TVA.Measurements.Routing
         {
             if (UnpublishedSamples != null)
                 UnpublishedSamples(this, new EventArgs<int>(seconds));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DiscardingMeasurements"/> event.
+        /// </summary>
+        /// <param name="measurements">Enumeration of <see cref="IMeasurement"/> values being discarded.</param>
+        protected virtual void OnDiscardingMeasurements(IEnumerable<IMeasurement> measurements)
+        {
+            if (DiscardingMeasurements != null)
+                DiscardingMeasurements(this, new EventArgs<IEnumerable<IMeasurement>>(measurements));
         }
 
         #endregion

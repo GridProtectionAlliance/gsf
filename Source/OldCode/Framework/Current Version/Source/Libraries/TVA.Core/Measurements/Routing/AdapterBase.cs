@@ -278,6 +278,15 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
+        /// <summary>
+        /// Event is raised when <see cref="AdapterBase"/> is disposed.
+        /// </summary>
+        /// <remarks>
+        /// If an adapter references another adapter by enumerating the <see cref="Parent"/> collection, this
+        /// event should be monitored to release the reference.
+        /// </remarks>
+        public event EventHandler Disposed;
+
         // Fields
         private string m_name;
         private uint m_id;
@@ -729,7 +738,10 @@ namespace TVA.Measurements.Routing
                 }
                 finally
                 {
-                    m_disposed = true;
+                    m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }
@@ -829,7 +841,7 @@ namespace TVA.Measurements.Routing
         /// </summary>
         /// <param name="timeout">The number of milliseconds to wait.</param>
         /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        protected virtual bool WaitForInitialize(int timeout)
+        public virtual bool WaitForInitialize(int timeout)
         {
             return m_initializeWaitHandle.WaitOne(timeout);
         }

@@ -236,6 +236,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.Threading;
 
 namespace TVA.Measurements.Routing
 {
@@ -270,6 +271,15 @@ namespace TVA.Measurements.Routing
         event EventHandler<EventArgs<Exception>> ProcessException;
 
         /// <summary>
+        /// Event is raised when <see cref="IAdapter"/> is disposed.
+        /// </summary>
+        /// <remarks>
+        /// If an adapter references another adapter by enumerating the <see cref="Parent"/> collection, this
+        /// event should be monitored to release the reference.
+        /// </remarks>
+        event EventHandler Disposed;
+
+        /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
         /// </summary>
         DataSet DataSource { get; set; }
@@ -301,6 +311,14 @@ namespace TVA.Measurements.Routing
         /// Implementors only need to track this value.
         /// </remarks>
         bool Initialized { get; set; }
+
+        /// <summary>
+        /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
+        /// </summary>
+        /// <remarks>
+        /// Implementors should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// </remarks>
+        int InitializationTimeout { get; set; }
 
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
@@ -338,5 +356,16 @@ namespace TVA.Measurements.Routing
         /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
         /// </summary>
         void AssignParentCollection(IAdapterCollection parent);
+
+        /// <summary>
+        /// Blocks the current thread until the adapter is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        /// <remarks>
+        /// Implementors should create a wait handle (e.g., the <see cref="ManualResetEvent"/>) so that consumers
+        /// can call this method and wait for the adapter intialization to complete before using the adapter.
+        /// </remarks>
+        bool WaitForInitialize(int timeout);
     }
 }

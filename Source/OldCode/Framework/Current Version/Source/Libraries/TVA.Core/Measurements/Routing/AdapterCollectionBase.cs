@@ -274,6 +274,11 @@ namespace TVA.Measurements.Routing
         /// </remarks>
         public event EventHandler<EventArgs<Exception>> ProcessException;
 
+        /// <summary>
+        /// Event is raised when this <see cref="AdapterCollectionBase{T}"/> is disposed or an <see cref="IAdapter"/> in the collection is disposed.
+        /// </summary>
+        public event EventHandler Disposed;
+
         // Fields
         private string m_name;
         private uint m_id;
@@ -283,6 +288,8 @@ namespace TVA.Measurements.Routing
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private string m_dataMember;
+        private int m_initializationTimeout;
+        private ManualResetEvent m_initializeWaitHandle;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
         private Ticks m_lastProcessTime;
@@ -303,6 +310,7 @@ namespace TVA.Measurements.Routing
         protected AdapterCollectionBase()
         {
             m_name = this.GetType().Name;
+            m_initializeWaitHandle = new ManualResetEvent(false);
 
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
@@ -367,6 +375,12 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_initialized = value;
+
+                // When initialization is complete we send notification
+                if (value)
+                    m_initializeWaitHandle.Set();
+                else
+                    m_initializeWaitHandle.Reset();
             }
         }
 
@@ -448,6 +462,24 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_dataMember = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
+        /// </summary>
+        /// <remarks>
+        /// Set to <see cref="Timeout.Infinite"/> to wait indefinitely.
+        /// </remarks>
+        public virtual int InitializationTimeout
+        {
+            get
+            {
+                return m_initializationTimeout;
+            }
+            set
+            {
+                m_initializationTimeout = value;
             }
         }
 
@@ -585,6 +617,8 @@ namespace TVA.Measurements.Routing
                 status.AppendLine();
                 status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
+                status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
+                status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
                 status.AppendFormat("       Data source defined: {0}", (dataSource != null));
@@ -664,6 +698,11 @@ namespace TVA.Measurements.Routing
                 {
                     if (disposing)
                     {
+                        if (m_initializeWaitHandle != null)
+                            m_initializeWaitHandle.Close();
+
+                        m_initializeWaitHandle = null;
+
                         if (m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
@@ -677,6 +716,9 @@ namespace TVA.Measurements.Routing
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+
+                    if (Disposed != null)
+                        Disposed(this, EventArgs.Empty);
                 }
             }
         }
@@ -699,31 +741,37 @@ namespace TVA.Measurements.Routing
         /// <exception cref="InvalidOperationException">DataMember is null or empty.</exception>
         public virtual void Initialize()
         {
-            if (m_dataSource == null)
+            if (DataSource == null)
                 throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
-            if (string.IsNullOrEmpty(m_dataMember))
+            if (string.IsNullOrEmpty(DataMember))
                 throw new InvalidOperationException(string.Format("DataMember is null or empty, cannot load {0}", Name));
 
+            Initialized = false;
+
+            Dictionary<string, string> settings = Settings;
+            string setting;
             T item;
+
+            if (settings.TryGetValue("initializationTimeout", out setting))
+                InitializationTimeout = int.Parse(setting);
+            else
+                InitializationTimeout = 5000;
 
             Clear();
 
-            if (m_dataSource.Tables.Contains(m_dataMember))
+            if (DataSource.Tables.Contains(DataMember))
             {
-                foreach (DataRow adapterRow in m_dataSource.Tables[m_dataMember].Rows)
+                foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
                 {
                     if (TryCreateAdapter(adapterRow, out item))
                         Add(item);
                 }
 
-                m_initialized = true;
+                Initialized = true;
             }
             else
-            {
-                m_initialized = false;
-                throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", m_dataMember, Name));
-            }
+                throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
         }
 
         /// <summary>
@@ -765,7 +813,7 @@ namespace TVA.Measurements.Routing
                 adapter.Name = name;
                 adapter.ID = id;
                 adapter.ConnectionString = connectionString;
-                adapter.DataSource = m_dataSource;
+                adapter.DataSource = DataSource;
 
                 return true;
             }
@@ -860,7 +908,7 @@ namespace TVA.Measurements.Routing
             T newAdapter, oldAdapter;
             uint rowID;
 
-            foreach (DataRow adapterRow in m_dataSource.Tables[m_dataMember].Rows)
+            foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
             {
                 rowID = uint.Parse(adapterRow["ID"].ToNonNullString("0"));
 
@@ -922,7 +970,15 @@ namespace TVA.Measurements.Routing
         /// </summary>
         public virtual void Start()
         {
-            m_enabled = true;
+            // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
+            if (m_enabled)
+                Stop();
+
+            // Wait for adapter intialization to complete...
+            m_enabled = WaitForInitialize(InitializationTimeout);
+
+            if (!m_enabled)
+                OnProcessException(new TimeoutException("Failed to start adapter collection due to timeout waiting for initialization."));
 
             // Reset statistics
             m_processedMeasurements = 0;
@@ -991,13 +1047,33 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
+        /// Manually sets the intialized state of the <see cref="AdapterCollectionBase{T}"/>.
+        /// </summary>
+        /// <param name="initialized">Desired initialized state.</param>
+        [AdapterCommand("Manually sets the intialized state of the adapter collection.")]
+        public virtual void SetInitializedState(bool initialized)
+        {
+            this.Initialized = initialized;
+        }
+
+        /// <summary>
         /// Gets a short one-line status of this <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
         /// <returns>A short one-line summary of the current status of this <see cref="AdapterBase"/>.</returns>
         public virtual string GetShortStatus(int maxLength)
         {
-            return string.Format("Total components: {0}", Count.ToString().PadLeft(5)).PadLeft(maxLength);
+            return string.Format("Total components: {0:N0}", Count).CenterText(maxLength);
+        }
+
+        /// <summary>
+        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter collection is <see cref="Initialized"/>.
+        /// </summary>
+        /// <param name="timeout">The number of milliseconds to wait.</param>
+        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        public virtual bool WaitForInitialize(int timeout)
+        {
+            return m_initializeWaitHandle.WaitOne(timeout);
         }
 
         /// <summary>
@@ -1101,6 +1177,7 @@ namespace TVA.Measurements.Routing
                 // Wire up events
                 item.StatusMessage += StatusMessage;
                 item.ProcessException += ProcessException;
+                item.Disposed += Disposed;
 
                 // Associate parent collection
                 item.AssignParentCollection(this);
@@ -1143,6 +1220,7 @@ namespace TVA.Measurements.Routing
                 // Un-wire events
                 item.StatusMessage -= StatusMessage;
                 item.ProcessException -= ProcessException;
+                item.Disposed -= Disposed;
 
                 // Make sure initialization handles are cleared in case any failed
                 // initializations are still pending

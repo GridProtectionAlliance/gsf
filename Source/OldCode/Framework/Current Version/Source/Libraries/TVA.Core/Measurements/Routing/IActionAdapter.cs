@@ -259,6 +259,14 @@ namespace TVA.Measurements.Routing
         event EventHandler<EventArgs<int>> UnpublishedSamples;
 
         /// <summary>
+        /// This event is raised if there are any measurements being discarded during the sorting process.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the enumeration of <see cref="IMeasurement"/> values that are being discarded during the sorting process.
+        /// </remarks>
+        event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
+
+        /// <summary>
         /// Queues measurements for calculation processing.  Measurements are automatically filters to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>
