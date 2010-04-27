@@ -27,6 +27,8 @@
 **       Modified to skip the build process in the absence of new changes since the last build.
 **  10/19/2009 - Pinal C. Patel
 **       Modified to allow archiving of binaries and installs for easy access.
+**  04/27/2010 - Pinal C. Patel
+**       Modified to automatically force a build when a specific version is being built.
 **
 *******************************************************************************************************
 -->
@@ -299,7 +301,7 @@
       <Output TaskParameter="TotalLinecount" PropertyName="TotalChanges"/>
     </File>
     <PropertyGroup>
-      <ForceBuild Condition="'$(ForceBuild)' != 'true' And '$(TotalChanges)' > '4'">true</ForceBuild>
+      <ForceBuild Condition="'$(TotalChanges)' > '4' Or '$(SourceVersion)' != 'T'">true</ForceBuild>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
