@@ -1583,9 +1583,9 @@ namespace TVA.ErrorManagement
                 }
                 finally
                 {
-                    base.Dispose(disposing);    // Call base class Dispose().
                     m_enabled = false;          // Mark as disabled.
                     m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }
