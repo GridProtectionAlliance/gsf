@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureUser.cs - Gbtc
+//  SecurityProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -232,8 +232,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
+using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Security;
 using System.Security.Principal;
@@ -251,19 +253,18 @@ namespace TVA.Security
     #region [ Enumerations ]
 
     /// <summary>
-    /// Inidicates the type of <see cref="IPrincipal"/> and <see cref="IIdentity"/> objects to be attached to threads in the 
-    /// <see cref="AppDomain.CurrentDomain">current application domain</see> for the purpose of implementing role-based security.
+    /// Inidicates the <see cref="IPrincipal"/> object to be attached the <see cref="AppDomain.CurrentDomain"/> thread for the purpose of implementing role-based security.
     /// </summary>
-    public enum SecurityPrincipal
+    public enum PrincipalPolicy
     {
         /// <summary>
-        /// <see cref="SecureUserPrincipal"/> and <see cref="SecureUserIdentity"/> objects are attached to the threads.
+        /// <see cref="TVA.Security.SecurityPrincipal"/> object is attached to the threads.
         /// </summary>
-        CustomPrincipal,
+        SecurityPrincipal,
         /// <summary>
-        /// <see cref="System.Security.Principal.WindowsPrincipal"/> and <see cref="System.Security.Principal.WindowsIdentity"/> objects are attached to the threads.
+        /// <see cref="System.Security.Principal.WindowsPrincipal"/> object is attached to the threads.
         /// </summary>
-        WindowsPrincipal,
+        WindowsPrincipal
     }
 
     #endregion
@@ -271,11 +272,54 @@ namespace TVA.Security
     /// <summary>
     /// A class that provides a mechanism for securing applications using role-based security.
     /// </summary>
-    /// <seealso cref="SecureUserIdentity"/>
-    /// <seealso cref="SecureUserPrincipal"/>
-    public class SecureUser : ISupportLifecycle, IPersistSettings
+    /// <seealso cref="SecurityIdentity"/>
+    /// <seealso cref="SecurityPrincipal"/>
+    public class SecurityProvider : ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
+
+        // Nested Types
+
+        /// <summary>
+        /// A class that facilitates the caching of <see cref="SecurityProvider"/>.
+        /// </summary>
+        private class CacheContext
+        {
+            private SecurityProvider m_provider;
+            private DateTime m_lastAccessed;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="CacheContext"/> class.
+            /// </summary>
+            public CacheContext(SecurityProvider provider)
+            {
+                m_provider = provider;
+                m_lastAccessed = DateTime.Now;
+            }
+
+            /// <summary>
+            /// Gets the <see cref="SecurityProvider"/> object of this <see cref="CacheContext"/>.
+            /// </summary>
+            public SecurityProvider Provider
+            {
+                get
+                {
+                    m_lastAccessed = DateTime.Now;
+                    return m_provider;
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="DateTime"/> of when the <see cref="Provider"/> was last accessed.
+            /// </summary>
+            public DateTime LastAccessed
+            {
+                get
+                {
+                    return m_lastAccessed;
+                }
+            }
+        }
 
         // Constants
 
@@ -290,9 +334,9 @@ namespace TVA.Security
         public const string DefaultConnectionString = "Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}";
 
         /// <summary>
-        /// Specifies the default value for the <see cref="SecurityPrincipal"/> property.
+        /// Specifies the default value for the <see cref="PrincipalPolicy"/> property.
         /// </summary>
-        public const SecurityPrincipal DefaultSecurityPrincipal = SecurityPrincipal.CustomPrincipal;
+        public const PrincipalPolicy DefaultPrincipalPolicy = PrincipalPolicy.SecurityPrincipal;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -302,17 +346,22 @@ namespace TVA.Security
         /// <summary>
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
-        public const string DefaultSettingsCategory = "ApplicationSecurity";
+        public const string DefaultSettingsCategory = "SecurityProvider";
 
         /// <summary>
         /// Regular expression used for validating the passwords of external users.
         /// </summary>
         private const string StrongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
 
+        /// <summary>
+        /// Number of minutes upto which <see cref="SecurityProvider"/> objects are to be cached.
+        /// </summary>
+        private const int CachingTimeout = 20;
+
         // Fields
         private string m_applicationName;
         private string m_connectionString;
-        private SecurityPrincipal m_securityPrincipal;
+        private PrincipalPolicy m_principalPolicy;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private string m_username;
@@ -342,18 +391,18 @@ namespace TVA.Security
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureUser"/> class.
+        /// Initializes a new instance of the <see cref="SecurityProvider"/> class.
         /// </summary>
-        public SecureUser()
+        public SecurityProvider()
             : this(Thread.CurrentPrincipal.Identity.Name)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureUser"/> class.
+        /// Initializes a new instance of the <see cref="SecurityProvider"/> class.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        public SecureUser(string username)
+        public SecurityProvider(string username)
         {
             // Properly format input.
             if (!string.IsNullOrEmpty(username))
@@ -363,7 +412,7 @@ namespace TVA.Security
                     m_username = username;
                 else
                     // Use the logged on domain.
-                    m_username = string.Format("{0}\\{1}", Environment.UserDomainName, username);
+                    m_username = string.Format("{0}\\{1}", Domain.GetComputerDomain().Name, username);
             }
 
             // Initialize member variables.
@@ -371,15 +420,15 @@ namespace TVA.Security
             m_roles = new List<string>();
             m_applicationName = DefaultApplicationName;
             m_connectionString = DefaultConnectionString;
-            m_securityPrincipal = DefaultSecurityPrincipal;
+            m_principalPolicy = DefaultPrincipalPolicy;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="SecureUser"/> object is reclaimed by <see cref="GC"/>.
+        /// Releases the unmanaged resources before the <see cref="SecurityProvider"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~SecureUser()
+        ~SecurityProvider()
         {
             Dispose(false);
         }
@@ -393,13 +442,13 @@ namespace TVA.Security
         /// </summary>
         public string ApplicationName
         {
-            get 
-            { 
-                return m_applicationName; 
+            get
+            {
+                return m_applicationName;
             }
-            set 
-            { 
-                m_applicationName = value; 
+            set
+            {
+                m_applicationName = value;
             }
         }
 
@@ -408,33 +457,33 @@ namespace TVA.Security
         /// </summary>
         public string ConnectionString
         {
-            get 
-            { 
-                return m_connectionString; 
+            get
+            {
+                return m_connectionString;
             }
-            set 
-            { 
-                m_connectionString = value; 
+            set
+            {
+                m_connectionString = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="SecurityPrincipal"/> to be used for enforcing role-based security.
+        /// Gets or sets the <see cref="PrincipalPolicy"/> to be used for enforcing role-based security.
         /// </summary>
-        public SecurityPrincipal SecurityPrincipal 
+        public PrincipalPolicy PrincipalPolicy
         {
-            get 
-            { 
-                return m_securityPrincipal; 
+            get
+            {
+                return m_principalPolicy;
             }
-            set 
-            { 
-                m_securityPrincipal = value; 
+            set
+            {
+                m_principalPolicy = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether <see cref="SecureUser"/> settings are to be saved to the config file.
+        /// Gets or sets a boolean value that indicates whether <see cref="SecurityProvider"/> settings are to be saved to the config file.
         /// </summary>
         public bool PersistSettings
         {
@@ -449,7 +498,7 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Gets or sets the category under which <see cref="SecureUser"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Gets or sets the category under which <see cref="SecurityProvider"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         public string SettingsCategory
@@ -468,7 +517,7 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="SecureUser"/> object is currently enabled.
+        /// Gets or sets a boolean value that indicates whether the <see cref="SecurityProvider"/> object is currently enabled.
         /// </summary>
         public bool Enabled
         {
@@ -485,16 +534,16 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's login name.
         /// </summary>
-        public string Username 
+        public string Username
         {
             get { return m_username; }
-            protected set { m_username = value;}
+            protected set { m_username = value; }
         }
 
         /// <summary>
         /// Gets the user's password.
         /// </summary>
-        public string Password 
+        public string Password
         {
             get { return m_password; }
             protected set { m_password = value; }
@@ -503,7 +552,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's first name.
         /// </summary>
-        public string FirstName 
+        public string FirstName
         {
             get { return m_firstName; }
             protected set { m_firstName = value; }
@@ -512,7 +561,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's last name.
         /// </summary>
-        public string LastName 
+        public string LastName
         {
             get { return m_lastName; }
             protected set { m_lastName = value; }
@@ -521,7 +570,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's company name.
         /// </summary>
-        public string CompanyName 
+        public string CompanyName
         {
             get { return m_companyName; }
             protected set { m_companyName = value; }
@@ -530,7 +579,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
-        public string PhoneNumber 
+        public string PhoneNumber
         {
             get { return m_phoneNumber; }
             protected set { m_phoneNumber = value; }
@@ -539,7 +588,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's email address.
         /// </summary>
-        public string EmailAddress 
+        public string EmailAddress
         {
             get { return m_emailAddress; }
             protected set { m_emailAddress = value; }
@@ -548,8 +597,8 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's security question.
         /// </summary>
-        public string SecurityQuestion 
-        { 
+        public string SecurityQuestion
+        {
             get { return m_securityQuestion; }
             protected set { m_securityQuestion = value; }
         }
@@ -557,7 +606,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's security answer.
         /// </summary>
-        public string SecurityAnswer 
+        public string SecurityAnswer
         {
             get { return m_securityAnswer; }
             protected set { m_securityAnswer = value; }
@@ -566,7 +615,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the date and time when user must change the password.
         /// </summary>
-        public DateTime PasswordChangeDataTime 
+        public DateTime PasswordChangeDataTime
         {
             get { return m_passwordChangeDateTime; }
             protected set { m_passwordChangeDateTime = value; }
@@ -575,7 +624,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the date and time when user account was created.
         /// </summary>
-        public DateTime AccountCreatedDateTime 
+        public DateTime AccountCreatedDateTime
         {
             get { return m_accountCreatedDateTime; }
             protected set { m_accountCreatedDateTime = value; }
@@ -584,7 +633,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
         /// </summary>
-        public bool IsDefined 
+        public bool IsDefined
         {
             get { return m_isDefined; }
             protected set { m_isDefined = value; }
@@ -593,7 +642,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
         /// </summary>
-        public bool IsExternal 
+        public bool IsExternal
         {
             get { return m_isExternal; }
             protected set { m_isExternal = value; }
@@ -602,7 +651,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
         /// </summary>
-        public bool IsLockedOut 
+        public bool IsLockedOut
         {
             get { return m_isLockedOut; }
             protected set { m_isLockedOut = value; }
@@ -611,7 +660,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a boolean value indicating whether or not the user has been authenticated.
         /// </summary>
-        public bool IsAuthenticated 
+        public bool IsAuthenticated
         {
             get { return m_isAuthenticated; }
             protected set { m_isAuthenticated = value; }
@@ -620,7 +669,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a read-only list of all the groups the user belongs to.
         /// </summary>
-        public IList<string> Groups 
+        public IList<string> Groups
         {
             get { return new ReadOnlyCollection<string>(m_groups); }
             protected set { m_groups = value; }
@@ -629,7 +678,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets a read-only list of all the roles assigned to the user.
         /// </summary>
-        public IList<string> Roles 
+        public IList<string> Roles
         {
             get { return new ReadOnlyCollection<string>(m_roles); }
             protected set { m_roles = value; }
@@ -638,7 +687,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the original <see cref="WindowsPrincipal"/> of the user if the user exists in Active Directory.
         /// </summary>
-        public WindowsPrincipal WindowsPrincipal 
+        public WindowsPrincipal WindowsPrincipal
         {
             get { return m_windowsPrincipal; }
             protected set { m_windowsPrincipal = value; }
@@ -649,7 +698,7 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="SecureUser"/> object.
+        /// Releases all the resources used by the <see cref="SecurityProvider"/> object.
         /// </summary>
         public void Dispose()
         {
@@ -658,12 +707,8 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Initializes the <see cref="SecureUser"/> object.
+        /// Initializes the <see cref="SecurityProvider"/> object.
         /// </summary>
-        /// <remarks>
-        /// <see cref="Initialize()"/> is to be called by user-code directly only if the <see cref="SecureUser"/> 
-        /// object is not consumed through the designer surface of the IDE.
-        /// </remarks>
         public virtual void Initialize()
         {
             if (!m_initialized)
@@ -676,51 +721,49 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Saves <see cref="SecureUser"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// Saves <see cref="SecurityProvider"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ApplicationName", true];
-                element.Update(m_applicationName, element.Description, element.Encrypted);
-                element = settings["ConnectionString", true];
-                element.Update(m_connectionString, element.Description, element.Encrypted);
-                element = settings["SecurityPrincipal", true];
-                element.Update(m_securityPrincipal, element.Description, element.Encrypted);
+                settings["ApplicationName", true].Update(m_applicationName);
+                settings["ConnectionString", true].Update(m_connectionString);
+                settings["PrincipalPolicy", true].Update(m_principalPolicy);
 
                 config.Save();
             }
         }
 
         /// <summary>
-        /// Loads saved <see cref="SecureUser"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// Loads saved <see cref="SecurityProvider"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public virtual void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security datastore.");
                 settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security datastore.");
-                settings.Add("SecurityPrincipal", m_securityPrincipal, "Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security.");
+                settings.Add("PrincipalPolicy", m_principalPolicy, "Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security.");
                 ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
                 ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
-                SecurityPrincipal = settings["SecurityPrincipal"].ValueAs(m_securityPrincipal);
+                PrincipalPolicy = settings["PrincipalPolicy"].ValueAs(m_principalPolicy);
             }
         }
 
@@ -757,7 +800,7 @@ namespace TVA.Security
             m_roles.Clear();
 
             bool refreshFromAD = PopulateDataFromActiveDirectory();
-            if (m_securityPrincipal == SecurityPrincipal.WindowsPrincipal)
+            if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal)
                 return refreshFromAD;
             else
                 return PopulateDataFromBackendDatabase();
@@ -771,8 +814,8 @@ namespace TVA.Security
         public virtual bool Authenticate(string password)
         {
             m_isAuthenticated = false;
-            if (m_securityPrincipal == SecurityPrincipal.WindowsPrincipal ||
-                (m_securityPrincipal == SecurityPrincipal.CustomPrincipal && m_isDefined && !m_isLockedOut && !m_isExternal))
+            if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal ||
+                (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_isDefined && !m_isLockedOut && !m_isExternal))
             {
                 // Authenticate against active directory.
                 if (!string.IsNullOrEmpty(password))
@@ -786,12 +829,12 @@ namespace TVA.Security
                 {
                     // Validate with current thread principal.
                     m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                    m_isAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_username) && 
-                                        string.Compare(m_windowsPrincipal.Identity.Name, m_username) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+                    m_isAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_username) &&
+                                        string.Compare(m_windowsPrincipal.Identity.Name, m_username, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
                 }
             }
-            else if(m_securityPrincipal == SecurityPrincipal.CustomPrincipal && m_isDefined && !m_isLockedOut && m_isExternal)
-            { 
+            else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_isDefined && !m_isLockedOut && m_isExternal)
+            {
                 // Authenticate against backend database.
                 m_isAuthenticated = m_password == EncryptPassword(password);
             }
@@ -800,7 +843,7 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="SecureUser"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="SecurityProvider"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
@@ -834,6 +877,7 @@ namespace TVA.Security
 
             using (UserInfo adUserInfo = new UserInfo(m_username))
             {
+                adUserInfo.PersistSettings = true;
                 adUserInfo.Initialize();
                 if (adUserInfo.UserEntry != null)
                 {
@@ -848,6 +892,7 @@ namespace TVA.Security
                 }
                 else
                 {
+                    // No such user in Active Directory.
                     return false;
                 }
             }
@@ -929,6 +974,7 @@ namespace TVA.Security
 
         private SqlConnection GetDatabaseConnection()
         {
+            SqlException exception = null;
             SqlConnection connection = null;
             foreach (KeyValuePair<string, string> pair in m_connectionString.ParseKeyValuePairs())
             {
@@ -937,10 +983,13 @@ namespace TVA.Security
                     // Initialize database connection.
                     connection = new SqlConnection(pair.Value);
                     connection.Open();
+
+                    return connection;
                 }
-                catch (SqlException)
+                catch (SqlException ex)
                 {
                     // Try other connection strings.
+                    exception = ex;
                 }
                 catch
                 {
@@ -949,63 +998,77 @@ namespace TVA.Security
                 }
             }
 
-            return connection;
+            throw new InitializationException("Unable to initialize connection to backend security datastore", exception);
         }
 
         #endregion
 
         #region [ Static ]
 
+        // Static Fields
+        private static Dictionary<string, CacheContext> s_cache;
+        private static System.Timers.Timer s_cacheMonitorTimer;
+
+        // Static Constructor
+        static SecurityProvider()
+        {
+            s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
+            s_cacheMonitorTimer = new System.Timers.Timer(60000);
+            s_cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
+            s_cacheMonitorTimer.Start();
+        }
+
         // Static Properties
-        
+
         /// <summary>
-        /// Gets or sets the <see cref="SecureUser"/> object of the current user.
+        /// Gets or sets the <see cref="SecurityProvider"/> object of the current user.
         /// </summary>
-        public static SecureUser Current
+        public static SecurityProvider Current
         {
             get
             {
-                SecureUserPrincipal principal = Thread.CurrentPrincipal as SecureUserPrincipal;
+                // Logic behind caching of the provider:
+                // - A provider is cached to session state data if the runtime is ASP.NET and if the session state 
+                //   data is accessible. This would essentially mean that we're dealing with web sites or web services
+                //   that are either SOAP ASMX services or WCF services hosted in ASP.NET compatibility mode.
+                // - A provider is cached to in-process static memory if we don't have access to session state data. 
+                //   This would essentially mean that we're either dealing with windows based application or WCF 
+                //   service hosted inside ASP.NET runtime without compatibility mode enabled.
+                SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
                 if (principal != null)
                 {
-                    // Retrieve user from current thread principal.
-                    return ((SecureUserIdentity)principal.Identity).Data;
+                    // The provider we're looking for is available to us via the current thread principal. This means
+                    // that the current thread principal has already been set by a call to Current property setter.
+                    return ((SecurityIdentity)principal.Identity).Provider;
                 }
                 else
                 {
-                    // Retrieve user from session data if available.
-                    if (Common.GetApplicationType() == ApplicationType.Web && 
-                        HttpContext.Current != null && HttpContext.Current.Session != null)
+                    // Since the provider is not available to us through the current thread principal, we check to see 
+                    // if it is available to us via one of the two caching mechanisms.
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
                     {
-                        SecureUser user = HttpContext.Current.Session[typeof(SecureUser).Name] as SecureUser;
-                        if (user != null && !(Thread.CurrentPrincipal is SecureUserPrincipal))
-                            Current = user;
-
-                        return user;
+                        // Check session state.
+                        SecurityProvider provider = HttpContext.Current.Session[typeof(SecurityProvider).Name] as SecurityProvider;
+                        if (provider == null)
+                            return null;
+                        else
+                            return SetupPrincipal(provider, false);
                     }
                     else
                     {
-                        return null;
+                        // Check in-process memory.
+                        CacheContext cache;
+                        lock (s_cache)
+                        {
+                            s_cache.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out cache);
+                        }
+
+                        if (cache == null)
+                            return null;
+                        else
+                            return SetupPrincipal(cache.Provider, false);
                     }
                 }
-                //if (Common.GetApplicationType() == ApplicationType.Web)
-                //{
-                //    // Retrieve user cached in the session data.
-                //    SecureUser user = HttpContext.Current.Session[typeof(SecureUser).Name] as SecureUser;
-                //    if (user != null && !(Thread.CurrentPrincipal is SecureUserPrincipal))
-                //        Current = user;
-
-                //    return user;
-                //}
-                //else
-                //{
-                //    // Retrieve user from current thread principal.
-                //    SecureUserPrincipal principal = Thread.CurrentPrincipal as SecureUserPrincipal;
-                //    if (principal == null)
-                //        return null;
-                //    else
-                //        return ((SecureUserIdentity)principal.Identity).Data;
-                //}
             }
             set
             {
@@ -1013,35 +1076,35 @@ namespace TVA.Security
                 {
                     // Login - Setup security principal.
                     value.Initialize();
-                    SecureUserIdentity identity = new SecureUserIdentity(value);
-                    SecureUserPrincipal principal = new SecureUserPrincipal(identity);
-                    Thread.CurrentPrincipal = principal;
-                    if (Common.GetApplicationType() == ApplicationType.Web && HttpContext.Current != null)
-                    {
-                        HttpContext.Current.User = principal;
-                        if (HttpContext.Current.Session != null)
-                            HttpContext.Current.Session[typeof(SecureUser).Name] = value;
-                    }
+                    SetupPrincipal(value, false);
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                        // Cache provider to session state.
+                        HttpContext.Current.Session[typeof(SecurityProvider).Name] = value;
+                    else
+                        // Cache provider to in-process memory.
+                        lock (s_cache)
+                        {
+                            s_cache[value.Username] = new CacheContext(value);
+                        }
                 }
                 else
                 {
                     // Logout - Restore original principal.
-                    SecureUserPrincipal principal = Thread.CurrentPrincipal as SecureUserPrincipal;
+                    SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
                     if (principal == null)
                         return;
 
-                    SecureUserIdentity identity = principal.Identity as SecureUserIdentity;
-                    if (identity.Data.WindowsPrincipal != null)
-                        Thread.CurrentPrincipal = identity.Data.WindowsPrincipal;
-                    else
-                        Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetAnonymous());
+                    SetupPrincipal(((SecurityIdentity)principal.Identity).Provider, true);
 
-                    if (Common.GetApplicationType() == ApplicationType.Web && HttpContext.Current != null)
-                    {
-                        HttpContext.Current.User = Thread.CurrentPrincipal;
-                        if (HttpContext.Current.Session != null)
-                            HttpContext.Current.Session[typeof(SecureUser).Name] = null;
-                    }
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                        // Remove previously cached provider from session state.
+                        HttpContext.Current.Session[typeof(SecurityProvider).Name] = null;
+                    else
+                        // Remove previously cached provider from in-process memory.
+                        lock (s_cache)
+                        {
+                            s_cache.Remove(principal.Identity.Name);
+                        }
                 }
             }
         }
@@ -1076,6 +1139,43 @@ namespace TVA.Security
                 message.Append("- Password must contain at least 1 lower case letter");
 
                 throw new SecurityException(message.ToString());
+            }
+        }
+
+        private static SecurityProvider SetupPrincipal(SecurityProvider provider, bool restore)
+        {
+            // Initialize the principal object.
+            IPrincipal principal;
+            if (restore && provider.WindowsPrincipal != null)
+                // Initialize principal to original WindowsPrincipal.
+                principal = provider.WindowsPrincipal;
+            else if (restore && provider.WindowsPrincipal == null)
+                // Initialize principal to anonymous WindowsPrincipal.
+                principal = new WindowsPrincipal(WindowsIdentity.GetAnonymous());
+            else
+                // Initialize principal to SecurityPrincipal.
+                principal = new SecurityPrincipal(new SecurityIdentity(provider));
+
+            // Setup the current thread principal.
+            Thread.CurrentPrincipal = principal;
+
+            // Setup ASP.NET remote user principal.
+            if (HttpContext.Current != null)
+                HttpContext.Current.User = Thread.CurrentPrincipal;
+
+            return provider;
+        }
+
+        private static void CacheMonitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            lock (s_cache)
+            {
+                List<string> cacheKeys = new List<string>(s_cache.Keys);
+                foreach (string cacheKey in cacheKeys)
+                {
+                    if (DateTime.Now.Subtract(s_cache[cacheKey].LastAccessed).TotalMinutes > CachingTimeout)
+                        s_cache.Remove(cacheKey);
+                }
             }
         }
 

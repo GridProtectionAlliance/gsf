@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureUserPrincipal.cs - Gbtc
+//  SecurityPolicy.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/22/2010 - Pinal C. Patel
+//  04/22/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,38 +230,35 @@
 #endregion
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.IdentityModel.Claims;
+using System.IdentityModel.Policy;
 using System.Security.Principal;
+using System.Threading;
+using TVA.Security;
 
-namespace TVA.Security
+namespace TVA.Web
 {
     /// <summary>
-    /// A class that implements <see cref="IPrincipal"/> interface to facilitate custom role-based security.
+    /// Represents an authorization policy that can be used by WCF services for initializing security.
     /// </summary>
-    /// <seealso cref="SecureUser"/>
-    /// <seealso cref="SecureUserIdentity"/>
-    public class SecureUserPrincipal : IPrincipal
+    public class SecurityPolicy : IAuthorizationPolicy
     {
         #region [ Members ]
 
         // Fields
-        private SecureUserIdentity m_identity;
+        private Guid m_id;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureUserPrincipal"/> class.
+        /// Initializes a new instance of the <see cref="SecurityPolicy"/> class.
         /// </summary>
-        /// <param name="identity">An <see cref="SecureUserIdentity"/> object.</param>
-        /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecureUserPrincipal(SecureUserIdentity identity)
+        public SecurityPolicy()
         {
-            if (identity == null)
-                throw new ArgumentNullException("identity");
-
-            m_identity = identity;
+            m_id = Guid.NewGuid();
         }
 
         #endregion
@@ -269,14 +266,19 @@ namespace TVA.Security
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="SecureUserIdentity"/> object of the user.
+        /// Gets the identifier of this <see cref="SecurityPolicy"/> instance.
         /// </summary>
-        public IIdentity Identity
+        public string Id
         {
-            get
-            {
-                return m_identity;
-            }
+            get { return m_id.ToString(); }
+        }
+
+        /// <summary>
+        /// Gets a claim set that represents the issuer of this <see cref="SecurityPolicy"/>.
+        /// </summary>
+        public ClaimSet Issuer
+        {
+            get { return ClaimSet.System; }
         }
 
         #endregion
@@ -284,45 +286,40 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Determines whether the user is a member of the specified <paramref name="role"/>.
+        /// Evaluates the <paramref name="eveluationContext"/> and initializes security.
         /// </summary>
-        /// <param name="role">Name of the role to check.</param>
-        /// <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        public bool IsInRole(string role)
+        /// <param name="evaluationContext">An <see cref="EvaluationContext"/> object.</param>
+        /// <param name="state">Custom state of the <see cref="SecurityPolicy"/>.</param>
+        /// <returns></returns>
+        public bool Evaluate(EvaluationContext evaluationContext, ref object state)
         {
-            if (m_identity.Data.SecurityPrincipal == SecurityPrincipal.WindowsPrincipal)
+            // In order for this to work properly security on the binding must be configured to use windows security.
+            // When this is done the caller's windows identity is available to us here and can be used to derive from 
+            // it the security principal that can be used by WCF service code downstream for implementing security.
+            object property;
+            if (evaluationContext.Properties.TryGetValue("Identities", out property))
             {
-                // Check membership against Active Directory.
-                if (m_identity.Data.WindowsPrincipal == null)
-                    return false;
-                else
-                    return m_identity.Data.WindowsPrincipal.IsInRole(role);
+                // Extract and assign the caller's windows identity to current thread if available.
+                IList<IIdentity> identities = property as List<IIdentity>;
+                foreach (IIdentity identity in identities)
+                {
+                    if (identity is WindowsIdentity)
+                    {
+                        Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)identity);
+
+                        break;
+                    }
+                }
             }
-            else
-            {
-                // Check membership against backend datastore.
-                if (!m_identity.Data.IsDefined || m_identity.Data.IsLockedOut || !m_identity.Data.IsAuthenticated)
-                    return false;
-                else
-                    return m_identity.Data.Roles.FirstOrDefault(currentRole => (string.Compare(role, currentRole, true) == 0)) != null;
-            }
-        }
 
-        #endregion
+            // Initialize the security principal from caller's windows identity if uninitialized.
+            if (SecurityProvider.Current == null)
+                SecurityProvider.Current = new SecurityProvider();
 
-        #region [ Operators ]
+            // Make the security principal available to code downstream for implementing security.
+            evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
 
-        /// <summary>
-        /// Converts <see cref="SecureUserPrincipal"/> object to <see cref="WindowsPrincipal"/> object.
-        /// </summary>
-        /// <param name="value">The <see cref="SecureUserIdentity"/> object to convert.</param>
-        /// <returns>An <see cref="WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsPrincipal(SecureUserPrincipal value)
-        {
-            if (value == null)
-                return null;
-            else
-                return (value.Identity as SecureUserIdentity).Data.WindowsPrincipal;
+            return true;
         }
 
         #endregion

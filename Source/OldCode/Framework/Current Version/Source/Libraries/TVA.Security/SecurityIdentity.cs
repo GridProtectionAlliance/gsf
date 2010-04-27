@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureUserIdentity.cs - Gbtc
+//  SecurityIdentity.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -237,30 +237,30 @@ namespace TVA.Security
     /// <summary>
     /// A class that implements <see cref="IIdentity"/> interface to facilitate custom role-based security.
     /// </summary>
-    /// <seealso cref="SecureUser"/>
-    /// <seealso cref="SecureUserPrincipal"/>
-    public class SecureUserIdentity : IIdentity
+    /// <seealso cref="SecurityProvider"/>
+    /// <seealso cref="SecurityPrincipal"/>
+    public class SecurityIdentity : IIdentity
     {
         #region [ Members ]
 
         // Fields
-        private SecureUser m_data;
+        private SecurityProvider m_provider;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureUserIdentity"/> class.
+        /// Initializes a new instance of the <see cref="SecurityIdentity"/> class.
         /// </summary>
-        /// <param name="data">An <see cref="SecureUser"/> object.</param>
+        /// <param name="provider">An <see cref="SecurityProvider"/> object.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="data"/> is null.</exception>
-        internal SecureUserIdentity(SecureUser data)
+        internal SecurityIdentity(SecurityProvider provider)
         {
-            if (data == null)
+            if (provider == null)
                 throw new ArgumentNullException("data");
 
-            m_data = data;
+            m_provider = provider;
         }
 
         #endregion
@@ -274,10 +274,10 @@ namespace TVA.Security
         {
             get
             {
-                if (m_data.WindowsPrincipal == null)
+                if (m_provider.WindowsPrincipal == null)
                     return "Custom";
                 else
-                    return m_data.WindowsPrincipal.Identity.AuthenticationType;
+                    return m_provider.WindowsPrincipal.Identity.AuthenticationType;
             }
         }
 
@@ -288,7 +288,7 @@ namespace TVA.Security
         {
             get
             {
-                return m_data.IsAuthenticated;
+                return m_provider.IsAuthenticated;
             }
         }
 
@@ -299,18 +299,18 @@ namespace TVA.Security
         {
             get
             {
-                return m_data.Username;
+                return m_provider.Username;
             }
         }
 
         /// <summary>
-        /// Gets the <see cref="SecureUser"/> object of the user.
+        /// Gets the <see cref="SecurityProvider"/> object of the user.
         /// </summary>
-        public SecureUser Data
+        public SecurityProvider Provider
         {
             get
             {
-                return m_data;
+                return m_provider;
             }
         }
 
@@ -319,16 +319,16 @@ namespace TVA.Security
         #region [ Operators ]
 
         /// <summary>
-        /// Converts <see cref="SecureUserIdentity"/> object to <see cref="WindowsIdentity"/> object.
+        /// Converts <see cref="SecurityIdentity"/> object to <see cref="WindowsIdentity"/> object.
         /// </summary>
-        /// <param name="value">The <see cref="SecureUserIdentity"/> object to convert.</param>
+        /// <param name="value">The <see cref="SecurityIdentity"/> object to convert.</param>
         /// <returns>An <see cref="WindowsIdentity"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsIdentity(SecureUserIdentity value)
+        public static explicit operator WindowsIdentity(SecurityIdentity value)
         {
-            if (value == null || value.Data.WindowsPrincipal == null)
+            if (value == null || value.Provider.WindowsPrincipal == null)
                 return null;
             else
-                return value.Data.WindowsPrincipal.Identity as WindowsIdentity;
+                return value.Provider.WindowsPrincipal.Identity as WindowsIdentity;
         }
 
         #endregion

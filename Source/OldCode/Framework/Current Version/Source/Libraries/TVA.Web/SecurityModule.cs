@@ -231,6 +231,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -239,6 +240,7 @@ using System.Web.SessionState;
 using TVA.Configuration;
 using TVA.IO;
 using TVA.Security;
+using System.Web.Hosting;
 
 namespace TVA.Web
 {
@@ -358,7 +360,7 @@ namespace TVA.Web
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="Type"/> based on <see cref="SecureUser"/> to be used for enforcing security.
+        /// Gets or sets the <see cref="Type"/> based on <see cref="SecurityProvider"/> to be used for enforcing security.
         /// </summary>
         public string ProviderType
         {
@@ -481,29 +483,24 @@ namespace TVA.Web
 
         /// <summary>
         /// Saves <see cref="SecurityModule"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void SaveSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElement element = null;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                element = settings["ProviderType", true];
-                element.Update(m_providerType, element.Description, element.Encrypted);
-                element = settings["Error401Page", true];
-                element.Update(m_error401Page, element.Description, element.Encrypted);
-                element = settings["Error403Page", true];
-                element.Update(m_error403Page, element.Description, element.Encrypted);
-                element = settings["IncludedResources", true];
-                element.Update(IncludedResources, element.Description, element.Encrypted);
-                element = settings["ExcludedResources", true];
-                element.Update(ExcludedResources, element.Description, element.Encrypted);
+                settings["ProviderType", true].Update(m_providerType);
+                settings["Error401Page", true].Update(m_error401Page);
+                settings["Error403Page", true].Update(m_error403Page);
+                settings["IncludedResources", true].Update(IncludedResources);
+                settings["ExcludedResources", true].Update(ExcludedResources);
 
                 config.Save();
             }
@@ -511,14 +508,15 @@ namespace TVA.Web
 
         /// <summary>
         /// Loads saved <see cref="SecurityModule"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>        
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
         public void LoadSettings()
         {
             if (m_persistSettings)
             {
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new InvalidOperationException("SettingsCategory property has not been set");
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
 
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
@@ -547,6 +545,9 @@ namespace TVA.Web
             m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
             m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
             m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
+
+            //if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
+            //    HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
         }
 
         /// <summary>
@@ -590,8 +591,8 @@ namespace TVA.Web
             if (IsResourceExcluded())
                 return;
 
-            if (SecureUser.Current == null)
-                SecureUser.Current = Activator.CreateInstance(Type.GetType(m_providerType)) as SecureUser;
+            if (SecurityProvider.Current == null)
+                SecurityProvider.Current = Activator.CreateInstance(Type.GetType(m_providerType)) as SecurityProvider;
 
             if (!m_application.User.Identity.IsAuthenticated)
             {
@@ -633,7 +634,7 @@ namespace TVA.Web
             foreach (KeyValuePair<string, string> inclusion in m_includedResources)
             {
                 if (FilePath.IsFilePatternMatch(inclusion.Key, resource, true) &&
-                    (inclusion.Value.Trim() == "*" || inclusion.Value.Split(',').FirstOrDefault(role => m_application.User.IsInRole(role.Trim())) != null))
+                    (inclusion.Value.Trim() == "*" || m_application.User.IsInRole(inclusion.Value)))
                     return true;
             }
 
@@ -714,10 +715,10 @@ namespace TVA.Web
                 {
                     string username = credentials[0];
                     string password = credentials[1];
-                    SecureUser user = Activator.CreateInstance(Type.GetType(m_providerType), username) as SecureUser;
+                    SecurityProvider user = Activator.CreateInstance(Type.GetType(m_providerType), username) as SecurityProvider;
                     user.Initialize();
                     user.Authenticate(password);
-                    SecureUser.Current = user;
+                    SecurityProvider.Current = user;
 
                     return Thread.CurrentPrincipal.Identity.IsAuthenticated;
                 }
