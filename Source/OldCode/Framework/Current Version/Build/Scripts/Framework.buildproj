@@ -23,6 +23,9 @@
 **       Enabled archiving of binaries and installs.
 **  10/20/2009 - Pinal C. Patel
 **       Made deployment of archives to public locations switchable.
+**  04/27/2010 - Pinal C. Patel
+**       Moved initialization of version and project files to after the build has been initialized
+**       so that they don't include files that have to deleted of moved since the last build.
 **
 *******************************************************************************************************
 -->
@@ -44,10 +47,10 @@
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
       <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\openPDC\$(ProjectName)\Beta</BuildDeployFolder>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="BeforeVersionSource">
     <ItemGroup>
-      <!-- List of projects to build. -->
-      <ProjectsToBuild Include="$(ProjectSolution)"/>
-      <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
       <!-- List of files to be versioned. -->
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
         <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
@@ -55,6 +58,14 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="BeforeBuildProjects">
+    <ItemGroup>
+      <!-- List of projects to build. -->
+      <ProjectsToBuild Include="$(ProjectSolution)"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
+    </ItemGroup>
+  </Target>
+  
   <Target Name="BeforeExecuteUnitTests">
     <ItemGroup>
       <!-- List of unit test assemblies. -->
