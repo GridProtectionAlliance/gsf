@@ -52,12 +52,14 @@
         <member name="M:TVA.Web.SecurityModule.SaveSettings">
             <summary>
             Saves <see cref="T:TVA.Web.SecurityModule"/> settings to the config file if the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.SecurityModule.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Web.SecurityModule.LoadSettings">
             <summary>
             Loads saved <see cref="T:TVA.Web.SecurityModule"/> settings from the config file if the <see cref="P:TVA.Web.SecurityModule.PersistSettings"/> property is set to true.
-            </summary>        
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.SecurityModule.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
         <member name="M:TVA.Web.SecurityModule.Init(System.Web.HttpApplication)">
             <summary>
@@ -72,7 +74,7 @@
         </member>
         <member name="P:TVA.Web.SecurityModule.ProviderType">
             <summary>
-            Gets or sets the <see cref="T:System.Type"/> based on <see cref="T:TVA.Security.SecureUser"/> to be used for enforcing security.
+            Gets or sets the <see cref="T:System.Type"/> based on <see cref="T:TVA.Security.SecurityProvider"/> to be used for enforcing security.
             </summary>
         </member>
         <member name="P:TVA.Web.SecurityModule.Error401Page">
@@ -125,6 +127,34 @@
         <member name="P:TVA.Web.SecurityModule.SessionEnabledHandler.IsReusable">
             <summary>
             Returns false since class has a member.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.SecurityPolicy">
+            <summary>
+            Represents an authorization policy that can be used by WCF services for initializing security.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityPolicy.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.SecurityPolicy"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.SecurityPolicy.Evaluate(System.IdentityModel.Policy.EvaluationContext,System.Object@)">
+            <summary>
+            Evaluates the <paramref name="eveluationContext"/> and initializes security.
+            </summary>
+            <param name="evaluationContext">An <see cref="T:System.IdentityModel.Policy.EvaluationContext"/> object.</param>
+            <param name="state">Custom state of the <see cref="T:TVA.Web.SecurityPolicy"/>.</param>
+            <returns></returns>
+        </member>
+        <member name="P:TVA.Web.SecurityPolicy.Id">
+            <summary>
+            Gets the identifier of this <see cref="T:TVA.Web.SecurityPolicy"/> instance.
+            </summary>
+        </member>
+        <member name="P:TVA.Web.SecurityPolicy.Issuer">
+            <summary>
+            Gets a claim set that represents the issuer of this <see cref="T:TVA.Web.SecurityPolicy"/>.
             </summary>
         </member>
         <member name="T:TVA.Web.Services.DataFlowDirection">
