@@ -271,7 +271,7 @@ namespace TVA.Measurements.Routing
         {
             base.Name = "Output Adapter Collection";
             base.DataMember = "OutputAdapters";
-            base.EnableMonitorTimer = true;
+            base.MonitorTimerEnabled = true;
         }
 
         #endregion

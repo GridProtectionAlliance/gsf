@@ -759,9 +759,9 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Starts the <see cref="ActionAdapterBase"/>, if it is not already running.
+        /// Starts the <see cref="ActionAdapterBase"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the action adapter, if it is not already running.")]
+        [AdapterCommand("Starts the action adapter or restarts it if it is already running.")]
         public override void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)

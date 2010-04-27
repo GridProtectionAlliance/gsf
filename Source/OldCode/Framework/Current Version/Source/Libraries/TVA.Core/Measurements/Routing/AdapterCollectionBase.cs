@@ -296,7 +296,7 @@ namespace TVA.Measurements.Routing
         private Time m_totalProcessTime;
         private long m_processedMeasurements;
         private System.Timers.Timer m_monitorTimer;
-        private bool m_enableMonitorTimer;
+        private bool m_monitorTimerEnabled;
         private bool m_enabled;
         private bool m_disposed;
 
@@ -565,15 +565,18 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Gets or sets flag that determines if monitor timer should be used for monitoring processed measurement statistics for the <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        protected virtual bool EnableMonitorTimer
+        protected virtual bool MonitorTimerEnabled
         {
             get
             {
-                return m_enableMonitorTimer;
+                return m_monitorTimerEnabled;
             }
             set
             {
-                m_enableMonitorTimer = value;
+                m_monitorTimerEnabled = value;
+
+                if (m_monitorTimer != null)
+                    m_monitorTimer.Enabled = value && Enabled;
             }
         }
 
@@ -621,6 +624,13 @@ namespace TVA.Measurements.Routing
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
+                if (MonitorTimerEnabled)
+                {
+                    status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements.ToString("N0"));
+                    status.AppendLine();
+                    status.AppendFormat("   Average processing rate: {0} measurements / second", ((int)(m_processedMeasurements / m_totalProcessTime)).ToString("N0"));
+                    status.AppendLine();
+                }
                 status.AppendFormat("       Data source defined: {0}", (dataSource != null));
                 status.AppendLine();
                 if (dataSource != null)
@@ -966,8 +976,9 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Starts each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
+        /// Starts, or restarts, each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
+        [AdapterCommand("Starts, or restarts, each adapter in the collection.")]
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)
@@ -980,10 +991,7 @@ namespace TVA.Measurements.Routing
             if (!m_enabled)
                 OnProcessException(new TimeoutException("Failed to start adapter collection due to timeout waiting for initialization."));
 
-            // Reset statistics
-            m_processedMeasurements = 0;
-            m_totalProcessTime = 0.0D;
-            m_lastProcessTime = DateTime.UtcNow.Ticks;
+            ResetStatistics();
 
             foreach (T item in this)
             {
@@ -1004,7 +1012,7 @@ namespace TVA.Measurements.Routing
             }
 
             // Start data monitor...
-            if (EnableMonitorTimer)
+            if (MonitorTimerEnabled)
                 m_monitorTimer.Start();
         }
 
@@ -1027,6 +1035,7 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Stops each <see cref="IAdapter"/> implementation in this <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
+        [AdapterCommand("Stops each adapter in the collection.")]
         public virtual void Stop()
         {
             m_enabled = false;
@@ -1054,6 +1063,19 @@ namespace TVA.Measurements.Routing
         public virtual void SetInitializedState(bool initialized)
         {
             this.Initialized = initialized;
+        }
+
+        /// <summary>
+        /// Resets the statistics of this collection.
+        /// </summary>
+        [AdapterCommand("Resets the statistics of this collection.")]
+        public void ResetStatistics()
+        {
+            m_processedMeasurements = 0;
+            m_totalProcessTime = 0.0D;
+            m_lastProcessTime = DateTime.UtcNow.Ticks;
+
+            OnStatusMessage("Statistics reset for this collection.");
         }
 
         /// <summary>

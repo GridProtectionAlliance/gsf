@@ -774,9 +774,9 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Starts the <see cref="AdapterBase"/>, if it is not already running.
+        /// Starts the <see cref="AdapterBase"/> or restarts it if it is already running.
         /// </summary>
-        [AdapterCommand("Starts the adapter, if it is not already running.")]
+        [AdapterCommand("Starts the adapter or restarts it if it is already running.")]
         public virtual void Start()
         {
             // Make sure we are stopped (e.g., disconnected) before attempting to start (e.g., connect)

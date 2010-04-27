@@ -255,6 +255,11 @@ namespace TVA.Measurements.Routing
         string DataMember { get; set; }
 
         /// <summary>
+        /// Resets the statistics of this collection.
+        /// </summary>
+        void ResetStatistics();
+
+        /// <summary>
         /// Attempts to get the adapter with the specified <paramref name="ID"/>.
         /// </summary>
         /// <param name="id">ID of adapter to get.</param>
