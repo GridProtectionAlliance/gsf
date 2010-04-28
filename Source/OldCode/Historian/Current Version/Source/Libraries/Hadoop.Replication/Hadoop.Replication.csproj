@@ -50,13 +50,15 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="TVA.Communication, Version=1.1.17.43549, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=1.1.36.46795, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+      <HintPath Condition=" '$(SignAssembly)' != 'true' ">..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+      <HintPath Condition=" '$(SignAssembly)' == 'true' ">..\..\Dependencies\TVA\Signed\TVA.Communication.dll</HintPath>
     </Reference>
-    <Reference Include="TVA.Core, Version=1.1.17.43549, Culture=neutral, PublicKeyToken=0912cfbda5dae2d1, processorArchitecture=MSIL">
+    <Reference Include="TVA.Core, Version=1.1.36.46795, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+      <HintPath Condition=" '$(SignAssembly)' != 'true' ">..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+      <HintPath Condition=" '$(SignAssembly)' == 'true' ">..\..\Dependencies\TVA\Signed\TVA.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

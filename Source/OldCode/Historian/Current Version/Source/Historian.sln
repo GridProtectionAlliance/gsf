@@ -40,6 +40,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		openPDC.snk = openPDC.snk
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Signed", "Signed", "{DCB4CA15-E3A7-4D21-8EC7-9D959C3241D8}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\TVA\Signed\TVA.Communication.dll = Dependencies\TVA\Signed\TVA.Communication.dll
+		Dependencies\TVA\Signed\TVA.Core.dll = Dependencies\TVA\Signed\TVA.Core.dll
+		Dependencies\TVA\Signed\TVA.Security.dll = Dependencies\TVA\Signed\TVA.Security.dll
+		Dependencies\TVA\Signed\TVA.Web.dll = Dependencies\TVA\Signed\TVA.Web.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 5
@@ -93,6 +101,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{EF3BA2EC-66A1-436D-B126-018C3DEB51D4} = {10F92F7C-6857-484D-9707-01ECE4F7467A}
+		{DCB4CA15-E3A7-4D21-8EC7-9D959C3241D8} = {EF3BA2EC-66A1-436D-B126-018C3DEB51D4}
 		{A0BB1312-9332-4B46-A785-35F14EA88AD9} = {A80F340A-FD72-407A-B070-5124162B64EC}
 		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {A80F340A-FD72-407A-B070-5124162B64EC}
 		{B561487F-79CC-4982-848E-C12F44B4669C} = {A80F340A-FD72-407A-B070-5124162B64EC}
