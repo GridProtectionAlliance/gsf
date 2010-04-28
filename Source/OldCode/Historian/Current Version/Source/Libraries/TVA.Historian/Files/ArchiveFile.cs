@@ -63,6 +63,8 @@
 //  03/18/2010 - Pinal C. Patel
 //       Modified ReadData() to use the current ArchiveFile instance for reading data from the current
 //       file instead of creating a new instance to avoid complications when rolling over to a new file.
+//  04/28/2010 - Pinal C. Patel
+//       Modified WriteData() overload that takes a collection of IDataPoint to not check file state.
 //
 //*******************************************************************************************************
 
@@ -1861,16 +1863,9 @@ namespace TVA.Historian.Files
         /// <param name="dataPoints"><see cref="ArchiveDataPoint"/> points to be written.</param>
         public void WriteData(IEnumerable<IDataPoint> dataPoints)
         {
-            if (IsOpen)
+            foreach (IDataPoint dataPoint in dataPoints)
             {
-                foreach (IDataPoint dataPoint in dataPoints)
-                {
-                    WriteData(dataPoint);
-                }
-            }
-            else
-            {
-                throw (new InvalidOperationException(string.Format("{0} '{1}' is not open.", this.GetType().Name, m_fileName)));
+                WriteData(dataPoint);
             }
         }
 
