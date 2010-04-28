@@ -26,6 +26,9 @@
 **  04/27/2010 - Pinal C. Patel
 **       Moved initialization of version and project files to after the build has been initialized
 **       so that they don't include files that have to deleted of moved since the last build.
+**  04/28/2010 - Pinal C. Patel
+**       Modified the build to output a set of signed class libraries by leveraging the newly added
+**       ProjectsToBuild.Properties property.
 **
 *******************************************************************************************************
 -->
@@ -62,6 +65,9 @@
     <ItemGroup>
       <!-- List of projects to build. -->
       <ProjectsToBuild Include="$(ProjectSolution)"/>
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\**\*.Test.csproj">
+        <Properties>SignAssembly=true;AssemblyOriginatorKeyFile=$(LocalFolder)\Source\openPDC.snk;OutputPath=$(BuildOutputFolder)\Libraries\Signed</Properties>
+      </ProjectsToBuild>
       <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
     </ItemGroup>
   </Target>
