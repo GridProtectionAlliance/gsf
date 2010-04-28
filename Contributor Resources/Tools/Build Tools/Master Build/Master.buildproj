@@ -29,6 +29,9 @@
 **       Modified to allow archiving of binaries and installs for easy access.
 **  04/27/2010 - Pinal C. Patel
 **       Modified to automatically force a build when a specific version is being built.
+**  04/28/2010 - Pinal C. Patel
+**       Modified ProjectsToBuild to include an optional Properties property that can be used to
+**       override project properties during the build process.
 **
 *******************************************************************************************************
 -->
@@ -338,7 +341,7 @@
   <Target Name="CoreBuildProjects">
     <!-- Build all of the specified projects. -->
     <Message Text="Compiling projects..."/>
-    <MSBuild Projects="@(ProjectsToBuild)" Properties="Configuration=$(BuildFlavor);Platform=$(BuildTarget)"/>
+    <MSBuild Projects="@(ProjectsToBuild)" Properties="Configuration=$(BuildFlavor);Platform=$(BuildTarget);%(ProjectsToBuild.Properties)"/>
     <!-- Build all of the specified installs. -->
     <Message Text="Compiling installs..."/>
     <Exec Command="%22$(VisualStudio)%22 %22$(ProjectSolution)%22 /Project %22%(InstallsToBuild.FullPath)%22 /Build %22$(BuildFlavor)|$(BuildTarget)%22" Condition="'$(ProjectSolution)' != '' And '@(InstallsToBuild)' != ''"/>
