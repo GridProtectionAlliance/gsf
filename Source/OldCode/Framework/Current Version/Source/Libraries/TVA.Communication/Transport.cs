@@ -22,6 +22,8 @@
 //  10/30/2009 - Pinal C. Patel
 //       Added IsIPv6IP() and IsMulticastIP() methods.
 //       Fixed bug in CreateSocket() that was breaking one-way communication support in UDP components.
+//  04/29/2010 - Pinal C. Patel
+//       Added EndpointFormatRegex constant to be used for parsing endpoint strings.
 //
 //*******************************************************************************************************
 
@@ -261,6 +263,20 @@ namespace TVA.Communication
         /// Specifies the highest valid port number for a <see cref="Socket"/>.
         /// </summary>
         public const int PortRangeHigh = 65535;
+
+        /// <summary>
+        /// Regular expression used to validate the format for an endpoint.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Matches the following valid input:<br/>
+        /// - localhost:80<br/>
+        /// - 127.0.0.1:80<br/>
+        /// - [::1]:80<br/>
+        /// - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+        /// </para>
+        /// </remarks>
+        public const string EndpointFormatRegex = @"(?<host>.+)\:(?<port>\d+$)";
 
         /// <summary>
         /// Creates an <see cref="IPEndPoint"/> for the specified host name and port number.

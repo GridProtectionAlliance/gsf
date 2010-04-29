@@ -347,18 +347,6 @@ namespace TVA.Communication
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888";
 
-        /// <summary>
-        /// Regular expression used to validate the server property in <see cref="ClientBase.ConnectionString"/>.
-        /// </summary>
-        /// <remarks>
-        /// Matches the following valid input:
-        /// - localhost:80
-        /// - 127.0.0.1:80
-        /// - [::1]:80
-        /// - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
-        /// </remarks>
-        private const string ValidServerRegex = @"(?<host>.+)\:(?<port>\d+$)";
-
         // Fields
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
@@ -535,8 +523,8 @@ namespace TVA.Communication
                     m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp);
 
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
-                Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
-                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(serverMatch.Groups["host"].Value, int.Parse(serverMatch.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
+                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
             }
             else
             {
@@ -570,12 +558,12 @@ namespace TVA.Communication
                 m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["port"]);
 
             // Check if 'server' property is valid.
-            Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
+            Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
 
-            if (serverMatch == Match.Empty)
+            if (endpoint == Match.Empty)
                 throw new FormatException(string.Format("Server property is invalid (Example: {0})", DefaultConnectionString));
 
-            if (!Transport.IsPortNumberValid(serverMatch.Groups["port"].Value))
+            if (!Transport.IsPortNumberValid(endpoint.Groups["port"].Value))
                 throw new ArgumentOutOfRangeException("connectionString", string.Format("Server port must between {0} and {1}", Transport.PortRangeLow, Transport.PortRangeHigh));
         }
 

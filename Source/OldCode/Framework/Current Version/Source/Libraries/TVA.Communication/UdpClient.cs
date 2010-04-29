@@ -362,18 +362,6 @@ namespace TVA.Communication
         public const string DefaultConnectionString = "Server=localhost:8888; Port=8989";
 
         /// <summary>
-        /// Regular expression used to validate the server property in <see cref="ClientBase.ConnectionString"/>.
-        /// </summary>
-        /// <remarks>
-        /// Matches the following valid input:
-        /// - localhost:80
-        /// - 127.0.0.1:80
-        /// - [::1]:80
-        /// - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
-        /// </remarks>
-        private const string ValidServerRegex = @"(?<host>.+)\:(?<port>\d+$)";
-
-        /// <summary>
         /// Specifies the constant to be used for disabling <see cref="SocketError.ConnectionReset"/> when endpoint is not listening.
         /// </summary>
         private const int SIO_UDP_CONNRESET = -1744830452;
@@ -499,9 +487,9 @@ namespace TVA.Communication
             if (m_connectData.ContainsKey("server"))
             {
                 // Client has a server endpoint specified.
-                Match serverMatch = Regex.Match(m_connectData["server"], ValidServerRegex);
-                if (serverMatch != Match.Empty)
-                    m_udpServer = Transport.CreateEndPoint(serverMatch.Groups["host"].Value, int.Parse(serverMatch.Groups["port"].Value));
+                Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
+                if (endpoint != Match.Empty)
+                    m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value));
                 else
                     throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
             }

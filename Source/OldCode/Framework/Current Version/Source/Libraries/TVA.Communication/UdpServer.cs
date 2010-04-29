@@ -25,6 +25,8 @@
 //       Added null reference checks to Stop() and DisconnectOne() for safety.
 //  10/30/2009 - Pinal C. Patel
 //       Added support for one-way communication by specifying Port=-1 in ConfigurationString.
+//  04/29/2010 - Pinal C. Patel
+//       Modified Start() to parse client endpoint strings correctly to address IPv6 IP parsing issue.
 //
 //*******************************************************************************************************
 
@@ -249,6 +251,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace TVA.Communication
@@ -473,9 +476,8 @@ namespace TVA.Communication
                     {
                         try
                         {
-                            string[] clientStringSegments = clientString.Split(':');
-
-                            if (clientStringSegments.Length == 2)
+                            Match endpoint = Regex.Match(clientString, Transport.EndpointFormatRegex);
+                            if (endpoint != Match.Empty)
                             {
                                 TransportProvider<Socket> udpClient = new TransportProvider<Socket>();
                                 udpClient.Secretkey = SharedSecret;
@@ -484,7 +486,7 @@ namespace TVA.Communication
                                 // Disable SocketError.ConnectionReset exception from being thrown when the enpoint is not listening.
                                 udpClient.Provider.IOControl(SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
                                 // Connect socket to the client endpoint so communication on the socket is restricted to a single endpoint.
-                                udpClient.Provider.Connect(Transport.CreateEndPoint(clientStringSegments[0], int.Parse(clientStringSegments[1])));
+                                udpClient.Provider.Connect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)));
 
                                 lock (m_udpClients)
                                 {
