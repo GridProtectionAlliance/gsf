@@ -305,6 +305,7 @@ namespace TVA.Measurements.Routing
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_settings = new Dictionary<string, string>();
+            m_initializationTimeout = ActionAdapterCollection.DefaultInitializationTimeout;
             
             // For most implementations millisecond resolution will be sufficient
             base.TimeResolution = Ticks.PerMillisecond;
@@ -558,7 +559,7 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        protected Dictionary<string, string> Settings
+        public Dictionary<string, string> Settings
         {
             get
             {
@@ -737,11 +738,6 @@ namespace TVA.Measurements.Routing
 
             if (settings.TryGetValue("allowSortsByArrival", out setting))
                 base.AllowSortsByArrival = setting.ParseBoolean();
-
-            if (settings.TryGetValue("initializationTimeout", out setting))
-                InitializationTimeout = int.Parse(setting);
-            else
-                InitializationTimeout = 5000;
 
             if (settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);

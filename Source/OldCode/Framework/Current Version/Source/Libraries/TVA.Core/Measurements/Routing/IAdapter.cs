@@ -234,6 +234,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Threading;
@@ -288,6 +289,11 @@ namespace TVA.Measurements.Routing
         /// Gets or sets key/value pair connection information specific to <see cref="IAdapter"/>.
         /// </summary>
         string ConnectionString { get; set; }
+
+        /// <summary>
+        /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
+        /// </summary>
+        Dictionary<string, string> Settings { get; }
 
         /// <summary>
         /// Gets a read-only reference to the collection that contains this <see cref="IAdapter"/>.

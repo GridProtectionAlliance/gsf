@@ -236,6 +236,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
@@ -255,6 +256,13 @@ namespace TVA.Measurements.Routing
     public abstract class AdapterCollectionBase<T> : Collection<T>, IAdapterCollection where T : IAdapter
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Default adapter initialization timeout.
+        /// </summary>
+        public const int DefaultInitializationTimeout = 15000;
 
         // Events
 
@@ -289,7 +297,6 @@ namespace TVA.Measurements.Routing
         private DataSet m_dataSource;
         private string m_dataMember;
         private int m_initializationTimeout;
-        private ManualResetEvent m_initializeWaitHandle;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
         private Ticks m_lastProcessTime;
@@ -310,8 +317,8 @@ namespace TVA.Measurements.Routing
         protected AdapterCollectionBase()
         {
             m_name = this.GetType().Name;
-            m_initializeWaitHandle = new ManualResetEvent(false);
             m_settings = new Dictionary<string, string>();
+            m_initializationTimeout = DefaultInitializationTimeout;
 
             m_monitorTimer = new System.Timers.Timer();
             m_monitorTimer.Elapsed += m_monitorTimer_Elapsed;
@@ -376,15 +383,6 @@ namespace TVA.Measurements.Routing
             set
             {
                 m_initialized = value;
-
-                // When initialization is complete we send notification
-                if (m_initializeWaitHandle != null)
-                {
-                    if (value)
-                        m_initializeWaitHandle.Set();
-                    else
-                        m_initializeWaitHandle.Reset();
-                }
             }
         }
 
@@ -470,7 +468,7 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
+        /// Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="Start"/> for initialization.
         /// </summary>
         /// <remarks>
         /// Set to <see cref="Timeout.Infinite"/> to wait indefinitely.
@@ -599,7 +597,7 @@ namespace TVA.Measurements.Routing
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        protected Dictionary<string, string> Settings
+        public Dictionary<string, string> Settings
         {
             get
             {
@@ -712,11 +710,6 @@ namespace TVA.Measurements.Routing
                 {
                     if (disposing)
                     {
-                        if (m_initializeWaitHandle != null)
-                            m_initializeWaitHandle.Close();
-
-                        m_initializeWaitHandle = null;
-
                         if (m_monitorTimer != null)
                         {
                             m_monitorTimer.Elapsed -= m_monitorTimer_Elapsed;
@@ -767,10 +760,9 @@ namespace TVA.Measurements.Routing
             string setting;
             T item;
 
+            // Load the default initialization parameter for adapters in this collection
             if (settings.TryGetValue("initializationTimeout", out setting))
                 InitializationTimeout = int.Parse(setting);
-            else
-                InitializationTimeout = 15000;
 
             Clear();
 
@@ -804,7 +796,7 @@ namespace TVA.Measurements.Routing
                 throw new NullReferenceException(string.Format("Cannot initialize from null adpater DataRow"));
 
             Assembly assembly;
-            string name = "", assemblyName = "", typeName = "", connectionString;
+            string name = "", assemblyName = "", typeName = "", connectionString, setting;
             uint id;
 
             try
@@ -824,10 +816,17 @@ namespace TVA.Measurements.Routing
                 assembly = Assembly.LoadFrom(assemblyName);
                 adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));
 
+                // Assign critical adapter properties
                 adapter.Name = name;
                 adapter.ID = id;
                 adapter.ConnectionString = connectionString;
                 adapter.DataSource = DataSource;
+
+                // Assign adapter initialization timeout
+                if (adapter.Settings.TryGetValue("initializationTimeout", out setting))
+                    adapter.InitializationTimeout = int.Parse(setting);
+                else
+                    adapter.InitializationTimeout = InitializationTimeout;
 
                 return true;
             }
@@ -989,11 +988,7 @@ namespace TVA.Measurements.Routing
             if (m_enabled)
                 Stop();
 
-            // Wait for adapter intialization to complete...
-            m_enabled = WaitForInitialize(InitializationTimeout);
-
-            if (!m_enabled)
-                OnProcessException(new TimeoutException("Failed to start adapter collection due to timeout waiting for initialization."));
+            m_enabled = true;
 
             ResetStatistics();
 
@@ -1060,16 +1055,6 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Manually sets the intialized state of the <see cref="AdapterCollectionBase{T}"/>.
-        /// </summary>
-        /// <param name="initialized">Desired initialized state.</param>
-        [AdapterCommand("Manually sets the intialized state of the adapter collection.")]
-        public virtual void SetInitializedState(bool initialized)
-        {
-            this.Initialized = initialized;
-        }
-
-        /// <summary>
         /// Resets the statistics of this collection.
         /// </summary>
         [AdapterCommand("Resets the statistics of this collection.")]
@@ -1093,16 +1078,15 @@ namespace TVA.Measurements.Routing
         }
 
         /// <summary>
-        /// Blocks the <see cref="Thread.CurrentThread"/> until the adapter collection is <see cref="Initialized"/>.
+        /// This method does not wait for <see cref="AdapterCollectionBase{T}"/>.
         /// </summary>
-        /// <param name="timeout">The number of milliseconds to wait.</param>
-        /// <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        /// <param name="timeout">This parameter is ignored.</param>
+        /// <returns><c>true</c> for <see cref="AdapterCollectionBase{T}"/>.</returns>
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public virtual bool WaitForInitialize(int timeout)
         {
-            if (m_initializeWaitHandle != null)
-                return m_initializeWaitHandle.WaitOne(timeout);
-
-            return false;
+            // Adapters collections have no need to wait
+            return true;
         }
 
         /// <summary>
