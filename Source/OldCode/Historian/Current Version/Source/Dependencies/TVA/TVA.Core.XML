@@ -15900,6 +15900,11 @@
             Gets or sets key/value pair connection information specific to <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
             </summary>
         </member>
+        <member name="P:TVA.Measurements.Routing.IAdapter.Settings">
+            <summary>
+            Gets settings <see cref="T:System.Collections.Generic.Dictionary`2"/> parsed when <see cref="P:TVA.Measurements.Routing.IAdapter.ConnectionString"/> was assigned.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.Routing.IAdapter.Parent">
             <summary>
             Gets a read-only reference to the collection that contains this <see cref="T:TVA.Measurements.Routing.IAdapter"/>.
@@ -16293,6 +16298,11 @@
             ID column type should be integer based, all other column types are expected to be string based.
             </remarks>
         </member>
+        <member name="F:TVA.Measurements.Routing.AdapterCollectionBase`1.DefaultInitializationTimeout">
+            <summary>
+            Default adapter initialization timeout.
+            </summary>
+        </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.#ctor">
             <summary>
             Constructs a new instance of the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
@@ -16386,12 +16396,6 @@
             Stops each <see cref="T:TVA.Measurements.Routing.IAdapter"/> implementation in this <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
             </summary>
         </member>
-        <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.SetInitializedState(System.Boolean)">
-            <summary>
-            Manually sets the intialized state of the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
-            </summary>
-            <param name="initialized">Desired initialized state.</param>
-        </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.ResetStatistics">
             <summary>
             Resets the statistics of this collection.
@@ -16406,10 +16410,10 @@
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.WaitForInitialize(System.Int32)">
             <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter collection is <see cref="P:TVA.Measurements.Routing.AdapterCollectionBase`1.Initialized"/>.
+            This method does not wait for <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
             </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+            <param name="timeout">This parameter is ignored.</param>
+            <returns><c>true</c> for <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.OnStatusMessage(System.String)">
             <summary>
@@ -16547,7 +16551,7 @@
         </member>
         <member name="P:TVA.Measurements.Routing.AdapterCollectionBase`1.InitializationTimeout">
             <summary>
-            Gets or sets maximum time system will wait during <see cref="M:TVA.Measurements.Routing.AdapterCollectionBase`1.Start"/> for initialization.
+            Gets or sets the default adapter time that represents the maximum time system will wait during <see cref="M:TVA.Measurements.Routing.AdapterCollectionBase`1.Start"/> for initialization.
             </summary>
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
