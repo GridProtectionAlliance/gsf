@@ -305,7 +305,7 @@ namespace TVA.Measurements.Routing
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_settings = new Dictionary<string, string>();
-            m_initializationTimeout = ActionAdapterCollection.DefaultInitializationTimeout;
+            m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
             
             // For most implementations millisecond resolution will be sufficient
             base.TimeResolution = Ticks.PerMillisecond;

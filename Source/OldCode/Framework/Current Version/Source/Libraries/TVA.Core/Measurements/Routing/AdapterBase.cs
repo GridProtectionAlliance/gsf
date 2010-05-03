@@ -260,6 +260,11 @@ namespace TVA.Measurements.Routing
         // Constants
         private const int DefaultMeasurementReportingInterval = 100000;
 
+        /// <summary>
+        /// Default initialization timeout.
+        /// </summary>
+        public const int DefaultInitializationTimeout = 15000;
+
         // Events
 
         /// <summary>
@@ -317,7 +322,7 @@ namespace TVA.Measurements.Routing
             m_name = this.GetType().Name;
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_settings = new Dictionary<string, string>();
-            m_initializationTimeout = AllAdaptersCollection.DefaultInitializationTimeout;
+            m_initializationTimeout = DefaultInitializationTimeout;
         }
 
         /// <summary>
