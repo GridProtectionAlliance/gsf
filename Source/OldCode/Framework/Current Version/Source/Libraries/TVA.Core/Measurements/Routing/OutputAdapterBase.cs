@@ -485,6 +485,9 @@ namespace TVA.Measurements.Routing
                 SourceIDs = setting.Split(',');
             else
                 SourceIDs = null;
+
+            // Start data monitor...
+            m_monitorTimer.Start();
         }
 
         /// <summary>
@@ -518,9 +521,6 @@ namespace TVA.Measurements.Routing
             // Start data processing thread
             m_measurementQueue.Start();
 
-            // Start data monitor...
-            m_monitorTimer.Start();
-
             OnStatusMessage("Connection established.");
         }
 
@@ -537,9 +537,6 @@ namespace TVA.Measurements.Routing
 
                 // Stop data processing thread
                 m_measurementQueue.Stop();
-
-                // Stop data monitor...
-                m_monitorTimer.Stop();
 
                 // Attempt disconnection from historian (e.g., consumer to call historian API disconnect function)
                 AttemptDisconnection();
