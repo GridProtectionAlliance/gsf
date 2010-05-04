@@ -16298,11 +16298,6 @@
             ID column type should be integer based, all other column types are expected to be string based.
             </remarks>
         </member>
-        <member name="F:TVA.Measurements.Routing.AdapterCollectionBase`1.DefaultInitializationTimeout">
-            <summary>
-            Default adapter initialization timeout.
-            </summary>
-        </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.#ctor">
             <summary>
             Constructs a new instance of the <see cref="T:TVA.Measurements.Routing.AdapterCollectionBase`1"/>.
@@ -16673,6 +16668,11 @@
         <member name="T:TVA.Measurements.Routing.AdapterBase">
             <summary>
             Represents the base class for any adapter.
+            </summary>
+        </member>
+        <member name="F:TVA.Measurements.Routing.AdapterBase.DefaultInitializationTimeout">
+            <summary>
+            Default initialization timeout.
             </summary>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterBase.#ctor">
