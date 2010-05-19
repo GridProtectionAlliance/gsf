@@ -314,7 +314,7 @@ namespace TVA.Web
 
             // Initialize the security principal from caller's windows identity if uninitialized.
             if (SecurityProvider.Current == null)
-                SecurityProvider.Current = new SecurityProvider();
+                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
 
             // Make the security principal available to code downstream for implementing security.
             evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;

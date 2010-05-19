@@ -43,6 +43,9 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.DirectoryServices" />
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -58,6 +61,7 @@
     <Compile Include="SecurityProvider.cs" />
     <Compile Include="SecurityIdentity.cs" />
     <Compile Include="SecurityPrincipal.cs" />
+    <Compile Include="UserData.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">

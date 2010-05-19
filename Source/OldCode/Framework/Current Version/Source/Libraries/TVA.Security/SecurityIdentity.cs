@@ -288,7 +288,7 @@ namespace TVA.Security
         {
             get
             {
-                return m_provider.IsAuthenticated;
+                return m_provider.UserData.IsAuthenticated;
             }
         }
 
@@ -299,7 +299,7 @@ namespace TVA.Security
         {
             get
             {
-                return m_provider.Username;
+                return m_provider.UserData.Username;
             }
         }
 

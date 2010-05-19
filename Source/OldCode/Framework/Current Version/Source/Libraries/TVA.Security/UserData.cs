@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//  UserData.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/10/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,137 +230,163 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Security;
-using TVA.Web.Hosting;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
-namespace TVA.Web
+namespace TVA.Security
 {
-    #region [ Enumerations ]
-
-    #endregion
-
     /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
+    /// A serializable class that contains information about a user defined in the security datastore.
     /// </summary>
-    public class SecurityModule : IHttpModule
+    [XmlType(), DataContract(Namespace = "")]
+    public class UserData
     {
-        #region [ Members ]
-
-        // Nested Types
+        #region [ Constructors ]
 
         /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
+        /// Initializes a new instance of the <see cref="UserData"/> class.
         /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
+        /// <param name="username">User's logon name.</param>
+        public UserData(string username)
         {
-            public IHttpHandler OriginalHandler;
+            Username = username;
+            Groups = new List<string>();
+            Roles = new List<string>();
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
-            {
-                OriginalHandler = originalHandler;
-            }
-
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
+            Initialize();
         }
 
-        // Fields
-        private HttpApplication m_application;
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the user's login name.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 0)]
+        public string Username { get; set; }
+
+        /// <summary>
+        /// Gets the user's password.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 1)]
+        public string Password { get; set; }
+
+        /// <summary>
+        /// Gets the user's first name.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 2)]
+        public string FirstName { get; set; }
+
+        /// <summary>
+        /// Gets the user's last name.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 3)]
+        public string LastName { get; set; }
+
+        /// <summary>
+        /// Gets the user's company name.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 4)]
+        public string CompanyName { get; set; }
+
+        /// <summary>
+        /// Gets the user's phone number.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 5)]
+        public string PhoneNumber { get; set; }
+
+        /// <summary>
+        /// Gets the user's email address.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 6)]
+        public string EmailAddress { get; set; }
+
+        /// <summary>
+        /// Gets the user's security question.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 7)]
+        public string SecurityQuestion { get; set; }
+
+        /// <summary>
+        /// Gets the user's security answer.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 8)]
+        public string SecurityAnswer { get; set; }
+
+        /// <summary>
+        /// Gets the date and time when user must change the password.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 9)]
+        public DateTime PasswordChangeDataTime { get; set; }
+
+        /// <summary>
+        /// Gets the date and time when user account was created.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 10)]
+        public DateTime AccountCreatedDateTime { get; set; }
+
+        /// <summary>
+        /// Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 11)]
+        public bool IsDefined { get; set; }
+
+        /// <summary>
+        /// Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 12)]
+        public bool IsExternal { get; set; }
+
+        /// <summary>
+        /// Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 13)]
+        public bool IsLockedOut { get; set; }
+
+        /// <summary>
+        /// Gets a boolean value indicating whether or not the user has been authenticated.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 14)]
+        public bool IsAuthenticated { get; set; }
+
+        /// <summary>
+        /// Gets a read-only list of all the groups the user belongs to.
+        /// </summary>
+        [XmlAttribute(), DataMember(Order = 15)]
+        public IList<string> Groups { get; set; }
+
+        /// <summary>
+        /// Gets a read-only list of all the roles assigned to the user.
+        /// </summary>
+        [XmlAttribute, DataMember(Order = 16)]
+        public IList<string> Roles { get; set; }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
+        /// Initializes this <see cref="UserData"/> object.
         /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
+        public void Initialize()
         {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
-
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
-
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
-
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
-
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
+            Password = string.Empty;
+            FirstName = string.Empty;
+            LastName = string.Empty;
+            CompanyName = string.Empty;
+            PhoneNumber = string.Empty;
+            EmailAddress = string.Empty;
+            SecurityQuestion = string.Empty;
+            SecurityAnswer = string.Empty;
+            PasswordChangeDataTime = DateTime.MinValue;
+            AccountCreatedDateTime = DateTime.MinValue;
+            IsDefined = false;
+            IsExternal = false;
+            IsLockedOut = false;
+            Groups.Clear();
+            Roles.Clear();
         }
 
         #endregion

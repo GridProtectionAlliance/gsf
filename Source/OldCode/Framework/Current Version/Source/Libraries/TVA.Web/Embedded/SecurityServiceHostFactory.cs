@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//  SecurityServiceHostFactory.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,139 +230,25 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Security;
-using TVA.Web.Hosting;
+using System.ServiceModel;
+using System.ServiceModel.Activation;
+using System.ServiceModel.Description;
 
-namespace TVA.Web
+namespace TVA.Web.Embedded
 {
-    #region [ Enumerations ]
-
-    #endregion
-
-    /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
-    /// </summary>
-    public class SecurityModule : IHttpModule
+    internal class SecurityServiceHostFactory : WebServiceHostFactory
     {
-        #region [ Members ]
-
-        // Nested Types
-
-        /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
-        /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
+        protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
-            public IHttpHandler OriginalHandler;
+            // Initialize host and binding.
+            ServiceHost host = new ServiceHost(serviceType, baseAddresses);
+            WebHttpBinding binding = new WebHttpBinding();
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
-            {
-                OriginalHandler = originalHandler;
-            }
+            // Add an endpoint for the service.
+            ServiceEndpoint endpoint = host.AddServiceEndpoint(typeof(ISecurityService), binding, "");
+            endpoint.Behaviors.Add(new WebHttpBehavior());
 
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
+            return host;
         }
-
-        // Fields
-        private HttpApplication m_application;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
-        /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
-        {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
-
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
-
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
-
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
-
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
-        }
-
-        #endregion
     }
 }

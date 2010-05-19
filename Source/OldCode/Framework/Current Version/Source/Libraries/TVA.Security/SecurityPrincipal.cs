@@ -311,7 +311,7 @@ namespace TVA.Security
             else
             {
                 // Check membership against backend datastore.
-                if (!m_identity.Provider.IsDefined || m_identity.Provider.IsLockedOut || !m_identity.Provider.IsAuthenticated)
+                if (!m_identity.Provider.UserData.IsDefined || m_identity.Provider.UserData.IsLockedOut || !m_identity.Provider.UserData.IsAuthenticated)
                 {
                     return false;
                 }
@@ -319,7 +319,7 @@ namespace TVA.Security
                 {
                     foreach (string role in roles.Split(','))
                     {
-                        if (m_identity.Provider.Roles.FirstOrDefault(currentRole => (string.Compare(role.Trim(), currentRole, true) == 0)) != null)
+                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (string.Compare(role.Trim(), currentRole, true) == 0)) != null)
                             return true;
                     }
 

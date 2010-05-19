@@ -2,6 +2,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
+using System.Web.UI;
+using TVA.Web.Hosting;
 
 // Assembly identity attributes.
 [assembly: AssemblyVersion("1.1.42.47266")]
@@ -26,3 +28,12 @@ using System.Security.Permissions;
 [assembly: ComVisible(false)]
 [assembly: Guid("eebbee45-2987-4bbd-9cc1-ff6d4dcf55f7")]
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
+
+// Embedd server-side controls.
+[assembly: EmbeddedResourceFile("TVA.Web.Embedded.SecurityPortal.aspx", "TVA.Web.Embedded")]
+[assembly: EmbeddedResourceFile("TVA.Web.Embedded.SecurityService.svc", "TVA.Web.Embedded")]
+
+// Embedd images used by embedded controls.
+[assembly: WebResource("TVA.Web.Embedded.Images.TVALogo.png", "img/png")]
+[assembly: WebResource("TVA.Web.Embedded.Images.Help.png", "img/png")]
+[assembly: WebResource("TVA.Web.Embedded.Images.Warning.png", "img/png")]

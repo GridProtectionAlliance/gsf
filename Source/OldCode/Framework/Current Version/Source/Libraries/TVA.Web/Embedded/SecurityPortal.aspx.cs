@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//  SecurityPortal.aspx.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,137 +230,185 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.SessionState;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using TVA.Configuration;
 using TVA.Security;
-using TVA.Web.Hosting;
 
-namespace TVA.Web
+namespace TVA.Web.Embedded
 {
-    #region [ Enumerations ]
-
-    #endregion
-
     /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
+    /// Embedded web page used by secure ASP.NET web sites for security related tasks.
     /// </summary>
-    public class SecurityModule : IHttpModule
+    public partial class SecurityPortal : System.Web.UI.Page
     {
         #region [ Members ]
 
-        // Nested Types
-
-        /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
-        /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
-        {
-            public IHttpHandler OriginalHandler;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
-            {
-                OriginalHandler = originalHandler;
-            }
-
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
-        }
-
-        // Fields
-        private HttpApplication m_application;
+        // Constants
+        private const string CookieName = "SecurityProvider";
+        private const string StaticPageTitle = "Security Portal";
+        private const string SettingsCategory = "SecurityPortal";
+        private const string UnauthorizedErrorCode = "401";
+        private const string AccessDeniedErrorCode = "403";
+        private const string EmbeddedHelpImage = "TVA.Web.Embedded.Images.Help.png";
+        private const string EmbeddedWarningImage = "TVA.Web.Embedded.Images.Warning.png";
+        private const string EmbeddedCompanyLogo = "TVA.Web.Embedded.Images.TVALogo.png";
+        private const string DefaultCompanyName = "Tennessee Valley Authority";
+        private const string DefaultCompanySite = "http://www.tva.gov";
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
+        /// Initializes the web page.
         /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void Page_Load(object sender, EventArgs e)
         {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            CategorizedSettingsElement setting = null;
 
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
+            // Setup company logo.
+            setting = settings["CompanyLogo"];
+            if (setting != null)
+                LogoImage.ImageUrl = setting.Value;
+            else
+                LogoImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
+
+            // Setup company name.
+            setting = settings["CompanyName"];
+            if (setting != null)
+                CompanyLink.Text = setting.Value;
+            else
+                CompanyLink.Text = DefaultCompanyName;
+
+            // Setup company link.
+            setting = settings["CompanySite"];
+            if (setting != null)
+                CompanyLink.NavigateUrl = setting.Value;
+            else
+                CompanyLink.NavigateUrl = DefaultCompanySite;
+
+            HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
+            WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
+
+            if (Request["s"] == UnauthorizedErrorCode || SecurityProvider.Current == null)
+            {
+                Page.Title = StaticPageTitle + " :: Login";
+
+                LoginPanel.Visible = true;
+                ContentPlaceHolder.Controls.Clear();
+                ContentPlaceHolder.Controls.Add(LoginPanel);
+
+                if (string.IsNullOrEmpty(UsernameInput.Text))
+                {
+                    UsernameInput.Text = Response.Cookies[CookieName]["Username"];
+                    if (!string.IsNullOrEmpty(UsernameInput.Text))
+                        RememberMeCheckBox.Checked = true;
+                }
+            }
+            else if (Request["s"] == AccessDeniedErrorCode)
+            {
+                Page.Title = StaticPageTitle + " :: Access Denied";
+
+                AccessDeniedPanel.Visible = true;
+                ContentPlaceHolder.Controls.Clear();
+                ContentPlaceHolder.Controls.Add(AccessDeniedPanel);
+            }
+            else
+            {
+                UserData data = SecurityProvider.Current.UserData;
+                UsernameLabel.Text = data.Username;
+                CompanyLabel.Text = data.CompanyName;
+                FirstNameInput.Text = data.FirstName;
+                LastNameInput.Text = data.LastName;
+                EmailAddressInput.Text = data.EmailAddress;
+                PhoneNumberInput.Text = data.PhoneNumber;
+                if (!data.IsExternal)
+                {
+                    FirstNameInput.Enabled = false;
+                    LastNameInput.Enabled = false;
+                    EmailAddressInput.Enabled = false;
+                    PhoneNumberInput.Enabled = false;
+                    UpdateButton.Enabled = false;
+                }
+
+                Page.Title = StaticPageTitle + " :: My Account";
+                MyAccountPanel.Visible = true;
+                ContentPlaceHolder.Controls.Clear();
+                ContentPlaceHolder.Controls.Add(MyAccountPanel);
+            }
         }
 
         /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
+        /// Logins the user.
         /// </summary>
-        public void Dispose()
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void LoginButton_Click(object sender, EventArgs e)
         {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
+            try
+            {
+                // Initialize the security provider.
+                SecurityProvider provider = new SecurityProvider(UsernameInput.Text);
+                provider.Initialize();
+                if (provider.Authenticate(PasswordInput.Text))
+                {
+                    // Setup security provider for subsequent uses.
+                    SecurityProvider.Current = provider;
+
+                    if (RememberMeCheckBox.Checked)
+                    {
+                        Response.Cookies[CookieName]["Username"] = UsernameInput.Text;
+                        Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(1);
+                    }
+                    else
+                    {
+                        Response.Cookies[CookieName]["Username"] = string.Empty;
+                        Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(-1);
+                    }
+
+                    // Redirect to the referring page.
+                    Response.Redirect(GetReferrerUrl(), false);
+                }
+                else
+                {
+                    // Display login failure message.
+                    ErrorMessageLabel.Text = "The username or password is invalid. Please try again.";
+                }
+            }
+            catch (Exception)
+            {
+                ErrorMessageLabel.Text = "Login failed due to an unexpected error.";
+            }
         }
 
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
+        /// <summary>
+        /// Updates user data.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void UpdateButton_Click(object sender, EventArgs e)
         {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
+            try
+            {
 
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
+        private string GetReferrerUrl()
         {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
+            if (Request["r"] != null)
+                return Request["r"];
+            else
+                return Request.UrlReferrer.AbsolutePath;
         }
 
         #endregion

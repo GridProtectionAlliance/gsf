@@ -1,14 +1,14 @@
-๏ปฟ//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//*******************************************************************************************************
+//  VirtualFileBaseCollection.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
-//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/04/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -48,7 +48,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -125,7 +125,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -230,139 +230,71 @@
 #endregion
 
 using System;
-using System.Web;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Security;
-using TVA.Web.Hosting;
 
-namespace TVA.Web
+namespace TVA.Web.Hosting
 {
-    #region [ Enumerations ]
+	/// <summary>
+	/// A strongly typed <see cref="System.Collections.ObjectModel.KeyedCollection{T, T}" />
+	/// where each element is a <see cref="System.Web.Hosting.VirtualFileBase" /> and is keyed
+	/// off of the <see cref="System.Web.Hosting.VirtualFileBase.VirtualPath" />
+	/// property.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// The default constructor for this collection does a culture-invariant case-insensitive
+	/// comparison on the keys.  This allows for proper case-insensitive web-oriented
+	/// behavior that is generally expected.
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="System.Web.Hosting.VirtualFileBase" />
+	public class VirtualFileBaseCollection : KeyedCollection<String, VirtualFileBase>
+	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TVA.Web.Hosting.VirtualFileBaseCollection" /> class that uses a case-insensitive comparer.
+		/// </summary>
+		/// <seealso cref="TVA.Web.Hosting.VirtualFileBaseCollection" />
+		public VirtualFileBaseCollection() : base(StringComparer.InvariantCultureIgnoreCase) { }
 
-    #endregion
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TVA.Web.Hosting.VirtualFileBaseCollection" /> class that uses the specified equality comparer.
+		/// </summary>
+		/// <param name="comparer">
+		/// The implementation of the <see cref="System.Collections.Generic.IEqualityComparer{T}" />
+		/// generic interface to use when comparing keys, or <see langword="null" /> to use the default
+		/// equality comparer for the type of the key, obtained from <see cref="System.Collections.Generic.EqualityComparer{T}.Default" />.
+		/// </param>
+		/// <seealso cref="TVA.Web.Hosting.VirtualFileBaseCollection" />
+		public VirtualFileBaseCollection(IEqualityComparer<String> comparer) : base(comparer) { }
 
-    /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
-    /// </summary>
-    public class SecurityModule : IHttpModule
-    {
-        #region [ Members ]
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TVA.Web.Hosting.VirtualFileBaseCollection" /> class that uses the specified equality comparer.
+		/// </summary>
+		/// <param name="comparer">
+		/// The implementation of the <see cref="System.Collections.Generic.IEqualityComparer{T}" />
+		/// generic interface to use when comparing keys, or <see langword="null" /> to use the default
+		/// equality comparer for the type of the key, obtained from <see cref="System.Collections.Generic.EqualityComparer{T}.Default" />.
+		/// </param>
+		/// <param name="dictionaryCreationThreshold">
+		/// The number of elements the collection can hold without creating a lookup dictionary
+		/// (0 creates the lookup dictionary when the first item is added), or ?1 to specify that
+		/// a lookup dictionary is never created.
+		/// </param>
+		/// <seealso cref="TVA.Web.Hosting.VirtualFileBaseCollection" />
+		public VirtualFileBaseCollection(IEqualityComparer<String> comparer, int dictionaryCreationThreshold) : base(comparer, dictionaryCreationThreshold) { }
 
-        // Nested Types
-
-        /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
-        /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
-        {
-            public IHttpHandler OriginalHandler;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
-            {
-                OriginalHandler = originalHandler;
-            }
-
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
-        }
-
-        // Fields
-        private HttpApplication m_application;
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
-        /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
-        {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
-
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
-
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
-
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
-
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
-        }
-
-        #endregion
-    }
+		/// <summary>
+		/// Extracts the key from the specified element.
+		/// </summary>
+		/// <param name="item">
+		/// The <see cref="System.Web.Hosting.VirtualFileBase" /> element from which to extract the key (<see cref="System.Web.Hosting.VirtualFileBase.VirtualPath" />).
+		/// </param>
+		/// <seealso cref="TVA.Web.Hosting.VirtualFileBaseCollection" />
+		protected override String GetKeyForItem(VirtualFileBase item)
+		{
+			return item.VirtualPath;
+		}
+	}
 }

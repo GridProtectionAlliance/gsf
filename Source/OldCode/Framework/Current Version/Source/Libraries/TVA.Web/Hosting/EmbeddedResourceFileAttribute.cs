@@ -1,14 +1,14 @@
-๏ปฟ//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//*******************************************************************************************************
+//  EmbeddedResourceFileAttribute.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
-//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/04/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -48,7 +48,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -125,7 +125,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -230,139 +230,191 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Security;
-using TVA.Web.Hosting;
 
-namespace TVA.Web
+namespace TVA.Web.Hosting
 {
-    #region [ Enumerations ]
-
-    #endregion
-
-    /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
-    /// </summary>
-    public class SecurityModule : IHttpModule
-    {
+	/// <summary>
+	/// Attribute indicating the location of an embedded resource that should be
+	/// served by the <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// This attribute is used by the <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+	/// module/path provider to retrieve the list of embedded resources from an assembly
+	/// that should be considered a part of the virtual filesystem.
+	/// </para>
+	/// </remarks>
+	/// <example>
+	/// <para>
+	/// Below is an example of what it might look like to embed a web form and a
+	/// user control in an assembly to be served up with the <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>:
+	/// </para>
+	/// <code lang="C#">
+	/// [assembly: EmbeddedResourceFileAttribute("MyNamespace.WebForm1.aspx", "MyNamespace")]
+	/// [assembly: EmbeddedResourceFileAttribute("MyNamespace.UserControl1.ascx", "MyNamespace")]
+	/// </code>
+	/// </example>
+	/// <seealso cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class EmbeddedResourceFileAttribute : Attribute
+	{
         #region [ Members ]
 
-        // Nested Types
+        // Fields
 
         /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
+        /// Internal storage for the
+        /// <see cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourceNamespace" />
+        /// property.
         /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        private string m_resourceNamespace;
+
+        /// <summary>
+        /// Internal storage for the
+        /// <see cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath" />
+        /// property.
+        /// </summary>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        private string m_resourcePath;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" /> class.
+        /// </summary>
+        /// <param name="resourcePath">The path to the embedded resource.  Used to get the resource as a stream from the assembly.</param>
+        /// <param name="resourceNamespace">The namespace the resource is in.  This will generally be removed from the full resource path to calculate the "application path" for the embedded resource.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown if <paramref name="resourcePath" /> or <paramref name="resourceNamespace" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">
+        /// Thrown if <paramref name="resourcePath" /> is <see cref="System.String.Empty" />
+        /// or if it only consists of periods and/or spaces.
+        /// </exception>
+        /// <remarks>
+        /// <para>
+        /// Both <paramref name="resourcePath" /> and <paramref name="resourceNamespace" />
+        /// will be processed to have leading and trailing periods and spaces removed.
+        /// If <paramref name="resourcePath" /> ends up being empty, an
+        /// <see cref="System.ArgumentOutOfRangeException"/> is thrown.  No exception
+        /// is thrown if <paramref name="resourceNamespace" /> turns out empty.
+        /// </para>
+        /// </remarks>
+        /// <example>
+        /// <para>
+        /// If the <paramref name="resourcePath" /> is <c>RootNS.SubNS.AppRoot.Folder.File.aspx</c>
+        /// and the <paramref name="resourceNamespace" /> is <c>RootNS.SubNS.AppRoot</c>,
+        /// the virtual "path" to the embedded file will be <c>Folder.File.aspx</c>
+        /// (which will be converted by the <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+        /// to <c>~/Folder/File.aspx</c>).
+        /// </para>
+        /// </example>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        public EmbeddedResourceFileAttribute(string resourcePath, string resourceNamespace)
         {
-            public IHttpHandler OriginalHandler;
-
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
+            if (resourcePath == null)
             {
-                OriginalHandler = originalHandler;
+                throw new ArgumentNullException("resourcePath");
+            }
+            if (resourcePath.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException("resourcePath");
+            }
+            if (resourceNamespace == null)
+            {
+                throw new ArgumentNullException("resourceNamespace");
             }
 
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
+            m_resourcePath = RemoveMalformedEndChars(resourcePath);
+            if (m_resourcePath.Length == 0)
             {
-                throw new NotSupportedException();
+                throw new ArgumentOutOfRangeException("resourcePath", resourcePath, "The resource path is invalid for mapping.");
             }
-
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
+            m_resourceNamespace = RemoveMalformedEndChars(resourceNamespace);
+            if (m_resourceNamespace.Length == 0)
             {
-                get { return false; }
+                throw new ArgumentOutOfRangeException("resourceNamespace", resourceNamespace, "The resource namespace is invalid for mapping.");
             }
         }
 
-        // Fields
-        private HttpApplication m_application;
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets the namespace for the embedded resource.
+        /// </summary>
+        /// <value>
+        /// A <see cref="System.String"/> with the embedded resource namespace.
+        /// </value>
+        /// <remarks>
+        /// <para>
+        /// This namespace will be removed from the full <see cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute.ResourcePath"/>
+        /// to create the virtual application path for the resource.
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        public string ResourceNamespace
+        {
+            get
+            {
+                return m_resourceNamespace;
+            }
+        }
+
+        /// <summary>
+        /// Gets the path to the embedded resource.
+        /// </summary>
+        /// <value>
+        /// A <see cref="System.String"/> with the full path to an embedded resource in
+        /// the associated assembly.
+        /// </value>
+        /// <remarks>
+        /// <para>
+        /// This path will be used to retrieve the resource from the assembly and serve
+        /// it up.
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        public string ResourcePath
+        {
+            get
+            {
+                return m_resourcePath;
+            }
+        }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
+        /// Removes leading and trailing dots and spaces from a string.
         /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
+        /// <param name="toFix">The <see cref="System.String"/> to be cleaned up.</param>
+        /// <returns>A version of <paramref name="toFix" /> with leading and trailing dots and spaces removed.</returns>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        private static string RemoveMalformedEndChars(string toFix)
         {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
-
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
-
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
-
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
-
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
-
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
-
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
-
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
+            return MalformedEndCharExpression.Replace(toFix, "$1");
         }
 
         #endregion
-    }
+
+        #region [ Static ]
+
+        // Static Fields
+
+        /// <summary>
+        /// Regular expression indicating the characters that can't start or end a resource.
+        /// </summary>
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute" />
+        /// <seealso cref="TVA.Web.Hosting.EmbeddedResourceFileAttribute.RemoveMalformedEndChars" />
+        private static System.Text.RegularExpressions.Regex MalformedEndCharExpression = new System.Text.RegularExpressions.Regex("^[. ]*(.*?)[. ]*$", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        #endregion
+	}
 }

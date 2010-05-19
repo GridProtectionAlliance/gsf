@@ -231,11 +231,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
-using System.DirectoryServices.ActiveDirectory;
 using System.Linq;
 using System.Security;
 using System.Security.Principal;
@@ -364,23 +362,7 @@ namespace TVA.Security
         private PrincipalPolicy m_principalPolicy;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private string m_username;
-        private string m_password;
-        private string m_firstName;
-        private string m_lastName;
-        private string m_companyName;
-        private string m_phoneNumber;
-        private string m_emailAddress;
-        private string m_securityQuestion;
-        private string m_securityAnswer;
-        private DateTime m_passwordChangeDateTime;
-        private DateTime m_accountCreatedDateTime;
-        private bool m_isDefined;
-        private bool m_isExternal;
-        private bool m_isLockedOut;
-        private bool m_isAuthenticated;
-        private IList<string> m_groups;
-        private IList<string> m_roles;
+        private UserData m_userData;
         private WindowsPrincipal m_windowsPrincipal;
         private bool m_enabled;
         private bool m_disposed;
@@ -404,20 +386,12 @@ namespace TVA.Security
         /// <param name="username">Name that uniquely identifies the user.</param>
         public SecurityProvider(string username)
         {
-            // Properly format input.
-            if (!string.IsNullOrEmpty(username))
-            {
-                if (username.Contains('\\'))
-                    // Domain name is provided.
-                    m_username = username;
-                else
-                    // Use the logged on domain.
-                    m_username = string.Format("{0}\\{1}", Domain.GetComputerDomain().Name, username);
-            }
+            // Properly format username.
+            if (!string.IsNullOrEmpty(username) && !username.Contains('\\'))
+                username = string.Format("{0}\\{1}", Environment.UserDomainName, username);
 
             // Initialize member variables.
-            m_groups = new List<string>();
-            m_roles = new List<string>();
+            m_userData = new UserData(username);
             m_applicationName = DefaultApplicationName;
             m_connectionString = DefaultConnectionString;
             m_principalPolicy = DefaultPrincipalPolicy;
@@ -532,156 +506,12 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Gets the user's login name.
+        /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
-        public string Username
+        public UserData UserData 
         {
-            get { return m_username; }
-            protected set { m_username = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's password.
-        /// </summary>
-        public string Password
-        {
-            get { return m_password; }
-            protected set { m_password = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's first name.
-        /// </summary>
-        public string FirstName
-        {
-            get { return m_firstName; }
-            protected set { m_firstName = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's last name.
-        /// </summary>
-        public string LastName
-        {
-            get { return m_lastName; }
-            protected set { m_lastName = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's company name.
-        /// </summary>
-        public string CompanyName
-        {
-            get { return m_companyName; }
-            protected set { m_companyName = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's phone number.
-        /// </summary>
-        public string PhoneNumber
-        {
-            get { return m_phoneNumber; }
-            protected set { m_phoneNumber = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's email address.
-        /// </summary>
-        public string EmailAddress
-        {
-            get { return m_emailAddress; }
-            protected set { m_emailAddress = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's security question.
-        /// </summary>
-        public string SecurityQuestion
-        {
-            get { return m_securityQuestion; }
-            protected set { m_securityQuestion = value; }
-        }
-
-        /// <summary>
-        /// Gets the user's security answer.
-        /// </summary>
-        public string SecurityAnswer
-        {
-            get { return m_securityAnswer; }
-            protected set { m_securityAnswer = value; }
-        }
-
-        /// <summary>
-        /// Gets the date and time when user must change the password.
-        /// </summary>
-        public DateTime PasswordChangeDataTime
-        {
-            get { return m_passwordChangeDateTime; }
-            protected set { m_passwordChangeDateTime = value; }
-        }
-
-        /// <summary>
-        /// Gets the date and time when user account was created.
-        /// </summary>
-        public DateTime AccountCreatedDateTime
-        {
-            get { return m_accountCreatedDateTime; }
-            protected set { m_accountCreatedDateTime = value; }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
-        /// </summary>
-        public bool IsDefined
-        {
-            get { return m_isDefined; }
-            protected set { m_isDefined = value; }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
-        /// </summary>
-        public bool IsExternal
-        {
-            get { return m_isExternal; }
-            protected set { m_isExternal = value; }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
-        /// </summary>
-        public bool IsLockedOut
-        {
-            get { return m_isLockedOut; }
-            protected set { m_isLockedOut = value; }
-        }
-
-        /// <summary>
-        /// Gets a boolean value indicating whether or not the user has been authenticated.
-        /// </summary>
-        public bool IsAuthenticated
-        {
-            get { return m_isAuthenticated; }
-            protected set { m_isAuthenticated = value; }
-        }
-
-        /// <summary>
-        /// Gets a read-only list of all the groups the user belongs to.
-        /// </summary>
-        public IList<string> Groups
-        {
-            get { return new ReadOnlyCollection<string>(m_groups); }
-            protected set { m_groups = value; }
-        }
-
-        /// <summary>
-        /// Gets a read-only list of all the roles assigned to the user.
-        /// </summary>
-        public IList<string> Roles
-        {
-            get { return new ReadOnlyCollection<string>(m_roles); }
-            protected set { m_roles = value; }
+            get { return m_userData; }
+            protected set { m_userData = value; }
         }
 
         /// <summary>
@@ -783,21 +613,7 @@ namespace TVA.Security
             //   2) Internal user's data will be retrieved from AD and external user will be treated as anonymous user.
 
             // Initialize data.
-            m_password = string.Empty;
-            m_firstName = string.Empty;
-            m_lastName = string.Empty;
-            m_companyName = string.Empty;
-            m_phoneNumber = string.Empty;
-            m_emailAddress = string.Empty;
-            m_securityQuestion = string.Empty;
-            m_securityAnswer = string.Empty;
-            m_passwordChangeDateTime = DateTime.MinValue;
-            m_accountCreatedDateTime = DateTime.MinValue;
-            m_isDefined = false;
-            m_isExternal = false;
-            m_isLockedOut = false;
-            m_groups.Clear();
-            m_roles.Clear();
+            m_userData.Initialize();
 
             bool refreshFromAD = PopulateDataFromActiveDirectory();
             if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal)
@@ -813,33 +629,33 @@ namespace TVA.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public virtual bool Authenticate(string password)
         {
-            m_isAuthenticated = false;
+            m_userData.IsAuthenticated = false;
             if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal ||
-                (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_isDefined && !m_isLockedOut && !m_isExternal))
+                (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsLockedOut && !m_userData.IsExternal))
             {
                 // Authenticate against active directory.
                 if (!string.IsNullOrEmpty(password))
                 {
                     // Validate by performing network logon.
-                    string[] userParts = m_username.Split('\\');
+                    string[] userParts = m_userData.Username.Split('\\');
                     m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
-                    m_isAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                    m_userData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
                 }
                 else
                 {
                     // Validate with current thread principal.
                     m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                    m_isAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_username) &&
-                                        string.Compare(m_windowsPrincipal.Identity.Name, m_username, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+                    m_userData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_userData.Username) &&
+                                                    string.Compare(m_windowsPrincipal.Identity.Name, m_userData.Username, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
                 }
             }
-            else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_isDefined && !m_isLockedOut && m_isExternal)
+            else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsLockedOut && m_userData.IsExternal)
             {
                 // Authenticate against backend database.
-                m_isAuthenticated = m_password == EncryptPassword(password);
+                m_userData.IsAuthenticated = m_userData.Password == EncryptPassword(password);
             }
 
-            return m_isAuthenticated;
+            return m_userData.IsAuthenticated;
         }
 
         /// <summary>
@@ -872,21 +688,21 @@ namespace TVA.Security
         /// <returns>true if user data is retrieved, otherwise false.</returns>
         protected virtual bool PopulateDataFromActiveDirectory()
         {
-            if (string.IsNullOrEmpty(m_username))
+            if (string.IsNullOrEmpty(m_userData.Username))
                 return false;
 
-            using (UserInfo adUserInfo = new UserInfo(m_username))
+            using (UserInfo adUserInfo = new UserInfo(m_userData.Username))
             {
                 adUserInfo.PersistSettings = true;
                 adUserInfo.Initialize();
                 if (adUserInfo.UserEntry != null)
                 {
                     // User exists in Active Directory.
-                    m_firstName = adUserInfo.FirstName;
-                    m_lastName = adUserInfo.LastName;
-                    m_companyName = adUserInfo.Company;
-                    m_phoneNumber = adUserInfo.Telephone;
-                    m_emailAddress = adUserInfo.Email;
+                    m_userData.FirstName = adUserInfo.FirstName;
+                    m_userData.LastName = adUserInfo.LastName;
+                    m_userData.CompanyName = adUserInfo.Company;
+                    m_userData.PhoneNumber = adUserInfo.Telephone;
+                    m_userData.EmailAddress = adUserInfo.Email;
 
                     return true;
                 }
@@ -904,7 +720,7 @@ namespace TVA.Security
         /// <returns>true if user data is retrieved, otherwise false.</returns>
         protected virtual bool PopulateDataFromBackendDatabase()
         {
-            if (string.IsNullOrEmpty(m_username))
+            if (string.IsNullOrEmpty(m_userData.Username))
                 return false;
 
             DataSet userData;
@@ -920,52 +736,52 @@ namespace TVA.Security
                 // Table2 (Index 1): Groups the user is a member of.
                 // Table3 (Index 2): Roles that are assigned to the user either directly or through a group.
                 // TODO: Remove split on m_username after database change
-                userData = dbConnection.RetrieveDataSet("dbo.RetrieveApiData", m_username.Split('\\')[1], m_applicationName);
+                userData = dbConnection.RetrieveDataSet("dbo.RetrieveApiData", m_userData.Username.Split('\\')[1], m_applicationName);
 
                 if (userData.Tables[0].Rows.Count == 0)
                     return false;
 
                 userDataRow = userData.Tables[0].Rows[0];
-                m_isDefined = true;
+                m_userData.IsDefined = true;
                 if (!Convert.IsDBNull(userDataRow["UserPasswordChangeDateTime"]))
-                    m_passwordChangeDateTime = Convert.ToDateTime(userDataRow["UserPasswordChangeDateTime"]);
+                    m_userData.PasswordChangeDataTime = Convert.ToDateTime(userDataRow["UserPasswordChangeDateTime"]);
                 if (!Convert.IsDBNull(userDataRow["UserAccountCreatedDateTime"]))
-                    m_accountCreatedDateTime = Convert.ToDateTime(userDataRow["UserAccountCreatedDateTime"]);
+                    m_userData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["UserAccountCreatedDateTime"]);
                 if (!Convert.IsDBNull(userDataRow["UserIsExternal"]))
-                    m_isExternal = Convert.ToBoolean(userDataRow["UserIsExternal"]);
+                    m_userData.IsExternal = Convert.ToBoolean(userDataRow["UserIsExternal"]);
                 if (!Convert.IsDBNull(userDataRow["UserIsLockedOut"]))
-                    m_isLockedOut = Convert.ToBoolean(userDataRow["UserIsLockedOut"]);
+                    m_userData.IsLockedOut = Convert.ToBoolean(userDataRow["UserIsLockedOut"]);
 
                 foreach (DataRow group in userData.Tables[1].Rows)
                 {
                     if (!Convert.IsDBNull(group["GroupName"]))
-                        m_groups.Add(Convert.ToString(group["GroupName"]));
+                        m_userData.Groups.Add(Convert.ToString(group["GroupName"]));
                 }
 
                 foreach (DataRow role in userData.Tables[2].Rows)
                 {
                     if (!Convert.IsDBNull(role["RoleName"]))
-                        m_roles.Add(Convert.ToString(role["RoleName"]));
+                        m_userData.Roles.Add(Convert.ToString(role["RoleName"]));
                 }
 
-                if (m_isExternal)
+                if (m_userData.IsExternal)
                 {
                     if (!Convert.IsDBNull(userDataRow["UserPassword"]))
-                        m_password = Convert.ToString(userDataRow["UserPassword"]);
+                        m_userData.Password = Convert.ToString(userDataRow["UserPassword"]);
                     if (!Convert.IsDBNull(userDataRow["UserFirstName"]))
-                        m_firstName = Convert.ToString(userDataRow["UserFirstName"]);
+                        m_userData.FirstName = Convert.ToString(userDataRow["UserFirstName"]);
                     if (!Convert.IsDBNull(userDataRow["UserLastName"]))
-                        m_lastName = Convert.ToString(userDataRow["UserLastName"]);
+                        m_userData.LastName = Convert.ToString(userDataRow["UserLastName"]);
                     if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
-                        m_companyName = Convert.ToString(userDataRow["UserCompanyName"]);
+                        m_userData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
                     if (!Convert.IsDBNull(userDataRow["UserPhoneNumber"]))
-                        m_phoneNumber = Convert.ToString(userDataRow["UserPhoneNumber"]);
+                        m_userData.PhoneNumber = Convert.ToString(userDataRow["UserPhoneNumber"]);
                     if (!Convert.IsDBNull(userDataRow["UserEmailAddress"]))
-                        m_emailAddress = Convert.ToString(userDataRow["UserEmailAddress"]);
+                        m_userData.EmailAddress = Convert.ToString(userDataRow["UserEmailAddress"]);
                     if (!Convert.IsDBNull(userDataRow["UserSecurityQuestion"]))
-                        m_securityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
+                        m_userData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
                     if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
-                        m_securityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
+                        m_userData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
                 }
 
                 return true;
@@ -1006,16 +822,34 @@ namespace TVA.Security
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<string, CacheContext> s_cache;
+        private static string s_providerType;
+        private static ICollection<string> s_excludedResources;
+        private static IDictionary<string, string> s_includedResources;
+        private static IDictionary<string, CacheContext> s_cache;
         private static System.Timers.Timer s_cacheMonitorTimer;
+
+        private const string DefaultProviderType = "TVA.Security.SecurityProvider, TVA.Security";
+        private const string DefaultIncludedResources = "~/*.*=*";
+        private const string DefaultExcludedResources = "~/SecurityPortal.aspx;~/SecurityService.svc;~/WebResource.axd";
 
         // Static Constructor
         static SecurityProvider()
         {
+            // Initialize static variables.
             s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
             s_cacheMonitorTimer = new System.Timers.Timer(60000);
             s_cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
             s_cacheMonitorTimer.Start();
+
+            // Load settings from config file.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[DefaultSettingsCategory];
+            settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
+            settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
+            settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
+            s_providerType = settings["ProviderType"].ValueAsString();
+            s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
+            s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
         }
 
         // Static Properties
@@ -1084,7 +918,7 @@ namespace TVA.Security
                         // Cache provider to in-process memory.
                         lock (s_cache)
                         {
-                            s_cache[value.Username] = new CacheContext(value);
+                            s_cache[value.UserData.Username] = new CacheContext(value);
                         }
                 }
                 else
@@ -1110,6 +944,69 @@ namespace TVA.Security
         }
 
         // Static Methods
+
+        /// <summary>
+        /// Creates a new <see cref="SecurityProvider"/> object based on the settings in the config file.
+        /// </summary>
+        /// <param name="username">Username of the user to which the <see cref="SecurityProvider"/> object belongs.</param>
+        /// <returns>An <see cref="SecurityProvider"/> object.</returns>
+        public static SecurityProvider CreateProvider(string username)
+        {
+            // Instantiate the provider.
+            SecurityProvider provider = null;
+            if (string.IsNullOrEmpty(username))
+                provider = Activator.CreateInstance(Type.GetType(s_providerType)) as SecurityProvider;
+            else
+                provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as SecurityProvider;
+
+            // Initialize the provider.
+            provider.Initialize();
+
+            return provider;
+        }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
+        /// </summary>
+        /// <param name="resource">Name of the resource to be checked.</param>
+        /// <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
+        public static bool IsResourceSecurable(string resource)
+        {
+            // Check if resource is excluded explicitly.
+            foreach (string exclusion in s_excludedResources)
+            {
+                if (IsRegexMatch(exclusion, resource))
+                    return false;
+            }
+
+            // Check if resource is included explicitly.
+            foreach (KeyValuePair<string, string> inclusion in s_includedResources)
+            {
+                if (IsRegexMatch(inclusion.Key, resource))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Determines if the current user, as defined by the <see cref="Thread.CurrentPrincipal"/>, has permission to access 
+        /// the specified <paramref name="resource"/> based on settings in the config file.
+        /// </summary>
+        /// <param name="resource">Name of the resource to be checked.</param>
+        /// <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
+        public static bool IsResourceAccessible(string resource)
+        {
+            // Check if the resource has a role-based access restriction on it.
+            foreach (KeyValuePair<string, string> inclusion in s_includedResources)
+            {
+                if (IsRegexMatch(inclusion.Key, resource) &&
+                    (inclusion.Value.Trim() == "*" || Thread.CurrentPrincipal.IsInRole(inclusion.Value)))
+                    return true;
+            }
+
+            return false;
+        }
 
         /// <summary>
         /// Encrypts the password to a one-way hash using the SHA1 hash algorithm.
@@ -1140,6 +1037,16 @@ namespace TVA.Security
 
                 throw new SecurityException(message.ToString());
             }
+        }
+
+        private static bool IsRegexMatch(string spec, string url)
+        {
+            spec = spec.Replace(".", "\\.");    // Escapse special regex character '.'.
+            spec = spec.Replace("?", "\\?");    // Escapse special regex character '?'.
+            spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
+
+            // Perform a case-insensitive regex match.
+            return Regex.IsMatch(url, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
         }
 
         private static SecurityProvider SetupPrincipal(SecurityProvider provider, bool restore)

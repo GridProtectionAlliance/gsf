@@ -1,14 +1,14 @@
-๏ปฟ//*******************************************************************************************************
-//  SecurityModule.cs - Gbtc
+//*******************************************************************************************************
+//  EmbeddedResourceVirtualFile.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
-//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/31/2010 - Pinal C. Patel
+//  05/04/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -48,7 +48,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -125,7 +125,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -230,139 +230,151 @@
 #endregion
 
 using System;
-using System.Web;
-using System.Web.Hosting;
-using System.Web.SessionState;
-using TVA.Security;
-using TVA.Web.Hosting;
+using System.Reflection;
 
-namespace TVA.Web
+namespace TVA.Web.Hosting
 {
-    #region [ Enumerations ]
+	/// <summary>
+	/// Represents a file object in embedded resource space.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// This type is used by the <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+	/// to serve embedded resources as virtual files.  The properties on the
+	/// file can be used to retrieve an embedded resource stream from the
+	/// <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+	/// at the appropriate
+	/// <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+	/// using reflection.  As part of the <see cref="System.Web.Hosting.VirtualFile"/>
+	/// interface, you can do this easily via <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open"/>.
+	/// </para>
+	/// <para>
+	/// For more information on embedded resource virtual filesystem
+	/// usage, see <see cref="TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+	/// </para>
+	/// </remarks>
+	/// <seealso cref="TVA.Web.Hosting.EmbeddedResourcePathProvider" />
+	public class EmbeddedResourceVirtualFile : System.Web.Hosting.VirtualFile
+	{
+		
+		#region EmbeddedResourceVirtualFile Variables
 
-    #endregion
+		#region Instance
 
-    /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
-    /// </summary>
-    public class SecurityModule : IHttpModule
-    {
-        #region [ Members ]
+		/// <summary>
+		/// Internal storage for the
+		/// <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly" />
+		/// property.
+		/// </summary>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+        private Assembly _containingAssembly;
 
-        // Nested Types
+		/// <summary>
+		/// Internal storage for the
+		/// <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath" />
+		/// property.
+		/// </summary>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+        private string _resourcePath;
 
-        /// <summary>
-        /// A handler used to force the SessionStateModule to load session state.
-        /// </summary>
-        private class SessionEnabledHandler : IHttpHandler, IRequiresSessionState
-        {
-            public IHttpHandler OriginalHandler;
+		#endregion
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="SessionEnabledHandler"/> class.
-            /// </summary>
-            /// <param name="originalHandler">The original handler object.</param>
-            public SessionEnabledHandler(IHttpHandler originalHandler)
-            {
-                OriginalHandler = originalHandler;
-            }
+		#endregion
 
-            /// <summary>
-            /// This method will never get called.
-            /// </summary>
-            public void ProcessRequest(HttpContext context)
-            {
-                throw new NotSupportedException();
-            }
 
-            /// <summary>
-            /// Returns false since class has a member.
-            /// </summary>
-            public bool IsReusable
-            {
-                get { return false; }
-            }
-        }
 
-        // Fields
-        private HttpApplication m_application;
+		#region EmbeddedResourceVirtualFile Properties
 
-        #endregion
+		/// <summary>
+		/// Gets a reference to the assembly containing the virtual file.
+		/// </summary>
+		/// <value>
+		/// A <see cref="System.Reflection.Assembly"/> that contains the embedded
+		/// resource with the file contents.
+		/// </value>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+		public Assembly ContainingAssembly
+		{
+			get
+			{
+				return _containingAssembly;
+			}
+		}
 
-        #region [ Methods ]
+		/// <summary>
+		/// Gets the path to the embedded resource in the containing assembly.
+		/// </summary>
+		/// <value>
+		/// A <see cref="System.String"/> that indicates an embedded resource
+		/// in the <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+		/// that represents the file for this instance.
+		/// </value>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+		public string ResourcePath
+		{
+			get
+			{
+				return _resourcePath;
+			}
+		}
 
-        /// <summary>
-        /// Initializes the <see cref="SecurityModule"/>.
-        /// </summary>
-        /// <param name="context">An <see cref="HttpApplication"/> object.</param>
-        public void Init(HttpApplication context)
-        {
-            m_application = context;
-            m_application.PostMapRequestHandler += Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState += Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute += Application_PreRequestHandlerExecute;
+		#endregion
 
-            if (!(HostingEnvironment.VirtualPathProvider is EmbeddedResourcePathProvider))
-                HostingEnvironment.RegisterVirtualPathProvider(new EmbeddedResourcePathProvider());
-        }
 
-        /// <summary>
-        /// Releases the resources used by <see cref="SecurityModule"/>.
-        /// </summary>
-        public void Dispose()
-        {
-            m_application.PostMapRequestHandler -= Application_PostMapRequestHandler;
-            m_application.PostAcquireRequestState -= Application_PostAcquireRequestState;
-            m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
-        }
 
-        private void Application_PostMapRequestHandler(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
+		#region EmbeddedResourceVirtualFile Implementation
 
-            if (m_application.Context.Handler is IReadOnlySessionState ||
-                m_application.Context.Handler is IRequiresSessionState)
-                // no need to replace the current handler 
-                return;
+		#region Constructors
 
-            // swap the current handler 
-            m_application.Context.Handler = new SessionEnabledHandler(m_application.Context.Handler);
-        }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" /> class.
+		/// </summary>
+		/// <param name="virtualPath">The virtual path to the resource represented by this instance.</param>
+		/// <param name="containingAssembly">The <see cref="System.Reflection.Assembly"/> containing the resource represented by this instance.</param>
+		/// <param name="resourcePath">The path to the embedded resource in the <paramref name="containingAssembly" />.</param>
+		/// <exception cref="System.ArgumentNullException">
+		/// Thrown if <paramref name="containingAssembly" /> or <paramref name="resourcePath" /> is <see langword="null" />.
+		/// </exception>
+		/// <exception cref="System.ArgumentOutOfRangeException">
+		/// Thrown if <paramref name="resourcePath" /> is <see cref="System.String.Empty" />.
+		/// </exception>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+        public EmbeddedResourceVirtualFile(string virtualPath, Assembly containingAssembly, string resourcePath)
+			: base(virtualPath)
+		{
+			if (containingAssembly == null)
+			{
+				throw new ArgumentNullException("containingAssembly");
+			}
+			if (resourcePath == null)
+			{
+				throw new ArgumentNullException("resourcePath");
+			}
+			if (resourcePath.Length == 0)
+			{
+				throw new ArgumentOutOfRangeException("resourcePath");
+			}
+			this._containingAssembly = containingAssembly;
+			this._resourcePath = resourcePath;
+		}
 
-        private void Application_PostAcquireRequestState(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
+		#endregion
 
-            SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
-            if (handler != null)
-                // set the original handler back 
-                HttpContext.Current.Handler = handler.OriginalHandler;
-        }
+		#region Overrides
+        
+		/// <summary>
+		/// Returns a read-only stream to the virtual resource.
+		/// </summary>
+		/// <returns>A read-only stream to the virtual file.</returns>
+		/// <seealso cref="TVA.Web.Hosting.EmbeddedResourceVirtualFile" />
+		/// <seealso cref="System.Web.Hosting.VirtualFile.Open" />
+		public override System.IO.Stream Open()
+		{
+			return this.ContainingAssembly.GetManifestResourceStream(this.ResourcePath);
+		}
 
-        private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
-        {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
-                return;
+		#endregion
 
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-            if (!m_application.User.Identity.IsAuthenticated)
-                // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
-                // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
-        }
-
-        #endregion
-    }
+		#endregion
+	}
 }

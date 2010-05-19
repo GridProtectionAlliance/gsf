@@ -65,9 +65,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Hosting\EmbeddedResourceFileAttribute.cs" />
+    <Compile Include="Hosting\EmbeddedResourcePathProvider.cs" />
+    <Compile Include="Hosting\EmbeddedResourceVirtualFile.cs" />
+    <Compile Include="Hosting\VirtualFileBaseCollection.cs" />
+    <Compile Include="Embedded\ISecurityService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SecurityModule.cs" />
     <Compile Include="SecurityPolicy.cs" />
+    <Compile Include="Embedded\SecurityPortal.aspx.cs">
+      <DependentUpon>SecurityPortal.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Embedded\SecurityPortal.aspx.designer.cs">
+      <DependentUpon>SecurityPortal.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Embedded\SecurityService.svc.cs">
+      <DependentUpon>SecurityService.svc</DependentUpon>
+    </Compile>
+    <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
     <Compile Include="Services\IRestService.cs" />
     <Compile Include="Services\NamespaceDoc.cs" />
     <Compile Include="Services\RestService.cs" />
@@ -82,6 +98,26 @@
       <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
       <Name>TVA.Security</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\SecurityPortal.aspx">
+      <SubType>ASPXCodeBehind</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\SecurityService.svc" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\Images\TVALogo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\Images\Help.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\Images\Warning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Embedded\Scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
