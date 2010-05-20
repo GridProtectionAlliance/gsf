@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Security.Permissions;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("1.1.42.47266")]
+[assembly: AssemblyVersion("1.1.43.48326")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
