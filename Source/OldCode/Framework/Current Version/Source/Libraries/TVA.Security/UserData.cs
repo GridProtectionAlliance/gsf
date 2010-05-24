@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/10/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  05/24/2010 - Pinal C. Patel
+//       Added non-serializable LoginID property to keep track of the NTID for internal users.
 //
 //*******************************************************************************************************
 
@@ -250,6 +252,7 @@ namespace TVA.Security
         /// <param name="username">User's logon name.</param>
         public UserData(string username)
         {
+            LoginID = username;
             Username = username;
             Groups = new List<string>();
             Roles = new List<string>();
@@ -260,6 +263,11 @@ namespace TVA.Security
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the user's login ID.
+        /// </summary>
+        public string LoginID { get; set; }
 
         /// <summary>
         /// Gets the user's login name.

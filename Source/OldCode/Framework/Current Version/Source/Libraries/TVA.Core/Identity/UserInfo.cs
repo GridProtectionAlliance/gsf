@@ -43,6 +43,8 @@
 //  04/07/2010 - Pinal C. Patel
 //       Updated the timeout prevention logic used in GetUserProperty() to work correctly when 
 //       privileged identity is specified for Active Directory operations.
+//  05/24/2010 - Pinal C. Patel
+//       Added the ability to derive the domain name for added flexibility if one is not specified.
 //
 //*******************************************************************************************************
 
@@ -269,6 +271,7 @@ using System.DirectoryServices;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
+using Microsoft.Win32;
 using TVA.Configuration;
 using TVA.Interop;
 
@@ -325,6 +328,8 @@ namespace TVA.Identity
         private const int LOGON32_LOGON_INTERACTIVE = 2;
         private const int LOGON32_LOGON_NETWORK = 3;
         private const int SECURITY_IMPERSONATION = 2;
+        private const string LogonDomainRegistryKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon";
+        private const string LogonDomainRegistryValue = "DefaultDomainName";
 
         // Fields
         private string m_domain;
@@ -672,7 +677,7 @@ namespace TVA.Identity
         #endregion
 
         #region [ Methods ]
-        
+
         /// <summary>
         /// Releases all the resources used by the <see cref="UserInfo"/> object.
         /// </summary>
@@ -696,10 +701,6 @@ namespace TVA.Identity
                 WindowsImpersonationContext currentContext = null;
                 try
                 {
-                    // 11/06/2007 - PCP: Some change in the AD now causes the searching the AD to fail also if
-                    // this code is not being executed under a domain account which was not the case before;
-                    // before only AD property lookup had this behavior.
-
                     // Impersonate to the privileged account if specified.
                     if (!string.IsNullOrEmpty(m_privilegedDomain) &&
                         !string.IsNullOrEmpty(m_privilegedUserName) &&
@@ -710,11 +711,17 @@ namespace TVA.Identity
                                                          m_privilegedPassword);
                     }
 
-                    // 02/27/2007 - PCP: Using the default directory entry instead of specifying the domain name.
-                    // This is done to overcome "The server is not operational" COM exception that was being
-                    // encountered when a domain name was being specified.
-                    DirectoryEntry entry = new DirectoryEntry("LDAP://" + m_domain);
+                    // Try do derive the domain if one is not specified.
+                    if (string.IsNullOrEmpty(m_domain))
+                        if (!string.IsNullOrEmpty(m_privilegedDomain))
+                            // Use domain specified for privileged account.
+                            m_domain = m_privilegedDomain;
+                        else
+                            // Use the default logon domain of the host machine.
+                            m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
 
+                    // Create user's directory entry for AD interactions.
+                    DirectoryEntry entry = new DirectoryEntry("LDAP://" + m_domain);
                     using (DirectorySearcher searcher = new DirectorySearcher(entry))
                     {
                         searcher.Filter = "(SAMAccountName=" + m_username + ")";
@@ -722,6 +729,9 @@ namespace TVA.Identity
                         if (result != null)
                             m_userEntry = result.GetDirectoryEntry();
                     }
+
+                    m_enabled = true;       // Mark as enabled.
+                    m_initialized = true;   // Initialize only once.
                 }
                 catch (Exception ex)
                 {
@@ -732,9 +742,6 @@ namespace TVA.Identity
                 {
                     EndImpersonation(currentContext);   // Undo impersonation if it was performed.
                 }
-
-                m_enabled = true;       // Mark as enabled.
-                m_initialized = true;   // Initialize only once.
             }
         }
 

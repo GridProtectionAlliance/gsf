@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/22/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  05/24/2010 - Pinal C. Patel
+//       Modified RefreshData() method to not query the AD at all for external user.
 //
 //*******************************************************************************************************
 
@@ -386,9 +388,9 @@ namespace TVA.Security
         /// <param name="username">Name that uniquely identifies the user.</param>
         public SecurityProvider(string username)
         {
-            // Properly format username.
-            if (!string.IsNullOrEmpty(username) && !username.Contains('\\'))
-                username = string.Format("{0}\\{1}", Environment.UserDomainName, username);
+            // Remove domain from username.
+            if (!string.IsNullOrEmpty(username) && username.Contains('\\'))
+                username = username.Split('\\')[1];
 
             // Initialize member variables.
             m_userData = new UserData(username);
@@ -603,23 +605,22 @@ namespace TVA.Security
         /// <returns>true if user data is refreshed, otherwise false.</returns>
         public virtual bool RefreshData()
         {
-            // TODO: Move this to external docs
-            // Source of user data will depend on the specified SecurityPolicy.
-            // - CustomPrincipal: 
-            //   1) User must exist in the security database. 
-            //   2) Internal user's data will be retrieved from AD and external user's data will be retrieved from database.
-            // - WindowsPrincipal: 
-            //   1) Check for user's existance in security database is not performed.
-            //   2) Internal user's data will be retrieved from AD and external user will be treated as anonymous user.
-
             // Initialize data.
             m_userData.Initialize();
 
-            bool refreshFromAD = PopulateDataFromActiveDirectory();
+            // Populate user data.
             if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal)
-                return refreshFromAD;
+            {
+                return PopulateDataFromActiveDirectory();
+            }
             else
-                return PopulateDataFromBackendDatabase();
+            {
+                bool refreshFromDB = PopulateDataFromBackendDatabase();
+                if (refreshFromDB && !m_userData.IsExternal)
+                    return PopulateDataFromActiveDirectory();
+                else
+                    return refreshFromDB;
+            }
         }
 
         /// <summary>
@@ -637,7 +638,7 @@ namespace TVA.Security
                 if (!string.IsNullOrEmpty(password))
                 {
                     // Validate by performing network logon.
-                    string[] userParts = m_userData.Username.Split('\\');
+                    string[] userParts = m_userData.LoginID.Split('\\');
                     m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
                     m_userData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
                 }
@@ -645,8 +646,8 @@ namespace TVA.Security
                 {
                     // Validate with current thread principal.
                     m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                    m_userData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_userData.Username) &&
-                                                    string.Compare(m_windowsPrincipal.Identity.Name, m_userData.Username, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+                    m_userData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_userData.LoginID) &&
+                                                    string.Compare(m_windowsPrincipal.Identity.Name, m_userData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
                 }
             }
             else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsLockedOut && m_userData.IsExternal)
@@ -691,13 +692,14 @@ namespace TVA.Security
             if (string.IsNullOrEmpty(m_userData.Username))
                 return false;
 
-            using (UserInfo adUserInfo = new UserInfo(m_userData.Username))
+            using (UserInfo adUserInfo = new UserInfo(string.Empty, m_userData.Username))
             {
                 adUserInfo.PersistSettings = true;
                 adUserInfo.Initialize();
                 if (adUserInfo.UserEntry != null)
                 {
                     // User exists in Active Directory.
+                    m_userData.LoginID = adUserInfo.LoginID;
                     m_userData.FirstName = adUserInfo.FirstName;
                     m_userData.LastName = adUserInfo.LastName;
                     m_userData.CompanyName = adUserInfo.Company;
@@ -735,8 +737,7 @@ namespace TVA.Security
                 // Table1 (Index 0): Information about the user.
                 // Table2 (Index 1): Groups the user is a member of.
                 // Table3 (Index 2): Roles that are assigned to the user either directly or through a group.
-                // TODO: Remove split on m_username after database change
-                userData = dbConnection.RetrieveDataSet("dbo.RetrieveApiData", m_userData.Username.Split('\\')[1], m_applicationName);
+                userData = dbConnection.RetrieveDataSet("dbo.RetrieveApiData", m_userData.Username, m_applicationName);
 
                 if (userData.Tables[0].Rows.Count == 0)
                     return false;
@@ -830,7 +831,7 @@ namespace TVA.Security
 
         private const string DefaultProviderType = "TVA.Security.SecurityProvider, TVA.Security";
         private const string DefaultIncludedResources = "~/*.*=*";
-        private const string DefaultExcludedResources = "~/SecurityPortal.aspx;~/SecurityService.svc;~/WebResource.axd";
+        private const string DefaultExcludedResources = "~/WebResource.axd;~/SecurityPortal.aspx;~/SecurityService.svc*";
 
         // Static Constructor
         static SecurityProvider()

@@ -10,6 +10,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  05/24/2010 - Pinal C. Patel
+//       Modified the service so it could be hosted in ASP.NET compatibility mode.
+//       Modified Login() to initialize the provider once and cache it for subsequent uses.
 //
 //*******************************************************************************************************
 
@@ -229,6 +232,7 @@
 */
 #endregion
 
+using System.ServiceModel.Activation;
 using TVA.Security;
 
 namespace TVA.Web.Embedded
@@ -236,6 +240,7 @@ namespace TVA.Web.Embedded
     /// <summary>
     /// Embedded WCF REST service used for securing external facing WCF services.
     /// </summary>
+    [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class SecurityService : ISecurityService
     {
         /// <summary>
@@ -247,7 +252,8 @@ namespace TVA.Web.Embedded
         public UserData Login(string username, string password)
         {
             SecurityProvider provider = SecurityProvider.CreateProvider(username);
-            provider.Authenticate(password);
+            if (provider.Authenticate(password))
+                SecurityProvider.Current = provider;
 
             return provider.UserData;
         }
