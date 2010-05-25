@@ -85,8 +85,10 @@
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
     <Compile Include="Services\IRestService.cs" />
+    <Compile Include="Services\ISecureRestService.cs" />
     <Compile Include="Services\NamespaceDoc.cs" />
     <Compile Include="Services\RestService.cs" />
+    <Compile Include="Services\SecureRestService.cs" />
     <Compile Include="Services\Serialization.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -115,9 +117,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Embedded\Images\Warning.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Embedded\Scripts\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

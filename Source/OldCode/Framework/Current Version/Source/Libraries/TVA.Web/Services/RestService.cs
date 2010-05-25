@@ -487,26 +487,29 @@ namespace TVA.Web.Services
                 LoadSettings();
                 if (m_enabled && !string.IsNullOrEmpty(m_serviceUri))
                 {
-                    // Create service host.
-                    m_serviceHost = new WebServiceHost(this, new Uri(m_serviceUri));
-                    // Add default endpoint.
-                    WebHttpBinding webHttpBinding = new WebHttpBinding();
-                    webHttpBinding.MaxReceivedMessageSize = int.MaxValue;
-                    m_serviceHost.AddServiceEndpoint(Type.GetType(m_serviceContract), webHttpBinding, "");
+                    // Initialize host and binding.
+                    m_serviceHost = new WebServiceHost(this.GetType(), new Uri(m_serviceUri));
+                    WebHttpBinding serviceBinding = new WebHttpBinding();
+
+                    // Add an endpoint for the service.
+                    ServiceEndpoint serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_serviceContract), serviceBinding, "");
+                    serviceEndpoint.Behaviors.Add(new WebHttpBehavior());
                     OnServiceHostCreated();
-                    // Change serialization behavior.
+
+                    // Change data serialization behavior.
                     foreach (ServiceEndpoint endpoint in m_serviceHost.Description.Endpoints)
                     {
                         foreach (OperationDescription operation in endpoint.Contract.Operations)
                         {
                             // Following behavior property must be set for all operations of the web service to allow for the maximum number 
                             // of items of any object sent or received by the operation to be serialized/deserialized by the serializer.
-                            DataContractSerializerOperationBehavior behavior = operation.Behaviors[typeof(DataContractSerializerOperationBehavior)] as DataContractSerializerOperationBehavior;
+                            DataContractSerializerOperationBehavior behavior = operation.Behaviors.Find<DataContractSerializerOperationBehavior>();
                             if (behavior != null)
                                 behavior.MaxItemsInObjectGraph = int.MaxValue;
                         }
                     }
-                    // Start service host.
+
+                    // Start the service.
                     m_serviceHost.Open();
                     OnServiceHostStarted();
                 }
