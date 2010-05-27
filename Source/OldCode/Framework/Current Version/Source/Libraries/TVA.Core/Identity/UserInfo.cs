@@ -45,6 +45,9 @@
 //       privileged identity is specified for Active Directory operations.
 //  05/24/2010 - Pinal C. Patel
 //       Added the ability to derive the domain name for added flexibility if one is not specified.
+//  05/27/2010 - Pinal C. Patel
+//       Modified DirectoryEntry object creation in Initialize() to take in to consideration the domain.
+//       Modified Initialize() to move the derivation of domain name after DirectoryEntry initialization.
 //
 //*******************************************************************************************************
 
@@ -354,29 +357,38 @@ namespace TVA.Identity
         /// <param name="domain">Domain where the user's account exists.</param>
         /// <param name="username">Username of user's account whose information is to be retrieved.</param>
         public UserInfo(string domain, string username)
-            : this()
+            : this(domain + "\\" + username)
         {
-            m_domain = domain;
-            m_username = username;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserInfo"/> class.
         /// </summary>
-        /// <param name="loginID">Login ID in "domain\username" format of the user's account whose information is to be retrieved.</param>
+        /// <param name="loginID">
+        /// Login ID in 'domain\username' format of the user's account whose information is to be retrieved. Login ID 
+        /// can also be specified in 'username' format without the domain name, in which case the domain name will be
+        /// approximated based on the privileged user domain if specified, default logon domain of the host machine 
+        /// if available, or the domain of the identity that owns the host process.
+        /// </param>
+        /// <exception cref="ArgumentNullException"><paramref name="loginID"/> is a null or empty string.</exception>
         public UserInfo(string loginID)
             : this()
         {
+            if (string.IsNullOrEmpty(loginID))
+                throw new ArgumentNullException("loginID");
+
             string[] parts = loginID.Split('\\');
-
             if (parts.Length != 2)
-                throw new ArgumentException("Expected login ID in format of 'domain\\username'");
-
-            if (string.IsNullOrEmpty(parts[0]) || string.IsNullOrEmpty(parts[1]))
-                throw new ArgumentException("Expected login ID in format of 'domain\\username'");
-
-            m_domain = parts[0];
-            m_username = parts[1];
+            {
+                // Login ID is specified in 'username' format.
+                m_username = loginID;
+            }
+            else
+            {
+                // Login ID is specified in 'domain\username' format.
+                m_domain = parts[0];
+                m_username = parts[1];
+            }
         }
 
         /// <summary>
@@ -538,7 +550,7 @@ namespace TVA.Identity
                 }
                 else
                 {
-                    return m_domain + "\\" + m_username;
+                    return LoginID;
                 }
             }
         }
@@ -711,6 +723,20 @@ namespace TVA.Identity
                                                          m_privilegedPassword);
                     }
 
+                    // Create user's directory entry for AD interactions.
+                    DirectoryEntry entry;
+                    if (string.IsNullOrEmpty(m_domain))
+                        entry = new DirectoryEntry();
+                    else
+                        entry = new DirectoryEntry("LDAP://" + m_domain);
+                    using (DirectorySearcher searcher = new DirectorySearcher(entry))
+                    {
+                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
+                        SearchResult result = searcher.FindOne();
+                        if (result != null)
+                            m_userEntry = result.GetDirectoryEntry();
+                    }
+
                     // Try do derive the domain if one is not specified.
                     if (string.IsNullOrEmpty(m_domain))
                         if (!string.IsNullOrEmpty(m_privilegedDomain))
@@ -720,23 +746,13 @@ namespace TVA.Identity
                             // Use the default logon domain of the host machine.
                             m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
 
-                    // Create user's directory entry for AD interactions.
-                    DirectoryEntry entry = new DirectoryEntry("LDAP://" + m_domain);
-                    using (DirectorySearcher searcher = new DirectorySearcher(entry))
-                    {
-                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                        SearchResult result = searcher.FindOne();
-                        if (result != null)
-                            m_userEntry = result.GetDirectoryEntry();
-                    }
-
                     m_enabled = true;       // Mark as enabled.
                     m_initialized = true;   // Initialize only once.
                 }
                 catch (Exception ex)
                 {
                     m_userEntry = null;
-                    throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}\\{1}'", m_domain, m_username), ex);
+                    throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}'", LoginID), ex);
                 }
                 finally
                 {

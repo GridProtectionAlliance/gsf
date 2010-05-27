@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  05/24/2010 - Pinal C. Patel
 //       Modified RefreshData() method to not query the AD at all for external user.
+//  05/27/2010 - Pinal C. Patel
+//       Added usage example to code comments.
 //
 //*******************************************************************************************************
 
@@ -274,6 +276,34 @@ namespace TVA.Security
     /// </summary>
     /// <seealso cref="SecurityIdentity"/>
     /// <seealso cref="SecurityPrincipal"/>
+    /// <example>
+    /// Required config file entries:
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </example>
     public class SecurityProvider : ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
@@ -326,7 +356,7 @@ namespace TVA.Security
         /// <summary>
         /// Specifies the default value for the <see cref="ApplicationName"/> property.
         /// </summary>
-        public const string DefaultApplicationName = "SecureApplication";
+        public const string DefaultApplicationName = "SEC_APP";
 
         /// <summary>
         /// Specifies the default value for the <see cref="ConnectionString"/> property.
@@ -510,7 +540,7 @@ namespace TVA.Security
         /// <summary>
         /// Gets the <see cref="UserData"/> object containing information about the user.
         /// </summary>
-        public UserData UserData 
+        public UserData UserData
         {
             get { return m_userData; }
             protected set { m_userData = value; }
@@ -600,7 +630,7 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Refreshes user data.
+        /// Refreshes the <see cref="UserData"/>.
         /// </summary>
         /// <returns>true if user data is refreshed, otherwise false.</returns>
         public virtual bool RefreshData()
@@ -692,7 +722,7 @@ namespace TVA.Security
             if (string.IsNullOrEmpty(m_userData.Username))
                 return false;
 
-            using (UserInfo adUserInfo = new UserInfo(string.Empty, m_userData.Username))
+            using (UserInfo adUserInfo = new UserInfo(m_userData.Username))
             {
                 adUserInfo.PersistSettings = true;
                 adUserInfo.Initialize();
@@ -830,8 +860,8 @@ namespace TVA.Security
         private static System.Timers.Timer s_cacheMonitorTimer;
 
         private const string DefaultProviderType = "TVA.Security.SecurityProvider, TVA.Security";
-        private const string DefaultIncludedResources = "~/*.*=*";
-        private const string DefaultExcludedResources = "~/WebResource.axd;~/SecurityPortal.aspx;~/SecurityService.svc*";
+        private const string DefaultIncludedResources = "*=*";
+        private const string DefaultExcludedResources = "";
 
         // Static Constructor
         static SecurityProvider()
@@ -846,11 +876,11 @@ namespace TVA.Security
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[DefaultSettingsCategory];
             settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
-            settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
             settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
+            settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
             s_providerType = settings["ProviderType"].ValueAsString();
-            s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
+            s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
         }
 
         // Static Properties

@@ -37,6 +37,12 @@
     <DocumentationFile>$(OutputPath)\TVA.Windows.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="PresentationFramework">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -51,6 +57,12 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationProvider">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Forms\AboutDialog.cs">
@@ -60,6 +72,12 @@
       <DependentUpon>AboutDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\PropertyGridExtensions.cs" />
+    <Compile Include="Forms\SecureForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\SecureForm.Designer.cs">
+      <DependentUpon>SecureForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -68,6 +86,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\SecureForm.resx">
+      <DependentUpon>SecureForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\TVADisclaimer.txt" />
     <EmbeddedResource Include="Forms\TVALogo.bmp" />
   </ItemGroup>
@@ -75,6 +96,10 @@
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>TVA.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.Security\TVA.Security.csproj">
+      <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
+      <Name>TVA.Security</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

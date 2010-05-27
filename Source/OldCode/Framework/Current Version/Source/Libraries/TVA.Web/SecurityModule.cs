@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/31/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  05/27/2010 - Pinal C. Patel
+//       Added usage example to code comments.
 //
 //*******************************************************************************************************
 
@@ -245,6 +247,50 @@ namespace TVA.Web
     /// <summary>
     /// Represents an HTTP module that can be used to enable site-wide role-based security.
     /// </summary>
+    /// <seealso cref="SecurityProvider"/>
+    /// <example>
+    /// Required config file entries:
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="~/WebResource.axd;~/SecurityPortal.aspx"
+    ///         description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///     <activeDirectory>
+    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+    ///         encrypted="true" />
+    ///     </activeDirectory>
+    ///   </categorizedSettings>
+    ///   <system.web>
+    ///     <authentication mode="Windows"/>
+    ///     <httpModules>
+    ///       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
+    ///     </httpModules>
+    ///   </system.web>
+    /// </configuration>
+    /// ]]>
+    /// </example>
     public class SecurityModule : IHttpModule
     {
         #region [ Members ]
@@ -316,6 +362,15 @@ namespace TVA.Web
             m_application.PreRequestHandlerExecute -= Application_PreRequestHandlerExecute;
         }
 
+        /// <summary>
+        /// Gets the name of resource being accessed.
+        /// </summary>
+        /// <returns>Name of the resource being accessed.</returns>
+        protected string GetResourceName()
+        {
+            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
+        }
+
         private void Application_PostMapRequestHandler(object sender, EventArgs e)
         {
             if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
@@ -356,11 +411,6 @@ namespace TVA.Web
             if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
                 // User does not have access to the resource.
                 m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
-        }
-
-        private string GetResourceName()
-        {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
         }
 
         #endregion

@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPolicy.cs - Gbtc
+//  SecureForm.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,11 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/22/2010 - Pinal C. Patel
+//  05/26/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  05/27/2010 - Pinal C. Patel
-//       Added usage example to code comments.
-//       Modified Evaluate() to make use of IncludedResources and ExcludedResources config file settings.
 //
 //*******************************************************************************************************
 
@@ -233,24 +230,20 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Claims;
-using System.IdentityModel.Policy;
 using System.Security;
 using System.Security.Principal;
-using System.ServiceModel;
 using System.Threading;
-using System.Web;
+using System.Windows.Forms;
 using TVA.Security;
 
-namespace TVA.Web
+namespace TVA.Windows.Forms
 {
     /// <summary>
-    /// Represents an authorization policy that can be used by WCF services for initializing security.
+    /// Represents a windows form secured using role-based security.
     /// </summary>
     /// <seealso cref="SecurityProvider"/>
     /// <example>
-    /// Common config file entries:
+    /// Required config file entries:
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -268,196 +261,24 @@ namespace TVA.Web
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///       <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="~/SecurityService.svc/*"
-    ///         description="Semicolon delimited list of resources to be excluded from being secured."
+    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
     ///     </securityProvider>
-    ///     <activeDirectory>
-    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-    ///         encrypted="true" />
-    ///     </activeDirectory>
     ///   </categorizedSettings>
     /// </configuration>
     /// ]]>
     /// </example>
-    /// <example>
-    /// Internal WCF service configuration:
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <system.serviceModel>
-    ///     <services>
-    ///       <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
-    ///                   bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior" />
-    ///       </service>
-    ///     </services>
-    ///     <behaviors>
-    ///       <endpointBehaviors>
-    ///         <behavior name="endpointBehavior">
-    ///           <webHttp/>
-    ///         </behavior>
-    ///       </endpointBehaviors>
-    ///       <serviceBehaviors>
-    ///         <behavior name="serviceBehavior">
-    ///           <serviceAuthorization principalPermissionMode="Custom">
-    ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
-    ///             </authorizationPolicies>
-    ///           </serviceAuthorization>
-    ///         </behavior>
-    ///       </serviceBehaviors>
-    ///     </behaviors>
-    ///     <bindings>
-    ///       <webHttpBinding>
-    ///         <binding name="endpointBinding">
-    ///           <security mode="TransportCredentialOnly">
-    ///             <transport clientCredentialType="Windows"/>
-    ///           </security>
-    ///         </binding>
-    ///       </webHttpBinding>
-    ///     </bindings>
-    ///     <serviceHostingEnvironment aspNetCompatibilityEnabled="false" />
-    ///   </system.serviceModel>
-    /// </configuration>
-    /// ]]>
-    /// </example>
-    /// <example>
-    /// External WCF service configuration:
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <system.web>
-    ///     <httpModules>
-    ///       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
-    ///     </httpModules>
-    ///   </system.web>
-    ///   <system.serviceModel>
-    ///     <services>
-    ///       <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" behaviorConfiguration="endpointBehavior" />
-    ///       </service>
-    ///     </services>
-    ///     <behaviors>
-    ///       <endpointBehaviors>
-    ///         <behavior name="endpointBehavior">
-    ///           <webHttp/>
-    ///         </behavior>
-    ///       </endpointBehaviors>
-    ///       <serviceBehaviors>
-    ///         <behavior name="serviceBehavior">
-    ///           <serviceAuthorization principalPermissionMode="Custom">
-    ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
-    ///             </authorizationPolicies>
-    ///           </serviceAuthorization>
-    ///         </behavior>
-    ///       </serviceBehaviors>
-    ///     </behaviors>
-    ///     <serviceHostingEnvironment aspNetCompatibilityEnabled="true" />
-    ///   </system.serviceModel>
-    /// </configuration>
-    /// ]]>
-    /// </example>
-    public class SecurityPolicy : IAuthorizationPolicy
+    public partial class SecureForm : Form
     {
-        #region [ Members ]
-
-        // Fields
-        private Guid m_id;
-
-        #endregion
-
-        #region [ Constructors ]
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPolicy"/> class.
+        /// Initializes a new instance of the <see cref="SecureForm"/> class.
         /// </summary>
-        public SecurityPolicy()
+        public SecureForm()
         {
-            m_id = Guid.NewGuid();
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the identifier of this <see cref="SecurityPolicy"/> instance.
-        /// </summary>
-        public string Id
-        {
-            get { return m_id.ToString(); }
-        }
-
-        /// <summary>
-        /// Gets a claim set that represents the issuer of this <see cref="SecurityPolicy"/>.
-        /// </summary>
-        public ClaimSet Issuer
-        {
-            get { return ClaimSet.System; }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Evaluates the <paramref name="eveluationContext"/> and initializes security.
-        /// </summary>
-        /// <param name="evaluationContext">An <see cref="EvaluationContext"/> object.</param>
-        /// <param name="state">Custom state of the <see cref="SecurityPolicy"/>.</param>
-        /// <returns></returns>
-        public bool Evaluate(EvaluationContext evaluationContext, ref object state)
-        {
-            // In order for this to work properly security on the binding must be configured to use windows security.
-            // When this is done the caller's windows identity is available to us here and can be used to derive from 
-            // it the security principal that can be used by WCF service code downstream for implementing security.
-            object property;
-            if (evaluationContext.Properties.TryGetValue("Identities", out property))
-            {
-                // Extract and assign the caller's windows identity to current thread if available.
-                IList<IIdentity> identities = property as List<IIdentity>;
-                foreach (IIdentity identity in identities)
-                {
-                    if (identity is WindowsIdentity)
-                    {
-                        Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)identity);
-
-                        break;
-                    }
-                }
-            }
-
-            string resource = GetResourceName();
-            if (SecurityProvider.IsResourceSecurable(resource))
-            {
-                // Initialize the security principal from caller's windows identity if uninitialized.
-                if (SecurityProvider.Current == null)
-                    SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
-
-                // Setup the principal to be attached to the thread on which WCF service will execute.
-                evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
-
-                // Perform a top-level permission check on the resource being accessed.
-                if (!SecurityProvider.IsResourceAccessible(resource))
-                    throw new SecurityException(string.Format("Access to {0} is denied", resource));
-
-                return true;
-            }
-            else
-            {
-                // Setup the principal to be attached to the thread on which WCF service will execute.
-                evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
-
-                return true;
-            }
+            // Initialize form components.
+            InitializeComponent();
         }
 
         /// <summary>
@@ -466,9 +287,27 @@ namespace TVA.Web
         /// <returns>Name of the resource being accessed.</returns>
         protected string GetResourceName()
         {
-            return VirtualPathUtility.ToAppRelative(OperationContext.Current.IncomingMessageHeaders.To.AbsolutePath);
+            return this.Name;
         }
 
-        #endregion
+        private void SecureForm_Load(object sender, EventArgs e)
+        {
+            // Check if the resource is excluded from being secured.
+            string resource = GetResourceName();
+            if (!SecurityProvider.IsResourceSecurable(resource))
+                return;
+
+            // Setup thread principal to current windows principal.
+            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
+                Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+            // Setup the security provider for role-based security.
+            if (SecurityProvider.Current == null)
+                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
+
+            // Verify the top-level security permission on the resource.
+            if (!SecurityProvider.IsResourceAccessible(resource))
+                throw new SecurityException(string.Format("Access to {0} is denied", resource));
+        }
     }
 }
