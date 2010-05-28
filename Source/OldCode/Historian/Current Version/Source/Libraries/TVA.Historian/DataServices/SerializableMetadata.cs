@@ -248,7 +248,7 @@ namespace TVA.Historian.DataServices
     /// </summary>
     /// <example>
     /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="XmlSerializer"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8" ?> 
     /// <Metadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -265,7 +265,7 @@ namespace TVA.Historian.DataServices
     /// ]]>
     /// </code>
     /// This is the output for <see cref="SerializableMetadata"/> serialized using <see cref="DataContractSerializer"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <Metadata xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <MetadataRecords>

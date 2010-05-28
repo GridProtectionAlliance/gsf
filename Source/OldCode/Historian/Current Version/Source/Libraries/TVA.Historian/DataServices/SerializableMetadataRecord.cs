@@ -247,7 +247,7 @@ namespace TVA.Historian.DataServices
     /// </summary>
     /// <example>
     /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="XmlSerializer"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8" ?> 
     /// <MetadataRecord HistorianID="1" DataType="0" Name="TVA_CORD-BUS2:ABBV" Synonym1="4-PM1" Synonym2="VPHM" Synonym3="" Description="Cordova ABB-521 500 kV Bus 2 Positive Sequence Voltage Magnitude" HardwareInfo="ABB RES521" 
@@ -258,7 +258,7 @@ namespace TVA.Historian.DataServices
     /// ]]>
     /// </code>
     /// This is the output for <see cref="SerializableMetadataRecord"/> serialized using <see cref="DataContractSerializer"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <MetadataRecord xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <HistorianID>1</HistorianID> 
