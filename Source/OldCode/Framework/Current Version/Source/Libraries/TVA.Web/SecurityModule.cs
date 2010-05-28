@@ -250,6 +250,7 @@ namespace TVA.Web
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Required config file entries:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -290,6 +291,7 @@ namespace TVA.Web
     ///   </system.web>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     public class SecurityModule : IHttpModule
     {

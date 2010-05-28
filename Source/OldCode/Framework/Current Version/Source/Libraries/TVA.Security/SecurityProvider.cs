@@ -278,6 +278,7 @@ namespace TVA.Security
     /// <seealso cref="SecurityPrincipal"/>
     /// <example>
     /// Required config file entries:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -303,6 +304,7 @@ namespace TVA.Security
     ///   </categorizedSettings>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     public class SecurityProvider : ISupportLifecycle, IPersistSettings
     {

@@ -251,6 +251,7 @@ namespace TVA.Web
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Common config file entries:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -285,9 +286,11 @@ namespace TVA.Web
     ///   </categorizedSettings>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     /// <example>
     /// Internal WCF service configuration:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -327,9 +330,11 @@ namespace TVA.Web
     ///   </system.serviceModel>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     /// <example>
     /// External WCF service configuration:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -364,6 +369,7 @@ namespace TVA.Web
     ///   </system.serviceModel>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     public class SecurityPolicy : IAuthorizationPolicy
     {

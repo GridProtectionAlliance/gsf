@@ -244,6 +244,7 @@ namespace TVA.Windows.Forms
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Required config file entries:
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -269,6 +270,7 @@ namespace TVA.Windows.Forms
     ///   </categorizedSettings>
     /// </configuration>
     /// ]]>
+    /// </code>
     /// </example>
     public partial class SecureForm : Form
     {
