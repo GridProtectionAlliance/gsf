@@ -18,6 +18,8 @@
 //       Fixed bug in the initialization of service contract name.
 //  03/30/2010 - Pinal C. Patel
 //       Updated CanRead and CanWrite to not include Enabled in its evaluation.
+//  05/28/2010 - Pinal C. Patel
+//       Added an endpoint for web service help.
 //
 //*******************************************************************************************************
 
@@ -238,11 +240,18 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
+using System.Text;
 using TVA.Configuration;
+using TVA.Reflection;
 
 namespace TVA.Web.Services
 {
@@ -428,7 +437,7 @@ namespace TVA.Web.Services
         /// </remarks>
         public WebServiceHost ServiceHost
         {
-            get 
+            get
             {
                 return m_serviceHost;
             }
@@ -441,7 +450,7 @@ namespace TVA.Web.Services
         {
             get
             {
-                if (m_serviceDataFlow == DataFlowDirection.Outgoing || 
+                if (m_serviceDataFlow == DataFlowDirection.Outgoing ||
                     m_serviceDataFlow == DataFlowDirection.BothWays)
                     return true;
                 else
@@ -456,7 +465,7 @@ namespace TVA.Web.Services
         {
             get
             {
-                if (m_serviceDataFlow == DataFlowDirection.Incoming || 
+                if (m_serviceDataFlow == DataFlowDirection.Incoming ||
                     m_serviceDataFlow == DataFlowDirection.BothWays)
                     return true;
                 else
@@ -569,6 +578,87 @@ namespace TVA.Web.Services
         }
 
         /// <summary>
+        /// Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
+        /// </summary>
+        /// <returns>An <see cref="Stream"/> object containing the HTML help.</returns>
+        [Description("Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.")]
+        public Stream Help()
+        {
+            // Local variables used in preparing the HTML.
+            Type serviceType = this.GetType();
+            string serviceName = serviceType.Name;
+            StringBuilder responseText = new StringBuilder();
+            WebGetAttribute webGetAttribute = null;
+            WebInvokeAttribute webInvokeAttribute = null;
+            DescriptionAttribute descriptionAttribute = null;
+
+            // Prepare the HTML to be returned.
+            responseText.Append("<html>");
+            responseText.AppendLine();
+            responseText.Append("<head>");
+            responseText.AppendLine();
+            responseText.AppendFormat("    <title>{0} - Documentation</title>", serviceName);
+            responseText.AppendLine();
+            responseText.Append("    <style type=\"text/css\">");
+            responseText.AppendLine();
+            responseText.Append("        body {margin: 0px;padding: 0px;font-family: Tahoma, Arial;}");
+            responseText.AppendLine();
+            responseText.Append("        .banner {padding: 10px 0px 3px 15px;font-size: 20pt;color: #ffffff;background-color: #003366;}");
+            responseText.AppendLine();
+            responseText.Append("        .content {margin: 15px;font-size: 10pt;}");
+            responseText.AppendLine();
+            responseText.Append("    </style>");
+            responseText.AppendLine();
+            responseText.Append("</head>");
+            responseText.AppendLine();
+            responseText.Append("<body>");
+            responseText.AppendLine();
+            responseText.AppendFormat("    <div class=\"banner\">{0}</div>", serviceName);
+            responseText.AppendLine();
+            responseText.Append("    <div class=\"content\">");
+            responseText.AppendLine();
+            responseText.Append("        <h3>Available Endpoints</h3>");
+            responseText.AppendLine();
+            responseText.Append("        <ul>");
+            responseText.AppendLine();
+            foreach (MethodInfo method in GetMethods(Type.GetType(m_serviceContract)))
+            {
+                // Check if the method in the service interface is REST.
+                if (method.TryGetAttribute(out webGetAttribute))
+                    responseText.AppendFormat("            <li><strong>GET {0}</strong>", webGetAttribute.UriTemplate);
+                else if (method.TryGetAttribute(out webInvokeAttribute))
+                    responseText.AppendFormat("            <li><strong>{0} {1}</strong>", webInvokeAttribute.Method, webInvokeAttribute.UriTemplate);
+
+                // Check if the REST method has a description we can use.
+                if (webGetAttribute != null || webInvokeAttribute != null)
+                {
+                    if (method.TryGetAttribute(out descriptionAttribute) ||
+                        serviceType.GetMethod(method.Name).TryGetAttribute(out descriptionAttribute))
+                        responseText.AppendFormat(" - {0}</li>", descriptionAttribute.Description);
+                    else
+                        responseText.Append("</li>");
+                    responseText.AppendLine();
+                }
+            }
+            responseText.Append("        </ul>");
+            responseText.AppendLine();
+            responseText.Append("    </div>");
+            responseText.AppendLine();
+            responseText.Append("</body>");
+            responseText.AppendLine();
+            responseText.Append("</html>");
+            responseText.AppendLine();
+
+            // Put the prepared HTML in a stream.
+            MemoryStream response = new MemoryStream(Encoding.UTF8.GetBytes(responseText.ToNonNullString()));
+            response.Position = 0;
+            WebOperationContext.Current.OutgoingResponse.ContentType = "text/html";
+
+            // Return the stream containg the HTML.
+            return response;
+        }
+
+        /// <summary>
         /// Releases the unmanaged resources used by the web service and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
@@ -621,6 +711,20 @@ namespace TVA.Web.Services
         {
             if (ServiceProcessException != null)
                 ServiceProcessException(this, new EventArgs<Exception>(exception));
+        }
+
+        private IEnumerable<MemberInfo> GetMethods(Type contract)
+        {
+            List<Type> types = new List<Type>();
+            List<MemberInfo> methods = new List<MemberInfo>();
+            types.Add(contract);
+            types.AddRange(contract.GetInterfaces());
+            foreach (Type type in types)
+            {
+                methods.AddRange(type.GetMethods());
+            }
+
+            return methods.OrderBy(method => method.Name);
         }
 
         #endregion

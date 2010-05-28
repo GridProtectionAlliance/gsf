@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  05/28/2010 - Pinal C. Patel
+//       Added an endpoint for web service help.
 //
 //*******************************************************************************************************
 
@@ -232,6 +234,8 @@
 #endregion
 
 using System;
+using System.IO;
+using System.ServiceModel;
 using System.ServiceModel.Web;
 using TVA.Configuration;
 
@@ -263,6 +267,7 @@ namespace TVA.Web.Services
     /// <summary>
     /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
+    [ServiceContract()]
     public interface IRestService : ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
@@ -305,6 +310,17 @@ namespace TVA.Web.Services
         /// Gets the <see cref="WebServiceHost"/> hosting the web service.
         /// </summary>
         WebServiceHost ServiceHost { get; }
+
+        #endregion
+
+        #region [ Methods ]
+        
+        /// <summary>
+        /// Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
+        /// </summary>
+        /// <returns>An <see cref="Stream"/> object containing the HTML help.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/help")]
+        Stream Help();
 
         #endregion
     }

@@ -232,6 +232,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Web;
 using TVA.Security;
+using TVA.Web.Services;
 
 namespace TVA.Web.Embedded
 {
@@ -239,18 +240,15 @@ namespace TVA.Web.Embedded
     /// Embedded WCF REST service contract used for securing external facing WCF services.
     /// </summary>
     [ServiceContract()]
-    public interface ISecurityService
+    public interface ISecurityService : IRestService
     {
         /// <summary>
-        /// Logins a user.
+        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
         /// </summary>
-        /// <param name="username">Username of the user to login.</param>
-        /// <param name="password">Password of the user to login.</param>
-        /// <returns>An <see cref="UserData"/> object of the logged in user.</returns>
+        /// <param name="username">Username of the user.</param>
+        /// <param name="password">Password of the user.</param>
+        /// <returns>An <see cref="UserData"/> object of the user.</returns>
         [OperationContract(), WebGet(UriTemplate = "/login/{username}/{password}")]
         UserData Login(string username, string password);
-
-        //[OperationContract(), WebGet(UriTemplate = "/help")]
-        //Stream Help();
     }
 }

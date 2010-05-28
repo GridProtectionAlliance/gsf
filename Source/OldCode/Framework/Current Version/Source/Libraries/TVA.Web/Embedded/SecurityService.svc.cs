@@ -232,8 +232,10 @@
 */
 #endregion
 
+using System.ComponentModel;
 using System.ServiceModel.Activation;
 using TVA.Security;
+using TVA.Web.Services;
 
 namespace TVA.Web.Embedded
 {
@@ -241,14 +243,15 @@ namespace TVA.Web.Embedded
     /// Embedded WCF REST service used for securing external facing WCF services.
     /// </summary>
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
-    public class SecurityService : ISecurityService
+    public class SecurityService : RestService, ISecurityService
     {
         /// <summary>
-        /// Logins a user.
+        /// Authenticates a user and caches the security context upon successful authentication for subsequent use.
         /// </summary>
-        /// <param name="username">Username of the user to login.</param>
-        /// <param name="password">Password of the user to login.</param>
-        /// <returns>An <see cref="UserData"/> object of the logged in user.</returns>
+        /// <param name="username">Username of the user.</param>
+        /// <param name="password">Password of the user.</param>
+        /// <returns>An <see cref="UserData"/> object of the user.</returns>
+        [Description("Authenticates a user and caches the security context upon successful authentication for subsequent use.")]
         public UserData Login(string username, string password)
         {
             SecurityProvider provider = SecurityProvider.CreateProvider(username);
@@ -257,56 +260,5 @@ namespace TVA.Web.Embedded
 
             return provider.UserData;
         }
-
-        //public Stream Help()
-        //{
-        //    string service = this.GetType().Name;
-
-        //    StringBuilder responseText = new StringBuilder();
-        //    responseText.Append("<html>");
-        //    responseText.Append("<head>");
-        //    responseText.AppendFormat("    <title>{0} - Documentation</title>", service);
-        //    responseText.Append("    <style type=\"text/css\">");
-        //    responseText.Append("        body {margin: 0px;padding: 0px;font-family: Calibri, Tahoma, Arial}");
-        //    responseText.Append("        .banner {padding: 5px 5px 5px 15px;background-color: Gray;color: White;}");
-        //    responseText.Append("        .content {margin: 15px;}");
-        //    responseText.Append("    </style>");
-        //    responseText.Append("</head>");
-        //    responseText.Append("<body>");
-        //    responseText.Append("    <div class=\"banner\">");
-        //    responseText.AppendFormat("        <h1>{0}</h1>", service);
-        //    responseText.Append("    </div>");
-        //    responseText.Append("    <div class=\"content\">");
-        //    responseText.Append("        <h2>Available Endpoints</h2>");
-        //    responseText.Append("        <ul>");
-        //    WebGetAttribute webGetAttribute;
-        //    WebInvokeAttribute webInvokeAttribute;
-        //    foreach (MethodInfo method in typeof(ISecurityService).GetMethods())
-        //    {
-        //        if (method.TryGetAttribute(out webGetAttribute))
-        //        {
-        //            responseText.AppendFormat("            <li><b>GET {0}</b></li>", webGetAttribute.UriTemplate);
-        //        }
-        //        else if (method.TryGetAttribute(out webInvokeAttribute))
-        //        {
-        //            responseText.AppendFormat("            <li><b>{0} {1}</b></li>", webInvokeAttribute.Method, webInvokeAttribute.UriTemplate);
-        //        }
-        //    }
-        //    responseText.Append("        </ul>");
-        //    responseText.Append("    </div>");
-
-        //    responseText.Append("</body>");
-        //    responseText.Append("</html>");
-
-        //    MemoryStream response = new MemoryStream();
-        //    StreamWriter writer = new StreamWriter(response);
-        //    writer.Write(responseText.ToString());
-        //    writer.Flush();
-        //    response.Position = 0;
-
-        //    WebOperationContext.Current.OutgoingResponse.ContentType = "text/html";
-
-        //    return response;
-        //}
     }
 }
