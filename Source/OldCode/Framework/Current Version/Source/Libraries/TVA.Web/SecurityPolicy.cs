@@ -251,7 +251,7 @@ namespace TVA.Web
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Common config file entries:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -290,7 +290,7 @@ namespace TVA.Web
     /// </example>
     /// <example>
     /// Internal WCF service configuration:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -334,7 +334,7 @@ namespace TVA.Web
     /// </example>
     /// <example>
     /// External WCF service configuration:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>

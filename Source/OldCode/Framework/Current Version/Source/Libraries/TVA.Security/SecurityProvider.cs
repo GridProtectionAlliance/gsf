@@ -278,7 +278,7 @@ namespace TVA.Security
     /// <seealso cref="SecurityPrincipal"/>
     /// <example>
     /// Required config file entries:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -295,6 +295,84 @@ namespace TVA.Security
     ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This examples shows how to extend <see cref="SecurityProvider"/> to use a flat-file for the security database:
+    /// <code>
+    /// using System.Data;
+    /// using System.IO;
+    /// using TVA;
+    /// using TVA.Data;
+    /// using TVA.IO;
+    /// using TVA.Security;
+    /// 
+    /// namespace CustomSecurity
+    /// {
+    ///     public class FlatFileSecurityProvider : SecurityProvider
+    ///     {
+    ///         private const int LeastPrivilegedLevel = 5;
+    /// 
+    ///         protected override bool PopulateDataFromBackendDatabase()
+    ///         {
+    ///             // Check for a valid username.
+    ///             if (string.IsNullOrEmpty(UserData.Username))
+    ///                 return false;
+    /// 
+    ///             // Check if a file name is specified.
+    ///             if (string.IsNullOrEmpty(ConnectionString))
+    ///                 return false;
+    /// 
+    ///             // Check if file exist on file system.
+    ///             string file = FilePath.GetAbsolutePath(ConnectionString);
+    ///             if (!File.Exists(file))
+    ///                 return false;
+    /// 
+    ///             // Read the data from the specified file.
+    ///             DataTable data = File.ReadAllText(file).ToDataTable(",", true);
+    ///             DataRow[] user = data.Select(string.Format("User = '{0}'", UserData.Username));
+    ///             if (user.Length > 0)
+    ///             {
+    ///                 // User exists in the specified file.
+    ///                 UserData.IsDefined = true;
+    /// 
+    ///                 for (int i = LeastPrivilegedLevel; i >= int.Parse(user[0]["Level"].ToNonNullString()); i--)
+    ///                 {
+    ///                     UserData.Roles.Add(i.ToString());
+    ///                 }
+    ///             }
+    /// 
+    ///             return true;
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// Config file entries that go along with the above example:
+    /// <code language="XML">
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="Security.csv" description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="CustomSecurity.FlatFileSecurityProvider, CustomSecurity"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
@@ -1034,12 +1112,29 @@ namespace TVA.Security
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
             {
                 if (IsRegexMatch(inclusion.Key, resource) &&
-                    (inclusion.Value.Trim() == "*" || Thread.CurrentPrincipal.IsInRole(inclusion.Value)))
+                    (Thread.CurrentPrincipal.IsInRole(inclusion.Value)))
                     return true;
             }
 
             return false;
         }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
+        /// </summary>
+        /// <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
+        /// <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
+        /// <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
+        public static bool IsRegexMatch(string spec, string target)
+        {
+            spec = spec.Replace(".", "\\.");    // Escapse special regex character '.'.
+            spec = spec.Replace("?", "\\?");    // Escapse special regex character '?'.
+            spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
+
+            // Perform a case-insensitive regex match.
+            return Regex.IsMatch(target, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
+        }
+
 
         /// <summary>
         /// Encrypts the password to a one-way hash using the SHA1 hash algorithm.
@@ -1070,16 +1165,6 @@ namespace TVA.Security
 
                 throw new SecurityException(message.ToString());
             }
-        }
-
-        private static bool IsRegexMatch(string spec, string url)
-        {
-            spec = spec.Replace(".", "\\.");    // Escapse special regex character '.'.
-            spec = spec.Replace("?", "\\?");    // Escapse special regex character '?'.
-            spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
-
-            // Perform a case-insensitive regex match.
-            return Regex.IsMatch(url, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
         }
 
         private static SecurityProvider SetupPrincipal(SecurityProvider provider, bool restore)

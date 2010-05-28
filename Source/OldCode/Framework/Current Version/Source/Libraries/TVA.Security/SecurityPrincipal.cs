@@ -319,7 +319,7 @@ namespace TVA.Security
                 {
                     foreach (string role in roles.Split(','))
                     {
-                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (string.Compare(role.Trim(), currentRole, true) == 0)) != null)
+                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProvider.IsRegexMatch(role.Trim(), currentRole))) != null)
                             return true;
                     }
 

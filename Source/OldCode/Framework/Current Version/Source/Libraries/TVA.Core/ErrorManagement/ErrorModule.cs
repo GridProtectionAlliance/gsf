@@ -250,7 +250,7 @@ namespace TVA.ErrorManagement
     /// <seealso cref="ErrorLogger"/>
     /// <example>
     /// Below is the config file entry required for enabling error handling using <see cref="ErrorModule"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <configuration>
     ///   <system.web>
@@ -262,7 +262,7 @@ namespace TVA.ErrorManagement
     /// ]]>
     /// </code>
     /// Below is the config file entry required for changing the settings of <see cref="ErrorModule.Logger"/>:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <configuration>
     ///   <configSections>

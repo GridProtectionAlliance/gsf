@@ -244,7 +244,7 @@ namespace TVA.Windows.Forms
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Required config file entries:
-    /// <code>
+    /// <code language="XML">
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
