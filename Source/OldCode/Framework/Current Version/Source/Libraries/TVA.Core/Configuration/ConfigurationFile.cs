@@ -319,7 +319,7 @@ namespace TVA.Configuration
     /// }
     /// </code>
     /// This example shows the content of the config file from the sample code above:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8"?>
     /// <configuration>

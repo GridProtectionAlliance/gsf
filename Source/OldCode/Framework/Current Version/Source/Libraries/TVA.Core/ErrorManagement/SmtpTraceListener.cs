@@ -252,7 +252,7 @@ namespace TVA.ErrorManagement
     /// </summary>
     /// <example>
     /// Below is the config file entry required for enabling e-mail based tracing using <see cref="SmtpTraceListener"/>:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <configuration>
     ///   <system.diagnostics>

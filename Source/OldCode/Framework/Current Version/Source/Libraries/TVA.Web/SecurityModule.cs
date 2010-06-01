@@ -250,7 +250,7 @@ namespace TVA.Web
     /// <seealso cref="SecurityProvider"/>
     /// <example>
     /// Required config file entries:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>

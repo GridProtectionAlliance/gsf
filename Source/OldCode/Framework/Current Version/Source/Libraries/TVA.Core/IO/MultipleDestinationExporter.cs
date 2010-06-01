@@ -293,7 +293,7 @@ namespace TVA.IO
     /// </code>
     /// This example shows the config file entry that can be used to specify the <see cref="ExportDestination"/> 
     /// used by the <see cref="MultipleDestinationExporter"/> when exporting data:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <exportDestinations>
     ///   <add name="ExportTimeout" value="-1" description="Total allowed time for all exports to execute in milliseconds."

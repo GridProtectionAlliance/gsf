@@ -278,7 +278,7 @@ namespace TVA.Security
     /// <seealso cref="SecurityPrincipal"/>
     /// <example>
     /// Required config file entries:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
@@ -357,7 +357,7 @@ namespace TVA.Security
     /// }
     /// </code>
     /// Config file entries that go along with the above example:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
