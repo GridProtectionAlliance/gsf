@@ -247,7 +247,7 @@ namespace TVA.Historian.DataServices
     /// </summary>
     /// <example>
     /// This is the output for <see cref="SerializableTimeSeriesData"/> serialized using <see cref="XmlSerializer"/>:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <?xml version="1.0" encoding="utf-8" ?> 
     /// <TimeSeriesData xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
@@ -262,7 +262,7 @@ namespace TVA.Historian.DataServices
     /// ]]>
     /// </code>
     /// This is the output for <see cref="SerializableTimeSeriesData"/> serialized using <see cref="DataContractSerializer"/>:
-    /// <code language="XML">
+    /// <code>
     /// <![CDATA[
     /// <TimeSeriesData xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
     ///   <TimeSeriesDataPoints>
