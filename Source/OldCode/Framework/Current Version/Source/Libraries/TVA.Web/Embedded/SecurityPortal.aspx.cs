@@ -10,6 +10,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  06/02/2010 - Pinal C. Patel
+//       Added sample customization config file entries to code comments.
+//       Modified to set the text cursor focus on input fields for ease of use.
 //
 //*******************************************************************************************************
 
@@ -240,12 +243,32 @@ namespace TVA.Web.Embedded
     /// <summary>
     /// Embedded web page used by secure ASP.NET web sites for security related tasks.
     /// </summary>
+    /// <example>
+    /// Config file entries for customizing the page:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityPortal>
+    ///       <add name="CompanyName" value="My Company" description="Name of the company." encrypted="false" />
+    ///       <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
+    ///       <add name="CompanyLogo" value="~/images/MyCompanyLogo.png" description="Image file of the company's logo." encrypted="false" />
+    ///     </securityPortal>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
     public partial class SecurityPortal : System.Web.UI.Page
     {
         #region [ Members ]
 
         // Constants
-        private const string CookieName = "SecurityProvider";
+        private const string CookieName = "SecurityPortal";
         private const string StaticPageTitle = "Security Portal";
         private const string SettingsCategory = "SecurityPortal";
         private const string UnauthorizedErrorCode = "401";
@@ -254,7 +277,7 @@ namespace TVA.Web.Embedded
         private const string EmbeddedWarningImage = "TVA.Web.Embedded.Images.Warning.png";
         private const string EmbeddedCompanyLogo = "TVA.Web.Embedded.Images.TVALogo.png";
         private const string DefaultCompanyName = "Tennessee Valley Authority";
-        private const string DefaultCompanySite = "http://www.tva.gov";
+        private const string DefaultCompanyLink = "http://www.tva.gov";
 
         #endregion
 
@@ -286,11 +309,11 @@ namespace TVA.Web.Embedded
                 CompanyLink.Text = DefaultCompanyName;
 
             // Setup company link.
-            setting = settings["CompanySite"];
+            setting = settings["CompanyLink"];
             if (setting != null)
                 CompanyLink.NavigateUrl = setting.Value;
             else
-                CompanyLink.NavigateUrl = DefaultCompanySite;
+                CompanyLink.NavigateUrl = DefaultCompanyLink;
 
             HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
             WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
@@ -306,8 +329,15 @@ namespace TVA.Web.Embedded
                 if (string.IsNullOrEmpty(UsernameInput.Text))
                 {
                     UsernameInput.Text = Response.Cookies[CookieName]["Username"];
-                    if (!string.IsNullOrEmpty(UsernameInput.Text))
+                    if (string.IsNullOrEmpty(UsernameInput.Text))
+                    {
+                        UsernameInput.Focus();
+                    }
+                    else
+                    {
+                        PasswordInput.Focus();
                         RememberMeCheckBox.Checked = true;
+                    }
                 }
             }
             else if (Request["s"] == AccessDeniedErrorCode)

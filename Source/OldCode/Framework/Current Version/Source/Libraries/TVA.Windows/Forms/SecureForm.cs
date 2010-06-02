@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/26/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  06/02/2010 - Pinal C. Patel
+//       Added authentication check in Form.Load event.
 //
 //*******************************************************************************************************
 
@@ -307,7 +309,11 @@ namespace TVA.Windows.Forms
             if (SecurityProvider.Current == null)
                 SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
 
-            // Verify the top-level security permission on the resource.
+            // Verify that the current thread principal has been authenticated.
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
+                throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
+
+            // Perform a top-level permission check on the resource being accessed.
             if (!SecurityProvider.IsResourceAccessible(resource))
                 throw new SecurityException(string.Format("Access to {0} is denied", resource));
         }

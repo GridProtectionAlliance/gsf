@@ -13,6 +13,8 @@
 //  05/27/2010 - Pinal C. Patel
 //       Added usage example to code comments.
 //       Modified Evaluate() to make use of IncludedResources and ExcludedResources config file settings.
+//  06/02/2010 - Pinal C. Patel
+//       Added authentication check to Evaluate() method.
 //
 //*******************************************************************************************************
 
@@ -450,6 +452,10 @@ namespace TVA.Web
 
                 // Setup the principal to be attached to the thread on which WCF service will execute.
                 evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
+
+                // Verify that the current thread principal has been authenticated.
+                if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
+                    throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
 
                 // Perform a top-level permission check on the resource being accessed.
                 if (!SecurityProvider.IsResourceAccessible(resource))
