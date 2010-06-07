@@ -267,7 +267,7 @@ namespace TVA.Web
     ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
     ///         description="Connection string to be used for connection to the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
@@ -348,7 +348,8 @@ namespace TVA.Web
     ///   <system.serviceModel>
     ///     <services>
     ///       <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" behaviorConfiguration="endpointBehavior" />
+    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
+    ///                   bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior"/>
     ///       </service>
     ///     </services>
     ///     <behaviors>
@@ -367,6 +368,13 @@ namespace TVA.Web
     ///         </behavior>
     ///       </serviceBehaviors>
     ///     </behaviors>
+    ///     <bindings>
+    ///       <webHttpBinding>
+    ///         <binding name="endpointBinding">
+    ///           <security mode="None" />
+    ///         </binding>
+    ///       </webHttpBinding>
+    ///     </bindings>
     ///     <serviceHostingEnvironment aspNetCompatibilityEnabled="true" />
     ///   </system.serviceModel>
     /// </configuration>

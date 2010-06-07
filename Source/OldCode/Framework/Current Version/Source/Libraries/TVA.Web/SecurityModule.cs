@@ -264,7 +264,7 @@ namespace TVA.Web
     ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
     ///         description="Connection string to be used for connection to the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (CustomPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
