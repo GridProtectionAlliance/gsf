@@ -519,7 +519,7 @@ namespace TVA.Measurements
                 // We only update timer period if it has changed since last call. Note that this is necessary since
                 // timer periods are defined as integers but actual period is typically uneven (e.g., 33.333 ms)
                 if (m_lastFramePeriod != period)
-                    Timer.Period = period;
+                    m_timer.Period = period;
 
                 m_lastFramePeriod = period;
             }
