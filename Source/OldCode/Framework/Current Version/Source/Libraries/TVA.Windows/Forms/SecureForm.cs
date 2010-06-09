@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  06/02/2010 - Pinal C. Patel
 //       Added authentication check in Form.Load event.
+//  06/09/2010 - Pinal C. Patel
+//       Added design-time check in Form.Load event to skip authentication when in design mode.
 //
 //*******************************************************************************************************
 
@@ -296,6 +298,10 @@ namespace TVA.Windows.Forms
 
         private void SecureForm_Load(object sender, EventArgs e)
         {
+            // Don't proceed if the form is opened in design mode.
+            if (DesignMode)
+                return;
+
             // Check if the resource is excluded from being secured.
             string resource = GetResourceName();
             if (!SecurityProvider.IsResourceSecurable(resource))
