@@ -6,7 +6,7 @@ using System.Web.UI;
 using TVA.Web.Hosting;
 
 // Assembly identity attributes.
-[assembly: AssemblyVersion("1.1.50.51403")]
+[assembly: AssemblyVersion("1.1.51.51568")]
 
 // Informational attributes.
 [assembly: AssemblyCompany("TVA")]
