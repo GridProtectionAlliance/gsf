@@ -372,8 +372,9 @@ namespace Hadoop.Replication
                 string justFileName = FilePath.GetFileName(file);
                 DataRow record = null;
                 DataRow[] filter = replicationLog.Select(string.Format("FileName ='{0}'", justFileName));
+                FileInfo fileInfo = new FileInfo(file);
 
-                WriteTrace("Replicating file '{0}'", FilePath.TrimFileName(file, FilePathTrimLength));
+                WriteTrace("Replicating file '{0}' of size {1:0,0} KB", FilePath.TrimFileName(file, FilePathTrimLength), Convert.ToInt32(fileInfo.Length / 1024D));
                 try
                 {
                     // Continue to "ping" FTP server so that it knows we are alive and well
@@ -460,7 +461,7 @@ namespace Hadoop.Replication
                                 try
                                 {
                                     WriteTrace("Deleting original file");
-                                    FileInfo fileInfo = new FileInfo(file);
+
                                     if (fileInfo.IsReadOnly)
                                         fileInfo.IsReadOnly = false;
                                     File.Delete(file);
