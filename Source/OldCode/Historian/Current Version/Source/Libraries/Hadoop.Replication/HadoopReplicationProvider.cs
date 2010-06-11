@@ -24,12 +24,19 @@
 //  03/03/2010 - Pinal C. Patel
 //       Modified to include files in sub directories of the root directory to be included in the 
 //       replication process.
+//  05/20/2010 - Pinal C. Patel
+//       Added the option to allow for deletion of the original files after being replicated.
+//  06/10/2010 - Pinal C. Patel
+//       Added the option to allow multiple archive locations to be specified delimited by ';' in 
+//       ArchiveLocation for convenience.
+//       Added extensive debug messages to enhance the debugging experience of the adapter.
 //
 //*******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
@@ -79,6 +86,16 @@ namespace Hadoop.Replication
         public const int DefaultHashRequestWaitTime = 3000;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="DeleteOriginalFiles"/> property.
+        /// </summary>
+        public const bool DefaultDeleteOriginalFiles = false;
+
+        /// <summary>
+        /// Length to be used for the <see cref="FilePath.TrimFileName"/> method.
+        /// </summary>
+        private const int FilePathTrimLength = 30;
+
+        /// <summary>
         /// Name of the file where replication history information is to be serialized.
         /// </summary>
         private const string ReplicationLogFile = "HadoopReplicationLog.xml";
@@ -89,6 +106,7 @@ namespace Hadoop.Replication
         private bool m_applyBufferPadding;
         private int m_hashRequestAttempts;
         private int m_hashRequestWaitTime;
+        private bool m_deleteOriginalFiles;
 
         #endregion
 
@@ -105,6 +123,7 @@ namespace Hadoop.Replication
             m_applyBufferPadding = DefaultApplyBufferPadding;
             m_hashRequestAttempts = DefaultHashRequestAttempts;
             m_hashRequestWaitTime = DefaultHashRequestWaitTime;
+            m_deleteOriginalFiles = DefaultDeleteOriginalFiles;
         }
 
         #endregion
@@ -202,6 +221,21 @@ namespace Hadoop.Replication
             }
         }
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the original files are to be deleted after being replicated successfully.
+        /// </summary>
+        public bool DeleteOriginalFiles
+        {
+            get
+            {
+                return m_deleteOriginalFiles;
+            }
+            set
+            {
+                m_deleteOriginalFiles = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -222,6 +256,7 @@ namespace Hadoop.Replication
                 settings["ApplyBufferPadding", true].Update(m_applyBufferPadding);
                 settings["HashRequestAttempts", true].Update(m_hashRequestAttempts);
                 settings["HashRequestWaitTime", true].Update(m_hashRequestWaitTime);
+                settings["DeleteOriginalFiles", true].Update(m_deleteOriginalFiles);
                 config.Save();
             }
         }
@@ -242,11 +277,13 @@ namespace Hadoop.Replication
                 settings.Add("ApplyBufferPadding", m_applyBufferPadding, "True if the buffer used for computing file hash is to be padded with null bytes for replicating HDFS hashing bug, otherwise False.");
                 settings.Add("HashRequestAttempts", m_hashRequestAttempts, "Maximum number of requests to be made to the FTP server for HDFS file hash.");
                 settings.Add("HashRequestWaitTime", m_hashRequestWaitTime, "Time (in milliseconds) to wait between requests to the FTP server for HDFS file hash.");
+                settings.Add("DeleteOriginalFiles", m_deleteOriginalFiles, "True if the original files are to be deleted after being replicated successfully; otherwise False.");
                 BytesPerCrc32 = settings["BytesPerCrc32"].ValueAs(m_bytesPerCrc32);
                 HdfsBlockSize = settings["HdfsBlockSize"].ValueAs(m_hdfsBlockSize);
                 ApplyBufferPadding = settings["ApplyBufferPadding"].ValueAs(m_applyBufferPadding);
                 HashRequestAttempts = settings["HashRequestAttempts"].ValueAs(m_hashRequestAttempts);
                 HashRequestWaitTime = settings["HashRequestWaitTime"].ValueAs(m_hashRequestWaitTime);
+                DeleteOriginalFiles = settings["DeleteOriginalFiles"].ValueAs(m_deleteOriginalFiles);
             }
         }
 
@@ -255,6 +292,8 @@ namespace Hadoop.Replication
         /// </summary>
         protected override void ReplicateArchive()
         {
+            WriteTrace("Archive replication started");
+
             // Parse FTP client information.
             Uri replicaUri = new Uri(ReplicaLocation);
             string[] credentials = replicaUri.UserInfo.Split(':');
@@ -267,157 +306,39 @@ namespace Hadoop.Replication
             FtpClient ftpClient = new FtpClient();
             ftpClient.Server = replicaUri.Host;
             ftpClient.Port = replicaUri.Port;
+            ftpClient.FileTransferProgress += FtpClient_FileTransferProgress;
 
             // Initialize the replication log.
+            WriteTrace("Initializing archive replication log");
             DataTable replicationLog = new DataTable("ReplicationRecord");
             replicationLog.Columns.Add("DateTime");
             replicationLog.Columns.Add("FileName");
             replicationLog.Columns.Add("FileHash");
             replicationLog.Columns.Add("FileSync");
+            replicationLog.Columns.Add("HashingTime");
             replicationLog.Columns.Add("TransferTime");
             replicationLog.Columns.Add("TransferRate");
             replicationLog.Columns.Add("ServerRequests");
             replicationLog.Columns.Add("ServerResponse");
             if (File.Exists(FilePath.GetAbsolutePath(ReplicationLogFile)))
                 replicationLog.ReadXml(FilePath.GetAbsolutePath(ReplicationLogFile));
+            WriteTrace("Archive replication log initialized");
 
             try
             {
                 // Connect FTP client to server.
+                WriteTrace("Connecting to ftp://{0}:{1}", ftpClient.Server, ftpClient.Port);
                 ftpClient.Connect(credentials[0], credentials[1]);
+                WriteTrace("Connection successful");
+                WriteTrace("Changing current directory to '{0}'", replicaUri.AbsolutePath);
                 ftpClient.SetCurrentDirectory(replicaUri.LocalPath);
+                WriteTrace("Current directory changed to '{0}'", ftpClient.CurrentDirectory.FullPath);
 
-                // Create list of files to be replicated.
-                List<string> files = new List<string>(Directory.GetFiles(ArchiveLocation, "*_to_*.d", SearchOption.AllDirectories));
-                files.Sort();
-
-                // Process all the files in the list.
-                foreach (string file in files)
+                // Process all archive location(s).
+                foreach (string folder in ArchiveLocation.Split(';'))
                 {
-                    bool uploading = false;
-                    string justFileName = FilePath.GetFileName(file);
-                    try
-                    {
-                        // Continue to "ping" FTP server so that it knows we are alive and well
-                        ftpClient.ControlChannel.Command("NOOP");
-
-                        // Compute HDFS file hash.
-                        byte[] localHash = ComputeHdfsFileHash(file, m_bytesPerCrc32, m_hdfsBlockSize, m_applyBufferPadding);
-
-                        // Check if file is to be uploaded.
-                        int requests;
-                        double transferStartTime, transferTotalTime;
-                        DataRow record = null;
-                        DataRow[] filter = replicationLog.Select(string.Format("FileName ='{0}'", justFileName));
-                        if (filter.Length == 0 ||
-                            filter[0]["FileSync"].ToString() == "Fail" ||
-                            localHash.CompareTo(ByteEncoding.Hexadecimal.GetBytes(filter[0]["FileHash"].ToString())) != 0)
-                        {
-                            // Upload file to HDFS since:
-                            // 1) File has not been replicated previously.
-                            // OR
-                            // 2) File has been replicated in the past, but its content has changed since then.
-                            uploading = true;
-                            transferStartTime = Common.SystemTimer;
-                            ftpClient.CurrentDirectory.PutFile(file);
-                            transferTotalTime = Common.SystemTimer - transferStartTime;
-
-                            // Request file hash from HDFS.
-                            for (requests = 1; requests <= m_hashRequestAttempts; requests++)
-                            {
-                                try
-                                {
-                                    // Wait before request.
-                                    Thread.Sleep(m_hashRequestWaitTime);
-                                    // Request file hash.
-                                    ftpClient.ControlChannel.Command(string.Format("HDFSCHKSM {0}{1}", ftpClient.CurrentDirectory.FullPath, justFileName));
-                                    // Exit when successful.
-                                    if (ftpClient.ControlChannel.LastResponse.Code == 200)
-                                        break;
-                                }
-                                catch
-                                {
-                                    // Apache MINA FTP server acts funny with updoad & hash check of large files.
-                                    try
-                                    {
-                                        ftpClient.Close();
-                                    }
-                                    catch { }
-                                    try
-                                    {
-                                        ftpClient.Connect(credentials[0], credentials[1]);
-                                        ftpClient.SetCurrentDirectory(replicaUri.LocalPath);
-                                    }
-                                    catch { }
-                                }
-                            }
-
-                            // Initialize replication log entry.
-                            if (filter.Length > 0)
-                            {
-                                record = filter[0];
-                            }
-                            else
-                            {
-                                record = replicationLog.NewRow();
-                                replicationLog.Rows.Add(record);
-                            }
-
-                            // Update replication log entry.
-                            record["DateTime"] = DateTime.UtcNow;
-                            record["FileName"] = justFileName;
-                            record["FileHash"] = ByteEncoding.Hexadecimal.GetString(localHash);
-                            record["TransferTime"] = transferTotalTime.ToString("0.000");
-                            record["TransferRate"] = ((new FileInfo(file).Length / SI2.Kilo) / transferTotalTime).ToString("0.00");
-                            record["ServerRequests"] = requests < m_hashRequestAttempts ? requests : m_hashRequestAttempts;
-                            record["ServerResponse"] = ftpClient.ControlChannel.LastResponse.Message.RemoveCrLfs();
-
-                            // Compare local and HDFS hash.
-                            if (ftpClient.ControlChannel.LastResponse.Code == 200 &&
-                                localHash.CompareTo(ByteEncoding.Hexadecimal.GetBytes(ftpClient.ControlChannel.LastResponse.Message.RemoveCrLfs().Split(':')[1])) == 0)
-                            {
-                                // File uploaded and hashes match.
-                                record["FileSync"] = "Pass";
-                                OnReplicationProgress(new ProcessProgress<int>("ReplicateArchive", justFileName, 1, 1));
-
-                                // Write XML log thus far
-                                replicationLog.WriteXml(FilePath.GetAbsolutePath(ReplicationLogFile));
-                            }
-                            else
-                            {
-                                // Hashes are different - possible causes:
-                                // 1) Local file got modified after hash was computed locally.
-                                // OR
-                                // 2) Local and remote hashing algorithms are not the same.
-                                record["FileSync"] = "Fail";
-                                throw new InvalidDataException("File hash mismatch");
-                            }
-                        }
-                    }
-                    catch (ThreadAbortException)
-                    {
-                        // Delete file from FTP site if an exception is encountered when processing the file.
-                        try
-                        {
-                            if (uploading && ftpClient.IsConnected)
-                                ftpClient.CurrentDirectory.RemoveFile(justFileName);
-                        }
-                        catch { }
-                        // Re-throw the encountered exception.
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        // Delete file from FTP site if an exception is encountered when processing the file.
-                        try
-                        {
-                            if (uploading && ftpClient.IsConnected)
-                                ftpClient.CurrentDirectory.RemoveFile(justFileName);
-                        }
-                        catch { }
-                        // Notify about the encountered exception.
-                        OnReplicationException(ex);
-                    }
+                    if (!string.IsNullOrEmpty(folder))
+                        ReplicateToHadoop(ftpClient, folder.Trim(), replicationLog);
                 }
             }
             finally
@@ -425,6 +346,193 @@ namespace Hadoop.Replication
                 ftpClient.Dispose();
                 replicationLog.WriteXml(FilePath.GetAbsolutePath(ReplicationLogFile));
             }
+
+            WriteTrace("Archive replication complete");
+        }
+
+        private void ReplicateToHadoop(FtpClient ftpClient, string replicationFolder, DataTable replicationLog)
+        {
+            WriteTrace("Replicating folder '{0}'", FilePath.TrimFileName(replicationFolder, FilePathTrimLength));
+
+            // Create list of files to be replicated.
+            List<string> files = new List<string>(Directory.GetFiles(replicationFolder, "*_to_*.d", SearchOption.AllDirectories));
+            files.Sort();
+
+            // Process all the files in the list.
+            WriteTrace("Found {0} files in folder", files.Count);
+            foreach (string file in files)
+            {
+                // Initialize local variables.
+                int requests = int.MinValue;
+                bool uploading = false;
+                double hashingStartTime = double.MinValue;
+                double hashingTotalTime = double.MinValue;
+                double transferStartTime = double.MinValue;
+                double transferTotalTime = double.MinValue;
+                string justFileName = FilePath.GetFileName(file);
+                DataRow record = null;
+                DataRow[] filter = replicationLog.Select(string.Format("FileName ='{0}'", justFileName));
+
+                WriteTrace("Replicating file '{0}'", FilePath.TrimFileName(file, FilePathTrimLength));
+                try
+                {
+                    // Continue to "ping" FTP server so that it knows we are alive and well
+                    ftpClient.ControlChannel.Command("NOOP");
+
+                    // Compute HDFS file hash.
+                    WriteTrace("Hashing file");
+                    hashingStartTime = Common.SystemTimer;
+                    byte[] localHash = ComputeHdfsFileHash(file, m_bytesPerCrc32, m_hdfsBlockSize, m_applyBufferPadding);
+                    hashingTotalTime = Common.SystemTimer - hashingStartTime;
+                    WriteTrace("File hashed in {0} seconds", Convert.ToInt32(hashingTotalTime));
+
+                    // Check if file is to be uploaded.
+                    if (filter.Length == 0 ||
+                        filter[0]["FileSync"].ToString() == "Fail" ||
+                        localHash.CompareTo(ByteEncoding.Hexadecimal.GetBytes(filter[0]["FileHash"].ToString())) != 0)
+                    {
+                        // Upload file to HDFS since:
+                        // 1) File has not been replicated previously.
+                        // OR
+                        // 2) File has been replicated in the past, but its content has changed since then.
+                        uploading = true;
+                        WriteTrace("Uploading file");
+                        transferStartTime = Common.SystemTimer;
+                        ftpClient.CurrentDirectory.PutFile(file);
+                        transferTotalTime = Common.SystemTimer - transferStartTime;
+                        WriteTrace("File uploaded in {0} seconds", Convert.ToInt32(transferTotalTime));
+
+                        // Request file hash from HDFS.
+                        for (requests = 1; requests <= m_hashRequestAttempts; requests++)
+                        {
+                            try
+                            {
+                                // Wait before request.
+                                WriteTrace("Waiting {0} seconds before HDFS hash request", m_hashRequestWaitTime / 1000);
+                                Thread.Sleep(m_hashRequestWaitTime);
+                                // Request file hash.
+                                WriteTrace("Requesting HDFS hash (Attempt {0})", requests);
+                                ftpClient.ControlChannel.Command(string.Format("HDFSCHKSM {0}{1}", ftpClient.CurrentDirectory.FullPath, justFileName));
+                                WriteTrace("Hash request response - {0}", ftpClient.ControlChannel.LastResponse.Message.RemoveCrLfs());
+                                // Exit when successful.
+                                if (ftpClient.ControlChannel.LastResponse.Code == 200)
+                                    break;
+                            }
+                            catch (Exception ex)
+                            {
+                                // Try again - Apache MINA FTP server acts funny with updoad & hash check of large files.
+                                WriteTrace("Hash request error - {0}", ex.Message);
+                            }
+                        }
+
+                        // Initialize replication log entry.
+                        if (filter.Length > 0)
+                        {
+                            record = filter[0];
+                        }
+                        else
+                        {
+                            record = replicationLog.NewRow();
+                            replicationLog.Rows.Add(record);
+                        }
+
+                        // Update replication log entry.
+                        record["DateTime"] = DateTime.UtcNow;
+                        record["FileName"] = justFileName;
+                        record["FileHash"] = ByteEncoding.Hexadecimal.GetString(localHash);
+                        record["HashingTime"] = hashingTotalTime.ToString("0.000");
+                        record["TransferTime"] = transferTotalTime.ToString("0.000");
+                        record["TransferRate"] = ((new FileInfo(file).Length / SI2.Kilo) / transferTotalTime).ToString("0.00");
+                        record["ServerRequests"] = requests < m_hashRequestAttempts ? requests : m_hashRequestAttempts;
+                        record["ServerResponse"] = ftpClient.ControlChannel.LastResponse.Message.RemoveCrLfs();
+
+                        // Compare local and HDFS hash.
+                        if (ftpClient.ControlChannel.LastResponse.Code == 200 &&
+                            localHash.CompareTo(ByteEncoding.Hexadecimal.GetBytes(ftpClient.ControlChannel.LastResponse.Message.RemoveCrLfs().Split(':')[1])) == 0)
+                        {
+                            // File uploaded and hashes match.
+                            record["FileSync"] = "Pass";
+                            WriteTrace("Replication successful");
+
+                            // Deleted original file after replication.
+                            if (m_deleteOriginalFiles)
+                            {
+                                try
+                                {
+                                    WriteTrace("Deleting original file");
+                                    FileInfo fileInfo = new FileInfo(file);
+                                    if (fileInfo.IsReadOnly)
+                                        fileInfo.IsReadOnly = false;
+                                    File.Delete(file);
+                                    WriteTrace("Original file deleted");
+                                }
+                                catch (Exception ex)
+                                {
+                                    WriteTrace("File delete error - {0}", ex.Message);
+                                }
+                            }
+
+                            // Notify about the successful replication.
+                            OnReplicationProgress(new ProcessProgress<int>("ReplicateArchive", justFileName, 1, 1));
+                        }
+                        else
+                        {
+                            // Hashes are different - possible causes:
+                            // 1) Local file got modified after hash was computed locally.
+                            // OR
+                            // 2) Local and remote hashing algorithms are not the same.
+                            record["FileSync"] = "Fail";
+                            WriteTrace("Replication unsuccessful");
+                            throw new InvalidDataException("File hash mismatch");
+                        }
+
+                        // Write replication entry to the log file.
+                        WriteTrace("Updating replication log file");
+                        replicationLog.WriteXml(FilePath.GetAbsolutePath(ReplicationLogFile));
+                        WriteTrace("Replication log file updated");
+                    }
+                    else
+                    {
+                        WriteTrace("Replication skipped - file content unchanged");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteTrace("Replication error - {0}", ex.Message);
+
+                    // Delete file from FTP site if an exception is encountered when processing the file.
+                    try
+                    {
+                        if (uploading && ftpClient.IsConnected)
+                        {
+                            WriteTrace("Deleting partial upload");
+                            ftpClient.CurrentDirectory.RemoveFile(justFileName);
+                            WriteTrace("Partial upload deleted");
+                        }
+                    }
+                    catch (Exception exDelete)
+                    {
+                        WriteTrace("Delete error - {0}", exDelete.Message);
+                    }
+
+                    if (ex is ThreadAbortException)
+                        // Re-throw the encountered exception.
+                        throw;
+                    else
+                        // Notify about the encountered exception.
+                        OnReplicationException(ex);
+                }
+            }
+
+            WriteTrace("Folder '{0}' replicated", FilePath.TrimFileName(replicationFolder, FilePathTrimLength));
+        }
+
+        private void FtpClient_FileTransferProgress(object sender, EventArgs<ProcessProgress<long>, TransferDirection> e)
+        {
+            // Show transfer progress at 10% increaments.
+            long percentComplete = (e.Argument1.Complete * 100) / e.Argument1.Total;
+            if ((percentComplete % 10) == 0)
+                WriteTrace("{0}ed {1}%", e.Argument2, percentComplete);
         }
 
         #endregion
@@ -453,8 +561,11 @@ namespace Hadoop.Replication
             List<byte> blockMD5s = new List<byte>();
             byte[] readBuffer = new byte[bytesPerCrc32];
             MD5CryptoServiceProvider hasher = new MD5CryptoServiceProvider();
+
             try
             {
+                WriteTrace("Computing HDFS file hash for '{0}'", FilePath.TrimFileName(fileName, FilePathTrimLength));
+
                 // Open file whose hash is to be computed.
                 fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 // Calculate the number of HDFS blocks used by the file on HDFS.
@@ -499,10 +610,13 @@ namespace Hadoop.Replication
                         // Don't apply padding - this will compute the correct HDFS file hash as per its design.
                         blockMD5s.AddRange(blockMD5);
                     }
+
+                    WriteTrace("Block {0} MD5 - {1}", i, ByteEncoding.Hexadecimal.GetString(blockMD5));
                 }
 
                 // Compute the final file hash from the buffer that contains block MD5 hashes.
                 fileHash = hasher.ComputeHash(blockMD5s.ToArray());
+                WriteTrace("HDFS file hash - {0}", ByteEncoding.Hexadecimal.GetString(fileHash));
             }
             finally
             {
@@ -511,6 +625,11 @@ namespace Hadoop.Replication
             }
 
             return fileHash;
+        }
+
+        private static void WriteTrace(string message, params object[] args)
+        {
+            Trace.WriteLine(DateTime.Now + ": " + string.Format(message, args), typeof(HadoopReplicationProvider).Name);
         }
 
         #endregion
