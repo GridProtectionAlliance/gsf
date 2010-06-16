@@ -37,10 +37,6 @@
     <DocumentationFile>$(OutputPath)\TVA.Services.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Web.Services3, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Dependencies\Microsoft\Microsoft.Web.Services3.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -86,6 +82,10 @@
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">
       <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
       <Name>TVA.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TVA.Security\TVA.Security.csproj">
+      <Project>{4060E729-EFFD-4E50-A0D5-99C0990EF7DA}</Project>
+      <Name>TVA.Security</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

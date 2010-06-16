@@ -32,6 +32,8 @@
 //       Added new header and license agreement.
 //  10/23/2009 - Pinal C. Patel
 //       Modified ReceivedServiceUpdate event to support the change in ServiceHelper.UpdateStatus().
+//  06/16/2010 - Pinal C. Patel
+//       Made changes necessary to implement role-based security.
 //
 //*******************************************************************************************************
 
@@ -262,29 +264,6 @@ using TVA.Configuration;
 
 namespace TVA.Services
 {
-    #region [ Enumerations ]
-
-    /// <summary>
-    /// Indicates the type of <see cref="Microsoft.Web.Services3.Security.Tokens.SecurityToken"/> to be sent to the <see cref="ServiceHelper"/> for authentication.
-    /// </summary>
-    public enum IdentityToken
-    {
-        /// <summary>
-        /// No <see cref="Microsoft.Web.Services3.Security.Tokens.SecurityToken"/> is to be sent.
-        /// </summary>
-        None,
-        /// <summary>
-        /// A <see cref="Microsoft.Web.Services3.Security.Tokens.UsernameToken"/> is to be sent.
-        /// </summary>
-        Ntlm,
-        /// <summary>
-        /// A <see cref="Microsoft.Web.Services3.Security.Tokens.KerberosToken"/> is to be sent.
-        /// </summary>
-        Kerberos
-    }
-
-    #endregion
-
     /// <summary>
     /// Component that provides client-side functionality to <see cref="ServiceHelper"/>.
     /// </summary>
@@ -296,14 +275,14 @@ namespace TVA.Services
         // Constants
 
         /// <summary>
-        /// Specifies the default value for the <see cref="AuthenticationMethod"/> property.
+        /// Specifies the default value for the <see cref="Username"/> property.
         /// </summary>
-        public const IdentityToken DefaultAuthenticationMethod = IdentityToken.None;
+        public const string DefaultUsername = "";
 
         /// <summary>
-        /// Specifies the default value for the <see cref="AuthenticationInput"/> property.
+        /// Specifies the default value for the <see cref="Password"/> property.
         /// </summary>
-        public const string DefaultAuthenticationInput = "";
+        public const string DefaultPassword = "";
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -357,7 +336,7 @@ namespace TVA.Services
         /// </summary>
         /// <remarks>
         /// Set <see cref="CancelEventArgs.Cancel"/> to <b>true</b> to continue with connection attempts even after authentication fails. 
-        /// This can be useful for re-authenticating using different <see cref="AuthenticationMethod"/> and <see cref="AuthenticationInput"/>.
+        /// This can be useful for re-authenticating the <see cref="ClientHelper"/> using different <see cref="Username"/> and <see cref="Password"/>.
         /// </remarks>
         [Category("Security"),
         Description("Occurs when the ServiceHelper fails to authenticate the ClientHelper.")]
@@ -379,8 +358,8 @@ namespace TVA.Services
 
         // Fields
         private ClientBase m_remotingClient;
-        private IdentityToken m_authenticationMethod;
-        private string m_authenticationInput;
+        private string m_username;
+        private string m_password;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_attemptReconnection;
@@ -398,8 +377,8 @@ namespace TVA.Services
         public ClientHelper()
             : base()
         {
-            m_authenticationMethod = DefaultAuthenticationMethod;
-            m_authenticationInput = DefaultAuthenticationInput;
+            m_username = DefaultUsername;
+            m_password = DefaultPassword;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
         }
@@ -455,42 +434,46 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets or sets the type of <see cref="IdentityToken"/> to be sent to the <see cref="ServiceHelper"/> for authentication.
+        /// Gets or sets the username of the <see cref="ClientHelper"/>'s user to be used for authenticating with the <see cref="ServiceHelper"/>.
         /// </summary>
+        /// <exception cref="ArgumentNullException">The value being specified is a null string.</exception>
         [Category("Security"),
-        DefaultValue(DefaultAuthenticationMethod),
-        Description("Type of IdentityToken to be sent to the ServiceHelper for authentication.")]
-        public IdentityToken AuthenticationMethod
+        DefaultValue(DefaultUsername),
+        Description("Username of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
+        public string Username
         {
             get
             {
-                return m_authenticationMethod;
-            }
-            set
-            {
-                m_authenticationMethod = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets input text for the current <see cref="AuthenticationMethod"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null string.</exception>
-        [Category("Security"),
-        DefaultValue(DefaultAuthenticationInput),
-        Description("Input text for the current AuthenticationMethod.")]
-        public string AuthenticationInput
-        {
-            get
-            {
-                return m_authenticationInput;
+                return m_username;
             }
             set
             {
                 if (value == null)
                     throw new ArgumentNullException("value");
 
-                m_authenticationInput = value;
+                m_username = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the password of the <see cref="ClientHelper"/>'s user to be used for authenticating with the <see cref="ServiceHelper"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being specified is a null string.</exception>
+        [Category("Security"),
+        DefaultValue(DefaultPassword),
+        Description("Password of the ClientHelper's user to be used for authenticating with the ServiceHelper.")]
+        public string Password
+        {
+            get
+            {
+                return m_password;
+            }
+            set
+            {
+                if (value == null)
+                    throw new ArgumentNullException("value");
+
+                m_password = value;
             }
         }
 
@@ -640,8 +623,8 @@ namespace TVA.Services
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["AuthenticationMethod", true].Update(m_authenticationMethod);
-                settings["AuthenticationInput", true].Update(m_authenticationInput);
+                settings["Username", true].Update(m_username);
+                settings["Password", true].Update(m_password);
                 config.Save();
             }
         }
@@ -661,10 +644,10 @@ namespace TVA.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("AuthenticationMethod", m_authenticationMethod, "Authentication method (None; Ntlm; Kerberos) used for security.");
-                settings.Add("AuthenticationInput", m_authenticationInput, "Input text for the current AuthenticationMethod.", true);
-                AuthenticationMethod = settings["AuthenticationMethod"].ValueAs(m_authenticationMethod);
-                AuthenticationInput = settings["AuthenticationInput"].ValueAs(m_authenticationInput);
+                settings.Add("Username", m_username, "Username to be used for authentication with the service.");
+                settings.Add("Password", m_password, "Password to be used for authentication with the service.", true);
+                Username = settings["Username"].ValueAs(m_username);
+                Password = settings["Password"].ValueAs(m_password);
             }
         }
 

@@ -9,7 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft", "Microsoft", "{
 		Dependencies\Microsoft\Microsoft.Pex.Linq.dll = Dependencies\Microsoft\Microsoft.Pex.Linq.dll
 		Dependencies\Microsoft\Microsoft.Stubs.Framework.dll = Dependencies\Microsoft\Microsoft.Stubs.Framework.dll
 		Dependencies\Microsoft\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll = Dependencies\Microsoft\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
-		Dependencies\Microsoft\Microsoft.Web.Services3.dll = Dependencies\Microsoft\Microsoft.Web.Services3.dll
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{8D2945DE-CD0F-48B0-9911-BE858BFBCBEC}"
@@ -47,7 +46,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
 	ProjectSection(SolutionItems) = preProject
 		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
-		Templates\CS\TVAWindowsServiceConsole.zip = Templates\CS\TVAWindowsServiceConsole.zip
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"

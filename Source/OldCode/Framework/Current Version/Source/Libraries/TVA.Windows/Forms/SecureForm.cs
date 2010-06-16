@@ -321,7 +321,7 @@ namespace TVA.Windows.Forms
 
             // Perform a top-level permission check on the resource being accessed.
             if (!SecurityProvider.IsResourceAccessible(resource))
-                throw new SecurityException(string.Format("Access to {0} is denied", resource));
+                throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
         }
     }
 }

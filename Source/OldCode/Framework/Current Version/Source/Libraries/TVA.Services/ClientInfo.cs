@@ -22,6 +22,8 @@
 //       Added new header and license agreement.
 //  02/08/2010 - Pinal C. Patel
 //       Corrected the assignment of ClientName property for web applications.
+//  06/16/2010 - Pinal C. Patel
+//       Made changes necessary to implement role-based security.
 //
 //*******************************************************************************************************
 
@@ -242,13 +244,10 @@
 #endregion
 
 using System;
-using System.IO;
-using System.Runtime.Serialization;
+using System.Security.Principal;
 using System.Web.Hosting;
-using System.Xml;
-using Microsoft.Web.Services3.Security;
-using Microsoft.Web.Services3.Security.Tokens;
 using TVA.Identity;
+using TVA.Reflection;
 
 namespace TVA.Services
 {
@@ -267,14 +266,12 @@ namespace TVA.Services
 
         // Fields
         private Guid m_clientID;
-        private DateTime m_connectedAt;
         private ApplicationType m_clientType;
         private string m_clientName;
-        private string m_userName;
+        private IPrincipal m_clientUser;
+        private string m_clientUserCredentials;
         private string m_machineName;
-        private string m_serializedIdentityToken;
-        [NonSerialized()]
-        private SecurityToken m_deserializedIdentityToken;
+        private DateTime m_connectedAt;
 
         #endregion
 
@@ -294,72 +291,33 @@ namespace TVA.Services
         /// <param name="parent">An <see cref="ClientHelper"/> object.</param>
         public ClientInfo(ClientHelper parent)
         {
-            m_clientID = Guid.Empty;
+            // Initialize member variables.
             m_clientType = Common.GetApplicationType();
             m_machineName = Environment.MachineName;
 
-            // Get the user login id.
-            if (!string.IsNullOrEmpty(UserInfo.RemoteUserID))
-                m_userName = UserInfo.RemoteUserID;
+            // Initialize user principal.
+            if (m_clientType == ApplicationType.Web)
+                m_clientUser = new GenericPrincipal(new GenericIdentity(UserInfo.RemoteUserID), new string[] { });
             else
-                m_userName = UserInfo.CurrentUserID;
+                m_clientUser = new GenericPrincipal(new GenericIdentity(UserInfo.CurrentUserID), new string[] { });
 
-            // Get the type of client application.
-            if (ClientType == ApplicationType.WindowsCui || ClientType == ApplicationType.WindowsGui)
-            {
-                m_clientName = AppDomain.CurrentDomain.FriendlyName;
-            }
-            else if (ClientType == ApplicationType.Web)
+            // Initialize user credentials.
+            if (parent == null || string.IsNullOrEmpty(parent.Username) || string.IsNullOrEmpty(parent.Password))
+                m_clientUserCredentials = string.Empty;
+            else
+                m_clientUserCredentials = string.Format("{0}:{1}", parent.Username, parent.Password);
+
+            // Initialize client application name.
+            if (m_clientType == ApplicationType.Web)
             {
                 if (HostingEnvironment.ApplicationVirtualPath == "/")
                     m_clientName = HostingEnvironment.SiteName;
                 else
                     m_clientName = HostingEnvironment.ApplicationVirtualPath.Trim('/');
             }
-
-            // Initialize the serialized identity token.
-            m_serializedIdentityToken = string.Empty;
-            if (parent != null && parent.AuthenticationMethod != IdentityToken.None)
+            else
             {
-                SecurityToken token = null;
-                StringWriter stringWriter = new StringWriter();
-                XmlTextWriter xmlTextWriter = new XmlTextWriter(stringWriter);
-                SerializableTokenWrapper<SecurityToken> serializer = new SerializableTokenWrapper<SecurityToken>();
-
-                try
-                {
-                    // Create a token based on the selected method.
-                    if (parent.AuthenticationMethod == IdentityToken.Ntlm)
-                    {
-                        if (!string.IsNullOrEmpty(parent.AuthenticationInput) && 
-                            parent.AuthenticationInput.Contains(":"))
-                        {
-                            // Input format: <username>:<password>
-                            string[] loginParts = parent.AuthenticationInput.Split(':');
-                            token = new UsernameToken(loginParts[0], loginParts[1], PasswordOption.SendPlainText);
-                        }
-                    }
-                    else if (parent.AuthenticationMethod == IdentityToken.Kerberos)
-                    {
-                        if (!string.IsNullOrEmpty(parent.AuthenticationInput) &&
-                            parent.AuthenticationInput.Contains("/"))
-                        {
-                            // Input format: host/<machine name>
-                            token = new KerberosToken(parent.AuthenticationInput, ImpersonationLevel.Impersonation);
-                        }
-                    }
-
-                    // Serialize the token to XML for transportation.
-                    if (token != null)
-                    {
-                        serializer.WriteToken(xmlTextWriter, token);
-                        m_serializedIdentityToken = stringWriter.ToString();
-                    }
-                }
-                catch
-                {
-                    // Identity token creation failed due to an exception.
-                }
+                m_clientName = AssemblyInfo.EntryAssembly.Name;
             }
         }
 
@@ -368,21 +326,12 @@ namespace TVA.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the ID of the remote client application.
+        /// Gets the identifier of the remote client application.
         /// </summary>
         public Guid ClientID
         {
             get { return m_clientID; }
             set { m_clientID = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="DateTime"/> when the remote client application connected to the <see cref="ServiceHelper"/>.
-        /// </summary>
-        public DateTime ConnectedAt
-        {
-            get { return m_connectedAt; }
-            set { m_connectedAt = value; }
         }
 
         /// <summary>
@@ -394,7 +343,7 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets the name of the remote client application.
+        /// Gets the friendly name of the remote client application.
         /// </summary>
         public string ClientName
         {
@@ -402,11 +351,19 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets the name of the user running the remote client application.
+        /// Gets the <see cref="IPrincipal"/> of the remote client application's user.
         /// </summary>
-        public string UserName
+        public IPrincipal ClientUser
         {
-            get { return m_userName; }
+            get { return m_clientUser; }
+        }
+
+        /// <summary>
+        /// Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="ClientUser"/> is not available.
+        /// </summary>
+        public string ClientUserCredentials
+        {
+            get { return m_clientUserCredentials; }
         }
 
         /// <summary>
@@ -418,44 +375,28 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets the serialized identity token used for authenticating the remote client user.
+        /// Gets or sets the <see cref="DateTime"/> when the remote client application connected to the <see cref="ServiceHelper"/>.
         /// </summary>
-        public string SerializedIdentityToken
+        public DateTime ConnectedAt
         {
-            get { return m_serializedIdentityToken; }
-        }
-
-        /// <summary>
-        /// Gets the deserialized identity token used for authenticating the remote client user.
-        /// </summary>
-        public SecurityToken DeserializedIdentityToken
-        {
-            get { return m_deserializedIdentityToken; }
+            get { return m_connectedAt; }
+            set { m_connectedAt = value; }
         }
 
         #endregion
 
         #region [ Methods ]
 
-        [OnDeserialized]
-        private void OnDeserialized(StreamingContext context)
+        /// <summary>
+        /// Updates the <see cref="ClientUser"/>.
+        /// </summary>
+        /// <param name="user">New <see cref="IPrincipal"/> object to be assigned to <see cref="ClientUser"/>.</param>
+        internal void SetClientUser(IPrincipal user)
         {
-            if (!string.IsNullOrEmpty(SerializedIdentityToken))
-            {
-                try
-                {
-                    // Deserialize the serialized identity token.
-                    XmlTextReader xmlTextReader = new XmlTextReader(new StringReader(SerializedIdentityToken));
-                    SerializableTokenWrapper<SecurityToken> deserializer = new SerializableTokenWrapper<SecurityToken>();
+            if (user == null)
+                throw new ArgumentNullException("user");
 
-                    xmlTextReader.Read();
-                    m_deserializedIdentityToken = deserializer.ReadToken(xmlTextReader);
-                }
-                catch
-                {
-                    // Exception may be encountered when deserializing if authentication fails.
-                }
-            }
+            m_clientUser = user;
         }
 
         #endregion

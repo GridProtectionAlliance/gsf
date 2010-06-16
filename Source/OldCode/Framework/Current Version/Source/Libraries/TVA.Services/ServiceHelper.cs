@@ -48,6 +48,9 @@
 //       Modified UpdateStatus() method to allow the type of update to be specified.
 //  12/18/2009 - Pinal C. Patel
 //       Added message flooding control to UpdateStatus().
+//  06/16/2010 - Pinal C. Patel
+//       Made changes necessary to implement role-based security.
+//       Added thread synchronization to list-based member variable.
 //
 //*******************************************************************************************************
 
@@ -273,7 +276,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
@@ -286,6 +288,7 @@ using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
 using TVA.Scheduling;
+using TVA.Security;
 
 namespace TVA.Services
 {
@@ -400,14 +403,9 @@ namespace TVA.Services
         public const bool DefaultSupportTelnetSessions = false;
 
         /// <summary>
-        /// Specifies the default value for the <see cref="AllowedRemoteUsers"/> property.
+        /// Specifies the default value for the <see cref="SecureRemoteInteractions"/> property.
         /// </summary>
-        public const string DefaultAllowedRemoteUsers = "*";
-
-        /// <summary>
-        /// Specifies the default value for the <see cref="ImpersonateRemoteUser"/> property.
-        /// </summary>
-        public const bool DefaultImpersonateRemoteUser = false;
+        public const bool DefaultSecureRemoteInteractions = false;
 
         /// <summary>
         /// Specifies the default value for the <see cref="PersistSettings"/> property.
@@ -514,8 +512,7 @@ namespace TVA.Services
         private int m_requestHistoryLimit;
         private bool m_supportTelnetSessions;
         private string m_telnetSessionPassword;
-        private string m_allowedRemoteUsers;
-        private bool m_impersonateRemoteUser;
+        private bool m_secureRemoteInteractions;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private ServiceBase m_parentService;
@@ -557,8 +554,7 @@ namespace TVA.Services
             m_monitorServiceHealth = DefaultMonitorServiceHealth;
             m_requestHistoryLimit = DefaultRequestHistoryLimit;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
-            m_allowedRemoteUsers = DefaultAllowedRemoteUsers;
-            m_impersonateRemoteUser = DefaultImpersonateRemoteUser;
+            m_secureRemoteInteractions = DefaultSecureRemoteInteractions;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_processes = new List<ServiceProcess>();
@@ -630,7 +626,7 @@ namespace TVA.Services
         [Category("Updates"),
         DefaultValue(DefaultMaxStatusUpdatesLength),
         Description("Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.")]
-        public int MaxStatusUpdatesLength 
+        public int MaxStatusUpdatesLength
         {
             get
             {
@@ -710,7 +706,7 @@ namespace TVA.Services
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHelper"/> will have support for remote telnet-like sessions.
         /// </summary>
-        [Category("Settings"),
+        [Category("Security"),
         DefaultValue(DefaultSupportTelnetSessions),
         Description("Indicates whether the ServiceHelper will have support for remote telnet-like sessions.")]
         public bool SupportTelnetSessions
@@ -726,43 +722,20 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets or sets a comma or semicolon delimited list of user logins allowed to connect to the <see cref="ServiceHelper"/>.
+        /// Gets or sets a boolean value that indicates whether <see cref="ServiceHelper"/> will secure remote interactions from <see cref="ClientHelper"/>.
         /// </summary>
-        /// <remarks>Use '*' to allow access to any remote user.</remarks>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
         [Category("Security"),
-        DefaultValue(DefaultAllowedRemoteUsers),
-        Description("Comma or semicolon delimited list of user logins allowed to connect to the ServiceHelper.")]
-        public string AllowedRemoteUsers
+        DefaultValue(DefaultSecureRemoteInteractions),
+        Description("Indicates whether ServiceHelper will secure remote interactions from ClientHelper.")]
+        public bool SecureRemoteInteractions
         {
             get
             {
-                return m_allowedRemoteUsers;
+                return m_secureRemoteInteractions;
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("AllowedRemoteUsers");
-
-                m_allowedRemoteUsers = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether remote commands are to be executed under the identity of the remote user.
-        /// </summary>
-        [Category("Security"),
-        DefaultValue(DefaultImpersonateRemoteUser),
-        Description("Indicates whether remote commands are to be executed under the identity of the remote user.")]
-        public bool ImpersonateRemoteUser
-        {
-            get
-            {
-                return m_impersonateRemoteUser;
-            }
-            set
-            {
-                m_impersonateRemoteUser = value;
+                m_secureRemoteInteractions = value;
             }
         }
 
@@ -919,14 +892,17 @@ namespace TVA.Services
                     // Re-enable all service components.
                     bool state;
                     ISupportLifecycle typedComponent;
-                    foreach (object component in m_serviceComponents)
+                    lock (m_serviceComponents)
                     {
-                        typedComponent = component as ISupportLifecycle;
-                        if (typedComponent != null)
+                        foreach (object component in m_serviceComponents)
                         {
-                            // Restore previous state.
-                            if (m_componentEnabledStates.TryGetValue(typedComponent, out state))
-                                typedComponent.Enabled = state;
+                            typedComponent = component as ISupportLifecycle;
+                            if (typedComponent != null)
+                            {
+                                // Restore previous state.
+                                if (m_componentEnabledStates.TryGetValue(typedComponent, out state))
+                                    typedComponent.Enabled = state;
+                            }
                         }
                     }
                 }
@@ -935,14 +911,17 @@ namespace TVA.Services
                     // Disable all service components.
                     m_componentEnabledStates.Clear();
                     ISupportLifecycle typedComponent;
-                    foreach (object component in m_serviceComponents)
+                    lock (m_serviceComponents)
                     {
-                        typedComponent = component as ISupportLifecycle;
-                        if (typedComponent != null)
+                        foreach (object component in m_serviceComponents)
                         {
-                            // Save current state.
-                            m_componentEnabledStates.Add(typedComponent, typedComponent.Enabled);
-                            typedComponent.Enabled = false;
+                            typedComponent = component as ISupportLifecycle;
+                            if (typedComponent != null)
+                            {
+                                // Save current state.
+                                m_componentEnabledStates.Add(typedComponent, typedComponent.Enabled);
+                                typedComponent.Enabled = false;
+                            }
                         }
                     }
                 }
@@ -952,28 +931,15 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
-        /// </summary>
-        [Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<object> ServiceComponents
-        {
-            get
-            {
-                return m_serviceComponents;
-            }
-        }
-
-        /// <summary>
         /// Gets a list of <see cref="ServiceProcess"/> defined in the <see cref="ServiceHelper"/>.
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ServiceProcess> Processes
+        public IList<ServiceProcess> Processes
         {
             get
             {
-                return m_processes;
+                return m_processes.AsReadOnly();
             }
         }
 
@@ -982,11 +948,11 @@ namespace TVA.Services
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ClientInfo> RemoteClients
+        public IList<ClientInfo> RemoteClients
         {
             get
             {
-                return m_remoteClients;
+                return m_remoteClients.AsReadOnly();
             }
         }
 
@@ -995,11 +961,11 @@ namespace TVA.Services
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ClientRequestInfo> ClientRequestHistory
+        public IList<ClientRequestInfo> ClientRequestHistory
         {
             get
             {
-                return m_clientRequestHistory;
+                return m_clientRequestHistory.AsReadOnly();
             }
         }
 
@@ -1008,11 +974,24 @@ namespace TVA.Services
         /// </summary>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Advanced)]
-        public List<ClientRequestHandler> ClientRequestHandlers
+        public IList<ClientRequestHandler> ClientRequestHandlers
         {
             get
             {
                 return m_clientRequestHandlers;
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of components that implement the <see cref="ISupportLifecycle"/> interface used by the <see cref="ParentService"/>.
+        /// </summary>
+        [Browsable(false),
+        EditorBrowsable(EditorBrowsableState.Advanced)]
+        public IList<object> ServiceComponents
+        {
+            get
+            {
+                return m_serviceComponents;
             }
         }
 
@@ -1067,16 +1046,19 @@ namespace TVA.Services
                 status.AppendLine();
                 status.AppendLine();
                 IProvideStatus typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IProvideStatus;
-                    if (typedComponent != null)
+                    foreach (object component in m_serviceComponents)
                     {
-                        // This component provides status information.                       
-                        status.AppendFormat("Status of {0}:", typedComponent.Name);
-                        status.AppendLine();
-                        status.Append(typedComponent.Status);
-                        status.AppendLine();
+                        typedComponent = component as IProvideStatus;
+                        if (typedComponent != null)
+                        {
+                            // This component provides status information.                       
+                            status.AppendFormat("Status of {0}:", typedComponent.Name);
+                            status.AppendLine();
+                            status.Append(typedComponent.Status);
+                            status.AppendLine();
+                        }
                     }
                 }
 
@@ -1171,8 +1153,7 @@ namespace TVA.Services
                 settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
                 settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
                 settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
-                settings["AllowedRemoteUsers", true].Update(m_allowedRemoteUsers);
-                settings["ImpersonateRemoteUser", true].Update(m_impersonateRemoteUser);
+                settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
                 config.Save();
             }
         }
@@ -1188,11 +1169,14 @@ namespace TVA.Services
             if (includeServiceComponents)
             {
                 IPersistSettings typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IPersistSettings;
-                    if (typedComponent != null)
-                        typedComponent.SaveSettings();
+                    foreach (object component in m_serviceComponents)
+                    {
+                        typedComponent = component as IPersistSettings;
+                        if (typedComponent != null)
+                            typedComponent.SaveSettings();
+                    }
                 }
             }
         }
@@ -1218,8 +1202,7 @@ namespace TVA.Services
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
                 settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
-                settings.Add("AllowedRemoteUsers", m_allowedRemoteUsers, "Comma or semicolon delimited list of user logins allowed to connect to the service remotely.");
-                settings.Add("ImpersonateRemoteUser", m_impersonateRemoteUser, "True to execute remote commands under the identity of the remote user; otherwise False.");
+                settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
                 if (settings["TelnetSessionPassword"] != null)
                     m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
@@ -1228,8 +1211,7 @@ namespace TVA.Services
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
                 SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
-                AllowedRemoteUsers = settings["AllowedRemoteUsers"].ValueAs(m_allowedRemoteUsers);
-                ImpersonateRemoteUser = settings["ImpersonateRemoteUser"].ValueAs(m_impersonateRemoteUser);
+                SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
             }
         }
 
@@ -1243,11 +1225,14 @@ namespace TVA.Services
             if (includeServiceComponents)
             {
                 IPersistSettings typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IPersistSettings;
-                    if (typedComponent != null)
-                        typedComponent.LoadSettings();
+                    foreach (object component in m_serviceComponents)
+                    {
+                        typedComponent = component as IPersistSettings;
+                        if (typedComponent != null)
+                            typedComponent.LoadSettings();
+                    }
                 }
             }
         }
@@ -1268,40 +1253,46 @@ namespace TVA.Services
 
             OnServiceStarting(args);
 
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Clients", "Displays list of clients connected to the service", ShowClients));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Settings", "Displays queryable service settings from config file", ShowSettings));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Processes", "Displays list of service or system processes", ShowProcesses));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("History", "Displays list of requests received from the clients", ShowRequestHistory));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Help", "Displays list of commands supported by the service", ShowRequestHelp));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Start", "Start a service or system process", StartProcess));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Abort", "Aborts a service or system process", AbortProcess));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
-            m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
-            // Enable telnet support if requested.
-            if (m_supportTelnetSessions)
+            lock (m_clientRequestHandlers)
             {
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
-            }
-            // Enable health monitoring if requested.
-            if (m_monitorServiceHealth)
-            {
-                m_performanceMonitor = new PerformanceMonitor();
-                m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Clients", "Displays list of clients connected to the service", ShowClients));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Settings", "Displays queryable service settings from config file", ShowSettings));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Processes", "Displays list of service or system processes", ShowProcesses));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Schedules", "Displays list of process schedules defined in the service", ShowSchedules));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("History", "Displays list of requests received from the clients", ShowRequestHistory));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Help", "Displays list of commands supported by the service", ShowRequestHelp));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Status", "Displays the current service status", ShowServiceStatus));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Start", "Start a service or system process", StartProcess));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Abort", "Aborts a service or system process", AbortProcess));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("UpdateSettings", "Updates service setting in the config file", UpdateSettings));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("ReloadSettings", "Reloads services settings from the config file", ReloadSettings));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Reschedule", "Reschedules a process defined in the service", RescheduleProcess));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+                // Enable telnet support if requested.
+                if (m_supportTelnetSessions)
+                {
+                    m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
+                }
+                // Enable health monitoring if requested.
+                if (m_monitorServiceHealth)
+                {
+                    m_performanceMonitor = new PerformanceMonitor();
+                    m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
+                }
             }
 
             // Add internal components as service components by default.
-            m_serviceComponents.Add(m_processScheduler);
-            m_serviceComponents.Add(m_statusLog);
-            m_serviceComponents.Add(m_errorLogger);
-            m_serviceComponents.Add(m_errorLogger.ErrorLog);
-            m_serviceComponents.Add(m_remotingServer);
-            m_serviceComponents.Add(m_statusUpdateQueue);
+            lock (m_serviceComponents)
+            {
+                m_serviceComponents.Add(m_processScheduler);
+                m_serviceComponents.Add(m_statusLog);
+                m_serviceComponents.Add(m_errorLogger);
+                m_serviceComponents.Add(m_errorLogger.ErrorLog);
+                m_serviceComponents.Add(m_remotingServer);
+                m_serviceComponents.Add(m_statusUpdateQueue);
+            }
 
             // Open log file if file logging is enabled.
             if (m_logStatusUpdates)
@@ -1400,7 +1391,10 @@ namespace TVA.Services
                 ServiceProcess process = new ServiceProcess(processExecutionMethod, processName, processArguments);
                 process.StateChanged += Process_StateChanged;
 
-                m_processes.Add(process);
+                lock (m_processes)
+                {
+                    m_processes.Add(process);
+                }
             }
             else
             {
@@ -1493,17 +1487,24 @@ namespace TVA.Services
         {
             try
             {
-                if (client == Guid.Empty)
-                {
-                    // Multicast message to all clients.
-                    if (m_remoteCommandClientID == Guid.Empty)
-                        // Process if remote command session is not in progress.
-                        m_remotingServer.MulticastAsync(response);
-                }
-                else
+                if (client != Guid.Empty)
                 {
                     // Send message directly to specified client.
                     m_remotingServer.SendToAsync(client, response);
+                }
+                else
+                {
+                    // Send message to all of the connected clients.
+                    if (m_remoteCommandClientID == Guid.Empty)
+                    {
+                        lock (m_remoteClients)
+                        {
+                            foreach (ClientInfo clientInfo in m_remoteClients)
+                            {
+                                m_remotingServer.SendToAsync(clientInfo.ClientID, response);
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -1547,7 +1548,10 @@ namespace TVA.Services
         /// <returns><see cref="ServiceProcess"/> object if found; otherwise null.</returns>
         public ServiceProcess FindProcess(string processName)
         {
-            return m_processes.Find(process => string.Compare(process.Name, processName, true) == 0);
+            lock (m_processes)
+            {
+                return m_processes.Find(process => string.Compare(process.Name, processName, true) == 0);
+            }
         }
 
         /// <summary>
@@ -1557,7 +1561,10 @@ namespace TVA.Services
         /// <returns><see cref="ClientInfo"/> object if found; otherwise null.</returns>
         public ClientInfo FindConnectedClient(Guid clientID)
         {
-            return m_remoteClients.Find(clientInfo => clientInfo.ClientID == clientID);
+            lock (m_remoteClients)
+            {
+                return m_remoteClients.Find(clientInfo => clientInfo.ClientID == clientID);
+            }
         }
 
         /// <summary>
@@ -1567,7 +1574,10 @@ namespace TVA.Services
         /// <returns><see cref="ClientRequestHandler"/> object if found; otherwise null.</returns>
         public ClientRequestHandler FindClientRequestHandler(string handlerCommand)
         {
-            return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, true) == 0);
+            lock (m_clientRequestHandlers)
+            {
+                return m_clientRequestHandlers.Find(handler => string.Compare(handler.Command, handlerCommand, true) == 0);
+            }
         }
 
         /// <summary>
@@ -1762,13 +1772,16 @@ namespace TVA.Services
                         // Service processes are created and owned by remoting server, so we dispose them
                         if (m_processes != null)
                         {
-                            foreach (ServiceProcess process in m_processes)
+                            lock (m_processes)
                             {
-                                process.StateChanged -= Process_StateChanged;
-                                process.Dispose();
-                            }
+                                foreach (ServiceProcess process in m_processes)
+                                {
+                                    process.StateChanged -= Process_StateChanged;
+                                    process.Dispose();
+                                }
 
-                            m_processes.Clear();
+                                m_processes.Clear();
+                            }
                         }
 
                         // Detach any remoting server events, we don't own this component so we don't dispose it
@@ -1781,6 +1794,36 @@ namespace TVA.Services
                     base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
+        }
+
+        private bool VerifySecurity(ClientInfo client)
+        {
+            // Set current thread principal to remote client's user principal.
+            Thread.CurrentPrincipal = client.ClientUser;
+
+            // Retrieve previously initialized security provider of the remote client's user.
+            if (SecurityProvider.Current == null)
+                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
+
+            // Initialize security provider for the remote client's user from specified credentials.
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated &&
+                !string.IsNullOrEmpty(client.ClientUserCredentials))
+            {
+                string[] credentialParts = client.ClientUserCredentials.Split(':');
+                if (credentialParts.Length == 2)
+                {
+                    SecurityProvider provider = SecurityProvider.CreateProvider(credentialParts[0]);
+                    provider.Initialize();
+                    if (provider.Authenticate(credentialParts[1]))
+                        SecurityProvider.Current = provider;
+                }
+            }
+
+            // Save the initialized security provider of remote client's user for subsequent uses.
+            if (client.ClientUser != Thread.CurrentPrincipal)
+                client.SetClientUser(Thread.CurrentPrincipal);
+
+            return client.ClientUser.Identity.IsAuthenticated;
         }
 
         private void ProcessStatusUpdates(StatusUpdate[] items)
@@ -1826,6 +1869,16 @@ namespace TVA.Services
 
             if (suppressedUpdates > 0)
                 SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update(s) from being displayed to avoid flooding.\r\n\r\n", suppressedUpdates));
+        }
+
+        private void SendAuthenticationSuccessResponse(Guid clientID)
+        {
+            SendResponse(clientID, new ServiceResponse("AuthenticationSuccess"));
+        }
+
+        private void SendAuthenticationFailureResponse(Guid clientID)
+        {
+            SendResponse(clientID, new ServiceResponse("AuthenticationFailure"));
         }
 
         private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
@@ -1903,14 +1956,17 @@ namespace TVA.Services
                     }
                 }
 
-                m_remoteClients.Remove(disconnectedClient);
-                UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.UserName, disconnectedClient.MachineName);
+                lock (m_remoteClients)
+                {
+                    m_remoteClients.Remove(disconnectedClient);
+                }
+                UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
             }
         }
 
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            // Set the thread's principal to the current principal.
+            // Set thread principal to current windows principal.
             Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             ClientInfo requestSender = FindConnectedClient(e.Argument1);
@@ -1923,30 +1979,28 @@ namespace TVA.Services
                 {
                     if (client != null)
                     {
-                        // Check remote user against valid user list.
-                        string[] allowedRemoteUsers = m_allowedRemoteUsers.Split(';', ',');
-                        if (m_allowedRemoteUsers == "*" ||
-                            (client.DeserializedIdentityToken != null &&
-                             client.DeserializedIdentityToken.Identity.IsAuthenticated &&
-                             allowedRemoteUsers.FirstOrDefault(user => string.Compare(user.Trim(), client.DeserializedIdentityToken.Identity.Name, true) == 0) != null))
+                        client.ClientID = e.Argument1;
+                        client.ConnectedAt = DateTime.Now;
+
+                        // Engage security for the remote client connection if configured.
+                        if (!m_secureRemoteInteractions || (m_secureRemoteInteractions && VerifySecurity(client)))
                         {
-                            // Authentication successful.
-                            client.ClientID = e.Argument1;
-                            client.ConnectedAt = DateTime.Now;
-                            m_remoteClients.Add(client);
-                            SendResponse(e.Argument1, new ServiceResponse("AuthenticationSuccess"));
-                            UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
+                            lock (m_remoteClients)
+                            {
+                                m_remoteClients.Add(client);
+                            }
+                            SendAuthenticationSuccessResponse(client.ClientID);
+                            UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
                         }
                         else
                         {
-                            // Authentication failed.
-                            throw new SecurityException("Remote client failed authentication");
+                            throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
                         }
                     }
                     else
                     {
                         // Required client information is missing.
-                        throw new SecurityException("Remote client failed to transmit required information");
+                        throw new SecurityException("Remote client failed to transmit the required information");
                     }
                 }
                 catch (Exception ex)
@@ -1954,9 +2008,10 @@ namespace TVA.Services
                     try
                     {
                         SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"));
-                        UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.UserName, client.MachineName);
-                        m_errorLogger.Log(ex);
                         m_remotingServer.DisconnectOne(e.Argument1);
+
+                        UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                        m_errorLogger.Log(ex);
                     }
                     catch
                     {
@@ -1967,7 +2022,6 @@ namespace TVA.Services
             {
                 // All subsequest messages from a remote client would be requests.
                 ClientRequest request = null;
-                WindowsImpersonationContext context = null;
                 Serialization.TryGetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), out request);
                 if (request != null)
                 {
@@ -1975,27 +2029,21 @@ namespace TVA.Services
                     {
                         ClientRequestInfo requestInfo = new ClientRequestInfo(requestSender, request);
 
-                        if (requestInfo.Sender.DeserializedIdentityToken != null)
-                            // Set the thread's principal to the remote user's principal.
-                            Thread.CurrentPrincipal = requestInfo.Sender.DeserializedIdentityToken.Principal;
-
                         if (m_remoteCommandClientID == Guid.Empty)
                         {
                             // Process incoming requests when remote command session is not in progress.
-                            m_clientRequestHistory.Add(requestInfo);
-
-                            // Remove old request entries if we've exceeded the limit for request history.
-                            if (m_clientRequestHistory.Count > m_requestHistoryLimit)
-                                m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
-
-                            // Impersonate remote user for increased security when impersonation is enabled.
-                            if (m_impersonateRemoteUser)
+                            lock (m_clientRequestHistory)
                             {
-                                if (((WindowsIdentity)Thread.CurrentPrincipal.Identity).ImpersonationLevel != TokenImpersonationLevel.Impersonation)
-                                    throw new InvalidOperationException("Impersonation is not supported");
-
-                                context = ((WindowsIdentity)Thread.CurrentPrincipal.Identity).Impersonate();
+                                m_clientRequestHistory.Add(requestInfo);
+                                if (m_clientRequestHistory.Count > m_requestHistoryLimit)
+                                    m_clientRequestHistory.RemoveRange(0, (m_clientRequestHistory.Count - m_requestHistoryLimit));
                             }
+
+                            // Check if remote client has permission to invoke the requested command.
+                            if (m_secureRemoteInteractions && VerifySecurity(requestInfo.Sender) &&
+                                SecurityProvider.IsResourceSecurable(requestInfo.Request.Command) &&
+                                !SecurityProvider.IsResourceAccessible(requestInfo.Request.Command))
+                                throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
 
                             // Notify the consumer about the incoming request from client.
                             OnReceivedClientRequest(request, requestSender);
@@ -2027,11 +2075,6 @@ namespace TVA.Services
                     {
                         m_errorLogger.Log(ex);
                         UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
-                    }
-                    finally
-                    {
-                        if (context != null)
-                            context.Undo();
                     }
                 }
                 else
@@ -2102,29 +2145,32 @@ namespace TVA.Services
                     responseMessage.Append(' ');
                     responseMessage.Append(new string('-', 20));
 
-                    foreach (ClientInfo clientInfo in m_remoteClients)
+                    lock (m_remoteClients)
                     {
-                        responseMessage.AppendLine();
+                        foreach (ClientInfo clientInfo in m_remoteClients)
+                        {
+                            responseMessage.AppendLine();
 
-                        if (!string.IsNullOrEmpty(clientInfo.ClientName))
-                            responseMessage.Append(clientInfo.ClientName.PadRight(25));
-                        else
-                            responseMessage.Append("[Not Available]".PadRight(25));
+                            if (!string.IsNullOrEmpty(clientInfo.ClientName))
+                                responseMessage.Append(clientInfo.ClientName.PadRight(25));
+                            else
+                                responseMessage.Append("[Not Available]".PadRight(25));
 
-                        responseMessage.Append(' ');
-                        if (!string.IsNullOrEmpty(clientInfo.MachineName))
-                            responseMessage.Append(clientInfo.MachineName.PadRight(15));
-                        else
-                            responseMessage.Append("[Not Available]".PadRight(15));
+                            responseMessage.Append(' ');
+                            if (!string.IsNullOrEmpty(clientInfo.MachineName))
+                                responseMessage.Append(clientInfo.MachineName.PadRight(15));
+                            else
+                                responseMessage.Append("[Not Available]".PadRight(15));
 
-                        responseMessage.Append(' ');
-                        if (!string.IsNullOrEmpty(clientInfo.UserName))
-                            responseMessage.Append(clientInfo.UserName.PadRight(15));
-                        else
-                            responseMessage.Append("[Not Available]".PadRight(15));
+                            responseMessage.Append(' ');
+                            if (!string.IsNullOrEmpty(clientInfo.ClientUser.Identity.Name))
+                                responseMessage.Append(clientInfo.ClientUser.Identity.Name.PadRight(15));
+                            else
+                                responseMessage.Append("[Not Available]".PadRight(15));
 
-                        responseMessage.Append(' ');
-                        responseMessage.Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(clientInfo.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+                        }
                     }
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
@@ -2180,27 +2226,30 @@ namespace TVA.Services
                 responseMessage.Append(new string('-', 30));
 
                 IPersistSettings typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IPersistSettings;
-                    if (typedComponent != null)
+                    foreach (object component in m_serviceComponents)
                     {
-                        foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[typedComponent.SettingsCategory])
+                        typedComponent = component as IPersistSettings;
+                        if (typedComponent != null)
                         {
-                            // Skip encrypted settings for security purpose.
-                            if (setting.Encrypted)
-                                continue;
+                            foreach (CategorizedSettingsElement setting in ConfigurationFile.Current.Settings[typedComponent.SettingsCategory])
+                            {
+                                // Skip encrypted settings for security purpose.
+                                if (setting.Encrypted)
+                                    continue;
 
-                            responseMessage.AppendLine();
-                            responseMessage.Append(typedComponent.SettingsCategory.PadRight(20));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(setting.Name.PadRight(25));
-                            responseMessage.Append(' ');
+                                responseMessage.AppendLine();
+                                responseMessage.Append(typedComponent.SettingsCategory.PadRight(20));
+                                responseMessage.Append(' ');
+                                responseMessage.Append(setting.Name.PadRight(25));
+                                responseMessage.Append(' ');
 
-                            if (!string.IsNullOrEmpty(setting.Value))
-                                responseMessage.Append(setting.Value.PadRight(30));
-                            else
-                                responseMessage.Append("[Not Set]".PadRight(30));
+                                if (!string.IsNullOrEmpty(setting.Value))
+                                    responseMessage.Append(setting.Value.PadRight(30));
+                                else
+                                    responseMessage.Append("[Not Set]".PadRight(30));
+                            }
                         }
                     }
                 }
@@ -2273,31 +2322,34 @@ namespace TVA.Services
                         responseMessage.Append(' ');
                         responseMessage.Append(new string('-', 20));
 
-                        foreach (ServiceProcess process in m_processes)
+                        lock (m_processes)
                         {
-                            responseMessage.AppendLine();
-                            responseMessage.Append(process.Name.PadRight(20));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(process.CurrentState.ToString().PadRight(15));
-                            responseMessage.Append(' ');
-
-                            if (process.ExecutionStartTime != DateTime.MinValue)
-                                responseMessage.Append(process.ExecutionStartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
-                            else
-                                responseMessage.Append("[Not Executed]".PadRight(20));
-
-                            responseMessage.Append(' ');
-
-                            if (process.ExecutionStopTime != DateTime.MinValue)
+                            foreach (ServiceProcess process in m_processes)
                             {
-                                responseMessage.Append(process.ExecutionStopTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
-                            }
-                            else
-                            {
+                                responseMessage.AppendLine();
+                                responseMessage.Append(process.Name.PadRight(20));
+                                responseMessage.Append(' ');
+                                responseMessage.Append(process.CurrentState.ToString().PadRight(15));
+                                responseMessage.Append(' ');
+
                                 if (process.ExecutionStartTime != DateTime.MinValue)
-                                    responseMessage.Append("[Executing]".PadRight(20));
+                                    responseMessage.Append(process.ExecutionStartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
                                 else
                                     responseMessage.Append("[Not Executed]".PadRight(20));
+
+                                responseMessage.Append(' ');
+
+                                if (process.ExecutionStopTime != DateTime.MinValue)
+                                {
+                                    responseMessage.Append(process.ExecutionStopTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+                                }
+                                else
+                                {
+                                    if (process.ExecutionStartTime != DateTime.MinValue)
+                                        responseMessage.Append("[Executing]".PadRight(20));
+                                    else
+                                        responseMessage.Append("[Not Executed]".PadRight(20));
+                                }
                             }
                         }
                         responseMessage.AppendLine();
@@ -2479,14 +2531,17 @@ namespace TVA.Services
                 responseMessage.Append(' ');
                 responseMessage.Append(new string('-', 30));
 
-                foreach (ClientRequestInfo historicRequest in m_clientRequestHistory)
+                lock (m_clientRequestHistory)
                 {
-                    responseMessage.AppendLine();
-                    responseMessage.Append(historicRequest.Request.Command.PadRight(20));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(historicRequest.ReceivedAt.ToString().PadRight(25));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(string.Format("{0} from {1}", historicRequest.Sender.UserName, historicRequest.Sender.MachineName).PadRight(30));
+                    foreach (ClientRequestInfo historicRequest in m_clientRequestHistory)
+                    {
+                        responseMessage.AppendLine();
+                        responseMessage.Append(historicRequest.Request.Command.PadRight(20));
+                        responseMessage.Append(' ');
+                        responseMessage.Append(historicRequest.ReceivedAt.ToString().PadRight(25));
+                        responseMessage.Append(' ');
+                        responseMessage.Append(string.Format("{0} from {1}", historicRequest.Sender.ClientUser.Identity.Name, historicRequest.Sender.MachineName).PadRight(30));
+                    }
                 }
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
@@ -2535,14 +2590,17 @@ namespace TVA.Services
                 responseMessage.Append(' ');
                 responseMessage.Append(new string('-', 55));
 
-                foreach (ClientRequestHandler handler in m_clientRequestHandlers)
+                lock (m_clientRequestHandlers)
                 {
-                    if (handler.IsAdvertised || showAdvancedHelp)
+                    foreach (ClientRequestHandler handler in m_clientRequestHandlers)
                     {
-                        responseMessage.AppendLine();
-                        responseMessage.Append(handler.Command.PadRight(20));
-                        responseMessage.Append(' ');
-                        responseMessage.Append(handler.CommandDescription.PadRight(55));
+                        if (handler.IsAdvertised || showAdvancedHelp)
+                        {
+                            responseMessage.AppendLine();
+                            responseMessage.Append(handler.Command.PadRight(20));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(handler.CommandDescription.PadRight(55));
+                        }
                     }
                 }
                 responseMessage.AppendLine();
@@ -2644,15 +2702,18 @@ namespace TVA.Services
                 string categoryName = requestInfo.Request.Arguments["orderedarg1"];
 
                 IPersistSettings typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IPersistSettings;
-                    if (typedComponent != null &&
-                        string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
+                    foreach (object component in m_serviceComponents)
                     {
-                        typedComponent.LoadSettings();
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
-                        return;
+                        typedComponent = component as IPersistSettings;
+                        if (typedComponent != null &&
+                            string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
+                        {
+                            typedComponent.LoadSettings();
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
+                            return;
+                        }
                     }
                 }
 
@@ -2711,79 +2772,82 @@ namespace TVA.Services
                 bool listSettings = requestInfo.Request.Arguments.Exists("list");
 
                 IPersistSettings typedComponent;
-                foreach (object component in m_serviceComponents)
+                lock (m_serviceComponents)
                 {
-                    typedComponent = component as IPersistSettings;
-                    if (typedComponent != null &&
-                        string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
+                    foreach (object component in m_serviceComponents)
                     {
-                        ConfigurationFile config = ConfigurationFile.Current;
-                        CategorizedSettingsElementCollection settings = config.Settings[categoryName];
-                        CategorizedSettingsElement setting = settings[settingName];
-                        if (addSetting)
+                        typedComponent = component as IPersistSettings;
+                        if (typedComponent != null &&
+                            string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                         {
-                            // Add new setting.
-                            if (setting == null)
+                            ConfigurationFile config = ConfigurationFile.Current;
+                            CategorizedSettingsElementCollection settings = config.Settings[categoryName];
+                            CategorizedSettingsElement setting = settings[settingName];
+                            if (addSetting)
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                settings.Add(settingName, settingValue);
-                                config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                // Add new setting.
+                                if (setting == null)
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    settings.Add(settingName, settingValue);
+                                    config.Save();
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                }
+                                else
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
+                                    return;
+                                }
+                            }
+                            else if (deleteSetting)
+                            {
+                                // Delete existing setting.
+                                if (setting != null)
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    settings.Remove(setting);
+                                    config.Save();
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                }
+                                else
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                    return;
+                                }
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
-                                return;
+                                // Update existing setting.
+                                if (setting != null)
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    setting.Value = settingValue;
+                                    config.Save();
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                }
+                                else
+                                {
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                    return;
+                                }
                             }
-                        }
-                        else if (deleteSetting)
-                        {
-                            // Delete existing setting.
-                            if (setting != null)
-                            {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                settings.Remove(setting);
-                                config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                            }
-                            else
-                            {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            // Update existing setting.
-                            if (setting != null)
-                            {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
-                                setting.Value = settingValue;
-                                config.Save();
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
-                            }
-                            else
-                            {
-                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
-                                return;
-                            }
-                        }
 
-                        if (reloadSettings)
-                        {
-                            // The user has requested to reload settings for all the components.
-                            requestInfo.Request = ClientRequest.Parse(string.Format("ReloadSettings {0}", categoryName));
-                            ReloadSettings(requestInfo);
-                        }
+                            if (reloadSettings)
+                            {
+                                // The user has requested to reload settings for all the components.
+                                requestInfo.Request = ClientRequest.Parse(string.Format("ReloadSettings {0}", categoryName));
+                                ReloadSettings(requestInfo);
+                            }
 
-                        if (listSettings)
-                        {
-                            // The user has requested to list all of the queryable settings.
-                            requestInfo.Request = ClientRequest.Parse("Settings");
-                            ShowSettings(requestInfo);
-                        }
+                            if (listSettings)
+                            {
+                                // The user has requested to list all of the queryable settings.
+                                requestInfo.Request = ClientRequest.Parse("Settings");
+                                ShowSettings(requestInfo);
+                            }
 
-                        return;
+                            return;
+                        }
                     }
                 }
 

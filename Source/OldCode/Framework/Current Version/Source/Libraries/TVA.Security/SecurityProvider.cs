@@ -14,6 +14,8 @@
 //       Modified RefreshData() method to not query the AD at all for external user.
 //  05/27/2010 - Pinal C. Patel
 //       Added usage example to code comments.
+//  06/15/2010 - Pinal C. Patel
+//       Added checks to the in-process caching logic.
 //
 //*******************************************************************************************************
 
@@ -1025,7 +1027,7 @@ namespace TVA.Security
                     if (HttpContext.Current != null && HttpContext.Current.Session != null)
                         // Cache provider to session state.
                         HttpContext.Current.Session[typeof(SecurityProvider).Name] = value;
-                    else
+                    else if (!string.IsNullOrEmpty(value.UserData.Username))
                         // Cache provider to in-process memory.
                         lock (s_cache)
                         {
@@ -1044,7 +1046,7 @@ namespace TVA.Security
                     if (HttpContext.Current != null && HttpContext.Current.Session != null)
                         // Remove previously cached provider from session state.
                         HttpContext.Current.Session[typeof(SecurityProvider).Name] = null;
-                    else
+                    else if (s_cache.ContainsKey(principal.Identity.Name))
                         // Remove previously cached provider from in-process memory.
                         lock (s_cache)
                         {

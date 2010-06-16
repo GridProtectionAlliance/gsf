@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  10/23/2009 - Pinal C. Patel
 //       Fixed errors introduced by breaking change to add support for classification of service updates.
+//  06/15/2010 - Pinal C. Patel
+//       Fixed errors introduced by breaking change to the security implementation.
 //
 //*******************************************************************************************************
 
@@ -361,56 +363,30 @@ namespace UDPRebroadcasterConsole
 
         private void ClientHelper_AuthenticationFailure(object sender, CancelEventArgs e)
         {
-            // Prompt for authentication method.
+            // Prompt for credentials.
             StringBuilder prompt = new StringBuilder();
-            prompt.Append("Remote connection was has rejected due to authentication failure. Please ");
-            prompt.Append("select from one of the options below to re-authenticate the remote connection:");
             prompt.AppendLine();
             prompt.AppendLine();
-            prompt.Append("[0] Abort (no retry)");
-            prompt.AppendLine();
-            prompt.Append("[1] NTLM Authentication");
-            prompt.AppendLine();
-            prompt.Append("[2] Kerberos Authentication");
+            prompt.Append("Connection to the service was rejected due to authentication failure. \r\n");
+            prompt.Append("Enter the credentials to be used for authentication with the service.");
             prompt.AppendLine();
             prompt.AppendLine();
-            prompt.Append("Selection: ");
             Console.Write(prompt.ToString());
 
-            // Capture authentication method selection.
-            int selection;
-            int.TryParse(Console.ReadLine(), out selection);
+            // Capture the username.
+            Console.Write("Enter username: ");
+            m_clientHelper.Username = Console.ReadLine();
 
-            Console.WriteLine();
-            if (selection == 1)         // NTLM Authentication
+            // Capture the password.
+            ConsoleKeyInfo key;
+            Console.Write("Enter password: ");
+            while ((key = Console.ReadKey(true)).KeyChar != '\r')
             {
-                // Capture the username.
-                string username = "";
-                Console.Write("Enter username: ");
-                username = Console.ReadLine();
-
-                // Capture the password.
-                string password = "";
-                ConsoleKeyInfo key;
-                Console.Write("Enter password: ");
-                while ((key = Console.ReadKey(true)).KeyChar != '\r')
-                {
-                    password += key.KeyChar;
-                }
-
-                // Update authentication parameters.
-                e.Cancel = false;
-                m_clientHelper.AuthenticationMethod = IdentityToken.Ntlm;
-                m_clientHelper.AuthenticationInput = username + ":" + password;
+                m_clientHelper.Password += key.KeyChar;
             }
-            else if (selection == 2)    // Kerberos Authentication
-            {
-                // Update authentication parameters.
-                e.Cancel = false;
-                Console.Write("Enter service principal: ");
-                m_clientHelper.AuthenticationMethod = IdentityToken.Kerberos;
-                m_clientHelper.AuthenticationInput = Console.ReadLine();
-            }
+
+            // Re-attempt connection with new credentials.
+            e.Cancel = false;
             Console.WriteLine();
             Console.WriteLine();
         }
