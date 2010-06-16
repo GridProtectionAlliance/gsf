@@ -20,6 +20,8 @@
 //       Added new header and license agreement.
 //  04/20/2010 - Pinal C. Patel
 //       Added new File property for the purpose of managing user scope setting.
+//  06/16/2010 - J. Ritchie Carroll
+//       Added Remove method to remove a categorized settings section.
 //
 //*******************************************************************************************************
 
@@ -316,6 +318,15 @@ namespace TVA.Configuration
 
                 return settingsCategory;
             }
+        }
+
+        /// <summary>
+        /// Removes the specified category name including its associated settings.
+        /// </summary>
+        /// <param name="name">Name of the category to be removed.</param>
+        public void Remove(string name)
+        {
+            base.Properties.Remove(name);
         }
 
         /// <summary>
