@@ -324,8 +324,19 @@ namespace TVA.Configuration
         /// Removes the specified category name including its associated settings.
         /// </summary>
         /// <param name="name">Name of the category to be removed.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
         public void Remove(string name)
         {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("name");
+
+            // Make the first letter of category name lower case, if not already.
+            char[] nameChars = name.ToCharArray();
+            nameChars[0] = char.ToLower(nameChars[0]);
+            
+            // Do not allow spaces in the name so that underlying .Net configuration API does not break.
+            name = (new string(nameChars)).RemoveWhiteSpace();
+
             base.Properties.Remove(name);
         }
 
