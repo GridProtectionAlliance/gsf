@@ -22,6 +22,8 @@
 //       Added new File property for the purpose of managing user scope setting.
 //  06/16/2010 - J. Ritchie Carroll
 //       Added Remove method to remove a categorized settings section.
+//  06/16/2010 - Pinal C. Patel
+//       Fixed Remove method to remove a categorized settings section.
 //
 //*******************************************************************************************************
 
@@ -327,17 +329,17 @@ namespace TVA.Configuration
         /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
         public void Remove(string name)
         {
-            if (string.IsNullOrEmpty(name))
-                throw new ArgumentNullException("name");
-
-            // Make the first letter of category name lower case, if not already.
-            char[] nameChars = name.ToCharArray();
-            nameChars[0] = char.ToLower(nameChars[0]);
+            // Get the category to be removed.
+            CategorizedSettingsElementCollection settingsCategory = this[name];
             
-            // Do not allow spaces in the name so that underlying .Net configuration API does not break.
-            name = (new string(nameChars)).RemoveWhiteSpace();
+            // Remove existing category settings.
+            while (settingsCategory.GetEnumerator().MoveNext())
+            {
+                settingsCategory.RemoveAt(0);
+            }
 
-            base.Properties.Remove(name);
+            // Remove category from property bag.
+            base.Properties.Remove(settingsCategory.Name);
         }
 
         /// <summary>
