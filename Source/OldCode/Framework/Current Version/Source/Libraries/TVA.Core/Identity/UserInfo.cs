@@ -48,6 +48,10 @@
 //  05/27/2010 - Pinal C. Patel
 //       Modified DirectoryEntry object creation in Initialize() to take in to consideration the domain.
 //       Modified Initialize() to move the derivation of domain name after DirectoryEntry initialization.
+//  06/17/2010 - Pinal C. Patel
+//       Modified the process of getting the user's DirectoryEntry object in Initialize() method to use 
+//       the default constructor of DirectorySearcher resulting in the search for the user to be 
+//       perfomed in the domain to which the host machine (where this code is executing) is joined.
 //
 //*******************************************************************************************************
 
@@ -723,13 +727,8 @@ namespace TVA.Identity
                                                          m_privilegedPassword);
                     }
 
-                    // Create user's directory entry for AD interactions.
-                    DirectoryEntry entry;
-                    if (string.IsNullOrEmpty(m_domain))
-                        entry = new DirectoryEntry();
-                    else
-                        entry = new DirectoryEntry("LDAP://" + m_domain);
-                    using (DirectorySearcher searcher = new DirectorySearcher(entry))
+                    // Get user's directory entry for AD interactions.
+                    using (DirectorySearcher searcher = new DirectorySearcher())
                     {
                         searcher.Filter = "(SAMAccountName=" + m_username + ")";
                         SearchResult result = searcher.FindOne();
