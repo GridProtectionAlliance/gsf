@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureForm.cs - Gbtc
+//  SecureWindow.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,12 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/26/2010 - Pinal C. Patel
+//  06/17/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  06/02/2010 - Pinal C. Patel
-//       Added authentication check in Form.Load event.
-//  06/09/2010 - Pinal C. Patel
-//       Added design-time check in Form.Load event to skip authentication when in design mode.
 //
 //*******************************************************************************************************
 
@@ -234,16 +230,17 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.Security;
 using System.Security.Principal;
 using System.Threading;
-using System.Windows.Forms;
+using System.Windows;
 using TVA.Security;
 
-namespace TVA.Windows.Forms
+namespace TVA.Windows
 {
     /// <summary>
-    /// Represents a windows form secured using role-based security.
+    /// Represents a WPF window secured using role-based security.
     /// </summary>
     /// <seealso cref="SecurityProvider"/>
     /// <example>
@@ -266,7 +263,7 @@ namespace TVA.Windows.Forms
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///       <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
@@ -284,17 +281,32 @@ namespace TVA.Windows.Forms
     /// ]]>
     /// </code>
     /// </example>
-    public partial class SecureForm : Form
+    /// <example>
+    /// XAML to be used for the WPF window that inherits from <see cref="SecureWindow"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <src:SecureWindow x:Class="SecureWpfApplication.Window1"
+    ///     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    ///     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+    ///     xmlns:src="clr-namespace:TVA.Windows;assembly=TVA.Windows"
+    ///     Title="Window1" Height="300" Width="300">
+    ///     <Grid>
+    /// 
+    ///     </Grid>
+    /// </src:SecureWindow>
+    /// ]]>
+    /// </code>
+    /// </example>
+    public class SecureWindow : Window
     {
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureForm"/> class.
+        /// Initializes a new instance of the <see cref="SecureWindow"/> class.
         /// </summary>
-        public SecureForm()
+        public SecureWindow()
         {
-            // Initialize form components.
-            InitializeComponent();
+            this.Initialized += SecureWindow_Initialized;
         }
 
         /// <summary>
@@ -303,13 +315,16 @@ namespace TVA.Windows.Forms
         /// <returns>Name of the resource being accessed.</returns>
         protected string GetResourceName()
         {
-            return this.Name;
+            if (!string.IsNullOrEmpty(this.Name))
+                return this.Name;
+            else
+                return this.GetType().Name;
         }
 
-        private void SecureForm_Load(object sender, EventArgs e)
+        private void SecureWindow_Initialized(object sender, EventArgs e)
         {
-            // Don't proceed if the form is opened in design mode.
-            if (DesignMode)
+            // Don't proceed if the window is opened in design mode.
+            if (DesignerProperties.GetIsInDesignMode(this))
                 return;
 
             // Check if the resource is excluded from being secured.
