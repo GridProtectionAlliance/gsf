@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPortal.aspx.cs - Gbtc
+//  NamespaceDoc.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,11 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/18/2010 - Pinal C. Patel
+//  06/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  06/02/2010 - Pinal C. Patel
-//       Added sample customization config file entries to code comments.
-//       Modified to set the text cursor focus on input fields for ease of use.
 //
 //*******************************************************************************************************
 
@@ -232,215 +229,15 @@
 */
 #endregion
 
-using System;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using TVA.Configuration;
-using TVA.Security;
+using System.Runtime.CompilerServices;
 
-namespace TVA.Web.Embedded
+namespace TVA.Web
 {
     /// <summary>
-    /// Embedded web page used by secure ASP.NET web sites for security related tasks.
+    /// Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
     /// </summary>
-    /// <example>
-    /// Config file entries for customizing the page:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <configSections>
-    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-    ///   </configSections>
-    ///   <categorizedSettings>
-    ///     <securityPortal>
-    ///       <add name="CompanyName" value="My Company" description="Name of the company." encrypted="false" />
-    ///       <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
-    ///       <add name="CompanyLogo" value="~/images/MyCompanyLogo.png" description="Image file of the company's logo." encrypted="false" />
-    ///     </securityPortal>
-    ///   </categorizedSettings>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// </example>
-    public partial class SecurityPortal : System.Web.UI.Page
+    [CompilerGenerated()]
+    class NamespaceDoc
     {
-        #region [ Members ]
-
-        // Constants
-        private const string CookieName = "SecurityPortal";
-        private const string StaticPageTitle = "Security Portal";
-        private const string SettingsCategory = "SecurityPortal";
-        private const string UnauthorizedErrorCode = "401";
-        private const string AccessDeniedErrorCode = "403";
-        private const string EmbeddedHelpImage = "TVA.Web.Embedded.Images.Help.png";
-        private const string EmbeddedWarningImage = "TVA.Web.Embedded.Images.Warning.png";
-        private const string EmbeddedCompanyLogo = "TVA.Web.Embedded.Images.TVALogo.png";
-        private const string DefaultCompanyName = "Tennessee Valley Authority";
-        private const string DefaultCompanyLink = "http://www.tva.gov";
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes the web page.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        protected void Page_Load(object sender, EventArgs e)
-        {
-            ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            CategorizedSettingsElement setting = null;
-
-            // Setup company logo.
-            setting = settings["CompanyLogo"];
-            if (setting != null)
-                LogoImage.ImageUrl = setting.Value;
-            else
-                LogoImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
-
-            // Setup company name.
-            setting = settings["CompanyName"];
-            if (setting != null)
-                CompanyLink.Text = setting.Value;
-            else
-                CompanyLink.Text = DefaultCompanyName;
-
-            // Setup company link.
-            setting = settings["CompanyLink"];
-            if (setting != null)
-                CompanyLink.NavigateUrl = setting.Value;
-            else
-                CompanyLink.NavigateUrl = DefaultCompanyLink;
-
-            HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
-            WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
-
-            if (Request["s"] == UnauthorizedErrorCode || SecurityProvider.Current == null)
-            {
-                Page.Title = StaticPageTitle + " :: Login";
-
-                LoginPanel.Visible = true;
-                ContentPlaceHolder.Controls.Clear();
-                ContentPlaceHolder.Controls.Add(LoginPanel);
-
-                if (string.IsNullOrEmpty(UsernameInput.Text))
-                {
-                    UsernameInput.Text = Response.Cookies[CookieName]["Username"];
-                    if (string.IsNullOrEmpty(UsernameInput.Text))
-                    {
-                        UsernameInput.Focus();
-                    }
-                    else
-                    {
-                        PasswordInput.Focus();
-                        RememberMeCheckBox.Checked = true;
-                    }
-                }
-            }
-            else if (Request["s"] == AccessDeniedErrorCode)
-            {
-                Page.Title = StaticPageTitle + " :: Access Denied";
-
-                AccessDeniedPanel.Visible = true;
-                ContentPlaceHolder.Controls.Clear();
-                ContentPlaceHolder.Controls.Add(AccessDeniedPanel);
-            }
-            else
-            {
-                UserData data = SecurityProvider.Current.UserData;
-                UsernameLabel.Text = data.Username;
-                CompanyLabel.Text = data.CompanyName;
-                FirstNameInput.Text = data.FirstName;
-                LastNameInput.Text = data.LastName;
-                EmailAddressInput.Text = data.EmailAddress;
-                PhoneNumberInput.Text = data.PhoneNumber;
-                if (!data.IsExternal)
-                {
-                    FirstNameInput.Enabled = false;
-                    LastNameInput.Enabled = false;
-                    EmailAddressInput.Enabled = false;
-                    PhoneNumberInput.Enabled = false;
-                }
-
-                Page.Title = StaticPageTitle + " :: My Account";
-                UpdateButton.Enabled = false;
-                MyAccountPanel.Visible = true;
-                ContentPlaceHolder.Controls.Clear();
-                ContentPlaceHolder.Controls.Add(MyAccountPanel);
-            }
-        }
-
-        /// <summary>
-        /// Logins the user.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        protected void LoginButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // Initialize the security provider.
-                SecurityProvider provider = new SecurityProvider(UsernameInput.Text);
-                provider.Initialize();
-                if (provider.Authenticate(PasswordInput.Text))
-                {
-                    // Setup security provider for subsequent uses.
-                    SecurityProvider.Current = provider;
-
-                    if (RememberMeCheckBox.Checked)
-                    {
-                        Response.Cookies[CookieName]["Username"] = UsernameInput.Text;
-                        Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(1);
-                    }
-                    else
-                    {
-                        Response.Cookies[CookieName]["Username"] = string.Empty;
-                        Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(-1);
-                    }
-
-                    // Redirect to the referring page.
-                    Response.Redirect(GetReferrerUrl(), false);
-                }
-                else
-                {
-                    // Display login failure message.
-                    ErrorMessageLabel.Text = "The username or password is invalid. Please try again.";
-                }
-            }
-            catch (Exception)
-            {
-                ErrorMessageLabel.Text = "Login failed due to an unexpected error.";
-            }
-        }
-
-        /// <summary>
-        /// Updates user data.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        protected void UpdateButton_Click(object sender, EventArgs e)
-        {
-            try
-            {
-
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        private string GetReferrerUrl()
-        {
-            if (Request["r"] != null)
-                return Request["r"];
-            else
-                return Request.UrlReferrer.AbsolutePath;
-        }
-
-        #endregion
     }
 }

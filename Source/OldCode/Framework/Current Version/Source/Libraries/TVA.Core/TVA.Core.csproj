@@ -299,6 +299,7 @@
     <Compile Include="Windows\Forms\FormExtensions.cs" />
     <Compile Include="Windows\Forms\NamespaceDoc.cs" />
     <Compile Include="Windows\Forms\ScreenArea.cs" />
+    <Compile Include="Windows\NamespaceDoc.cs" />
     <Compile Include="Word.cs" />
     <Compile Include="Xml\NamespaceDoc.cs" />
     <Compile Include="Xml\XmlExtensions.cs" />
