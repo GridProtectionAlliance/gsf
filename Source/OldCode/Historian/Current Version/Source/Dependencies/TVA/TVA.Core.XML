@@ -6747,6 +6747,13 @@
             <seealso cref="T:TVA.Configuration.CategorizedSettingsElement"/>
             <seealso cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/>
         </member>
+        <member name="M:TVA.Configuration.CategorizedSettingsSection.Remove(System.String)">
+            <summary>
+            Removes the specified category name including its associated settings.
+            </summary>
+            <param name="name">Name of the category to be removed.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
+        </member>
         <member name="M:TVA.Configuration.CategorizedSettingsSection.SetCryptoKey(System.String)">
             <summary>
             Sets the key to be used for encrypting and decrypting setting values.
@@ -10628,7 +10635,13 @@
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Identity.UserInfo"/> class.
             </summary>
-            <param name="loginID">Login ID in "domain\username" format of the user's account whose information is to be retrieved.</param>
+            <param name="loginID">
+            Login ID in 'domain\username' format of the user's account whose information is to be retrieved. Login ID 
+            can also be specified in 'username' format without the domain name, in which case the domain name will be
+            approximated based on the privileged user domain if specified, default logon domain of the host machine 
+            if available, or the domain of the identity that owns the host process.
+            </param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="loginID"/> is a null or empty string.</exception>
         </member>
         <member name="M:TVA.Identity.UserInfo.#ctor">
             <summary>

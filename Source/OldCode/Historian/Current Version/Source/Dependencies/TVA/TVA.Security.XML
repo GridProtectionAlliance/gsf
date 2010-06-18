@@ -25,6 +25,122 @@
             </summary>
             <seealso cref="T:TVA.Security.SecurityIdentity"/>
             <seealso cref="T:TVA.Security.SecurityPrincipal"/>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+                    description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+            <example>
+            This examples shows how to extend <see cref="T:TVA.Security.SecurityProvider"/> to use a flat-file for the security database:
+            <code>
+            using System.Data;
+            using System.IO;
+            using TVA;
+            using TVA.Data;
+            using TVA.IO;
+            using TVA.Security;
+            
+            namespace CustomSecurity
+            {
+                public class FlatFileSecurityProvider : SecurityProvider
+                {
+                    private const int LeastPrivilegedLevel = 5;
+            
+                    protected override bool PopulateDataFromBackendDatabase()
+                    {
+                        // Check for a valid username.
+                        if (string.IsNullOrEmpty(UserData.Username))
+                            return false;
+            
+                        // Check if a file name is specified.
+                        if (string.IsNullOrEmpty(ConnectionString))
+                            return false;
+            
+                        // Check if file exist on file system.
+                        string file = FilePath.GetAbsolutePath(ConnectionString);
+                        if (!File.Exists(file))
+                            return false;
+            
+                        // Read the data from the specified file.
+                        DataTable data = File.ReadAllText(file).ToDataTable(",", true);
+                        DataRow[] user = data.Select(string.Format("User = '{0}'", UserData.Username));
+                        if (user.Length &gt; 0)
+                        {
+                            // User exists in the specified file.
+                            UserData.IsDefined = true;
+            
+                            for (int i = LeastPrivilegedLevel; i &gt;= int.Parse(user[0]["Level"].ToNonNullString()); i--)
+                            {
+                                UserData.Roles.Add(i.ToString());
+                            }
+                        }
+            
+                        return true;
+                    }
+                }
+            }
+            </code>
+            Config file entries that go along with the above example:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="Security.csv" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+                    encrypted="false" />
+                  <add name="ProviderType" value="CustomSecurity.FlatFileSecurityProvider, CustomSecurity"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                </securityProvider>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
         </member>
         <member name="F:TVA.Security.SecurityProvider.DefaultApplicationName">
             <summary>
@@ -101,7 +217,7 @@
         </member>
         <member name="M:TVA.Security.SecurityProvider.RefreshData">
             <summary>
-            Refreshes user data.
+            Refreshes the <see cref="P:TVA.Security.SecurityProvider.UserData"/>.
             </summary>
             <returns>true if user data is refreshed, otherwise false.</returns>
         </member>
@@ -129,6 +245,36 @@
             Retrieves user data from backend security datastore.
             </summary>
             <returns>true if user data is retrieved, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProvider.CreateProvider(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Security.SecurityProvider"/> object based on the settings in the config file.
+            </summary>
+            <param name="username">Username of the user to which the <see cref="T:TVA.Security.SecurityProvider"/> object belongs.</param>
+            <returns>An <see cref="T:TVA.Security.SecurityProvider"/> object.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProvider.IsResourceSecurable(System.String)">
+            <summary>
+            Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProvider.IsResourceAccessible(System.String)">
+            <summary>
+            Determines if the current user, as defined by the <see cref="P:System.Threading.Thread.CurrentPrincipal"/>, has permission to access 
+            the specified <paramref name="resource"/> based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProvider.IsRegexMatch(System.String,System.String)">
+            <summary>
+            Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
+            </summary>
+            <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
+            <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
+            <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.SecurityProvider.EncryptPassword(System.String)">
             <summary>
@@ -168,89 +314,9 @@
             Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Security.SecurityProvider"/> object is currently enabled.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProvider.Username">
+        <member name="P:TVA.Security.SecurityProvider.UserData">
             <summary>
-            Gets the user's login name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.Password">
-            <summary>
-            Gets the user's password.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.FirstName">
-            <summary>
-            Gets the user's first name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.LastName">
-            <summary>
-            Gets the user's last name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.CompanyName">
-            <summary>
-            Gets the user's company name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.PhoneNumber">
-            <summary>
-            Gets the user's phone number.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.EmailAddress">
-            <summary>
-            Gets the user's email address.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.SecurityQuestion">
-            <summary>
-            Gets the user's security question.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.SecurityAnswer">
-            <summary>
-            Gets the user's security answer.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.PasswordChangeDataTime">
-            <summary>
-            Gets the date and time when user must change the password.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.AccountCreatedDateTime">
-            <summary>
-            Gets the date and time when user account was created.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.IsDefined">
-            <summary>
-            Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.IsExternal">
-            <summary>
-            Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.IsLockedOut">
-            <summary>
-            Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.IsAuthenticated">
-            <summary>
-            Gets a boolean value indicating whether or not the user has been authenticated.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.Groups">
-            <summary>
-            Gets a read-only list of all the groups the user belongs to.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProvider.Roles">
-            <summary>
-            Gets a read-only list of all the roles assigned to the user.
+            Gets the <see cref="P:TVA.Security.SecurityProvider.UserData"/> object containing information about the user.
             </summary>
         </member>
         <member name="P:TVA.Security.SecurityProvider.WindowsPrincipal">
@@ -355,6 +421,112 @@
         <member name="P:TVA.Security.SecurityPrincipal.Identity">
             <summary>
             Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.UserData">
+            <summary>
+            A serializable class that contains information about a user defined in the security datastore.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserData.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
+            </summary>
+            <param name="username">User's logon name.</param>
+        </member>
+        <member name="M:TVA.Security.UserData.Initialize">
+            <summary>
+            Initializes this <see cref="T:TVA.Security.UserData"/> object.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.LoginID">
+            <summary>
+            Gets the user's login ID.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Username">
+            <summary>
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Password">
+            <summary>
+            Gets the user's password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.FirstName">
+            <summary>
+            Gets the user's first name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.LastName">
+            <summary>
+            Gets the user's last name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.CompanyName">
+            <summary>
+            Gets the user's company name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PhoneNumber">
+            <summary>
+            Gets the user's phone number.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.EmailAddress">
+            <summary>
+            Gets the user's email address.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityQuestion">
+            <summary>
+            Gets the user's security question.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityAnswer">
+            <summary>
+            Gets the user's security answer.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PasswordChangeDataTime">
+            <summary>
+            Gets the date and time when user must change the password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
+            <summary>
+            Gets the date and time when user account was created.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDefined">
+            <summary>
+            Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsExternal">
+            <summary>
+            Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsLockedOut">
+            <summary>
+            Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsAuthenticated">
+            <summary>
+            Gets a boolean value indicating whether or not the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Groups">
+            <summary>
+            Gets a read-only list of all the groups the user belongs to.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Roles">
+            <summary>
+            Gets a read-only list of all the roles assigned to the user.
             </summary>
         </member>
     </members>
