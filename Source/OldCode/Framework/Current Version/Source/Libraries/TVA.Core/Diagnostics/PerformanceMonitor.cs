@@ -20,6 +20,8 @@
 //       Entered code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  06/21/2010 - Stephen C. Wills
+//       Fixed issue with monitor not disposing of counters properly.
 //
 //*******************************************************************************************************
 
@@ -647,6 +649,8 @@ namespace TVA.Diagnostics
                             {
                                 counter.Dispose();
                             }
+
+                            m_counters.Clear();
                         }
                     }
                 }

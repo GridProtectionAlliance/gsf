@@ -16,6 +16,8 @@
 //       Entered code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  06/21/2010 - Stephen C. Wills
+//       Fixed issue with counters not disposing properly.
 //
 //*******************************************************************************************************
 
@@ -559,7 +561,11 @@ namespace TVA.Diagnostics
                         // This will be done only when the object is disposed by calling Dispose().
                         if (m_counter != null)
                             m_counter.Dispose();
+
+                        m_counter = null;
                     }
+
+                    Reset();
                 }
                 finally
                 {
@@ -573,20 +579,13 @@ namespace TVA.Diagnostics
         /// </summary>
         public void Sample()
         {
-            try
+            if (m_counter != null)
             {
                 m_samples.Add(m_counter.NextValue());         // Update counter samples.
                 while (m_samples.Count > m_samplingWindow)
                 {
                     m_samples.RemoveAt(0);                    // Keep the counter samples window rolling.
                 }
-            }
-            catch (InvalidOperationException)
-            {
-                // If we're monitoring performance of an application that's not running (it was not running to begin 
-                // with, or it was running but it no longer running), we'll encounter an InvalidOperationException 
-                // exception. In this case we'll reset the values and absorb the exception.
-                Reset();
             }
         }
 

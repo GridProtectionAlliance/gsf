@@ -44,6 +44,8 @@
 //  01/04/2010 - J. Ritchie Carroll
 //       Removed hard thread abort from shutdown which will allow current processing items
 //       to complete before terminating thread.
+//  06/21/2010 - Stephen C. Wills
+//       Modified Dispose to fix potential concurrency issues.
 //
 //*******************************************************************************************************
 
@@ -1251,7 +1253,7 @@ namespace TVA.Collections
                         m_processTimer = null;
                         if (m_processQueue != null)
                         {
-                            m_processQueue.Clear();
+                            Clear();
                         }
                         m_processQueue = null;
                         m_processItemFunction = null;

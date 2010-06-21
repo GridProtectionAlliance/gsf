@@ -41,6 +41,8 @@
 //  04/19/2010 - J. Ritchie Carroll
 //       Added a discarded measurement event to allow adapters to apply special handling to discarded
 //       measurements if needed.
+//  06/21/2010 - Stephen C. Wills
+//       Modified code to avoid the call to abort the publication thread.
 //
 //*******************************************************************************************************
 
@@ -633,6 +635,7 @@ namespace TVA.Measurements
         private long m_timeResolution;                      // Maximum sorting resolution in ticks
         private DownsamplingMethod m_downsamplingMethod;    // Downsampling method to use if input is at a higher-resolution than output
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
+        private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
@@ -884,6 +887,7 @@ namespace TVA.Measurements
 
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
+                    m_maximumPublicationTimeout = (int)m_ticksPerFrame * 2;
 
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
@@ -1451,17 +1455,15 @@ namespace TVA.Measurements
                     {
                         DetachFromFrameRateTimer(m_framesPerSecond);
 
-                        if (m_publicationThread != null)
-                        {
-                            m_publicationThread.Abort();
-                        }
                         m_publicationThread = null;
 
                         if (m_publicationWaitHandle != null)
                         {
-                            m_publicationWaitHandle.Close();
+                            AutoResetEvent publicationWaitHandle = m_publicationWaitHandle;
+                            m_publicationWaitHandle = null;
+                            publicationWaitHandle.Set();
+                            publicationWaitHandle.Close();
                         }
-                        m_publicationWaitHandle = null;
 
                         if (m_frameQueue != null)
                         {
@@ -1934,7 +1936,7 @@ namespace TVA.Measurements
             int frameIndex;
 
             // Keep thread alive...
-            while (true)
+            while (m_publicationWaitHandle != null)
             {
                 // Keep publishing frames so long as they are ready for publication. This handles case where
                 // system may be falling behind because user function is taking too long - exit when no
@@ -2029,7 +2031,7 @@ namespace TVA.Measurements
                 }
 
                 // Wait for next publication signal
-                m_publicationWaitHandle.WaitOne();
+                m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout);
             }
         }
 

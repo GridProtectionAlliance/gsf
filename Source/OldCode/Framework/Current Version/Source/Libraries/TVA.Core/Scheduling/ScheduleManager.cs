@@ -29,6 +29,8 @@
 //       Fixed the implementation of Enabled property.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  06/21/2010 - Stephen C. Wills
+//       Modified code to avoid calls to abort the m_startTimerThread.
 //
 //*******************************************************************************************************
 
@@ -700,11 +702,7 @@ namespace TVA.Scheduling
             if (m_timer.Enabled)
                 m_timer.Stop();
 
-            if (m_startTimerThread != null)
-            {
-                m_startTimerThread.Abort();
-                m_startTimerThread = null;
-            }
+            m_startTimerThread = null;
         }
 
         /// <summary>
@@ -908,9 +906,6 @@ namespace TVA.Scheduling
                         // This will be done only when the object is disposed by calling Dispose().
                         SaveSettings();
 
-                        if (m_startTimerThread != null)
-                            m_startTimerThread.Abort();
-
                         if (m_timer != null)
                         {
                             m_timer.Elapsed -= m_timer_Elapsed;
@@ -928,7 +923,7 @@ namespace TVA.Scheduling
 
         private void StartTimer()
         {
-            while (true)
+            while (!Enabled)
             {
                 OnStarting();
 

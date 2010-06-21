@@ -19,6 +19,8 @@
 //       in more cases (e.g., at higher than millisecond resolutions).
 //  03/31/2010 - J. Ritchie Carroll
 //       Modified frame queue to wrap IFrame's in a tracking frame used for downsampling operations.
+//  06/21/2010 - Stephen C. Wills
+//       Modified Dispose to fix potential concurrency issues.
 //
 //*******************************************************************************************************
 
@@ -433,14 +435,8 @@ namespace TVA.Measurements
                 {
                     if (disposing)
                     {
-                        if (m_frameList != null)
-                            m_frameList.Clear();
-
+                        Clear();
                         m_frameList = null;
-
-                        if (m_frameHash != null)
-                            m_frameHash.Clear();
-
                         m_frameHash = null;
 
                         m_createNewFrame = null;
