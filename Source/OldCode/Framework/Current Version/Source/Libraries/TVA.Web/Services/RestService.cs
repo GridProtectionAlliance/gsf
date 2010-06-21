@@ -20,6 +20,8 @@
 //       Updated CanRead and CanWrite to not include Enabled in its evaluation.
 //  05/28/2010 - Pinal C. Patel
 //       Added an endpoint for web service help.
+//  06/21/2010 - Pinal C. Patel
+//       Added Singleton property for added control over the hosting process.
 //
 //*******************************************************************************************************
 
@@ -286,6 +288,7 @@ namespace TVA.Web.Services
         public event EventHandler<EventArgs<Exception>> ServiceProcessException;
 
         // Fields
+        private bool m_singleton;
         private string m_serviceUri;
         private string m_serviceContract;
         private DataFlowDirection m_serviceDataFlow;
@@ -323,6 +326,22 @@ namespace TVA.Web.Services
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
+        /// requests or base the web service instance creation on <see cref="InstanceContextMode"/> specified in its <see cref="ServiceBehaviorAttribute"/>.
+        /// </summary>
+        public bool Singleton
+        {
+            get
+            {
+                return m_singleton;
+            }
+            set
+            {
+                m_singleton = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the URI where the web service is to be hosted.
@@ -497,7 +516,10 @@ namespace TVA.Web.Services
                 if (m_enabled && !string.IsNullOrEmpty(m_serviceUri))
                 {
                     // Initialize host and binding.
-                    m_serviceHost = new WebServiceHost(this.GetType(), new Uri(m_serviceUri));
+                    if (m_singleton)
+                        m_serviceHost = new WebServiceHost(this, new Uri(m_serviceUri));
+                    else
+                        m_serviceHost = new WebServiceHost(this.GetType(), new Uri(m_serviceUri));
                     WebHttpBinding serviceBinding = new WebHttpBinding();
 
                     // Add an endpoint for the service.
@@ -544,6 +566,7 @@ namespace TVA.Web.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["Enabled", true].Update(m_enabled);
+                settings["Singleton", true].Update(m_singleton);
                 settings["ServiceUri", true].Update(m_serviceUri);
                 settings["ServiceContract", true].Update(m_serviceContract);
                 settings["ServiceDataFlow", true].Update(m_serviceDataFlow);
@@ -567,10 +590,12 @@ namespace TVA.Web.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Add("Enabled", m_enabled, "True if this web service is enabled; otherwise False.");
+                settings.Add("Singleton", m_singleton, "True if this web service is singleton; otherwise False.");
                 settings.Add("ServiceUri", m_serviceUri, "URI where this web service is to be hosted.");
                 settings.Add("ServiceContract", m_serviceContract, "Assembly qualified name of the contract interface implemented by this web service.");
                 settings.Add("ServiceDataFlow", m_serviceDataFlow, "Flow of data (Incoming; Outgoing; BothWays) allowed for this web service.");
                 Enabled = settings["Enabled"].ValueAs(m_enabled);
+                Singleton = settings["Singleton"].ValueAs(m_singleton);
                 ServiceUri = settings["ServiceUri"].ValueAs(m_serviceUri);
                 ServiceContract = settings["ServiceContract"].ValueAs(m_serviceContract);
                 ServiceDataFlow = settings["ServiceDataFlow"].ValueAs(m_serviceDataFlow);
