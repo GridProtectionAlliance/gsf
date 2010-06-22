@@ -4,6 +4,11 @@
         <name>TVA.Web</name>
     </assembly>
     <members>
+        <member name="T:TVA.Web.Embedded.NamespaceDoc">
+            <summary>
+            Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
+            </summary>
+        </member>
         <member name="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute">
             <summary>
             Attribute indicating the location of an embedded resource that should be
@@ -618,6 +623,11 @@
             </value>
             <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
         </member>
+        <member name="T:TVA.Web.Hosting.NamespaceDoc">
+            <summary>
+            Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
+            </summary>
+        </member>
         <member name="T:TVA.Web.Hosting.VirtualFileBaseCollection">
             <summary>
             A strongly typed <see cref="T:System.Collections.ObjectModel.KeyedCollection`2"/>
@@ -734,6 +744,11 @@
             <param name="username">Username of the user.</param>
             <param name="password">Password of the user.</param>
             <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
+        </member>
+        <member name="T:TVA.Web.NamespaceDoc">
+            <summary>
+            Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
+            </summary>
         </member>
         <member name="T:TVA.Web.SecurityModule">
             <summary>
@@ -1314,6 +1329,12 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is the exception encountered when processing a request.
             </remarks>
+        </member>
+        <member name="P:TVA.Web.Services.RestService.Singleton">
+            <summary>
+            Gets or sets a boolean value that indicates whether the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> will use the current instance of the web service for processing 
+            requests or base the web service instance creation on <see cref="T:System.ServiceModel.InstanceContextMode"/> specified in its <see cref="T:System.ServiceModel.ServiceBehaviorAttribute"/>.
+            </summary>
         </member>
         <member name="P:TVA.Web.Services.RestService.ServiceUri">
             <summary>

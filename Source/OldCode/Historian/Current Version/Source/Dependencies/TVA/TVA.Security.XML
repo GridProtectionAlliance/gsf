@@ -4,6 +4,11 @@
         <name>TVA.Security</name>
     </assembly>
     <members>
+        <member name="T:TVA.Security.NamespaceDoc">
+            <summary>
+            Contains fundamental classes that define the security framework for role-based security.
+            </summary>
+        </member>
         <member name="T:TVA.Security.PrincipalPolicy">
             <summary>
             Inidicates the <see cref="T:System.Security.Principal.IPrincipal"/> object to be attached the <see cref="P:System.AppDomain.CurrentDomain"/> thread for the purpose of implementing role-based security.

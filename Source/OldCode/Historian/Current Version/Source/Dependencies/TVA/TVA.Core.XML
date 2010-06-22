@@ -34719,6 +34719,11 @@
             </summary>
             <returns>The total height of all the screens relative to their arrangement.</returns>
         </member>
+        <member name="T:TVA.Windows.NamespaceDoc">
+            <summary>
+            Contains classes and extension functions related to .NET Windows-based platforms such as Windows Forms and WPF.
+            </summary>
+        </member>
         <member name="T:TVA.Word">
             <summary>
             Represents functions and extensions related to 16-bit words, 32-bit double-words and 64-bit quad-words.

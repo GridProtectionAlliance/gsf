@@ -16,6 +16,8 @@
 //       Added new header and license agreement.
 //  12/01/2009 - Pinal C. Patel
 //       Added a default protected constructor.
+//  06/22/2010 - Pinal C. Patel
+//       Modified the default constructor to set the base class Singleton property to true.
 //
 //*******************************************************************************************************
 
@@ -259,6 +261,7 @@ namespace TVA.Historian.DataServices
         protected DataService()
             : base()
         {
+            Singleton = true;
         }
 
         #endregion
