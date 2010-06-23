@@ -18,6 +18,8 @@
 //       Added WaitHandle return value from asynchronous connection.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  06/23/2010 - Stephen C. Wills
+//       Modified to use the absolute file path.
 //
 //*******************************************************************************************************
 
@@ -242,6 +244,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
+using TVA;
+using TVA.IO;
 using TVA.Configuration;
 
 namespace TVA.Communication
@@ -871,7 +875,7 @@ namespace TVA.Communication
                     OnConnectionAttempt(); ;
 
                     // Open the file.
-                    m_fileClient.Provider = new FileStream(m_connectData["file"], m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
+                    m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
                     // Move to the specified offset.
                     m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); 
 
