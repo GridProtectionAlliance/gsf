@@ -16,6 +16,8 @@
 //       Added usage example to code comments.
 //  06/15/2010 - Pinal C. Patel
 //       Added checks to the in-process caching logic.
+//  06/24/2010 - Pinal C. Patel
+//       Added LogError() and LogLogin() methods.
 //
 //*******************************************************************************************************
 
@@ -725,21 +727,29 @@ namespace TVA.Security
         /// <returns>true if user data is refreshed, otherwise false.</returns>
         public virtual bool RefreshData()
         {
-            // Initialize data.
-            m_userData.Initialize();
+            try
+            {
+                // Initialize data.
+                m_userData.Initialize();
 
-            // Populate user data.
-            if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal)
-            {
-                return PopulateDataFromActiveDirectory();
-            }
-            else
-            {
-                bool refreshFromDB = PopulateDataFromBackendDatabase();
-                if (refreshFromDB && !m_userData.IsExternal)
+                // Populate user data.
+                if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal)
+                {
                     return PopulateDataFromActiveDirectory();
+                }
                 else
-                    return refreshFromDB;
+                {
+                    bool refreshFromDB = PopulateDataFromBackendDatabase();
+                    if (refreshFromDB && !m_userData.IsExternal)
+                        return PopulateDataFromActiveDirectory();
+                    else
+                        return refreshFromDB;
+                }
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
             }
         }
 
@@ -750,33 +760,42 @@ namespace TVA.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public virtual bool Authenticate(string password)
         {
-            m_userData.IsAuthenticated = false;
-            if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal ||
-                (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsLockedOut && !m_userData.IsExternal))
+            try
             {
-                // Authenticate against active directory.
-                if (!string.IsNullOrEmpty(password))
+                m_userData.IsAuthenticated = false;
+                if (m_principalPolicy == PrincipalPolicy.WindowsPrincipal ||
+                    (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsExternal))
                 {
-                    // Validate by performing network logon.
-                    string[] userParts = m_userData.LoginID.Split('\\');
-                    m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
-                    m_userData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                    // Authenticate against active directory.
+                    if (!string.IsNullOrEmpty(password))
+                    {
+                        // Validate by performing network logon.
+                        string[] userParts = m_userData.LoginID.Split('\\');
+                        m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
+                        m_userData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+                    }
+                    else
+                    {
+                        // Validate with current thread principal.
+                        m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        m_userData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_userData.LoginID) &&
+                                                        string.Compare(m_windowsPrincipal.Identity.Name, m_userData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+                    }
                 }
-                else
+                else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && m_userData.IsExternal)
                 {
-                    // Validate with current thread principal.
-                    m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                    m_userData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(m_userData.LoginID) &&
-                                                    string.Compare(m_windowsPrincipal.Identity.Name, m_userData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+                    // Authenticate against backend datastore.
+                    m_userData.IsAuthenticated = m_userData.Password == EncryptPassword(password);
                 }
-            }
-            else if (m_principalPolicy == PrincipalPolicy.SecurityPrincipal && m_userData.IsDefined && !m_userData.IsLockedOut && m_userData.IsExternal)
-            {
-                // Authenticate against backend database.
-                m_userData.IsAuthenticated = m_userData.Password == EncryptPassword(password);
-            }
+                LogLogin(m_userData.IsAuthenticated);
 
-            return m_userData.IsAuthenticated;
+                return m_userData.IsAuthenticated;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
         }
 
         /// <summary>
@@ -801,6 +820,54 @@ namespace TVA.Security
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        /// <summary>
+        /// Logs user authentication attempt.
+        /// </summary>
+        /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
+        /// <returns>true if logging was successful, otherwise false.</returns>
+        protected virtual bool LogLogin(bool loginSuccess)
+        {
+            if (!string.IsNullOrEmpty(m_applicationName))
+            {
+                if (!m_userData.IsDefined)
+                    return false;
+
+                using (SqlConnection dbConnection = GetDatabaseConnection())
+                {
+                    dbConnection.ExecuteScalar("dbo.LogLogin", m_userData.Username, !loginSuccess);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Logs information about an encountered exception to the backend datastore.
+        /// </summary>
+        /// <param name="source">Source of the exception.</param>
+        /// <param name="message">Detailed description of the exception.</param>
+        /// <returns>true if logging was successful, otherwise false.</returns>
+        protected virtual bool LogError(string source, string message)
+        {
+            if (!string.IsNullOrEmpty(m_applicationName))
+            {
+                try
+                {
+                    using (SqlConnection dbConnection = GetDatabaseConnection())
+                    {
+                        dbConnection.ExecuteScalar("dbo.LogError", m_applicationName, source, message);
+                    }
+                    return true;
+                }
+                catch
+                {
+                }
+            }
+
+            return false;
         }
 
         /// <summary>

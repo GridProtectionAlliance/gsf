@@ -410,9 +410,9 @@ namespace TVA.Web.Embedded
                     ErrorMessageLabel.Text = "The username or password is invalid. Please try again.";
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                ErrorMessageLabel.Text = "Login failed due to an unexpected error.";
+                ErrorMessageLabel.Text = string.Format("Login failed due to an error - {0}", ex.Message);
             }
         }
 
