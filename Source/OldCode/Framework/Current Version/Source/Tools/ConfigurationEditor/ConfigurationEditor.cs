@@ -238,13 +238,17 @@ using System.ServiceProcess;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
+using TVA.Security.Cryptography;
 
 namespace ConfigurationEditor
 {
 	public partial class FormConfigurationEditor : Form
 	{
 
-		#region [ Members and Properties ]
+        #region [ Members and Properties ]
+
+        private const CipherStrength CryptoStrength = CipherStrength.Aes256;
+        private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
 
 		string m_configurationFileName;
 		bool m_isDirty;
@@ -423,10 +427,17 @@ namespace ConfigurationEditor
 								if (attribValue.Value.ToLower() == "true" || attribValue.Value.ToLower() == "false")
 									propType = typeof(System.Boolean);
 								else
-									propType = typeof(System.String);
+                                    propType = typeof(System.String);
+
+                                //If value is encrypted, then decrypt before loading it into property grid.
+                                string attribValueString;
+                                if (attribEncrypted != null && attribEncrypted.Value.ToLower() == "true" && !string.IsNullOrEmpty(attribValue.Value))
+                                    attribValueString = Cipher.Decrypt(attribValue.Value, DefaultCryptoKey, CryptoStrength);
+                                else
+                                    attribValueString = attribValue.Value.ToString();
 
 								//Now add the property													
-								properties.AddProperty(atrribKey.Value.ToString(), attribValue.Value.ToString(),
+								properties.AddProperty(atrribKey.Value.ToString(), attribValueString,
 										attribDescription.Value.ToString(), sectionList[y].Name, propType, false, false);
 
 							}
@@ -541,7 +552,13 @@ namespace ConfigurationEditor
 				if (property != null)
 				{
 					//Set the node value to the property value which will have been set in the Property grid.							
-					nodes[i].Attributes["value"].Value = property.GetValue(null).ToString();
+                    nodes[i].Attributes["value"].Value = property.GetValue(null).ToString();
+
+                    //If encrypted=true, then encrypt the value before saving into configuration file.
+                    if (nodes[i].Attributes["encrypted"] != null && nodes[i].Attributes["encrypted"].Value.ToLower() == "true" && !string.IsNullOrEmpty(property.GetValue(null).ToString()))
+                        nodes[i].Attributes["value"].Value = Cipher.Encrypt(property.GetValue(null).ToString(), DefaultCryptoKey, CryptoStrength);
+                    else
+                        nodes[i].Attributes["value"].Value = property.GetValue(null).ToString();
 
 					//Check to see if we have a value for our extended custom xml attribute - the description attribute.
 					//The default description is the property name when no descripyion attribute is present.

@@ -92,6 +92,12 @@
   <ItemGroup>
     <Content Include="configedit.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\TVA.Core\TVA.Core.csproj">
+      <Project>{FF3FCBA6-F01A-4EC2-BC3F-6BA832AFCF88}</Project>
+      <Name>TVA.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
