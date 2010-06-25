@@ -1802,8 +1802,8 @@ namespace TVA.Services
             Thread.CurrentPrincipal = client.ClientUser;
 
             // Retrieve previously initialized security provider of the remote client's user.
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
+            if (SecurityProviderCache.CurrentProvider == null)
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Initialize security provider for the remote client's user from specified credentials.
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated &&
@@ -1812,10 +1812,10 @@ namespace TVA.Services
                 string[] credentialParts = client.ClientUserCredentials.Split(':');
                 if (credentialParts.Length == 2)
                 {
-                    SecurityProvider provider = SecurityProvider.CreateProvider(credentialParts[0]);
+                    ISecurityProvider provider = SecurityProviderUtility.CreateProvider(credentialParts[0]);
                     provider.Initialize();
                     if (provider.Authenticate(credentialParts[1]))
-                        SecurityProvider.Current = provider;
+                        SecurityProviderCache.CurrentProvider = provider;
                 }
             }
 
@@ -2041,8 +2041,8 @@ namespace TVA.Services
 
                             // Check if remote client has permission to invoke the requested command.
                             if (m_secureRemoteInteractions && VerifySecurity(requestInfo.Sender) &&
-                                SecurityProvider.IsResourceSecurable(requestInfo.Request.Command) &&
-                                !SecurityProvider.IsResourceAccessible(requestInfo.Request.Command))
+                                SecurityProviderUtility.IsResourceSecurable(requestInfo.Request.Command) &&
+                                !SecurityProviderUtility.IsResourceAccessible(requestInfo.Request.Command))
                                 throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
 
                             // Notify the consumer about the incoming request from client.

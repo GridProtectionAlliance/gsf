@@ -237,14 +237,14 @@ namespace TVA.Security
     /// <summary>
     /// A class that implements <see cref="IIdentity"/> interface to facilitate custom role-based security.
     /// </summary>
-    /// <seealso cref="SecurityProvider"/>
     /// <seealso cref="SecurityPrincipal"/>
+    /// <seealso cref="ISecurityProvider"/>
     public class SecurityIdentity : IIdentity
     {
         #region [ Members ]
 
         // Fields
-        private SecurityProvider m_provider;
+        private ISecurityProvider m_provider;
 
         #endregion
 
@@ -253,9 +253,9 @@ namespace TVA.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="SecurityIdentity"/> class.
         /// </summary>
-        /// <param name="provider">An <see cref="SecurityProvider"/> object.</param>
+        /// <param name="provider">An <see cref="ISecurityProvider"/> of the user.</param>
         /// <exception cref="ArgumentNullException">Value specified for <paramref name="data"/> is null.</exception>
-        internal SecurityIdentity(SecurityProvider provider)
+        internal SecurityIdentity(ISecurityProvider provider)
         {
             if (provider == null)
                 throw new ArgumentNullException("data");
@@ -304,9 +304,9 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Gets the <see cref="SecurityProvider"/> object of the user.
+        /// Gets the <see cref="ISecurityProvider"/> of the user.
         /// </summary>
-        public SecurityProvider Provider
+        public ISecurityProvider Provider
         {
             get
             {

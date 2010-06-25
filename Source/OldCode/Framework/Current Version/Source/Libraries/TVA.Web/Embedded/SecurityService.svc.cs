@@ -254,9 +254,9 @@ namespace TVA.Web.Embedded
         [Description("Authenticates a user and caches the security context upon successful authentication for subsequent use.")]
         public UserData Login(string username, string password)
         {
-            SecurityProvider provider = SecurityProvider.CreateProvider(username);
+            ISecurityProvider provider = SecurityProviderUtility.CreateProvider(username);
             if (provider.Authenticate(password))
-                SecurityProvider.Current = provider;
+                SecurityProviderCache.CurrentProvider = provider;
 
             return provider.UserData;
         }

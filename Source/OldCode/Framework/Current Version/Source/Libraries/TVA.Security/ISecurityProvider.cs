@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPrincipal.cs - Gbtc
+//  ISecurityProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/22/2010 - Pinal C. Patel
+//  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,120 +230,78 @@
 #endregion
 
 using System;
-using System.Linq;
 using System.Security.Principal;
+using TVA.Configuration;
 
 namespace TVA.Security
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// A class that implements <see cref="IPrincipal"/> interface to facilitate custom role-based security.
+    /// Inidicates the <see cref="IPrincipal"/> object to be attached to the <see cref="AppDomain.CurrentDomain"/> thread for the purpose of implementing role-based security.
     /// </summary>
-    /// <seealso cref="SecurityIdentity"/>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecurityPrincipal : IPrincipal
+    public enum PrincipalPolicy
     {
-        #region [ Members ]
-
-        // Fields
-        private SecurityIdentity m_identity;
-
-        #endregion
-
-        #region [ Constructors ]
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPrincipal"/> class.
+        /// <see cref="TVA.Security.SecurityPrincipal"/> object is attached to the threads.
         /// </summary>
-        /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
-        /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
-        {
-            if (identity == null)
-                throw new ArgumentNullException("identity");
+        SecurityPrincipal,
+        /// <summary>
+        /// <see cref="System.Security.Principal.WindowsPrincipal"/> object is attached to the threads.
+        /// </summary>
+        WindowsPrincipal
+    }
 
-            m_identity = identity;
-        }
+    #endregion
 
-        #endregion
-
+    /// <summary>
+    /// Defines a provider of role-based security in applications.
+    /// </summary>
+    public interface ISecurityProvider : ISupportLifecycle, IPersistSettings
+    {
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="SecurityIdentity"/> object of the user.
+        /// Gets or sets the name of the application being secured as defined in the backend security datastore.
         /// </summary>
-        public IIdentity Identity
-        {
-            get
-            {
-                return m_identity;
-            }
-        }
+        string ApplicationName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the connection string to be used for connection to the backend security datastore.
+        /// </summary>
+        string ConnectionString { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PrincipalPolicy"/> to be used for enforcing role-based security.
+        /// </summary>
+        PrincipalPolicy PrincipalPolicy { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="UserData"/> object containing information about the user.
+        /// </summary>
+        UserData UserData { get; }
+
+        /// <summary>
+        /// Gets the original <see cref="WindowsPrincipal"/> of the user if the user exists in Active Directory.
+        /// </summary>
+        WindowsPrincipal WindowsPrincipal { get; }
 
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Determines whether the user is a member of the specified <paramref name="role"/>.
+        /// Refreshes the <see cref="UserData"/>.
         /// </summary>
-        /// <param name="roles">Comma seperated list of roles to check.</param>
-        /// <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        public bool IsInRole(string roles)
-        {
-            if (m_identity.Provider.PrincipalPolicy == PrincipalPolicy.WindowsPrincipal)
-            {
-                // Check membership against Active Directory.
-                if (m_identity.Provider.WindowsPrincipal == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.WindowsPrincipal.IsInRole(role.Trim()))
-                            return true;
-                    }
-
-                    return false;
-                }
-            }
-            else
-            {
-                // Check membership against backend datastore.
-                if (!m_identity.Provider.UserData.IsDefined || m_identity.Provider.UserData.IsLockedOut || !m_identity.Provider.UserData.IsAuthenticated)
-                {
-                    return false;
-                }
-                else
-                {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(role.Trim(), currentRole))) != null)
-                            return true;
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        #endregion
-
-        #region [ Operators ]
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        bool RefreshData();
 
         /// <summary>
-        /// Converts <see cref="SecurityPrincipal"/> object to <see cref="WindowsPrincipal"/> object.
+        /// Authenticates the user.
         /// </summary>
-        /// <param name="value">The <see cref="SecurityIdentity"/> object to convert.</param>
-        /// <returns>An <see cref="WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsPrincipal(SecurityPrincipal value)
-        {
-            if (value == null)
-                return null;
-            else
-                return (value.Identity as SecurityIdentity).Provider.WindowsPrincipal;
-        }
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        bool Authenticate(string password);
 
         #endregion
     }

@@ -318,7 +318,7 @@ namespace TVA.Web.Embedded
             HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
             WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
 
-            if (Request["s"] == UnauthorizedErrorCode || SecurityProvider.Current == null)
+            if (Request["s"] == UnauthorizedErrorCode || SecurityProviderCache.CurrentProvider == null)
             {
                 Page.Title = StaticPageTitle + " :: Login";
 
@@ -350,7 +350,7 @@ namespace TVA.Web.Embedded
             }
             else
             {
-                UserData data = SecurityProvider.Current.UserData;
+                UserData data = SecurityProviderCache.CurrentProvider.UserData;
                 UsernameLabel.Text = data.Username;
                 CompanyLabel.Text = data.CompanyName;
                 FirstNameInput.Text = data.FirstName;
@@ -383,12 +383,12 @@ namespace TVA.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                SecurityProvider provider = new SecurityProvider(UsernameInput.Text);
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(UsernameInput.Text);
                 provider.Initialize();
                 if (provider.Authenticate(PasswordInput.Text))
                 {
                     // Setup security provider for subsequent uses.
-                    SecurityProvider.Current = provider;
+                    SecurityProviderCache.CurrentProvider = provider;
 
                     if (RememberMeCheckBox.Checked)
                     {

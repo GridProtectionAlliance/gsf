@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPolicy.cs - Gbtc
+//  SecurityProviderBase.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,13 +8,18 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/22/2010 - Pinal C. Patel
+//  03/22/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  05/24/2010 - Pinal C. Patel
+//       Modified RefreshData() method to not query the AD at all for external user.
 //  05/27/2010 - Pinal C. Patel
 //       Added usage example to code comments.
-//       Modified Evaluate() to make use of IncludedResources and ExcludedResources config file settings.
-//  06/02/2010 - Pinal C. Patel
-//       Added authentication check to Evaluate() method.
+//  06/15/2010 - Pinal C. Patel
+//       Added checks to the in-process caching logic.
+//  06/24/2010 - Pinal C. Patel
+//       Added LogError() and LogLogin() methods.
+//  06/25/2010 - Pinal C. Patel
+//       Fixed a bug in the caching mechanism employed in Current static property.
 //
 //*******************************************************************************************************
 
@@ -235,24 +240,82 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Claims;
-using System.IdentityModel.Policy;
-using System.Security;
+using System.Configuration;
+using System.Linq;
 using System.Security.Principal;
-using System.ServiceModel;
 using System.Threading;
-using System.Web;
-using TVA.Security;
+using TVA.Configuration;
 
-namespace TVA.Web
+namespace TVA.Security
 {
     /// <summary>
-    /// Represents an authorization policy that can be used by WCF services for initializing security.
+    /// Base class for a provider of role-based security in applications.
     /// </summary>
-    /// <seealso cref="ISecurityProvider"/>
+    /// <seealso cref="SecurityIdentity"/>
+    /// <seealso cref="SecurityPrincipal"/>
     /// <example>
-    /// Common config file entries:
+    /// This examples shows how to extend <see cref="SecurityProviderBase"/> to use a flat-file for the security datastore:
+    /// <code>
+    /// using System.Data;
+    /// using System.IO;
+    /// using TVA;
+    /// using TVA.Data;
+    /// using TVA.IO;
+    /// using TVA.Security;
+    /// 
+    /// namespace CustomSecurity
+    /// {
+    ///     public class FlatFileSecurityProvider : SecurityProviderBase
+    ///     {
+    ///         private const int LeastPrivilegedLevel = 5;
+    /// 
+    ///         public FlatFileSecurityProvider(string username)
+    ///             : base(username)
+    ///         {
+    ///         }
+    /// 
+    ///         public override bool RefreshData()
+    ///         {
+    ///             // Check for a valid username.
+    ///             if (string.IsNullOrEmpty(UserData.Username))
+    ///                 return false;
+    /// 
+    ///             // Check if a file name is specified.
+    ///             if (string.IsNullOrEmpty(ConnectionString))
+    ///                 return false;
+    /// 
+    ///             // Check if file exist on file system.
+    ///             string file = FilePath.GetAbsolutePath(ConnectionString);
+    ///             if (!File.Exists(file))
+    ///                 return false;
+    /// 
+    ///             // Read the data from the specified file.
+    ///             DataTable data = File.ReadAllText(file).ToDataTable(",", true);
+    ///             DataRow[] user = data.Select(string.Format("Username = '{0}'", UserData.Username));
+    ///             if (user.Length > 0)
+    ///             {
+    ///                 // User exists in the specified file.
+    ///                 UserData.IsDefined = true;
+    ///                 UserData.Password = user[0]["Password"].ToNonNullString();
+    /// 
+    ///                 for (int i = LeastPrivilegedLevel; i >= int.Parse(user[0]["Level"].ToNonNullString()); i--)
+    ///                 {
+    ///                     UserData.Roles.Add(i.ToString());
+    ///                 }
+    ///             }
+    /// 
+    ///             return true;
+    ///         }
+    /// 
+    ///         public override bool Authenticate(string password)
+    ///         {
+    ///             // Compare password hashes to authenticate.
+    ///             return (UserData.Password == SecurityProviderUtility.EncryptPassword(password));
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// Config file entries that go along with the above example:
     /// <code>
     /// <![CDATA[
     /// <?xml version="1.0"?>
@@ -264,140 +327,98 @@ namespace TVA.Web
     ///     <securityProvider>
     ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///       <add name="ConnectionString" value="Security.csv" description="Connection string to be used for connection to the backend security datastore."
     ///         encrypted="false" />
     ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
+    ///       <add name="ProviderType" value="CustomSecurity.FlatFileSecurityProvider, CustomSecurity"
     ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="~/SecurityService.svc/*"
-    ///         description="Semicolon delimited list of resources to be excluded from being secured."
+    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
     ///     </securityProvider>
-    ///     <activeDirectory>
-    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-    ///         encrypted="true" />
-    ///     </activeDirectory>
     ///   </categorizedSettings>
     /// </configuration>
     /// ]]>
     /// </code>
     /// </example>
-    /// <example>
-    /// Internal WCF service configuration:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <system.serviceModel>
-    ///     <services>
-    ///       <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
-    ///                   bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior" />
-    ///       </service>
-    ///     </services>
-    ///     <behaviors>
-    ///       <endpointBehaviors>
-    ///         <behavior name="endpointBehavior">
-    ///           <webHttp/>
-    ///         </behavior>
-    ///       </endpointBehaviors>
-    ///       <serviceBehaviors>
-    ///         <behavior name="serviceBehavior">
-    ///           <serviceAuthorization principalPermissionMode="Custom">
-    ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
-    ///             </authorizationPolicies>
-    ///           </serviceAuthorization>
-    ///         </behavior>
-    ///       </serviceBehaviors>
-    ///     </behaviors>
-    ///     <bindings>
-    ///       <webHttpBinding>
-    ///         <binding name="endpointBinding">
-    ///           <security mode="TransportCredentialOnly">
-    ///             <transport clientCredentialType="Windows"/>
-    ///           </security>
-    ///         </binding>
-    ///       </webHttpBinding>
-    ///     </bindings>
-    ///     <serviceHostingEnvironment aspNetCompatibilityEnabled="false" />
-    ///   </system.serviceModel>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// </example>
-    /// <example>
-    /// External WCF service configuration:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <system.web>
-    ///     <httpModules>
-    ///       <add name="SecurityModule" type="TVA.Web.SecurityModule, TVA.Web" />
-    ///     </httpModules>
-    ///   </system.web>
-    ///   <system.serviceModel>
-    ///     <services>
-    ///       <service name="WcfService1.Service1" behaviorConfiguration="serviceBehavior">
-    ///         <endpoint address="" contract="WcfService1.IService1" binding="webHttpBinding" 
-    ///                   bindingConfiguration="endpointBinding" behaviorConfiguration="endpointBehavior"/>
-    ///       </service>
-    ///     </services>
-    ///     <behaviors>
-    ///       <endpointBehaviors>
-    ///         <behavior name="endpointBehavior">
-    ///           <webHttp/>
-    ///         </behavior>
-    ///       </endpointBehaviors>
-    ///       <serviceBehaviors>
-    ///         <behavior name="serviceBehavior">
-    ///           <serviceAuthorization principalPermissionMode="Custom">
-    ///             <authorizationPolicies>
-    ///               <add policyType="TVA.Web.SecurityPolicy, TVA.Web" />
-    ///             </authorizationPolicies>
-    ///           </serviceAuthorization>
-    ///         </behavior>
-    ///       </serviceBehaviors>
-    ///     </behaviors>
-    ///     <bindings>
-    ///       <webHttpBinding>
-    ///         <binding name="endpointBinding">
-    ///           <security mode="None" />
-    ///         </binding>
-    ///       </webHttpBinding>
-    ///     </bindings>
-    ///     <serviceHostingEnvironment aspNetCompatibilityEnabled="true" />
-    ///   </system.serviceModel>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// </example>
-    public class SecurityPolicy : IAuthorizationPolicy
+    public abstract class SecurityProviderBase : ISecurityProvider
     {
         #region [ Members ]
 
+        // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ApplicationName"/> property.
+        /// </summary>
+        public const string DefaultApplicationName = "SEC_APP";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ConnectionString"/> property.
+        /// </summary>
+        public const string DefaultConnectionString = "Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="PrincipalPolicy"/> property.
+        /// </summary>
+        public const PrincipalPolicy DefaultPrincipalPolicy = PrincipalPolicy.SecurityPrincipal;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="PersistSettings"/> property.
+        /// </summary>
+        public const bool DefaultPersistSettings = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="SettingsCategory"/> property.
+        /// </summary>
+        public const string DefaultSettingsCategory = "SecurityProvider";
+
         // Fields
-        private Guid m_id;
+        private string m_applicationName;
+        private string m_connectionString;
+        private PrincipalPolicy m_principalPolicy;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
+        private UserData m_userData;
+        private WindowsPrincipal m_windowsPrincipal;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPolicy"/> class.
+        /// Initializes a new instance of the security provider.
         /// </summary>
-        public SecurityPolicy()
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        protected SecurityProviderBase(string username)
         {
-            m_id = Guid.NewGuid();
+            // Verify specified username.
+            if (string.IsNullOrEmpty(username))
+                username = Thread.CurrentPrincipal.Identity.Name;
+
+            // Remove domain from username.
+            if (username.Contains('\\'))
+                username = username.Split('\\')[1];
+
+            // Initialize member variables.
+            m_userData = new UserData(username);
+            m_applicationName = DefaultApplicationName;
+            m_connectionString = DefaultConnectionString;
+            m_principalPolicy = DefaultPrincipalPolicy;
+            m_persistSettings = DefaultPersistSettings;
+            m_settingsCategory = DefaultSettingsCategory;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the security provider is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~SecurityProviderBase()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -405,19 +426,127 @@ namespace TVA.Web
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the identifier of this <see cref="SecurityPolicy"/> instance.
+        /// Gets or sets the name of the application being secured as defined in the backend security datastore.
         /// </summary>
-        public string Id
+        public string ApplicationName
         {
-            get { return m_id.ToString(); }
+            get
+            {
+                return m_applicationName;
+            }
+            set
+            {
+                m_applicationName = value;
+            }
         }
 
         /// <summary>
-        /// Gets a claim set that represents the issuer of this <see cref="SecurityPolicy"/>.
+        /// Gets or sets the connection string to be used for connection to the backend security datastore.
         /// </summary>
-        public ClaimSet Issuer
+        public string ConnectionString
         {
-            get { return ClaimSet.System; }
+            get
+            {
+                return m_connectionString;
+            }
+            set
+            {
+                m_connectionString = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PrincipalPolicy"/> to be used for enforcing role-based security.
+        /// </summary>
+        public PrincipalPolicy PrincipalPolicy
+        {
+            get
+            {
+                return m_principalPolicy;
+            }
+            set
+            {
+                m_principalPolicy = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="UserData"/> object containing information about the user.
+        /// </summary>
+        public UserData UserData
+        {
+            get
+            {
+                return m_userData;
+            }
+            protected set
+            {
+                m_userData = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the original <see cref="WindowsPrincipal"/> of the user if the user exists in Active Directory.
+        /// </summary>
+        public WindowsPrincipal WindowsPrincipal
+        {
+            get
+            {
+                return m_windowsPrincipal;
+            }
+            protected set
+            {
+                m_windowsPrincipal = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether security provider settings are to be saved to the config file.
+        /// </summary>
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the category under which security provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_settingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the security provider is currently enabled.
+        /// </summary>
+        public bool Enabled
+        {
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
         }
 
         #endregion
@@ -425,68 +554,110 @@ namespace TVA.Web
         #region [ Methods ]
 
         /// <summary>
-        /// Evaluates the <paramref name="eveluationContext"/> and initializes security.
+        /// Releases all the resources used by the security provider.
         /// </summary>
-        /// <param name="evaluationContext">An <see cref="EvaluationContext"/> object.</param>
-        /// <param name="state">Custom state of the <see cref="SecurityPolicy"/>.</param>
-        /// <returns></returns>
-        public bool Evaluate(EvaluationContext evaluationContext, ref object state)
+        public void Dispose()
         {
-            // In order for this to work properly security on the binding must be configured to use windows security.
-            // When this is done the caller's windows identity is available to us here and can be used to derive from 
-            // it the security principal that can be used by WCF service code downstream for implementing security.
-            object property;
-            if (evaluationContext.Properties.TryGetValue("Identities", out property))
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Initializes the security provider.
+        /// </summary>
+        public virtual void Initialize()
+        {
+            if (!m_initialized)
             {
-                // Extract and assign the caller's windows identity to current thread if available.
-                IList<IIdentity> identities = property as List<IIdentity>;
-                foreach (IIdentity identity in identities)
-                {
-                    if (identity is WindowsIdentity)
-                    {
-                        Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)identity);
-
-                        break;
-                    }
-                }
-            }
-
-            string resource = GetResourceName();
-            if (SecurityProviderUtility.IsResourceSecurable(resource))
-            {
-                // Initialize the security principal from caller's windows identity if uninitialized.
-                if (SecurityProviderCache.CurrentProvider == null)
-                    SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-
-                // Setup the principal to be attached to the thread on which WCF service will execute.
-                evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
-
-                // Verify that the current thread principal has been authenticated.
-                if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                    throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
-
-                // Perform a top-level permission check on the resource being accessed.
-                if (!SecurityProviderUtility.IsResourceAccessible(resource))
-                    throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
-
-                return true;
-            }
-            else
-            {
-                // Setup the principal to be attached to the thread on which WCF service will execute.
-                evaluationContext.Properties["Principal"] = Thread.CurrentPrincipal;
-
-                return true;
+                LoadSettings();
+                RefreshData();
+                Authenticate(string.Empty);
+                m_initialized = true; // Initialize only once.
             }
         }
 
         /// <summary>
-        /// Gets the name of resource being accessed.
+        /// Saves security provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
-        /// <returns>Name of the resource being accessed.</returns>
-        protected string GetResourceName()
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public virtual void SaveSettings()
         {
-            return VirtualPathUtility.ToAppRelative(OperationContext.Current.IncomingMessageHeaders.To.AbsolutePath);
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["ApplicationName", true].Update(m_applicationName);
+                settings["ConnectionString", true].Update(m_connectionString);
+                settings["PrincipalPolicy", true].Update(m_principalPolicy);
+
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved security provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public virtual void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("ApplicationName", m_applicationName, "Name of the application being secured as defined in the backend security datastore.");
+                settings.Add("ConnectionString", m_connectionString, "Connection string to be used for connection to the backend security datastore.");
+                settings.Add("PrincipalPolicy", m_principalPolicy, "Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security.");
+                ApplicationName = settings["ApplicationName"].ValueAs(m_applicationName);
+                ConnectionString = settings["ConnectionString"].ValueAs(m_connectionString);
+                PrincipalPolicy = settings["PrincipalPolicy"].ValueAs(m_principalPolicy);
+            }
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, refreshes the <see cref="UserData"/>.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        public abstract bool RefreshData();
+
+        /// <summary>
+        /// When overridden in a derived class, authenticates the user.
+        /// </summary>
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public abstract bool Authenticate(string password);
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the security provider and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.	
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         #endregion

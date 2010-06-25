@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPrincipal.cs - Gbtc
+//  SecurityProviderUtility.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/22/2010 - Pinal C. Patel
+//  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,119 +230,165 @@
 #endregion
 
 using System;
-using System.Linq;
-using System.Security.Principal;
+using System.Collections.Generic;
+using System.Security;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Web.Security;
+using TVA.Configuration;
 
 namespace TVA.Security
 {
     /// <summary>
-    /// A class that implements <see cref="IPrincipal"/> interface to facilitate custom role-based security.
+    /// A helper class containing methods used in the implementation of role-based security.
     /// </summary>
-    /// <seealso cref="SecurityIdentity"/>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecurityPrincipal : IPrincipal
+    public static class SecurityProviderUtility
     {
         #region [ Members ]
 
-        // Fields
-        private SecurityIdentity m_identity;
+        //Constants
+
+        private const string DefaultSettingsCategory = "SecurityProvider";
+        private const string DefaultProviderType = "TVA.Security.DefaultSecurityProvider, TVA.Security";
+        private const string DefaultIncludedResources = "*=*";
+        private const string DefaultExcludedResources = "";
+
+        /// <summary>
+        /// Regular expression used for validating the passwords of external users.
+        /// </summary>
+        private const string StrongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
 
         #endregion
 
-        #region [ Constructors ]
+        #region [ Static ]
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPrincipal"/> class.
-        /// </summary>
-        /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
-        /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
+        // Static Fields
+        private static string s_providerType;
+        private static ICollection<string> s_excludedResources;
+        private static IDictionary<string, string> s_includedResources;
+
+        // Static Constructor
+        static SecurityProviderUtility()
         {
-            if (identity == null)
-                throw new ArgumentNullException("identity");
-
-            m_identity = identity;
+            // Load settings from config file.
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[DefaultSettingsCategory];
+            settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
+            settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
+            settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
+            s_providerType = settings["ProviderType"].ValueAsString();
+            s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
+            s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
         }
 
-        #endregion
-
-        #region [ Properties ]
+        // Static Methods
 
         /// <summary>
-        /// Gets the <see cref="SecurityIdentity"/> object of the user.
+        /// Creates a new <see cref="ISecurityProvider"/> based on the settings in the config file.
         /// </summary>
-        public IIdentity Identity
+        /// <param name="username">Username of the user for whom the <see cref="ISecurityProvider"/> is to be created.</param>
+        /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
+        public static ISecurityProvider CreateProvider(string username)
         {
-            get
+            // Instantiate the provider.
+            ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;               
+
+            // Initialize the provider.
+            provider.Initialize();
+
+            return provider;
+        }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
+        /// </summary>
+        /// <param name="resource">Name of the resource to be checked.</param>
+        /// <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
+        public static bool IsResourceSecurable(string resource)
+        {
+            // Check if resource is excluded explicitly.
+            foreach (string exclusion in s_excludedResources)
             {
-                return m_identity;
+                if (IsRegexMatch(exclusion, resource))
+                    return false;
             }
+
+            // Check if resource is included explicitly.
+            foreach (KeyValuePair<string, string> inclusion in s_includedResources)
+            {
+                if (IsRegexMatch(inclusion.Key, resource))
+                    return true;
+            }
+
+            return false;
         }
 
-        #endregion
+        /// <summary>
+        /// Determines if the current user, as defined by the <see cref="Thread.CurrentPrincipal"/>, has permission to access 
+        /// the specified <paramref name="resource"/> based on settings in the config file.
+        /// </summary>
+        /// <param name="resource">Name of the resource to be checked.</param>
+        /// <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
+        public static bool IsResourceAccessible(string resource)
+        {
+            // Check if the resource has a role-based access restriction on it.
+            foreach (KeyValuePair<string, string> inclusion in s_includedResources)
+            {
+                if (IsRegexMatch(inclusion.Key, resource) &&
+                    (Thread.CurrentPrincipal.IsInRole(inclusion.Value)))
+                    return true;
+            }
 
-        #region [ Methods ]
+            return false;
+        }
 
         /// <summary>
-        /// Determines whether the user is a member of the specified <paramref name="role"/>.
+        /// Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
         /// </summary>
-        /// <param name="roles">Comma seperated list of roles to check.</param>
-        /// <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        public bool IsInRole(string roles)
+        /// <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
+        /// <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
+        /// <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
+        public static bool IsRegexMatch(string spec, string target)
         {
-            if (m_identity.Provider.PrincipalPolicy == PrincipalPolicy.WindowsPrincipal)
-            {
-                // Check membership against Active Directory.
-                if (m_identity.Provider.WindowsPrincipal == null)
-                {
-                    return false;
-                }
-                else
-                {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.WindowsPrincipal.IsInRole(role.Trim()))
-                            return true;
-                    }
+            spec = spec.Replace(".", "\\.");    // Escapse special regex character '.'.
+            spec = spec.Replace("?", "\\?");    // Escapse special regex character '?'.
+            spec = spec.Replace("*", ".*");     // Convert '*' to its regex equivalent.
 
-                    return false;
-                }
+            // Perform a case-insensitive regex match.
+            return Regex.IsMatch(target, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
+        }
+
+
+        /// <summary>
+        /// Encrypts the password to a one-way hash using the SHA1 hash algorithm.
+        /// </summary>
+        /// <param name="password">Password to be encrypted.</param>
+        /// <returns>Encrypted password.</returns>
+        public static string EncryptPassword(string password)
+        {
+
+            if (Regex.IsMatch(password, StrongPasswordRegex))
+            {
+                // We prepend salt text to the password and then has it to make it even more secure.
+                return FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\\P78f9E66b:a35_VÂ©6M13Â©6~2&[" + password, "SHA1");
             }
             else
             {
-                // Check membership against backend datastore.
-                if (!m_identity.Provider.UserData.IsDefined || m_identity.Provider.UserData.IsLockedOut || !m_identity.Provider.UserData.IsAuthenticated)
-                {
-                    return false;
-                }
-                else
-                {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(role.Trim(), currentRole))) != null)
-                            return true;
-                    }
+                // Password does not meet the strong password rule defined below, so we don't encrypt the password.
+                StringBuilder message = new StringBuilder();
+                message.Append("Password does not meet the following criteria:");
+                message.AppendLine();
+                message.Append("- Password must be at least 8 characters");
+                message.AppendLine();
+                message.Append("- Password must contain at least 1 digit");
+                message.AppendLine();
+                message.Append("- Password must contain at least 1 upper case letter");
+                message.AppendLine();
+                message.Append("- Password must contain at least 1 lower case letter");
 
-                    return false;
-                }
+                throw new SecurityException(message.ToString());
             }
-        }
-
-        #endregion
-
-        #region [ Operators ]
-
-        /// <summary>
-        /// Converts <see cref="SecurityPrincipal"/> object to <see cref="WindowsPrincipal"/> object.
-        /// </summary>
-        /// <param name="value">The <see cref="SecurityIdentity"/> object to convert.</param>
-        /// <returns>An <see cref="WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsPrincipal(SecurityPrincipal value)
-        {
-            if (value == null)
-                return null;
-            else
-                return (value.Identity as SecurityIdentity).Provider.WindowsPrincipal;
         }
 
         #endregion

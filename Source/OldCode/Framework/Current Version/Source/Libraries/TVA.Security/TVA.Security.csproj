@@ -57,11 +57,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DefaultSecurityProvider.cs" />
+    <Compile Include="ISecurityProvider.cs" />
     <Compile Include="NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SecurityProvider.cs" />
+    <Compile Include="SecurityProviderBase.cs" />
     <Compile Include="SecurityIdentity.cs" />
     <Compile Include="SecurityPrincipal.cs" />
+    <Compile Include="SecurityProviderCache.cs" />
+    <Compile Include="SecurityProviderUtility.cs" />
     <Compile Include="UserData.cs" />
   </ItemGroup>
   <ItemGroup>

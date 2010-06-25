@@ -245,7 +245,7 @@ namespace TVA.Windows.Forms
     /// <summary>
     /// Represents a windows form secured using role-based security.
     /// </summary>
-    /// <seealso cref="SecurityProvider"/>
+    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -264,7 +264,7 @@ namespace TVA.Windows.Forms
     ///         encrypted="false" />
     ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+    ///       <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
@@ -314,7 +314,7 @@ namespace TVA.Windows.Forms
 
             // Check if the resource is excluded from being secured.
             string resource = GetResourceName();
-            if (!SecurityProvider.IsResourceSecurable(resource))
+            if (!SecurityProviderUtility.IsResourceSecurable(resource))
                 return;
 
             // Setup thread principal to current windows principal.
@@ -322,15 +322,15 @@ namespace TVA.Windows.Forms
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security.
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
+            if (SecurityProviderCache.CurrentProvider == null)
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Verify that the current thread principal has been authenticated.
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
                 throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
 
             // Perform a top-level permission check on the resource being accessed.
-            if (!SecurityProvider.IsResourceAccessible(resource))
+            if (!SecurityProviderUtility.IsResourceAccessible(resource))
                 throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
         }
 

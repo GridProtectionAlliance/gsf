@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPrincipal.cs - Gbtc
+//  SecurityProviderCache.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/22/2010 - Pinal C. Patel
+//  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,119 +230,217 @@
 #endregion
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Security.Principal;
+using System.Threading;
+using System.Web;
 
 namespace TVA.Security
 {
     /// <summary>
-    /// A class that implements <see cref="IPrincipal"/> interface to facilitate custom role-based security.
+    /// A helper class that manages the caching of <see cref="ISecurityProvider"/>s.
     /// </summary>
-    /// <seealso cref="SecurityIdentity"/>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecurityPrincipal : IPrincipal
+    public static class SecurityProviderCache
     {
         #region [ Members ]
 
-        // Fields
-        private SecurityIdentity m_identity;
-
-        #endregion
-
-        #region [ Constructors ]
+        // Nested Types
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPrincipal"/> class.
+        /// A class that facilitates the caching of <see cref="ISecurityProvider"/>.
         /// </summary>
-        /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
-        /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
+        private class CacheContext
         {
-            if (identity == null)
-                throw new ArgumentNullException("identity");
+            private ISecurityProvider m_provider;
+            private DateTime m_lastAccessed;
 
-            m_identity = identity;
+            /// <summary>
+            /// Initializes a new instance of the <see cref="CacheContext"/> class.
+            /// </summary>
+            public CacheContext(ISecurityProvider provider)
+            {
+                m_provider = provider;
+                m_lastAccessed = DateTime.Now;
+            }
+
+            /// <summary>
+            /// Gets the <see cref="ISecurityProvider"/> managed by this <see cref="CacheContext"/>.
+            /// </summary>
+            public ISecurityProvider Provider
+            {
+                get
+                {
+                    m_lastAccessed = DateTime.Now;
+                    return m_provider;
+                }
+            }
+
+            /// <summary>
+            /// Gets the <see cref="DateTime"/> of when the <see cref="Provider"/> was last accessed.
+            /// </summary>
+            public DateTime LastAccessed
+            {
+                get
+                {
+                    return m_lastAccessed;
+                }
+            }
         }
 
-        #endregion
-
-        #region [ Properties ]
+        // Constants
 
         /// <summary>
-        /// Gets the <see cref="SecurityIdentity"/> object of the user.
+        /// Number of minutes upto which <see cref="ISecurityProvider"/>s are to be cached.
         /// </summary>
-        public IIdentity Identity
+        private const int CachingTimeout = 20;
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+        private static IDictionary<string, CacheContext> s_cache;
+        private static System.Timers.Timer s_cacheMonitorTimer;
+
+        // Static Constructor
+        static SecurityProviderCache()
+        {
+            // Initialize static variables.
+            s_cache = new Dictionary<string, CacheContext>(StringComparer.CurrentCultureIgnoreCase);
+            s_cacheMonitorTimer = new System.Timers.Timer(60000);
+            s_cacheMonitorTimer.Elapsed += CacheMonitorTimer_Elapsed;
+            s_cacheMonitorTimer.Start();
+        }
+
+        // Static Properties
+
+        /// <summary>
+        /// Gets or sets the <see cref="ISecurityProvider"/> of the current user.
+        /// </summary>
+        public static ISecurityProvider CurrentProvider
         {
             get
             {
-                return m_identity;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Determines whether the user is a member of the specified <paramref name="role"/>.
-        /// </summary>
-        /// <param name="roles">Comma seperated list of roles to check.</param>
-        /// <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        public bool IsInRole(string roles)
-        {
-            if (m_identity.Provider.PrincipalPolicy == PrincipalPolicy.WindowsPrincipal)
-            {
-                // Check membership against Active Directory.
-                if (m_identity.Provider.WindowsPrincipal == null)
+                // Logic behind caching of the provider:
+                // - A provider is cached to session state data if the runtime is ASP.NET and if the session state 
+                //   data is accessible. This would essentially mean that we're dealing with web sites or web services
+                //   that are either SOAP ASMX services or WCF services hosted in ASP.NET compatibility mode.
+                // - A provider is cached to in-process static memory if we don't have access to session state data. 
+                //   This would essentially mean that we're either dealing with windows based application or WCF 
+                //   service hosted inside ASP.NET runtime without compatibility mode enabled.
+                SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
+                if (principal != null)
                 {
-                    return false;
+                    // The provider we're looking for is available to us via the current thread principal. This means
+                    // that the current thread principal has already been set by a call to Current property setter.
+                    return ((SecurityIdentity)principal.Identity).Provider;
                 }
                 else
                 {
-                    foreach (string role in roles.Split(','))
+                    // Since the provider is not available to us through the current thread principal, we check to see 
+                    // if it is available to us via one of the two caching mechanisms.
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
                     {
-                        if (m_identity.Provider.WindowsPrincipal.IsInRole(role.Trim()))
-                            return true;
+                        // Check session state.
+                        ISecurityProvider provider = HttpContext.Current.Session[typeof(ISecurityProvider).Name] as ISecurityProvider;
+                        if (provider == null)
+                            return null;
+                        else
+                            return SetupPrincipal(provider, false);
                     }
+                    else
+                    {
+                        // Check in-process memory.
+                        CacheContext cache;
+                        lock (s_cache)
+                        {
+                            s_cache.TryGetValue(Thread.CurrentPrincipal.Identity.Name, out cache);
+                        }
 
-                    return false;
+                        if (cache == null)
+                            return null;
+                        else
+                            return SetupPrincipal(cache.Provider, false);
+                    }
                 }
             }
-            else
+            set
             {
-                // Check membership against backend datastore.
-                if (!m_identity.Provider.UserData.IsDefined || m_identity.Provider.UserData.IsLockedOut || !m_identity.Provider.UserData.IsAuthenticated)
+                if (value != null)
                 {
-                    return false;
+                    // Login - Setup security principal.
+                    value.Initialize();
+                    SetupPrincipal(value, false);
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                        // Cache provider to session state.
+                        HttpContext.Current.Session[typeof(ISecurityProvider).Name] = value;
+                    else if (!string.IsNullOrEmpty(value.UserData.LoginID))
+                        // Cache provider to in-process memory.
+                        lock (s_cache)
+                        {
+                            s_cache[value.UserData.LoginID] = new CacheContext(value);
+                        }
                 }
                 else
                 {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(role.Trim(), currentRole))) != null)
-                            return true;
-                    }
+                    // Logout - Restore original principal.
+                    SecurityPrincipal principal = Thread.CurrentPrincipal as SecurityPrincipal;
+                    if (principal == null)
+                        return;
 
-                    return false;
+                    SecurityIdentity identity = (SecurityIdentity)principal.Identity;
+                    SetupPrincipal(identity.Provider, true);
+
+                    if (HttpContext.Current != null && HttpContext.Current.Session != null)
+                        // Remove previously cached provider from session state.
+                        HttpContext.Current.Session[typeof(ISecurityProvider).Name] = null;
+                    else if (s_cache.ContainsKey(identity.Provider.UserData.LoginID))
+                        // Remove previously cached provider from in-process memory.
+                        lock (s_cache)
+                        {
+                            s_cache.Remove(identity.Provider.UserData.LoginID);
+                        }
                 }
             }
         }
 
-        #endregion
+        // Static Methods
 
-        #region [ Operators ]
-
-        /// <summary>
-        /// Converts <see cref="SecurityPrincipal"/> object to <see cref="WindowsPrincipal"/> object.
-        /// </summary>
-        /// <param name="value">The <see cref="SecurityIdentity"/> object to convert.</param>
-        /// <returns>An <see cref="WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsPrincipal(SecurityPrincipal value)
+        private static ISecurityProvider SetupPrincipal(ISecurityProvider provider, bool restore)
         {
-            if (value == null)
-                return null;
+            // Initialize the principal object.
+            IPrincipal principal;
+            if (restore && provider.WindowsPrincipal != null)
+                // Initialize principal to original WindowsPrincipal.
+                principal = provider.WindowsPrincipal;
+            else if (restore && provider.WindowsPrincipal == null)
+                // Initialize principal to anonymous WindowsPrincipal.
+                principal = new WindowsPrincipal(WindowsIdentity.GetAnonymous());
             else
-                return (value.Identity as SecurityIdentity).Provider.WindowsPrincipal;
+                // Initialize principal to SecurityPrincipal.
+                principal = new SecurityPrincipal(new SecurityIdentity(provider));
+
+            // Setup the current thread principal.
+            Thread.CurrentPrincipal = principal;
+
+            // Setup ASP.NET remote user principal.
+            if (HttpContext.Current != null)
+                HttpContext.Current.User = Thread.CurrentPrincipal;
+
+            return provider;
+        }
+
+        private static void CacheMonitorTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            lock (s_cache)
+            {
+                List<string> cacheKeys = new List<string>(s_cache.Keys);
+                foreach (string cacheKey in cacheKeys)
+                {
+                    if (DateTime.Now.Subtract(s_cache[cacheKey].LastAccessed).TotalMinutes > CachingTimeout)
+                        s_cache.Remove(cacheKey);
+                }
+            }
         }
 
         #endregion

@@ -247,7 +247,7 @@ namespace TVA.Web
     /// <summary>
     /// Represents an HTTP module that can be used to enable site-wide role-based security.
     /// </summary>
-    /// <seealso cref="SecurityProvider"/>
+    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -266,7 +266,7 @@ namespace TVA.Web
     ///         encrypted="false" />
     ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
     ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+    ///       <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
@@ -375,7 +375,7 @@ namespace TVA.Web
 
         private void Application_PostMapRequestHandler(object sender, EventArgs e)
         {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
+            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
                 return;
 
             if (m_application.Context.Handler is IReadOnlySessionState ||
@@ -389,7 +389,7 @@ namespace TVA.Web
 
         private void Application_PostAcquireRequestState(object sender, EventArgs e)
         {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
+            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
                 return;
 
             SessionEnabledHandler handler = HttpContext.Current.Handler as SessionEnabledHandler;
@@ -400,17 +400,17 @@ namespace TVA.Web
 
         private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
         {
-            if (!SecurityProvider.IsResourceSecurable(GetResourceName()))
+            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
                 return;
 
-            if (SecurityProvider.Current == null)
-                SecurityProvider.Current = SecurityProvider.CreateProvider(string.Empty);
+            if (SecurityProviderCache.CurrentProvider == null)
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
                 m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
 
-            if (!SecurityProvider.IsResourceAccessible(GetResourceName()))
+            if (!SecurityProviderUtility.IsResourceAccessible(GetResourceName()))
                 // User does not have access to the resource.
                 m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
         }

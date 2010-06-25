@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecurityPrincipal.cs - Gbtc
+//  DefaultSecurityProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/22/2010 - Pinal C. Patel
+//  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -230,53 +230,69 @@
 #endregion
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Security.Principal;
+using System.Threading;
+using TVA.Data;
+using TVA.Identity;
 
 namespace TVA.Security
 {
     /// <summary>
-    /// A class that implements <see cref="IPrincipal"/> interface to facilitate custom role-based security.
+    /// Represents an <see cref="ISecurityProvider"/> that uses SQL Server for it backend datastore and authenticates 
+    /// internal users against the Active Directory and external users against the SQL Server backend datastore.
     /// </summary>
-    /// <seealso cref="SecurityIdentity"/>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecurityPrincipal : IPrincipal
+    /// <example>
+    /// Required config file entries:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///     <activeDirectory>
+    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+    ///         encrypted="true" />
+    ///     </activeDirectory>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
+    public class DefaultSecurityProvider : SecurityProviderBase
     {
-        #region [ Members ]
-
-        // Fields
-        private SecurityIdentity m_identity;
-
-        #endregion
-
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecurityPrincipal"/> class.
+        /// Initializes a new instance of the <see cref="DefaultSecurityProvider"/> class.
         /// </summary>
-        /// <param name="identity">An <see cref="SecurityIdentity"/> object.</param>
-        /// <exception cref="ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        internal SecurityPrincipal(SecurityIdentity identity)
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        public DefaultSecurityProvider(string username)
+            : base(username)
         {
-            if (identity == null)
-                throw new ArgumentNullException("identity");
-
-            m_identity = identity;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the <see cref="SecurityIdentity"/> object of the user.
-        /// </summary>
-        public IIdentity Identity
-        {
-            get
-            {
-                return m_identity;
-            }
         }
 
         #endregion
@@ -284,65 +300,263 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Determines whether the user is a member of the specified <paramref name="role"/>.
+        /// Refreshes the <see cref="UserData"/>.
         /// </summary>
-        /// <param name="roles">Comma seperated list of roles to check.</param>
-        /// <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        public bool IsInRole(string roles)
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        public override bool RefreshData()
         {
-            if (m_identity.Provider.PrincipalPolicy == PrincipalPolicy.WindowsPrincipal)
+            try
             {
-                // Check membership against Active Directory.
-                if (m_identity.Provider.WindowsPrincipal == null)
+                // Initialize data.
+                UserData.Initialize();
+
+                // Populate user data.
+                if (PrincipalPolicy == PrincipalPolicy.WindowsPrincipal)
                 {
-                    return false;
+                    return PopulateDataFromActiveDirectory();
                 }
                 else
                 {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.WindowsPrincipal.IsInRole(role.Trim()))
-                            return true;
-                    }
-
-                    return false;
+                    bool refreshFromDB = PopulateDataFromBackendDatabase();
+                    if (refreshFromDB && !UserData.IsExternal)
+                        return PopulateDataFromActiveDirectory();
+                    else
+                        return refreshFromDB;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // Check membership against backend datastore.
-                if (!m_identity.Provider.UserData.IsDefined || m_identity.Provider.UserData.IsLockedOut || !m_identity.Provider.UserData.IsAuthenticated)
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Authenticates the user.
+        /// </summary>
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public override bool Authenticate(string password)
+        {
+            try
+            {
+                UserData.IsAuthenticated = false;
+                if (PrincipalPolicy == PrincipalPolicy.WindowsPrincipal ||
+                    (PrincipalPolicy == PrincipalPolicy.SecurityPrincipal && UserData.IsDefined && !UserData.IsExternal))
                 {
+                    // Authenticate against active directory.
+                    if (!string.IsNullOrEmpty(password))
+                    {
+                        // Validate by performing network logon.
+                        string[] userParts = UserData.LoginID.Split('\\');
+                        WindowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
+                        UserData.IsAuthenticated = WindowsPrincipal != null && WindowsPrincipal.Identity.IsAuthenticated;
+                    }
+                    else
+                    {
+                        // Validate with current thread principal.
+                        WindowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        UserData.IsAuthenticated = WindowsPrincipal != null && !string.IsNullOrEmpty(UserData.LoginID) &&
+                                                        string.Compare(WindowsPrincipal.Identity.Name, UserData.LoginID, true) == 0 && WindowsPrincipal.Identity.IsAuthenticated;
+                    }
+                }
+                else if (PrincipalPolicy == PrincipalPolicy.SecurityPrincipal && UserData.IsDefined && UserData.IsExternal)
+                {
+                    // Authenticate against backend datastore.
+                    UserData.IsAuthenticated = UserData.Password == SecurityProviderUtility.EncryptPassword(password);
+                }
+                LogLogin(UserData.IsAuthenticated);
+
+                return UserData.IsAuthenticated;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Logs user authentication attempt.
+        /// </summary>
+        /// <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
+        /// <returns>true if logging was successful, otherwise false.</returns>
+        protected virtual bool LogLogin(bool loginSuccess)
+        {
+            if (!string.IsNullOrEmpty(ApplicationName))
+            {
+                if (!UserData.IsDefined)
                     return false;
+
+                using (SqlConnection dbConnection = GetDatabaseConnection())
+                {
+                    dbConnection.ExecuteScalar("dbo.LogLogin", UserData.Username, !loginSuccess);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Logs information about an encountered exception to the backend datastore.
+        /// </summary>
+        /// <param name="source">Source of the exception.</param>
+        /// <param name="message">Detailed description of the exception.</param>
+        /// <returns>true if logging was successful, otherwise false.</returns>
+        protected virtual bool LogError(string source, string message)
+        {
+            if (!string.IsNullOrEmpty(ApplicationName))
+            {
+                try
+                {
+                    using (SqlConnection dbConnection = GetDatabaseConnection())
+                    {
+                        dbConnection.ExecuteScalar("dbo.LogError", ApplicationName, source, message);
+                    }
+                    return true;
+                }
+                catch
+                {
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieves user data from Active Directory.
+        /// </summary>
+        /// <returns>true if user data is retrieved, otherwise false.</returns>
+        protected virtual bool PopulateDataFromActiveDirectory()
+        {
+            if (string.IsNullOrEmpty(UserData.Username))
+                return false;
+
+            using (UserInfo adUserInfo = new UserInfo(UserData.Username))
+            {
+                adUserInfo.PersistSettings = true;
+                adUserInfo.Initialize();
+                if (adUserInfo.UserEntry != null)
+                {
+                    // User exists in Active Directory.
+                    UserData.LoginID = adUserInfo.LoginID;
+                    UserData.FirstName = adUserInfo.FirstName;
+                    UserData.LastName = adUserInfo.LastName;
+                    UserData.CompanyName = adUserInfo.Company;
+                    UserData.PhoneNumber = adUserInfo.Telephone;
+                    UserData.EmailAddress = adUserInfo.Email;
+
+                    return true;
                 }
                 else
                 {
-                    foreach (string role in roles.Split(','))
-                    {
-                        if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(role.Trim(), currentRole))) != null)
-                            return true;
-                    }
-
+                    // No such user in Active Directory.
                     return false;
                 }
             }
         }
 
-        #endregion
-
-        #region [ Operators ]
-
         /// <summary>
-        /// Converts <see cref="SecurityPrincipal"/> object to <see cref="WindowsPrincipal"/> object.
+        /// Retrieves user data from backend security datastore.
         /// </summary>
-        /// <param name="value">The <see cref="SecurityIdentity"/> object to convert.</param>
-        /// <returns>An <see cref="WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
-        public static explicit operator WindowsPrincipal(SecurityPrincipal value)
+        /// <returns>true if user data is retrieved, otherwise false.</returns>
+        protected virtual bool PopulateDataFromBackendDatabase()
         {
-            if (value == null)
-                return null;
-            else
-                return (value.Identity as SecurityIdentity).Provider.WindowsPrincipal;
+            if (string.IsNullOrEmpty(UserData.Username))
+                return false;
+
+            DataSet userData;
+            DataRow userDataRow;
+            using (SqlConnection dbConnection = GetDatabaseConnection())
+            {
+                if (dbConnection == null)
+                    return false;
+
+                // We'll retrieve all the data we need in a single trip to the database by calling the stored
+                // procedure 'RetrieveApiData' that will return 3 tables to us:
+                // Table1 (Index 0): Information about the user.
+                // Table2 (Index 1): Groups the user is a member of.
+                // Table3 (Index 2): Roles that are assigned to the user either directly or through a group.
+                userData = dbConnection.RetrieveDataSet("dbo.RetrieveApiData", UserData.Username, ApplicationName);
+
+                if (userData.Tables[0].Rows.Count == 0)
+                    return false;
+
+                userDataRow = userData.Tables[0].Rows[0];
+                UserData.IsDefined = true;
+                if (!Convert.IsDBNull(userDataRow["UserPasswordChangeDateTime"]))
+                    UserData.PasswordChangeDataTime = Convert.ToDateTime(userDataRow["UserPasswordChangeDateTime"]);
+                if (!Convert.IsDBNull(userDataRow["UserAccountCreatedDateTime"]))
+                    UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["UserAccountCreatedDateTime"]);
+                if (!Convert.IsDBNull(userDataRow["UserIsExternal"]))
+                    UserData.IsExternal = Convert.ToBoolean(userDataRow["UserIsExternal"]);
+                if (!Convert.IsDBNull(userDataRow["UserIsLockedOut"]))
+                    UserData.IsLockedOut = Convert.ToBoolean(userDataRow["UserIsLockedOut"]);
+
+                foreach (DataRow group in userData.Tables[1].Rows)
+                {
+                    if (!Convert.IsDBNull(group["GroupName"]))
+                        UserData.Groups.Add(Convert.ToString(group["GroupName"]));
+                }
+
+                foreach (DataRow role in userData.Tables[2].Rows)
+                {
+                    if (!Convert.IsDBNull(role["RoleName"]))
+                        UserData.Roles.Add(Convert.ToString(role["RoleName"]));
+                }
+
+                if (UserData.IsExternal)
+                {
+                    if (!Convert.IsDBNull(userDataRow["UserPassword"]))
+                        UserData.Password = Convert.ToString(userDataRow["UserPassword"]);
+                    if (!Convert.IsDBNull(userDataRow["UserFirstName"]))
+                        UserData.FirstName = Convert.ToString(userDataRow["UserFirstName"]);
+                    if (!Convert.IsDBNull(userDataRow["UserLastName"]))
+                        UserData.LastName = Convert.ToString(userDataRow["UserLastName"]);
+                    if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
+                        UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
+                    if (!Convert.IsDBNull(userDataRow["UserPhoneNumber"]))
+                        UserData.PhoneNumber = Convert.ToString(userDataRow["UserPhoneNumber"]);
+                    if (!Convert.IsDBNull(userDataRow["UserEmailAddress"]))
+                        UserData.EmailAddress = Convert.ToString(userDataRow["UserEmailAddress"]);
+                    if (!Convert.IsDBNull(userDataRow["UserSecurityQuestion"]))
+                        UserData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
+                    if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
+                        UserData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
+                }
+
+                return true;
+            }
+        }
+
+        private SqlConnection GetDatabaseConnection()
+        {
+            SqlException exception = null;
+            SqlConnection connection = null;
+            foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
+            {
+                try
+                {
+                    // Initialize database connection.
+                    connection = new SqlConnection(pair.Value);
+                    connection.Open();
+
+                    return connection;
+                }
+                catch (SqlException ex)
+                {
+                    // Try other connection strings.
+                    exception = ex;
+                }
+                catch
+                {
+                    // Bubble-up encountered exception.
+                    throw;
+                }
+            }
+
+            throw new InitializationException("Unable to initialize connection to backend security datastore", exception);
         }
 
         #endregion
