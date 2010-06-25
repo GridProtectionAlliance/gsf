@@ -18,6 +18,8 @@
 //       Added checks to the in-process caching logic.
 //  06/24/2010 - Pinal C. Patel
 //       Added LogError() and LogLogin() methods.
+//  06/25/2010 - Pinal C. Patel
+//       Fixed a bug in the caching mechanism employed in Current static property.
 //
 //*******************************************************************************************************
 
@@ -1102,11 +1104,11 @@ namespace TVA.Security
                     if (HttpContext.Current != null && HttpContext.Current.Session != null)
                         // Cache provider to session state.
                         HttpContext.Current.Session[typeof(SecurityProvider).Name] = value;
-                    else if (!string.IsNullOrEmpty(value.UserData.Username))
+                    else if (!string.IsNullOrEmpty(value.UserData.LoginID))
                         // Cache provider to in-process memory.
                         lock (s_cache)
                         {
-                            s_cache[value.UserData.Username] = new CacheContext(value);
+                            s_cache[value.UserData.LoginID] = new CacheContext(value);
                         }
                 }
                 else
@@ -1116,16 +1118,17 @@ namespace TVA.Security
                     if (principal == null)
                         return;
 
-                    SetupPrincipal(((SecurityIdentity)principal.Identity).Provider, true);
+                    SecurityIdentity identity = (SecurityIdentity)principal.Identity;
+                    SetupPrincipal(identity.Provider, true);
 
                     if (HttpContext.Current != null && HttpContext.Current.Session != null)
                         // Remove previously cached provider from session state.
                         HttpContext.Current.Session[typeof(SecurityProvider).Name] = null;
-                    else if (s_cache.ContainsKey(principal.Identity.Name))
+                    else if (s_cache.ContainsKey(identity.Provider.UserData.LoginID))
                         // Remove previously cached provider from in-process memory.
                         lock (s_cache)
                         {
-                            s_cache.Remove(principal.Identity.Name);
+                            s_cache.Remove(identity.Provider.UserData.LoginID);
                         }
                 }
             }
