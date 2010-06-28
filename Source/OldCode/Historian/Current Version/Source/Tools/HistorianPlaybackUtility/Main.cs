@@ -308,12 +308,20 @@ namespace HistorianPlaybackUtility
             {
                 SerialPortInput.Items.Add(port);
             }
-            SerialPortInput.SelectedIndex = 0;
-            SerialBaudRateInput.SelectedIndex = 4;
-            SerialParityInput.SelectedIndex = 0;
-            SerialStopBitsInput.SelectedIndex = 1;
-            this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(3));
-
+            if (SerialPortInput.Items.Count > 0)
+            {
+                SerialPortInput.SelectedIndex = 0;
+                SerialBaudRateInput.SelectedIndex = 4;
+                SerialParityInput.SelectedIndex = 0;
+                SerialStopBitsInput.SelectedIndex = 1;
+                this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(3));
+            }
+            else
+            {
+                MessageBox.Show("No serial ports where found on this machine. The option for serial output will be removed.");
+                OutputCannelTabs.TabPages.Remove(SerialSettingsTab);
+           
+            }
             // Initialize member variables.
             m_activeThreads = new List<Thread>();
             m_archiveFile = new ArchiveFile();
