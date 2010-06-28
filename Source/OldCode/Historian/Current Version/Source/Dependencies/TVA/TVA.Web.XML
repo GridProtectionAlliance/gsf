@@ -754,7 +754,7 @@
             <summary>
             Represents an HTTP module that can be used to enable site-wide role-based security.
             </summary>
-            <seealso cref="T:TVA.Security.SecurityProvider"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
             <example>
             Required config file entries:
             <code>
@@ -773,7 +773,7 @@
                     encrypted="false" />
                   <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
                     encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -843,7 +843,7 @@
             <summary>
             Represents an authorization policy that can be used by WCF services for initializing security.
             </summary>
-            <seealso cref="T:TVA.Security.SecurityProvider"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
             <example>
             Common config file entries:
             <code>
@@ -862,7 +862,7 @@
                     encrypted="false" />
                   <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
                     encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
