@@ -1,4 +1,4 @@
-Imports System.Reflection
+ï»¿Imports System.Reflection
 Imports System.Runtime.CompilerServices
 Imports System.Runtime.InteropServices
 
@@ -10,7 +10,7 @@ Imports System.Runtime.InteropServices
 <Assembly: AssemblyDescription("Database Migration Utility")> 
 <Assembly: AssemblyCompany("Grid Protection Alliance")> 
 <Assembly: AssemblyProduct("TVA Code Library Framework")> 
-<Assembly: AssemblyCopyright("Copyright © 2010")> 
+<Assembly: AssemblyCopyright("Copyright ï¿½ 2010")> 
 <Assembly: AssemblyTrademark("")>
 <Assembly: AssemblyCulture("")>
 
@@ -24,4 +24,4 @@ Imports System.Runtime.InteropServices
 ' You can specify all the values or you can default the Revision and Build Numbers
 ' by using the '*' as shown below
 
-<Assembly: AssemblyVersion("1.1.*")> 
+<Assembly: AssemblyVersion("1.1.60.53878")> 
