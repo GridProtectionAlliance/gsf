@@ -953,7 +953,7 @@ Friend Class DataMigrationUtility
             Case DatabaseType.SqlServer
                 destination.Text = "Provider=SQLOLEDB; Data Source=localhost; Initial Catalog=openPDC; User Id=myUsername; Password=myPassword;"
             Case DatabaseType.MySQL
-                destination.Text = "Provider=MySQLProv; Data Source=localhost; Initial Catalog=openPDC; User Id=myUsername; Password=myPassword;"
+                destination.Text = "Provider=MySQLProv; location=MACHINE; Data Source=openPDC; User Id=myUsername; Password=myPassword;"
             Case DatabaseType.Oracle
                 destination.Text = "Provider=msdaora; Data Source=openPDC; User Id=myUsername; Password=myPassword;"
             Case Else
