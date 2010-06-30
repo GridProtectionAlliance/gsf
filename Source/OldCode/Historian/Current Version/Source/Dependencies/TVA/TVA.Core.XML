@@ -14744,6 +14744,21 @@
             Gets the total number of measurements that were sorted by arrival because the measurement reported a bad timestamp quality.
             </summary>
         </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.DownsampledMeasurements">
+            <summary>
+            Gets the total number of downsampled measurements processed by the concentrator.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.MissedSortsByTimeout">
+            <summary>
+            Gets the total number of missed sorts by timeout processed by the concentrator.
+            </summary>
+        </member>
+        <member name="P:TVA.Measurements.ConcentratorBase.FramesAheadOfSchedule">
+            <summary>
+            Gets the total number of frames ahead of schedule processed by the concentrator.
+            </summary>
+        </member>
         <member name="P:TVA.Measurements.ConcentratorBase.TotalPublicationTime">
             <summary>
             Gets the total number of seconds frames have spent in the publication process since concentrator started.
