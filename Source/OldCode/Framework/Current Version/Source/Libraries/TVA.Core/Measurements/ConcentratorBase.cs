@@ -1,3 +1,4 @@
+
 //*******************************************************************************************************
 //  ConcentratorBase.cs - Gbtc
 //
@@ -1267,6 +1268,39 @@ namespace TVA.Measurements
             get
             {
                 return m_measurementsSortedByArrival;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of downsampled measurements processed by the concentrator.
+        /// </summary>
+        public long DownsampledMeasurements
+        {
+            get
+            {
+                return m_downsampledMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of missed sorts by timeout processed by the concentrator.
+        /// </summary>
+        public long MissedSortsByTimeout
+        {
+            get
+            {
+                return m_missedSortsByTimeout;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total number of frames ahead of schedule processed by the concentrator.
+        /// </summary>
+        public long FramesAheadOfSchedule
+        {
+            get
+            {
+                return m_framesAheadOfSchedule;
             }
         }
 
