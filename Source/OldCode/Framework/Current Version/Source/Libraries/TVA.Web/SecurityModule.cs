@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  05/27/2010 - Pinal C. Patel
 //       Added usage example to code comments.
+//  06/30/2010 - Pinal C. Patel
+//       Modified redirection logic to support security of static resources (*.txt, *.pdf, *.exe).
 //
 //*******************************************************************************************************
 
@@ -400,7 +402,8 @@ namespace TVA.Web
 
         private void Application_PreRequestHandlerExecute(object sender, EventArgs e)
         {
-            if (!SecurityProviderUtility.IsResourceSecurable(GetResourceName()))
+            string resource = GetResourceName();
+            if (!SecurityProviderUtility.IsResourceSecurable(resource))
                 return;
 
             if (SecurityProviderCache.CurrentProvider == null)
@@ -408,11 +411,22 @@ namespace TVA.Web
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+                Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
 
-            if (!SecurityProviderUtility.IsResourceAccessible(GetResourceName()))
+            if (!SecurityProviderUtility.IsResourceAccessible(resource))
                 // User does not have access to the resource.
-                m_application.Response.Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+                Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+        }
+
+        private void Redirect(string url)
+        {
+            // Abruptly ending the processing caused by a redirect does not work well when processing static content.
+            if (HttpContext.Current.Handler is DefaultHttpHandler)
+                // Accessed resource is static.
+                m_application.Response.Redirect(url, false);
+            else
+                // Accessed resource is dynamic.
+                m_application.Response.Redirect(url, true);
         }
 
         #endregion
