@@ -31,6 +31,8 @@
 //       Added new header and license agreement.
 //  06/21/2010 - Stephen C. Wills
 //       Modified code to avoid calls to abort the m_startTimerThread.
+//  07/02/2010 - J. Ritchie Caroll
+//       Fixed an issue related to accessing a disposed timer.
 //
 //*******************************************************************************************************
 
@@ -474,7 +476,10 @@ namespace TVA.Scheduling
         {
             get
             {
-                return m_timer.Enabled;
+                if (m_timer != null)
+                    return m_timer.Enabled;
+
+                return false;
             }
         }
 
@@ -911,6 +916,8 @@ namespace TVA.Scheduling
                             m_timer.Elapsed -= m_timer_Elapsed;
                             m_timer.Dispose();
                         }
+
+                        m_timer = null;
                     }
                 }
                 finally
