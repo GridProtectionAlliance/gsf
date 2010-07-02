@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.FolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
             this.SplitContainerFull = new System.Windows.Forms.SplitContainer();
             this.SplitContainerTop = new System.Windows.Forms.SplitContainer();
@@ -783,10 +784,12 @@
             this.ClientSize = new System.Drawing.Size(692, 566);
             this.Controls.Add(this.SplitContainerFull);
             this.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MinimumSize = new System.Drawing.Size(700, 600);
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Historian Playback Utility v{0}";
+            this.Load += new System.EventHandler(this.Main_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.SplitContainerFull.Panel1.ResumeLayout(false);
             this.SplitContainerFull.Panel2.ResumeLayout(false);

@@ -248,6 +248,7 @@ using TVA.Historian.Files;
 using TVA.Historian.Packets;
 using TVA.IO;
 using TVA.Reflection;
+using TVA.Windows.Forms;
 
 namespace HistorianPlaybackUtility
 {
@@ -304,25 +305,29 @@ namespace HistorianPlaybackUtility
             EnableWatermark();
             StartTimeInput.Value = DateTime.UtcNow.AddMinutes(-5);
             EndTimeInput.Value = DateTime.UtcNow;
+
+            // Add version number to title
+            this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(3));
+
             foreach (string port in SerialPort.GetPortNames())
             {
                 SerialPortInput.Items.Add(port);
             }
+
             if (SerialPortInput.Items.Count > 0)
             {
                 SerialPortInput.SelectedIndex = 0;
                 SerialBaudRateInput.SelectedIndex = 4;
                 SerialParityInput.SelectedIndex = 0;
                 SerialStopBitsInput.SelectedIndex = 1;
-                this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Version.ToString(3));
             }
             else
             {
-                MessageBox.Show("No serial ports where found on this machine. The option for serial output will be removed.");
+                // No serial ports where found on this machineso the option for serial output will be removed
                 OutputCannelTabs.TabPages.Remove(SerialSettingsTab);
-           
             }
-            // Initialize member variables.
+
+             // Initialize member variables.
             m_activeThreads = new List<Thread>();
             m_archiveFile = new ArchiveFile();
             m_archiveFile.StateFile = new StateFile();
@@ -465,6 +470,11 @@ namespace HistorianPlaybackUtility
 
         #region [ Handlers ]
 
+        private void Main_Load(object sender, EventArgs e)
+        {
+            this.RestoreLayout();
+        }
+
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (m_archiveFile.StateFile != null)
@@ -487,6 +497,8 @@ namespace HistorianPlaybackUtility
 
             if (m_rolloverWaitHandle != null)
                 m_rolloverWaitHandle.Close();
+
+            this.SaveLayout();
         }
 
         private void ArchiveLocationBrowse_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
