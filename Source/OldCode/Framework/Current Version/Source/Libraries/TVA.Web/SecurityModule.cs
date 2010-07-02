@@ -14,6 +14,8 @@
 //       Added usage example to code comments.
 //  06/30/2010 - Pinal C. Patel
 //       Modified redirection logic to support security of static resources (*.txt, *.pdf, *.exe).
+//  07/01/2010 - Pinal C. Patel
+//       Modified redirection logic to allow for custom redirection using customErrors settings.
 //
 //*******************************************************************************************************
 
@@ -235,8 +237,10 @@
 
 using System;
 using System.Web;
+using System.Web.Configuration;
 using System.Web.Hosting;
 using System.Web.SessionState;
+using TVA.Configuration;
 using TVA.Security;
 using TVA.Web.Hosting;
 
@@ -411,22 +415,37 @@ namespace TVA.Web
 
             if (!m_application.User.Identity.IsAuthenticated)
                 // Failed to authenticate user.
-                Redirect("~/SecurityPortal.aspx?s=401&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+                Redirect(401);
 
             if (!SecurityProviderUtility.IsResourceAccessible(resource))
                 // User does not have access to the resource.
-                Redirect("~/SecurityPortal.aspx?s=403&r=" + HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+                Redirect(403);
         }
 
-        private void Redirect(string url)
+        private void Redirect(int statusCode)
         {
+            if (m_application.Context.IsCustomErrorEnabled)
+            {
+                // Defer redirect to customErrors settings in the config file to allow for custom error pages.
+                ConfigurationFile configFile = ConfigurationFile.Current;
+                CustomErrorsSection customErrors = configFile.Configuration.GetSection("system.web/customErrors") as CustomErrorsSection;
+                if (customErrors != null && customErrors.Errors[statusCode.ToString()] != null)
+                {
+                    // Set status code for the response.
+                    m_application.Context.Response.StatusCode = statusCode;
+                    // Throw exception for ASP.NET pipeline to takeover processing.
+                    throw new HttpException(statusCode, string.Format("Security exception (HTTP status code: {0})", statusCode));
+                }
+            }
+
             // Abruptly ending the processing caused by a redirect does not work well when processing static content.
-            if (HttpContext.Current.Handler is DefaultHttpHandler)
+            string redirectUrl = string.Format("~/SecurityPortal.aspx?s={0}&r={1}", statusCode, HttpUtility.UrlEncode(m_application.Request.Url.AbsoluteUri));
+            if (m_application.Context.Handler is DefaultHttpHandler)
                 // Accessed resource is static.
-                m_application.Response.Redirect(url, false);
+                m_application.Context.Response.Redirect(redirectUrl, false);
             else
                 // Accessed resource is dynamic.
-                m_application.Response.Redirect(url, true);
+                m_application.Context.Response.Redirect(redirectUrl, true);
         }
 
         #endregion

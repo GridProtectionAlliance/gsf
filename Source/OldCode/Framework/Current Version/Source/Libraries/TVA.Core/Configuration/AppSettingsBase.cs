@@ -378,7 +378,7 @@ namespace TVA.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void CreateSetting(string name, string setting, string value)
         {
-            KeyValueConfigurationCollection settings = m_configFile.AppSettings.Settings;
+            KeyValueConfigurationCollection settings = m_configFile.Configuration.AppSettings.Settings;
 
             if (settings[setting] == null)
                 settings.Add(setting, value);
@@ -394,7 +394,7 @@ namespace TVA.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override string RetrieveSetting(string name, string setting)
         {
-            return m_configFile.AppSettings.Settings[setting].Value;
+            return m_configFile.Configuration.AppSettings.Settings[setting].Value;
         }
 
         /// <summary>
@@ -407,7 +407,7 @@ namespace TVA.Configuration
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected override void StoreSetting(string name, string setting, string value)
         {
-            m_configFile.AppSettings.Settings[setting].Value = value;
+            m_configFile.Configuration.AppSettings.Settings[setting].Value = value;
         }
 
         /// <summary>

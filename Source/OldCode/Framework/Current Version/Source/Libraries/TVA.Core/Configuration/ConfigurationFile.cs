@@ -30,6 +30,9 @@
 //  04/20/2010 - Pinal C. Patel
 //       Added static Open() method as the only way of retrieving a ConfigurationFile instance.
 //       Added internal UserConfigurationFile class for accessing and updating user scope settings.
+//  07/01/2010 - Pinal C. Patel
+//       Removed FileName, AppSettings and ConnectionStrings proxy properties and replaced them with
+//       new Configuration property to allow for full access to the application configuration.
 //
 //*******************************************************************************************************
 
@@ -286,8 +289,8 @@ namespace TVA.Configuration
     ///         // Get the sections of config file.
     ///         CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
     ///         CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
-    ///         KeyValueConfigurationCollection appSettings = config.AppSettings.Settings;
-    ///         ConnectionStringSettingsCollection connStrings = config.ConnectionStrings.ConnectionStrings;
+    ///         KeyValueConfigurationCollection appSettings = config.Configuration.AppSettings.Settings;
+    ///         ConnectionStringSettingsCollection connStrings = config.Configuration.ConnectionStrings.ConnectionStrings;
     ///        
     ///         // Add settings to the config file under the "appSettings" section.
     ///         appSettings.Add("SaveSettingOnExit", true.ToString());
@@ -464,22 +467,19 @@ namespace TVA.Configuration
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the name and path of the config file represented by this <see cref="ConfigurationFile"/> object.
+        /// Get the underlying <see cref="System.Configuration.Configuration"/> that can be accessed using this <see cref="ConfigurationFile"/> object.
         /// </summary>
-        /// <returns>Name and path of the config file.</returns>
-        public string FileName
+        public System.Configuration.Configuration Configuration
         {
             get
             {
-                return m_configuration.FilePath;
+                return m_configuration;
             }
         }
 
         /// <summary>
-        /// Gets the <see cref="CategorizedSettingsSection"/> object representing settings under the 
-        /// "categorizedSettings" section of the config file.
+        /// Gets the <see cref="CategorizedSettingsSection"/> object representing settings under the "categorizedSettings" section of the config file.
         /// </summary>
-        /// <returns>A <see cref="CategorizedSettingsSection"/> object.</returns>
         public CategorizedSettingsSection Settings
         {
             get
@@ -488,32 +488,6 @@ namespace TVA.Configuration
                 settings.File = this;
                 settings.SetCryptoKey(m_cryptoKey);
                 return settings;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="System.Configuration.AppSettingsSection"/> object representing settings under the 
-        /// "appSettings" section of the config file.
-        /// </summary>
-        /// <returns>A <see cref="System.Configuration.AppSettingsSection"/> object.</returns>
-        public AppSettingsSection AppSettings
-        {
-            get
-            {
-                return m_configuration.AppSettings;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="System.Configuration.ConnectionStringsSection"/> representing settings under the 
-        /// "connectionStrings" section of the config file.
-        /// </summary>
-        /// <returns>A <see cref="System.Configuration.ConnectionStringsSection"/> object.</returns>
-        public ConnectionStringsSection ConnectionStrings
-        {
-            get
-            {
-                return m_configuration.ConnectionStrings;
             }
         }
 
