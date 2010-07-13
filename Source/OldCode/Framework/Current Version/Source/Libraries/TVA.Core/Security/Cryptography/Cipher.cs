@@ -27,7 +27,10 @@
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //  10/05/2009 - J. Ritchie Carroll
-//      Switched to AES only encryption/decryption using machine specific local key cache.
+//       Switched to AES only encryption/decryption using machine specific local key cache.
+//  07/13/2010 - Stephen C. Wills
+//       Added a file watcher to reload the KeyIV table when an external
+//       process modifies the cache file.
 //
 //*******************************************************************************************************
 
@@ -294,6 +297,21 @@ namespace TVA.Security.Cryptography
         // Password hash table (run-time optimization)
         private static Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
 
+        // Key and initialization vector cache file watcher
+        private static FileSystemWatcher s_keyIVCacheFileWatcher = new FileSystemWatcher();
+
+        /// <summary>
+        /// Static constructor for the <see cref="Cipher"/> class.
+        /// Prepares the file watcher for receiving events.
+        /// </summary>
+        static Cipher()
+        {
+            s_keyIVCacheFileWatcher.Changed += s_keyIVCacheFileWatcher_Changed;
+            s_keyIVCacheFileWatcher.Path = FilePath.GetAbsolutePath(".");
+            s_keyIVCacheFileWatcher.Filter = KeyIVCacheFileName;
+            s_keyIVCacheFileWatcher.EnableRaisingEvents = true;
+        }
+
         /// <summary>
         /// Imports a key and initialization vector into the local system key cache.
         /// </summary>
@@ -430,6 +448,7 @@ namespace TVA.Security.Cryptography
 
             try
             {
+                s_keyIVCacheFileWatcher.EnableRaisingEvents = false;
                 FileStream keyIVCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
                 keyIVCacheFile.Write(serializedKeyIVTable, 0, serializedKeyIVTable.Length);
                 keyIVCacheFile.Close();
@@ -437,6 +456,7 @@ namespace TVA.Security.Cryptography
             finally
             {
                 fileLockMutex.ReleaseMutex();
+                s_keyIVCacheFileWatcher.EnableRaisingEvents = true;
             }
         }
 
@@ -513,6 +533,17 @@ namespace TVA.Security.Cryptography
                 systemMutex = new Mutex(false, mutexName);
 
             return systemMutex;
+        }
+
+        /// <summary>
+        /// Reloads the key and initialization vector table when the cache file is modified externally.
+        /// </summary>
+        /// <param name="sender">The object that triggered the event.</param>
+        /// <param name="e">An object which provides data for directory events.</param>
+        private static void s_keyIVCacheFileWatcher_Changed(object sender, FileSystemEventArgs e)
+        {
+            if (e.ChangeType == WatcherChangeTypes.Changed)
+                s_keyIVTable = DeserializeKeyIVTable();
         }
 
         /// <summary>
