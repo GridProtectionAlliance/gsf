@@ -6810,8 +6810,8 @@
                      // Get the sections of config file.
                      CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
                      CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
-                     KeyValueConfigurationCollection appSettings = config.AppSettings.Settings;
-                     ConnectionStringSettingsCollection connStrings = config.ConnectionStrings.ConnectionStrings;
+                     KeyValueConfigurationCollection appSettings = config.Configuration.AppSettings.Settings;
+                     ConnectionStringSettingsCollection connStrings = config.Configuration.ConnectionStrings.ConnectionStrings;
                     
                      // Add settings to the config file under the "appSettings" section.
                      appSettings.Add("SaveSettingOnExit", true.ToString());
@@ -6909,32 +6909,15 @@
             <param name="configFilePath">Path of the config file that belongs to a Windows or Web application.</param>
             <returns>An <see cref="T:TVA.Configuration.ConfigurationFile"/> object.</returns>
         </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.FileName">
+        <member name="P:TVA.Configuration.ConfigurationFile.Configuration">
             <summary>
-            Gets the name and path of the config file represented by this <see cref="T:TVA.Configuration.ConfigurationFile"/> object.
+            Get the underlying <see cref="T:System.Configuration.Configuration"/> that can be accessed using this <see cref="T:TVA.Configuration.ConfigurationFile"/> object.
             </summary>
-            <returns>Name and path of the config file.</returns>
         </member>
         <member name="P:TVA.Configuration.ConfigurationFile.Settings">
             <summary>
-            Gets the <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> object representing settings under the 
-            "categorizedSettings" section of the config file.
+            Gets the <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> object representing settings under the "categorizedSettings" section of the config file.
             </summary>
-            <returns>A <see cref="T:TVA.Configuration.CategorizedSettingsSection"/> object.</returns>
-        </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.AppSettings">
-            <summary>
-            Gets the <see cref="T:System.Configuration.AppSettingsSection"/> object representing settings under the 
-            "appSettings" section of the config file.
-            </summary>
-            <returns>A <see cref="T:System.Configuration.AppSettingsSection"/> object.</returns>
-        </member>
-        <member name="P:TVA.Configuration.ConfigurationFile.ConnectionStrings">
-            <summary>
-            Gets the <see cref="T:System.Configuration.ConnectionStringsSection"/> representing settings under the 
-            "connectionStrings" section of the config file.
-            </summary>
-            <returns>A <see cref="T:System.Configuration.ConnectionStringsSection"/> object.</returns>
         </member>
         <member name="P:TVA.Configuration.ConfigurationFile.UserSettings">
             <summary>
@@ -10624,13 +10607,6 @@
             Specifies the default value for the <see cref="P:TVA.Identity.UserInfo.SettingsCategory"/> property.
             </summary>
         </member>
-        <member name="M:TVA.Identity.UserInfo.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Identity.UserInfo"/> class.
-            </summary>
-            <param name="domain">Domain where the user's account exists.</param>
-            <param name="username">Username of user's account whose information is to be retrieved.</param>
-        </member>
         <member name="M:TVA.Identity.UserInfo.#ctor(System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Identity.UserInfo"/> class.
@@ -10640,6 +10616,21 @@
             can also be specified in 'username' format without the domain name, in which case the domain name will be
             approximated based on the privileged user domain if specified, default logon domain of the host machine 
             if available, or the domain of the identity that owns the host process.
+            </param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="loginID"/> is a null or empty string.</exception>
+        </member>
+        <member name="M:TVA.Identity.UserInfo.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Identity.UserInfo"/> class.
+            </summary>
+            <param name="loginID">
+            Login ID in 'domain\username' format of the user's account whose information is to be retrieved. Login ID 
+            can also be specified in 'username' format without the domain name, in which case the domain name will be
+            approximated based on the privileged user domain if specified, default logon domain of the host machine 
+            if available, or the domain of the identity that owns the host process.
+            </param>
+            <param name="ldapPath">
+            String in 'LDAP://' format that specifies the Active Directory node where search for the user starts.
             </param>
             <exception cref="T:System.ArgumentNullException"><paramref name="loginID"/> is a null or empty string.</exception>
         </member>
@@ -10715,6 +10706,12 @@
              }
              </code>
             </example>
+        </member>
+        <member name="M:TVA.Identity.UserInfo.ImpersonatePrivilegedAccount">
+            <summary>
+            Impersonates the defined privileged domain account.
+            </summary>
+            <returns>An <see cref="T:System.Security.Principal.WindowsImpersonationContext"/> if privileged domain account has been defined, otherwise null.</returns>
         </member>
         <member name="M:TVA.Identity.UserInfo.GetUserProperty(System.String)">
             <summary>
@@ -16286,11 +16283,11 @@
         </member>
         <member name="M:TVA.Measurements.Routing.IAdapterCollection.TryGetAdapterByID(System.UInt32,TVA.Measurements.Routing.IAdapter@)">
             <summary>
-            Attempts to get the adapter with the specified <paramref name="ID"/>.
+            Attempts to get the adapter with the specified <paramref name="id"/>.
             </summary>
             <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
-            <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.IAdapterCollection.TryGetAdapterByName(System.String,TVA.Measurements.Routing.IAdapter@)">
             <summary>
@@ -16379,11 +16376,11 @@
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.TryGetAdapterByID(System.UInt32,`0@)">
             <summary>
-            Attempts to get the adapter with the specified <paramref name="ID"/>.
+            Attempts to get the adapter with the specified <paramref name="id"/>.
             </summary>
             <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
-            <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.AdapterCollectionBase`1.TryGetAdapterByName(System.String,`0@)">
             <summary>
@@ -17011,12 +17008,12 @@
         </member>
         <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryGetAnyAdapterByID(System.UInt32,TVA.Measurements.Routing.IAdapter@,TVA.Measurements.Routing.IAdapterCollection@)">
             <summary>
-            Attempts to get any adapter in all collections with the specified <paramref name="ID"/>.
+            Attempts to get any adapter in all collections with the specified <paramref name="id"/>.
             </summary>
             <param name="id">ID of adapter to get.</param>
             <param name="adapter">Adapter reference if found; otherwise null.</param>
             <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
-            <returns><c>true</c> if adapter with the specified <paramref name="ID"/> was found; otherwise <c>false</c>.</returns>
+            <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.Measurements.Routing.AllAdaptersCollection.TryInitializeAdapterByID(System.UInt32)">
             <summary>
@@ -17677,7 +17674,7 @@
             <para>Operation will only store a value that is newer than the cached value.</para>
             </remarks>
             <param name="timestamp">New timestamp, in ticks, for <see cref="T:TVA.Measurements.TemporalMeasurement"/>.</param>
-            <param name="value">New value for <see cref="T:TVA.Measurements.TemporalMeasurement"/>, only stored if <paramref name="ticks"/> are newer than current <see cref="T:TVA.Ticks"/>.</param>
+            <param name="value">New value for <see cref="T:TVA.Measurements.TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> are newer than current <see cref="T:TVA.Ticks"/>.</param>
         </member>
         <member name="P:TVA.Measurements.TemporalMeasurement.LagTime">
             <summary>Allowed past time deviation tolerance in seconds (can be subsecond).</summary>
@@ -22780,7 +22777,7 @@
         </member>
         <member name="M:TVA.NtpTimeTag.GetBaseDateOffsetTicks(System.UInt32)">
             <summary>
-            Gets proper NTP offset based on most significant byte on <paramref name="timestamp"/> value, see RFC-2030.
+            Gets proper NTP offset based on most significant byte on <paramref name="seconds"/> value, see RFC-2030.
             </summary>
             <param name="seconds">NTP seconds timestamp value.</param>
             <returns>Proper NTP offset.</returns>
@@ -24905,6 +24902,11 @@
             Specifies the default value for the <see cref="P:TVA.Scheduling.ScheduleManager.SettingsCategory"/> property.
             </summary>
         </member>
+        <member name="F:TVA.Scheduling.ScheduleManager.TimerInterval">
+            <summary>
+            Number of milliseconds between timer ticks.
+            </summary>
+        </member>
         <member name="M:TVA.Scheduling.ScheduleManager.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Scheduling.ScheduleManager"/> class.
@@ -25252,6 +25254,12 @@
             This class exists to simplify usage of basic cryptography functionality.
             </remarks>
         </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.#cctor">
+            <summary>
+            Static constructor for the <see cref="T:TVA.Security.Cryptography.Cipher"/> class.
+            Prepares the file watcher for receiving events.
+            </summary>
+        </member>
         <member name="M:TVA.Security.Cryptography.Cipher.ImportKeyIV(System.String,System.Int32,System.String)">
             <summary>
             Imports a key and initialization vector into the local system key cache.
@@ -25306,6 +25314,13 @@
             </summary>
             <param name="mutexName">Mutext name to retrieve.</param>
             <returns>Specified system level mutex; it is created if it does not exist.</returns>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.s_keyIVCacheFileWatcher_Changed(System.Object,System.IO.FileSystemEventArgs)">
+            <summary>
+            Reloads the key and initialization vector table when the cache file is modified externally.
+            </summary>
+            <param name="sender">The object that triggered the event.</param>
+            <param name="e">An object which provides data for directory events.</param>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.Encrypt(System.String,System.String,TVA.Security.Cryptography.CipherStrength)">
             <summary>

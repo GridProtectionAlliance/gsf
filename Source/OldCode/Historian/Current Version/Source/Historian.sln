@@ -1,31 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Applications", "Applications", "{B373F64D-C79D-4C08-950D-E0018860AEBA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{10F92F7C-6857-484D-9707-01ECE4F7467A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{EF3BA2EC-66A1-436D-B126-018C3DEB51D4}"
-	ProjectSection(SolutionItems) = preProject
-		Dependencies\TVA\TVA.Communication.dll = Dependencies\TVA\TVA.Communication.dll
-		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
-		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
-		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
-		Dependencies\TVA\TVA.Security.dll = Dependencies\TVA\TVA.Security.dll
-		Dependencies\TVA\TVA.Security.XML = Dependencies\TVA\TVA.Security.XML
-		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
-		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{CC049F97-6B48-499F-A7F9-67EA1FC95983}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{A80F340A-FD72-407A-B070-5124162B64EC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{A0BB1312-9332-4B46-A785-35F14EA88AD9}"
-EndProject
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian", "Libraries\TVA.Historian\TVA.Historian.csproj", "{7E1ABF87-8936-44E5-85C0-37044E0D3877}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{867183C2-7FA4-48AD-B995-DFDE62C2EBB9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TVA.Historian.Test", "Libraries\Test\TVA.Historian.Test\TVA.Historian.Test.csproj", "{D405B0BE-88EE-4224-AA8C-4A6817481C17}"
 EndProject
@@ -33,43 +9,31 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HistorianPlaybackUtility", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hadoop.Replication", "Libraries\Hadoop.Replication\Hadoop.Replication.csproj", "{B561487F-79CC-4982-848E-C12F44B4669C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B5ECB3FD-25C8-43AE-BB95-E89B8AA78542}"
-	ProjectSection(SolutionItems) = preProject
-		Historian.testrunconfig = Historian.testrunconfig
-		Historian.vsmdi = Historian.vsmdi
-		openPDC.snk = openPDC.snk
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Signed", "Signed", "{DCB4CA15-E3A7-4D21-8EC7-9D959C3241D8}"
-	ProjectSection(SolutionItems) = preProject
-		Dependencies\TVA\Signed\TVA.Communication.dll = Dependencies\TVA\Signed\TVA.Communication.dll
-		Dependencies\TVA\Signed\TVA.Core.dll = Dependencies\TVA\Signed\TVA.Core.dll
-		Dependencies\TVA\Signed\TVA.Security.dll = Dependencies\TVA\Signed\TVA.Security.dll
-		Dependencies\TVA\Signed\TVA.Web.dll = Dependencies\TVA\Signed\TVA.Web.dll
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 5
+		SccNumberOfProjects = 4
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
-		SccTeamFoundationServer = https://tfs07.codeplex.com/
-		SccLocalPath0 = .
-		SccProjectUniqueName1 = Libraries\\TVA.Historian\\TVA.Historian.csproj
-		SccProjectTopLevelParentUniqueName1 = Historian.sln
-		SccProjectName1 = Libraries/TVA.Historian
-		SccLocalPath1 = Libraries\\TVA.Historian
-		SccProjectUniqueName2 = Libraries\\Test\\TVA.Historian.Test\\TVA.Historian.Test.csproj
-		SccProjectTopLevelParentUniqueName2 = Historian.sln
-		SccProjectName2 = Libraries/Test/TVA.Historian.Test
-		SccLocalPath2 = Libraries\\Test\\TVA.Historian.Test
-		SccProjectUniqueName3 = Tools\\HistorianPlaybackUtility\\HistorianPlaybackUtility.csproj
-		SccProjectTopLevelParentUniqueName3 = Historian.sln
-		SccProjectName3 = Tools/HistorianPlaybackUtility
-		SccLocalPath3 = Tools\\HistorianPlaybackUtility
-		SccProjectUniqueName4 = Libraries\\Hadoop.Replication\\Hadoop.Replication.csproj
-		SccProjectTopLevelParentUniqueName4 = Historian.sln
-		SccProjectName4 = Libraries/Hadoop.Replication
-		SccLocalPath4 = Libraries\\Hadoop.Replication
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
+		SccProjectUniqueName0 = Libraries\\TVA.Historian\\TVA.Historian.csproj
+		SccProjectName0 = Libraries/TVA.Historian
+		SccAuxPath0 = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath0 = Libraries\\TVA.Historian
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = Libraries\\Test\\TVA.Historian.Test\\TVA.Historian.Test.csproj
+		SccProjectName1 = Libraries/Test/TVA.Historian.Test
+		SccAuxPath1 = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath1 = Libraries\\Test\\TVA.Historian.Test
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = Tools\\HistorianPlaybackUtility\\HistorianPlaybackUtility.csproj
+		SccProjectName2 = Tools/HistorianPlaybackUtility
+		SccAuxPath2 = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath2 = Tools\\HistorianPlaybackUtility
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName3 = Libraries\\Hadoop.Replication\\Hadoop.Replication.csproj
+		SccProjectName3 = Libraries/Hadoop.Replication
+		SccAuxPath3 = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath3 = Libraries\\Hadoop.Replication
+		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Historian.vsmdi
@@ -98,14 +62,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{EF3BA2EC-66A1-436D-B126-018C3DEB51D4} = {10F92F7C-6857-484D-9707-01ECE4F7467A}
-		{DCB4CA15-E3A7-4D21-8EC7-9D959C3241D8} = {EF3BA2EC-66A1-436D-B126-018C3DEB51D4}
-		{A0BB1312-9332-4B46-A785-35F14EA88AD9} = {A80F340A-FD72-407A-B070-5124162B64EC}
-		{7E1ABF87-8936-44E5-85C0-37044E0D3877} = {A80F340A-FD72-407A-B070-5124162B64EC}
-		{B561487F-79CC-4982-848E-C12F44B4669C} = {A80F340A-FD72-407A-B070-5124162B64EC}
-		{D405B0BE-88EE-4224-AA8C-4A6817481C17} = {A0BB1312-9332-4B46-A785-35F14EA88AD9}
-		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E} = {867183C2-7FA4-48AD-B995-DFDE62C2EBB9}
 	EndGlobalSection
 EndGlobal

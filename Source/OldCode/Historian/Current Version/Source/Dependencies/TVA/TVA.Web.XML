@@ -391,7 +391,7 @@
             <example>
             <para>
             Given a <paramref name="baseNamespace"/> of <c>MyNamespace</c>,
-            this method will process <paramref name="resoucePath"/> as follows:
+            this method will process <paramref name="resourcePath"/> as follows:
             </para>
             <list type="table">
             <listheader>
@@ -495,7 +495,7 @@
             </exception>
             <remarks>
             <para>
-            The <paramref name="assmeblyName"/> will be passed to <see cref="M:System.Reflection.Assembly.Load(System.String)"/>
+            The <paramref name="assemblyName"/> will be passed to <see cref="M:System.Reflection.Assembly.Load(System.String)"/>
             so the associated assembly can be processed.  If the assembly is not
             found, a <see cref="T:System.IO.FileNotFoundException"/> is thrown.
             </para>
@@ -691,48 +691,48 @@
             Embedded WCF REST service contract used for securing external facing WCF services.
             </summary>
         </member>
-        <member name="T:TVA.Web.Services.IRestService">
+        <member name="T:TVA.Web.Services.ISelfHostingService">
             <summary>
             Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.IRestService.Help">
+        <member name="M:TVA.Web.Services.ISelfHostingService.Help">
             <summary>
             Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
             </summary>
             <returns>An <see cref="T:System.IO.Stream"/> object containing the HTML help.</returns>
         </member>
-        <member name="E:TVA.Web.Services.IRestService.ServiceHostCreated">
+        <member name="E:TVA.Web.Services.ISelfHostingService.ServiceHostCreated">
             <summary>
-            Occurs when the <see cref="P:TVA.Web.Services.IRestService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.IRestService.ServiceUri"/>.
+            Occurs when the <see cref="P:TVA.Web.Services.ISelfHostingService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.ISelfHostingService.ServiceUri"/>.
             </summary>
         </member>
-        <member name="E:TVA.Web.Services.IRestService.ServiceHostStarted">
+        <member name="E:TVA.Web.Services.ISelfHostingService.ServiceHostStarted">
             <summary>
-            Occurs when the <see cref="P:TVA.Web.Services.IRestService.ServiceHost"/> can process requests via all of its endpoints.
+            Occurs when the <see cref="P:TVA.Web.Services.ISelfHostingService.ServiceHost"/> can process requests via all of its endpoints.
             </summary>
         </member>
-        <member name="E:TVA.Web.Services.IRestService.ServiceProcessException">
+        <member name="E:TVA.Web.Services.ISelfHostingService.ServiceProcessException">
             <summary>
             Occurs when an <see cref="T:System.Exception"/> is encountered when processing a request.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.IRestService.ServiceUri">
+        <member name="P:TVA.Web.Services.ISelfHostingService.ServiceUri">
             <summary>
             Gets or sets the URI where the web service is to be hosted.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.IRestService.ServiceContract">
+        <member name="P:TVA.Web.Services.ISelfHostingService.ServiceContract">
             <summary>
             Gets or sets the contract interface implemented by the web service.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.IRestService.ServiceDataFlow">
+        <member name="P:TVA.Web.Services.ISelfHostingService.ServiceDataFlow">
             <summary>
             Gets or sets the <see cref="T:TVA.Web.Services.DataFlowDirection"/> of the web service.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.IRestService.ServiceHost">
+        <member name="P:TVA.Web.Services.ISelfHostingService.ServiceHost">
             <summary>
             Gets the <see cref="T:System.ServiceModel.Web.WebServiceHost"/> hosting the web service.
             </summary>
@@ -771,9 +771,7 @@
                   <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
                     description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -860,9 +858,7 @@
                   <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
                     description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -982,7 +978,7 @@
         </member>
         <member name="M:TVA.Web.SecurityPolicy.Evaluate(System.IdentityModel.Policy.EvaluationContext,System.Object@)">
             <summary>
-            Evaluates the <paramref name="eveluationContext"/> and initializes security.
+            Evaluates the <paramref name="evaluationContext"/> and initializes security.
             </summary>
             <param name="evaluationContext">An <see cref="T:System.IdentityModel.Policy.EvaluationContext"/> object.</param>
             <param name="state">Custom state of the <see cref="T:TVA.Web.SecurityPolicy"/>.</param>
@@ -1244,85 +1240,85 @@
             Embedded WCF REST service used for securing external facing WCF services.
             </summary>
         </member>
-        <member name="T:TVA.Web.Services.RestService">
+        <member name="T:TVA.Web.Services.SelfHostingService">
             <summary>
             A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.#ctor">
+        <member name="M:TVA.Web.Services.SelfHostingService.#ctor">
             <summary>
             Initializes a new instance of the web service.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.Finalize">
+        <member name="M:TVA.Web.Services.SelfHostingService.Finalize">
             <summary>
             Releases the unmanaged resources before the web service is reclaimed by <see cref="T:System.GC"/>.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.Dispose">
+        <member name="M:TVA.Web.Services.SelfHostingService.Dispose">
             <summary>
             Releases all the resources used by the web service.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.Initialize">
+        <member name="M:TVA.Web.Services.SelfHostingService.Initialize">
             <summary>
             Initializes the web service.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.SaveSettings">
+        <member name="M:TVA.Web.Services.SelfHostingService.SaveSettings">
             <summary>
-            Saves web service settings to the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            Saves web service settings to the config file if the <see cref="P:TVA.Web.Services.SelfHostingService.PersistSettings"/> property is set to true.
             </summary>
-            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.RestService.SettingsCategory"/> has a value of null or empty string.</exception>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.SelfHostingService.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
-        <member name="M:TVA.Web.Services.RestService.LoadSettings">
+        <member name="M:TVA.Web.Services.SelfHostingService.LoadSettings">
             <summary>
-            Loads saved web service settings from the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            Loads saved web service settings from the config file if the <see cref="P:TVA.Web.Services.SelfHostingService.PersistSettings"/> property is set to true.
             </summary>
-            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.RestService.SettingsCategory"/> has a value of null or empty string.</exception>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Web.Services.SelfHostingService.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
-        <member name="M:TVA.Web.Services.RestService.Help">
+        <member name="M:TVA.Web.Services.SelfHostingService.Help">
             <summary>
             Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
             </summary>
             <returns>An <see cref="T:System.IO.Stream"/> object containing the HTML help.</returns>
         </member>
-        <member name="M:TVA.Web.Services.RestService.Dispose(System.Boolean)">
+        <member name="M:TVA.Web.Services.SelfHostingService.Dispose(System.Boolean)">
             <summary>
             Releases the unmanaged resources used by the web service and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TVA.Web.Services.RestService.OnServiceHostCreated">
+        <member name="M:TVA.Web.Services.SelfHostingService.OnServiceHostCreated">
             <summary>
-            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event.
+            Raises the <see cref="E:TVA.Web.Services.SelfHostingService.ServiceHostCreated"/> event.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.OnServiceHostStarted">
+        <member name="M:TVA.Web.Services.SelfHostingService.OnServiceHostStarted">
             <summary>
-            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceHostStarted"/> event.
+            Raises the <see cref="E:TVA.Web.Services.SelfHostingService.ServiceHostStarted"/> event.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.RestService.OnServiceProcessException(System.Exception)">
+        <member name="M:TVA.Web.Services.SelfHostingService.OnServiceProcessException(System.Exception)">
             <summary>
-            Raises the <see cref="E:TVA.Web.Services.RestService.ServiceProcessException"/> event.
+            Raises the <see cref="E:TVA.Web.Services.SelfHostingService.ServiceProcessException"/> event.
             </summary>
-            <param name="exception"><see cref="T:System.Exception"/> to sent to <see cref="E:TVA.Web.Services.RestService.ServiceProcessException"/> event.</param>
+            <param name="exception"><see cref="T:System.Exception"/> to sent to <see cref="E:TVA.Web.Services.SelfHostingService.ServiceProcessException"/> event.</param>
         </member>
-        <member name="E:TVA.Web.Services.RestService.ServiceHostCreated">
+        <member name="E:TVA.Web.Services.SelfHostingService.ServiceHostCreated">
             <summary>
-            Occurs when the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.RestService.ServiceUri"/>.
+            Occurs when the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/> has been created for the specified <see cref="P:TVA.Web.Services.SelfHostingService.ServiceUri"/>.
             </summary>
             <remarks>
-            When <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event is fired, changes like adding new endpoints can be made to the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/>.
+            When <see cref="E:TVA.Web.Services.SelfHostingService.ServiceHostCreated"/> event is fired, changes like adding new endpoints can be made to the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/>.
             </remarks>
         </member>
-        <member name="E:TVA.Web.Services.RestService.ServiceHostStarted">
+        <member name="E:TVA.Web.Services.SelfHostingService.ServiceHostStarted">
             <summary>
-            Occurs when the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> has can process requests via all of its endpoints.
+            Occurs when the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/> has can process requests via all of its endpoints.
             </summary>
         </member>
-        <member name="E:TVA.Web.Services.RestService.ServiceProcessException">
+        <member name="E:TVA.Web.Services.SelfHostingService.ServiceProcessException">
             <summary>
             Occurs when an <see cref="T:System.Exception"/> is encountered when processing a request.
             </summary>
@@ -1330,21 +1326,21 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the exception encountered when processing a request.
             </remarks>
         </member>
-        <member name="P:TVA.Web.Services.RestService.Singleton">
+        <member name="P:TVA.Web.Services.SelfHostingService.Singleton">
             <summary>
-            Gets or sets a boolean value that indicates whether the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> will use the current instance of the web service for processing 
+            Gets or sets a boolean value that indicates whether the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/> will use the current instance of the web service for processing 
             requests or base the web service instance creation on <see cref="T:System.ServiceModel.InstanceContextMode"/> specified in its <see cref="T:System.ServiceModel.ServiceBehaviorAttribute"/>.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.RestService.ServiceUri">
+        <member name="P:TVA.Web.Services.SelfHostingService.ServiceUri">
             <summary>
             Gets or sets the URI where the web service is to be hosted.
             </summary>
             <remarks>
-            Set <see cref="P:TVA.Web.Services.RestService.ServiceUri"/> to a null or empty string to disable web service hosting.
+            Set <see cref="P:TVA.Web.Services.SelfHostingService.ServiceUri"/> to a null or empty string to disable web service hosting.
             </remarks>
         </member>
-        <member name="P:TVA.Web.Services.RestService.ServiceContract">
+        <member name="P:TVA.Web.Services.SelfHostingService.ServiceContract">
             <summary>
             Gets or sets the contract interface implemented by the web service.
             </summary>
@@ -1353,42 +1349,42 @@
             </remarks>
             <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
         </member>
-        <member name="P:TVA.Web.Services.RestService.ServiceDataFlow">
+        <member name="P:TVA.Web.Services.SelfHostingService.ServiceDataFlow">
             <summary>
             Gets or sets the <see cref="T:TVA.Web.Services.DataFlowDirection"/> of the web service.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.RestService.Enabled">
+        <member name="P:TVA.Web.Services.SelfHostingService.Enabled">
             <summary>
             Gets or sets a boolean value that indicates whether the web service is currently enabled.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.RestService.PersistSettings">
+        <member name="P:TVA.Web.Services.SelfHostingService.PersistSettings">
             <summary>
             Gets or sets a boolean value that indicates whether the web service settings are to be saved to the config file.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.RestService.SettingsCategory">
+        <member name="P:TVA.Web.Services.SelfHostingService.SettingsCategory">
             <summary>
-            Gets or sets the category under which the web service settings are to be saved to the config file if the <see cref="P:TVA.Web.Services.RestService.PersistSettings"/> property is set to true.
+            Gets or sets the category under which the web service settings are to be saved to the config file if the <see cref="P:TVA.Web.Services.SelfHostingService.PersistSettings"/> property is set to true.
             </summary>
             <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
         </member>
-        <member name="P:TVA.Web.Services.RestService.ServiceHost">
+        <member name="P:TVA.Web.Services.SelfHostingService.ServiceHost">
             <summary>
             Gets the <see cref="T:System.ServiceModel.Web.WebServiceHost"/> hosting the web service.
             </summary>
             <remarks>
-            By default, the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> only has <see cref="T:System.ServiceModel.WebHttpBinding"/> endpoint at the <see cref="P:TVA.Web.Services.RestService.ServiceUri"/>. 
-            Additional endpoints can be added to the <see cref="P:TVA.Web.Services.RestService.ServiceHost"/> when <see cref="E:TVA.Web.Services.RestService.ServiceHostCreated"/> event is fired.
+            By default, the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/> only has <see cref="T:System.ServiceModel.WebHttpBinding"/> endpoint at the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceUri"/>. 
+            Additional endpoints can be added to the <see cref="P:TVA.Web.Services.SelfHostingService.ServiceHost"/> when <see cref="E:TVA.Web.Services.SelfHostingService.ServiceHostCreated"/> event is fired.
             </remarks>
         </member>
-        <member name="P:TVA.Web.Services.RestService.CanRead">
+        <member name="P:TVA.Web.Services.SelfHostingService.CanRead">
             <summary>
             Gets a boolean value that indicates whether data can be requested from the web service.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.RestService.CanWrite">
+        <member name="P:TVA.Web.Services.SelfHostingService.CanWrite">
             <summary>
             Gets a boolean value that indicates whether data can be published to the web service.
             </summary>
@@ -1421,12 +1417,12 @@
             Data will be flowing both in and out from the web service.
             </summary>
         </member>
-        <member name="T:TVA.Web.Services.ISecureRestService">
+        <member name="T:TVA.Web.Services.ISecureSelfHostingService">
             <summary>
             Defines a secure web service that can send and receive data over REST (Representational State Transfer) interface.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.ISecureRestService.User">
+        <member name="P:TVA.Web.Services.ISecureSelfHostingService.User">
             <summary>
             Gets information about the user making the web service request.
             </summary>
@@ -1436,17 +1432,17 @@
             Contains classes and interfaces that provide the basic infrastructure for writting web services.
             </summary>
         </member>
-        <member name="T:TVA.Web.Services.SecureRestService">
+        <member name="T:TVA.Web.Services.SecureSelfHostingService">
             <summary>
             A base class for secure web service that can send and receive data over REST (Representational State Transfer) interface.
             </summary>
         </member>
-        <member name="M:TVA.Web.Services.SecureRestService.#ctor">
+        <member name="M:TVA.Web.Services.SecureSelfHostingService.#ctor">
             <summary>
             Initializes a new instance of the secure web service.
             </summary>
         </member>
-        <member name="P:TVA.Web.Services.SecureRestService.User">
+        <member name="P:TVA.Web.Services.SecureSelfHostingService.User">
             <summary>
             Gets information about the user making the web service request.
             </summary>

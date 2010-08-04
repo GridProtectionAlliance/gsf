@@ -261,7 +261,7 @@ namespace TVA.Historian.DataServices
     /// <summary>
     /// Defines a web service that can send and receive historian data over REST (Representational State Transfer) interface.
     /// </summary>
-    public interface IDataService : IRestService
+    public interface IDataService : ISelfHostingService
     {
         #region [ Properties ]
 

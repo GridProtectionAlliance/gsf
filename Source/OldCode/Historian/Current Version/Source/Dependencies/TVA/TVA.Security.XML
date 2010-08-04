@@ -4,10 +4,9 @@
         <name>TVA.Security</name>
     </assembly>
     <members>
-        <member name="T:TVA.Security.DefaultSecurityProvider">
+        <member name="T:TVA.Security.LdapSecurityProvider">
             <summary>
-            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses SQL Server for it backend datastore and authenticates 
-            internal users against the Active Directory and external users against the SQL Server backend datastore.
+            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that Active Directory for its backend datastore and credential authentication.
             </summary>
             <example>
             Required config file entries:
@@ -20,14 +19,12 @@
               </configSections>
               <categorizedSettings>
                 <securityProvider>
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
                     encrypted="false" />
-                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+                  <add name="ConnectionString" value="LDAP://DC=COMPANY,DC=COM"
                     description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.DefaultSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -130,8 +127,6 @@
                     encrypted="false" />
                   <add name="ConnectionString" value="Security.csv" description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="PrincipalPolicy" value="SecurityPrincipal" description="Principal (SecurityPrincipal; WindowsPrincipal) to be used for enforcing role-based security."
-                    encrypted="false" />
                   <add name="ProviderType" value="CustomSecurity.FlatFileSecurityProvider, CustomSecurity"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
@@ -173,19 +168,9 @@
             Gets or sets the connection string to be used for connection to the backend security datastore.
             </summary>
         </member>
-        <member name="P:TVA.Security.ISecurityProvider.PrincipalPolicy">
-            <summary>
-            Gets or sets the <see cref="P:TVA.Security.ISecurityProvider.PrincipalPolicy"/> to be used for enforcing role-based security.
-            </summary>
-        </member>
         <member name="P:TVA.Security.ISecurityProvider.UserData">
             <summary>
             Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.WindowsPrincipal">
-            <summary>
-            Gets the original <see cref="P:TVA.Security.ISecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
             </summary>
         </member>
         <member name="F:TVA.Security.SecurityProviderBase.DefaultApplicationName">
@@ -196,11 +181,6 @@
         <member name="F:TVA.Security.SecurityProviderBase.DefaultConnectionString">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Security.SecurityProviderBase.ConnectionString"/> property.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.SecurityProviderBase.DefaultPrincipalPolicy">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Security.SecurityProviderBase.PrincipalPolicy"/> property.
             </summary>
         </member>
         <member name="F:TVA.Security.SecurityProviderBase.DefaultPersistSettings">
@@ -275,19 +255,9 @@
             Gets or sets the connection string to be used for connection to the backend security datastore.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderBase.PrincipalPolicy">
-            <summary>
-            Gets or sets the <see cref="P:TVA.Security.SecurityProviderBase.PrincipalPolicy"/> to be used for enforcing role-based security.
-            </summary>
-        </member>
         <member name="P:TVA.Security.SecurityProviderBase.UserData">
             <summary>
             Gets the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> object containing information about the user.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProviderBase.WindowsPrincipal">
-            <summary>
-            Gets the original <see cref="P:TVA.Security.SecurityProviderBase.WindowsPrincipal"/> of the user if the user exists in Active Directory.
             </summary>
         </member>
         <member name="P:TVA.Security.SecurityProviderBase.PersistSettings">
@@ -306,66 +276,105 @@
             Gets or sets a boolean value that indicates whether the security provider is currently enabled.
             </summary>
         </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.#ctor(System.String)">
+        <member name="M:TVA.Security.LdapSecurityProvider.#ctor(System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.DefaultSecurityProvider"/> class.
+            Initializes a new instance of the <see cref="T:TVA.Security.LdapSecurityProvider"/> class.
             </summary>
-            <param name="username">Name that uniquely identifies the user.</param>
+            <param name="username"></param>
         </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.RefreshData">
+        <member name="M:TVA.Security.LdapSecurityProvider.RefreshData">
             <summary>
             Refreshes the <see cref="T:TVA.Security.UserData"/>.
             </summary>
-            <returns>true if <see cref="T:TVA.Security.UserData"/> is refreshed, otherwise false.</returns>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.Authenticate(System.String)">
+        <member name="M:TVA.Security.LdapSecurityProvider.Authenticate(System.String)">
             <summary>
             Authenticates the user.
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
         </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.LogLogin(System.Boolean)">
+        <member name="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal">
+            <summary>
+            Gets the original <see cref="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SqlSecurityProvider">
+            <summary>
+            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses SQL Server for its backend datastore and authenticates 
+            internal users against the Active Directory and external users against the SQL Server backend datastore.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+                    description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SqlSecurityProvider"/> class.
+            </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="T:TVA.Security.UserData"/>.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.Authenticate(System.String)">
+            <summary>
+            Authenticates the user.
+            </summary>
+            <param name="password">Password to be used for authentication.</param>
+            <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.LogLogin(System.Boolean)">
             <summary>
             Logs user authentication attempt.
             </summary>
             <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
             <returns>true if logging was successful, otherwise false.</returns>
         </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.LogError(System.String,System.String)">
+        <member name="M:TVA.Security.SqlSecurityProvider.LogError(System.String,System.String)">
             <summary>
             Logs information about an encountered exception to the backend datastore.
             </summary>
             <param name="source">Source of the exception.</param>
             <param name="message">Detailed description of the exception.</param>
             <returns>true if logging was successful, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.PopulateDataFromActiveDirectory">
-            <summary>
-            Retrieves user data from Active Directory.
-            </summary>
-            <returns>true if user data is retrieved, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.DefaultSecurityProvider.PopulateDataFromBackendDatabase">
-            <summary>
-            Retrieves user data from backend security datastore.
-            </summary>
-            <returns>true if user data is retrieved, otherwise false.</returns>
-        </member>
-        <member name="T:TVA.Security.PrincipalPolicy">
-            <summary>
-            Inidicates the <see cref="T:System.Security.Principal.IPrincipal"/> object to be attached to the <see cref="P:System.AppDomain.CurrentDomain"/> thread for the purpose of implementing role-based security.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.PrincipalPolicy.SecurityPrincipal">
-            <summary>
-            <see cref="T:TVA.Security.SecurityPrincipal"/> object is attached to the threads.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.PrincipalPolicy.WindowsPrincipal">
-            <summary>
-            <see cref="T:System.Security.Principal.WindowsPrincipal"/> object is attached to the threads.
-            </summary>
         </member>
         <member name="T:TVA.Security.NamespaceDoc">
             <summary>
@@ -384,14 +393,7 @@
             Initializes a new instance of the <see cref="T:TVA.Security.SecurityIdentity"/> class.
             </summary>
             <param name="provider">An <see cref="T:TVA.Security.ISecurityProvider"/> of the user.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="data"/> is null.</exception>
-        </member>
-        <member name="M:TVA.Security.SecurityIdentity.op_Explicit(TVA.Security.SecurityIdentity)~System.Security.Principal.WindowsIdentity">
-            <summary>
-            Converts <see cref="T:TVA.Security.SecurityIdentity"/> object to <see cref="T:System.Security.Principal.WindowsIdentity"/> object.
-            </summary>
-            <param name="value">The <see cref="T:TVA.Security.SecurityIdentity"/> object to convert.</param>
-            <returns>An <see cref="T:System.Security.Principal.WindowsIdentity"/> object if conversion is possible, otherwise null.</returns>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
         </member>
         <member name="P:TVA.Security.SecurityIdentity.AuthenticationType">
             <summary>
@@ -429,17 +431,10 @@
         </member>
         <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
             <summary>
-            Determines whether the user is a member of the specified <paramref name="role"/>.
+            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
             </summary>
             <param name="roles">Comma seperated list of roles to check.</param>
-            <returns>true if the user is a member of the specified <paramref name="role"/>, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.op_Explicit(TVA.Security.SecurityPrincipal)~System.Security.Principal.WindowsPrincipal">
-            <summary>
-            Converts <see cref="T:TVA.Security.SecurityPrincipal"/> object to <see cref="T:System.Security.Principal.WindowsPrincipal"/> object.
-            </summary>
-            <param name="value">The <see cref="T:TVA.Security.SecurityIdentity"/> object to convert.</param>
-            <returns>An <see cref="T:System.Security.Principal.WindowsPrincipal"/> object if conversion is possible, otherwise null.</returns>
+            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
         </member>
         <member name="P:TVA.Security.SecurityPrincipal.Identity">
             <summary>
@@ -606,17 +601,22 @@
         </member>
         <member name="P:TVA.Security.UserData.IsDefined">
             <summary>
-            Gets a boolean value indicating whether or not the user is defined in the backend security datastore.
+            Gets a boolean value that indicates whether the user is defined in the backend security datastore.
             </summary>
         </member>
         <member name="P:TVA.Security.UserData.IsExternal">
             <summary>
-            Gets a boolean value indicating whether or not the user is defined as an external user in the backend security datastore.
+            Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDisabled">
+            <summary>
+            Gets a boolean value that indicates whether the user account has been disabled.
             </summary>
         </member>
         <member name="P:TVA.Security.UserData.IsLockedOut">
             <summary>
-            Gets a boolean value indicating whether or not the user account has been locked due to numerous unsuccessful login attempts.
+            Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
             </summary>
         </member>
         <member name="P:TVA.Security.UserData.IsAuthenticated">
