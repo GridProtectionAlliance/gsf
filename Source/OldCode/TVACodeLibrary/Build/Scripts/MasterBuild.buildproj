@@ -243,7 +243,7 @@
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
     <PropertyGroup>
       <TfsServer Condition="'$(TfsServer)' == ''">https://tfs.codeplex.com/tfs/tfs05</TfsServer>
-      <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Current Version</ServerFolder>
+      <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\$(ProjectName)</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
