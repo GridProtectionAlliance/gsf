@@ -33,6 +33,9 @@
 //       Modified code to avoid calls to abort the m_startTimerThread.
 //  07/02/2010 - J. Ritchie Caroll
 //       Fixed an issue related to accessing a disposed timer.
+//  08/04/2010 - Pinal C. Patel
+//       Fixed an issue with NullReferenceException being encountered when ScheduleManager object is 
+//       disposed before it successfully starts up (StartTimer() method).
 //
 //*******************************************************************************************************
 
@@ -327,6 +330,11 @@ namespace TVA.Scheduling
         /// </summary>
         public const string DefaultSettingsCategory = "ScheduleManager";
 
+        /// <summary>
+        /// Number of milliseconds between timer ticks.
+        /// </summary>
+        private const int TimerInterval = 60000;
+
         // Events
 
         /// <summary>
@@ -389,8 +397,6 @@ namespace TVA.Scheduling
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_schedules = new List<Schedule>();
-            m_timer = new System.Timers.Timer(60000);
-            m_timer.Elapsed += m_timer_Elapsed;
         }
 
         /// <summary>
@@ -683,12 +689,16 @@ namespace TVA.Scheduling
         /// </summary>
         public void Start()
         {
-            if (m_startTimerThread == null && !m_timer.Enabled)
+            if (!IsRunning && m_startTimerThread == null)
             {
                 // Initialize if uninitialized.
                 Initialize();
 
-                // Schedule manager is not running and no active attempt to start it is in progress.
+                // Initialize timer that checks schedules.
+                m_timer = new System.Timers.Timer(TimerInterval);
+                m_timer.Elapsed += m_timer_Elapsed;
+
+                // Spawn new thread to start timer at top of the minute.
 #if ThreadTracking
                 m_startTimerThread = new ManagedThread(StartTimer);
                 m_startTimerThread.Name = "TVA.Scheduling.ScheduleManager.StartTimer()";
@@ -704,8 +714,12 @@ namespace TVA.Scheduling
         /// </summary>
         public void Stop()
         {
-            if (m_timer.Enabled)
-                m_timer.Stop();
+            if (m_timer != null)
+            {
+                m_timer.Elapsed -= m_timer_Elapsed;
+                m_timer.Dispose();
+            }
+            m_timer = null;
 
             m_startTimerThread = null;
         }
@@ -909,15 +923,8 @@ namespace TVA.Scheduling
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        Stop();
                         SaveSettings();
-
-                        if (m_timer != null)
-                        {
-                            m_timer.Elapsed -= m_timer_Elapsed;
-                            m_timer.Dispose();
-                        }
-
-                        m_timer = null;
                     }
                 }
                 finally
@@ -930,7 +937,7 @@ namespace TVA.Scheduling
 
         private void StartTimer()
         {
-            while (!Enabled)
+            while (!IsRunning && m_timer != null)
             {
                 OnStarting();
 
@@ -938,7 +945,6 @@ namespace TVA.Scheduling
                 {
                     // We'll start the timer that will check the schedules at top of the minute.
                     m_timer.Start();
-                    m_startTimerThread = null;
                     OnStarted();
                     
                     CheckAllSchedules();
@@ -949,6 +955,7 @@ namespace TVA.Scheduling
                     Thread.Sleep(1000);
                 }
             }
+            m_startTimerThread = null;
         }
 
         private void m_timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
