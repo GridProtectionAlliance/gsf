@@ -10,9 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{C3058807-1DFE-4681-BBBC-959BE6A84E10}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CS", "CS", "{7708DB97-99C1-4596-B44F-5BFE4E664015}"
-	ProjectSection(SolutionItems) = preProject
-		Templates\CS\TVAWindowsService.zip = Templates\CS\TVAWindowsService.zip
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{6C78685B-1653-43B5-98C8-0470A173A848}"
 EndProject

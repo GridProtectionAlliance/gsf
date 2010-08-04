@@ -31,12 +31,12 @@
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.dll" xmlns="" />
       <DocumentationSource sourceFile="..\Output\$(Configuration)\Libraries\TVA.Windows.xml" xmlns="" />
     </DocumentationSources>
-    <FrameworkVersion>3.5</FrameworkVersion>
+    <FrameworkVersion>4.0.30319</FrameworkVersion>
     <Preliminary>False</Preliminary>
     <PresentationStyle>Prototype</PresentationStyle>
     <MissingTags>Summary, Parameter, Returns, AutoDocumentCtors, Namespace, TypeParameter</MissingTags>
-    <CopyrightText>Tennessee Valley Authority, 2009. No copyright is claimed pursuant to 17 USC &amp;#167%3b 105.  All Other Rights Reserved.</CopyrightText>
-    <CopyrightHref>https://naspi.tva.com/PhasorMeasurementData/Documents/TVA%2520Open%2520Source%2520Agreement.txt</CopyrightHref>
+    <CopyrightText>Tennessee Valley Authority, 2010. No copyright is claimed pursuant to 17 USC &amp;#167%3b 105.  All Other Rights Reserved.</CopyrightText>
+    <CopyrightHref>http://tvacodelibrary.codeplex.com/license</CopyrightHref>
     <FeedbackEMailAddress>pcpatel%40tva.gov</FeedbackEMailAddress>
     <FeedbackEMailLinkText>Pinal C. Patel</FeedbackEMailLinkText>
     <VisibleItems>Attributes, InheritedMembers, InheritedFrameworkMembers, Protected, SealedProtected</VisibleItems>
