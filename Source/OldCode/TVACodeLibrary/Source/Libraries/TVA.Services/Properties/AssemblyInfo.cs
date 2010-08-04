@@ -1,0 +1,27 @@
+﻿using System;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Permissions;
+
+// Assembly identity attributes.
+[assembly: AssemblyVersion("4.0.0.55993")]
+
+// Informational attributes.
+[assembly: AssemblyCompany("TVA")]
+[assembly: AssemblyCopyright("No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.")]
+[assembly: AssemblyProduct("openPDC Framework")]
+
+// Assembly manifest attributes.
+#if DEBUG
+[assembly: AssemblyConfiguration("Debug Build")]
+#else
+[assembly: AssemblyConfiguration("Release Build")]
+#endif
+[assembly: AssemblyDefaultAlias("TVA.Services")]
+[assembly: AssemblyDescription("Windows service components of the openPDC Framework.")]
+[assembly: AssemblyTitle("TVA.Services")]
+
+// Other configuration attributes.
+[assembly: CLSCompliant(true)]
+[assembly: ComVisible(false)]
+[assembly: Guid("8822ca22-cda5-4562-9a67-2adb084730e1")]
