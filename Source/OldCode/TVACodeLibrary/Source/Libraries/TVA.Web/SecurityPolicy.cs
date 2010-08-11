@@ -15,6 +15,8 @@
 //       Modified Evaluate() to make use of IncludedResources and ExcludedResources config file settings.
 //  06/02/2010 - Pinal C. Patel
 //       Added authentication check to Evaluate() method.
+//  08/11/2010 - Pinal C. Patel
+//       Made key methods virtual for extensibility.
 //
 //*******************************************************************************************************
 
@@ -428,7 +430,7 @@ namespace TVA.Web
         /// <param name="evaluationContext">An <see cref="EvaluationContext"/> object.</param>
         /// <param name="state">Custom state of the <see cref="SecurityPolicy"/>.</param>
         /// <returns></returns>
-        public bool Evaluate(EvaluationContext evaluationContext, ref object state)
+        public virtual bool Evaluate(EvaluationContext evaluationContext, ref object state)
         {
             // In order for this to work properly security on the binding must be configured to use windows security.
             // When this is done the caller's windows identity is available to us here and can be used to derive from 
@@ -482,7 +484,7 @@ namespace TVA.Web
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
-        protected string GetResourceName()
+        protected virtual string GetResourceName()
         {
             return VirtualPathUtility.ToAppRelative(OperationContext.Current.IncomingMessageHeaders.To.AbsolutePath);
         }

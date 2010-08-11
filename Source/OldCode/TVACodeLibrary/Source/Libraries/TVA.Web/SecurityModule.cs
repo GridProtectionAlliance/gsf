@@ -16,6 +16,8 @@
 //       Modified redirection logic to support security of static resources (*.txt, *.pdf, *.exe).
 //  07/01/2010 - Pinal C. Patel
 //       Modified redirection logic to allow for custom redirection using customErrors settings.
+//  08/11/2010 - Pinal C. Patel
+//       Made key methods virtual for extensibility.
 //
 //*******************************************************************************************************
 
@@ -372,7 +374,7 @@ namespace TVA.Web
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
-        protected string GetResourceName()
+        protected virtual string GetResourceName()
         {
             return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
         }

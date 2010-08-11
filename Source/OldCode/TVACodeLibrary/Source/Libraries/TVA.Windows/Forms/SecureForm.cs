@@ -14,6 +14,8 @@
 //       Added authentication check in Form.Load event.
 //  06/09/2010 - Pinal C. Patel
 //       Added design-time check in Form.Load event to skip authentication when in design mode.
+//  08/11/2010 - Pinal C. Patel
+//       Made key methods virtual for extensibility.
 //
 //*******************************************************************************************************
 
@@ -299,7 +301,7 @@ namespace TVA.Windows.Forms
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
-        protected string GetResourceName()
+        protected virtual string GetResourceName()
         {
             return this.Name;
         }

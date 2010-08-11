@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/17/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  08/11/2010 - Pinal C. Patel
+//       Made key methods virtual for extensibility.
 //
 //*******************************************************************************************************
 
@@ -311,7 +313,7 @@ namespace TVA.Windows
         /// Gets the name of resource being accessed.
         /// </summary>
         /// <returns>Name of the resource being accessed.</returns>
-        protected string GetResourceName()
+        protected virtual string GetResourceName()
         {
             if (!string.IsNullOrEmpty(this.Name))
                 return this.Name;
