@@ -297,7 +297,7 @@ namespace TVA.Historian.Exporters
         }
 
         /// <summary>
-        /// Gets or sets the historian identifier of the <paramref name="Instance"/> whose time-series data is to be exported.
+        /// Gets or sets the historian identifier of the <see cref="Instance"/> whose time-series data is to be exported.
         /// </summary>
         /// <exception cref="ArgumentException">The value being assigned is not positive or -1.</exception>
         public int Identifier
