@@ -272,7 +272,8 @@ namespace TVA.Validation
     ///         input["Name"] = Console.ReadLine();
     ///         Console.Write("Enter email: ");
     ///         input["Email"] = Console.ReadLine();
-    /// 
+    ///         Console.WriteLine("");
+    ///     
     ///         // Validate user input.
     ///         string errors;
     ///         if (!validation.Validate(out errors))
