@@ -244,7 +244,7 @@ namespace TVA.Historian.DataServices
     /// <summary>
     /// A base class for web service that can send and receive historian data over REST (Representational State Transfer) interface.
     /// </summary>
-    public class DataService : SelfHostingService, ISelfHostingService
+    public class DataService : SelfHostingService, IDataService
     {
         #region [ Members ]
 
