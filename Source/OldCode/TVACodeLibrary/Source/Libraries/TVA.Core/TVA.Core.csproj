@@ -323,6 +323,7 @@
     <Compile Include="USTimeZones.cs" />
     <Compile Include="Validation\EmailAddressValidator.cs" />
     <Compile Include="Validation\IValidator.cs" />
+    <Compile Include="Validation\NamespaceDoc.cs" />
     <Compile Include="Validation\NonNullStringValidator.cs" />
     <Compile Include="Validation\NumericRangeValidator.cs" />
     <Compile Include="Validation\ValidationService.cs" />
