@@ -1,0 +1,280 @@
+//******************************************************************************************************
+//  InputAdapterBase.cs - Gbtc
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  Licensed to the Grid Protection Alliance (GPA) under one or more contributor license agreements. See
+//  the NOTICE file distributed with this work for additional information regarding copyright ownership.
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//  Code Modification History:
+//  ----------------------------------------------------------------------------------------------------
+//  09/02/2010 - J. Ritchie Carroll
+//       Generated original version of source code.
+//
+//******************************************************************************************************
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using TVA;
+
+namespace TimeSeriesFramework.Adapters
+{
+    /// <summary>
+    /// Represents the base class for any incoming input adapter.
+    /// </summary>
+    /// <remarks>
+    /// Derived classes are expected to call <see cref="OnNewMeasurements"/> when new measurements are received.
+    /// </remarks>
+    public abstract class InputAdapterBase : AdapterBase, IInputAdapter
+    {
+        #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Provides new measurements from input adapter.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is a collection of new measurements for host to process.
+        /// </remarks>
+        public event EventHandler<EventArgs<ICollection<IMeasurement>>> NewMeasurements;
+
+        // Fields
+        private System.Timers.Timer m_connectionTimer;
+        private bool m_disposed;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Constructs a new instance of the <see cref="InputAdapterBase"/>.
+        /// </summary>
+        protected InputAdapterBase()
+        {
+            m_connectionTimer = new System.Timers.Timer();
+            m_connectionTimer.Elapsed += m_connectionTimer_Elapsed;
+
+            m_connectionTimer.AutoReset = false;
+            m_connectionTimer.Interval = 2000;
+            m_connectionTimer.Enabled = false;
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets flag that determines if the data input connects asynchronously.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should return true when data input source is connects asynchronously, otherwise return false.
+        /// </remarks>
+        protected abstract bool UseAsyncConnect { get; }
+
+        /// <summary>
+        /// Gets or sets the connection attempt interval, in milliseconds, for the data input source.
+        /// </summary>
+        protected double ConnectionAttemptInterval
+        {
+            get
+            {
+                return m_connectionTimer.Interval;
+            }
+            set
+            {
+                m_connectionTimer.Interval = value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the detailed status of the data input source.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should extend status with implementation specific information.
+        /// </remarks>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                status.Append(base.Status);
+                status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
+                status.AppendLine();
+                status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
+                status.AppendLine();
+
+                return status.ToString();
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="InputAdapterBase"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    if (disposing)
+                    {
+                        if (m_connectionTimer != null)
+                        {
+                            m_connectionTimer.Elapsed -= m_connectionTimer_Elapsed;
+                            m_connectionTimer.Dispose();
+                        }
+                        m_connectionTimer = null;
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        /// <summary>
+        /// Starts this <see cref="InputAdapterBase"/> and initiates connection cycle to data input source.
+        /// </summary>
+        public override void Start()
+        {
+            base.Start();
+
+            // Start the connection cycle
+            m_connectionTimer.Enabled = true;
+        }
+
+        /// <summary>
+        /// Attempts to connect to data input source.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should attempt connection to data input source here.  Any exceptions thrown
+        /// by this implementation will result in restart of the connection cycle.
+        /// </remarks>
+        protected abstract void AttemptConnection();
+
+        /// <summary>
+        /// Called when data input source connection is established.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should call this method manually if <see cref="UseAsyncConnect"/> is <c>true</c>.
+        /// </remarks>
+        protected virtual void OnConnected()
+        {
+            OnStatusMessage("Connection established.");
+        }
+
+        /// <summary>
+        /// Stops this <see cref="InputAdapterBase"/> and disconnects from data input source.
+        /// </summary>
+        public override void Stop()
+        {
+            try
+            {
+                bool performedDisconnect = Enabled;
+
+                base.Stop();
+
+                // Attempt disconnection from data source
+                AttemptDisconnection();
+
+                if (performedDisconnect && !UseAsyncConnect)
+                    OnDisconnected();
+            }
+            catch (ThreadAbortException)
+            {
+                // This exception can be safely ignored...
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Exception occured during disconnect: {0}", ex.Message), ex));
+            }
+        }
+
+        /// <summary>
+        /// Attempts to disconnect from data input source.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should attempt disconnect from data input source here.  Any exceptions thrown
+        /// by this implementation will be reported to host via <see cref="AdapterBase.ProcessException"/> event.
+        /// </remarks>
+        protected abstract void AttemptDisconnection();
+
+        /// <summary>
+        /// Called when data input source is disconnected.
+        /// </summary>
+        /// <remarks>
+        /// Derived classes should call this method manually if <see cref="UseAsyncConnect"/> is <c>true</c>.
+        /// </remarks>
+        protected virtual void OnDisconnected()
+        {
+            OnStatusMessage("Disconnected.");
+        }
+
+        /// <summary>
+        /// Raises the <see cref="NewMeasurements"/> event.
+        /// </summary>
+        protected virtual void OnNewMeasurements(ICollection<IMeasurement> measurements)
+        {
+            if (NewMeasurements != null)
+                NewMeasurements(this, new EventArgs<ICollection<IMeasurement>>(measurements));
+
+            IncrementProcessedMeasurements(measurements.Count);
+        }
+
+        /// <summary>
+        /// Raises <see cref="AdapterBase.ProcessException"/> event.
+        /// </summary>
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        protected override void OnProcessException(Exception ex)
+        {
+            base.OnProcessException(ex);
+        }
+
+        private void m_connectionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            try
+            {
+                OnStatusMessage("Attempting connection...");
+
+                // Attempt connection to data source
+                AttemptConnection();
+
+                if (!UseAsyncConnect)
+                    OnConnected();
+            }
+            catch (ThreadAbortException)
+            {
+                // This exception can be safely ignored...
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
+
+                // So long as user hasn't requested to stop, keep trying connection
+                if (Enabled)
+                    Start();
+            }
+        }
+
+        #endregion
+    }	
+}
