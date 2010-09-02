@@ -43,7 +43,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{03779694-D6C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimeSeriesFramework", "Libraries\TimeSeriesFramework\TimeSeriesFramework.csproj", "{412F9F59-D9B9-4C8E-96D2-20492644198C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5EE054A2-9C72-4801-9FF1-60C4D2DA5F20}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.txt = LICENSE.txt
+		NOTICE.txt = NOTICE.txt
+	EndProjectSection
+EndProject
 Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 2
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\TimeSeriesFramework\\TimeSeriesFramework.csproj
+		SccProjectTopLevelParentUniqueName1 = TimeSeriesFramework.sln
+		SccProjectName1 = Libraries/TimeSeriesFramework
+		SccLocalPath1 = Libraries\\TimeSeriesFramework
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x86 = Debug|x86
