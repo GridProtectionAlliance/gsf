@@ -18,6 +18,8 @@
 //       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  09/02/2010 - Pinal C. Patel
+//       Exposed underlying SmtpClient object via Client property for greater control.
 //
 //*******************************************************************************************************
 
@@ -263,13 +265,14 @@ namespace TVA.Net.Smtp
     ///         email.IsBodyHtml = true;
     ///         email.Attachments = @"c:\attachment.txt";
     ///         email.Send();
+    ///         email.Dispose();
     ///
     ///         Console.ReadLine();
     ///     }
     /// }
     /// </code>
     /// </example>
-    public class Mail
+    public class Mail : IDisposable
     {
         #region [ Members ]
 
@@ -286,9 +289,10 @@ namespace TVA.Net.Smtp
         private string m_bccRecipients;
         private string m_subject;
         private string m_body;
-        private string m_smtpServer;
         private string m_attachments;
         private bool m_isBodyHtml;
+        private SmtpClient m_smtpClient;
+        private bool m_disposed;
 
         #endregion
 
@@ -317,6 +321,14 @@ namespace TVA.Net.Smtp
             this.SmtpServer = smtpServer;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="Mail"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~Mail()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -324,6 +336,7 @@ namespace TVA.Net.Smtp
         /// <summary>
         /// Gets or sets the e-mail address of the <see cref="Mail"/> message sender.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
         public string From
         {
             get
@@ -343,6 +356,7 @@ namespace TVA.Net.Smtp
         /// <summary>
         /// Gets or sets the comma-separated or semicolon-seperated e-mail address list of the <see cref="Mail"/> message recipients.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
         public string ToRecipients
         {
             get
@@ -422,11 +436,12 @@ namespace TVA.Net.Smtp
         /// <summary>
         /// Gets or sets the name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.
         /// </summary>
+        /// <exception cref="ArgumentNullException">Value being assigned is a null or empty string.</exception>
         public string SmtpServer
         {
             get
             {
-                return m_smtpServer;
+                return m_smtpClient.Host;
             }
             set
             {
@@ -434,7 +449,12 @@ namespace TVA.Net.Smtp
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
 
-                m_smtpServer = value;
+                // Dispose existing client.
+                if (m_smtpClient != null)
+                    m_smtpClient.Dispose();
+
+                // Instantiate new client.
+                m_smtpClient = new SmtpClient(value);
             }
         }
 
@@ -468,9 +488,29 @@ namespace TVA.Net.Smtp
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="SmtpClient"/> object used for sending the <see cref="Mail"/> message.
+        /// </summary>
+        public SmtpClient Client 
+        {
+            get
+            {
+                return m_smtpClient;
+            }
+        }
+
         #endregion
 
-        #region [ Methods ]
+        #region [ Methods ]       
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="Mail"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <summary>
         /// Send the <see cref="Mail"/> message with <see cref="Attachments"/> to the <see cref="ToRecipients"/>, 
@@ -517,9 +557,42 @@ namespace TVA.Net.Smtp
                 }
             }
 
-            SmtpClient smtpClient = new SmtpClient(m_smtpServer);
-            smtpClient.Send(emailMessage);  // Send the mail.
-            emailMessage.Dispose();         // Clean-up.
+            try
+            {
+                // Send the mail.
+                m_smtpClient.Send(emailMessage);
+            }
+            finally
+            {
+                // Clean-up.
+                emailMessage.Dispose();             
+            }
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="Mail"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_smtpClient != null)
+                            m_smtpClient.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
         #endregion
@@ -585,14 +658,16 @@ namespace TVA.Net.Smtp
         /// <param name="smtpServer">The name or IP address of the SMTP server to be used for sending the <see cref="Mail"/> message.</param>
         public static void Send(string from, string toRecipients, string ccRecipients, string bccRecipients, string subject, string body, bool isBodyHtml, string attachments, string smtpServer)
         {
-            Mail email = new Mail(from, toRecipients, smtpServer);
-            email.CcRecipients = ccRecipients;
-            email.BccRecipients = bccRecipients;
-            email.Subject = subject;
-            email.Body = body;
-            email.IsBodyHtml = isBodyHtml;
-            email.Attachments = attachments;
-            email.Send();
+            using (Mail email = new Mail(from, toRecipients, smtpServer))
+            {
+                email.CcRecipients = ccRecipients;
+                email.BccRecipients = bccRecipients;
+                email.Subject = subject;
+                email.Body = body;
+                email.IsBodyHtml = isBodyHtml;
+                email.Attachments = attachments;
+                email.Send();
+            }
         }
 
         #endregion

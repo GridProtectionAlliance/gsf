@@ -239,7 +239,7 @@ using TVA.Identity;
 namespace TVA.Security
 {
     /// <summary>
-    /// Represents an <see cref="ISecurityProvider"/> that Active Directory for its backend datastore and credential authentication.
+    /// Represents an <see cref="ISecurityProvider"/> that uses Active Directory for its backend datastore and credential authentication.
     /// </summary>
     /// <example>
     /// Required config file entries:
