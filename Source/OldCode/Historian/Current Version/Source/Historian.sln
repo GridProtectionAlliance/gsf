@@ -21,8 +21,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{E7897B57-AE6
 		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
 		Dependencies\TVA\TVA.Security.dll = Dependencies\TVA\TVA.Security.dll
 		Dependencies\TVA\TVA.Security.XML = Dependencies\TVA\TVA.Security.XML
+		Dependencies\TVA\TVA.Services.dll = Dependencies\TVA\TVA.Services.dll
+		Dependencies\TVA\TVA.Services.XML = Dependencies\TVA\TVA.Services.XML
 		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
 		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
+		Dependencies\TVA\TVA.Windows.dll = Dependencies\TVA\TVA.Windows.dll
+		Dependencies\TVA\TVA.Windows.XML = Dependencies\TVA\TVA.Windows.XML
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{203451A6-758E-4D7F-8588-86E9E5D67B52}"
@@ -37,28 +41,34 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{EA3B8DD4-F77A-409D-BE8E-1391EA5B0BE4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TimeSeriesFramework", "TimeSeriesFramework", "{CDCA5604-FEC5-4392-84E9-787D56779CA9}"
+	ProjectSection(SolutionItems) = preProject
+		Dependencies\TimeSeriesFramework\TimeSeriesFramework.dll = Dependencies\TimeSeriesFramework\TimeSeriesFramework.dll
+		Dependencies\TimeSeriesFramework\TimeSeriesFramework.XML = Dependencies\TimeSeriesFramework\TimeSeriesFramework.XML
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 5
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
-		SccProjectUniqueName0 = Libraries\\TVA.Historian\\TVA.Historian.csproj
-		SccProjectTopLevelParentUniqueName0 = Historian.sln
-		SccProjectName0 = Libraries/TVA.Historian
-		SccLocalPath0 = Libraries\\TVA.Historian
-		SccProjectUniqueName1 = Libraries\\Test\\TVA.Historian.Test\\TVA.Historian.Test.csproj
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = Libraries\\TVA.Historian\\TVA.Historian.csproj
 		SccProjectTopLevelParentUniqueName1 = Historian.sln
-		SccProjectName1 = Libraries/Test/TVA.Historian.Test
-		SccLocalPath1 = Libraries\\Test\\TVA.Historian.Test
-		SccProjectUniqueName2 = Tools\\HistorianPlaybackUtility\\HistorianPlaybackUtility.csproj
+		SccProjectName1 = Libraries/TVA.Historian
+		SccLocalPath1 = Libraries\\TVA.Historian
+		SccProjectUniqueName2 = Libraries\\Test\\TVA.Historian.Test\\TVA.Historian.Test.csproj
 		SccProjectTopLevelParentUniqueName2 = Historian.sln
-		SccProjectName2 = Tools/HistorianPlaybackUtility
-		SccLocalPath2 = Tools\\HistorianPlaybackUtility
-		SccProjectUniqueName3 = Libraries\\Hadoop.Replication\\Hadoop.Replication.csproj
+		SccProjectName2 = Libraries/Test/TVA.Historian.Test
+		SccLocalPath2 = Libraries\\Test\\TVA.Historian.Test
+		SccProjectUniqueName3 = Tools\\HistorianPlaybackUtility\\HistorianPlaybackUtility.csproj
 		SccProjectTopLevelParentUniqueName3 = Historian.sln
-		SccProjectName3 = Libraries/Hadoop.Replication
-		SccLocalPath3 = Libraries\\Hadoop.Replication
-		SccLocalPath4 = .
+		SccProjectName3 = Tools/HistorianPlaybackUtility
+		SccLocalPath3 = Tools\\HistorianPlaybackUtility
+		SccProjectUniqueName4 = Libraries\\Hadoop.Replication\\Hadoop.Replication.csproj
+		SccProjectTopLevelParentUniqueName4 = Historian.sln
+		SccProjectName4 = Libraries/Hadoop.Replication
+		SccLocalPath4 = Libraries\\Hadoop.Replication
 	EndGlobalSection
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Historian.vsmdi
@@ -95,5 +105,6 @@ Global
 		{D405B0BE-88EE-4224-AA8C-4A6817481C17} = {EA3B8DD4-F77A-409D-BE8E-1391EA5B0BE4}
 		{07016E6A-01B1-4B3D-B1D6-F9131A1BEB6E} = {4A8304B6-A0C7-480E-9C2F-CCC4DC922647}
 		{E7897B57-AE67-4ABC-B35A-47C5074EF95B} = {94822134-56F8-4F3F-9BCD-2656324C37AD}
+		{CDCA5604-FEC5-4392-84E9-787D56779CA9} = {94822134-56F8-4F3F-9BCD-2656324C37AD}
 	EndGlobalSection
 EndGlobal

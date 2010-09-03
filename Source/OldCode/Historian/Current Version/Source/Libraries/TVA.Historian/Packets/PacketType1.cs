@@ -239,7 +239,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TVA.Historian.Files;
-using TVA.Measurements;
+using TimeSeriesFramework;
 
 namespace TVA.Historian.Packets
 {
