@@ -239,66 +239,9 @@
             <see cref="P:TVA.Services.ClientHelper.Enabled"/> property is not be set by user-code directly.
             </remarks>
         </member>
-        <member name="T:TVA.Services.ClientInfo">
+        <member name="T:TVA.Services.NamespaceDoc">
             <summary>
-            Represents information about a client using <see cref="T:TVA.Services.ClientHelper"/> for connecting to a Windows Service that uses <see cref="T:TVA.Services.ServiceHelper"/>.
-            </summary>
-            <remarks>
-            <see cref="T:TVA.Services.ClientInfo"/> can be serialized and deserialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> only.
-            </remarks>
-            <seealso cref="T:TVA.Services.ClientHelper"/>
-            <seealso cref="T:TVA.Services.ServiceHelper"/>
-        </member>
-        <member name="M:TVA.Services.ClientInfo.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ClientInfo"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Services.ClientInfo.#ctor(TVA.Services.ClientHelper)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ClientInfo"/> class.
-            </summary>
-            <param name="parent">An <see cref="T:TVA.Services.ClientHelper"/> object.</param>
-        </member>
-        <member name="M:TVA.Services.ClientInfo.SetClientUser(System.Security.Principal.IPrincipal)">
-            <summary>
-            Updates the <see cref="P:TVA.Services.ClientInfo.ClientUser"/>.
-            </summary>
-            <param name="user">New <see cref="T:System.Security.Principal.IPrincipal"/> object to be assigned to <see cref="P:TVA.Services.ClientInfo.ClientUser"/>.</param>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ClientID">
-            <summary>
-            Gets the identifier of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ClientType">
-            <summary>
-            Gets the <see cref="T:TVA.ApplicationType"/> of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ClientName">
-            <summary>
-            Gets the friendly name of the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ClientUser">
-            <summary>
-            Gets the <see cref="T:System.Security.Principal.IPrincipal"/> of the remote client application's user.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ClientUserCredentials">
-            <summary>
-            Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="P:TVA.Services.ClientInfo.ClientUser"/> is not available.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.MachineName">
-            <summary>
-            Gets the name of the machine running the remote client application.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientInfo.ConnectedAt">
-            <summary>
-            Gets or sets the <see cref="T:System.DateTime"/> when the remote client application connected to the <see cref="T:TVA.Services.ServiceHelper"/>.
+            Contains classes used to simplify and standardize development and operation of Windows services that are remotely manageable.
             </summary>
         </member>
         <member name="T:TVA.Services.ClientRequest">
@@ -347,85 +290,6 @@
         <member name="P:TVA.Services.ClientRequest.Attachments">
             <summary>
             Gets a list of attachments for the <see cref="T:TVA.Services.ClientRequest"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.ClientRequestHandler">
-            <summary>
-            Represents a handler for <see cref="T:TVA.Services.ClientRequest"/>s sent by <see cref="T:TVA.Services.ClientHelper"/>.
-            </summary>
-            <seealso cref="T:TVA.Services.ClientHelper"/>
-            <seealso cref="T:TVA.Services.ClientRequest"/>
-            <seealso cref="T:TVA.Services.ServiceHelper"/>
-        </member>
-        <member name="M:TVA.Services.ClientRequestHandler.#ctor(System.String,System.String,System.Action{TVA.Services.ClientRequestInfo})">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestHandler"/> class.
-            </summary>
-            <param name="requestCommand">Command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.</param>
-            <param name="requestDescription">Description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.</param>
-            <param name="handlerMethod"><see cref="T:System.Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
-        </member>
-        <member name="M:TVA.Services.ClientRequestHandler.#ctor(System.String,System.String,System.Action{TVA.Services.ClientRequestInfo},System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestHandler"/> class.
-            </summary>
-            <param name="requestCommand">Command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.</param>
-            <param name="requestDescription">Description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.</param>
-            <param name="handlerMethod"><see cref="T:System.Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
-            <param name="isAdvertised">true if the <see cref="T:TVA.Services.ClientRequestHandler"/> is to be published by the <see cref="T:TVA.Services.ServiceHelper"/>; otherwise false.</param>
-        </member>
-        <member name="P:TVA.Services.ClientRequestHandler.Command">
-            <summary>
-            Gets the command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientRequestHandler.CommandDescription">
-            <summary>
-            Gets the description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientRequestHandler.HandlerMethod">
-            <summary>
-            Gets the <see cref="T:System.Delegate"/> method that gets invoked for processing the <see cref="P:TVA.Services.ClientRequestHandler.Command"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientRequestHandler.IsAdvertised">
-            <summary>
-            Gets a boolean value that indicates whether the <see cref="T:TVA.Services.ClientRequestHandler"/> will be published by the <see cref="T:TVA.Services.ServiceHelper"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.ClientRequestInfo">
-            <summary>
-            Represents information about a <see cref="T:TVA.Services.ClientRequest"/> sent by <see cref="T:TVA.Services.ClientHelper"/>.
-            </summary>
-            <seealso cref="T:TVA.Services.ClientInfo"/>
-            <seealso cref="T:TVA.Services.ClientRequest"/>
-        </member>
-        <member name="M:TVA.Services.ClientRequestInfo.#ctor(TVA.Services.ClientInfo,TVA.Services.ClientRequest)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestInfo"/> class.
-            </summary>
-            <param name="sender"><see cref="T:TVA.Services.ClientInfo"/> object of the <paramref name="request"/> sender.</param>
-            <param name="request"><see cref="T:TVA.Services.ClientRequest"/> object sent by the <paramref name="sender"/>.</param>
-        </member>
-        <member name="P:TVA.Services.ClientRequestInfo.Sender">
-            <summary>
-            Gets or sets the <see cref="T:TVA.Services.ClientInfo"/> object of the <see cref="P:TVA.Services.ClientRequestInfo.Request"/> sender.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientRequestInfo.Request">
-            <summary>
-            Gets or sets the <see cref="T:TVA.Services.ClientRequest"/> object sent by the <see cref="P:TVA.Services.ClientRequestInfo.Sender"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ClientRequestInfo.ReceivedAt">
-            <summary>
-            Gets or sets the <see cref="T:System.DateTime"/> when the <see cref="P:TVA.Services.ClientRequestInfo.Request"/> was received from the <see cref="P:TVA.Services.ClientRequestInfo.Sender"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.NamespaceDoc">
-            <summary>
-            Contains classes used to simplify and standardize development and operation of Windows services that are remotely manageable.
             </summary>
         </member>
         <member name="T:TVA.Services.ServiceState">
@@ -973,6 +837,184 @@
             Gets the descriptive status of the <see cref="T:TVA.Services.ServiceHelper"/>.
             </summary>
         </member>
+        <member name="T:TVA.Services.ClientInfo">
+            <summary>
+            Represents information about a client using <see cref="T:TVA.Services.ClientHelper"/> for connecting to a Windows Service that uses <see cref="T:TVA.Services.ServiceHelper"/>.
+            </summary>
+            <remarks>
+            <see cref="T:TVA.Services.ClientInfo"/> can be serialized and deserialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> only.
+            </remarks>
+            <seealso cref="T:TVA.Services.ClientHelper"/>
+            <seealso cref="T:TVA.Services.ServiceHelper"/>
+        </member>
+        <member name="M:TVA.Services.ClientInfo.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ClientInfo"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Services.ClientInfo.#ctor(TVA.Services.ClientHelper)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ClientInfo"/> class.
+            </summary>
+            <param name="parent">An <see cref="T:TVA.Services.ClientHelper"/> object.</param>
+        </member>
+        <member name="M:TVA.Services.ClientInfo.SetClientUser(System.Security.Principal.IPrincipal)">
+            <summary>
+            Updates the <see cref="P:TVA.Services.ClientInfo.ClientUser"/>.
+            </summary>
+            <param name="user">New <see cref="T:System.Security.Principal.IPrincipal"/> object to be assigned to <see cref="P:TVA.Services.ClientInfo.ClientUser"/>.</param>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ClientID">
+            <summary>
+            Gets the identifier of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ClientType">
+            <summary>
+            Gets the <see cref="T:TVA.ApplicationType"/> of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ClientName">
+            <summary>
+            Gets the friendly name of the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ClientUser">
+            <summary>
+            Gets the <see cref="T:System.Security.Principal.IPrincipal"/> of the remote client application's user.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ClientUserCredentials">
+            <summary>
+            Gets the credentials in 'username:password' format for authenticating the remote client application's user if a valid <see cref="P:TVA.Services.ClientInfo.ClientUser"/> is not available.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.MachineName">
+            <summary>
+            Gets the name of the machine running the remote client application.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientInfo.ConnectedAt">
+            <summary>
+            Gets or sets the <see cref="T:System.DateTime"/> when the remote client application connected to the <see cref="T:TVA.Services.ServiceHelper"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Services.ServiceResponse">
+            <summary>
+            Represents a response sent by the <see cref="T:TVA.Services.ServiceHelper"/> to a <see cref="T:TVA.Services.ClientRequest"/> from the <see cref="T:TVA.Services.ClientHelper"/>.
+            </summary>
+            <seealso cref="T:TVA.Services.ServiceHelper"/>
+            <seealso cref="T:TVA.Services.ClientHelper"/>
+            <seealso cref="T:TVA.Services.ClientRequest"/>
+        </member>
+        <member name="M:TVA.Services.ServiceResponse.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Services.ServiceResponse.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Services.ServiceResponse"/> in plain text.</param>
+        </member>
+        <member name="M:TVA.Services.ServiceResponse.#ctor(System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
+            </summary>
+            <param name="type">Type of the <see cref="T:TVA.Services.ServiceResponse"/> in plain-text.</param>
+            <param name="message">Message associated with the <see cref="T:TVA.Services.ServiceResponse"/>.</param>
+        </member>
+        <member name="P:TVA.Services.ServiceResponse.Type">
+            <summary>
+            Gets or sets the plain-text type of the <see cref="T:TVA.Services.ServiceResponse"/>.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is either a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Services.ServiceResponse.Message">
+            <summary>
+            Gets or sets the palin-text message associated with the <see cref="T:TVA.Services.ServiceResponse"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ServiceResponse.Attachments">
+            <summary>
+            Gets a list of serializable attachments of the <see cref="T:TVA.Services.ServiceResponse"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Services.ClientRequestInfo">
+            <summary>
+            Represents information about a <see cref="T:TVA.Services.ClientRequest"/> sent by <see cref="T:TVA.Services.ClientHelper"/>.
+            </summary>
+            <seealso cref="T:TVA.Services.ClientInfo"/>
+            <seealso cref="T:TVA.Services.ClientRequest"/>
+        </member>
+        <member name="M:TVA.Services.ClientRequestInfo.#ctor(TVA.Services.ClientInfo,TVA.Services.ClientRequest)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestInfo"/> class.
+            </summary>
+            <param name="sender"><see cref="T:TVA.Services.ClientInfo"/> object of the <paramref name="request"/> sender.</param>
+            <param name="request"><see cref="T:TVA.Services.ClientRequest"/> object sent by the <paramref name="sender"/>.</param>
+        </member>
+        <member name="P:TVA.Services.ClientRequestInfo.Sender">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Services.ClientInfo"/> object of the <see cref="P:TVA.Services.ClientRequestInfo.Request"/> sender.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientRequestInfo.Request">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Services.ClientRequest"/> object sent by the <see cref="P:TVA.Services.ClientRequestInfo.Sender"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientRequestInfo.ReceivedAt">
+            <summary>
+            Gets or sets the <see cref="T:System.DateTime"/> when the <see cref="P:TVA.Services.ClientRequestInfo.Request"/> was received from the <see cref="P:TVA.Services.ClientRequestInfo.Sender"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Services.ClientRequestHandler">
+            <summary>
+            Represents a handler for <see cref="T:TVA.Services.ClientRequest"/>s sent by <see cref="T:TVA.Services.ClientHelper"/>.
+            </summary>
+            <seealso cref="T:TVA.Services.ClientHelper"/>
+            <seealso cref="T:TVA.Services.ClientRequest"/>
+            <seealso cref="T:TVA.Services.ServiceHelper"/>
+        </member>
+        <member name="M:TVA.Services.ClientRequestHandler.#ctor(System.String,System.String,System.Action{TVA.Services.ClientRequestInfo})">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestHandler"/> class.
+            </summary>
+            <param name="requestCommand">Command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.</param>
+            <param name="requestDescription">Description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.</param>
+            <param name="handlerMethod"><see cref="T:System.Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
+        </member>
+        <member name="M:TVA.Services.ClientRequestHandler.#ctor(System.String,System.String,System.Action{TVA.Services.ClientRequestInfo},System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Services.ClientRequestHandler"/> class.
+            </summary>
+            <param name="requestCommand">Command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.</param>
+            <param name="requestDescription">Description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.</param>
+            <param name="handlerMethod"><see cref="T:System.Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
+            <param name="isAdvertised">true if the <see cref="T:TVA.Services.ClientRequestHandler"/> is to be published by the <see cref="T:TVA.Services.ServiceHelper"/>; otherwise false.</param>
+        </member>
+        <member name="P:TVA.Services.ClientRequestHandler.Command">
+            <summary>
+            Gets the command text that the <see cref="T:TVA.Services.ClientRequestHandler"/> will process.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientRequestHandler.CommandDescription">
+            <summary>
+            Gets the description of the <see cref="T:TVA.Services.ClientRequestHandler"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientRequestHandler.HandlerMethod">
+            <summary>
+            Gets the <see cref="T:System.Delegate"/> method that gets invoked for processing the <see cref="P:TVA.Services.ClientRequestHandler.Command"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Services.ClientRequestHandler.IsAdvertised">
+            <summary>
+            Gets a boolean value that indicates whether the <see cref="T:TVA.Services.ClientRequestHandler"/> will be published by the <see cref="T:TVA.Services.ServiceHelper"/>.
+            </summary>
+        </member>
         <member name="T:TVA.Services.ServiceProcessState">
             <summary>
             Indicates the current state of <see cref="T:TVA.Services.ServiceProcess"/>.
@@ -1102,48 +1144,6 @@
         <member name="P:TVA.Services.ServiceProcess.Status">
             <summary>
             Gets the descriptive status of the <see cref="T:TVA.Services.ServiceProcess"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.ServiceResponse">
-            <summary>
-            Represents a response sent by the <see cref="T:TVA.Services.ServiceHelper"/> to a <see cref="T:TVA.Services.ClientRequest"/> from the <see cref="T:TVA.Services.ClientHelper"/>.
-            </summary>
-            <seealso cref="T:TVA.Services.ServiceHelper"/>
-            <seealso cref="T:TVA.Services.ClientHelper"/>
-            <seealso cref="T:TVA.Services.ClientRequest"/>
-        </member>
-        <member name="M:TVA.Services.ServiceResponse.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Services.ServiceResponse.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
-            </summary>
-            <param name="type">Type of the <see cref="T:TVA.Services.ServiceResponse"/> in plain text.</param>
-        </member>
-        <member name="M:TVA.Services.ServiceResponse.#ctor(System.String,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Services.ServiceResponse"/> class.
-            </summary>
-            <param name="type">Type of the <see cref="T:TVA.Services.ServiceResponse"/> in plain-text.</param>
-            <param name="message">Message associated with the <see cref="T:TVA.Services.ServiceResponse"/>.</param>
-        </member>
-        <member name="P:TVA.Services.ServiceResponse.Type">
-            <summary>
-            Gets or sets the plain-text type of the <see cref="T:TVA.Services.ServiceResponse"/>.
-            </summary>
-            <exception cref="T:System.ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        </member>
-        <member name="P:TVA.Services.ServiceResponse.Message">
-            <summary>
-            Gets or sets the palin-text message associated with the <see cref="T:TVA.Services.ServiceResponse"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Services.ServiceResponse.Attachments">
-            <summary>
-            Gets a list of serializable attachments of the <see cref="T:TVA.Services.ServiceResponse"/>.
             </summary>
         </member>
     </members>

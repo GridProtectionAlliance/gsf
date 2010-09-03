@@ -25,12 +25,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MySQL", "MySQL", "{8847FB9B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{03779694-D6C5-482A-AF4B-9C058338FA8C}"
 	ProjectSection(SolutionItems) = preProject
-		Dependencies\TVA\TVA.Communication.dll = Dependencies\TVA\TVA.Communication.dll
 		Dependencies\TVA\TVA.Communication.XML = Dependencies\TVA\TVA.Communication.XML
 		Dependencies\TVA\TVA.Core.dll = Dependencies\TVA\TVA.Core.dll
 		Dependencies\TVA\TVA.Core.XML = Dependencies\TVA\TVA.Core.XML
-		Dependencies\TVA\TVA.Historian.dll = Dependencies\TVA\TVA.Historian.dll
-		Dependencies\TVA\TVA.Historian.XML = Dependencies\TVA\TVA.Historian.XML
 		Dependencies\TVA\TVA.Security.dll = Dependencies\TVA\TVA.Security.dll
 		Dependencies\TVA\TVA.Security.XML = Dependencies\TVA\TVA.Security.XML
 		Dependencies\TVA\TVA.Services.dll = Dependencies\TVA\TVA.Services.dll
