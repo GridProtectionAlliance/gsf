@@ -100,38 +100,44 @@ namespace TimeSeriesFramework
 
         private void DebugHost_Load(object sender, EventArgs e)
         {
-            // Call user overridable debug host loading method
-            DebugHostLoading();
+            if (!DesignMode)
+            {
+                // Call user overridable debug host loading method
+                DebugHostLoading();
 
-            // Initialize text.
-            m_productName = AssemblyInfo.EntryAssembly.Title;
-            this.Text = string.Format(this.Text, m_productName);
-            notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
-            LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
-            exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
+                // Initialize text.
+                m_productName = AssemblyInfo.EntryAssembly.Title;
+                this.Text = string.Format(this.Text, m_productName);
+                notifyIcon.Text = string.Format(notifyIcon.Text, m_productName);
+                LabelNotice.Text = string.Format(LabelNotice.Text, m_productName);
+                exitToolStripMenuItem.Text = string.Format(exitToolStripMenuItem.Text, m_productName);
 
-            // Minimize the window.
-            this.WindowState = FormWindowState.Minimized;
+                // Minimize the window.
+                this.WindowState = FormWindowState.Minimized;
 
-            // Start the windows service.
-            ServiceHost.StartDebugging(Environment.CommandLine.Split(' '));
+                // Start the windows service.
+                ServiceHost.StartDebugging(Environment.CommandLine.Split(' '));
+            }
         }
 
         private void DebugHost_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(string.Format("Are you sure you want to stop {0} service? ", m_productName), 
-                "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (!DesignMode)
             {
-                // Stop the windows service.
-                ServiceHost.StopDebugging();
+                if (MessageBox.Show(string.Format("Are you sure you want to stop {0} service? ", m_productName),
+                    "Stop Service", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    // Stop the windows service.
+                    ServiceHost.StopDebugging();
 
-                // Call user overridable debug host unloading method
-                DebugHostUnloading();
-            }
-            else
-            {
-                // Stop the application from exiting.
-                e.Cancel = true;
+                    // Call user overridable debug host unloading method
+                    DebugHostUnloading();
+                }
+                else
+                {
+                    // Stop the application from exiting.
+                    e.Cancel = true;
+                }
             }
         }
 

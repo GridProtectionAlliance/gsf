@@ -23,15 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using TVA;
-using TVA.Collections;
-using TVA.Communication;
-using TimeSeriesFramework.Adapters;
-using System.Data;
-using System.IO;
 using System.Threading;
+using TimeSeriesFramework.Adapters;
+using TVA;
+using TVA.Communication;
 
 namespace TimeSeriesFramework
 {

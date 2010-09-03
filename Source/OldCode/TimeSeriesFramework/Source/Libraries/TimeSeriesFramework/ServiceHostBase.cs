@@ -35,12 +35,11 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using Microsoft.Win32;
+using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Configuration;
 using TVA.Data;
 using TVA.IO;
-
-using TimeSeriesFramework.Adapters;
 using TVA.Reflection;
 using TVA.Services;
 using TVA.Units;
