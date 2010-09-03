@@ -183,34 +183,6 @@
     <Compile Include="IProvideStatus.cs" />
     <Compile Include="ISupportLifecycle.cs" />
     <Compile Include="LittleBinaryValue.cs" />
-    <Compile Include="Measurements\ConcentratorBase.cs" />
-    <Compile Include="Measurements\TrackingFrame.cs" />
-    <Compile Include="Measurements\Frame.cs" />
-    <Compile Include="Measurements\FrameQueue.cs" />
-    <Compile Include="Measurements\IFrame.cs" />
-    <Compile Include="Measurements\IMeasurement.cs" />
-    <Compile Include="Measurements\ImmediateMeasurements.cs" />
-    <Compile Include="Measurements\Measurement.cs" />
-    <Compile Include="Measurements\MeasurementKey.cs" />
-    <Compile Include="Measurements\NamespaceDoc.cs" />
-    <Compile Include="Measurements\Routing\ActionAdapterBase.cs" />
-    <Compile Include="Measurements\Routing\ActionAdapterCollection.cs" />
-    <Compile Include="Measurements\Routing\AdapterBase.cs" />
-    <Compile Include="Measurements\Routing\AdapterCollectionBase.cs" />
-    <Compile Include="Measurements\Routing\AdapterCommandAttribute.cs" />
-    <Compile Include="Measurements\Routing\AllAdaptersCollection.cs" />
-    <Compile Include="Measurements\Routing\FacileActionAdapterBase.cs" />
-    <Compile Include="Measurements\Routing\IActionAdapter.cs" />
-    <Compile Include="Measurements\Routing\IAdapter.cs" />
-    <Compile Include="Measurements\Routing\IAdapterCollection.cs" />
-    <Compile Include="Measurements\Routing\IInputAdapter.cs" />
-    <Compile Include="Measurements\Routing\InputAdapterBase.cs" />
-    <Compile Include="Measurements\Routing\InputAdapterCollection.cs" />
-    <Compile Include="Measurements\Routing\IOutputAdapter.cs" />
-    <Compile Include="Measurements\Routing\NamespaceDoc.cs" />
-    <Compile Include="Measurements\Routing\OutputAdapterBase.cs" />
-    <Compile Include="Measurements\Routing\OutputAdapterCollection.cs" />
-    <Compile Include="Measurements\TemporalMeasurement.cs" />
     <Compile Include="Media\Music\Damping.cs" />
     <Compile Include="Media\Music\Dynamic.cs" />
     <Compile Include="Media\Music\MeasureSize.cs" />
@@ -352,7 +324,6 @@
     <EmbeddedResource Include="Scheduling\ScheduleManager.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Measurements\Routing\IaonAdapters.vsd" />
     <None Include="Media\Wavefile Information\Waveform Audio Format.ppt" />
   </ItemGroup>
   <ItemGroup>
