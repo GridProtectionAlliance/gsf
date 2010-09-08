@@ -203,6 +203,8 @@ namespace TimeSeriesFramework
                 Source = Encoding.Unicode.GetString(buffer, index, length);
                 index += length;
             }
+            else
+                Source = "";
 
             // Decode signal ID
             SignalID = EndianOrder.BigEndian.ToGuid(buffer, index);
@@ -218,6 +220,8 @@ namespace TimeSeriesFramework
                 TagName = Encoding.Unicode.GetString(buffer, index, length);
                 index += length;
             }
+            else
+                TagName = null;
 
             // Decode value
             Value = EndianOrder.BigEndian.ToDouble(buffer, index);

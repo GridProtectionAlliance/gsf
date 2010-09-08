@@ -31,7 +31,7 @@ using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
 
-namespace TimeSeriesFramework
+namespace TimeSeriesFramework.Transport
 {
     #region [ Enumerations ]
 
@@ -73,6 +73,9 @@ namespace TimeSeriesFramework
         DataPacket = 0xD2
     }
 
+    /// <summary>
+    /// <see cref="DataPublisher"/> data packet flags.
+    /// </summary>
     [Flags()]
     public enum DataPacketFlags : byte
     {
@@ -278,7 +281,8 @@ namespace TimeSeriesFramework
             {
                 lock (this)
                 {
-                    base.QueueMeasurementForProcessing(measurement);
+                    if (!m_disposed)
+                        base.QueueMeasurementForProcessing(measurement);
                 }
             }
 
@@ -294,7 +298,8 @@ namespace TimeSeriesFramework
             {
                 lock (this)
                 {
-                    base.QueueMeasurementsForProcessing(measurements);
+                    if (!m_disposed)
+                        base.QueueMeasurementsForProcessing(measurements);
                 }
             }
 
@@ -462,7 +467,7 @@ namespace TimeSeriesFramework
                     }
                 }
 
-                if (filteredMeasurements.Count > 0)
+                if (filteredMeasurements.Count > 0 && !m_disposed)
                     ThreadPool.QueueUserWorkItem(ProcessMeasurements, filteredMeasurements);
             }
 
@@ -619,6 +624,9 @@ namespace TimeSeriesFramework
                     {
                         if (m_dataServer != null)
                         {
+                            if (m_dataServer.CurrentState == ServerState.Running)
+                                m_dataServer.DisconnectAll();
+
                             m_dataServer.ClientConnected -= m_dataServer_ClientConnected;
                             m_dataServer.ClientDisconnected -= m_dataServer_ClientDisconnected;
                             m_dataServer.HandshakeProcessTimeout -= m_dataServer_HandshakeProcessTimeout;
@@ -723,9 +731,10 @@ namespace TimeSeriesFramework
         /// <param name="clientID">ID of client to send response.</param>
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
-        protected virtual void SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
+        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command)
         {
-            SendClientResponse(clientID, response, command, (byte[])null);
+            return SendClientResponse(clientID, response, command, (byte[])null);
         }
 
         /// <summary>
@@ -735,12 +744,13 @@ namespace TimeSeriesFramework
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
         /// <param name="status">Status message to return.</param>
-        protected virtual void SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
+        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string status)
         {
             if (status != null)
-                SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(status));
-            else
-                SendClientResponse(clientID, response, command);
+                return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(status));
+
+            return SendClientResponse(clientID, response, command);
         }
 
         /// <summary>
@@ -751,12 +761,13 @@ namespace TimeSeriesFramework
         /// <param name="command">In response to command.</param>
         /// <param name="formattedStatus">Formatted status message to return.</param>
         /// <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
-        protected virtual void SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
+        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
-            if (formattedStatus != null)
-                SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(string.Format(formattedStatus, args)));
-            else
-                SendClientResponse(clientID, response, command);
+            if (!string.IsNullOrEmpty(formattedStatus))
+                return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(string.Format(formattedStatus, args)));
+
+            return SendClientResponse(clientID, response, command);
         }
 
         /// <summary>
@@ -766,48 +777,61 @@ namespace TimeSeriesFramework
         /// <param name="response">Server response.</param>
         /// <param name="command">In response to command.</param>
         /// <param name="data">Data to return to client; null if none.</param>
-        protected virtual void SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
+        /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, byte[] data)
         {
-            SendClientResponse(clientID, (byte)response, (byte)command, data);
+            return SendClientResponse(clientID, (byte)response, (byte)command, data);
         }
 
         // Send binary response packet to client
-        private void SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
+        private bool SendClientResponse(Guid clientID, byte responseCode, byte commandCode, byte[] data)
         {
-            MemoryStream responsePacket = new MemoryStream();
-
-            // Add response code
-            responsePacket.WriteByte(responseCode);
-
-            // Add original in response to command code
-            responsePacket.WriteByte(commandCode);
-
-            if (data == null || data.Length == 0)
-            {
-                // Add zero sized data buffer to response packet
-                responsePacket.Write(EndianOrder.BigEndian.GetBytes(0), 0, 4);
-            }
-            else
-            {
-                // Add size of data buffer to response packet
-                responsePacket.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
-
-                // Add data buffer
-                responsePacket.Write(data, 0, data.Length);
-            }
+            bool success = false;
 
             // Send response packet
-            if (m_dataServer != null)
+            if (m_dataServer != null && m_dataServer.CurrentState == ServerState.Running)
             {
                 try
                 {
+                    MemoryStream responsePacket = new MemoryStream();
+
+                    // Add response code
+                    responsePacket.WriteByte(responseCode);
+
+                    // Add original in response to command code
+                    responsePacket.WriteByte(commandCode);
+
+                    if (data == null || data.Length == 0)
+                    {
+                        // Add zero sized data buffer to response packet
+                        responsePacket.Write(EndianOrder.BigEndian.GetBytes(0), 0, 4);
+                    }
+                    else
+                    {
+                        // Add size of data buffer to response packet
+                        responsePacket.Write(EndianOrder.BigEndian.GetBytes(data.Length), 0, 4);
+
+                        // Add data buffer
+                        responsePacket.Write(data, 0, data.Length);
+                    }
+
                     m_dataServer.SendToAsync(clientID, responsePacket.ToArray());
+
+                    success = true;
+                }
+                catch (ObjectDisposedException)
+                {
+                    // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
                 }
                 catch (Exception ex)
                 {
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
                 }
             }
+            else
+                OnProcessException(new InvalidOperationException("Publisher is not running. Cannot send response packet."));
+
+            return success;
         }
 
         // Remove client subscription
@@ -1019,7 +1043,9 @@ namespace TimeSeriesFramework
         private void m_dataServer_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
+
+            if (!(ex is ObjectDisposedException))
+                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
         }
 
         private void m_dataServer_ReceiveClientDataTimeout(object sender, EventArgs<Guid> e)

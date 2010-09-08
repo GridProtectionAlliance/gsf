@@ -61,7 +61,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConcentratorBase.cs" />
-    <Compile Include="DataPacket.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IFrame.cs" />
@@ -88,8 +87,8 @@
     <Compile Include="Adapters\OutputAdapterBase.cs" />
     <Compile Include="Adapters\OutputAdapterCollection.cs" />
     <Compile Include="SerializableMeasurementSlim.cs" />
-    <Compile Include="DataPublisher.cs" />
-    <Compile Include="DataSubscriber.cs" />
+    <Compile Include="Transport\DataPublisher.cs" />
+    <Compile Include="Transport\DataSubscriber.cs" />
     <Compile Include="DebugHostBase.cs">
       <SubType>Form</SubType>
     </Compile>

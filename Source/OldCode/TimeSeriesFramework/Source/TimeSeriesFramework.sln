@@ -46,9 +46,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		NOTICE.txt = NOTICE.txt
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataSubscriberTest", "Applications\DataSubscriberTest\DataSubscriberTest.csproj", "{DEAE7327-1628-4D6D-B682-257335B86B22}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPublisherTest", "Applications\DataPublisherTest\DataPublisherTest.csproj", "{4508009C-7011-4981-B35F-594F42CC0D1F}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 2
+		SccNumberOfProjects = 4
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs07
 		SccLocalPath0 = .
@@ -56,25 +60,61 @@ Global
 		SccProjectTopLevelParentUniqueName1 = TimeSeriesFramework.sln
 		SccProjectName1 = Libraries/TimeSeriesFramework
 		SccLocalPath1 = Libraries\\TimeSeriesFramework
+		SccProjectUniqueName2 = Applications\\DataSubscriberTest\\DataSubscriberTest.csproj
+		SccProjectTopLevelParentUniqueName2 = TimeSeriesFramework.sln
+		SccProjectName2 = Applications/DataSubscriberTest
+		SccLocalPath2 = Applications\\DataSubscriberTest
+		SccProjectUniqueName3 = Applications\\DataPublisherTest\\DataPublisherTest.csproj
+		SccProjectTopLevelParentUniqueName3 = TimeSeriesFramework.sln
+		SccProjectName3 = Applications/DataPublisherTest
+		SccLocalPath3 = Applications\\DataPublisherTest
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Debug|x86.ActiveCfg = Debug|Any CPU
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{412F9F59-D9B9-4C8E-96D2-20492644198C}.Release|x86.ActiveCfg = Release|Any CPU
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|x86.ActiveCfg = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Debug|x86.Build.0 = Debug|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|Any CPU.ActiveCfg = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|Mixed Platforms.Build.0 = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|x86.ActiveCfg = Release|x86
+		{DEAE7327-1628-4D6D-B682-257335B86B22}.Release|x86.Build.0 = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|x86.ActiveCfg = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Debug|x86.Build.0 = Debug|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Any CPU.ActiveCfg = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|Mixed Platforms.Build.0 = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.ActiveCfg = Release|x86
+		{4508009C-7011-4981-B35F-594F42CC0D1F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{DEAE7327-1628-4D6D-B682-257335B86B22} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
+		{4508009C-7011-4981-B35F-594F42CC0D1F} = {F2F990DA-EC53-4B01-86FC-5557EF149769}
 		{D2F52E0C-FDD4-4AC7-BF60-F2C589A3A61C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
 		{305DB059-5B1C-4BBF-85C1-D41148D90CE5} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
 		{F08ECF09-C90D-4CCD-864D-8ECDD9F2CB9C} = {0DB3505F-CC49-4D22-A67F-14688BABB192}
