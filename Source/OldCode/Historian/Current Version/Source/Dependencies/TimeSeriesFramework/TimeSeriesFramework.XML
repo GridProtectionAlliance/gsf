@@ -1455,64 +1455,1137 @@
             </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
         </member>
-        <member name="T:TimeSeriesFramework.ServerCommand">
+        <member name="T:TimeSeriesFramework.Frame">
             <summary>
-            <see cref="T:TimeSeriesFramework.DataPublisher"/> server commands.
+            Implementation of a basic <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <remarks>
+            A frame represents a collection of measurements at a given time.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.IFrame">
+            <summary>
+            Abstract frame interface representing a collection of measurements at an exact moment in time.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerCommand.Subscribe">
+        <member name="P:TimeSeriesFramework.IFrame.Measurements">
             <summary>
-            Subscribe command.
+            Keyed measurements in this <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <remarks>
+            Represents a dictionary of measurements, keyed by <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IFrame.Published">
+            <summary>
+            Gets or sets published state of this <see cref="T:TimeSeriesFramework.IFrame"/>.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerCommand.Unsubscribe">
+        <member name="P:TimeSeriesFramework.IFrame.SortedMeasurements">
             <summary>
-            Unsubscribe command.
+            Gets or sets total number of measurements that have been sorted into this <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <remarks>
+            If this property has not been assigned a value, implementors should return measurement count.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IFrame.Timestamp">
+            <summary>
+            Gets or sets exact timestamp, in <see cref="T:TVA.Ticks"/>, of the data represented in this <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <remarks>
+            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IFrame.LastSortedMeasurement">
+            <summary>
+            Gets ot sets reference to last <see cref="T:TimeSeriesFramework.IMeasurement"/> that was sorted into this <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <remarks>
+            <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="T:TimeSeriesFramework.IFrame"/>.</para>
+            <para>Implementors need only track the value.</para>
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks)">
+            <summary>
+            Constructs a new <see cref="T:TimeSeriesFramework.Frame"/> given the specified parameters.
+            </summary>
+            <param name="timestamp">Timestamp, in ticks, for this <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks,System.Collections.Generic.IDictionary{TimeSeriesFramework.MeasurementKey,TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Constructs a new <see cref="T:TimeSeriesFramework.Frame"/> given the specified parameters.
+            </summary>
+            <param name="timestamp">Timestamp, in ticks, for this <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <param name="measurements">Initial set of measurements to load into the <see cref="T:TimeSeriesFramework.Frame"/>, if any.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.Clone">
+            <summary>
+            Create a copy of this <see cref="T:TimeSeriesFramework.Frame"/> and its measurements.
+            </summary>
+            <remarks>
+            The measurement dictionary of this <see cref="T:TimeSeriesFramework.Frame"/> is synclocked during copy.
+            </remarks>
+            <returns>A cloned <see cref="T:TimeSeriesFramework.Frame"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.Equals(TimeSeriesFramework.IFrame)">
+            <summary>
+            Determines whether the specified <see cref="T:TimeSeriesFramework.IFrame"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>.
+            </summary>
+            <param name="other">The <see cref="T:TimeSeriesFramework.IFrame"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <returns>
+            true if the specified <see cref="T:TimeSeriesFramework.IFrame"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>;
+            otherwise, false.
+            </returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <returns>
+            true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>;
+            otherwise, false.
+            </returns>
+            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IFrame"/>.</exception>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.CompareTo(TimeSeriesFramework.IFrame)">
+            <summary>
+            Compares the <see cref="T:TimeSeriesFramework.Frame"/> with an <see cref="T:TimeSeriesFramework.IFrame"/>.
+            </summary>
+            <param name="other">The <see cref="T:TimeSeriesFramework.IFrame"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+            <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.CompareTo(System.Object)">
+            <summary>
+            Compares the <see cref="T:TimeSeriesFramework.Frame"/> with the specified <see cref="T:System.Object"/>.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
+            <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
+            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IFrame"/>.</exception>
+            <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.GetHashCode">
+            <summary>
+            Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Frame"/>.
+            </summary>
+            <returns>A hash code for the current <see cref="T:TimeSeriesFramework.Frame"/>.</returns>
+            <remarks>Hash code based on timestamp of frame.</remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_Equality(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Compares two <see cref="T:TimeSeriesFramework.Frame"/> timestamps for equality.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_Inequality(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Compares two <see cref="T:TimeSeriesFramework.Frame"/> timestamps for inequality.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_GreaterThan(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is greater than right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_GreaterThanOrEqual(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is greater than or equal to right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_LessThan(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is less than right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Frame.op_LessThanOrEqual(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
+            <summary>
+            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is less than or equal to right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
+            </summary>
+            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
+            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
+            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Frame.Measurements">
+            <summary>
+            Keyed measurements in this <see cref="T:TimeSeriesFramework.Frame"/>.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerCommand.QueryPoints">
+        <member name="P:TimeSeriesFramework.Frame.Published">
             <summary>
-            Query points command.
+            Gets or sets published state of this <see cref="T:TimeSeriesFramework.Frame"/>.
             </summary>
         </member>
-        <member name="T:TimeSeriesFramework.ServerResponse">
+        <member name="P:TimeSeriesFramework.Frame.SortedMeasurements">
             <summary>
-            <see cref="T:TimeSeriesFramework.DataPublisher"/> server responses.
+            Gets or sets total number of measurements that have been sorted into this <see cref="T:TimeSeriesFramework.Frame"/>.
+            </summary>
+            <remarks>
+            If this property has not been assigned a value, the property will return measurement count.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Frame.Timestamp">
+            <summary>
+            Gets or sets exact timestamp, in <see cref="T:TVA.Ticks"/>, of the data represented in this <see cref="T:TimeSeriesFramework.Frame"/>.
+            </summary>
+            <remarks>
+            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Frame.LastSortedMeasurement">
+            <summary>
+            Gets or sets reference to last measurement that was sorted into this <see cref="T:TimeSeriesFramework.Frame"/>.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerResponse.Succeeded">
+        <member name="T:TimeSeriesFramework.ConfigurationType">
             <summary>
-            Command succeeded response.
+            Configuration data source type enumeration.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerResponse.Failed">
+        <member name="F:TimeSeriesFramework.ConfigurationType.Database">
             <summary>
-            Command failed response.
+            Configuration source is a database.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.ServerResponse.DataPacket">
+        <member name="F:TimeSeriesFramework.ConfigurationType.WebService">
             <summary>
-            Data packet response.
+            Configuration source is a webservice.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.DataPacketFlags.Synchronized">
+        <member name="F:TimeSeriesFramework.ConfigurationType.XmlFile">
             <summary>
-            Determines if data packet is synchronized. Bit set = synchronized, bit clear = unsynchronized.
+            Configuration source is a XML file.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.DataPacketFlags.Compact">
+        <member name="T:TimeSeriesFramework.DataOperationFunction">
             <summary>
-            Determines if serialized measurement is compact. Bit set = compact, bit clear = full fidelity.
+            Defines a method signature for a bootstrap data source operation.
+            </summary>
+            <param name="connection">Connection to database.</param>
+            <param name="adapterType">Adapter type for database connection.</param>
+            <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
+            <param name="statusMessage">Reference to host status message function.</param>
+            <param name="processException">Reference to host process exception function.</param>
+        </member>
+        <member name="T:TimeSeriesFramework.ServiceClientBase">
+            <summary>
+            Represents a client that can remotely access the time-series framework service host.
             </summary>
         </member>
-        <member name="F:TimeSeriesFramework.DataPacketFlags.NoFlags">
+        <member name="F:TimeSeriesFramework.ServiceClientBase.components">
             <summary>
-            No flags set. This would represent unsynchronized, full fidelity measurement data packets.
+            Required designer variable.
             </summary>
         </member>
-        <member name="T:TimeSeriesFramework.DataPublisher">
+        <member name="M:TimeSeriesFramework.ServiceClientBase.Dispose(System.Boolean)">
+            <summary> 
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.ServiceClientBase.InitializeComponent">
             <summary>
-            Represents a data publishing server that allows multiple connections for data subscriptions.
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.SerializableMeasurement">
+            <summary>
+            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.SerializableMeasurement.FixedLength">
+            <summary>
+            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
+            </summary>
+            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from the specified binary image.
+            </summary>
+            <param name="buffer">Binary image to be used for initialization.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
+            <param name="count">Valid number of bytes within binary image.</param>
+            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage">
+            <summary>
+            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
+            </summary>
+            <remarks>
+            <para>
+            Field:      Bytes:   <br/>
+            ---------   ---------<br/>
+              ID            4    <br/>
+            SourceLen       4    <br/>
+             Source     SourceLen<br/>
+            SignalID       16    <br/>
+             TagLen         4    <br/>
+              Tag        TagLen  <br/>
+              Value         8    <br/>
+              Adder         8    <br/>
+            Multipler       8    <br/>
+              Ticks         8    <br/>
+              Flags         1    <br/>
+            </para>
+            <para>
+            Constant Length = 61<br/>
+            Variable Length = SourceLen + TagLen
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryLength">
+            <summary>
+            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.DataSubscriber">
+            <summary>
+            Represents a data subscribing client that will connect to a data publisher for a data subscription.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.InputAdapterBase">
+            <summary>
+            Represents the base class for any incoming input adapter.
+            </summary>
+            <remarks>
+            Derived classes are expected to call <see cref="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> when new measurements are received.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.AdapterBase">
+            <summary>
+            Represents the base class for any adapter.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Adapters.AdapterBase.DefaultInitializationTimeout">
+            <summary>
+            Default initialization timeout.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.#ctor">
+            <summary>
+            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Initialize">
+            <summary>
+            Intializes <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Start">
+            <summary>
+            Starts the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> or restarts it if it is already running.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Stop">
+            <summary>
+            Stops the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>		
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.SetInitializedState(System.Boolean)">
+            <summary>
+            Manually sets the intialized state of the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <param name="initialized">Desired initialized state.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <param name="maxLength">Maximum number of available characters for display.</param>
+            <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.IsInputMeasurement(TimeSeriesFramework.MeasurementKey)">
+            <summary>
+            Determines if specified measurement key is defined in <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys"/>.
+            </summary>
+            <param name="item">Primary key of measurement to find.</param>
+            <returns>true if specified measurement key is defined in <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.WaitForInitialize(System.Int32)">
+            <summary>
+            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.Initialized"/>.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait.</param>
+            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage"/> event.
+            </summary>
+            <param name="status">New status message.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String,System.Object[])">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage"/> event with a formatted status message.
+            </summary>
+            <param name="formattedStatus">Formatted status message.</param>
+            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+            <remarks>
+            This overload combines string.Format and SendStatusMessage for convienence.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.IncrementProcessedMeasurements(System.Int64)">
+            <summary>
+            Safely increments the total processed measurements.
+            </summary>
+            <param name="totalAdded"></param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String)">
+            <summary>
+            Parses input measurement keys from connection string setting.
+            </summary>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
+            <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
+            <returns>User selected input measurement keys.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String)">
+            <summary>
+            Parses output measurements from connection string setting.
+            </summary>
+            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
+            <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
+            <returns>User selected output measurements.</returns>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage">
+            <summary>
+            Provides status messages to consumer.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is new status message.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException">
+            <summary>
+            Event is raised when there is an exception encountered while processing.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.Disposed">
+            <summary>
+            Event is raised when <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> is disposed.
+            </summary>
+            <remarks>
+            If an adapter references another adapter by enumerating the <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.Parent"/> collection, this
+            event should be monitored to release the reference.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Name">
+            <summary>
+            Gets or sets the name of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <remarks>
+            Derived classes should provide a name for the adapter.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ID">
+            <summary>
+            Gets or sets numeric ID associated with this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ConnectionString">
+            <summary>
+            Gets or sets key/value pair connection information specific to this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <remarks>
+            <para>
+            Example connection string using manually defined measurements:<br/>
+            <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
+            <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
+            When defined manually, elements in key:<br/>
+            * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
+            * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
+            defaulting to 0.0 and 1.0 respectively.
+            <br/>
+            </para>
+            <para>
+            Example connection string using measurements defined in a <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.DataSource"/> table:<br/>
+            <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};</c><br/>
+            <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
+            <br/>
+            Basic filtering syntax is as follows:<br/>
+            <br/>
+                {FILTER &lt;TableName&gt; WHERE &lt;Expression&gt; [ORDER BY &lt;SortField&gt;]}<br/>
+            <br/>
+            Source tables are expected to have at least the following fields:<br/>
+            <list type="table">
+                <listheader>
+                    <term>Name</term>
+                    <term>Type</term>
+                    <description>Description.</description>
+                </listheader>
+                <item>
+                    <term>ID</term>
+                    <term>NVARCHAR</term>
+                    <description>Measurement key formatted as: ArchiveSource:PointID.</description>
+                </item>
+                <item>
+                    <term>PointTag</term>
+                    <term>NVARCHAR</term>
+                    <description>Point tag of measurement.</description>
+                </item>
+                <item>
+                    <term>Adder</term>
+                    <term>FLOAT</term>
+                    <description>Adder to apply to value, if any (default to 0.0).</description>
+                </item>
+                <item>
+                    <term>Multiplier</term>
+                    <term>FLOAT</term>
+                    <description>Multipler to apply to value, if any (default to 1.0).</description>
+                </item>
+            </list>
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Parent">
+            <summary>
+            Gets a read-only reference to the collection that contains this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.DataSource">
+            <summary>
+            Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.InitializationTimeout">
+            <summary>
+            Gets or sets maximum time system will wait during <see cref="M:TimeSeriesFramework.Adapters.AdapterBase.Start"/> for initialization.
+            </summary>
+            <remarks>
+            Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.OutputMeasurements">
+            <summary>
+            Gets or sets output measurements that the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> will produce, if any.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys">
+            <summary>
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> expects, if any.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ProcessedMeasurements">
+            <summary>
+            Gets the total number of measurements handled thus far by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.MeasurementReportingInterval">
+            <summary>
+            Gets or sets the measurement reporting interval.
+            </summary>
+            <remarks>
+            This is used to determined how many measurements should be processed before reporting status.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Initialized">
+            <summary>
+            Gets or sets flag indicating if the adapter has been initialized successfully.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Enabled">
+            <summary>
+            Gets or sets enabled state of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <remarks>
+            Base class simply starts or stops <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> based on flag value. Derived classes should
+            extend this if needed to enable or disable operational state of the adapter based on flag value.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Settings">
+            <summary>
+            Gets settings <see cref="T:System.Collections.Generic.Dictionary`2"/> parsed when <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.ConnectionString"/> was assigned.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Status">
+            <summary>
+            Gets the status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <remarks>
+            Derived classes should provide current status information about the adapter for display purposes.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.#ctor">
+            <summary>
+            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Start">
+            <summary>
+            Starts this <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> and initiates connection cycle to data input source.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.AttemptConnection">
+            <summary>
+            Attempts to connect to data input source.
+            </summary>
+            <remarks>
+            Derived classes should attempt connection to data input source here.  Any exceptions thrown
+            by this implementation will result in restart of the connection cycle.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnConnected">
+            <summary>
+            Called when data input source connection is established.
+            </summary>
+            <remarks>
+            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Stop">
+            <summary>
+            Stops this <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> and disconnects from data input source.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.AttemptDisconnection">
+            <summary>
+            Attempts to disconnect from data input source.
+            </summary>
+            <remarks>
+            Derived classes should attempt disconnect from data input source here.  Any exceptions thrown
+            by this implementation will be reported to host via <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnDisconnected">
+            <summary>
+            Called when data input source is disconnected.
+            </summary>
+            <remarks>
+            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements">
+            <summary>
+            Provides new measurements from input adapter.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect">
+            <summary>
+            Gets flag that determines if the data input connects asynchronously.
+            </summary>
+            <remarks>
+            Derived classes should return true when data input source is connects asynchronously, otherwise return false.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.ConnectionAttemptInterval">
+            <summary>
+            Gets or sets the connection attempt interval, in milliseconds, for the data input source.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.Status">
+            <summary>
+            Returns the detailed status of the data input source.
+            </summary>
+            <remarks>
+            Derived classes should extend status with implementation specific information.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
+            </summary>
+            <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+            <param name="framesPerSecond">The desired number of data frames per second.</param>
+            <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
+            <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+            <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real time.</param>
+            <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
+            <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
+            <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
+            <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
+            <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.String)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
+            </summary>
+            <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+            <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Subscribe(System.Boolean,System.Boolean,System.String)">
+            <summary>
+            Subscribes (or re-subscribes) to a data publisher for a set of data points.
+            </summary>
+            <param name="synchronized">Boolean value that determines if subscription should be synchronized.</param>
+            <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+            <param name="connectionString">Connection string that defines required and optional parameters for the subscription.</param>
+            <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.Unsubscribe">
+            <summary>
+            Unsubscribes from a data publisher.
+            </summary>
+            <returns><c>true</c> if unsubscribe was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SendServerCommand(TimeSeriesFramework.Transport.ServerCommand,System.Byte[])">
+            <summary>
+            Sends a server command to the publisher connection.
+            </summary>
+            <param name="commandCode"><see cref="T:TimeSeriesFramework.Transport.ServerCommand"/> to send.</param>
+            <param name="data">Command data to send.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.AttemptConnection">
+            <summary>
+            Attempts to connect to this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.AttemptDisconnection">
+            <summary>
+            Attempts to disconnect from this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+            <param name="maxLength">Maximum length of the status message.</param>
+            <returns>Text of the status message.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.InterpretResponseMessage(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Get message from string based response.
+            </summary>
+            <param name="buffer">Response buffer.</param>
+            <param name="startIndex">Start index of response message.</param>
+            <param name="length">Length of response message.</param>
+            <returns>Decoded response string.</returns>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionEstablished">
+            <summary>
+            Occurs when client connection to the data publication server is established.
+            </summary>
+        </member>
+        <member name="E:TimeSeriesFramework.Transport.DataSubscriber.ConnectionTerminated">
+            <summary>
+            Occurs when client connection to the data publication server is terminated.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.UseAsyncConnect">
+            <summary>
+            Gets a flag that determines if this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/> uses an asynchronous connection.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataSubscriber.Status">
+            <summary>
+            Gets the status of this <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
+            </summary>
+            <remarks>
+            Derived classes should provide current status information about the adapter for display purposes.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.SerializableMeasurementSlim">
+            <summary>
+            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized with minimal size.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.SerializableMeasurementSlim.FixedLength">
+            <summary>
+            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(System.Boolean)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
+            </summary>
+            <param name="includeTime">Determines if time is included in binary images.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(TimeSeriesFramework.IMeasurement,System.Boolean)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
+            </summary>
+            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
+            <param name="includeTime">Determines if time is included in binary images.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from the specified binary image.
+            </summary>
+            <param name="buffer">Binary image to be used for initialization.</param>
+            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
+            <param name="count">Valid number of bytes within binary image.</param>
+            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.IncludeTime">
+            <summary>
+            Gets or sets flags that determines if time is included in binary images.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage">
+            <summary>
+            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
+            </summary>
+            <remarks>
+            <para>
+            Field:     Bytes: <br/>
+            --------   -------<br/>
+            SignalID     16   <br/>
+             Value        8   <br/>
+             [Time]       8?  <br/>
+             Flags        1   <br/>
+            </para>
+            <para>
+            Constant Length = 25<br/>
+            Variable Length = 8 (time is optional)
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryLength">
+            <summary>
+            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.OutputAdapterBase">
+            <summary>
+            Represents that base class for any outgoing data stream.
+            </summary>
+            <remarks>
+            This base class acts as a measurement queue so that output adapters can temporarily go
+            offline without losing any measurements to be processed. Derived classes are expected to
+            override <see cref="M:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessMeasurements(TimeSeriesFramework.IMeasurement[])"/> to handle queued measurements.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.#ctor">
+            <summary>
+            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Start">
+            <summary>
+            Starts this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> and initiates connection cycle to data output stream.
+            </summary>		
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.AttemptConnection">
+            <summary>
+            Attempts to connect to data output stream.
+            </summary>
+            <remarks>
+            Derived classes should attempt connection to data output stream here.  Any exceptions thrown
+            by this implementation will result in restart of the connection cycle.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnConnected">
+            <summary>
+            Called when data input source connection is established.
+            </summary>
+            <remarks>
+            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Stop">
+            <summary>
+            Stops this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> and disconnects from data output stream.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.AttemptDisconnection">
+            <summary>
+            Attempts to disconnect from data output stream.
+            </summary>
+            <remarks>
+            Derived classes should attempt disconnect from data output stream here.  Any exceptions thrown
+            by this implementation will be reported to host via <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnDisconnected">
+            <summary>
+            Called when data input source is disconnected.
+            </summary>
+            <remarks>
+            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Queues a single measurement for processing.
+            </summary>
+            <param name="measurement">Measurement to queue for processing.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Measurements to queue for processing.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessMeasurements(TimeSeriesFramework.IMeasurement[])">
+            <summary>
+            Serializes measurements to data output stream.
+            </summary>
+            <remarks>
+            <para>
+            Derived classes must implement this function to process queued measurements.
+            For example, this function would "archive" measurements if output adapter is for a historian.
+            </para>
+            <para>
+            It is important that consumers "resume" connection cycle if processing fails (e.g., connection
+            to archive is lost). Here is an example:
+            <example>
+            <code>
+            protected virtual void ProcessMeasurements(IMeasurement[] measurements)
+            {
+                try
+                {
+                    // Process measurements...
+                    foreach (IMeasurement measurement in measurement)
+                    {
+                        ArchiveMeasurement(measurement);
+                    }
+                }
+                catch (Exception)
+                {                
+                    // So long as user hasn't requested to stop, restart connection cycle
+                    if (Enabled)
+                        Start();
+                }
+            }
+            </code>
+            </example>
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.RemoveMeasurements(System.Int32)">
+            <summary>
+            This removes a range of measurements from the internal measurement queue.
+            </summary>
+            <remarks>
+            This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
+            requested than there are points available - all points in the queue will be removed.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Flush">
+            <summary>
+            Blocks the current thread, if the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> is connected, until all items
+            in <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> queue are processed, and then stops processing.
+            </summary>
+            <remarks>
+            <para>
+            It is possible for items to be added to the queue while the flush is executing. The flush will continue to
+            process items as quickly as possible until the queue is empty. Unless the user stops queueing items to be
+            processed, the flush call may never return (not a happy situtation on shutdown).
+            </para>
+            <para>
+            The <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> does not clear queue prior to destruction. If the user fails to call
+            this method before the class is destructed, there may be items that remain unprocessed in the queue.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnUnprocessedMeasurements(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements"/> event.
+            </summary>
+            <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements">
+            <summary>
+            Event is raised every second allowing host to track total number of unprocessed measurements.
+            </summary>
+            <remarks>
+            <para>
+            Base class reports current queue size of unprocessed measurements so that if queue size reaches
+            an unhealthy threshold, host can take evasive action.
+            </para>
+            <para>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
+            </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.RequeueOnException">
+            <summary>
+            Gets or sets whether or not to automatically place measurements back into the processing
+            queue if an exception occurs while processing.  Defaults to false.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.SourceIDs">
+            <summary>
+            Gets or sets <see cref="T:TimeSeriesFramework.IMeasurement"/> source ID's used to filter output measurements.
+            </summary>
+            <remarks>
+            Set to <c>null</c> apply no filter (i.e., adapter expects all measurements).
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive">
+            <summary>
+            Returns a flag that determines if measurements sent to this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> are
+            destined for archival.
+            </summary>
+            <remarks>
+            This property allows the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> to calculate statistics on how
+            many measurements have been archived per minute. Historians would normally set this property
+            to <c>true</c>; other custom exports would set this property to <c>false</c>.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect">
+            <summary>
+            Gets flag that determines if the data output stream connects asynchronously.
+            </summary>
+            <remarks>
+            Derived classes should return true when data output stream connects asynchronously, otherwise return false.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.ConnectionAttemptInterval">
+            <summary>
+            Gets or sets the connection attempt interval, in milliseconds, for the data output adapter.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.InternalProcessQueue">
+            <summary>
+            Allows derived class access to internal processing queue.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.Status">
+            <summary>
+            Returns the detailed status of the data input source.  Derived classes should extend status with implementation specific information.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.DebugHostBase">
+            <summary>
+            Windows form application used to host the time-series framework service.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.DebugHostBase.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.DebugHostBase.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.DebugHostBase.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.DebugHostBase.ServiceHost">
+            <summary>
+            Reference to instance of <see cref="T:TimeSeriesFramework.ServiceHostBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.DebugHostBase.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TimeSeriesFramework.DebugHostBase"/> windows form.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.DebugHostBase.DebugHostLoading">
+            <summary>
+            Invoked when the debug host is loading. By default this launches the remote service client.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.DebugHostBase.DebugHostUnloading">
+            <summary>
+            Invoked when the debug host is unloading. By default this shuts down the remote service client.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.DebugHostBase.ServiceClientName">
+            <summary>
+            Gets the executable name of the service client that can remotely access the time-series framework service.
             </summary>
         </member>
         <member name="T:TimeSeriesFramework.Adapters.ActionAdapterCollection">
@@ -1621,120 +2694,284 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.#ctor">
+        <member name="T:TimeSeriesFramework.Adapters.NamespaceDoc">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.DataPublisher"/>.
+            Contains classes that define an adapter interface layer used to route measurements through a cycle of input, sorted actions and queued output.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.Finalize">
+        <member name="T:TimeSeriesFramework.Adapters.InputAdapterCollection">
             <summary>
-            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.DataPublisher"/> object is reclaimed by <see cref="T:System.GC"/>.
+            Represents a collection of <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementations.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.Dispose(System.Boolean)">
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.#ctor">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.DataPublisher"/> object and optionally releases the managed resources.
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterCollection.NewMeasurements"/> event.
+            </summary>
+            <param name="measurements">New measurements.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.InitializeItem(TimeSeriesFramework.Adapters.IInputAdapter)">
+            <summary>
+            Wires events and initializes new <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.
+            </summary>
+            <param name="item">New <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.DisposeItem(TimeSeriesFramework.Adapters.IInputAdapter)">
+            <summary>
+            Unwires events and disposes of <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.
+            </summary>
+            <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> to dispose.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.InputAdapterCollection.NewMeasurements">
+            <summary>
+            This event will be raised when there are new measurements available from the input data source.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase">
+            <summary>
+            Represents the base class for simple, non-time-aligned, action adapters.
+            </summary>
+            <remarks>
+            This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
+            class needs time-aligned data for processing, the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/> class should be used instead.
+            Derived classes are expected call <see cref="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> for any new measurements that may get created.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Initialize">
+            <summary>
+            Initializes <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+            <summary>
+            Queues a single measurement for processing.
+            </summary>
+            <param name="measurement">Measurement to queue for processing.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Queues a collection of measurements for processing.
+            </summary>
+            <param name="measurements">Measurements to queue for processing.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements"/> event.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnProcessException(System.Exception)">
+            <summary>
+            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
+            </summary>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnUnpublishedSamples(System.Int32)">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.UnpublishedSamples"/> event.
+            </summary>
+            <param name="seconds">Total number of unpublished seconds of data.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnDiscardingMeasurements(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+            <summary>
+            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.DiscardingMeasurements"/> event.
+            </summary>
+            <param name="measurements">Enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values being discarded.</param>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements">
+            <summary>
+            Provides new measurements from action adapter.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.UnpublishedSamples">
+            <summary>
+            This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
+            </remarks>
+        </member>
+        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.DiscardingMeasurements">
+            <summary>
+            This event is raised if there are any measurements being discarded during the sorting process.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.FramesPerSecond">
+            <summary>
+            Gets or sets the frames per second to be used by the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>.
+            </summary>
+            <remarks>
+            This value is only tracked in the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>, derived class will determine its use.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Status">
+            <summary>
+            Returns the detailed status of the data input source.
+            </summary>
+            <remarks>
+            Derived classes should extend status with implementation specific information.
+            </remarks>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.AdapterCommandAttribute">
+            <summary>
+            Represents an attribute that allows a method in an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> class to be exposed as
+            an invokable command.
+            </summary>
+            <remarks>
+            Only public methods will be exposed as invokable.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterCommandAttribute.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Adapters.AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
+            </summary>
+            <param name="description">Assigns the description for this adapter command.</param>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCommandAttribute.Description">
+            <summary>
+            Gets the description of this adapter command.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.NamespaceDoc">
+            <summary>
+            Contains classes used to abstractly define time-series measured values and provide mechanisms for managing measurements.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.FrameQueue">
+            <summary>
+            Represents a real-time queue of <see cref="T:TimeSeriesFramework.TrackingFrame"/> instances used by the <see cref="T:TimeSeriesFramework.ConcentratorBase"/> class.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.FrameQueue.#ctor(TimeSeriesFramework.FrameQueue.CreateNewFrameFunction)">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.FrameQueue"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.FrameQueue.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.FrameQueue"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.FrameQueue.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TimeSeriesFramework.FrameQueue"/> object.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.FrameQueue.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.FrameQueue"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.Initialize">
+        <member name="M:TimeSeriesFramework.FrameQueue.Clear">
             <summary>
-            Intializes <see cref="T:TimeSeriesFramework.DataPublisher"/>.
+            Clears the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.Start">
+        <member name="M:TimeSeriesFramework.FrameQueue.Pop">
             <summary>
-            Establish <see cref="T:TimeSeriesFramework.DataPublisher"/> and start listening for client connections.
+            Removes current <see cref="P:TimeSeriesFramework.FrameQueue.Head"/> frame from the <see cref="T:TimeSeriesFramework.FrameQueue"/> after it has been processed and assigns a new <see cref="P:TimeSeriesFramework.FrameQueue.Head"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.Stop">
+        <member name="M:TimeSeriesFramework.FrameQueue.GetFrame(System.Int64)">
             <summary>
-            Terminate <see cref="T:TimeSeriesFramework.DataPublisher"/> and stop listening for client connections.
+            Gets <see cref="T:TimeSeriesFramework.TrackingFrame"/> from the queue with the specified timestamp, in ticks.  If no frame exists for
+            the specified timestamp, one will be created.
             </summary>
+            <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="T:TimeSeriesFramework.TrackingFrame"/>.</param>
+            <remarks>
+            Ticks can be any point in time so long time requested is greater than time of last published frame; this queue is
+            used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null will
+            be returned. Note that frame returned will be "best-fit" for given timestamp based on <see cref="P:TimeSeriesFramework.FrameQueue.FramesPerSecond"/>.
+            </remarks>
+            <returns>An existing or new <see cref="T:TimeSeriesFramework.TrackingFrame"/> from the queue for the specified timestamp.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.GetShortStatus(System.Int32)">
+        <member name="P:TimeSeriesFramework.FrameQueue.FramesPerSecond">
             <summary>
-            Gets a short one-line status of this <see cref="!:CommonPhasorServices"/>.
-            </summary>
-            <param name="maxLength">Maximum number of available characters for display.</param>
-            <returns>A short one-line summary of the current status of the <see cref="!:CommonPhasorServices"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.DisposeItem(TimeSeriesFramework.Adapters.IActionAdapter)">
-            <summary>
-            Unwires events and disposes of <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> implementation.
-            </summary>
-            <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> to dispose.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.ServerResponse,TimeSeriesFramework.ServerCommand)">
-            <summary>
-            Sends response back to specified client.
-            </summary>
-            <param name="clientID">ID of client to send response.</param>
-            <param name="response">Server response.</param>
-            <param name="command">In response to command.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.ServerResponse,TimeSeriesFramework.ServerCommand,System.String)">
-            <summary>
-            Sends response back to specified client with a message.
-            </summary>
-            <param name="clientID">ID of client to send response.</param>
-            <param name="response">Server response.</param>
-            <param name="command">In response to command.</param>
-            <param name="status">Status message to return.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.ServerResponse,TimeSeriesFramework.ServerCommand,System.String,System.Object[])">
-            <summary>
-            Sends response back to specified client with a formatted message.
-            </summary>
-            <param name="clientID">ID of client to send response.</param>
-            <param name="response">Server response.</param>
-            <param name="command">In response to command.</param>
-            <param name="formattedStatus">Formatted status message to return.</param>
-            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.ServerResponse,TimeSeriesFramework.ServerCommand,System.Byte[])">
-            <summary>
-            Sends response back to specified client with attached data.
-            </summary>
-            <param name="clientID">ID of client to send response.</param>
-            <param name="response">Server response.</param>
-            <param name="command">In response to command.</param>
-            <param name="data">Data to return to client; null if none.</param>
-        </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.Status">
-            <summary>
-            Gets the status of this <see cref="T:TimeSeriesFramework.DataPublisher"/>.
+            Gets or sets the number of frames per second to be used by <see cref="T:TimeSeriesFramework.FrameQueue"/>.
             </summary>
             <remarks>
-            Derived classes should provide current status information about the adapter for display purposes.
+            Valid frame rates are greater than 0 frames per second.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.Name">
+        <member name="P:TimeSeriesFramework.FrameQueue.TimeResolution">
             <summary>
-            Gets or sets the name of this <see cref="T:TimeSeriesFramework.DataPublisher"/>.
+            Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.FrameQueue.DownsamplingMethod">
+            <summary>
+            Gets or sets the <see cref="T:TimeSeriesFramework.DownsamplingMethod"/> to be used by the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.FrameQueue.Head">
+            <summary>
+            Returns the next <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>, if any.
             </summary>
             <remarks>
-            The assigned name is used as the settings category when persisting the TCP server settings.
+            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.TrackingFrame"/> collection, as a
+            result this property may be called at any time without a locking penalty.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.IClientSubscription.ClientID">
+        <member name="P:TimeSeriesFramework.FrameQueue.Last">
             <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.DataPublisher.IClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.IClientSubscription.UseCompactMeasurementFormat">
-            <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.DataPublisher.IClientSubscription"/>.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.ActionAdapterBase">
-            <summary>
-            Represents the base class for action adapters.
+            Gets the last processed <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
             </summary>
             <remarks>
-            This base class acts as a measurement concentrator which time aligns all incoming measurements for proper processing.
-            Derived classes are expected to override <see cref="M:TimeSeriesFramework.ConcentratorBase.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)"/> to handle time aligned measurements
-            and call <see cref="M:TimeSeriesFramework.Adapters.ActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> for any new measurements that may get created.
+            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.IFrame"/> collection, as a
+            result this property may be called at any time without a locking penalty.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.FrameQueue.LastDownsampledMeasurements">
+            <summary>
+            Gets total number of downsampled measurements from last published frame.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.FrameQueue.Count">
+            <summary>
+            Returns the total number of frames in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.DownsamplingMethod">
+            <summary>
+            Downsampling method enumeration.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.DownsamplingMethod.LastReceived">
+            <summary>
+            Downsamples to the last measurement received.
+            </summary>
+            <remarks>
+            Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.DownsamplingMethod.Closest">
+            <summary>
+            Downsamples to the measurement closest to frame time.
+            </summary>
+            <remarks>
+            This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
+            </remarks>
+        </member>
+        <member name="F:TimeSeriesFramework.DownsamplingMethod.Filtered">
+            <summary>
+            Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
+            </summary>
+            <remarks>
+            This option will produce the best result but has a processing penalty.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.ConcentratorBase">
@@ -2294,6 +3531,191 @@
             Gets reference count for this <see cref="T:TimeSeriesFramework.ConcentratorBase.FrameRateTimer"/>.
             </summary>
         </member>
+        <member name="T:TimeSeriesFramework.Transport.ServerCommand">
+            <summary>
+            <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> server commands.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.Subscribe">
+            <summary>
+            Subscribe command.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.Unsubscribe">
+            <summary>
+            Unsubscribe command.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerCommand.QueryPoints">
+            <summary>
+            Query points command.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.ServerResponse">
+            <summary>
+            <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> server responses.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.Succeeded">
+            <summary>
+            Command succeeded response.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.Failed">
+            <summary>
+            Command failed response.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.ServerResponse.DataPacket">
+            <summary>
+            Data packet response.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.DataPacketFlags">
+            <summary>
+            <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> data packet flags.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.Synchronized">
+            <summary>
+            Determines if data packet is synchronized. Bit set = synchronized, bit clear = unsynchronized.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.Compact">
+            <summary>
+            Determines if serialized measurement is compact. Bit set = compact, bit clear = full fidelity.
+            </summary>
+        </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPacketFlags.NoFlags">
+            <summary>
+            No flags set. This would represent unsynchronized, full fidelity measurement data packets.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Transport.DataPublisher">
+            <summary>
+            Represents a data publishing server that allows multiple connections for data subscriptions.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
+            <summary>
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.Initialize">
+            <summary>
+            Intializes <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.Start">
+            <summary>
+            Establish <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and start listening for client connections.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.Stop">
+            <summary>
+            Terminate <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/> and stop listening for client connections.
+            </summary>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.GetShortStatus(System.Int32)">
+            <summary>
+            Gets a short one-line status of this <see cref="!:CommonPhasorServices"/>.
+            </summary>
+            <param name="maxLength">Maximum number of available characters for display.</param>
+            <returns>A short one-line summary of the current status of the <see cref="!:CommonPhasorServices"/>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.DisposeItem(TimeSeriesFramework.Adapters.IActionAdapter)">
+            <summary>
+            Unwires events and disposes of <see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> implementation.
+            </summary>
+            <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IActionAdapter"/> to dispose.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand)">
+            <summary>
+            Sends response back to specified client.
+            </summary>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="response">Server response.</param>
+            <param name="command">In response to command.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand,System.String)">
+            <summary>
+            Sends response back to specified client with a message.
+            </summary>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="response">Server response.</param>
+            <param name="command">In response to command.</param>
+            <param name="status">Status message to return.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand,System.String,System.Object[])">
+            <summary>
+            Sends response back to specified client with a formatted message.
+            </summary>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="response">Server response.</param>
+            <param name="command">In response to command.</param>
+            <param name="formattedStatus">Formatted status message to return.</param>
+            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SendClientResponse(System.Guid,TimeSeriesFramework.Transport.ServerResponse,TimeSeriesFramework.Transport.ServerCommand,System.Byte[])">
+            <summary>
+            Sends response back to specified client with attached data.
+            </summary>
+            <param name="clientID">ID of client to send response.</param>
+            <param name="response">Server response.</param>
+            <param name="command">In response to command.</param>
+            <param name="data">Data to return to client; null if none.</param>
+            <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.Status">
+            <summary>
+            Gets the status of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+            <remarks>
+            Derived classes should provide current status information about the adapter for display purposes.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.Name">
+            <summary>
+            Gets or sets the name of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
+            </summary>
+            <remarks>
+            The assigned name is used as the settings category when persisting the TCP server settings.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription.ClientID">
+            <summary>
+            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription.UseCompactMeasurementFormat">
+            <summary>
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription"/>.
+            </summary>
+        </member>
+        <member name="T:TimeSeriesFramework.Adapters.ActionAdapterBase">
+            <summary>
+            Represents the base class for action adapters.
+            </summary>
+            <remarks>
+            This base class acts as a measurement concentrator which time aligns all incoming measurements for proper processing.
+            Derived classes are expected to override <see cref="M:TimeSeriesFramework.ConcentratorBase.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)"/> to handle time aligned measurements
+            and call <see cref="M:TimeSeriesFramework.Adapters.ActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> for any new measurements that may get created.
+            </remarks>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/>.
@@ -2548,20 +3970,20 @@
             Derived classes should extend status with implementation specific information.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.#ctor(TimeSeriesFramework.DataPublisher,System.Guid)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid)">
             <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription"/>.
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
             </summary>
             <param name="parent">Reference to parent.</param>
             <param name="clientID"></param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.Dispose(System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.Dispose(System.Boolean)">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.PublishFrame(TimeSeriesFramework.IFrame,System.Int32)">
             <summary>
             Publish <see cref="T:TimeSeriesFramework.IFrame"/> of time-aligned collection of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that arrived within the
             concentrator's defined <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/>.
@@ -2569,1439 +3991,102 @@
             <param name="frame"><see cref="T:TimeSeriesFramework.IFrame"/> of measurements with the same timestamp that arrived within <see cref="P:TimeSeriesFramework.ConcentratorBase.LagTime"/> that are ready for processing.</param>
             <param name="index">Index of <see cref="T:TimeSeriesFramework.IFrame"/> within a second ranging from zero to <c><see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
             <summary>
             Queues a single measurement for processing.
             </summary>
             <param name="measurement">Measurement to queue for processing.</param>
             <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
             so that dynamic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Queues a collection of measurements for processing.
             </summary>
             <param name="measurements">Collection of measurements to queue for processing.</param>
             <remarks>
-            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
             so that dynamic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.ClientID">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.ClientID">
             <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription"/>.
+            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.UseCompactMeasurementFormat">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription"/>.
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription"/> expects, if any.
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription"/> expects, if any.
             </summary>
             <remarks>
             We override method so assignment can be synchronized such that dynamic updates won't interfere
-            with filtering in <see cref="M:TimeSeriesFramework.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
+            with filtering in <see cref="M:TimeSeriesFramework.Transport.DataPublisher.SynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
             </remarks>
         </member>
-        <member name="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.#ctor(TimeSeriesFramework.Transport.DataPublisher,System.Guid)">
             <summary>
-            Represents the base class for simple, non-time-aligned, action adapters.
-            </summary>
-            <remarks>
-            This base class acts on incoming measurements, in a non-time-aligned fashion, for general processing. If derived
-            class needs time-aligned data for processing, the <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/> class should be used instead.
-            Derived classes are expected call <see cref="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> for any new measurements that may get created.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.AdapterBase">
-            <summary>
-            Represents the base class for any adapter.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.Adapters.AdapterBase.DefaultInitializationTimeout">
-            <summary>
-            Default initialization timeout.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.#ctor">
-            <summary>
-            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Initialize">
-            <summary>
-            Intializes <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Start">
-            <summary>
-            Starts the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> or restarts it if it is already running.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.Stop">
-            <summary>
-            Stops the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>		
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.SetInitializedState(System.Boolean)">
-            <summary>
-            Manually sets the intialized state of the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <param name="initialized">Desired initialized state.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.GetShortStatus(System.Int32)">
-            <summary>
-            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <param name="maxLength">Maximum number of available characters for display.</param>
-            <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.IsInputMeasurement(TimeSeriesFramework.MeasurementKey)">
-            <summary>
-            Determines if specified measurement key is defined in <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys"/>.
-            </summary>
-            <param name="item">Primary key of measurement to find.</param>
-            <returns>true if specified measurement key is defined in <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.WaitForInitialize(System.Int32)">
-            <summary>
-            Blocks the <see cref="P:System.Threading.Thread.CurrentThread"/> until the adapter is <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.Initialized"/>.
-            </summary>
-            <param name="timeout">The number of milliseconds to wait.</param>
-            <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String)">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage"/> event.
-            </summary>
-            <param name="status">New status message.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String,System.Object[])">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage"/> event with a formatted status message.
-            </summary>
-            <param name="formattedStatus">Formatted status message.</param>
-            <param name="args">Arguments for <paramref name="formattedStatus"/>.</param>
-            <remarks>
-            This overload combines string.Format and SendStatusMessage for convienence.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.IncrementProcessedMeasurements(System.Int64)">
-            <summary>
-            Safely increments the total processed measurements.
-            </summary>
-            <param name="totalAdded"></param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseInputMeasurementKeys(System.Data.DataSet,System.String)">
-            <summary>
-            Parses input measurement keys from connection string setting.
-            </summary>
-            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define input measurement keys.</param>
-            <param name="value">Value of setting used to define input measurement keys, typically "inputMeasurementKeys".</param>
-            <returns>User selected input measurement keys.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.ParseOutputMeasurements(System.Data.DataSet,System.String)">
-            <summary>
-            Parses output measurements from connection string setting.
-            </summary>
-            <param name="dataSource">The <see cref="T:System.Data.DataSet"/> used to filter measurments when user specifies a FILTER expression to define output measurements.</param>
-            <param name="value">Value of setting used to define output measurements, typically "outputMeasurements".</param>
-            <returns>User selected output measurements.</returns>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage">
-            <summary>
-            Provides status messages to consumer.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is new status message.
-            </remarks>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException">
-            <summary>
-            Event is raised when there is an exception encountered while processing.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
-            </remarks>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.AdapterBase.Disposed">
-            <summary>
-            Event is raised when <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> is disposed.
-            </summary>
-            <remarks>
-            If an adapter references another adapter by enumerating the <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.Parent"/> collection, this
-            event should be monitored to release the reference.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Name">
-            <summary>
-            Gets or sets the name of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <remarks>
-            Derived classes should provide a name for the adapter.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ID">
-            <summary>
-            Gets or sets numeric ID associated with this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ConnectionString">
-            <summary>
-            Gets or sets key/value pair connection information specific to this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <remarks>
-            <para>
-            Example connection string using manually defined measurements:<br/>
-            <c>inputMeasurementKeys={P1:1245;P1:1247;P2:1335};</c><br/>
-            <c>outputMeasurements={P3:1345,60.0,1.0;P3:1346;P3:1347}</c><br/>
-            When defined manually, elements in key:<br/>
-            * inputMeasurementKeys are defined as "ArchiveSource:PointID"<br/>
-            * outputMeasurements are defined as "ArchiveSource:PointID,Adder,Multiplier", the adder and multiplier are optional
-            defaulting to 0.0 and 1.0 respectively.
-            <br/>
-            </para>
-            <para>
-            Example connection string using measurements defined in a <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.DataSource"/> table:<br/>
-            <c>inputMeasurementKeys={FILTER ActiveMeasurements WHERE Company='TVA' AND SignalType='FREQ' ORDER BY ID};</c><br/>
-            <c>outputMeasurements={FILTER ActiveMeasurements WHERE SignalType IN ('IPHA','VPHA') AND Phase='+'}</c><br/>
-            <br/>
-            Basic filtering syntax is as follows:<br/>
-            <br/>
-                {FILTER &lt;TableName&gt; WHERE &lt;Expression&gt; [ORDER BY &lt;SortField&gt;]}<br/>
-            <br/>
-            Source tables are expected to have at least the following fields:<br/>
-            <list type="table">
-                <listheader>
-                    <term>Name</term>
-                    <term>Type</term>
-                    <description>Description.</description>
-                </listheader>
-                <item>
-                    <term>ID</term>
-                    <term>NVARCHAR</term>
-                    <description>Measurement key formatted as: ArchiveSource:PointID.</description>
-                </item>
-                <item>
-                    <term>PointTag</term>
-                    <term>NVARCHAR</term>
-                    <description>Point tag of measurement.</description>
-                </item>
-                <item>
-                    <term>Adder</term>
-                    <term>FLOAT</term>
-                    <description>Adder to apply to value, if any (default to 0.0).</description>
-                </item>
-                <item>
-                    <term>Multiplier</term>
-                    <term>FLOAT</term>
-                    <description>Multipler to apply to value, if any (default to 1.0).</description>
-                </item>
-            </list>
-            </para>
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Parent">
-            <summary>
-            Gets a read-only reference to the collection that contains this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.DataSource">
-            <summary>
-            Gets or sets <see cref="T:System.Data.DataSet"/> based data source available to this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.InitializationTimeout">
-            <summary>
-            Gets or sets maximum time system will wait during <see cref="M:TimeSeriesFramework.Adapters.AdapterBase.Start"/> for initialization.
-            </summary>
-            <remarks>
-            Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.OutputMeasurements">
-            <summary>
-            Gets or sets output measurements that the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> will produce, if any.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys">
-            <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> expects, if any.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ProcessedMeasurements">
-            <summary>
-            Gets the total number of measurements handled thus far by the <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.MeasurementReportingInterval">
-            <summary>
-            Gets or sets the measurement reporting interval.
-            </summary>
-            <remarks>
-            This is used to determined how many measurements should be processed before reporting status.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Initialized">
-            <summary>
-            Gets or sets flag indicating if the adapter has been initialized successfully.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Enabled">
-            <summary>
-            Gets or sets enabled state of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <remarks>
-            Base class simply starts or stops <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> based on flag value. Derived classes should
-            extend this if needed to enable or disable operational state of the adapter based on flag value.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Settings">
-            <summary>
-            Gets settings <see cref="T:System.Collections.Generic.Dictionary`2"/> parsed when <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.ConnectionString"/> was assigned.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Status">
-            <summary>
-            Gets the status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
-            </summary>
-            <remarks>
-            Derived classes should provide current status information about the adapter for display purposes.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Initialize">
-            <summary>
-            Initializes <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Queues a collection of measurements for processing.
-            </summary>
-            <param name="measurements">Measurements to queue for processing.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements"/> event.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnUnpublishedSamples(System.Int32)">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.UnpublishedSamples"/> event.
-            </summary>
-            <param name="seconds">Total number of unpublished seconds of data.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.FacileActionAdapterBase.OnDiscardingMeasurements(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.DiscardingMeasurements"/> event.
-            </summary>
-            <param name="measurements">Enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values being discarded.</param>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.NewMeasurements">
-            <summary>
-            Provides new measurements from action adapter.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
-            </remarks>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.UnpublishedSamples">
-            <summary>
-            This event is raised by derived class, if needed, to track current number of unpublished seconds of data in the queue.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the total number of unpublished seconds of data.
-            </remarks>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.FacileActionAdapterBase.DiscardingMeasurements">
-            <summary>
-            This event is raised if there are any measurements being discarded during the sorting process.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the enumeration of <see cref="T:TimeSeriesFramework.IMeasurement"/> values that are being discarded during the sorting process.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.FramesPerSecond">
-            <summary>
-            Gets or sets the frames per second to be used by the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>.
-            </summary>
-            <remarks>
-            This value is only tracked in the <see cref="T:TimeSeriesFramework.Adapters.FacileActionAdapterBase"/>, derived class will determine its use.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.FacileActionAdapterBase.Status">
-            <summary>
-            Returns the detailed status of the data input source.
-            </summary>
-            <remarks>
-            Derived classes should extend status with implementation specific information.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.#ctor(TimeSeriesFramework.DataPublisher,System.Guid)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/>.
+            Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
             </summary>
             <param name="parent">Reference to parent.</param>
             <param name="clientID"></param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.Dispose(System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.Dispose(System.Boolean)">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/> object and optionally releases the managed resources.
+            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/> object and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.GetShortStatus(System.Int32)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.GetShortStatus(System.Int32)">
             <summary>
-            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/>.
+            Gets a short one-line status of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
             </summary>
             <param name="maxLength">Maximum number of available characters for display.</param>
             <returns>A short one-line summary of the current status of this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
             <summary>
             Queues a single measurement for processing.
             </summary>
             <param name="measurement">Measurement to queue for processing.</param>
             <remarks>
-            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            Measurement is filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
             so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
+        <member name="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
             Queues a collection of measurements for processing.
             </summary>
             <param name="measurements">Collection of measurements to queue for processing.</param>
             <remarks>
-            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
+            Measurements are filtered against the defined <see cref="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys"/> so we override method
             so that dyanmic updates to keys will be synchronized with filtering to prevent interference.
             </remarks>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.ClientID">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.ClientID">
             <summary>
-            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/>.
+            Gets the <see cref="T:System.Guid"/> client identifier of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.UseCompactMeasurementFormat">
             <summary>
-            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/>.
+            Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys">
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.InputMeasurementKeys">
             <summary>
-            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription"/> expects, if any.
+            Gets or sets primary keys of input measurements the <see cref="T:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription"/> expects, if any.
             </summary>
             <remarks>
             We override method so assignment can be synchronized such that dynamic updates won't interfere
-            with filtering in <see cref="M:TimeSeriesFramework.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.Frame">
-            <summary>
-            Implementation of a basic <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <remarks>
-            A frame represents a collection of measurements at a given time.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.IFrame">
-            <summary>
-            Abstract frame interface representing a collection of measurements at an exact moment in time.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.IFrame.Measurements">
-            <summary>
-            Keyed measurements in this <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <remarks>
-            Represents a dictionary of measurements, keyed by <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.IFrame.Published">
-            <summary>
-            Gets or sets published state of this <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.IFrame.SortedMeasurements">
-            <summary>
-            Gets or sets total number of measurements that have been sorted into this <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <remarks>
-            If this property has not been assigned a value, implementors should return measurement count.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.IFrame.Timestamp">
-            <summary>
-            Gets or sets exact timestamp, in <see cref="T:TVA.Ticks"/>, of the data represented in this <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <remarks>
-            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.IFrame.LastSortedMeasurement">
-            <summary>
-            Gets ot sets reference to last <see cref="T:TimeSeriesFramework.IMeasurement"/> that was sorted into this <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <remarks>
-            <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="T:TimeSeriesFramework.IFrame"/>.</para>
-            <para>Implementors need only track the value.</para>
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks)">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Frame"/> given the specified parameters.
-            </summary>
-            <param name="timestamp">Timestamp, in ticks, for this <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.#ctor(TVA.Ticks,System.Collections.Generic.IDictionary{TimeSeriesFramework.MeasurementKey,TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Constructs a new <see cref="T:TimeSeriesFramework.Frame"/> given the specified parameters.
-            </summary>
-            <param name="timestamp">Timestamp, in ticks, for this <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-            <param name="measurements">Initial set of measurements to load into the <see cref="T:TimeSeriesFramework.Frame"/>, if any.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.Clone">
-            <summary>
-            Create a copy of this <see cref="T:TimeSeriesFramework.Frame"/> and its measurements.
-            </summary>
-            <remarks>
-            The measurement dictionary of this <see cref="T:TimeSeriesFramework.Frame"/> is synclocked during copy.
-            </remarks>
-            <returns>A cloned <see cref="T:TimeSeriesFramework.Frame"/>.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.Equals(TimeSeriesFramework.IFrame)">
-            <summary>
-            Determines whether the specified <see cref="T:TimeSeriesFramework.IFrame"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-            <param name="other">The <see cref="T:TimeSeriesFramework.IFrame"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-            <returns>
-            true if the specified <see cref="T:TimeSeriesFramework.IFrame"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>;
-            otherwise, false.
-            </returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.Equals(System.Object)">
-            <summary>
-            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-            <returns>
-            true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:TimeSeriesFramework.Frame"/>;
-            otherwise, false.
-            </returns>
-            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IFrame"/>.</exception>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.CompareTo(TimeSeriesFramework.IFrame)">
-            <summary>
-            Compares the <see cref="T:TimeSeriesFramework.Frame"/> with an <see cref="T:TimeSeriesFramework.IFrame"/>.
-            </summary>
-            <param name="other">The <see cref="T:TimeSeriesFramework.IFrame"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-            <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-            <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.CompareTo(System.Object)">
-            <summary>
-            Compares the <see cref="T:TimeSeriesFramework.Frame"/> with the specified <see cref="T:System.Object"/>.
-            </summary>
-            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:TimeSeriesFramework.Frame"/>.</param>
-            <returns>A 32-bit signed integer that indicates the relative order of the objects being compared.</returns>
-            <exception cref="T:System.ArgumentException"><paramref name="obj"/> is not an <see cref="T:TimeSeriesFramework.IFrame"/>.</exception>
-            <remarks>This implementation of a basic frame compares itself by timestamp.</remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.GetHashCode">
-            <summary>
-            Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-            <returns>A hash code for the current <see cref="T:TimeSeriesFramework.Frame"/>.</returns>
-            <remarks>Hash code based on timestamp of frame.</remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_Equality(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Compares two <see cref="T:TimeSeriesFramework.Frame"/> timestamps for equality.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_Inequality(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Compares two <see cref="T:TimeSeriesFramework.Frame"/> timestamps for inequality.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_GreaterThan(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is greater than right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_GreaterThanOrEqual(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is greater than or equal to right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_LessThan(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is less than right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="M:TimeSeriesFramework.Frame.op_LessThanOrEqual(TimeSeriesFramework.Frame,TimeSeriesFramework.Frame)">
-            <summary>
-            Returns true if left <see cref="T:TimeSeriesFramework.Frame"/> timestamp is less than or equal to right <see cref="T:TimeSeriesFramework.Frame"/> timestamp.
-            </summary>
-            <param name="frame1">The <see cref="T:TimeSeriesFramework.Frame"/> left hand operand.</param>
-            <param name="frame2">The <see cref="T:TimeSeriesFramework.Frame"/> right hand operand.</param>
-            <returns>A <see cref="T:System.Boolean"/> representing the result of the operation.</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.Frame.Measurements">
-            <summary>
-            Keyed measurements in this <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Frame.Published">
-            <summary>
-            Gets or sets published state of this <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Frame.SortedMeasurements">
-            <summary>
-            Gets or sets total number of measurements that have been sorted into this <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-            <remarks>
-            If this property has not been assigned a value, the property will return measurement count.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Frame.Timestamp">
-            <summary>
-            Gets or sets exact timestamp, in <see cref="T:TVA.Ticks"/>, of the data represented in this <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-            <remarks>
-            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Frame.LastSortedMeasurement">
-            <summary>
-            Gets or sets reference to last measurement that was sorted into this <see cref="T:TimeSeriesFramework.Frame"/>.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.ConfigurationType">
-            <summary>
-            Configuration data source type enumeration.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.ConfigurationType.Database">
-            <summary>
-            Configuration source is a database.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.ConfigurationType.WebService">
-            <summary>
-            Configuration source is a webservice.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.ConfigurationType.XmlFile">
-            <summary>
-            Configuration source is a XML file.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.DataOperationFunction">
-            <summary>
-            Defines a method signature for a bootstrap data source operation.
-            </summary>
-            <param name="connection">Connection to database.</param>
-            <param name="adapterType">Adapter type for database connection.</param>
-            <param name="nodeIDQueryString">Formatted node ID guid query string.</param>
-            <param name="statusMessage">Reference to host status message function.</param>
-            <param name="processException">Reference to host process exception function.</param>
-        </member>
-        <member name="T:TimeSeriesFramework.ServiceClientBase">
-            <summary>
-            Represents a client that can remotely access the time-series framework service host.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.ServiceClientBase.components">
-            <summary>
-            Required designer variable.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceClientBase.Dispose(System.Boolean)">
-            <summary> 
-            Clean up any resources being used.
-            </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.ServiceClientBase.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.SerializableMeasurement">
-            <summary>
-            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.SerializableMeasurement.FixedLength">
-            <summary>
-            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.#ctor(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
-            </summary>
-            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurement.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurement"/> from the specified binary image.
-            </summary>
-            <param name="buffer">Binary image to be used for initialization.</param>
-            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-            <param name="count">Valid number of bytes within binary image.</param>
-            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage">
-            <summary>
-            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurement"/>.
-            </summary>
-            <remarks>
-            <para>
-            Field:      Bytes:   <br/>
-            ---------   ---------<br/>
-              ID            4    <br/>
-            SourceLen       4    <br/>
-             Source     SourceLen<br/>
-            SignalID       16    <br/>
-             TagLen         4    <br/>
-              Tag        TagLen  <br/>
-              Value         8    <br/>
-              Adder         8    <br/>
-            Multipler       8    <br/>
-              Ticks         8    <br/>
-              Flags         1    <br/>
-            </para>
-            <para>
-            Constant Length = 61<br/>
-            Variable Length = SourceLen + TagLen
-            </para>
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurement.BinaryLength">
-            <summary>
-            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurement.BinaryImage"/>.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.SerializableMeasurementSlim">
-            <summary>
-            Represents a <see cref="T:TimeSeriesFramework.IMeasurement"/> that can be serialized with minimal size.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.SerializableMeasurementSlim.FixedLength">
-            <summary>
-            Fixed byte length of a <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(System.Boolean)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
-            </summary>
-            <param name="includeTime">Determines if time is included in binary images.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.#ctor(TimeSeriesFramework.IMeasurement,System.Boolean)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.
-            </summary>
-            <param name="m">Source <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
-            <param name="includeTime">Determines if time is included in binary images.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.SerializableMeasurementSlim.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/> from the specified binary image.
-            </summary>
-            <param name="buffer">Binary image to be used for initialization.</param>
-            <param name="startIndex">0-based starting index in the <paramref name="buffer"/> to be used for initialization.</param>
-            <param name="count">Valid number of bytes within binary image.</param>
-            <returns>The number of bytes used for initialization in the <paramref name="buffer"/> (i.e., the number of bytes parsed).</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.IncludeTime">
-            <summary>
-            Gets or sets flags that determines if time is included in binary images.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage">
-            <summary>
-            Gets the binary image of the <see cref="T:TimeSeriesFramework.SerializableMeasurementSlim"/>.
-            </summary>
-            <remarks>
-            <para>
-            Field:     Bytes: <br/>
-            --------   -------<br/>
-            SignalID     16   <br/>
-             Value        8   <br/>
-             [Time]       8?  <br/>
-             Flags        1   <br/>
-            </para>
-            <para>
-            Constant Length = 25<br/>
-            Variable Length = 8 (time is optional)
-            </para>
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryLength">
-            <summary>
-            Gets the length of the <see cref="P:TimeSeriesFramework.SerializableMeasurementSlim.BinaryImage"/>.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.OutputAdapterBase">
-            <summary>
-            Represents that base class for any outgoing data stream.
-            </summary>
-            <remarks>
-            This base class acts as a measurement queue so that output adapters can temporarily go
-            offline without losing any measurements to be processed. Derived classes are expected to
-            override <see cref="M:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessMeasurements(TimeSeriesFramework.IMeasurement[])"/> to handle queued measurements.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.#ctor">
-            <summary>
-            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Initialize">
-            <summary>
-            Initializes <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Start">
-            <summary>
-            Starts this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> and initiates connection cycle to data output stream.
-            </summary>		
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.AttemptConnection">
-            <summary>
-            Attempts to connect to data output stream.
-            </summary>
-            <remarks>
-            Derived classes should attempt connection to data output stream here.  Any exceptions thrown
-            by this implementation will result in restart of the connection cycle.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnConnected">
-            <summary>
-            Called when data input source connection is established.
-            </summary>
-            <remarks>
-            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Stop">
-            <summary>
-            Stops this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> and disconnects from data output stream.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.AttemptDisconnection">
-            <summary>
-            Attempts to disconnect from data output stream.
-            </summary>
-            <remarks>
-            Derived classes should attempt disconnect from data output stream here.  Any exceptions thrown
-            by this implementation will be reported to host via <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnDisconnected">
-            <summary>
-            Called when data input source is disconnected.
-            </summary>
-            <remarks>
-            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
-            <summary>
-            Queues a single measurement for processing.
-            </summary>
-            <param name="measurement">Measurement to queue for processing.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Queues a collection of measurements for processing.
-            </summary>
-            <param name="measurements">Measurements to queue for processing.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.ProcessMeasurements(TimeSeriesFramework.IMeasurement[])">
-            <summary>
-            Serializes measurements to data output stream.
-            </summary>
-            <remarks>
-            <para>
-            Derived classes must implement this function to process queued measurements.
-            For example, this function would "archive" measurements if output adapter is for a historian.
-            </para>
-            <para>
-            It is important that consumers "resume" connection cycle if processing fails (e.g., connection
-            to archive is lost). Here is an example:
-            <example>
-            <code>
-            protected virtual void ProcessMeasurements(IMeasurement[] measurements)
-            {
-                try
-                {
-                    // Process measurements...
-                    foreach (IMeasurement measurement in measurement)
-                    {
-                        ArchiveMeasurement(measurement);
-                    }
-                }
-                catch (Exception)
-                {                
-                    // So long as user hasn't requested to stop, restart connection cycle
-                    if (Enabled)
-                        Start();
-                }
-            }
-            </code>
-            </example>
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.RemoveMeasurements(System.Int32)">
-            <summary>
-            This removes a range of measurements from the internal measurement queue.
-            </summary>
-            <remarks>
-            This method is typically only used to curtail size of measurement queue if it's getting too large.  If more points are
-            requested than there are points available - all points in the queue will be removed.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.Flush">
-            <summary>
-            Blocks the current thread, if the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> is connected, until all items
-            in <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> queue are processed, and then stops processing.
-            </summary>
-            <remarks>
-            <para>
-            It is possible for items to be added to the queue while the flush is executing. The flush will continue to
-            process items as quickly as possible until the queue is empty. Unless the user stops queueing items to be
-            processed, the flush call may never return (not a happy situtation on shutdown).
-            </para>
-            <para>
-            The <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> does not clear queue prior to destruction. If the user fails to call
-            this method before the class is destructed, there may be items that remain unprocessed in the queue.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnUnprocessedMeasurements(System.Int32)">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements"/> event.
-            </summary>
-            <param name="unprocessedMeasurements">Total measurements in the queue that have not been processed.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.OutputAdapterBase.UnprocessedMeasurements">
-            <summary>
-            Event is raised every second allowing host to track total number of unprocessed measurements.
-            </summary>
-            <remarks>
-            <para>
-            Base class reports current queue size of unprocessed measurements so that if queue size reaches
-            an unhealthy threshold, host can take evasive action.
-            </para>
-            <para>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is total number of unprocessed measurements.
-            </para>
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.RequeueOnException">
-            <summary>
-            Gets or sets whether or not to automatically place measurements back into the processing
-            queue if an exception occurs while processing.  Defaults to false.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.SourceIDs">
-            <summary>
-            Gets or sets <see cref="T:TimeSeriesFramework.IMeasurement"/> source ID's used to filter output measurements.
-            </summary>
-            <remarks>
-            Set to <c>null</c> apply no filter (i.e., adapter expects all measurements).
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.OutputIsForArchive">
-            <summary>
-            Returns a flag that determines if measurements sent to this <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterBase"/> are
-            destined for archival.
-            </summary>
-            <remarks>
-            This property allows the <see cref="T:TimeSeriesFramework.Adapters.OutputAdapterCollection"/> to calculate statistics on how
-            many measurements have been archived per minute. Historians would normally set this property
-            to <c>true</c>; other custom exports would set this property to <c>false</c>.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.UseAsyncConnect">
-            <summary>
-            Gets flag that determines if the data output stream connects asynchronously.
-            </summary>
-            <remarks>
-            Derived classes should return true when data output stream connects asynchronously, otherwise return false.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.ConnectionAttemptInterval">
-            <summary>
-            Gets or sets the connection attempt interval, in milliseconds, for the data output adapter.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.InternalProcessQueue">
-            <summary>
-            Allows derived class access to internal processing queue.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.OutputAdapterBase.Status">
-            <summary>
-            Returns the detailed status of the data input source.  Derived classes should extend status with implementation specific information.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.DebugHostBase">
-            <summary>
-            Windows form application used to host the time-series framework service.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.DebugHostBase.components">
-            <summary>
-            Required designer variable.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.DebugHostBase.Dispose(System.Boolean)">
-            <summary>
-            Clean up any resources being used.
-            </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.DebugHostBase.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.DebugHostBase.ServiceHost">
-            <summary>
-            Reference to instance of <see cref="T:TimeSeriesFramework.ServiceHostBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.DebugHostBase.#ctor">
-            <summary>
-            Creates a new instance of the <see cref="T:TimeSeriesFramework.DebugHostBase"/> windows form.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.DebugHostBase.DebugHostLoading">
-            <summary>
-            Invoked when the debug host is loading. By default this launches the remote service client.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.DebugHostBase.DebugHostUnloading">
-            <summary>
-            Invoked when the debug host is unloading. By default this shuts down the remote service client.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.DebugHostBase.ServiceClientName">
-            <summary>
-            Gets the executable name of the service client that can remotely access the time-series framework service.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.DataPacket">
-            <summary>
-            Represents a data transmission packet.
-            </summary>
-            <remarks>
-            Data Structure:
-            <list type="table">
-                <listheader>
-                    <term>Data Element Size</term>
-                    <description>Data Element Description</description>
-                </listheader>
-                <item>
-                    <term>1 byte</term>
-                    <description><see cref="F:TimeSeriesFramework.ServerResponse.DataPacket"/>, response code.</description>
-                </item>
-                <item>
-                    <term>1 byte</term>
-                    <description><see cref="F:TimeSeriesFramework.ServerCommand.Subscribe"/>, in response to subscribe command code.</description>
-                </item>
-                <item>
-                    <term>1 byte</term>
-                    <description><see cref="T:TimeSeriesFramework.DataPacketFlags"/> specific to data packet.</description>
-                </item>
-                <item>
-                    <term>[8 bytes]</term>
-                    <description>Optional data timestamp (only included for synchronized data packets.</description>
-                </item>
-                <item>
-                    <term>4 bytes</term>
-                    <description>Total number of serialized <see cref="T:TimeSeriesFramework.IMeasurement"/> values that follow.</description>
-                </item>
-                <item>
-                    <term>N bytes</term>
-                    <description>Array of serialized <see cref="T:TimeSeriesFramework.IMeasurement"/> values.</description>
-                </item>
-            </list>
-            <br/>
-            Bytes of all numeric values are encoded in big-endian order.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.NamespaceDoc">
-            <summary>
-            Contains classes that define an adapter interface layer used to route measurements through a cycle of input, sorted actions and queued output.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.InputAdapterCollection">
-            <summary>
-            Represents a collection of <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementations.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.#ctor">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Adapters.InputAdapterCollection"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterCollection.NewMeasurements"/> event.
-            </summary>
-            <param name="measurements">New measurements.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.InitializeItem(TimeSeriesFramework.Adapters.IInputAdapter)">
-            <summary>
-            Wires events and initializes new <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.
-            </summary>
-            <param name="item">New <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterCollection.DisposeItem(TimeSeriesFramework.Adapters.IInputAdapter)">
-            <summary>
-            Unwires events and disposes of <see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> implementation.
-            </summary>
-            <param name="item"><see cref="T:TimeSeriesFramework.Adapters.IInputAdapter"/> to dispose.</param>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.InputAdapterCollection.NewMeasurements">
-            <summary>
-            This event will be raised when there are new measurements available from the input data source.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is collection of new measurements for host to process.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.AdapterCommandAttribute">
-            <summary>
-            Represents an attribute that allows a method in an <see cref="T:TimeSeriesFramework.Adapters.IAdapter"/> class to be exposed as
-            an invokable command.
-            </summary>
-            <remarks>
-            Only public methods will be exposed as invokable.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.AdapterCommandAttribute.#ctor(System.String)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.Adapters.AdapterCommandAttribute"/> with the specified <paramref name="description"/> value.
-            </summary>
-            <param name="description">Assigns the description for this adapter command.</param>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.AdapterCommandAttribute.Description">
-            <summary>
-            Gets the description of this adapter command.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.NamespaceDoc">
-            <summary>
-            Contains classes used to abstractly define time-series measured values and provide mechanisms for managing measurements.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.FrameQueue">
-            <summary>
-            Represents a real-time queue of <see cref="T:TimeSeriesFramework.TrackingFrame"/> instances used by the <see cref="T:TimeSeriesFramework.ConcentratorBase"/> class.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.#ctor(TimeSeriesFramework.FrameQueue.CreateNewFrameFunction)">
-            <summary>
-            Creates a new <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TimeSeriesFramework.FrameQueue"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TimeSeriesFramework.FrameQueue"/> object.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.FrameQueue"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.Clear">
-            <summary>
-            Clears the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.Pop">
-            <summary>
-            Removes current <see cref="P:TimeSeriesFramework.FrameQueue.Head"/> frame from the <see cref="T:TimeSeriesFramework.FrameQueue"/> after it has been processed and assigns a new <see cref="P:TimeSeriesFramework.FrameQueue.Head"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.FrameQueue.GetFrame(System.Int64)">
-            <summary>
-            Gets <see cref="T:TimeSeriesFramework.TrackingFrame"/> from the queue with the specified timestamp, in ticks.  If no frame exists for
-            the specified timestamp, one will be created.
-            </summary>
-            <param name="ticks">Timestamp, in ticks, for which to get or create <see cref="T:TimeSeriesFramework.TrackingFrame"/>.</param>
-            <remarks>
-            Ticks can be any point in time so long time requested is greater than time of last published frame; this queue is
-            used in a real-time scenario with time moving forward.  If a frame is requested for an old timestamp, null will
-            be returned. Note that frame returned will be "best-fit" for given timestamp based on <see cref="P:TimeSeriesFramework.FrameQueue.FramesPerSecond"/>.
-            </remarks>
-            <returns>An existing or new <see cref="T:TimeSeriesFramework.TrackingFrame"/> from the queue for the specified timestamp.</returns>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.FramesPerSecond">
-            <summary>
-            Gets or sets the number of frames per second to be used by <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-            <remarks>
-            Valid frame rates are greater than 0 frames per second.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.TimeResolution">
-            <summary>
-            Gets or sets the maximum time resolution to use when sorting measurements by timestamps into their proper destination frame.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.DownsamplingMethod">
-            <summary>
-            Gets or sets the <see cref="T:TimeSeriesFramework.DownsamplingMethod"/> to be used by the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.Head">
-            <summary>
-            Returns the next <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>, if any.
-            </summary>
-            <remarks>
-            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.TrackingFrame"/> collection, as a
-            result this property may be called at any time without a locking penalty.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.Last">
-            <summary>
-            Gets the last processed <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-            <remarks>
-            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.IFrame"/> collection, as a
-            result this property may be called at any time without a locking penalty.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.LastDownsampledMeasurements">
-            <summary>
-            Gets total number of downsampled measurements from last published frame.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.Count">
-            <summary>
-            Returns the total number of frames in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
-            </summary>
-        </member>
-        <member name="T:TimeSeriesFramework.DownsamplingMethod">
-            <summary>
-            Downsampling method enumeration.
-            </summary>
-        </member>
-        <member name="F:TimeSeriesFramework.DownsamplingMethod.LastReceived">
-            <summary>
-            Downsamples to the last measurement received.
-            </summary>
-            <remarks>
-            Use this option if no downsampling is needed or the selected value is not critical. This is the fastest option if the incoming and outgoing frame rates match.
-            </remarks>
-        </member>
-        <member name="F:TimeSeriesFramework.DownsamplingMethod.Closest">
-            <summary>
-            Downsamples to the measurement closest to frame time.
-            </summary>
-            <remarks>
-            This is the typical operation used when performing simple downsampling. This is the fastest option if the incoming frame rate is faster than the outgoing frame rate.
-            </remarks>
-        </member>
-        <member name="F:TimeSeriesFramework.DownsamplingMethod.Filtered">
-            <summary>
-            Downsamples by applying a user-defined value filter over all received measurements to anti-alias the results.
-            </summary>
-            <remarks>
-            This option will produce the best result but has a processing penalty.
-            </remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.Adapters.InputAdapterBase">
-            <summary>
-            Represents the base class for any incoming input adapter.
-            </summary>
-            <remarks>
-            Derived classes are expected to call <see cref="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})"/> when new measurements are received.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.#ctor">
-            <summary>
-            Constructs a new instance of the <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/>.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Start">
-            <summary>
-            Starts this <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> and initiates connection cycle to data input source.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.AttemptConnection">
-            <summary>
-            Attempts to connect to data input source.
-            </summary>
-            <remarks>
-            Derived classes should attempt connection to data input source here.  Any exceptions thrown
-            by this implementation will result in restart of the connection cycle.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnConnected">
-            <summary>
-            Called when data input source connection is established.
-            </summary>
-            <remarks>
-            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.Stop">
-            <summary>
-            Stops this <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> and disconnects from data input source.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.AttemptDisconnection">
-            <summary>
-            Attempts to disconnect from data input source.
-            </summary>
-            <remarks>
-            Derived classes should attempt disconnect from data input source here.  Any exceptions thrown
-            by this implementation will be reported to host via <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnDisconnected">
-            <summary>
-            Called when data input source is disconnected.
-            </summary>
-            <remarks>
-            Derived classes should call this method manually if <see cref="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect"/> is <c>true</c>.
-            </remarks>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnNewMeasurements(System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement})">
-            <summary>
-            Raises the <see cref="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements"/> event.
-            </summary>
-        </member>
-        <member name="M:TimeSeriesFramework.Adapters.InputAdapterBase.OnProcessException(System.Exception)">
-            <summary>
-            Raises <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.ProcessException"/> event.
-            </summary>
-            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
-        </member>
-        <member name="E:TimeSeriesFramework.Adapters.InputAdapterBase.NewMeasurements">
-            <summary>
-            Provides new measurements from input adapter.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect">
-            <summary>
-            Gets flag that determines if the data input connects asynchronously.
-            </summary>
-            <remarks>
-            Derived classes should return true when data input source is connects asynchronously, otherwise return false.
-            </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.ConnectionAttemptInterval">
-            <summary>
-            Gets or sets the connection attempt interval, in milliseconds, for the data input source.
-            </summary>
-        </member>
-        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.Status">
-            <summary>
-            Returns the detailed status of the data input source.
-            </summary>
-            <remarks>
-            Derived classes should extend status with implementation specific information.
+            with filtering in <see cref="M:TimeSeriesFramework.Transport.DataPublisher.UnsynchronizedClientSubscription.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})"/>.
             </remarks>
         </member>
         <member name="T:TimeSeriesFramework.TrackingFrame">
@@ -4142,11 +4227,6 @@
         <member name="P:TimeSeriesFramework.ImmediateMeasurements.Maximum">
             <summary>Returns the maximum value of all measurements.</summary>
             <remarks>This is only useful if all measurements represent the same type of measurement.</remarks>
-        </member>
-        <member name="T:TimeSeriesFramework.DataSubscriber">
-            <summary>
-            Represents a data subscribing client that will connection to a data publisher for a data subscription.
-            </summary>
         </member>
     </members>
 </doc>
