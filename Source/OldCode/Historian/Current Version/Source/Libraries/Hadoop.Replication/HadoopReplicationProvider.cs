@@ -30,6 +30,9 @@
 //       Added the option to allow multiple archive locations to be specified delimited by ';' in 
 //       ArchiveLocation for convenience.
 //       Added extensive debug messages to enhance the debugging experience of the adapter.
+//  09/13/2010 - Pinal C. Patel
+//       Modified the replication process to attempt deletion of the original file again if deletion was 
+//       unsuccessful during previous attempt.
 //
 //*******************************************************************************************************
 
@@ -457,21 +460,7 @@ namespace Hadoop.Replication
 
                             // Deleted original file after replication.
                             if (m_deleteOriginalFiles)
-                            {
-                                try
-                                {
-                                    WriteTrace("Deleting original file");
-
-                                    if (fileInfo.IsReadOnly)
-                                        fileInfo.IsReadOnly = false;
-                                    File.Delete(file);
-                                    WriteTrace("Original file deleted");
-                                }
-                                catch (Exception ex)
-                                {
-                                    WriteTrace("File delete error - {0}", ex.Message);
-                                }
-                            }
+                                DeleteOriginalFile(file, fileInfo);
 
                             // Notify about the successful replication.
                             OnReplicationProgress(new ProcessProgress<int>("ReplicateArchive", justFileName, 1, 1));
@@ -495,6 +484,10 @@ namespace Hadoop.Replication
                     else
                     {
                         WriteTrace("Replication skipped - file content unchanged");
+
+                        // Deleted original file if skipped previously.
+                        if (m_deleteOriginalFiles)
+                            DeleteOriginalFile(file, fileInfo);
                     }
                 }
                 catch (Exception ex)
@@ -526,6 +519,22 @@ namespace Hadoop.Replication
             }
 
             WriteTrace("Folder '{0}' replicated", FilePath.TrimFileName(replicationFolder, FilePathTrimLength));
+        }
+
+        private static void DeleteOriginalFile(string file, FileInfo fileInfo)
+        {
+            try
+            {
+                WriteTrace("Deleting original file");
+                if (fileInfo.IsReadOnly)
+                    fileInfo.IsReadOnly = false;
+                File.Delete(file);
+                WriteTrace("Original file deleted");
+            }
+            catch (Exception ex)
+            {
+                WriteTrace("File delete error - {0}", ex.Message);
+            }
         }
 
         private void FtpClient_FileTransferProgress(object sender, EventArgs<ProcessProgress<long>, TransferDirection> e)
