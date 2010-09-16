@@ -30,12 +30,16 @@
 **       Modified the build to output a set of signed class libraries by leveraging the newly added
 **       ProjectsToBuild.Properties property.
 **       Made building of strong-named class libraries optional using SkipSigning property.
+**  09/15/2010 - Mihir Brahmbhatt
+**       Modified the build script for Framework v4.0 and change BuildDeployFolder and 
+**       ArchiveDestinations path to gpaweb shared folder.
 **
 *******************************************************************************************************
 -->
 
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!--<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">-->
 
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\..\..\Contributor Resources\Tools\Build Tools\Master Build\Master.buildproj"/>
 
   <Target Name="BeforePrepareSettings">
@@ -49,7 +53,8 @@
     <PropertyGroup>
       <!-- Project specific settings. -->
       <ProjectSolution>$(LocalFolder)\Source\$(ProjectName).sln</ProjectSolution>
-      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\openPDC\$(ProjectName)\Beta</BuildDeployFolder>
+      <!--<BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\rgocopgfs1\Applications\openPDC\$(ProjectName)\Beta</BuildDeployFolder>-->
+      <BuildDeployFolder Condition="'$(BuildDeployFolder)' == ''">\\gpaweb\NightlyBuilds\openPDC\$(ProjectName)\Beta</BuildDeployFolder>
     </PropertyGroup>
   </Target>
 
@@ -87,13 +92,13 @@
 
   <Target Name="BeforeDeployBuild">
     <ItemGroup>
-      <!-- List of binaries to archive. -->
+      <!-- List of binaries to archive. --><!--
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*"/>
-      <!-- List of installs to archive. -->
+      --><!-- List of installs to archive. --><!--
       <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
-      <!-- Destinations of archive files (*.zip). -->
+      --><!-- Destinations of archive files (*.zip). -->
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
-      <ArchiveDestinations Include="\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC" Condition="'$(SkipPublicArchive)' != 'true'"/>
+      <!--<ArchiveDestinations Include="\\socppmuweb\naspi\openPDC;\\rocppmuweb\naspi\openPDC" Condition="'$(SkipPublicArchive)' != 'true'"/>-->
     </ItemGroup>
   </Target>
   
