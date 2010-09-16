@@ -25,4 +25,3 @@ using System.Security.Permissions;
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 [assembly: Guid("ddd2158e-a37b-425f-8be5-c86c5a99a31a")]
-[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
