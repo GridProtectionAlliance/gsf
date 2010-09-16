@@ -32,15 +32,26 @@
 **  04/28/2010 - Pinal C. Patel
 **       Modified ProjectsToBuild to include an optional Properties property that can be used to
 **       override project properties during the build process.
+** 09/15/2010 - Mihir Brahmbhatt
+**       Modified the build script for Framework v4.0 and change CorePopulateWorkspace
+**       Added CheckForChanges as sub targets for CorePopulateWorkspace target property
 **
 *******************************************************************************************************
 -->
 
-<Project DefaultTargets="All" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!--<Project DefaultTargets="All" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <Import Project="MSBuild Community Tasks\MSBuild.Community.Tasks.Targets"/>
   <Import Project="MSBuild Extension Pack\MSBuild.ExtensionPack.tasks"/>
+-->
 
+<Project DefaultTargets="All" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="Targets\Inline\TfsHistory.targets"/>
+  <Import Project="Targets\Inline\TfsVersion.targets"/>
+  <Import Project="Targets\MSBuild Community Tasks\MSBuild.Community.Tasks.Targets"/>
+  <Import Project="Targets\MSBuild Extension Pack\MSBuild.ExtensionPack.tasks"/>
+  
   <PropertyGroup>
     <!-- Name of the project being built. -->
     <ProjectName></ProjectName>
@@ -237,7 +248,8 @@
     <Message Text="Preparing settings for build..."/>
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
     <PropertyGroup>
-      <TfsServer Condition="'$(TfsServer)' == ''">https://tfs07.codeplex.com</TfsServer>
+      <!--<TfsServer Condition="'$(TfsServer)' == ''">https://tfs07.codeplex.com</TfsServer>-->
+      <TfsServer Condition="'$(TfsServer)' == ''">https://tfs.codeplex.com/tfs/TFS07</TfsServer>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/openpdc/$(ProjectName)/Current Version</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\openPDC\$(ProjectName)</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
@@ -246,11 +258,12 @@
       <BuildInteractive Condition="'$(BuildInteractive)' == ''">true</BuildInteractive>
       <VersionFile Condition="'$(VersionFile)' == ''">$(LocalFolder)\Build\Scripts\$(ProjectName).version</VersionFile>
       <SourceVersion Condition="'$(SourceVersion)' == ''">T</SourceVersion>
-      <TfsClient Condition="'$(TfsClient)' == ''">$(VS90COMNTOOLS)\..\IDE\tf.exe</TfsClient>
-      <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS90COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
-      <MSTest Condition="'$(MSTest)' == ''">$(VS90COMNTOOLS)\..\IDE\mstest.exe</MSTest>
+      <TfsClient Condition="'$(TfsClient)' == ''">$(VS100COMNTOOLS)\..\IDE\tf.exe</TfsClient>
+      <VisualStudio Condition="'$(VisualStudio)' == ''">$(VS100COMNTOOLS)\..\IDE\devenv.com</VisualStudio>
+      <MSTest Condition="'$(MSTest)' == ''">$(VS100COMNTOOLS)\..\IDE\mstest.exe</MSTest>
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
+      <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
     </PropertyGroup>
   </Target>
 
@@ -288,11 +301,11 @@
 
   <Target Name="BeforePopulateWorkspace"/>
 
-  <Target Name="CorePopulateWorkspace">
-    <!-- Get source code for the specified version. -->
+  <!--<Target Name="CorePopulateWorkspace">
+    --><!-- Get source code for the specified version. --><!--
     <Message Text="Getting source code..."/>
     <Exec Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
-    <!-- Check for new changes since the last build. -->
+    --><!-- Check for new changes since the last build. --><!--
     <Message Text="Checking for changes..."/>
     <Attrib Files="$(VersionFile)" ReadOnly="false"/>
     <Version VersionFile="$(VersionFile)">
@@ -307,8 +320,36 @@
       <ForceBuild Condition="'$(TotalChanges)' > '4' Or '$(SourceVersion)' != 'T'">true</ForceBuild>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
+  </Target>-->
+
+  <Target Name="CorePopulateWorkspace">
+    <!-- Get source code for the specified version. -->
+    <Message Text="Getting source code..."/>
+    <Exec Command="%22$(TfsClient)%22 get %22$(LocalFolder)%22 /version:$(SourceVersion) /force /recursive /noprompt"/>
+    <CallTarget Targets="CheckForChanges"/>
   </Target>
 
+  <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
+    <!-- Check for new changes since the last build. -->
+    <Message Text="Checking for changes..."/>
+    <Attrib Files="$(VersionFile)" ReadOnly="false"/>
+    <Version VersionFile="$(VersionFile)">
+      <Output TaskParameter="Revision" PropertyName="Changeset"/>
+    </Version>
+    <Attrib Files="$(VersionFile)" ReadOnly="true"/>
+    <PropertyGroup>
+      <Changeset Condition="'$(Changeset)' &lt; '1'">1</Changeset>
+    </PropertyGroup>
+    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="C$(Changeset)~">
+      <Output TaskParameter="TotalChanges" PropertyName="TotalChanges"/>
+    </TfsHistory>
+    <PropertyGroup>
+      <ForceBuild Condition="'$(TotalChanges)' &gt; '1'">true</ForceBuild>
+    </PropertyGroup>
+    <Message Text="Total Changes...'$(TotalChanges)'" />
+    <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
+  </Target>
+  
   <Target Name="AfterPopulateWorkspace"/>
 
   <Target Name="BeforeVersionSource"/>
@@ -323,9 +364,12 @@
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
     </Version>
-    <MSBuild.Community.Tasks.Tfs.TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
+    <!--<MSBuild.Community.Tasks.Tfs.TfsVersion LocalPath="$(LocalFolder)" TfsLibraryLocation="$(VS90COMNTOOLS)\..\IDE\PrivateAssemblies">
       <Output TaskParameter="Changeset" PropertyName="Revision"/>
-    </MSBuild.Community.Tasks.Tfs.TfsVersion>
+    </MSBuild.Community.Tasks.Tfs.TfsVersion>-->
+    <TfsVersion TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)">
+      <Output TaskParameter="Changeset" PropertyName="Revision"/>
+    </TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}"/>
     <PropertyGroup>
