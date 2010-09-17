@@ -41,6 +41,8 @@ namespace DataSubscriberTest
 
         static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
         {
+            //Console.WriteLine(string.Format("{0} total measurements received so far: {1}", e.Argument.Count, e.Argument.ToDelimitedString(", ")));
+
             dataCount += e.Argument.Count;
 
             if (dataCount % (5 * 60) == 0)
