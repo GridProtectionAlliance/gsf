@@ -30,6 +30,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using TVA;
+using TVA.Units;
 
 namespace TimeSeriesFramework.Adapters
 {
@@ -90,6 +91,8 @@ namespace TimeSeriesFramework.Adapters
         private long m_processedMeasurements;
         private int m_measurementReportingInterval;
         private bool m_enabled;
+        private long m_startTime;
+        private long m_stopTime;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -383,6 +386,59 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets the UTC time this <see cref="AdapterBase"/> was started.
+        /// </summary>
+        public Ticks StartTime
+        {
+            get
+            {
+                return m_startTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the UTC time this <see cref="AdapterBase"/> was stopped.
+        /// </summary>
+        public Ticks StopTime
+        {
+            get
+            {
+                return m_stopTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the total amount of time, in seconds, that the concentrator has been active.
+        /// </summary>
+        public virtual Time RunTime
+        {
+            get
+            {
+                Ticks processingTime = 0;
+
+                if (m_startTime > 0)
+                {
+                    if (m_stopTime > 0)
+                    {
+                        processingTime = m_stopTime - m_startTime;
+                    }
+                    else
+                    {
+#if UseHighResolutionTime
+                        processingTime = PrecisionTimer.UtcNow.Ticks - m_startTime;
+#else
+                        processingTime = DateTime.UtcNow.Ticks - m_startTime;
+#endif
+                    }
+                }
+
+                if (processingTime < 0) processingTime = 0;
+
+                return processingTime.ToSeconds();
+            }
+        }
+
+        /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
         public Dictionary<string, string> Settings
@@ -424,6 +480,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("         Operational state: {0}", Enabled ? "Running" : "Stopped");
                 status.AppendLine();
                 status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
+                status.AppendLine();
+                status.AppendFormat("    Total adapter run time: {0}", RunTime.ToString());
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
@@ -574,7 +632,12 @@ namespace TimeSeriesFramework.Adapters
             // Wait for adapter intialization to complete...
             m_enabled = WaitForInitialize(InitializationTimeout);
 
-            if (!m_enabled)
+            if (m_enabled)
+            {
+                m_stopTime = 0;
+                m_startTime = PrecisionTimer.UtcNow.Ticks;
+            }
+            else
                 OnProcessException(new TimeoutException("Failed to start adapter due to timeout waiting for initialization."));
         }
 
@@ -585,6 +648,7 @@ namespace TimeSeriesFramework.Adapters
         public virtual void Stop()
         {
             m_enabled = false;
+            m_stopTime = PrecisionTimer.UtcNow.Ticks;
         }
         
         // Assigns the reference to the parent adapter collection that will contain this adapter.

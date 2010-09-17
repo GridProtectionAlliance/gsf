@@ -51,6 +51,7 @@ namespace TimeSeriesFramework.Adapters
 
         // Fields
         private System.Timers.Timer m_connectionTimer;
+        private bool m_isConnected;
         private bool m_disposed;
 
         #endregion
@@ -73,6 +74,21 @@ namespace TimeSeriesFramework.Adapters
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets flag that determines if <see cref="InputAdapterBase"/> is connected.
+        /// </summary>
+        public virtual bool IsConnected
+        {
+            get
+            {
+                return m_isConnected;
+            }
+            protected set
+            {
+                m_isConnected = value;
+            }
+        }
 
         /// <summary>
         /// Gets flag that determines if the data input connects asynchronously.
@@ -110,6 +126,8 @@ namespace TimeSeriesFramework.Adapters
                 StringBuilder status = new StringBuilder();
 
                 status.Append(base.Status);
+                status.AppendFormat("    Connection established: {0}", IsConnected);
+                status.AppendLine();
                 status.AppendFormat("   Asynchronous connection: {0}", UseAsyncConnect);
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
@@ -179,6 +197,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void OnConnected()
         {
+            IsConnected = true;
             OnStatusMessage("Connection established.");
         }
 
@@ -226,6 +245,7 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         protected virtual void OnDisconnected()
         {
+            IsConnected = false;
             OnStatusMessage("Disconnected.");
         }
 

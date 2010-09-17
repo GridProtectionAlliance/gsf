@@ -404,6 +404,7 @@ namespace TimeSeriesFramework
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
         private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
+        private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
         private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
         private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
@@ -440,6 +441,7 @@ namespace TimeSeriesFramework
 #endif
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;
+            m_performTimestampReasonabilityCheck = true;
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
             m_latestMeasurements = new ImmediateMeasurements(this);
 
@@ -778,6 +780,29 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if timestamp reasonability checks should be performed on incoming
+        /// measurements (i.e., measurement timestamps are compared to system clock for reasonability using
+        /// <see cref="LeadTime"/> tolerance).
+        /// </summary>
+        /// <remarks>
+        /// Setting this value to false will make the concentrator use the latest value received as "real-time"
+        /// without validation; this is not recommended in production since time reported by source devices may
+        /// be grossly incorrect. For non-production configurations, setting this value to false will allow
+        /// concentration of historical data.
+        /// </remarks>
+        public bool PerformTimestampReasonabilityCheck
+        {
+            get
+            {
+                return m_performTimestampReasonabilityCheck;
+            }
+            set
+            {
+                m_performTimestampReasonabilityCheck = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the current enabled state of concentrator.
         /// </summary>
         /// <returns>Current enabled state of concentrator</returns>
@@ -799,6 +824,29 @@ namespace TimeSeriesFramework
                     Stop();
             }
         }
+
+        /// <summary>
+        /// Gets the UTC time the concentrator was started.
+        /// </summary>
+        public Ticks StartTime
+        {
+            get
+            {
+                return m_startTime;
+            }
+        }
+
+        /// <summary>
+        /// Gets the UTC time the concentrator was stopped.
+        /// </summary>
+        public Ticks StopTime
+        {
+            get
+            {
+                return m_stopTime;
+            }
+        }
+
         /// <summary>
         /// Gets the total amount of time, in seconds, that the concentrator has been active.
         /// </summary>
@@ -924,25 +972,28 @@ namespace TimeSeriesFramework
                 }
                 else
                 {
-                    // If the current value for real-time is outside of the time deviation tolerance of the local
-                    // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
-                    // time. Since the lead time typically defines the tolerated accuracy of the local clock to
-                    // real-time we will use this value as the + and - timestamp tolerance to validate if the
-                    // measurement time is reasonable.
-#if UseHighResolutionTime
-                    long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
-                    long currentTimeTicks = DateTime.UtcNow.Ticks;
-#endif
-                    long currentRealTimeTicks = m_realTimeTicks;
-                    double distance = (currentTimeTicks - currentRealTimeTicks) / (double)Ticks.PerSecond;
-
-                    if (distance > m_leadTime || distance < -m_leadTime)
+                    if (m_performTimestampReasonabilityCheck)
                     {
-                        // Set real time ticks to current ticks (as long as another thread hasn't changed it
-                        // already), the interlocked compare exchange avoids an expensive synclock to update real
-                        // time ticks.
-                        Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
+                        // If the current value for real-time is outside of the time deviation tolerance of the local
+                        // clock, then we set latest measurement time (i.e., real-time) to be the current local clock
+                        // time. Since the lead time typically defines the tolerated accuracy of the local clock to
+                        // real-time we will use this value as the + and - timestamp tolerance to validate if the
+                        // measurement time is reasonable.
+#if UseHighResolutionTime
+                        long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+#else
+                        long currentTimeTicks = DateTime.UtcNow.Ticks;
+#endif
+                        long currentRealTimeTicks = m_realTimeTicks;
+                        double distance = (currentTimeTicks - currentRealTimeTicks) / (double)Ticks.PerSecond;
+
+                        if (distance > m_leadTime || distance < -m_leadTime)
+                        {
+                            // Set real time ticks to current ticks (as long as another thread hasn't changed it
+                            // already), the interlocked compare exchange avoids an expensive synclock to update real
+                            // time ticks.
+                            Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
+                        }
                     }
 
                     // Assume lastest measurement timestamp is the best value we have for real-time.
@@ -1135,6 +1186,8 @@ namespace TimeSeriesFramework
                 status.AppendFormat("    Allow sorts by arrival: {0}", m_ignoreBadTimestamps ? false : m_allowSortsByArrival);
                 status.AppendLine();
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
+                status.AppendLine();
+                status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "enabled" : "disabled");
                 status.AppendLine();
                 status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
                 status.AppendLine();
@@ -1462,7 +1515,7 @@ namespace TimeSeriesFramework
                         // timestamp and real-time in seconds is calculated and validated between lag and lead times.
                         distance = SecondsFromRealTime(timestamp);
 
-                        if (distance > m_lagTime || distance < -m_leadTime)
+                        if (distance > m_lagTime || (m_performTimestampReasonabilityCheck && distance < -m_leadTime))
                         {
                             // This data has come in late or has a future timestamp.  For old timestamps, we're not
                             // going to create a frame for data that will never be processed.  For future dates we
@@ -1555,39 +1608,47 @@ namespace TimeSeriesFramework
 
                         if (timestamp > m_realTimeTicks)
                         {
-                            // Apply a resonability check to this value using the local clock. Since the lead time
-                            // typically defines the tolerated accuracy of the local clock to real time, this value
-                            // is used as the + and - timestamp tolerance to validate if the time is reasonable.
-#if UseHighResolutionTime
-                            long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
-                            long currentTimeTicks = DateTime.UtcNow.Ticks;
-#endif
-                            if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
+                            if (m_performTimestampReasonabilityCheck)
                             {
-                                // The new time measurement looks good, so this function assumes the time is
-                                // "real time" so long as another thread has not changed the real time value
-                                // already. Using the interlocked compare exchange method introduces the
-                                // possibility that we may have had newer ticks than another thread that just
-                                // updated real-time ticks, but if so the deviation will not be much since ticks
-                                // were greater than current real-time ticks in all threads that got to this
-                                // point. Besides, newer measurements are always coming in anyway and the compare
-                                // exchange method saves a call to a monitor lock thereby reducing contention.
-                                Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
+                                // Apply a resonability check to this value using the local clock. Since the lead time
+                                // typically defines the tolerated accuracy of the local clock to real time, this value
+                                // is used as the + and - timestamp tolerance to validate if the time is reasonable.
+#if UseHighResolutionTime
+                                long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+#else
+                                long currentTimeTicks = DateTime.UtcNow.Ticks;
+#endif
+                                if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
+                                {
+                                    // The new time measurement looks good, so this function assumes the time is
+                                    // "real time" so long as another thread has not changed the real time value
+                                    // already. Using the interlocked compare exchange method introduces the
+                                    // possibility that we may have had newer ticks than another thread that just
+                                    // updated real-time ticks, but if so the deviation will not be much since ticks
+                                    // were greater than current real-time ticks in all threads that got to this
+                                    // point. Besides, newer measurements are always coming in anyway and the compare
+                                    // exchange method saves a call to a monitor lock thereby reducing contention.
+                                    Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
+                                }
+                                else
+                                {
+                                    // Measurement ticks were outside of time deviation tolerances so we'll also check to make
+                                    // sure current real-time ticks are within these tolerances as well
+                                    distance = (currentTimeTicks - m_realTimeTicks) / (double)Ticks.PerSecond;
+
+                                    if (distance > m_leadTime || distance < -m_leadTime)
+                                    {
+                                        // New time measurement was invalid as was current real-time value so we have no choice but to
+                                        // assume the current time as "real-time", so we set real time ticks to current ticks so long
+                                        // as another thread hasn't changed it already
+                                        Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, realTimeTicks);
+                                    }
+                                }
                             }
                             else
                             {
-                                // Measurement ticks were outside of time deviation tolerances so we'll also check to make
-                                // sure current real-time ticks are within these tolerances as well
-                                distance = (currentTimeTicks - m_realTimeTicks) / (double)Ticks.PerSecond;
-
-                                if (distance > m_leadTime || distance < -m_leadTime)
-                                {
-                                    // New time measurement was invalid as was current real-time value so we have no choice but to
-                                    // assume the current time as "real-time", so we set real time ticks to current ticks so long
-                                    // as another thread hasn't changed it already
-                                    Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, realTimeTicks);
-                                }
+                                // Resonability checks are disabled, assume newest time is real-time...
+                                Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
                             }
                         }
                     }

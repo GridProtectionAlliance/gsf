@@ -538,6 +538,9 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("allowPreemptivePublishing", out setting))
                 AllowPreemptivePublishing = setting.ParseBoolean();
 
+            if (settings.TryGetValue("performTimestampReasonabilityCheck", out setting))
+                PerformTimestampReasonabilityCheck = setting.ParseBoolean();
+
             if (settings.TryGetValue("downsamplingMethod", out setting))
                 DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
         }
