@@ -344,7 +344,7 @@
       <Output TaskParameter="TotalChanges" PropertyName="TotalChanges"/>
     </TfsHistory>
     <PropertyGroup>
-      <ForceBuild Condition="'$(TotalChanges)' &gt; '1'">true</ForceBuild>
+      <ForceBuild Condition="'$(TotalChanges)' &gt; '2'">true</ForceBuild>
     </PropertyGroup>
     <Message Text="Total Changes...'$(TotalChanges)'" />
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
