@@ -10,8 +10,10 @@
 ::  -----------------------------------------------------------------------------------------------------
 ::  10/20/2009 - Pinal C. Patel
 ::       Generated original version of source code.
+::	09/16/2010 - Mihir Brahmbhatt
+::		Modified to framework version from 3.5 to 4.0
 ::
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v3.5\msbuild.exe Historian.buildproj /l:FileLogger,Microsoft.Build.Engine;logfile=Historian.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe Historian.buildproj /l:FileLogger,Microsoft.Build.Engine;logfile=Historian.output
