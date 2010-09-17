@@ -20,6 +20,8 @@
 //       Implemented IFormattable.ToString() overloads.
 //  04/20/2010 - J. Ritchie Carroll
 //       Added construction overload for IMeasurement that accepts specific quality.
+//  09/16/2010 - J. Ritchie Carroll
+//       Modified formatted time to include milliseconds.
 //
 //*******************************************************************************************************
 
@@ -607,14 +609,14 @@ namespace TVA.Historian.Files
                 case "I":
                     return m_historianID.ToString(provider);
                 case "T":
-                    return m_time.ToString(provider);
+                    return m_time.ToString();
                 case "V":
                     return m_value.ToString(provider);
                 case "Q":
                     return Quality.ToString();
                 default:
                     return string.Format("ID={0}; Time={1}; Value={2}; Quality={3}",
-                                         m_historianID.ToString(provider), m_time.ToString(provider), m_value.ToString(provider), Quality.ToString());
+                                         m_historianID.ToString(provider), m_time.ToString(), m_value.ToString(provider), Quality.ToString());
             }
         }
 
