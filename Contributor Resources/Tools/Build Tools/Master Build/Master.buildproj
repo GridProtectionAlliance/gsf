@@ -69,10 +69,14 @@
     <BuildLabel></BuildLabel>
     <!-- Type of the build to compile. -->
     <BuildFlavor></BuildFlavor>
+    <!-- Target 32bit platform of the build. -->
+    <Buildx86Target></Buildx86Target>
     <!-- Target platform of the build. -->
     <BuildTarget></BuildTarget>
     <!-- Output folder of build content. -->
     <BuildOutputFolder></BuildOutputFolder>
+    <!-- Drop location of the 32-bit build content. -->
+    <Buildx86DeployFolder></Buildx86DeployFolder>
     <!-- Drop location of the build content. -->
     <BuildDeployFolder></BuildDeployFolder>
     <!-- Setting for enabling user propmts. -->
@@ -118,6 +122,11 @@
     <CompileBuildDependsOn>
       PopulateWorkspace;
       VersionSource;
+      Buildx86Projects;
+      Executex86UnitTests;
+      Labelx86Build;
+      Cleanx86Build;
+      Deployx86Build;
       BuildProjects;
       ExecuteUnitTests;
     </CompileBuildDependsOn>
@@ -152,6 +161,33 @@
       CoreVersionSource;
       AfterVersionSource;
     </VersionSourceDependsOn>
+    <!--x86 32bit-->
+    <Buildx86ProjectsDependsOn>
+      Beforex86BuildProjects;
+      Corex86BuildProjects;
+      Afterx86BuildProjects;
+    </Buildx86ProjectsDependsOn>
+    <Executex86UnitTestsDependsOn>
+      Beforex86ExecuteUnitTests;
+      Corex86ExecuteUnitTests;
+      Afterx86ExecuteUnitTests;
+    </Executex86UnitTestsDependsOn>
+    <Labelx86BuildDependsOn>
+      Beforex86LabelBuild;
+      Corex86LabelBuild;
+      Afterx86LabelBuild;
+    </Labelx86BuildDependsOn>
+    <Cleanx86BuildDependsOn>
+      Beforex86CleanBuild;
+      Corex86CleanBuild;
+      Afterx86CleanBuild;
+    </Cleanx86BuildDependsOn>
+    <Deployx86BuildDependsOn>
+      Beforex86DeployBuild;
+      Corex86DeployBuild;
+      Afterx86DeployBuild;
+    </Deployx86BuildDependsOn>
+    <!--32bit end-->
     <BuildProjectsDependsOn>
       BeforeBuildProjects;
       CoreBuildProjects;
@@ -196,6 +232,12 @@
     </FilesToVersion>
     <!-- List of unit test assemblies. -->
     <UnitTestAssemblies Include="Nothing" Exclude="Nothing"/>
+    <!-- List of 32bit binaries to archive. -->
+    <Binariesx86ToArchive Include="Nothing" Exclude="Nothing"/>
+    <!-- List of 32bit installs to archive. -->
+    <Installsx86ToArchive Include="Nothing" Exclude="Nothing"/>
+    <!-- Destinations 32bit of archive files (*.zip). -->
+    <Archivex86Destinations Include="Nothing" Exclude="Nothing"/>
     <!-- List of binaries to archive. -->
     <BinariesToArchive Include="Nothing" Exclude="Nothing"/>
     <!-- List of installs to archive. -->
@@ -228,7 +270,17 @@
   <Target Name="PopulateWorkspace" DependsOnTargets="$(PopulateWorkspaceDependsOn)"/>
 
   <Target Name="VersionSource" DependsOnTargets="$(VersionSourceDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+  <!--x86 32-bit version-->
+  <Target Name="Buildx86Projects" DependsOnTargets="$(Buildx86ProjectsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
+  <Target Name="Executex86UnitTests" DependsOnTargets="$(Executex86UnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+
+  <Target Name="Labelx86Build" DependsOnTargets="$(Labelx86BuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+
+  <Target Name="Cleanx86Build" DependsOnTargets="$(Cleanx86BuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+
+  <Target Name="Deployx86Build" DependsOnTargets="$(Deployx86BuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+  <!--32-bit version end-->
   <Target Name="BuildProjects" DependsOnTargets="$(BuildProjectsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="ExecuteUnitTests" DependsOnTargets="$(ExecuteUnitTestsDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
@@ -253,6 +305,7 @@
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/openpdc/$(ProjectName)/Current Version</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\openPDC\$(ProjectName)</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
+      <Buildx86Target Condition="'$(Buildx86Target)' == ''">x86</Buildx86Target>
       <BuildTarget Condition="'$(BuildTarget)' == ''">Any CPU</BuildTarget>
       <BuildOutputFolder Condition="'$(BuildOutputFolder)' == ''">$(LocalFolder)\Build\Output\$(BuildFlavor)</BuildOutputFolder>
       <BuildInteractive Condition="'$(BuildInteractive)' == ''">true</BuildInteractive>
@@ -380,8 +433,85 @@
 
   <Target Name="AfterVersionSource"/>
 
-  <Target Name="BeforeBuildProjects"/>
+  <!--x86 (32-bit) version Build before x64 (64-bit version -->
+  <Target Name="Beforex86BuildProjects"/>
 
+  <Target Name="Corex86BuildProjects">
+    <!-- Build all of the specified projects. -->
+    <Message Text="Compiling 32-bit projects... Configuration=$(BuildFlavor);Platform=$(Buildx86Target)"/>
+    <MSBuild Projects="@(ProjectsToBuild)" Properties="Configuration=$(BuildFlavor);Platform=$(Buildx86Target);%(ProjectsToBuild.Properties)"/>
+    <!-- Build all of the specified installs. -->
+    <Message Text="Compiling 32-bit installs..."/>
+    <Exec Command="%22$(VisualStudio)%22 %22$(ProjectSolution)%22 /Project %22%(InstallsToBuild.FullPath)%22 /Build %22$(BuildFlavor)|$(Buildx86Target)%22" Condition="'$(ProjectSolution)' != '' And '@(InstallsToBuild)' != ''"/>
+  </Target>
+
+  <Target Name="Afterx86BuildProjects"/>
+
+  <Target Name="Beforex86ExecuteUnitTests"/>
+
+  <Target Name="Corex86ExecuteUnitTests" Condition="'@(UnitTestAssemblies)' != ''">
+    <!-- Execute tests in unit test assemblies. -->
+    <Message Text="Executing unit tests..."/>
+    <Exec Command="%22$(MSTest)%22 /testcontainer:%22%(UnitTestAssemblies.FullPath)%22" WorkingDirectory="%(UnitTestAssemblies.RootDir)%(UnitTestAssemblies.Directory)"/>
+  </Target>
+
+  <Target Name="Afterx86ExecuteUnitTests"/>
+
+  <Target Name="Beforex86LabelBuild"/>
+
+  <Target Name="Corex86LabelBuild" Condition="'$(BuildLabel)' != ''">
+    <!-- Apply label for the current build. -->
+    <Message Text="Not Labeling 32bit build $(BuildLabel)..."/>
+    <!--<Exec Command="%22$(TfsClient)%22 label /comment:%22Label applied for build $(BuildLabel).%22 %22$(BuildLabel)%22 %22$(LocalFolder)%22"/> -->
+  </Target>
+
+  <Target Name="Afterx86LabelBuild"/>
+
+  <Target Name="Beforex86CleanBuild"/>
+
+  <Target Name="Corex86CleanBuild">
+    <!-- Clean output of the current build. -->
+    <Message Text="Cleaning 32bit build output..."/>
+    <ItemGroup>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
+    </ItemGroup>
+    <Delete Files="@(FilesToDelete)" ContinueOnError="true"/>
+  </Target>
+
+  <Target Name="Afterx86CleanBuild"/>
+
+  <Target Name="Beforex86DeployBuild"/>
+
+  <Target Name="Corex86DeployBuild" Condition="'$(BuildOutputFolder)' != '' And '$(Buildx86DeployFolder)' != ''">
+    <!-- Copy build content to the deploy folder. -->
+    <Message Text="Deploying 32-bit build content..."/>
+    <ItemGroup>
+      <FilesToDeploy Include="$(BuildOutputFolder)\**\*.*"/>
+    </ItemGroup>
+    <MakeDir Directories="$(Buildx86DeployFolder)" Condition="!Exists('$(Buildx86DeployFolder)')"/>
+    <Folder TaskAction="RemoveContent" Path="$(Buildx86DeployFolder)"/>
+    <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(Buildx86DeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
+    <!-- Create specified archives of build content. -->
+    <Message Text="Archiving 32-bit build content..."/>
+    <!--<MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(BinariesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(InstallsToArchive)' != ''"/>
+    <ItemGroup>
+      <Archives Include="$(LocalFolder)\*.zip"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(Archives)" DestinationFolder="%(ArchiveDestinations.FullPath)" ContinueOnError="true"/>-->
+    <Message Text="Remove contents of 32-bit versions file from $(BuildOutputFolder)..."/>
+    <Folder TaskAction="RemoveContent" Path="$(BuildOutputFolder)"/>
+  </Target>
+
+  <Target Name="Afterx86DeployBuild"/>
+  
+  <!--32-bit version build completed-->
+  
+  <Target Name="BeforeBuildProjects"/>
+  
   <Target Name="CoreBuildProjects">
     <!-- Build all of the specified projects. -->
     <Message Text="Compiling projects..."/>
@@ -439,11 +569,17 @@
     </ItemGroup>
     <MakeDir Directories="$(BuildDeployFolder)" Condition="!Exists('$(BuildDeployFolder)')"/>
     <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
+    <!-- Copy x86 (32-bit) version setup file to current output folder-->
+    <Message Text="Copy 32bit setup version to BuildOutput folder..."/>
+    <Copy SourceFiles="$(Buildx86DeployFolder)\Setup\Installers\openPDCSetup.msi" DestinationFolder="$(BuildOutputFolder)\Setup\Installers\" ContinueOnError="true"/>
+    <Message Text="Remove 32bit version..."/>
+    <Folder TaskAction="RemoveContent" Path="$(Buildx86DeployFolder)"/>
+    <!--Copy Complete-->
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
     <!-- Create specified archives of build content. -->
     <Message Text="Archiving build content..."/>
-    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(BinariesToArchive)' != ''"/>
-    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(InstallsToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(BuildDeployFolder)" Condition="'@(BinariesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(BuildDeployFolder)" Condition="'@(InstallsToArchive)' != ''"/>
     <ItemGroup>
       <Archives Include="$(LocalFolder)\*.zip"/>
     </ItemGroup>
