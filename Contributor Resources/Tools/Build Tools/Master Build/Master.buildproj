@@ -134,6 +134,7 @@
       LabelBuild;
       CleanBuild;
       DeployBuild;
+      ArchiveBuild;
       DeleteWorkspace;
     </FinalizeBuildDependsOn>
     <CheckEnvironmentDependsOn>
@@ -213,12 +214,18 @@
       CoreDeployBuild;
       AfterDeployBuild;
     </DeployBuildDependsOn>
+    <ArchiveBuildDependsOn>
+      BeforeArchiveBuild;
+      CoreArchiveBuild;
+      AfterArchiveBuild;
+    </ArchiveBuildDependsOn>
     <DeleteWorkspaceDependsOn>
       BeforeDeleteWorkspace;
       CoreDeleteWorkspace;
       AfterDeleteWorkspace;
     </DeleteWorkspaceDependsOn>
-  </PropertyGroup>
+  
+</PropertyGroup>
 
   <ItemGroup>
     <!-- List of projects to build. -->
@@ -290,6 +297,8 @@
   <Target Name="CleanBuild" DependsOnTargets="$(CleanBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="DeployBuild" DependsOnTargets="$(DeployBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
+
+  <Target Name="ArchiveBuild" DependsOnTargets="$(ArchiveBuildDependsOn)" Condition="'$(ForceBuild)' == 'true'"/>
 
   <Target Name="DeleteWorkspace" DependsOnTargets="$(DeleteWorkspaceDependsOn)"/>
 
@@ -569,13 +578,23 @@
     </ItemGroup>
     <MakeDir Directories="$(BuildDeployFolder)" Condition="!Exists('$(BuildDeployFolder)')"/>
     <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
-    <!-- Copy x86 (32-bit) version setup file to current output folder-->
-    <Message Text="Copy 32bit setup version to BuildOutput folder..."/>
-    <Copy SourceFiles="$(Buildx86DeployFolder)\Setup\Installers\openPDCSetup.msi" DestinationFolder="$(BuildOutputFolder)\Setup\Installers\" ContinueOnError="true"/>
-    <Message Text="Remove 32bit version..."/>
-    <Folder TaskAction="RemoveContent" Path="$(Buildx86DeployFolder)"/>
-    <!--Copy Complete-->
+    
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
+    <!-- Create specified archives of build content. -->
+    <!--<Message Text="Archiving build content..."/>
+    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(BuildDeployFolder)" Condition="'@(BinariesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(BuildDeployFolder)" Condition="'@(InstallsToArchive)' != ''"/>
+    <ItemGroup>
+      <Archives Include="$(LocalFolder)\*.zip"/>
+    </ItemGroup>
+    <Copy SourceFiles="@(Archives)" DestinationFolder="%(ArchiveDestinations.FullPath)" ContinueOnError="true"/>-->
+  </Target>
+
+  <Target Name="AfterDeployBuild"/>
+
+  <Target Name="BeforeArchiveBuild" />
+  
+  <Target Name="CoreArchiveBuild" >
     <!-- Create specified archives of build content. -->
     <Message Text="Archiving build content..."/>
     <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(BuildDeployFolder)" Condition="'@(BinariesToArchive)' != ''"/>
@@ -585,9 +604,9 @@
     </ItemGroup>
     <Copy SourceFiles="@(Archives)" DestinationFolder="%(ArchiveDestinations.FullPath)" ContinueOnError="true"/>
   </Target>
-
-  <Target Name="AfterDeployBuild"/>
-
+  
+  <Target Name="AfterArchiveBuild" />
+  
   <Target Name="BeforeDeleteWorkspace"/>
 
   <Target Name="CoreDeleteWorkspace">
