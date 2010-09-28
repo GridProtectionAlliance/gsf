@@ -2058,6 +2058,21 @@
             extend this if needed to enable or disable operational state of the adapter based on flag value.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StartTime">
+            <summary>
+            Gets the UTC time this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> was started.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.StopTime">
+            <summary>
+            Gets the UTC time this <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/> was stopped.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.RunTime">
+            <summary>
+            Gets the total amount of time, in seconds, that the concentrator has been active.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.Settings">
             <summary>
             Gets settings <see cref="T:System.Collections.Generic.Dictionary`2"/> parsed when <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.ConnectionString"/> was assigned.
@@ -2144,6 +2159,11 @@
             <remarks>
             <see cref="F:TVA.EventArgs`1.Argument"/> is a collection of new measurements for host to process.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.IsConnected">
+            <summary>
+            Gets flag that determines if <see cref="T:TimeSeriesFramework.Adapters.InputAdapterBase"/> is connected.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.InputAdapterBase.UseAsyncConnect">
             <summary>
@@ -3348,6 +3368,19 @@
             In order for this property to used, the <see cref="P:TimeSeriesFramework.ConcentratorBase.ExpectedMeasurements"/> must be defined.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.PerformTimestampReasonabilityCheck">
+            <summary>
+            Gets or sets flag that determines if timestamp reasonability checks should be performed on incoming
+            measurements (i.e., measurement timestamps are compared to system clock for reasonability using
+            <see cref="P:TimeSeriesFramework.ConcentratorBase.LeadTime"/> tolerance).
+            </summary>
+            <remarks>
+            Setting this value to false will make the concentrator use the latest value received as "real-time"
+            without validation; this is not recommended in production since time reported by source devices may
+            be grossly incorrect. For non-production configurations, setting this value to false will allow
+            concentration of historical data.
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.Enabled">
             <summary>
             Gets or sets the current enabled state of concentrator.
@@ -3357,6 +3390,16 @@
             Concentrator must be started by calling <see cref="M:TimeSeriesFramework.ConcentratorBase.Start"/> method or setting
             <c><see cref="P:TimeSeriesFramework.ConcentratorBase.Enabled"/> = true</c>) before concentration will begin.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.StartTime">
+            <summary>
+            Gets the UTC time the concentrator was started.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.StopTime">
+            <summary>
+            Gets the UTC time the concentrator was stopped.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.RunTime">
             <summary>
