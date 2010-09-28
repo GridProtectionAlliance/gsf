@@ -20,6 +20,12 @@
 //       Added new header and license agreement.
 //  10/21/2009 - Pinal C. Patel
 //       Added error checking to assembly attribute properties.
+//  09/28/2010 - Pinal C. Patel
+//       Modified EntryAssembly to perform a reflection only load of the currently executing process 
+//       to deal with entry assembly not being available in non-default application domains.
+//       Changed GetCustomAttribute() to return CustomAttributeData instead of Object to deal with
+//       possible reflection only load being performed in EntryAssenbly.
+//       Removed Debuggable property since it was not very useful and added complexity when extracting.
 //
 //*******************************************************************************************************
 
@@ -244,6 +250,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
@@ -275,264 +282,281 @@ namespace TVA.Reflection
 
         #region [ Properties ]
 
-        /// <summary>Gets the title information of the assembly.</summary>
-        /// <returns>The title information of the assembly.</returns>
+        /// <summary>
+        /// Gets the underlying <see cref="Assembly"/> being represented by this <see cref="AssemblyInfo"/> object.
+        /// </summary>
+        public Assembly Assembly
+        {
+            get
+            {
+                return m_assemblyInstance;
+            }
+        }
+
+        /// <summary>
+        /// Gets the title information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Title
         {
             get
             {
-                AssemblyTitleAttribute attribute = GetCustomAttribute(typeof(AssemblyTitleAttribute)) as AssemblyTitleAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTitleAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Title;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the description information of the assembly.</summary>
-        /// <returns>The description information of the assembly.</returns>
+        /// <summary>
+        /// Gets the description information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Description
         {
             get
             {
-                AssemblyDescriptionAttribute attribute = GetCustomAttribute(typeof(AssemblyDescriptionAttribute)) as AssemblyDescriptionAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDescriptionAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Description;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the company name information of the assembly.</summary>
-        /// <returns>The company name information of the assembly.</returns>
+        /// <summary>
+        /// Gets the company name information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Company
         {
             get
             {
-                AssemblyCompanyAttribute attribute = GetCustomAttribute(typeof(AssemblyCompanyAttribute)) as AssemblyCompanyAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCompanyAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Company;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the product name information of the assembly.</summary>
-        /// <returns>The product name information of the assembly.</returns>
+        /// <summary>
+        /// Gets the product name information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Product
         {
             get
             {
-                AssemblyProductAttribute attribute = GetCustomAttribute(typeof(AssemblyProductAttribute)) as AssemblyProductAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyProductAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Product;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the copyright information of the assembly.</summary>
-        /// <returns>The copyright information of the assembly.</returns>
+        /// <summary>
+        /// Gets the copyright information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Copyright
         {
             get
             {
-                AssemblyCopyrightAttribute attribute = GetCustomAttribute(typeof(AssemblyCopyrightAttribute)) as AssemblyCopyrightAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyCopyrightAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Copyright;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the trademark information of the assembly.</summary>
-        /// <returns>The trademark information of the assembly.</returns>
+        /// <summary>
+        /// Gets the trademark information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Trademark
         {
             get
             {
-                AssemblyTrademarkAttribute attribute = GetCustomAttribute(typeof(AssemblyTrademarkAttribute)) as AssemblyTrademarkAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyTrademarkAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Trademark;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the configuration information of the assembly.</summary>
-        /// <returns>The configuration information of the assembly.</returns>
+        /// <summary>
+        /// Gets the configuration information of the <see cref="Assembly"/>.
+        /// </summary>
         public string Configuration
         {
             get
             {
-                AssemblyConfigurationAttribute attribute = GetCustomAttribute(typeof(AssemblyConfigurationAttribute)) as AssemblyConfigurationAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyConfigurationAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Configuration;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets a boolean value indicating if the assembly has been built as delay-signed.</summary>
-        /// <returns>True, if the assembly has been built as delay-signed; otherwise, False.</returns>
+        /// <summary>
+        /// Gets a boolean value indicating if the <see cref="Assembly"/> has been built as delay-signed.
+        /// </summary>
         public bool DelaySign
         {
             get
             {
-                AssemblyDelaySignAttribute attribute = GetCustomAttribute(typeof(AssemblyDelaySignAttribute)) as AssemblyDelaySignAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyDelaySignAttribute));
                 if (attribute == null)
                     return false;
                 else
-                    return attribute.DelaySign;
+                    return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the version information of the assembly.</summary>
-        /// <returns>The version information of the assembly</returns>
+        /// <summary>
+        /// Gets the version information of the <see cref="Assembly"/>.
+        /// </summary>
         public string InformationalVersion
         {
             get
             {
-                AssemblyInformationalVersionAttribute attribute = GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute)) as AssemblyInformationalVersionAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.InformationalVersion;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the name of the file containing the key pair used to generate a strong name for the attributed
-        /// assembly.</summary>
-        /// <returns>A string containing the name of the file that contains the key pair.</returns>
+        /// <summary>
+        /// Gets the name of the file containing the key pair used to generate a strong name for the attributed <see cref="Assembly"/>.
+        /// </summary>
         public string KeyFile
         {
             get
             {
-                AssemblyKeyFileAttribute attribute = GetCustomAttribute(typeof(AssemblyKeyFileAttribute)) as AssemblyKeyFileAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(AssemblyKeyFileAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.KeyFile;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the culture name of the assembly.</summary>
-        /// <returns>The culture name of the assembly.</returns>
+        /// <summary>
+        /// Gets the culture name of the <see cref="Assembly"/>.
+        /// </summary>
         public string CultureName
         {
             get
             {
-                NeutralResourcesLanguageAttribute attribute = GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute)) as NeutralResourcesLanguageAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(NeutralResourcesLanguageAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.CultureName;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular
-        /// version of a satellite assembly to simplify updates of the main assembly of an application.</summary>
+        /// <summary>
+        /// Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular
+        /// version of a satellite assembly to simplify updates of the main assembly of an application.
+        /// </summary>
         public string SatelliteContractVersion
         {
             get
             {
-                SatelliteContractVersionAttribute attribute = GetCustomAttribute(typeof(SatelliteContractVersionAttribute)) as SatelliteContractVersionAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(SatelliteContractVersionAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Version;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the string representing the assembly version used to indicate to a COM client that all classes
-        /// in the current version of the assembly are compatible with classes in an earlier version of the assembly.</summary>
-        /// <returns>The string representing the assembly version in MajorVersion.MinorVersion.RevisionNumber.BuildNumber
-        /// format.</returns>
+        /// <summary>
+        /// Gets the string representing the assembly version used to indicate to a COM client that all classes
+        /// in the current version of the assembly are compatible with classes in an earlier version of the assembly.
+        /// </summary>
         public string ComCompatibleVersion
         {
             get
             {
-                ComCompatibleVersionAttribute attribute = GetCustomAttribute(typeof(ComCompatibleVersionAttribute)) as ComCompatibleVersionAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(ComCompatibleVersionAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.MajorVersion.ToString() + "." + attribute.MinorVersion.ToString() + "." + "." + attribute.BuildNumber.ToString() + attribute.RevisionNumber.ToString();
+                    return attribute.ConstructorArguments[0].Value.ToString() + "." +
+                           attribute.ConstructorArguments[1].Value.ToString() + "." +
+                           attribute.ConstructorArguments[2].Value.ToString() + "." +
+                           attribute.ConstructorArguments[3].Value.ToString();
             }
         }
 
-        /// <summary>Gets a boolean value indicating if the assembly is exposed to COM.</summary>
-        /// <returns>True, if the assembly is exposed to COM; otherwise, False.</returns>
+        /// <summary>
+        /// Gets a boolean value indicating if the <see cref="Assembly"/> is exposed to COM.
+        /// </summary>
         public bool ComVisible
         {
             get
             {
-                ComVisibleAttribute attribute = GetCustomAttribute(typeof(ComVisibleAttribute)) as ComVisibleAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(ComVisibleAttribute));
                 if (attribute == null)
                     return false;
                 else
-                    return attribute.Value;
+                    return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the assembly GUID that is used as an ID if the assembly is exposed to COM.</summary>
-        /// <returns>The assembly GUID that is used as an ID if the assembly is exposed to COM.</returns>
+        /// <summary>
+        /// Gets the GUID that is used as an ID if the <see cref="Assembly"/> is exposed to COM.
+        /// </summary>
         public string Guid
         {
             get
             {
-                GuidAttribute attribute = GetCustomAttribute(typeof(GuidAttribute)) as GuidAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(GuidAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.Value;
+                    return (string)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets the string representing the assembly version number in MajorVersion.MinorVersion format.</summary>
-        /// <returns>The string representing the assembly version number in MajorVersion.MinorVersion format.</returns>
+        /// <summary>
+        /// Gets the string representing the <see cref="Assembly"/> version number in MajorVersion.MinorVersion format.
+        /// </summary>
         public string TypeLibVersion
         {
             get
             {
-                TypeLibVersionAttribute attribute = GetCustomAttribute(typeof(TypeLibVersionAttribute)) as TypeLibVersionAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(TypeLibVersionAttribute));
                 if (attribute == null)
                     return string.Empty;
                 else
-                    return attribute.MajorVersion.ToString() + "." + attribute.MinorVersion.ToString();
+                    return attribute.ConstructorArguments[0].Value.ToString() + "." +
+                           attribute.ConstructorArguments[1].Value.ToString();
             }
         }
 
-        /// <summary>Gets a boolean value indicating whether the indicated program element is CLS-compliant.</summary>
-        /// <returns>True, if the program element is CLS-compliant; otherwise, False.</returns>
+        /// <summary>
+        /// Gets a boolean value indicating whether the <see cref="Assembly"/> is CLS-compliant.
+        /// </summary>
         public bool CLSCompliant
         {
             get
             {
-                CLSCompliantAttribute attribute = GetCustomAttribute(typeof(CLSCompliantAttribute)) as CLSCompliantAttribute;
+                CustomAttributeData attribute = GetCustomAttribute(typeof(CLSCompliantAttribute));
                 if (attribute == null)
                     return false;
                 else
-                    return attribute.IsCompliant;
+                    return (bool)attribute.ConstructorArguments[0].Value;
             }
         }
 
-        /// <summary>Gets a value that indicates whether the runtime will track information during code generation for the
-        /// debugger.</summary>
-        /// <returns>True, if the runtime will track information during code generation for the debugger; otherwise, False.</returns>
-        public bool Debuggable
-        {
-            get
-            {
-                DebuggableAttribute attribute = GetCustomAttribute(typeof(DebuggableAttribute)) as DebuggableAttribute;
-                if (attribute == null)
-                    return false;
-                else
-                    return attribute.IsJITTrackingEnabled;
-            }
-        }
-
-        /// <summary>Gets the path or UNC location of the loaded file that contains the manifest.</summary>
-        /// <returns>The location of the loaded file that contains the manifest.</returns>
+        /// <summary>
+        /// Gets the path or UNC location of the loaded file that contains the manifest.
+        /// </summary>
         public string Location
         {
             get
@@ -541,9 +565,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the location of the assembly as specified originally; for example, in a
-        /// AssemblyName object.</summary>
-        /// <returns>The location of the assembly as specified originally.</returns>
+        /// <summary>
+        /// Gets the location of the <see cref="Assembly"/> as specified originally.
+        /// </summary>
         public string CodeBase
         {
             get
@@ -552,8 +576,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the display name of the assembly.</summary>
-        /// <returns>The display name of the assembly.</returns>
+        /// <summary>
+        /// Gets the display name of the <see cref="Assembly"/>.
+        /// </summary>
         public string FullName
         {
             get
@@ -562,8 +587,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the simple, unencrypted name of the assembly.</summary>
-        /// <returns>A string that is the simple, unencrypted name of the assembly.</returns>
+        /// <summary>
+        /// Gets the simple, unencrypted name of the <see cref="Assembly"/>.
+        /// </summary>
         public string Name
         {
             get
@@ -572,8 +598,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the major, minor, revision, and build numbers of the assembly.</summary>
-        /// <returns>A System.Version object representing the major, minor, revision, and build numbers of the assembly.</returns>
+        /// <summary>
+        /// Gets the major, minor, revision, and build numbers of the <see cref="Assembly"/>.
+        /// </summary>
         public Version Version
         {
             get
@@ -582,9 +609,10 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the string representing the version of the common language runtime (CLR) saved in the file
-        /// containing the manifest.</summary>
-        /// <returns>The string representing the CLR version folder name. This is not a full path.</returns>
+        /// <summary>
+        /// Gets the string representing the version of the common language runtime (CLR) saved in the file
+        /// containing the manifest.
+        /// </summary>
         public string ImageRuntimeVersion
         {
             get
@@ -593,8 +621,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets a boolean value indicating whether the assembly was loaded from the global assembly cache.</summary>
-        /// <returns>True, if the assembly was loaded from the global assembly cache; otherwise, False.</returns>
+        /// <summary>
+        /// Gets a boolean value indicating whether the <see cref="Assembly"/> was loaded from the global assembly cache.
+        /// </summary>
         public bool GACLoaded
         {
             get
@@ -603,8 +632,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the date and time when the assembly was last built.</summary>
-        /// <returns>The date and time when the assembly was last built.</returns>
+        /// <summary>
+        /// Gets the date and time when the <see cref="Assembly"/> was built.
+        /// </summary>
         public DateTime BuildDate
         {
             get
@@ -613,8 +643,9 @@ namespace TVA.Reflection
             }
         }
 
-        /// <summary>Gets the root namespace of the assembly.</summary>
-        /// <returns>The root namespace of the assembly.</returns>
+        /// <summary>
+        /// Gets the root namespace of the <see cref="Assembly"/>.
+        /// </summary>
         public string RootNamespace
         {
             get
@@ -644,81 +675,23 @@ namespace TVA.Reflection
             assemblyAttributes.Add("GAC Loaded", GACLoaded.ToString());
 
             //Add all attributes available from AssemblyInfo.
-            foreach (object assemblyAttribute in m_assemblyInstance.GetCustomAttributes(false))
-            {
-                if (assemblyAttribute is AssemblyTitleAttribute)
-                {
-                    assemblyAttributes.Add("Title", Title);
-                }
-                else if (assemblyAttribute is AssemblyDescriptionAttribute)
-                {
-                    assemblyAttributes.Add("Description", Description);
-                }
-                else if (assemblyAttribute is AssemblyCompanyAttribute)
-                {
-                    assemblyAttributes.Add("Company", Company);
-                }
-                else if (assemblyAttribute is AssemblyProductAttribute)
-                {
-                    assemblyAttributes.Add("Product", Product);
-                }
-                else if (assemblyAttribute is AssemblyCopyrightAttribute)
-                {
-                    assemblyAttributes.Add("Copyright", Copyright);
-                }
-                else if (assemblyAttribute is AssemblyTrademarkAttribute)
-                {
-                    assemblyAttributes.Add("Trademark", Trademark);
-                }
-                else if (assemblyAttribute is AssemblyConfigurationAttribute)
-                {
-                    assemblyAttributes.Add("Configuration", Configuration);
-                }
-                else if (assemblyAttribute is AssemblyDelaySignAttribute)
-                {
-                    assemblyAttributes.Add("Delay Sign", DelaySign.ToString());
-                }
-                else if (assemblyAttribute is AssemblyInformationalVersionAttribute)
-                {
-                    assemblyAttributes.Add("Informational Version", InformationalVersion);
-                }
-                else if (assemblyAttribute is AssemblyKeyFileAttribute)
-                {
-                    assemblyAttributes.Add("Key File", KeyFile);
-                }
-                else if (assemblyAttribute is NeutralResourcesLanguageAttribute)
-                {
-                    assemblyAttributes.Add("Culture Name", CultureName);
-                }
-                else if (assemblyAttribute is SatelliteContractVersionAttribute)
-                {
-                    assemblyAttributes.Add("Satellite Contract Version", SatelliteContractVersion);
-                }
-                else if (assemblyAttribute is ComCompatibleVersionAttribute)
-                {
-                    assemblyAttributes.Add("Com Compatible Version", ComCompatibleVersion);
-                }
-                else if (assemblyAttribute is ComVisibleAttribute)
-                {
-                    assemblyAttributes.Add("Com Visible", ComVisible.ToString());
-                }
-                else if (assemblyAttribute is GuidAttribute)
-                {
-                    assemblyAttributes.Add("Guid", Guid);
-                }
-                else if (assemblyAttribute is TypeLibVersionAttribute)
-                {
-                    assemblyAttributes.Add("Type Lib Version", TypeLibVersion);
-                }
-                else if (assemblyAttribute is CLSCompliantAttribute)
-                {
-                    assemblyAttributes.Add("CLS Compliant", CLSCompliant.ToString());
-                }
-                else if (assemblyAttribute is DebuggableAttribute)
-                {
-                    assemblyAttributes.Add("Debuggable", Debuggable.ToString());
-                }
-            }
+            assemblyAttributes.Add("Title", Title);
+            assemblyAttributes.Add("Description", Description);
+            assemblyAttributes.Add("Company", Company);
+            assemblyAttributes.Add("Product", Product);
+            assemblyAttributes.Add("Copyright", Copyright);
+            assemblyAttributes.Add("Trademark", Trademark);
+            assemblyAttributes.Add("Configuration", Configuration);
+            assemblyAttributes.Add("Delay Sign", DelaySign.ToString());
+            assemblyAttributes.Add("Informational Version", InformationalVersion);
+            assemblyAttributes.Add("Key File", KeyFile);
+            assemblyAttributes.Add("Culture Name", CultureName);
+            assemblyAttributes.Add("Satellite Contract Version", SatelliteContractVersion);
+            assemblyAttributes.Add("Com Compatible Version", ComCompatibleVersion);
+            assemblyAttributes.Add("Com Visible", ComVisible.ToString());
+            assemblyAttributes.Add("Guid", Guid);
+            assemblyAttributes.Add("Type Lib Version", TypeLibVersion);
+            assemblyAttributes.Add("CLS Compliant", CLSCompliant.ToString());
 
             return assemblyAttributes;
         }
@@ -726,14 +699,10 @@ namespace TVA.Reflection
         /// <summary>Gets the specified assembly attribute if it is exposed by the assembly.</summary>
         /// <param name="attributeType">Type of the attribute to get.</param>
         /// <returns>The requested assembly attribute if it exists; otherwise null.</returns>
-        public object GetCustomAttribute(Type attributeType)
+        public CustomAttributeData GetCustomAttribute(Type attributeType)
         {
             //Returns the requested assembly attribute.
-            object[] assemblyAttributes = m_assemblyInstance.GetCustomAttributes(attributeType, false);
-            if (assemblyAttributes.Length <= 0)
-                return null;
-            else
-                return assemblyAttributes[0];
+            return m_assemblyInstance.GetCustomAttributesData().FirstOrDefault(assemblyAttribute => assemblyAttribute.Constructor.DeclaringType == attributeType);
         }
 
         /// <summary>Gets the specified embedded resource from the assembly.</summary>
@@ -791,7 +760,13 @@ namespace TVA.Reflection
             get
             {
                 if (s_entryAssembly == null)
-                    s_entryAssembly = new AssemblyInfo(Assembly.GetEntryAssembly());
+                {
+                    Assembly entryAssembly = Assembly.GetEntryAssembly();
+                    if (entryAssembly == null)
+                        entryAssembly = Assembly.ReflectionOnlyLoadFrom(Process.GetCurrentProcess().MainModule.FileName);
+
+                    s_entryAssembly = new AssemblyInfo(entryAssembly);
+                }
 
                 return s_entryAssembly;
             }

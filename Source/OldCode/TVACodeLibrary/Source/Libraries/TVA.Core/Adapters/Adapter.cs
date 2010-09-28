@@ -1,21 +1,15 @@
 ﻿//*******************************************************************************************************
-//  AssemblyExtensions.cs - Gbtc
+//  Adapter.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/12/2008 - J. Ritchie Carroll
+//  09/23/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  08/07/2009 - Josh L. Patterson
-//       Edited Comments.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  09/28/2010 - Pinal C. Patel
-//       Removed Debuggable extension method since its value source is no longer present in AssemblyInfo.
 //
 //*******************************************************************************************************
 
@@ -236,194 +230,271 @@
 #endregion
 
 using System;
-using System.Collections.Specialized;
-using System.IO;
-using System.Reflection;
+using System.Configuration;
+using System.Text;
+using TVA.Configuration;
 
-namespace TVA.Reflection
+namespace TVA.Adapters
 {
-    /// <summary>Defines extension functions related to Assemblies.</summary>
-    public static class AssemblyExtensions
+    /// <summary>
+    /// Represents an adapter that could execute in isolation in a seperate <see cref="AppDomain"/>.
+    /// </summary>
+    /// <seealso cref="AdapterLoader{T}"/>
+    public class Adapter : MarshalByRefObject, IAdapter
     {
-        /// <summary>Returns only assembly name and version from full assembly name.</summary>
-        /// <param name="assemblyInstance">An <see cref="Assembly"/> to get the short name of.</param>
-        /// <returns>The assembly name and version from the full assembly name.</returns>
-        public static string ShortName(this Assembly assemblyInstance)
+        #region [ Members ]
+
+        // Fields
+        private DateTime m_created;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
+        private bool m_enabled;
+        private bool m_disposed;
+        private bool m_initialized;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Adapter"/>.
+        /// </summary>
+        public Adapter()
         {
-            return assemblyInstance.FullName.Split(',')[0];
+            m_created = DateTime.Now;
+            m_persistSettings = true;
+            m_settingsCategory = this.GetType().Name;
         }
 
-        /// <summary>Gets the specified embedded resource from the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <param name="resourceName">The full name (including the namespace) of the embedded resource to get.</param>
-        /// <returns>The embedded resource.</returns>
-        public static Stream GetEmbeddedResource(this Assembly assemblyInstance, string resourceName)
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="Adapter"/> is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~Adapter()
         {
-            //Extracts and returns the requested embedded resource.
-            return assemblyInstance.GetManifestResourceStream(resourceName);
+            Dispose(false);
         }
 
-        /// <summary>Gets the title information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The title information of the assembly.</returns>
-        public static string Title(this Assembly assemblyInstance)
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="Adapter"/> is currently enabled.
+        /// </summary>
+        public virtual bool Enabled
         {
-            return (new AssemblyInfo(assemblyInstance)).Title;
+            get
+            {
+                return m_enabled;
+            }
+            set
+            {
+                m_enabled = value;
+            }
         }
 
-        /// <summary>Gets the description information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The description information of the assembly.</returns>
-        public static string Description(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="Adapter"/> settings are to be saved to the config file.
+        /// </summary>
+        public virtual bool PersistSettings
         {
-            return (new AssemblyInfo(assemblyInstance)).Description;
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
         }
 
-        /// <summary>Gets the company name information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The company name information of the assembly.</returns>
-        public static string Company(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets or sets the category under which <see cref="Adapter"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        public virtual string SettingsCategory
         {
-            return (new AssemblyInfo(assemblyInstance)).Company;
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_settingsCategory = value;
+            }
         }
 
-        /// <summary>Gets the product name information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The product name information of the assembly.</returns>
-        public static string Product(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets the memory utilzation of the <see cref="Adapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
+        /// </summary>
+        /// <remarks><see cref="MemoryUsage"/> gets updated only after a full blocking collection by <see cref="GC"/> (eg. <see cref="GC.Collect()"/>).</remarks>
+        public double MemoryUsage 
         {
-            return (new AssemblyInfo(assemblyInstance)).Product;
+            get
+            {
+                if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
+                    // Both app domain isolation and app domain resource monitoring is enabled.
+                    return Domain.MonitoringSurvivedMemorySize;
+                else
+                    return double.NaN;
+            }
         }
 
-        /// <summary>Gets the copyright information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The copyright information of the assembly.</returns>
-        public static string Copyright(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets the % processor utilization of the <see cref="Adapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
+        /// </summary>
+        public double ProcessorUsage 
         {
-            return (new AssemblyInfo(assemblyInstance)).Copyright;
+            get
+            {
+
+                if (!Domain.IsDefaultAppDomain() && AppDomain.MonitoringIsEnabled)
+                    // Both app domain isolation and app domain resource monitoring is enabled.
+                    return Domain.MonitoringTotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.Now.Ticks - m_created.Ticks) / Environment.ProcessorCount * 100;
+                else
+                    return double.NaN;
+            }
         }
 
-        /// <summary>Gets the trademark information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The trademark information of the assembly.</returns>
-        public static string Trademark(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets the unique identifier of the <see cref="Adapter"/>.
+        /// </summary>
+        public virtual string Name
         {
-            return (new AssemblyInfo(assemblyInstance)).Trademark;
+            get
+            {
+                return this.GetType().Name;
+            }
         }
 
-        /// <summary>Gets the configuration information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The configuration information of the assembly.</returns>
-        public static string Configuration(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="Adapter"/>.
+        /// </summary>
+        public virtual string Status
         {
-            return (new AssemblyInfo(assemblyInstance)).Configuration;
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                status.Append("            Adapter domain: ");
+                status.Append(Domain.FriendlyName);
+                status.AppendLine();
+                status.Append("             Adapter state: ");
+                status.Append(m_enabled ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("              Memory usage: ");
+                status.Append(MemoryUsage.Equals(double.NaN) ? "Not tracked" : MemoryUsage.ToString("0 bytes"));
+                status.AppendLine();
+                status.Append("           Processor usage: ");
+                status.Append(ProcessorUsage.Equals(double.NaN) ? "Not tracked" : ProcessorUsage.ToString("0'%'"));
+                status.AppendLine();
+
+                return status.ToString();
+            }
         }
 
-        /// <summary>Gets a boolean value indicating if the assembly has been built as delay-signed.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>True, if the assembly has been built as delay-signed; otherwise, False.</returns>
-        public static bool DelaySign(this Assembly assemblyInstance)
+        /// <summary>
+        /// Gets the <see cref="AppDomain"/> in which the <see cref="Adapter"/> is executing.
+        /// </summary>
+        public virtual AppDomain Domain 
         {
-            return (new AssemblyInfo(assemblyInstance)).DelaySign;
+            get
+            {
+                return AppDomain.CurrentDomain;
+            }
         }
 
-        /// <summary>Gets the version information of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The version information of the assembly</returns>
-        public static string InformationalVersion(this Assembly assemblyInstance)
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Releases all the resources used by the <see cref="Adapter"/>.
+        /// </summary>
+        public void Dispose()
         {
-            return (new AssemblyInfo(assemblyInstance)).InformationalVersion;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        /// <summary>Gets the name of the file containing the key pair used to generate a strong name for the attributed assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>A string containing the name of the file that contains the key pair.</returns>
-        public static string KeyFile(this Assembly assemblyInstance)
+        /// <summary>
+        /// Initializes the <see cref="Adapter"/>.
+        /// </summary>
+        public virtual void Initialize()
         {
-            return (new AssemblyInfo(assemblyInstance)).KeyFile;
+            if (!m_initialized)
+            {
+                LoadSettings();         // Load settings from the config file.
+                m_initialized = true;   // Initialize only once.
+            }
         }
 
-        /// <summary>Gets the culture name of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The culture name of the assembly.</returns>
-        public static string CultureName(this Assembly assemblyInstance)
+        /// <summary>
+        /// Saves <see cref="Adapter"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public virtual void SaveSettings()
         {
-            return (new AssemblyInfo(assemblyInstance)).CultureName;
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["Enabled", true].Update(m_enabled);
+                config.Save();
+            }
         }
 
-        /// <summary>Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular
-        /// version of a satellite assembly to simplify updates of the main assembly of an application.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The satellite contract version of the assembly.</returns>
-        public static string SatelliteContractVersion(this Assembly assemblyInstance)
+        /// <summary>
+        /// Loads saved <see cref="Adapter"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public virtual void LoadSettings()
         {
-            return (new AssemblyInfo(assemblyInstance)).SatelliteContractVersion;
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("Enabled", m_enabled, "True if this adapter is enabled; otherwise False.");
+                Enabled = settings["Enabled"].ValueAs(m_enabled);
+            }
         }
 
-        /// <summary>Gets the string representing the assembly version used to indicate to a COM client that all classes
-        /// in the current version of the assembly are compatible with classes in an earlier version of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The string representing the assembly version in MajorVersion.MinorVersion.RevisionNumber.BuildNumber
-        /// format.</returns>
-        public static string ComCompatibleVersion(this Assembly assemblyInstance)
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="Adapter"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
         {
-            return (new AssemblyInfo(assemblyInstance)).ComCompatibleVersion;
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.				
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
         }
 
-        /// <summary>Gets a boolean value indicating if the assembly is exposed to COM.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>True, if the assembly is exposed to COM; otherwise, False.</returns>
-        public static bool ComVisible(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).ComVisible;
-        }
-
-        /// <summary>Gets the assembly GUID that is used as an ID if the assembly is exposed to COM.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The assembly GUID that is used as an ID if the assembly is exposed to COM.</returns>
-        public static string Guid(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).Guid;
-        }
-
-        /// <summary>Gets the string representing the assembly version number in MajorVersion.MinorVersion format.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The string representing the assembly version number in MajorVersion.MinorVersion format.</returns>
-        public static string TypeLibVersion(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).TypeLibVersion;
-        }
-
-        /// <summary>Gets a boolean value indicating whether the indicated program element is CLS-compliant.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>True, if the program element is CLS-compliant; otherwise, False.</returns>
-        public static bool CLSCompliant(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).CLSCompliant;
-        }
-
-        /// <summary>Gets the date and time when the assembly was last built.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The date and time when the assembly was last built.</returns>
-        public static DateTime BuildDate(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).BuildDate;
-        }
-
-        /// <summary>Gets the root namespace of the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>The root namespace of the assembly.</returns>
-        public static string RootNamespace(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).RootNamespace;
-        }
-
-        /// <summary>Gets a name/value collection of assembly attributes exposed by the assembly.</summary>
-        /// <param name="assemblyInstance">Source assembly.</param>
-        /// <returns>A NameValueCollection of assembly attributes.</returns>
-        public static NameValueCollection GetAttributes(this Assembly assemblyInstance)
-        {
-            return (new AssemblyInfo(assemblyInstance)).GetAttributes();
-        }
+        #endregion
     }
 }

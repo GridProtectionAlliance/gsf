@@ -20,6 +20,8 @@
 //       Added new header and license agreement.
 //  09/17/2009 - Pinal C. Patel
 //       Modified GetApplicationType() to remove dependency on HttpContext.Current.
+//  09/28/2010 - Pinal C. Patel
+//       Cached the current ApplicationType returned by GetApplicationType() for better performance.
 //
 //*******************************************************************************************************
 
@@ -302,6 +304,8 @@ namespace TVA
     /// </summary>
     public static class Common
     {
+        private static Nullable<ApplicationType> s_applicationType;
+
         /// <summary>Returns one of two strongly-typed objects.</summary>
         /// <returns>One of two objects, depending on the evaluation of given expression.</returns>
         /// <param name="expression">The expression you want to evaluate.</param>
@@ -376,9 +380,12 @@ namespace TVA
         /// <returns>One of the <see cref="ApplicationType"/> values.</returns>
         public static ApplicationType GetApplicationType()
         {
+            if (s_applicationType != null)
+                return s_applicationType.Value;
+
             if (HostingEnvironment.ApplicationVirtualPath != null)
             {
-                return ApplicationType.Web;
+                s_applicationType = ApplicationType.Web;
             }
             else
             {
@@ -400,14 +407,16 @@ namespace TVA
 
                     Array.Copy(exeHeader, 92, subSystem, 0, 2);
 
-                    return ((ApplicationType)(BitConverter.ToInt16(subSystem, 0)));
+                    s_applicationType = ((ApplicationType)(BitConverter.ToInt16(subSystem, 0)));
                 }
                 catch
                 {
                     // We are unable to determine the application type.
-                    return ApplicationType.Unknown;
+                    s_applicationType = ApplicationType.Unknown;
                 }
             }
+
+            return s_applicationType.Value;
         }
 
         // The following "ToNonNullString" methods extend all class based objects. Note that these extension methods can be

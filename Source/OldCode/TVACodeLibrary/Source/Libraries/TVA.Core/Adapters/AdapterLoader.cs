@@ -20,6 +20,9 @@
 //       Added new AdapterCreated event.
 //       Implemented IProvideStatus interface.
 //       Enhanced the implementation of Enabled property.
+//  09/23/2010 - Pinal C. Patel
+//       Added IsolateAdapters property to allow for loading qualified adapters in seperate application
+//       domain for isolated execution.
 //
 //*******************************************************************************************************
 
@@ -244,11 +247,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 using TVA.Collections;
 using TVA.IO;
 
-namespace TVA
+namespace TVA.Adapters
 {
     /// <summary>
     /// Represents a generic loader of adapters.
@@ -305,6 +309,7 @@ namespace TVA
         // Fields
         private string m_adapterDirectory;
         private bool m_watchForAdapters;
+        private bool m_isolateAdapters;
         private ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
         private ProcessQueue<object> m_operationQueue;
@@ -378,6 +383,21 @@ namespace TVA
             set
             {
                 m_watchForAdapters = value;
+            }
+        }        
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="Adapters"/> are loaded in seperate <see cref="AppDomain"/> for isolated execution.
+        /// </summary>
+        public bool IsolateAdapters 
+        {
+            get
+            {
+                return m_isolateAdapters;
+            }
+            set
+            {
+                m_isolateAdapters = value;
             }
         }
 
@@ -497,7 +517,7 @@ namespace TVA
                         {
                             status.AppendLine();
                             status.Append("              Adapter name: ");
-                            status.Append(implementingAdapter.GetType().Name);
+                            status.Append(implementingAdapter.Name);
                             status.AppendLine();
                             status.Append(implementingAdapter.Status);
                         }
@@ -595,7 +615,21 @@ namespace TVA
                 if (adapterType.GetConstructor(Type.EmptyTypes) != null)
                 {
                     // Instantiate adapter instance.
-                    T adapter = (T)(Activator.CreateInstance(adapterType));
+                    T adapter;
+                    if (m_isolateAdapters &&
+                        (adapterType.GetRootType() == typeof(MarshalByRefObject) ||
+                         adapterType.GetInterface(typeof(ISerializable).FullName) != null ||
+                         adapterType.GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0))
+                    {
+                        // Adapter isolation is enabled and possible.
+                        AppDomain domain = AppDomain.CreateDomain(adapterType.Name);
+                        adapter = (T)domain.CreateInstanceAndUnwrap(adapterType.Assembly.FullName, adapterType.FullName);
+                    }
+                    else
+                    {
+                        // Load adapter in the current executing domain.
+                        adapter = (T)(Activator.CreateInstance(adapterType));
+                    }
                     OnAdapterCreated(adapter);
 
                     // Initialize adapter if supported.
