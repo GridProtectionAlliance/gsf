@@ -23,11 +23,14 @@
 
 using System;
 using System.ComponentModel;
+using System.Linq;
+using System.ServiceProcess;
 using System.Text;
 using TVA;
 using TVA.Console;
 using TVA.Reflection;
 using TVA.Services;
+using System.Diagnostics;
 
 namespace TimeSeriesFramework
 {
@@ -73,52 +76,137 @@ namespace TimeSeriesFramework
             string userInput = null;
             Arguments arguments = new Arguments(string.Join(" ", args));
 
-            if (arguments.Exists("server") || arguments.Exists("secret"))
+            if (arguments.Exists("OrderedArg1") && arguments.Exists("restart"))
             {
-                // Override default settings with user provided input. 
-                m_clientHelper.PersistSettings = false;
-                m_remotingClient.PersistSettings = false;
+                string serviceName = arguments["OrderedArg1"];
 
-                if (arguments.Exists("secret"))
-                    m_remotingClient.SharedSecret = arguments["secret"];
+                // Attempt to access service controller for the specified Windows service
+                ServiceController serviceController = ServiceController.GetServices().SingleOrDefault(svc => string.Compare(svc.ServiceName, serviceName, true) == 0);
 
-                if (arguments.Exists("server"))
-                    m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
-            }
-
-            // Connect to service and send commands. 
-            m_clientHelper.Connect();
-            while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
-            {
-                // Wait for a command from the user. 
-                userInput = Console.ReadLine();
-                // Write a blank line to the console.
-                Console.WriteLine();
-
-                if (!string.IsNullOrEmpty(userInput))
+                if (serviceController != null)
                 {
-                    // The user typed in a command and didn't just hit <ENTER>. 
-                    switch (userInput.ToUpper())
+                    try
                     {
-                        case "CLS":
-                            // User wants to clear the console window. 
-                            Console.Clear();
-                            break;
-                        case "EXIT":
-                            // User wants to exit the telnet session with the service. 
-                            if (m_telnetActive)
-                            {
-                                userInput = string.Empty;
-                                m_clientHelper.SendRequest("Telnet -disconnect");
-                            }
-                            break;
-                        default:
-                            // User wants to send a request to the service. 
-                            m_clientHelper.SendRequest(userInput);
-                            if (string.Compare(userInput, "Help", true) == 0)
-                                DisplayHelp();
+                        if (serviceController.Status == ServiceControllerStatus.Running)
+                        {
+                            Console.WriteLine("Attempting to stop the {0} Windows service...", serviceName);
 
-                            break;
+                            serviceController.Stop();
+
+                            // Can't wait forever for service to stop, so we time-out after 20 seconds
+                            serviceController.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(20.0D));
+
+                            if (serviceController.Status == ServiceControllerStatus.Stopped)
+                                Console.WriteLine("Successfully stopped the {0} Windows service.", serviceName);
+                            else
+                                Console.WriteLine("Failed to stop the {0} Windows service after trying for 20 seconds...", serviceName);
+
+                            // Add an extra line for visual separation of service termination status
+                            Console.WriteLine("");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Failed to stop the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                    }
+                }
+
+                // If the service failed to stop or it is installed as stand-alone debug application, we try to forcibly stop any remaining running instances
+                try
+                {
+                    Process[] instances = Process.GetProcessesByName(serviceName);
+
+                    if (instances.Length > 0)
+                    {
+                        int total = 0;
+                        Console.WriteLine("Attempting to stop running instances of the {0}...", serviceName);
+
+                        // Terminate all instances of service running on the local computer
+                        foreach (Process process in instances)
+                        {
+                            process.Kill();
+                            total++;
+                        }
+
+                        if (total > 0)
+                            Console.WriteLine(string.Format("Stopped {0} {1} instance{2}.", total, serviceName, total > 1 ? "s" : ""));
+
+                        // Add an extra line for visual separation of process termination status
+                        Console.WriteLine("");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to terminate running instances of the {0}: {1}\r\n", serviceName, ex.Message);
+                }
+
+                // Attempt to restart Windows service...
+                if (serviceController != null)
+                {
+                    try
+                    {
+                        // Refresh state in case service process was forcibly stopped
+                        serviceController.Refresh();
+
+                        if (serviceController.Status == ServiceControllerStatus.Stopped)
+                            serviceController.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Failed to restart the {0} Windows service: {1}\r\n", serviceName, ex.Message);
+                    }
+                }
+            }
+            else
+            {
+                if (arguments.Exists("server") || arguments.Exists("secret"))
+                {
+                    // Override default settings with user provided input. 
+                    m_clientHelper.PersistSettings = false;
+                    m_remotingClient.PersistSettings = false;
+
+                    if (arguments.Exists("secret"))
+                        m_remotingClient.SharedSecret = arguments["secret"];
+
+                    if (arguments.Exists("server"))
+                        m_remotingClient.ConnectionString = string.Format("Server={0}", arguments["server"]);
+                }
+
+                // Connect to service and send commands. 
+                m_clientHelper.Connect();
+
+                while (m_clientHelper.Enabled && string.Compare(userInput, "Exit", true) != 0)
+                {
+                    // Wait for a command from the user. 
+                    userInput = Console.ReadLine();
+                    // Write a blank line to the console.
+                    Console.WriteLine();
+
+                    if (!string.IsNullOrEmpty(userInput))
+                    {
+                        // The user typed in a command and didn't just hit <ENTER>. 
+                        switch (userInput.ToUpper())
+                        {
+                            case "CLS":
+                                // User wants to clear the console window. 
+                                Console.Clear();
+                                break;
+                            case "EXIT":
+                                // User wants to exit the telnet session with the service. 
+                                if (m_telnetActive)
+                                {
+                                    userInput = string.Empty;
+                                    m_clientHelper.SendRequest("Telnet -disconnect");
+                                }
+                                break;
+                            default:
+                                // User wants to send a request to the service. 
+                                m_clientHelper.SendRequest(userInput);
+                                if (string.Compare(userInput, "Help", true) == 0)
+                                    DisplayHelp();
+
+                                break;
+                        }
                     }
                 }
             }

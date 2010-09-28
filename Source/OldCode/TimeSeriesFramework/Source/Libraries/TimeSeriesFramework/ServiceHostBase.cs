@@ -43,6 +43,7 @@ using TVA.IO;
 using TVA.Reflection;
 using TVA.Services;
 using TVA.Units;
+using TVA.Communication;
 
 namespace TimeSeriesFramework
 {
@@ -103,6 +104,7 @@ namespace TimeSeriesFramework
         private string m_dataProviderString;
         private string m_cachedConfigurationFile;
         private bool m_uniqueAdapterIDs;
+        private bool m_allowRemoteRestart;
         private Dictionary<object, string> m_derivedNameCache;
 
         // Threshold settings
@@ -148,6 +150,39 @@ namespace TimeSeriesFramework
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets the related remote console application name.
+        /// </summary>
+        protected virtual string ConsoleApplicationName
+        {
+            get
+            {
+                return ServiceName + "Console.exe";
+            }
+        }
+
+        /// <summary>
+        /// Gets access to the <see cref="TVA.Services.ServiceHelper"/>.
+        /// </summary>
+        protected ServiceHelper ServiceHelper
+        {
+            get
+            {
+                return m_serviceHelper;
+            }
+        }
+
+        /// <summary>
+        /// Gets reference to the <see cref="TcpServer"/> based remoting server.
+        /// </summary>
+        protected TcpServer RemotingServer
+        {
+            get
+            {
+                return m_remotingServer;
+            }
+        }
 
         /// <summary>
         /// Gets reference to the <see cref="AllAdaptersCollection"/>.
@@ -266,7 +301,8 @@ namespace TimeSeriesFramework
             systemSettings.Add("ConfigurationCachePath", cachePath, "Defines the path used to cache serialized configurations");
             systemSettings.Add("CachedConfigurationFile", "SystemConfiguration.xml", "File name for last known good system configuration (only cached for a Database or WebService connection)");
             systemSettings.Add("UniqueAdaptersIDs", "True", "Set to true if all runtime adapter ID's will be unique to allow for easier adapter specification");
-            systemSettings.Add("ProcessPriority", "RealTime", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
+            systemSettings.Add("ProcessPriority", "High", "Sets desired process priority: Normal, AboveNormal, High, RealTime");
+            systemSettings.Add("AllowRemoteRestart", "True", "Controls ability to remotely restart the host service.");
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
@@ -311,6 +347,7 @@ namespace TimeSeriesFramework
             m_dataProviderString = systemSettings["DataProviderString"].Value;
             m_cachedConfigurationFile = FilePath.AddPathSuffix(cachePath) + systemSettings["CachedConfigurationFile"].Value;
             m_uniqueAdapterIDs = systemSettings["UniqueAdaptersIDs"].ValueAsBoolean(true);
+            m_allowRemoteRestart = systemSettings["AllowRemoteRestart"].ValueAsBoolean(true);
             m_derivedNameCache = new Dictionary<object, string>();
 
             // Define guid with query string delimeters according to database needs
@@ -450,6 +487,7 @@ namespace TimeSeriesFramework
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("ReloadConfig", "Manually reloads the system configuration", ReloadConfigRequstHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("UpdateConfigFile", "Updates an option in the configuration file", UpdateConfigFileRequestHandler));
             m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Authenticate", "Authenticates network shares for health and status exports", AuthenticateRequestHandler));
+            m_serviceHelper.ClientRequestHandlers.Add(new ClientRequestHandler("Restart", "Attempts to restart the host service.", RestartServiceHandler));
 
             // Start system initialization on an independent thread so that service responds in a timely fashion...
             ThreadPool.QueueUserWorkItem(InitializeSystem);
@@ -1823,6 +1861,66 @@ namespace TimeSeriesFramework
                 {
                     SendResponse(requestInfo, false, "Failed to reauthenticate network shares: {0}", ex.Message);
                     m_serviceHelper.ErrorLogger.Log(ex);
+                }
+            }
+        }
+
+        // Attempts to restart service
+        protected virtual void RestartServiceHandler(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Attempts to restart the hose service.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Restart [Options]");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+
+                DisplayResponseMessage(requestInfo, helpMessage.ToString());
+            }
+            else
+            {
+                if (m_allowRemoteRestart)
+                {
+                    DisplayStatusMessage("Attempting to restart host service...", UpdateType.Information);
+
+                    try
+                    {
+                        ProcessStartInfo psi = null;
+                        psi = new ProcessStartInfo(ConsoleApplicationName);
+                        psi.CreateNoWindow = true;
+                        psi.WindowStyle = ProcessWindowStyle.Hidden;
+                        psi.UseShellExecute = false;
+                        psi.Arguments = ServiceName + " -restart";
+
+                        using (Process shell = new Process())
+                        {
+                            shell.StartInfo = psi;
+                            shell.Start();
+                            if (!shell.WaitForExit(30000))
+                                shell.Kill();
+                        }
+
+                        SendResponse(requestInfo, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        SendResponse(requestInfo, false, "Failed to restart host service: {0}", ex.Message);
+                        m_serviceHelper.ErrorLogger.Log(ex);
+                    }
+                }
+                else
+                {
+                    DisplayStatusMessage("Remote restart request denied, this is currently disallowed in the system configuration.", UpdateType.Warning);
                 }
             }
         }
