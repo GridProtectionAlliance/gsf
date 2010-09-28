@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -31,6 +32,8 @@
 //       Added new header and license agreement.
 //  12/02/2009 - Stephen C. Wills
 //       Added disposal of database command objects.
+//  09/28/2010 - J. Ritchie Carroll
+//       Added Stephen's CreateParameterizedCommand as an extension function.
 //
 //*******************************************************************************************************
 
@@ -248,6 +251,25 @@
  representative as follows: J. Ritchie Carroll <mailto:jrcarrol@tva.gov>.
 
 */
+#endregion
+
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
 #endregion
 
 using System;
@@ -1450,6 +1472,42 @@ namespace TVA.Data
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates and returns a parameterized <see cref="IDbCommand"/>. Parameter names are embedded in the SQL statement
+        /// passed as a parameter to this method.
+        /// </summary>
+        /// <param name="connection">The database connection.</param>
+        /// <param name="sql">The SQL statement.</param>
+        /// <param name="args">The parameters for the command in the order that they appear in the SQL statement.</param>
+        /// <remarks>
+        /// This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
+        /// character and should be surrounded by either spaces, parentheses, or commas.
+        /// </remarks>
+        /// <returns>The parameterized command.</returns>
+        public static IDbCommand CreateParameterizedCommand(this IDbConnection connection, string sql, params object[] args)
+        {
+            string[] tokens = sql.Split(' ', '(', ')', ',');
+            IDbCommand command = connection.CreateCommand();
+            int i = 0;
+
+            foreach (string token in tokens)
+            {
+                if (token.StartsWith("@") && !command.Parameters.Contains(token))
+                {
+                    IDbDataParameter parameter = command.CreateParameter();
+
+                    parameter.ParameterName = token;
+                    parameter.Value = args[i++];
+                    parameter.Direction = ParameterDirection.Input;
+
+                    command.Parameters.Add(parameter);
+                }
+            }
+
+            command.CommandText = sql;
+            return command;
         }
 
         #endregion
