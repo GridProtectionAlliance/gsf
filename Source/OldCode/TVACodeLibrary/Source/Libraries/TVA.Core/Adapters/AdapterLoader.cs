@@ -21,8 +21,10 @@
 //       Implemented IProvideStatus interface.
 //       Enhanced the implementation of Enabled property.
 //  09/23/2010 - Pinal C. Patel
-//       Added IsolateAdapters property to allow for loading qualified adapters in seperate application
-//       domain for isolated execution.
+//       Added adapter isolation capability to allow for loading qualified adapters in seperate 
+//       application domain for isolated execution.
+//  10/01/2010 - Pinal C. Patel
+//       Added adapter monitoring capability to monitor the resource utilization of adapters.
 //
 //*******************************************************************************************************
 
@@ -246,11 +248,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using TVA.Collections;
 using TVA.IO;
+using TVA.Units;
 
 namespace TVA.Adapters
 {
@@ -258,9 +263,216 @@ namespace TVA.Adapters
     /// Represents a generic loader of adapters.
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of adapters to be loaded.</typeparam>
+    /// <seealso cref="Adapter"/>
+    /// <seealso cref="IAdapter"/>
+    /// <example>
+    /// This example show how to use the <see cref="AdapterLoader{T}"/> to isolate adapters in seperate <see cref="AppDomain"/>s and monitor their resource usage:
+    /// <code>
+    /// using System;
+    /// using System.Collections.Generic;
+    /// using System.Text;
+    /// using System.Threading;
+    /// using TVA;
+    /// using TVA.Adapters;
+    /// using TVA.Security.Cryptography;
+    /// using TVA.Units;
+    /// 
+    /// class Program
+    /// {
+    ///     static AdapterLoader&lt;PublishAdapterBase&gt; s_adapterLoader;
+    /// 
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Enable app domain resource monitoring.
+    ///         AppDomain.MonitoringIsEnabled = true;
+    /// 
+    ///         // Load adapters that mimic data publishing.
+    ///         s_adapterLoader = new AdapterLoader&lt;PublishAdapterBase&gt;();
+    ///         s_adapterLoader.IsolateAdapters = true;
+    ///         s_adapterLoader.MonitorAdapters = true;
+    ///         s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
+    ///         s_adapterLoader.AllowableProcessProcessorUsage = 50;
+    ///         s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
+    ///         s_adapterLoader.AllowableAdapterProcessorUsage = 25;
+    ///         s_adapterLoader.AdapterLoaded += OnAdapterLoaded;
+    ///         s_adapterLoader.AdapterUnloaded += OnAdapterUnloaded;
+    ///         s_adapterLoader.AdapterResourceUsageExceeded += OnAdapterResourceUsageExceeded;
+    ///         s_adapterLoader.Initialize();
+    /// 
+    ///         // Take user input to alter adapter working state.
+    ///         string userInput;
+    ///         Console.WriteLine("Possible commands:");
+    ///         Console.WriteLine("  Connect - Connects all disconnected adapters");
+    ///         Console.WriteLine("  Disconnect - Disconnects all connected adapters");
+    ///         Console.WriteLine("  Exit - Exits this application\r\n");
+    ///         while (string.Compare(userInput = Console.ReadLine(), "Exit", true) != 0)
+    ///         {
+    ///             switch (userInput.ToLower())
+    ///             {
+    ///                 case "connect":
+    ///                     // Connect all adapters.
+    ///                     Console.Write("Connecting adapters...");
+    ///                     foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
+    ///                     {
+    ///                         adapter.Enabled = true;
+    ///                     }
+    ///                     Console.WriteLine("done.\r\n");
+    ///                     break;
+    ///                 case "disconnect":
+    ///                     // Disconnect all adapters.
+    ///                     Console.Write("Disconnecting adapters...");
+    ///                     foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
+    ///                     {
+    ///                         adapter.Enabled = false;
+    ///                     }
+    ///                     Console.WriteLine("done.\r\n");
+    ///                     break;
+    ///             }
+    ///         }
+    /// 
+    ///         // Shutdown.
+    ///         s_adapterLoader.Dispose();
+    ///     }
+    /// 
+    ///     static void OnAdapterLoaded(object sender, EventArgs&lt;PublishAdapterBase&gt; e)
+    ///     {
+    ///         Console.WriteLine("{0} has been loaded\r\n", e.Argument.GetType().Name);
+    ///     }
+    /// 
+    ///     static void OnAdapterUnloaded(object sender, EventArgs&lt;PublishAdapterBase&gt; e)
+    ///     {
+    ///         Console.WriteLine("{0} has been unloaded\r\n", e.Argument.GetType().Name);
+    ///     }
+    /// 
+    ///     static void OnAdapterResourceUsageExceeded(object sender, TVA.EventArgs&lt;PublishAdapterBase&gt; e)
+    ///     {
+    ///         Console.WriteLine("{0} status:", e.Argument.Name);
+    ///         Console.WriteLine(e.Argument.Status);
+    /// 
+    ///         // Remove the adapter in order to reclaim the resources used by it.
+    ///         lock (s_adapterLoader.Adapters)
+    ///         {
+    ///             s_adapterLoader.Adapters.Remove(e.Argument);
+    ///         }
+    ///     }
+    /// }
+    /// 
+    /// /// <summary>
+    /// /// Base adapter class.
+    /// /// </summary>
+    /// public abstract class PublishAdapterBase : Adapter
+    /// {
+    ///     public PublishAdapterBase()
+    ///     {
+    ///         Data = new List&lt;byte[]&gt;();
+    ///     }
+    /// 
+    ///     public List&lt;byte[]&gt; Data { get; set; }
+    /// 
+    ///     public override void Initialize()
+    ///     {
+    ///         base.Initialize();
+    ///         new Thread(Publish).Start();
+    ///         Enabled = true;
+    ///     }
+    /// 
+    ///     protected abstract void Publish();
+    /// }
+    /// 
+    /// /// &lt;summary&gt;
+    /// /// Adapter that does not manage memory well.
+    /// /// &lt;/summary&gt;
+    /// public class PublisAdapterA : PublishAdapterBase
+    /// {
+    ///     protected override void Publish()
+    ///     {
+    ///         while (true)
+    ///         {
+    ///             for (int i = 0; i &lt; 10000; i++)
+    ///             {
+    ///                 Data.Add(new byte[10]);
+    ///             }
+    ///             Thread.Sleep(100);
+    /// 
+    ///             if (Enabled)
+    ///                 Data.RemoveRange(0, Data.Count / 2);
+    ///         }
+    ///     }
+    /// }
+    /// 
+    /// /// &lt;summary&gt;
+    /// /// Adapter that uses the processor in excess.
+    /// /// &lt;/summary&gt;
+    /// public class PublishAdapterB : PublishAdapterBase
+    /// {
+    ///     protected override void Publish()
+    ///     {
+    ///         string text = string.Empty;
+    ///         System.Random random = new System.Random();
+    ///         while (true)
+    ///         {
+    ///             for (int i = 0; i &lt; 10; i++)
+    ///             {
+    ///                 for (int j = 0; j &lt; 4; j++)
+    ///                 {
+    ///                     text += (char)random.Next(256);
+    ///                 }
+    ///                 Data.Add(Encoding.ASCII.GetBytes(text.Encrypt("C1pH3r", CipherStrength.Aes256)).BlockCopy(0, 1));
+    ///             }
+    ///             Thread.Sleep(10);
+    /// 
+    ///             if (Enabled)
+    ///                 Data.RemoveRange(0, Data.Count / 2);
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// Specified the default value for the <see cref="AdapterDirectory"/> property.
+        /// </summary>
+        public const string DefaultAdapterDirectory = "";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="WatchForAdapters"/> property.
+        /// </summary>
+        public const bool DefaultWatchForAdapters = true;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="IsolateAdapters"/> property.
+        /// </summary>
+        public const bool DefaultIsolateAdapters = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MonitorAdapters"/> property.
+        /// </summary>
+        public const bool DefaultMonitorAdapters = false;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowableProcessMemoryUsage"/> property
+        /// </summary>
+        public const double DefaultAllowableProcessMemoryUsage = 1000 * SI2.Mega;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowableProcessProcessorUsage"/> property.
+        /// </summary>
+        public const double DefaultAllowableProcessProcessorUsage = 75;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowableAdapterMemoryUsage"/> property.
+        /// </summary>
+        public const double DefaultAllowableAdapterMemoryUsage = 100 * SI2.Mega;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AllowableAdapterProcessorUsage"/> property.
+        /// </summary>
+        public const double DefaultAllowableAdapterProcessorUsage = 50;
 
         // Events
 
@@ -289,6 +501,12 @@ namespace TVA.Adapters
         public event EventHandler<EventArgs<T>> AdapterUnloaded;
 
         /// <summary>
+        /// Occurs when an adapter has exceeded either the <see cref="AllowableAdapterMemoryUsage"/> or <see cref="AllowableAdapterProcessorUsage"/>.
+        /// </summary>
+        /// <see cref="EventArgs{T}.Argument"/> is the adapter that exceeded the allowable system resource utlization.
+        public event EventHandler<EventArgs<T>> AdapterResourceUsageExceeded;
+
+        /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered when loading an adapter.
         /// </summary>
         /// <remarks>
@@ -310,10 +528,16 @@ namespace TVA.Adapters
         private string m_adapterDirectory;
         private bool m_watchForAdapters;
         private bool m_isolateAdapters;
+        private bool m_monitorAdapters;
+        private double m_allowableProcessMemoryUsage;
+        private double m_allowableProcessProcessorUsage;
+        private double m_allowableAdapterMemoryUsage;
+        private double m_allowableAdapterProcessorUsage;
         private ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
         private ProcessQueue<object> m_operationQueue;
         private Dictionary<Type, bool> m_enabledStates;
+        private Thread m_adapterMonitoringThread;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -327,8 +551,14 @@ namespace TVA.Adapters
         /// </summary>
         public AdapterLoader()
         {
-            m_adapterDirectory = string.Empty;
-            m_watchForAdapters = true;
+            m_adapterDirectory = DefaultAdapterDirectory;
+            m_watchForAdapters = DefaultWatchForAdapters;
+            m_isolateAdapters = DefaultIsolateAdapters;
+            m_monitorAdapters = DefaultMonitorAdapters;
+            m_allowableProcessMemoryUsage = DefaultAllowableProcessMemoryUsage;
+            m_allowableProcessProcessorUsage = DefaultAllowableProcessProcessorUsage;
+            m_allowableAdapterMemoryUsage = DefaultAllowableAdapterMemoryUsage;
+            m_allowableAdapterProcessorUsage = DefaultAllowableAdapterProcessorUsage;
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
             m_adapterWatcher = new FileSystemWatcher();
@@ -384,12 +614,12 @@ namespace TVA.Adapters
             {
                 m_watchForAdapters = value;
             }
-        }        
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="Adapters"/> are loaded in seperate <see cref="AppDomain"/> for isolated execution.
         /// </summary>
-        public bool IsolateAdapters 
+        public bool IsolateAdapters
         {
             get
             {
@@ -398,6 +628,106 @@ namespace TVA.Adapters
             set
             {
                 m_isolateAdapters = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether resource utilization of <see cref="Adapters"/> executing in <see cref="IsolateAdapters">isolation</see> is to be monitored.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="AllowableProcessMemoryUsage"/>, <see cref="AllowableProcessProcessorUsage"/>, <see cref="AllowableAdapterMemoryUsage"/> and 
+        /// <see cref="AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException"><see cref="Adapters"/> do not implement the <see cref="IAdapter"/> interface.</exception>
+        public bool MonitorAdapters
+        {
+            get
+            {
+                return m_monitorAdapters;
+            }
+            set
+            {
+                if (!(typeof(T) == typeof(IAdapter) ||
+                      typeof(T).GetInterface(typeof(IAdapter).FullName) != null))
+                    throw new InvalidOperationException(string.Format("{0} does not implement {1} interface", typeof(T).Name, typeof(IAdapter).Name));
+
+                m_monitorAdapters = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        public double AllowableProcessMemoryUsage
+        {
+            get
+            {
+                return m_allowableProcessMemoryUsage;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value");
+
+                m_allowableProcessMemoryUsage = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the memory in bytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        public double AllowableProcessProcessorUsage
+        {
+            get
+            {
+                return m_allowableProcessProcessorUsage;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value");
+
+                m_allowableProcessProcessorUsage = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the processor time in % the <see cref="Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        public double AllowableAdapterMemoryUsage
+        {
+            get
+            {
+                return m_allowableAdapterMemoryUsage;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value");
+
+                m_allowableAdapterMemoryUsage = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the memory in bytes the <see cref="Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        public double AllowableAdapterProcessorUsage
+        {
+            get
+            {
+                return m_allowableAdapterProcessorUsage;
+            }
+            set
+            {
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException("value");
+
+                m_allowableAdapterProcessorUsage = value;
             }
         }
 
@@ -433,7 +763,7 @@ namespace TVA.Adapters
                             foreach (T adapter in m_adapters)
                             {
                                 implementingAdapter = adapter as ISupportLifecycle;
-                                if (implementingAdapter != null && 
+                                if (implementingAdapter != null &&
                                     m_enabledStates.TryGetValue(implementingAdapter.GetType(), out savedState))
                                     implementingAdapter.Enabled = savedState;
                             }
@@ -497,6 +827,12 @@ namespace TVA.Adapters
                 status.AppendLine();
                 status.Append("        Adapters directory: ");
                 status.Append(FilePath.TrimFileName(AdapterDirectory, 30));
+                status.AppendLine();
+                status.Append("         Adapter isolation: ");
+                status.Append(m_isolateAdapters ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.Append("        Adapter monitoring: ");
+                status.Append(m_monitorAdapters ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("           Dynamic loading: ");
                 status.Append(m_adapterWatcher.EnableRaisingEvents ? "Enabled" : "Disabled");
@@ -599,6 +935,17 @@ namespace TVA.Adapters
                 // Save current state.
                 SaveCurrentState();
 
+                // Start adapter monitoring.
+                if (m_monitorAdapters && m_isolateAdapters)
+                {
+                    // Following must be true in order for us to monitor adapter resources:
+                    // - Adapter monitoring is enabled.
+                    // - Adapter isolation is enabled.
+                    // - Adapters must have implemented the IAdapter interface.
+                    m_adapterMonitoringThread = new Thread(MonitorAdapterResources);
+                    m_adapterMonitoringThread.Start();
+                }
+
                 m_enabled = true;       // Mark as enabled.
                 m_initialized = true;   // Initialize only once.
             }
@@ -651,6 +998,80 @@ namespace TVA.Adapters
         }
 
         /// <summary>
+        /// Monitors the resource utilization of <see cref="Adapters"/>.
+        /// </summary>
+        protected virtual void MonitorAdapterResources()
+        {
+            // Enable individual application domain resource tracking if it is enabled.
+            if (!AppDomain.MonitoringIsEnabled)
+                AppDomain.MonitoringIsEnabled = true;
+
+            Process currentProcess;
+            double processMemoryUsage;
+            double processProcessorUsage;
+            List<IAdapter> offendingAdapters = new List<IAdapter>();
+            while (!m_disposed)
+            {
+                Thread.Sleep(5000);
+
+                // Don't interfere if process memory and processor utlization is in check.
+                currentProcess = Process.GetCurrentProcess();
+                processMemoryUsage = GetMemoryUsage(currentProcess);
+                processProcessorUsage = GetProcessorUsage(currentProcess);
+                if (processMemoryUsage <= m_allowableProcessMemoryUsage &&
+                    processProcessorUsage <= m_allowableProcessProcessorUsage)
+                    continue;
+
+                if (Monitor.TryEnter(m_adapters))
+                {
+                    try
+                    {
+                        // Force a full blocking GC so the memory usage of adapters is updated.
+                        GC.Collect();
+
+                        foreach (IAdapter adapter in m_adapters)
+                        {
+                            if (adapter.MemoryUsage > m_allowableAdapterMemoryUsage ||
+                                adapter.ProcessorUsage > m_allowableAdapterProcessorUsage)
+                                offendingAdapters.Add(adapter);
+                        }
+                    }
+                    finally
+                    {
+                        Monitor.Exit(m_adapters);
+                    }
+
+                    // Notify about the offending adapters.
+                    foreach (T adapter in offendingAdapters)
+                    {
+                        OnAdapterResourceUsageExceeded(adapter);
+                    }
+                    offendingAdapters.Clear();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the memory usage in bytes of the specified <paramref name="process"/>.
+        /// </summary>
+        /// <param name="process">The <see cref="Process"/> whose memory usage is to be determined.</param>
+        /// <returns>Memory usage in bytes of the specified <paramref name="process"/>.</returns>
+        protected virtual double GetMemoryUsage(Process process)
+        {
+            return process.WorkingSet64;
+        }
+
+        /// <summary>
+        /// Gets the % processor usage of the specified <paramref name="process"/>.
+        /// </summary>
+        /// <param name="process">The <see cref="Process"/> whose processot usage is to be determined.</param>
+        /// <returns>Processor usage in % of the specified <paramref name="process"/>.</returns>
+        protected virtual double GetProcessorUsage(Process process)
+        {
+            return process.TotalProcessorTime.TotalSeconds / Ticks.ToSeconds(DateTime.Now - process.StartTime) / Environment.ProcessorCount * 100;
+        }
+
+        /// <summary>
         /// Executes an operation on the <paramref name="adapter"/> with the given <paramref name="data"/>.
         /// </summary>
         /// <param name="adapter">Adapter on which an operation is to be executed.</param>
@@ -691,16 +1112,9 @@ namespace TVA.Adapters
                         {
                             lock (m_adapters)
                             {
-                                T adapter;
-                                IDisposable implementingAdapter;
-                                while (m_adapters.GetEnumerator().MoveNext())
+                                for (int i = 0; i < m_adapters.Count; i += 0)
                                 {
-                                    adapter = m_adapters[0];
-                                    implementingAdapter = adapter as IDisposable;
-                                    if (implementingAdapter != null)
-                                        implementingAdapter.Dispose();
-
-                                    m_adapters.Remove(adapter);
+                                    m_adapters.RemoveAt(0);
                                 }
                             }
                             m_adapters.CollectionChanged -= Adapters_CollectionChanged;
@@ -741,8 +1155,36 @@ namespace TVA.Adapters
         /// <param name="adapter">Adapter instance to send to <see cref="AdapterUnloaded"/> event.</param>
         protected virtual void OnAdapterUnloaded(T adapter)
         {
+            try
+            {
+                // Dispose the adapter.
+                IDisposable disposableAdapter = adapter as IDisposable;
+                if (disposableAdapter != null)
+                    disposableAdapter.Dispose();
+            }
+            catch { }
+
+            try
+            {
+                // Unload adapter domain.
+                IAdapter isolatedAdapter = adapter as IAdapter;
+                if (isolatedAdapter != null && !isolatedAdapter.Domain.IsDefaultAppDomain())
+                    AppDomain.Unload(isolatedAdapter.Domain);
+            }
+            catch { }
+
             if (AdapterUnloaded != null)
                 AdapterUnloaded(this, new EventArgs<T>(adapter));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="AdapterResourceUsageExceeded"/> event.
+        /// </summary>
+        /// <param name="adapter">Adapter instance to send to <see cref="AdapterResourceUsageExceeded"/> event.</param>
+        protected virtual void OnAdapterResourceUsageExceeded(T adapter)
+        {
+            if (AdapterResourceUsageExceeded != null)
+                AdapterResourceUsageExceeded(this, new EventArgs<T>(adapter));
         }
 
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IAdapter.cs - Gbtc
+//  NamespaceDoc.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/23/2010 - Pinal C. Patel
+//  10/01/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -229,33 +229,15 @@
 */
 #endregion
 
-using System;
-using TVA.Configuration;
+using System.Runtime.CompilerServices;
 
 namespace TVA.Adapters
 {
     /// <summary>
-    /// Defines an adapter that could execute in isolation in a seperate <see cref="AppDomain"/>.
+    /// Contains classes that facilitate the development of adapter-driven architecture.
     /// </summary>
-    public interface IAdapter : ISupportLifecycle, IProvideStatus, IPersistSettings
+    [CompilerGenerated()]
+    class NamespaceDoc
     {
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets the <see cref="AppDomain"/> in which the adapter is executing.
-        /// </summary>
-        AppDomain Domain { get; }
-
-        /// <summary>
-        /// Gets the memory utilzation of the adapter in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
-        /// </summary>
-        double MemoryUsage { get; }
-
-        /// <summary>
-        /// Gets the % processor utilization of the adapter if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
-        /// </summary>
-        double ProcessorUsage { get; }
-
-        #endregion
     }
 }

@@ -90,6 +90,7 @@
     <Compile Include="Adapters\AdapterLoader.cs" />
     <Compile Include="Adapters\Adapter.cs" />
     <Compile Include="Adapters\IAdapter.cs" />
+    <Compile Include="Adapters\NamespaceDoc.cs" />
     <Compile Include="BigBinaryValue.cs" />
     <Compile Include="BinaryCodedDecimal.cs" />
     <Compile Include="BinaryValue.cs" />
