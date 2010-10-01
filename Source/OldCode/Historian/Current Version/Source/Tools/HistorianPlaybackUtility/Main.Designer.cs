@@ -90,9 +90,11 @@
             this.StartProcessing = new System.Windows.Forms.Button();
             this.StopProcessing = new System.Windows.Forms.Button();
             this.SaveFile = new System.Windows.Forms.SaveFileDialog();
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerFull)).BeginInit();
             this.SplitContainerFull.Panel1.SuspendLayout();
             this.SplitContainerFull.Panel2.SuspendLayout();
             this.SplitContainerFull.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerTop)).BeginInit();
             this.SplitContainerTop.Panel1.SuspendLayout();
             this.SplitContainerTop.Panel2.SuspendLayout();
             this.SplitContainerTop.SuspendLayout();
@@ -224,9 +226,9 @@
             this.SearchPhraseInput.Name = "SearchPhraseInput";
             this.SearchPhraseInput.Size = new System.Drawing.Size(316, 21);
             this.SearchPhraseInput.TabIndex = 2;
+            this.SearchPhraseInput.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchPhraseInput_MouseClick);
             this.SearchPhraseInput.TextChanged += new System.EventHandler(this.SearchPhraseInput_TextChanged);
             this.SearchPhraseInput.Leave += new System.EventHandler(this.SearchPhraseInput_Leave);
-            this.SearchPhraseInput.MouseClick += new System.Windows.Forms.MouseEventHandler(this.SearchPhraseInput_MouseClick);
             // 
             // EndTimeInput
             // 
@@ -489,7 +491,7 @@
             this.SerialRtsEnable.AutoSize = true;
             this.SerialRtsEnable.Location = new System.Drawing.Point(264, 60);
             this.SerialRtsEnable.Name = "SerialRtsEnable";
-            this.SerialRtsEnable.Size = new System.Drawing.Size(45, 17);
+            this.SerialRtsEnable.Size = new System.Drawing.Size(48, 17);
             this.SerialRtsEnable.TabIndex = 30;
             this.SerialRtsEnable.Text = "RTS";
             this.SerialRtsEnable.UseVisualStyleBackColor = true;
@@ -499,7 +501,7 @@
             this.SerialDtrEnable.AutoSize = true;
             this.SerialDtrEnable.Location = new System.Drawing.Point(222, 60);
             this.SerialDtrEnable.Name = "SerialDtrEnable";
-            this.SerialDtrEnable.Size = new System.Drawing.Size(46, 17);
+            this.SerialDtrEnable.Size = new System.Drawing.Size(49, 17);
             this.SerialDtrEnable.TabIndex = 29;
             this.SerialDtrEnable.Text = "DTR";
             this.SerialDtrEnable.UseVisualStyleBackColor = true;
@@ -657,7 +659,7 @@
             this.RepeatDataProcessing.AutoSize = true;
             this.RepeatDataProcessing.Location = new System.Drawing.Point(8, 281);
             this.RepeatDataProcessing.Name = "RepeatDataProcessing";
-            this.RepeatDataProcessing.Size = new System.Drawing.Size(218, 17);
+            this.RepeatDataProcessing.Size = new System.Drawing.Size(214, 17);
             this.RepeatDataProcessing.TabIndex = 21;
             this.RepeatDataProcessing.Text = "Repeat processing of data until stopped";
             this.RepeatDataProcessing.UseVisualStyleBackColor = true;
@@ -667,7 +669,7 @@
             this.ProcessDataInParallel.AutoSize = true;
             this.ProcessDataInParallel.Location = new System.Drawing.Point(8, 262);
             this.ProcessDataInParallel.Name = "ProcessDataInParallel";
-            this.ProcessDataInParallel.Size = new System.Drawing.Size(211, 17);
+            this.ProcessDataInParallel.Size = new System.Drawing.Size(209, 17);
             this.ProcessDataInParallel.TabIndex = 20;
             this.ProcessDataInParallel.Text = "Process selected data points in parallel";
             this.ProcessDataInParallel.UseVisualStyleBackColor = true;
@@ -743,12 +745,12 @@
             this.MessagesOutput.Dock = System.Windows.Forms.DockStyle.Fill;
             this.MessagesOutput.Font = new System.Drawing.Font("Lucida Console", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MessagesOutput.ForeColor = System.Drawing.SystemColors.Window;
-            this.MessagesOutput.Location = new System.Drawing.Point(3, 17);
+            this.MessagesOutput.Location = new System.Drawing.Point(3, 16);
             this.MessagesOutput.Multiline = true;
             this.MessagesOutput.Name = "MessagesOutput";
             this.MessagesOutput.ReadOnly = true;
             this.MessagesOutput.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.MessagesOutput.Size = new System.Drawing.Size(663, 178);
+            this.MessagesOutput.Size = new System.Drawing.Size(663, 179);
             this.MessagesOutput.TabIndex = 0;
             // 
             // StartProcessing
@@ -789,13 +791,15 @@
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Historian Playback Utility v{0}";
-            this.Load += new System.EventHandler(this.Main_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
+            this.Load += new System.EventHandler(this.Main_Load);
             this.SplitContainerFull.Panel1.ResumeLayout(false);
             this.SplitContainerFull.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerFull)).EndInit();
             this.SplitContainerFull.ResumeLayout(false);
             this.SplitContainerTop.Panel1.ResumeLayout(false);
             this.SplitContainerTop.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.SplitContainerTop)).EndInit();
             this.SplitContainerTop.ResumeLayout(false);
             this.InputSelectionContainer.ResumeLayout(false);
             this.InputSelectionContainer.PerformLayout();
