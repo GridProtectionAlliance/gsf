@@ -777,192 +777,6 @@
             </summary>
             <returns>True, if no composite values have been assigned a value; otherwise, false.</returns>
         </member>
-        <member name="T:TVA.AdapterLoader`1">
-            <summary>
-            Represents a generic loader of adapters.
-            </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of adapters to be loaded.</typeparam>
-        </member>
-        <member name="T:TVA.IProvideStatus">
-            <summary>
-            Defines an interface for any object to allow it to provide a name and status
-            that can be displayed for informational purposes.
-            </summary>
-        </member>
-        <member name="P:TVA.IProvideStatus.Name">
-            <summary>
-            Gets the name of the object providing status information.
-            </summary>
-        </member>
-        <member name="P:TVA.IProvideStatus.Status">
-            <summary>
-            Gets the current status details about object providing status information.
-            </summary>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.AdapterLoader`1"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.AdapterLoader`1"/> is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.AdapterLoader`1"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.Initialize">
-            <summary>
-            Initializes the <see cref="T:TVA.AdapterLoader`1"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.Initialize(System.Collections.Generic.IEnumerable{System.Type})">
-            <summary>
-            Initializes the <see cref="T:TVA.AdapterLoader`1"/>.
-            </summary>
-            <param name="adapterTypes">Collection of adapter <see cref="T:System.Type"/>s from which <see cref="P:TVA.AdapterLoader`1.Adapters"/> are to be created.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.ProcessAdapter(System.Type)">
-            <summary>
-            Processes the <paramref name="adapterType"/> by creating its instance and initializing it.
-            </summary>
-            <param name="adapterType"><see cref="T:System.Type"/> of the adapter to be instantiated and initialized.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.ExecuteAdapterOperation(`0,System.Object)">
-            <summary>
-            Executes an operation on the <paramref name="adapter"/> with the given <paramref name="data"/>.
-            </summary>
-            <param name="adapter">Adapter on which an operation is to be executed.</param>
-            <param name="data">Data to be used when executing an operation.</param>
-            <exception cref="T:System.NotSupportedException">Always</exception>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.AdapterLoader`1"/> and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.OnAdapterCreated(`0)">
-            <summary>
-            Raises the <see cref="E:TVA.AdapterLoader`1.AdapterCreated"/> event.
-            </summary>
-            <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.AdapterCreated"/> event.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.OnAdapterLoaded(`0)">
-            <summary>
-            Raises the <see cref="E:TVA.AdapterLoader`1.AdapterLoaded"/> event.
-            </summary>
-            <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.AdapterLoaded"/> event.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.OnAdapterUnloaded(`0)">
-            <summary>
-            Raises the <see cref="E:TVA.AdapterLoader`1.AdapterUnloaded"/> event.
-            </summary>
-            <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.AdapterUnloaded"/> event.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.OnAdapterLoadException(System.Type,System.Exception)">
-            <summary>
-            Raises the <see cref="E:TVA.AdapterLoader`1.AdapterLoadException"/> event.
-            </summary>
-            <param name="adapter"><see cref="T:System.Type"/> to send to <see cref="E:TVA.AdapterLoader`1.AdapterLoadException"/> event.</param>
-            <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.AdapterLoader`1.AdapterLoadException"/> event.</param>
-        </member>
-        <member name="M:TVA.AdapterLoader`1.OnOperationExecutionException(`0,System.Exception)">
-            <summary>
-            Raises the <see cref="E:TVA.AdapterLoader`1.OperationExecutionException"/> event.
-            </summary>
-            <param name="adapter">Adapter instance to send to <see cref="E:TVA.AdapterLoader`1.OperationExecutionException"/> event.</param>
-            <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.AdapterLoader`1.OperationExecutionException"/> event.</param>
-        </member>
-        <member name="E:TVA.AdapterLoader`1.AdapterCreated">
-            <summary>
-            Occurs when a new adapter is found and instantiated.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was created.
-            </remarks>
-        </member>
-        <member name="E:TVA.AdapterLoader`1.AdapterLoaded">
-            <summary>
-            Occurs when a new adapter is loaded to the <see cref="P:TVA.AdapterLoader`1.Adapters"/> list.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was loaded.
-            </remarks>
-        </member>
-        <member name="E:TVA.AdapterLoader`1.AdapterUnloaded">
-            <summary>
-            Occurs when an existing adapter is unloaded from the <see cref="P:TVA.AdapterLoader`1.Adapters"/> list.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was unloaded.
-            </remarks>
-        </member>
-        <member name="E:TVA.AdapterLoader`1.AdapterLoadException">
-            <summary>
-            Occurs when an <see cref="T:System.Exception"/> is encountered when loading an adapter.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:System.Type"/> of adapter that was being loaded.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is the <see cref="T:System.Exception"/> encountered when loading the adapter.
-            </remarks>
-        </member>
-        <member name="E:TVA.AdapterLoader`1.OperationExecutionException">
-            <summary>
-            Occurs when an <see cref="T:System.Exception"/> is encountered while executing a queued operation on one the <see cref="P:TVA.AdapterLoader`1.Adapters"/>.
-            </summary>
-            <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the adapter on which the operation was being executed.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is the <see cref="T:System.Exception"/> encountered when executing an operation on the adapter.
-            </remarks>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.AdapterDirectory">
-            <summary>
-            Gets or sets the directory where <see cref="P:TVA.AdapterLoader`1.Adapters"/> are located.
-            </summary>
-            <remarks>
-            When an empty string is assigned to <see cref="P:TVA.AdapterLoader`1.AdapterDirectory"/>, <see cref="P:TVA.AdapterLoader`1.Adapters"/> are loaded from the directory where application is executing.
-            </remarks>
-            <exception cref="T:System.ArgumentNullException">The value being assigned is a null string.</exception>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.WatchForAdapters">
-            <summary>
-            Gets or sets a boolean value that indicates whether new assemblies added at runtime will be processed for <see cref="P:TVA.AdapterLoader`1.Adapters"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.Enabled">
-            <summary>
-            Gets or sets a boolean value that indicates whether the <see cref="T:TVA.AdapterLoader`1"/> is currently enabled.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.Adapters">
-            <summary>
-            Gets a list of adapters loaded from the <see cref="P:TVA.AdapterLoader`1.AdapterDirectory"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.Name">
-            <summary>
-            Gets the unique identifier of the <see cref="T:TVA.AdapterLoader`1"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.Status">
-            <summary>
-            Gets the descriptive status of the <see cref="T:TVA.AdapterLoader`1"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.AdapterWatcher">
-            <summary>
-            Gets the <see cref="T:System.IO.FileSystemWatcher"/> object watching for new adapter assemblies added at runtime.
-            </summary>
-        </member>
-        <member name="P:TVA.AdapterLoader`1.OperationQueue">
-            <summary>
-            Gets the <see cref="T:TVA.Collections.ProcessQueue`1"/> object to be used for queuing operations to be executed on <see cref="P:TVA.AdapterLoader`1.Adapters"/>.
-            </summary>
-        </member>
         <member name="T:TVA.Units.Time">
             <summary>Represents a time measurement, in seconds, as a double-precision floating-point number.</summary>
             <remarks>
@@ -5434,6 +5248,11 @@
             will serialized into the section labeled by the <see cref="P:TVA.Configuration.CategorizedSettingsBase.CategoryName"/> value.
             </remarks>
         </member>
+        <member name="T:TVA.Adapters.NamespaceDoc">
+            <summary>
+            Contains classes that facilitate the development of adapter-driven architecture.
+            </summary>
+        </member>
         <member name="T:TVA.Windows.Forms.ScreenArea">
             <summary>Returns screen area statistics and capture functionality for all connected screens.</summary>
         </member>
@@ -7231,6 +7050,22 @@
             Gets FTP response code.
             </summary>
         </member>
+        <member name="T:TVA.IProvideStatus">
+            <summary>
+            Defines an interface for any object to allow it to provide a name and status
+            that can be displayed for informational purposes.
+            </summary>
+        </member>
+        <member name="P:TVA.IProvideStatus.Name">
+            <summary>
+            Gets the name of the object providing status information.
+            </summary>
+        </member>
+        <member name="P:TVA.IProvideStatus.Status">
+            <summary>
+            Gets the current status details about object providing status information.
+            </summary>
+        </member>
         <member name="T:TVA.IO.MultipleDestinationExporter">
              <summary>
              Handles the exporting of a file to multiple destinations that are defined in the config file.
@@ -7518,6 +7353,451 @@
         <member name="P:TVA.IO.MultipleDestinationExporter.Status">
             <summary>
             Gets the descriptive status of the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object.
+            </summary>
+        </member>
+        <member name="T:TVA.Adapters.AdapterLoader`1">
+            <summary>
+            Represents a generic loader of adapters.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of adapters to be loaded.</typeparam>
+            <seealso cref="T:TVA.Adapters.Adapter"/>
+            <seealso cref="T:TVA.Adapters.IAdapter"/>
+            <example>
+            This example show how to use the <see cref="T:TVA.Adapters.AdapterLoader`1"/> to isolate adapters in seperate <see cref="T:System.AppDomain"/>s and monitor their resource usage:
+            <code>
+            using System;
+            using System.Collections.Generic;
+            using System.Text;
+            using System.Threading;
+            using TVA;
+            using TVA.Adapters;
+            using TVA.Security.Cryptography;
+            using TVA.Units;
+            
+            class Program
+            {
+                static AdapterLoader&lt;PublishAdapterBase&gt; s_adapterLoader;
+            
+                static void Main(string[] args)
+                {
+                    // Enable app domain resource monitoring.
+                    AppDomain.MonitoringIsEnabled = true;
+            
+                    // Load adapters that mimic data publishing.
+                    s_adapterLoader = new AdapterLoader&lt;PublishAdapterBase&gt;();
+                    s_adapterLoader.IsolateAdapters = true;
+                    s_adapterLoader.MonitorAdapters = true;
+                    s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
+                    s_adapterLoader.AllowableProcessProcessorUsage = 50;
+                    s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
+                    s_adapterLoader.AllowableAdapterProcessorUsage = 25;
+                    s_adapterLoader.AdapterLoaded += OnAdapterLoaded;
+                    s_adapterLoader.AdapterUnloaded += OnAdapterUnloaded;
+                    s_adapterLoader.AdapterResourceUsageExceeded += OnAdapterResourceUsageExceeded;
+                    s_adapterLoader.Initialize();
+            
+                    // Take user input to alter adapter working state.
+                    string userInput;
+                    Console.WriteLine("Possible commands:");
+                    Console.WriteLine("  Connect - Connects all disconnected adapters");
+                    Console.WriteLine("  Disconnect - Disconnects all connected adapters");
+                    Console.WriteLine("  Exit - Exits this application\r\n");
+                    while (string.Compare(userInput = Console.ReadLine(), "Exit", true) != 0)
+                    {
+                        switch (userInput.ToLower())
+                        {
+                            case "connect":
+                                // Connect all adapters.
+                                Console.Write("Connecting adapters...");
+                                foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
+                                {
+                                    adapter.Enabled = true;
+                                }
+                                Console.WriteLine("done.\r\n");
+                                break;
+                            case "disconnect":
+                                // Disconnect all adapters.
+                                Console.Write("Disconnecting adapters...");
+                                foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
+                                {
+                                    adapter.Enabled = false;
+                                }
+                                Console.WriteLine("done.\r\n");
+                                break;
+                        }
+                    }
+            
+                    // Shutdown.
+                    s_adapterLoader.Dispose();
+                }
+            
+                static void OnAdapterLoaded(object sender, EventArgs&lt;PublishAdapterBase&gt; e)
+                {
+                    Console.WriteLine("{0} has been loaded\r\n", e.Argument.GetType().Name);
+                }
+            
+                static void OnAdapterUnloaded(object sender, EventArgs&lt;PublishAdapterBase&gt; e)
+                {
+                    Console.WriteLine("{0} has been unloaded\r\n", e.Argument.GetType().Name);
+                }
+            
+                static void OnAdapterResourceUsageExceeded(object sender, TVA.EventArgs&lt;PublishAdapterBase&gt; e)
+                {
+                    Console.WriteLine("{0} status:", e.Argument.Name);
+                    Console.WriteLine(e.Argument.Status);
+            
+                    // Remove the adapter in order to reclaim the resources used by it.
+                    lock (s_adapterLoader.Adapters)
+                    {
+                        s_adapterLoader.Adapters.Remove(e.Argument);
+                    }
+                }
+            }
+            
+            /// <summary>
+            /// Base adapter class.
+            /// </summary>
+            public abstract class PublishAdapterBase : Adapter
+            {
+                public PublishAdapterBase()
+                {
+                    Data = new List&lt;byte[]&gt;();
+                }
+            
+                public List&lt;byte[]&gt; Data { get; set; }
+            
+                public override void Initialize()
+                {
+                    base.Initialize();
+                    new Thread(Publish).Start();
+                    Enabled = true;
+                }
+            
+                protected abstract void Publish();
+            }
+            
+            /// &lt;summary&gt;
+            /// Adapter that does not manage memory well.
+            /// &lt;/summary&gt;
+            public class PublisAdapterA : PublishAdapterBase
+            {
+                protected override void Publish()
+                {
+                    while (true)
+                    {
+                        for (int i = 0; i &lt; 10000; i++)
+                        {
+                            Data.Add(new byte[10]);
+                        }
+                        Thread.Sleep(100);
+            
+                        if (Enabled)
+                            Data.RemoveRange(0, Data.Count / 2);
+                    }
+                }
+            }
+            
+            /// &lt;summary&gt;
+            /// Adapter that uses the processor in excess.
+            /// &lt;/summary&gt;
+            public class PublishAdapterB : PublishAdapterBase
+            {
+                protected override void Publish()
+                {
+                    string text = string.Empty;
+                    System.Random random = new System.Random();
+                    while (true)
+                    {
+                        for (int i = 0; i &lt; 10; i++)
+                        {
+                            for (int j = 0; j &lt; 4; j++)
+                            {
+                                text += (char)random.Next(256);
+                            }
+                            Data.Add(Encoding.ASCII.GetBytes(text.Encrypt("C1pH3r", CipherStrength.Aes256)).BlockCopy(0, 1));
+                        }
+                        Thread.Sleep(10);
+            
+                        if (Enabled)
+                            Data.RemoveRange(0, Data.Count / 2);
+                    }
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAdapterDirectory">
+            <summary>
+            Specified the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultWatchForAdapters">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.WatchForAdapters"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultIsolateAdapters">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.IsolateAdapters"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultMonitorAdapters">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.MonitorAdapters"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAllowableProcessMemoryUsage">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage"/> property
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAllowableProcessProcessorUsage">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAllowableAdapterMemoryUsage">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAllowableAdapterProcessorUsage">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage"/> property.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Adapters.AdapterLoader`1"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Adapters.AdapterLoader`1"/> is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.Initialize">
+            <summary>
+            Initializes the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.Initialize(System.Collections.Generic.IEnumerable{System.Type})">
+            <summary>
+            Initializes the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+            <param name="adapterTypes">Collection of adapter <see cref="T:System.Type"/>s from which <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are to be created.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.ProcessAdapter(System.Type)">
+            <summary>
+            Processes the <paramref name="adapterType"/> by creating its instance and initializing it.
+            </summary>
+            <param name="adapterType"><see cref="T:System.Type"/> of the adapter to be instantiated and initialized.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.MonitorAdapterResources">
+            <summary>
+            Monitors the resource utilization of <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.GetMemoryUsage(System.Diagnostics.Process)">
+            <summary>
+            Gets the memory usage in bytes of the specified <paramref name="process"/>.
+            </summary>
+            <param name="process">The <see cref="T:System.Diagnostics.Process"/> whose memory usage is to be determined.</param>
+            <returns>Memory usage in bytes of the specified <paramref name="process"/>.</returns>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.GetProcessorUsage(System.Diagnostics.Process)">
+            <summary>
+            Gets the % processor usage of the specified <paramref name="process"/>.
+            </summary>
+            <param name="process">The <see cref="T:System.Diagnostics.Process"/> whose processot usage is to be determined.</param>
+            <returns>Processor usage in % of the specified <paramref name="process"/>.</returns>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.ExecuteAdapterOperation(`0,System.Object)">
+            <summary>
+            Executes an operation on the <paramref name="adapter"/> with the given <paramref name="data"/>.
+            </summary>
+            <param name="adapter">Adapter on which an operation is to be executed.</param>
+            <param name="data">Data to be used when executing an operation.</param>
+            <exception cref="T:System.NotSupportedException">Always</exception>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Adapters.AdapterLoader`1"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterCreated(`0)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterCreated"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterCreated"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterLoaded(`0)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoaded"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoaded"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterUnloaded(`0)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterUnloaded"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterUnloaded"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterResourceUsageExceeded(`0)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterResourceUsageExceeded"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterResourceUsageExceeded"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterLoadException(System.Type,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.
+            </summary>
+            <param name="adapter"><see cref="T:System.Type"/> to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.</param>
+            <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnOperationExecutionException(`0,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.OperationExecutionException"/> event.
+            </summary>
+            <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.OperationExecutionException"/> event.</param>
+            <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.Adapters.AdapterLoader`1.OperationExecutionException"/> event.</param>
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.AdapterCreated">
+            <summary>
+            Occurs when a new adapter is found and instantiated.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was created.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.AdapterLoaded">
+            <summary>
+            Occurs when a new adapter is loaded to the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> list.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was loaded.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.AdapterUnloaded">
+            <summary>
+            Occurs when an existing adapter is unloaded from the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> list.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that was unloaded.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.AdapterResourceUsageExceeded">
+            <summary>
+            Occurs when an adapter has exceeded either the <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage"/> or <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage"/>.
+            </summary>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the adapter that exceeded the allowable system resource utlization.
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException">
+            <summary>
+            Occurs when an <see cref="T:System.Exception"/> is encountered when loading an adapter.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:System.Type"/> of adapter that was being loaded.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the <see cref="T:System.Exception"/> encountered when loading the adapter.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.AdapterLoader`1.OperationExecutionException">
+            <summary>
+            Occurs when an <see cref="T:System.Exception"/> is encountered while executing a queued operation on one the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the adapter on which the operation was being executed.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the <see cref="T:System.Exception"/> encountered when executing an operation on the adapter.
+            </remarks>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory">
+            <summary>
+            Gets or sets the directory where <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are located.
+            </summary>
+            <remarks>
+            When an empty string is assigned to <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are loaded from the directory where application is executing.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null string.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.WatchForAdapters">
+            <summary>
+            Gets or sets a boolean value that indicates whether new assemblies added at runtime will be processed for <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.IsolateAdapters">
+            <summary>
+            Gets or sets a boolean value that indicates whether <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are loaded in seperate <see cref="T:System.AppDomain"/> for isolated execution.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.MonitorAdapters">
+            <summary>
+            Gets or sets a boolean value that indicates whether resource utilization of <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> executing in <see cref="P:TVA.Adapters.AdapterLoader`1.IsolateAdapters">isolation</see> is to be monitored.
+            </summary>
+            <remarks>
+            Use <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage"/> and 
+            <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException"><see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> do not implement the <see cref="T:TVA.Adapters.IAdapter"/> interface.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage">
+            <summary>
+            Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage">
+            <summary>
+            Gets or sets the memory in bytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage">
+            <summary>
+            Gets or sets the processor time in % the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage">
+            <summary>
+            Gets or sets the memory in bytes the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.Enabled">
+            <summary>
+            Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Adapters.AdapterLoader`1"/> is currently enabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.Adapters">
+            <summary>
+            Gets a list of adapters loaded from the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.Name">
+            <summary>
+            Gets the unique identifier of the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.Status">
+            <summary>
+            Gets the descriptive status of the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AdapterWatcher">
+            <summary>
+            Gets the <see cref="T:System.IO.FileSystemWatcher"/> object watching for new adapter assemblies added at runtime.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.OperationQueue">
+            <summary>
+            Gets the <see cref="T:TVA.Collections.ProcessQueue`1"/> object to be used for queuing operations to be executed on <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
             </summary>
         </member>
         <member name="T:TVA.USTimeZones">
@@ -11576,6 +11856,26 @@
             <param name="startOfRange">Beginning of range character.</param>
             <param name="endOfRange">End of range character.</param>
             <returns><c>true</c> is the character is within the range.</returns>
+        </member>
+        <member name="T:TVA.Adapters.IAdapter">
+            <summary>
+            Defines an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.IAdapter.Domain">
+            <summary>
+            Gets the <see cref="T:System.AppDomain"/> in which the adapter is executing.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.IAdapter.MemoryUsage">
+            <summary>
+            Gets the memory utilzation of the adapter in bytes if executing in a seperate <see cref="T:System.AppDomain"/>, otherwise <see cref="F:System.Double.NaN"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.IAdapter.ProcessorUsage">
+            <summary>
+            Gets the % processor utilization of the adapter if executing in a seperate <see cref="T:System.AppDomain"/> otherwise <see cref="F:System.Double.NaN"/>.
+            </summary>
         </member>
         <member name="T:TVA.UInt24">
             <summary>Represents a 3-byte, 24-bit unsigned integer.</summary>
@@ -17525,6 +17825,92 @@
             Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
             </summary>
         </member>
+        <member name="T:TVA.Adapters.Adapter">
+            <summary>
+            Represents an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
+            </summary>
+            <seealso cref="T:TVA.Adapters.AdapterLoader`1"/>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Adapters.Adapter"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Adapters.Adapter"/> is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Adapters.Adapter"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.Initialize">
+            <summary>
+            Initializes the <see cref="T:TVA.Adapters.Adapter"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.SaveSettings">
+            <summary>
+            Saves <see cref="T:TVA.Adapters.Adapter"/> settings to the config file if the <see cref="P:TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.LoadSettings">
+            <summary>
+            Loads saved <see cref="T:TVA.Adapters.Adapter"/> settings from the config file if the <see cref="P:TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Adapters.Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Adapters.Adapter"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.Enabled">
+            <summary>
+            Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Adapters.Adapter"/> is currently enabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.PersistSettings">
+            <summary>
+            Gets or sets a boolean value that indicates whether <see cref="T:TVA.Adapters.Adapter"/> settings are to be saved to the config file.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.SettingsCategory">
+            <summary>
+            Gets or sets the category under which <see cref="T:TVA.Adapters.Adapter"/> settings are to be saved to the config file if the <see cref="P:TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.MemoryUsage">
+            <summary>
+            Gets the memory utilzation of the <see cref="T:TVA.Adapters.Adapter"/> in bytes if executing in a seperate <see cref="T:System.AppDomain"/>, otherwise <see cref="F:System.Double.NaN"/>.
+            </summary>
+            <remarks><see cref="P:TVA.Adapters.Adapter.MemoryUsage"/> gets updated only after a full blocking collection by <see cref="T:System.GC"/> (eg. <see cref="M:System.GC.Collect"/>).</remarks>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.ProcessorUsage">
+            <summary>
+            Gets the % processor utilization of the <see cref="T:TVA.Adapters.Adapter"/> if executing in a seperate <see cref="T:System.AppDomain"/> otherwise <see cref="F:System.Double.NaN"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.Name">
+            <summary>
+            Gets the unique identifier of the <see cref="T:TVA.Adapters.Adapter"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.Status">
+            <summary>
+            Gets the descriptive status of the <see cref="T:TVA.Adapters.Adapter"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.Domain">
+            <summary>
+            Gets the <see cref="T:System.AppDomain"/> in which the <see cref="T:TVA.Adapters.Adapter"/> is executing.
+            </summary>
+        </member>
         <member name="T:TVA.TypeExtensions">
             <summary>
             Extensions to all <see cref="T:System.Type"/> objects.
@@ -22745,6 +23131,20 @@
             <param name="parameters">The parameters to populate the <see cref="T:System.Data.IDbCommand"/> parameters with.</param>
             <typeparam name="TDbCommand">Then <see cref="T:System.Data.IDbCommand"/> type to be used.</typeparam>
         </member>
+        <member name="M:TVA.Data.DataExtensions.CreateParameterizedCommand(System.Data.IDbConnection,System.String,System.Object[])">
+            <summary>
+            Creates and returns a parameterized <see cref="T:System.Data.IDbCommand"/>. Parameter names are embedded in the SQL statement
+            passed as a parameter to this method.
+            </summary>
+            <param name="connection">The database connection.</param>
+            <param name="sql">The SQL statement.</param>
+            <param name="args">The parameters for the command in the order that they appear in the SQL statement.</param>
+            <remarks>
+            This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
+            character and should be surrounded by either spaces, parentheses, or commas.
+            </remarks>
+            <returns>The parameterized command.</returns>
+        </member>
         <member name="M:TVA.Data.DataExtensions.ToDataTable(System.String,System.String,System.Boolean)">
             <summary>
             Converts a delimited string into a <see cref="T:System.Data.DataTable"/>.
@@ -23880,12 +24280,6 @@
             <summary>Gets a boolean value indicating whether the indicated program element is CLS-compliant.</summary>
             <param name="assemblyInstance">Source assembly.</param>
             <returns>True, if the program element is CLS-compliant; otherwise, False.</returns>
-        </member>
-        <member name="M:TVA.Reflection.AssemblyExtensions.Debuggable(System.Reflection.Assembly)">
-            <summary>Gets a value that indicates whether the runtime will track information during code generation for the
-            debugger.</summary>
-            <param name="assemblyInstance">Source assembly.</param>
-            <returns>True, if the runtime will track information during code generation for the debugger; otherwise, False.</returns>
         </member>
         <member name="M:TVA.Reflection.AssemblyExtensions.BuildDate(System.Reflection.Assembly)">
             <summary>Gets the date and time when the assembly was last built.</summary>
@@ -27067,7 +27461,7 @@
         </member>
         <member name="M:TVA.Reflection.AssemblyInfo.#ctor(System.Reflection.Assembly)">
             <summary>Initializes a new instance of the <see cref="T:TVA.Reflection.AssemblyInfo"/> class.</summary>
-            <param name="assemblyInstance">An <see cref="T:System.Reflection.Assembly"/> object.</param>
+            <param name="assemblyInstance">An <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> object.</param>
         </member>
         <member name="M:TVA.Reflection.AssemblyInfo.GetAttributes">
             <summary>Gets a collection of assembly attributes exposed by the assembly.</summary>
@@ -27088,119 +27482,143 @@
             <param name="assemblyName">Name of the assembly to load.</param>
             <remarks>This cannot be used to load TVA.Core itself.</remarks>
         </member>
+        <member name="P:TVA.Reflection.AssemblyInfo.Assembly">
+            <summary>
+            Gets the underlying <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> being represented by this <see cref="T:TVA.Reflection.AssemblyInfo"/> object.
+            </summary>
+        </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Title">
-            <summary>Gets the title information of the assembly.</summary>
-            <returns>The title information of the assembly.</returns>
+            <summary>
+            Gets the title information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Description">
-            <summary>Gets the description information of the assembly.</summary>
-            <returns>The description information of the assembly.</returns>
+            <summary>
+            Gets the description information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Company">
-            <summary>Gets the company name information of the assembly.</summary>
-            <returns>The company name information of the assembly.</returns>
+            <summary>
+            Gets the company name information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Product">
-            <summary>Gets the product name information of the assembly.</summary>
-            <returns>The product name information of the assembly.</returns>
+            <summary>
+            Gets the product name information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Copyright">
-            <summary>Gets the copyright information of the assembly.</summary>
-            <returns>The copyright information of the assembly.</returns>
+            <summary>
+            Gets the copyright information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Trademark">
-            <summary>Gets the trademark information of the assembly.</summary>
-            <returns>The trademark information of the assembly.</returns>
+            <summary>
+            Gets the trademark information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Configuration">
-            <summary>Gets the configuration information of the assembly.</summary>
-            <returns>The configuration information of the assembly.</returns>
+            <summary>
+            Gets the configuration information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.DelaySign">
-            <summary>Gets a boolean value indicating if the assembly has been built as delay-signed.</summary>
-            <returns>True, if the assembly has been built as delay-signed; otherwise, False.</returns>
+            <summary>
+            Gets a boolean value indicating if the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> has been built as delay-signed.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.InformationalVersion">
-            <summary>Gets the version information of the assembly.</summary>
-            <returns>The version information of the assembly</returns>
+            <summary>
+            Gets the version information of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.KeyFile">
-            <summary>Gets the name of the file containing the key pair used to generate a strong name for the attributed
-            assembly.</summary>
-            <returns>A string containing the name of the file that contains the key pair.</returns>
+            <summary>
+            Gets the name of the file containing the key pair used to generate a strong name for the attributed <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.CultureName">
-            <summary>Gets the culture name of the assembly.</summary>
-            <returns>The culture name of the assembly.</returns>
+            <summary>
+            Gets the culture name of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.SatelliteContractVersion">
-            <summary>Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular
-            version of a satellite assembly to simplify updates of the main assembly of an application.</summary>
+            <summary>
+            Gets the assembly version used to instruct the System.Resources.ResourceManager to ask for a particular
+            version of a satellite assembly to simplify updates of the main assembly of an application.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.ComCompatibleVersion">
-            <summary>Gets the string representing the assembly version used to indicate to a COM client that all classes
-            in the current version of the assembly are compatible with classes in an earlier version of the assembly.</summary>
-            <returns>The string representing the assembly version in MajorVersion.MinorVersion.RevisionNumber.BuildNumber
-            format.</returns>
+            <summary>
+            Gets the string representing the assembly version used to indicate to a COM client that all classes
+            in the current version of the assembly are compatible with classes in an earlier version of the assembly.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.ComVisible">
-            <summary>Gets a boolean value indicating if the assembly is exposed to COM.</summary>
-            <returns>True, if the assembly is exposed to COM; otherwise, False.</returns>
+            <summary>
+            Gets a boolean value indicating if the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> is exposed to COM.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Guid">
-            <summary>Gets the assembly GUID that is used as an ID if the assembly is exposed to COM.</summary>
-            <returns>The assembly GUID that is used as an ID if the assembly is exposed to COM.</returns>
+            <summary>
+            Gets the GUID that is used as an ID if the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> is exposed to COM.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.TypeLibVersion">
-            <summary>Gets the string representing the assembly version number in MajorVersion.MinorVersion format.</summary>
-            <returns>The string representing the assembly version number in MajorVersion.MinorVersion format.</returns>
+            <summary>
+            Gets the string representing the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> version number in MajorVersion.MinorVersion format.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.CLSCompliant">
-            <summary>Gets a boolean value indicating whether the indicated program element is CLS-compliant.</summary>
-            <returns>True, if the program element is CLS-compliant; otherwise, False.</returns>
-        </member>
-        <member name="P:TVA.Reflection.AssemblyInfo.Debuggable">
-            <summary>Gets a value that indicates whether the runtime will track information during code generation for the
-            debugger.</summary>
-            <returns>True, if the runtime will track information during code generation for the debugger; otherwise, False.</returns>
+            <summary>
+            Gets a boolean value indicating whether the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> is CLS-compliant.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Location">
-            <summary>Gets the path or UNC location of the loaded file that contains the manifest.</summary>
-            <returns>The location of the loaded file that contains the manifest.</returns>
+            <summary>
+            Gets the path or UNC location of the loaded file that contains the manifest.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.CodeBase">
-            <summary>Gets the location of the assembly as specified originally; for example, in a
-            AssemblyName object.</summary>
-            <returns>The location of the assembly as specified originally.</returns>
+            <summary>
+            Gets the location of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> as specified originally.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.FullName">
-            <summary>Gets the display name of the assembly.</summary>
-            <returns>The display name of the assembly.</returns>
+            <summary>
+            Gets the display name of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Name">
-            <summary>Gets the simple, unencrypted name of the assembly.</summary>
-            <returns>A string that is the simple, unencrypted name of the assembly.</returns>
+            <summary>
+            Gets the simple, unencrypted name of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.Version">
-            <summary>Gets the major, minor, revision, and build numbers of the assembly.</summary>
-            <returns>A System.Version object representing the major, minor, revision, and build numbers of the assembly.</returns>
+            <summary>
+            Gets the major, minor, revision, and build numbers of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.ImageRuntimeVersion">
-            <summary>Gets the string representing the version of the common language runtime (CLR) saved in the file
-            containing the manifest.</summary>
-            <returns>The string representing the CLR version folder name. This is not a full path.</returns>
+            <summary>
+            Gets the string representing the version of the common language runtime (CLR) saved in the file
+            containing the manifest.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.GACLoaded">
-            <summary>Gets a boolean value indicating whether the assembly was loaded from the global assembly cache.</summary>
-            <returns>True, if the assembly was loaded from the global assembly cache; otherwise, False.</returns>
+            <summary>
+            Gets a boolean value indicating whether the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> was loaded from the global assembly cache.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.BuildDate">
-            <summary>Gets the date and time when the assembly was last built.</summary>
-            <returns>The date and time when the assembly was last built.</returns>
+            <summary>
+            Gets the date and time when the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/> was built.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.RootNamespace">
-            <summary>Gets the root namespace of the assembly.</summary>
-            <returns>The root namespace of the assembly.</returns>
+            <summary>
+            Gets the root namespace of the <see cref="P:TVA.Reflection.AssemblyInfo.Assembly"/>.
+            </summary>
         </member>
         <member name="P:TVA.Reflection.AssemblyInfo.CallingAssembly">
             <summary>Gets the <see cref="T:TVA.Reflection.AssemblyInfo"/> object of the assembly that invoked the currently executing method.</summary>
