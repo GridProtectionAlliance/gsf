@@ -148,7 +148,7 @@ namespace TimeSeriesFramework
                         // Refresh state in case service process was forcibly stopped
                         serviceController.Refresh();
 
-                        if (serviceController.Status == ServiceControllerStatus.Stopped)
+                        if (serviceController.Status != ServiceControllerStatus.Running)
                             serviceController.Start();
                     }
                     catch (Exception ex)
