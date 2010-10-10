@@ -345,7 +345,7 @@
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Version VersionFile="$(VersionFile)">
+    <Version VersionFile="$(VersionFile)" BuildType="Increment">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
