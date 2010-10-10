@@ -37,7 +37,7 @@
 **       specifying the version using the SourceVersion property.
 **  10/09/2010 - Pinal C. Patel
 **       Modified the build archival process to allow for customization.
-**       Removed setup.exe from FilesToDelete list so core openPDC setup is not deleted.
+**       Moved initialization if FilesToDelete list to CoreBuildProjects target.
 **
 *******************************************************************************************************
 -->
@@ -372,6 +372,13 @@
     <!-- Build all of the specified installs. -->
     <Message Text="Compiling installs..."/>
     <Exec Command="%22$(VisualStudio)%22 %22$(ProjectSolution)%22 /Project %22%(InstallsToBuild.FullPath)%22 /Build %22$(BuildFlavor)|$(BuildTarget)%22" Condition="'$(ProjectSolution)' != '' And '@(InstallsToBuild)' != ''"/>
+    <!-- Create list of files to be deleted from build output. -->
+    <ItemGroup>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
+    </ItemGroup>
   </Target>
 
   <Target Name="AfterBuildProjects"/>
@@ -401,11 +408,6 @@
   <Target Name="CoreCleanBuild">
     <!-- Clean output of the current build. -->
     <Message Text="Cleaning build output..."/>
-    <ItemGroup>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
-    </ItemGroup>
     <Delete Files="@(FilesToDelete)" ContinueOnError="true"/>
   </Target>
 
