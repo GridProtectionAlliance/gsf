@@ -23,6 +23,8 @@
 //  12/10/2009 - Pinal C. Patel
 //       Override Initialize() to start OperationQueue.
 //       Modified RefreshOne() take in the name of the provider to use for refreshing the metadata.
+//  10/11/2010 - Mihir Brahmbhatt
+//       Updated header and license agreement.
 //
 //******************************************************************************************************
 

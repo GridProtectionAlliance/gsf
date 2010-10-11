@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/11/2010 - Mihir Brahmbhatt
+//       Updated header and license agreement.
 //
 //******************************************************************************************************
 
