@@ -22,6 +22,13 @@
 //       Added an endpoint for web service help.
 //  06/21/2010 - Pinal C. Patel
 //       Added Singleton property for added control over the hosting process.
+//  10/08/2010 - Pinal C. Patel
+//       Removed REST web service help endpoint since a similar feature is now part of WCF 4.0.
+//  10/14/2010 - Pinal C. Patel
+//       Made changes for hosting flexibility and enabling security:
+//         Deleted DataFlow since access restriction can now be imposed by enabling security.
+//         Added SecurityPolicy and PublishMetadata.
+//         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
 //
 //*******************************************************************************************************
 
@@ -243,17 +250,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
-using System.IO;
+using System.IdentityModel.Policy;
 using System.Linq;
-using System.Reflection;
+using System.Net;
+using System.Net.NetworkInformation;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
-using System.Text;
 using TVA.Configuration;
-using TVA.Reflection;
 
 namespace TVA.Web.Services
 {
@@ -267,7 +273,7 @@ namespace TVA.Web.Services
         // Events
 
         /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> has been created for the specified <see cref="ServiceUri"/>.
+        /// Occurs when the <see cref="ServiceHost"/> has been created with the specified <see cref="Endpoints"/>.
         /// </summary>
         /// <remarks>
         /// When <see cref="ServiceHostCreated"/> event is fired, changes like adding new endpoints can be made to the <see cref="ServiceHost"/>.
@@ -288,16 +294,17 @@ namespace TVA.Web.Services
         public event EventHandler<EventArgs<Exception>> ServiceProcessException;
 
         // Fields
+        private string m_endpoints;
+        private string m_contract;
         private bool m_singleton;
-        private string m_serviceUri;
-        private string m_serviceContract;
-        private DataFlowDirection m_serviceDataFlow;
+        private string m_securityPolicy;
+        private bool m_publishMetadata;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
-        private WebServiceHost m_serviceHost;
+        private ServiceHost m_serviceHost;
 
         #endregion
 
@@ -309,9 +316,7 @@ namespace TVA.Web.Services
         protected SelfHostingService()
         {
             Type type = this.GetType();
-            m_serviceContract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
-            m_serviceDataFlow = DataFlowDirection.BothWays;
-            m_persistSettings = true;
+            m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
             m_settingsCategory = type.Name;
         }
 
@@ -326,6 +331,43 @@ namespace TVA.Web.Services
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
+        /// </summary>
+        /// <remarks>
+        /// Set <see cref="Endpoints"/> to a null or empty string to disable web service hosting.
+        /// </remarks>
+        public string Endpoints
+        {
+            get
+            {
+                return m_endpoints;
+            }
+            set
+            {
+                m_endpoints = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        public string Contract
+        {
+            get
+            {
+                return m_contract;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_contract = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
@@ -344,57 +386,32 @@ namespace TVA.Web.Services
         }
 
         /// <summary>
-        /// Gets or sets the URI where the web service is to be hosted.
+        /// Gets or sets the <see cref="Type.FullName"/> of <see cref="IAuthorizationPolicy"/> to be used for securing all web service <see cref="Endpoints"/>.
         /// </summary>
-        /// <remarks>
-        /// Set <see cref="ServiceUri"/> to a null or empty string to disable web service hosting.
-        /// </remarks>
-        public string ServiceUri
+        public string SecurityPolicy
         {
             get
             {
-                return m_serviceUri;
+                return m_securityPolicy;
             }
             set
             {
-                m_serviceUri = value;
+                m_securityPolicy = value;
             }
         }
 
         /// <summary>
-        /// Gets or sets the contract interface implemented by the web service.
+        /// Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="Endpoints"/>.
         /// </summary>
-        /// <remarks>
-        /// This is the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
-        /// </remarks>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string ServiceContract
+        public bool PublishMetadata
         {
             get
             {
-                return m_serviceContract;
+                return m_publishMetadata;
             }
             set
             {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_serviceContract = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="DataFlowDirection"/> of the web service.
-        /// </summary>
-        public DataFlowDirection ServiceDataFlow
-        {
-            get
-            {
-                return m_serviceDataFlow;
-            }
-            set
-            {
-                m_serviceDataFlow = value;
+                m_publishMetadata = value;
             }
         }
 
@@ -451,44 +468,14 @@ namespace TVA.Web.Services
         /// Gets the <see cref="WebServiceHost"/> hosting the web service.
         /// </summary>
         /// <remarks>
-        /// By default, the <see cref="ServiceHost"/> only has <see cref="WebHttpBinding"/> endpoint at the <see cref="ServiceUri"/>. 
+        /// By default, the <see cref="ServiceHost"/> only has <see cref="WebHttpBinding"/> endpoint at the <see cref="Endpoints"/>. 
         /// Additional endpoints can be added to the <see cref="ServiceHost"/> when <see cref="ServiceHostCreated"/> event is fired.
         /// </remarks>
-        public WebServiceHost ServiceHost
+        public ServiceHost ServiceHost
         {
             get
             {
                 return m_serviceHost;
-            }
-        }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether data can be requested from the web service.
-        /// </summary>
-        protected bool CanRead
-        {
-            get
-            {
-                if (m_serviceDataFlow == DataFlowDirection.Outgoing ||
-                    m_serviceDataFlow == DataFlowDirection.BothWays)
-                    return true;
-                else
-                    return false;
-            }
-        }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether data can be published to the web service.
-        /// </summary>
-        protected bool CanWrite
-        {
-            get
-            {
-                if (m_serviceDataFlow == DataFlowDirection.Incoming ||
-                    m_serviceDataFlow == DataFlowDirection.BothWays)
-                    return true;
-                else
-                    return false;
             }
         }
 
@@ -513,32 +500,79 @@ namespace TVA.Web.Services
             if (!m_initialized)
             {
                 LoadSettings();
-                if (m_enabled && !string.IsNullOrEmpty(m_serviceUri))
+                if (m_enabled && !string.IsNullOrEmpty(m_endpoints))
                 {
-                    // Initialize host and binding.
+                    // Initialize service host.
+                    string serviceUri = string.Format("http://localhost:{0}", GetUnusedPort());
                     if (m_singleton)
-                        m_serviceHost = new WebServiceHost(this, new Uri(m_serviceUri));
+                        m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
                     else
-                        m_serviceHost = new WebServiceHost(this.GetType(), new Uri(m_serviceUri));
-                    WebHttpBinding serviceBinding = new WebHttpBinding();
+                        m_serviceHost = new ServiceHost(this.GetType(), new Uri(serviceUri));
 
-                    // Add an endpoint for the service.
-                    ServiceEndpoint serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_serviceContract), serviceBinding, "");
-                    serviceEndpoint.Behaviors.Add(new WebHttpBehavior());
-                    OnServiceHostCreated();
-
-                    // Change data serialization behavior.
-                    foreach (ServiceEndpoint endpoint in m_serviceHost.Description.Endpoints)
+                    // Enable metadata publishing.
+                    if (m_publishMetadata)
                     {
-                        foreach (OperationDescription operation in endpoint.Contract.Operations)
+                        ServiceMetadataBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceMetadataBehavior>();
+                        if (serviceBehavior == null)
                         {
-                            // Following behavior property must be set for all operations of the web service to allow for the maximum number 
-                            // of items of any object sent or received by the operation to be serialized/deserialized by the serializer.
-                            DataContractSerializerOperationBehavior behavior = operation.Behaviors.Find<DataContractSerializerOperationBehavior>();
-                            if (behavior != null)
-                                behavior.MaxItemsInObjectGraph = int.MaxValue;
+                            serviceBehavior = new ServiceMetadataBehavior();
+                            m_serviceHost.Description.Behaviors.Add(serviceBehavior);
+                        }
+                        serviceBehavior.HttpGetEnabled = true;
+                    }
+
+                    // Enable security on the service.
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        ServiceAuthorizationBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+                        if (serviceBehavior == null)
+                        {
+                            serviceBehavior = new ServiceAuthorizationBehavior();
+                            m_serviceHost.Description.Behaviors.Add(serviceBehavior);
+                        }
+                        serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
+                        List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
+                        policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
+                        serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
+                    }
+
+                    // Add specified service endpoints.
+                    string serviceAddress;
+                    string[] serviceAddresses;
+                    Binding serviceBinding;
+                    ServiceEndpoint serviceEndpoint;
+                    serviceAddresses = m_endpoints.Split(';');
+                    for (int i = 0; i < serviceAddresses.Length; i++)
+                    {
+                        serviceAddress = serviceAddresses[i].Trim();
+                        serviceBinding = GetServiceBinding(ref serviceAddress);
+                        if (serviceBinding != null)
+                        {
+                            serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
+                            if (serviceBinding.GetType() == typeof(WebHttpBinding))
+                            {
+                                // Special handling for REST endpoint.
+                                WebHttpBehavior restBehavior = new WebHttpBehavior();
+                                if (m_publishMetadata)
+                                    restBehavior.HelpEnabled = true;
+
+                                serviceEndpoint.Behaviors.Add(restBehavior);
+                            }
+                            else if (m_publishMetadata)
+                            {
+                                // Add endpoint for service metadata.
+                                if (serviceAddress.StartsWith("http://"))
+                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), serviceAddress + "/mex");
+                                else if (serviceAddress.StartsWith("net.tcp://"))
+                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexTcpBinding(), serviceAddress + "/mex");
+                                else if (serviceAddress.StartsWith("net.pipe://"))
+                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexNamedPipeBinding(), serviceAddress + "/mex");
+                            }
                         }
                     }
+
+                    // Allow for customization.
+                    OnServiceHostCreated();
 
                     // Start the service.
                     m_serviceHost.Open();
@@ -566,10 +600,11 @@ namespace TVA.Web.Services
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings["Enabled", true].Update(m_enabled);
+                settings["Endpoints", true].Update(m_endpoints);
+                settings["Contract", true].Update(m_contract);
                 settings["Singleton", true].Update(m_singleton);
-                settings["ServiceUri", true].Update(m_serviceUri);
-                settings["ServiceContract", true].Update(m_serviceContract);
-                settings["ServiceDataFlow", true].Update(m_serviceDataFlow);
+                settings["SecurityPolicy", true].Update(m_securityPolicy);
+                settings["PublishMetadata", true].Update(m_publishMetadata);
                 config.Save();
             }
         }
@@ -589,98 +624,149 @@ namespace TVA.Web.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if this web service is enabled; otherwise False.");
-                settings.Add("Singleton", m_singleton, "True if this web service is singleton; otherwise False.");
-                settings.Add("ServiceUri", m_serviceUri, "URI where this web service is to be hosted.");
-                settings.Add("ServiceContract", m_serviceContract, "Assembly qualified name of the contract interface implemented by this web service.");
-                settings.Add("ServiceDataFlow", m_serviceDataFlow, "Flow of data (Incoming; Outgoing; BothWays) allowed for this web service.");
+                settings.Add("Enabled", m_enabled, "True if the web service is enabled; otherwise False.");
+                settings.Add("Endpoints", m_endpoints, "Semicolon delimited list of URIs where the web service can be accessed.");
+                settings.Add("Contract", m_contract, "Assembly qualified name of the contract interface implemented by the web service.");
+                settings.Add("Singleton", m_singleton, "True if the web service is singleton; otherwise False.");
+                settings.Add("SecurityPolicy", m_securityPolicy, "Assembly qualified name of the authorization policy to be used for securing the web service.");
+                settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
                 Enabled = settings["Enabled"].ValueAs(m_enabled);
+                Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
+                Contract = settings["Contract"].ValueAs(m_contract);
                 Singleton = settings["Singleton"].ValueAs(m_singleton);
-                ServiceUri = settings["ServiceUri"].ValueAs(m_serviceUri);
-                ServiceContract = settings["ServiceContract"].ValueAs(m_serviceContract);
-                ServiceDataFlow = settings["ServiceDataFlow"].ValueAs(m_serviceDataFlow);
+                SecurityPolicy = settings["SecurityPolicy"].ValueAs(m_securityPolicy);
+                PublishMetadata = settings["PublishMetadata"].ValueAs(m_publishMetadata);
             }
         }
 
         /// <summary>
-        /// Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
+        /// Get an unused port number.
         /// </summary>
-        /// <returns>An <see cref="Stream"/> object containing the HTML help.</returns>
-        [Description("Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.")]
-        public Stream Help()
+        /// <returns>An <see cref="Int32"/> value.</returns>
+        protected virtual int GetUnusedPort()
         {
-            // Local variables used in preparing the HTML.
-            Type serviceType = this.GetType();
-            string serviceName = serviceType.Name;
-            StringBuilder responseText = new StringBuilder();
-            WebGetAttribute webGetAttribute = null;
-            WebInvokeAttribute webInvokeAttribute = null;
-            DescriptionAttribute descriptionAttribute = null;
-
-            // Prepare the HTML to be returned.
-            responseText.Append("<html>");
-            responseText.AppendLine();
-            responseText.Append("<head>");
-            responseText.AppendLine();
-            responseText.AppendFormat("    <title>{0} - Documentation</title>", serviceName);
-            responseText.AppendLine();
-            responseText.Append("    <style type=\"text/css\">");
-            responseText.AppendLine();
-            responseText.Append("        body {margin: 0px;padding: 0px;font-family: Tahoma, Arial;}");
-            responseText.AppendLine();
-            responseText.Append("        .banner {padding: 10px 0px 3px 15px;font-size: 20pt;color: #ffffff;background-color: #003366;}");
-            responseText.AppendLine();
-            responseText.Append("        .content {margin: 15px;font-size: 10pt;}");
-            responseText.AppendLine();
-            responseText.Append("    </style>");
-            responseText.AppendLine();
-            responseText.Append("</head>");
-            responseText.AppendLine();
-            responseText.Append("<body>");
-            responseText.AppendLine();
-            responseText.AppendFormat("    <div class=\"banner\">{0}</div>", serviceName);
-            responseText.AppendLine();
-            responseText.Append("    <div class=\"content\">");
-            responseText.AppendLine();
-            responseText.Append("        <h3>Available Endpoints</h3>");
-            responseText.AppendLine();
-            responseText.Append("        <ul>");
-            responseText.AppendLine();
-            foreach (MethodInfo method in GetMethods(Type.GetType(m_serviceContract)))
+            int randomPort = new Random().Next(1024, 65535);
+            IPEndPoint[] tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+            while (true)
             {
-                // Check if the method in the service interface is REST.
-                if (method.TryGetAttribute(out webGetAttribute))
-                    responseText.AppendFormat("            <li><strong>GET {0}</strong>", webGetAttribute.UriTemplate);
-                else if (method.TryGetAttribute(out webInvokeAttribute))
-                    responseText.AppendFormat("            <li><strong>{0} {1}</strong>", webInvokeAttribute.Method, webInvokeAttribute.UriTemplate);
-
-                // Check if the REST method has a description we can use.
-                if (webGetAttribute != null || webInvokeAttribute != null)
-                {
-                    if (method.TryGetAttribute(out descriptionAttribute) ||
-                        serviceType.GetMethod(method.Name).TryGetAttribute(out descriptionAttribute))
-                        responseText.AppendFormat(" - {0}</li>", descriptionAttribute.Description);
-                    else
-                        responseText.Append("</li>");
-                    responseText.AppendLine();
-                }
+                if (tcpListeners.FirstOrDefault(ep => ep.Port == randomPort) != null)
+                    // Port in use - pick another one.
+                    randomPort++;
+                else
+                    // Port is not in use - use this.
+                    return randomPort;
             }
-            responseText.Append("        </ul>");
-            responseText.AppendLine();
-            responseText.Append("    </div>");
-            responseText.AppendLine();
-            responseText.Append("</body>");
-            responseText.AppendLine();
-            responseText.Append("</html>");
-            responseText.AppendLine();
+        }
 
-            // Put the prepared HTML in a stream.
-            MemoryStream response = new MemoryStream(Encoding.UTF8.GetBytes(responseText.ToNonNullString()));
-            response.Position = 0;
-            WebOperationContext.Current.OutgoingResponse.ContentType = "text/html";
+        /// <summary>
+        /// Creates a <see cref="Binding"/> based on the specified <paramref name="address"/>.
+        /// </summary>
+        /// <param name="address">The URI that is used to determine the type of <see cref="Binding"/> to be created.</param>
+        /// <returns>An <see cref="Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
+        protected virtual Binding GetServiceBinding(ref string address)
+        {
+            address = address.Trim();
+            if (string.IsNullOrEmpty(address))
+                return null;
 
-            // Return the stream containg the HTML.
-            return response;
+            switch (new Uri(address.ToLower()).Scheme)
+            {
+                case "http":
+                case "http.soap11":
+                    // Format address.
+                    address = address.Replace("http.soap11", "http");
+                    // Create binding.
+                    BasicHttpBinding soap11Binding = new BasicHttpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        soap11Binding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
+                        soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return soap11Binding;
+                case "http.soap12":
+                    // Format address.
+                    address = address.Replace("http.soap12", "http");
+                    // Create binding.
+                    WSHttpBinding soap12Binding = new WSHttpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        soap12Binding.Security.Mode = SecurityMode.Transport;
+                        soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return soap12Binding;
+                case "http.duplex":
+                    // Format address.
+                    address = address.Replace("http.duplex", "http");
+                    // Create binding.
+                    WSDualHttpBinding duplexBinding = new WSDualHttpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        duplexBinding.Security.Mode = WSDualHttpSecurityMode.Message;
+                    }
+
+                    return duplexBinding;
+                case "http.rest":
+                    // Format address.
+                    address = address.Replace("http.rest", "http");
+                    // Create binding.
+                    WebHttpBinding restBinding = new WebHttpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
+                        restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return restBinding;
+                case "net.tcp":
+                    // Create binding.
+                    NetTcpBinding tcpBinding = new NetTcpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        tcpBinding.Security.Mode = SecurityMode.Transport;
+                        tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.Windows;
+                    }
+
+                    return tcpBinding;
+                case "net.p2p":
+                    // Create binding.
+                    NetPeerTcpBinding p2pBinding = new NetPeerTcpBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        p2pBinding.Security.Mode = SecurityMode.Transport;
+                    }
+
+                    return p2pBinding;
+                case "net.pipe":
+                    // Create binding.
+                    NetNamedPipeBinding pipeBinding = new NetNamedPipeBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        pipeBinding.Security.Mode = NetNamedPipeSecurityMode.Transport;
+                    }
+
+                    return pipeBinding;
+                case "net.msmq":
+                    // Create binding.
+                    NetMsmqBinding msmqBinding = new NetMsmqBinding();
+                    if (!string.IsNullOrEmpty(m_securityPolicy))
+                    {
+                        // Enable security.
+                        msmqBinding.Security.Mode = NetMsmqSecurityMode.Transport;
+                    }
+
+                    return msmqBinding;
+                default:
+                    return null;
+            }
         }
 
         /// <summary>
@@ -736,20 +822,6 @@ namespace TVA.Web.Services
         {
             if (ServiceProcessException != null)
                 ServiceProcessException(this, new EventArgs<Exception>(exception));
-        }
-
-        private IEnumerable<MemberInfo> GetMethods(Type contract)
-        {
-            List<Type> types = new List<Type>();
-            List<MemberInfo> methods = new List<MemberInfo>();
-            types.Add(contract);
-            types.AddRange(contract.GetInterfaces());
-            foreach (Type type in types)
-            {
-                methods.AddRange(type.GetMethods());
-            }
-
-            return methods.OrderBy(method => method.Name);
         }
 
         #endregion

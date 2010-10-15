@@ -18,6 +18,8 @@
 //       Modified redirection logic to allow for custom redirection using customErrors settings.
 //  08/11/2010 - Pinal C. Patel
 //       Made key methods virtual for extensibility.
+//  10/14/2010 - Pinal C. Patel
+//       Modified GetResourceName() to return path and query for consistency with SecurityPolicy.
 //
 //*******************************************************************************************************
 
@@ -274,9 +276,9 @@ namespace TVA.Web
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///       <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="~/WebResource.axd;~/SecurityPortal.aspx"
+    ///       <add name="ExcludedResources" value="*/WebResource.axd;*/SecurityPortal.aspx"
     ///         description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
     ///     </securityProvider>
@@ -373,10 +375,10 @@ namespace TVA.Web
         /// <summary>
         /// Gets the name of resource being accessed.
         /// </summary>
-        /// <returns>Name of the resource being accessed.</returns>
+        /// <returns><see cref="HttpApplication.Request"/>.<see cref="HttpRequest.Url"/>.<see cref="Uri.PathAndQuery"/> property value.</returns>
         protected virtual string GetResourceName()
         {
-            return VirtualPathUtility.ToAppRelative(m_application.Request.Url.AbsolutePath);
+            return m_application.Request.Url.PathAndQuery;
         }
 
         private void Application_PostMapRequestHandler(object sender, EventArgs e)

@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureSelfHostingService.cs - Gbtc
+//  IMessageBusService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/24/2010 - Pinal C. Patel
+//  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -229,76 +229,38 @@
 */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Policy;
-using System.Security.Principal;
 using System.ServiceModel;
-using System.ServiceModel.Description;
-using System.Threading;
 
-namespace TVA.Web.Services
+namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// A base class for secure web service that can send and receive data over REST (Representational State Transfer) interface.
+    /// Defines a message bus for event-based messaging between disjoint systems.
     /// </summary>
-    public class SecureSelfHostingService : SelfHostingService, ISecureSelfHostingService
+    [ServiceContract(SessionMode = SessionMode.Allowed, CallbackContract = typeof(IMessageBusServiceCallback))]
+    public interface IMessageBusService : ISelfHostingService
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the secure web service.
-        /// </summary>
-        protected SecureSelfHostingService()
-            : base()
-        {
-            base.ServiceHostCreated += new EventHandler(SecureRestService_ServiceHostCreated);
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets information about the user making the web service request.
-        /// </summary>
-        public IPrincipal User
-        {
-            get
-            {
-                return Thread.CurrentPrincipal;
-            }
-        }
-
-        #endregion
-
         #region [ Methods ]
 
-        private void SecureRestService_ServiceHostCreated(object sender, EventArgs e)
-        {
-            // Enable windows authentication for all defined service endpoints.
-            foreach (ServiceEndpoint serviceEndpoint in ServiceHost.Description.Endpoints)
-            {
-                WebHttpBinding binding = serviceEndpoint.Binding as WebHttpBinding;
-                if (binding != null)
-                {
-                    binding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
-                    binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
-                }
-            }
+        /// <summary>
+        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
+        /// </summary>
+        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
+        [OperationContract(IsOneWay = true)]
+        void Register(RegistrationRequest request);
 
-            // Specify custom security policy to enforce role-based security.
-            ServiceAuthorizationBehavior serviceBehavior = ServiceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
-            if (serviceBehavior == null)
-            {
-                serviceBehavior = new ServiceAuthorizationBehavior();
-                ServiceHost.Description.Behaviors.Add(serviceBehavior);
-            }
-            serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
-            List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-            policies.Add(new SecurityPolicy());
-            serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
-        }
+        /// <summary>
+        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
+        /// </summary>
+        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
+        [OperationContract(IsOneWay = true)]
+        void Unregister(RegistrationRequest request);
+
+        /// <summary>
+        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
+        /// </summary>
+        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
+        [OperationContract(IsOneWay = true)]
+        void Publish(Message message);
 
         #endregion
     }

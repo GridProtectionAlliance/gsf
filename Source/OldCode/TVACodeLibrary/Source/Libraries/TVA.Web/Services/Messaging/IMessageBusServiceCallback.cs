@@ -1,26 +1,15 @@
-//*******************************************************************************************************
-//  ClientRequest.cs - Gbtc
+﻿//*******************************************************************************************************
+//  IMessageBusServiceCallback.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/29/2006 - Pinal C. Patel
-//       Original version of source code generated.
-//  04/27/2007 - Pinal C. Patel
-//       Added Attachments property for clients to send serializable objects as part of the request.
-//  09/30/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  03/09/2009 - Pinal C. Patel
-//       Edited code comments.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  10/14/2010 - Pinal C. Patel
-//       Overrode ToString() method to provide a text representation of ClientRequest.
-//       Recoded static Parse() method to make it more robust.
+//  10/06/2010 - Pinal C. Patel
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -240,154 +229,24 @@
 */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using TVA.Console;
+using System.ServiceModel;
 
-namespace TVA.Services
+namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// Represents a request sent by <see cref="ClientHelper"/> to <see cref="ServiceHelper"/>.
+    /// Defines a callback contract that must be implemented by clients of <see cref="MessageBusService"/> for receiving <see cref="Message"/>s.
     /// </summary>
-    /// <seealso cref="ClientHelper"/>
-    /// <seealso cref="ServiceHelper"/>
-	[Serializable()]
-    public class ClientRequest
-	{
-        #region [ Members ]
-
-        // Fields
-        private string m_command;
-        private Arguments m_arguments;
-        private List<object> m_attachments;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        public ClientRequest()
-            : this("UNDEFINED")
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        public ClientRequest(string command)
-            : this(command, new Arguments(""))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        /// <param name="arguments"><see cref="Arguments"/> for the <paramref name="command"/>.</param>
-        public ClientRequest(string command, Arguments arguments)
-        {
-            m_command = command.ToUpper();
-            m_arguments = arguments;
-            m_attachments = new List<object>();
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the command text for the <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        public string Command
-        {
-            get
-            {
-                return m_command;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_command = value.ToUpper();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Arguments"/> for the <see cref="Command"/>.
-        /// </summary>
-        public Arguments Arguments
-        {
-            get
-            {
-                return m_arguments;
-            }
-            set
-            {
-                m_arguments = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of attachments for the <see cref="ClientRequest"/>.
-        /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
-
-        #endregion
-
+    public interface IMessageBusServiceCallback
+    {
         #region [ Methods ]
 
         /// <summary>
-        /// Returns the <see cref="String"/> that represents the <see cref="ClientRequest"/>.
+        /// Invoked when a new <see cref="Message"/> is received from the <see cref="MessageBusService"/>.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0} {1}", m_command, m_arguments);
-        }
+        /// <param name="message"></param>
+        [OperationContract(IsOneWay = true)]
+        void MessageReceived(Message message);
 
         #endregion
-
-        #region [ Static ]
-
-        /// <summary>
-        /// Converts <see cref="string"/> to a <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <param name="text">Text to be converted to a <see cref="ClientRequest"/>.</param>
-        /// <returns><see cref="ClientRequest"/> object if parsing is successful; otherwise null.</returns>
-        public static ClientRequest Parse(string text)
-        {
-            // Input text can't be null.
-            if (text == null)
-                return null;
-
-            // Input text can't be empty.
-            text = text.Trim();
-            if (text == "")
-                return null;
-
-            string[] textSegments = text.Split(' ');
-            ClientRequest request = new ClientRequest();
-            request.Command = textSegments[0].ToUpper();
-            if (textSegments.Length == 1)
-                request.Arguments = new Arguments("");
-            else
-                request.Arguments = new Arguments(text.Remove(0, text.IndexOf(' ') + 1).Trim());
-
-            return request;
-        }
-
-        #endregion
-	}
+    }
 }
- 

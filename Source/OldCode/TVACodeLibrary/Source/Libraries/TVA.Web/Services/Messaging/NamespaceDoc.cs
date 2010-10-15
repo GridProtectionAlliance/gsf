@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ISecureSelfHostingService.cs - Gbtc
+//  NamespaceDoc.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,7 +8,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/24/2010 - Pinal C. Patel
+//  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -229,18 +229,15 @@
 */
 #endregion
 
-using System.Security.Principal;
+using System.Runtime.CompilerServices;
 
-namespace TVA.Web.Services
+namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// Defines a secure web service that can send and receive data over REST (Representational State Transfer) interface.
+    /// Contains WCF web services that facilitate secure inter-process messaging.
     /// </summary>
-    public interface ISecureSelfHostingService : ISelfHostingService
+    [CompilerGenerated()]
+    class NamespaceDoc
     {
-        /// <summary>
-        /// Gets information about the user making the web service request.
-        /// </summary>
-        IPrincipal User { get;}
     }
 }

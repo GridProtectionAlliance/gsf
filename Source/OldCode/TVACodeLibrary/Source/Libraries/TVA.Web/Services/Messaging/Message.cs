@@ -1,26 +1,15 @@
-//*******************************************************************************************************
-//  ClientRequest.cs - Gbtc
+﻿//*******************************************************************************************************
+//  Message.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/29/2006 - Pinal C. Patel
-//       Original version of source code generated.
-//  04/27/2007 - Pinal C. Patel
-//       Added Attachments property for clients to send serializable objects as part of the request.
-//  09/30/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  03/09/2009 - Pinal C. Patel
-//       Edited code comments.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  10/14/2010 - Pinal C. Patel
-//       Overrode ToString() method to provide a text representation of ClientRequest.
-//       Recoded static Parse() method to make it more robust.
+//  10/06/2010 - Pinal C. Patel
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -241,153 +230,64 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using TVA.Console;
 
-namespace TVA.Services
+namespace TVA.Web.Services.Messaging
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents a request sent by <see cref="ClientHelper"/> to <see cref="ServiceHelper"/>.
+    /// Indicates how a <see cref="Message"/> is processed by the <see cref="MessageBusService"/>.
     /// </summary>
-    /// <seealso cref="ClientHelper"/>
-    /// <seealso cref="ServiceHelper"/>
-	[Serializable()]
-    public class ClientRequest
-	{
-        #region [ Members ]
+    public enum MessageType
+    {
+        /// <summary>
+        /// <see cref="Message"/> is distributed to all of its registered consumers.
+        /// </summary>
+        Topic,
+        /// <summary>
+        /// <see cref="Message"/> is distributed to the first of all its registered consumers.
+        /// </summary>
+        Queue
+    }
 
-        // Fields
-        private string m_command;
-        private Arguments m_arguments;
-        private List<object> m_attachments;
+    #endregion
 
-        #endregion
-
+    /// <summary>
+    /// Represents a message that can be used to exchange information between processes using <see cref="MessageBusService"/>.
+    /// </summary>
+    public class Message
+    {
         #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        public ClientRequest()
-            : this("UNDEFINED")
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        public ClientRequest(string command)
-            : this(command, new Arguments(""))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        /// <param name="arguments"><see cref="Arguments"/> for the <paramref name="command"/>.</param>
-        public ClientRequest(string command, Arguments arguments)
-        {
-            m_command = command.ToUpper();
-            m_arguments = arguments;
-            m_attachments = new List<object>();
-        }
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the command text for the <see cref="ClientRequest"/>.
+        /// Gets or sets the <see cref="DateTime"/> when this <see cref="Message"/> was created.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        public string Command
-        {
-            get
-            {
-                return m_command;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_command = value.ToUpper();
-            }
-        }
+        public DateTime Time { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="Arguments"/> for the <see cref="Command"/>.
+        /// Gets or sets the <see cref="MessageType">Type</see> of this <see cref="Message"/>.
         /// </summary>
-        public Arguments Arguments
-        {
-            get
-            {
-                return m_arguments;
-            }
-            set
-            {
-                m_arguments = value;
-            }
-        }
+        public MessageType Type { get; set; }
 
         /// <summary>
-        /// Gets a list of attachments for the <see cref="ClientRequest"/>.
+        /// Gets or sets the identifier of this <see cref="Message"/>.
         /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the format of the <see cref="Content"/> in this <see cref="Message"/>.
+        /// </summary>
+        public string Format { get; set; }
+
+        /// <summary>
+        /// Gets or sets the actual payload of this <see cref="Message"/>.
+        /// </summary>
+        public byte[] Content { get; set; }
 
         #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Returns the <see cref="String"/> that represents the <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0} {1}", m_command, m_arguments);
-        }
-
-        #endregion
-
-        #region [ Static ]
-
-        /// <summary>
-        /// Converts <see cref="string"/> to a <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <param name="text">Text to be converted to a <see cref="ClientRequest"/>.</param>
-        /// <returns><see cref="ClientRequest"/> object if parsing is successful; otherwise null.</returns>
-        public static ClientRequest Parse(string text)
-        {
-            // Input text can't be null.
-            if (text == null)
-                return null;
-
-            // Input text can't be empty.
-            text = text.Trim();
-            if (text == "")
-                return null;
-
-            string[] textSegments = text.Split(' ');
-            ClientRequest request = new ClientRequest();
-            request.Command = textSegments[0].ToUpper();
-            if (textSegments.Length == 1)
-                request.Arguments = new Arguments("");
-            else
-                request.Arguments = new Arguments(text.Remove(0, text.IndexOf(' ') + 1).Trim());
-
-            return request;
-        }
-
-        #endregion
-	}
+    }
 }
- 

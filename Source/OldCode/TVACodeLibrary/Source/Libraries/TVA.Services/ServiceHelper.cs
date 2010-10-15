@@ -51,6 +51,9 @@
 //  06/16/2010 - Pinal C. Patel
 //       Made changes necessary to implement role-based security.
 //       Added thread synchronization to list-based member variable.
+//  10/14/2010 - Pinal C. Patel
+//       Updated security implementation to include the entire client request text including command 
+//       and arguments instead of just the command.
 //
 //*******************************************************************************************************
 
@@ -2041,8 +2044,8 @@ namespace TVA.Services
 
                             // Check if remote client has permission to invoke the requested command.
                             if (m_secureRemoteInteractions && VerifySecurity(requestInfo.Sender) &&
-                                SecurityProviderUtility.IsResourceSecurable(requestInfo.Request.Command) &&
-                                !SecurityProviderUtility.IsResourceAccessible(requestInfo.Request.Command))
+                                SecurityProviderUtility.IsResourceSecurable(requestInfo.Request.ToString()) &&
+                                !SecurityProviderUtility.IsResourceAccessible(requestInfo.Request.ToString()))
                                 throw new SecurityException(string.Format("Access to '{0}' is denied", requestInfo.Request.Command));
 
                             // Notify the consumer about the incoming request from client.

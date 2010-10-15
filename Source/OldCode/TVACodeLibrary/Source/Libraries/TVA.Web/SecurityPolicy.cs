@@ -17,6 +17,9 @@
 //       Added authentication check to Evaluate() method.
 //  08/11/2010 - Pinal C. Patel
 //       Made key methods virtual for extensibility.
+//  10/14/2010 - Pinal C. Patel
+//       Modified GetResourceName() to return path and query for consistency across WCF hosting 
+//       environments (i.e. ASP.NET, WAS, etc.).
 //
 //*******************************************************************************************************
 
@@ -244,7 +247,6 @@ using System.Security;
 using System.Security.Principal;
 using System.ServiceModel;
 using System.Threading;
-using System.Web;
 using TVA.Security;
 
 namespace TVA.Web
@@ -271,9 +273,9 @@ namespace TVA.Web
     ///         encrypted="false" />
     ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="~/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///       <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="~/SecurityService.svc/*"
+    ///       <add name="ExcludedResources" value="*/SecurityService.svc/*"
     ///         description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
     ///     </securityProvider>
@@ -483,10 +485,10 @@ namespace TVA.Web
         /// <summary>
         /// Gets the name of resource being accessed.
         /// </summary>
-        /// <returns>Name of the resource being accessed.</returns>
+        /// <returns><see cref="OperationContext.IncomingMessageHeaders"/>.<see cref="System.ServiceModel.Channels.MessageHeaders.To"/>.<see cref="Uri.PathAndQuery"/> property value.</returns>
         protected virtual string GetResourceName()
         {
-            return VirtualPathUtility.ToAppRelative(OperationContext.Current.IncomingMessageHeaders.To.AbsolutePath);
+            return OperationContext.Current.IncomingMessageHeaders.To.PathAndQuery;
         }
 
         #endregion

@@ -14,6 +14,13 @@
 //       Added new header and license agreement.
 //  05/28/2010 - Pinal C. Patel
 //       Added an endpoint for web service help.
+//  10/08/2010 - Pinal C. Patel
+//       Removed REST web service help endpoint since a similar feature is now part of WCF 4.0.
+//  10/14/2010 - Pinal C. Patel
+//       Made changes for hosting flexibility and enabling security:
+//         Deleted DataFlow since access restriction can now be imposed by enabling security.
+//         Added SecurityPolicy and PublishMetadata.
+//         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
 //
 //*******************************************************************************************************
 
@@ -234,36 +241,12 @@
 #endregion
 
 using System;
-using System.IO;
+using System.IdentityModel.Policy;
 using System.ServiceModel;
-using System.ServiceModel.Web;
 using TVA.Configuration;
 
 namespace TVA.Web.Services
 {
-    #region [ Enumerations ]
-
-    /// <summary>
-    /// Indicates the direction in which data will be flowing from a web service.
-    /// </summary>
-    public enum DataFlowDirection
-    {
-        /// <summary>
-        /// Data will be flowing in to the web service.
-        /// </summary>
-        Incoming,
-        /// <summary>
-        /// Data will be flowing out from the web service.
-        /// </summary>
-        Outgoing,
-        /// <summary>
-        /// Data will be flowing both in and out from the web service.
-        /// </summary>
-        BothWays
-    }
-
-    #endregion
-
     /// <summary>
     /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
@@ -273,7 +256,7 @@ namespace TVA.Web.Services
         #region [ Members ]
 
         /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> has been created for the specified <see cref="ServiceUri"/>.
+        /// Occurs when the <see cref="ServiceHost"/> has been created with the specified <see cref="Endpoints"/>.
         /// </summary>
         event EventHandler ServiceHostCreated;
 
@@ -292,35 +275,35 @@ namespace TVA.Web.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the URI where the web service is to be hosted.
+        /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
         /// </summary>
-        string ServiceUri { get; set; }
+        string Endpoints { get; set; }
 
         /// <summary>
-        /// Gets or sets the contract interface implemented by the web service.
+        /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
         /// </summary>
-        string ServiceContract { get; set; }
+        string Contract { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="DataFlowDirection"/> of the web service.
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
+        /// requests or base the web service instance creation on <see cref="InstanceContextMode"/> specified in its <see cref="ServiceBehaviorAttribute"/>.
         /// </summary>
-        DataFlowDirection ServiceDataFlow { get; set; }
+        bool Singleton { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="WebServiceHost"/> hosting the web service.
+        /// Gets or sets the <see cref="Type.FullName"/> of <see cref="IAuthorizationPolicy"/> to be used for securing all web service <see cref="Endpoints"/>.
         /// </summary>
-        WebServiceHost ServiceHost { get; }
-
-        #endregion
-
-        #region [ Methods ]
+        string SecurityPolicy { get; set; }
         
         /// <summary>
-        /// Returns an HTML help page containing a list of endpoints published by this REST web service along with a description of the endpoint if one is available.
+        /// Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="Endpoints"/>.
         /// </summary>
-        /// <returns>An <see cref="Stream"/> object containing the HTML help.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/help")]
-        Stream Help();
+        bool PublishMetadata { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="ServiceHost"/> hosting the web service.
+        /// </summary>
+        ServiceHost ServiceHost { get; }
 
         #endregion
     }

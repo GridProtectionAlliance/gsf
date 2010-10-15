@@ -1,26 +1,15 @@
-//*******************************************************************************************************
-//  ClientRequest.cs - Gbtc
+﻿//*******************************************************************************************************
+//  MessageBusService.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/29/2006 - Pinal C. Patel
-//       Original version of source code generated.
-//  04/27/2007 - Pinal C. Patel
-//       Added Attachments property for clients to send serializable objects as part of the request.
-//  09/30/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  03/09/2009 - Pinal C. Patel
-//       Edited code comments.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
-//  10/14/2010 - Pinal C. Patel
-//       Overrode ToString() method to provide a text representation of ClientRequest.
-//       Recoded static Parse() method to make it more robust.
+//  10/06/2010 - Pinal C. Patel
+//       Generated original version of source code.
 //
 //*******************************************************************************************************
 
@@ -242,152 +231,279 @@
 
 using System;
 using System.Collections.Generic;
-using TVA.Console;
+using System.ServiceModel;
+using TVA.Collections;
 
-namespace TVA.Services
+namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// Represents a request sent by <see cref="ClientHelper"/> to <see cref="ServiceHelper"/>.
+    /// A message bus for event-based messaging between disjoint systems.
     /// </summary>
-    /// <seealso cref="ClientHelper"/>
-    /// <seealso cref="ServiceHelper"/>
-	[Serializable()]
-    public class ClientRequest
-	{
+    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
+    public class MessageBusService : SelfHostingService, IMessageBusService
+    {
         #region [ Members ]
 
+        // Nested Types
+
+        private class SubscriptionContext
+        {
+            public SubscriptionContext()
+            {
+                Producers = new List<string>();
+                Consumers = new List<string>();
+            }
+
+            public List<string> Producers;
+
+            public List<string> Consumers;
+        }
+
         // Fields
-        private string m_command;
-        private Arguments m_arguments;
-        private List<object> m_attachments;
+        private Dictionary<string, OperationContext> m_clients;
+        private Dictionary<string, SubscriptionContext> m_queueSubscriptions;
+        private Dictionary<string, SubscriptionContext> m_topicSubscriptions;
+        private ProcessQueue<Message> m_publishQueue;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
+        /// Initializes a new instance of the <see cref="MessageBusService"/> class.
         /// </summary>
-        public ClientRequest()
-            : this("UNDEFINED")
+        public MessageBusService()
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        public ClientRequest(string command)
-            : this(command, new Arguments(""))
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
-        /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        /// <param name="arguments"><see cref="Arguments"/> for the <paramref name="command"/>.</param>
-        public ClientRequest(string command, Arguments arguments)
-        {
-            m_command = command.ToUpper();
-            m_arguments = arguments;
-            m_attachments = new List<object>();
+            m_clients = new Dictionary<string, OperationContext>(StringComparer.CurrentCultureIgnoreCase);
+            m_queueSubscriptions = new Dictionary<string, SubscriptionContext>(StringComparer.CurrentCultureIgnoreCase);
+            m_topicSubscriptions = new Dictionary<string, SubscriptionContext>(StringComparer.CurrentCultureIgnoreCase);
+            m_publishQueue = ProcessQueue<Message>.CreateRealTimeQueue(PublishMessages);
         }
 
         #endregion
 
         #region [ Properties ]
 
-        /// <summary>
-        /// Gets or sets the command text for the <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        public string Command
-        {
-            get
-            {
-                return m_command;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_command = value.ToUpper();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Arguments"/> for the <see cref="Command"/>.
-        /// </summary>
-        public Arguments Arguments
-        {
-            get
-            {
-                return m_arguments;
-            }
-            set
-            {
-                m_arguments = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of attachments for the <see cref="ClientRequest"/>.
-        /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
 
         /// <summary>
-        /// Returns the <see cref="String"/> that represents the <see cref="ClientRequest"/>.
+        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
-        public override string ToString()
+        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
+        public virtual void Register(RegistrationRequest request)
         {
-            return string.Format("{0} {1}", m_command, m_arguments);
+            OperationContext client = OperationContext.Current;
+            lock (m_clients)
+            {
+                if (!m_clients.ContainsKey(client.SessionId))
+                {
+                    m_clients.Add(client.SessionId, client);
+                    client.Channel.Faulted += OnChannelFaulted;
+                    client.Channel.Closing += OnChannelClosing;
+                }
+            }
+
+            SubscriptionContext subscription = null;
+            if (request.MessageType == MessageType.Queue)
+            {
+                lock (m_queueSubscriptions)
+                {
+                    if (!m_queueSubscriptions.TryGetValue(request.MessageName, out subscription))
+                    {
+                        subscription = new SubscriptionContext();
+                        m_queueSubscriptions.Add(request.MessageName, subscription);
+                    }
+                }
+            }
+            else if (request.MessageType == MessageType.Topic)
+            {
+                lock (m_topicSubscriptions)
+                {
+                    if (!m_topicSubscriptions.TryGetValue(request.MessageName, out subscription))
+                    {
+                        subscription = new SubscriptionContext();
+                        m_topicSubscriptions.Add(request.MessageName, subscription);
+                    }
+                }
+            }
+
+            if (request.RegistrationType == RegistrationType.Produce)
+            {
+                lock (subscription.Producers)
+                {
+                    if (!subscription.Producers.Contains(client.SessionId))
+                        subscription.Producers.Add(client.SessionId);
+                }
+            }
+            else if (request.RegistrationType == RegistrationType.Consume)
+            {
+                lock (subscription.Consumers)
+                {
+                    if (!subscription.Consumers.Contains(client.SessionId))
+                        subscription.Consumers.Add(client.SessionId);
+                }
+            }
+
+            if (!m_publishQueue.Enabled)
+                m_publishQueue.Enabled = true;
         }
-
-        #endregion
-
-        #region [ Static ]
 
         /// <summary>
-        /// Converts <see cref="string"/> to a <see cref="ClientRequest"/>.
+        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
-        /// <param name="text">Text to be converted to a <see cref="ClientRequest"/>.</param>
-        /// <returns><see cref="ClientRequest"/> object if parsing is successful; otherwise null.</returns>
-        public static ClientRequest Parse(string text)
+        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
+        public virtual void Unregister(RegistrationRequest request)
         {
-            // Input text can't be null.
-            if (text == null)
-                return null;
+            SubscriptionContext subscription = null;
+            if (request.MessageType == MessageType.Queue)
+            {
+                lock (m_queueSubscriptions)
+                {
+                    m_queueSubscriptions.TryGetValue(request.MessageName, out subscription);
+                }
+            }
+            else if (request.MessageType == MessageType.Topic)
+            {
+                lock (m_topicSubscriptions)
+                {
+                    m_topicSubscriptions.TryGetValue(request.MessageName, out subscription);
+                }
+            }
 
-            // Input text can't be empty.
-            text = text.Trim();
-            if (text == "")
-                return null;
+            if (subscription != null)
+            {
+                if (request.RegistrationType == RegistrationType.Produce)
+                {
+                    lock (subscription.Producers)
+                    {
+                        subscription.Producers.Remove(OperationContext.Current.SessionId);
+                    }
+                }
+                else if (request.RegistrationType == RegistrationType.Consume)
+                {
+                    lock (subscription.Consumers)
+                    {
+                        subscription.Consumers.Remove(OperationContext.Current.SessionId);
+                    }
+                }
+            }
+        }
 
-            string[] textSegments = text.Split(' ');
-            ClientRequest request = new ClientRequest();
-            request.Command = textSegments[0].ToUpper();
-            if (textSegments.Length == 1)
-                request.Arguments = new Arguments("");
-            else
-                request.Arguments = new Arguments(text.Remove(0, text.IndexOf(' ') + 1).Trim());
+        /// <summary>
+        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
+        /// </summary>
+        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
+        public virtual void Publish(Message message)
+        {
+            m_publishQueue.Add(message);
+        }
 
-            return request;
+        /// <summary>
+        /// Called by the internal queue used to buffer <see cref="Message"/>s that are to be distributed.
+        /// </summary>
+        /// <param name="messages">A collection of <see cref="Message"/>s to be distributed.</param>
+        protected virtual void PublishMessages(Message[] messages)
+        {
+            //Debug.WriteLine(m_publishQueue.Status);
+
+            OperationContext client = null;
+            SubscriptionContext subscription = null;
+            foreach (Message message in messages)
+            {
+                if (message.Type == MessageType.Queue)
+                {
+                    lock (m_queueSubscriptions)
+                    {
+                        m_queueSubscriptions.TryGetValue(message.Name, out subscription);
+                    }
+                }
+                else if (message.Type == MessageType.Topic)
+                {
+                    lock (m_topicSubscriptions)
+                    {
+                        m_topicSubscriptions.TryGetValue(message.Name, out subscription);
+                    }
+                }
+
+                if (subscription != null)
+                {
+                    lock (subscription.Consumers)
+                    {
+                        lock (m_clients)
+                        {
+
+                            foreach (string clientId in subscription.Consumers)
+                            {
+                                if (m_clients.TryGetValue(clientId, out client))
+                                {
+                                    client.GetCallbackChannel<IMessageBusServiceCallback>().MessageReceived(message);
+
+                                    if (message.Type == MessageType.Queue)
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void DisconnectClient(string clientId)
+        {
+            lock (m_queueSubscriptions)
+            {
+                foreach (SubscriptionContext subscription in m_queueSubscriptions.Values)
+                {
+                    lock (subscription.Producers)
+                    {
+                        subscription.Producers.Remove(clientId);
+                    }
+                    lock (subscription.Consumers)
+                    {
+                        subscription.Consumers.Remove(clientId);
+                    }
+                }
+            }
+
+            lock (m_topicSubscriptions)
+            {
+                foreach (SubscriptionContext subscription in m_topicSubscriptions.Values)
+                {
+                    lock (subscription.Producers)
+                    {
+                        subscription.Producers.Remove(clientId);
+                    }
+                    lock (subscription.Consumers)
+                    {
+                        subscription.Consumers.Remove(clientId);
+                    }
+                }
+            }
+
+            OperationContext client;
+            lock (m_clients)
+            {
+                if (m_clients.TryGetValue(clientId, out client))
+                {
+                    m_clients.Remove(clientId);
+                    client.Channel.Faulted -= OnChannelFaulted;
+                    client.Channel.Closing -= OnChannelClosing;
+                }
+            }
+        }
+
+        private void OnChannelClosing(object sender, EventArgs e)
+        {
+            DisconnectClient(((IContextChannel)sender).SessionId);
+        }
+
+        private void OnChannelFaulted(object sender, EventArgs e)
+        {
+            DisconnectClient(((IContextChannel)sender).SessionId);
         }
 
         #endregion
-	}
+    }
 }
- 
