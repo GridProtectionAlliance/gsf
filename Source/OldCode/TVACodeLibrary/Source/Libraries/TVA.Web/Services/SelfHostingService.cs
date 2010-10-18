@@ -336,7 +336,8 @@ namespace TVA.Web.Services
         /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
         /// </summary>
         /// <remarks>
-        /// Set <see cref="Endpoints"/> to a null or empty string to disable web service hosting.
+        /// Set <see cref="Endpoints"/> to a null or empty string to disable web service hosting. Refer to <see cref="CreateServiceBinding"/> 
+        /// for a list of supported URI formats.
         /// </remarks>
         public string Endpoints
         {
@@ -545,7 +546,7 @@ namespace TVA.Web.Services
                     for (int i = 0; i < serviceAddresses.Length; i++)
                     {
                         serviceAddress = serviceAddresses[i].Trim();
-                        serviceBinding = GetServiceBinding(ref serviceAddress);
+                        serviceBinding = CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
                         if (serviceBinding != null)
                         {
                             serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
@@ -659,117 +660,6 @@ namespace TVA.Web.Services
         }
 
         /// <summary>
-        /// Creates a <see cref="Binding"/> based on the specified <paramref name="address"/>.
-        /// </summary>
-        /// <param name="address">The URI that is used to determine the type of <see cref="Binding"/> to be created.</param>
-        /// <returns>An <see cref="Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
-        protected virtual Binding GetServiceBinding(ref string address)
-        {
-            address = address.Trim();
-            if (string.IsNullOrEmpty(address))
-                return null;
-
-            switch (new Uri(address.ToLower()).Scheme)
-            {
-                case "http":
-                case "http.soap11":
-                    // Format address.
-                    address = address.Replace("http.soap11", "http");
-                    // Create binding.
-                    BasicHttpBinding soap11Binding = new BasicHttpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        soap11Binding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
-                        soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
-                    }
-
-                    return soap11Binding;
-                case "http.soap12":
-                    // Format address.
-                    address = address.Replace("http.soap12", "http");
-                    // Create binding.
-                    WSHttpBinding soap12Binding = new WSHttpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        soap12Binding.Security.Mode = SecurityMode.Transport;
-                        soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
-                    }
-
-                    return soap12Binding;
-                case "http.duplex":
-                    // Format address.
-                    address = address.Replace("http.duplex", "http");
-                    // Create binding.
-                    WSDualHttpBinding duplexBinding = new WSDualHttpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        duplexBinding.Security.Mode = WSDualHttpSecurityMode.Message;
-                    }
-
-                    return duplexBinding;
-                case "http.rest":
-                    // Format address.
-                    address = address.Replace("http.rest", "http");
-                    // Create binding.
-                    WebHttpBinding restBinding = new WebHttpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
-                        restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
-                    }
-
-                    return restBinding;
-                case "net.tcp":
-                    // Create binding.
-                    NetTcpBinding tcpBinding = new NetTcpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        tcpBinding.Security.Mode = SecurityMode.Transport;
-                        tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.Windows;
-                    }
-
-                    return tcpBinding;
-                case "net.p2p":
-                    // Create binding.
-                    NetPeerTcpBinding p2pBinding = new NetPeerTcpBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        p2pBinding.Security.Mode = SecurityMode.Transport;
-                    }
-
-                    return p2pBinding;
-                case "net.pipe":
-                    // Create binding.
-                    NetNamedPipeBinding pipeBinding = new NetNamedPipeBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        pipeBinding.Security.Mode = NetNamedPipeSecurityMode.Transport;
-                    }
-
-                    return pipeBinding;
-                case "net.msmq":
-                    // Create binding.
-                    NetMsmqBinding msmqBinding = new NetMsmqBinding();
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        // Enable security.
-                        msmqBinding.Security.Mode = NetMsmqSecurityMode.Transport;
-                    }
-
-                    return msmqBinding;
-                default:
-                    return null;
-            }
-        }
-
-        /// <summary>
         /// Releases the unmanaged resources used by the web service and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
@@ -822,6 +712,163 @@ namespace TVA.Web.Services
         {
             if (ServiceProcessException != null)
                 ServiceProcessException(this, new EventArgs<Exception>(exception));
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Creates a <see cref="Binding"/> based on the specified <paramref name="address"/>.
+        /// </summary>
+        /// <param name="address">The URI that is used to determine the type of <see cref="Binding"/> to be created.</param>
+        /// <param name="enableSecurity">A boolean value that indicated whether security is to be enabled on the <see cref="Binding"/>.</param>
+        /// <returns>An <see cref="Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
+        /// <remarks>
+        /// Here is a list of valid schemes that can be specified in the <paramref name="address"/>:
+        /// <list type="table">
+        ///     <listheader>
+        ///         <term>Address Scheme</term>
+        ///         <description>Usage</description>
+        ///     </listheader>
+        ///     <item>
+        ///         <term><b>http://</b> or <b>http.soap11://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>http.soap11://localhost:2929</b> will create an <see cref="BasicHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>http.soap12://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>http.soap12://localhost:2929</b> will create an <see cref="WSHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>http.duplex://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>http.duplex://localhost:2929</b> will create an <see cref="WSDualHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>http.rest://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>http.rest://localhost:2929</b> will create an <see cref="WebHttpBinding"/> and update the <paramref name="address"/> to <b>http://localhost:2929</b>.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>net.tcp://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>net.tcp://localhost:2929</b> will create an <see cref="NetTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>net.p2p://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>net.p2p://localhost:2929</b> will create an <see cref="NetPeerTcpBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>net.pipe://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>net.pipe://localhost:2929</b> will create an <see cref="NetNamedPipeBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+        ///     </item>
+        ///     <item>
+        ///         <term><b>net.msmq://</b></term>
+        ///         <description>An <paramref name="address"/> of <b>net.msmq://localhost:2929</b> will create an <see cref="NetMsmqBinding"/> and leave the <paramref name="address"/> unchanged.</description>
+        ///     </item>
+        /// </list>
+        /// </remarks>
+        public static Binding CreateServiceBinding(ref string address, bool enableSecurity)
+        {
+            address = address.Trim();
+            if (string.IsNullOrEmpty(address))
+                return null;
+
+            switch (new Uri(address.ToLower()).Scheme)
+            {
+                case "http":
+                case "http.soap11":
+                    // Format address.
+                    address = address.Replace("http.soap11", "http");
+                    // Create binding.
+                    BasicHttpBinding soap11Binding = new BasicHttpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        soap11Binding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
+                        soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return soap11Binding;
+                case "http.soap12":
+                    // Format address.
+                    address = address.Replace("http.soap12", "http");
+                    // Create binding.
+                    WSHttpBinding soap12Binding = new WSHttpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        soap12Binding.Security.Mode = SecurityMode.Transport;
+                        soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return soap12Binding;
+                case "http.duplex":
+                    // Format address.
+                    address = address.Replace("http.duplex", "http");
+                    // Create binding.
+                    WSDualHttpBinding duplexBinding = new WSDualHttpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        duplexBinding.Security.Mode = WSDualHttpSecurityMode.Message;
+                    }
+
+                    return duplexBinding;
+                case "http.rest":
+                    // Format address.
+                    address = address.Replace("http.rest", "http");
+                    // Create binding.
+                    WebHttpBinding restBinding = new WebHttpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
+                        restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+
+                    return restBinding;
+                case "net.tcp":
+                    // Create binding.
+                    NetTcpBinding tcpBinding = new NetTcpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        tcpBinding.Security.Mode = SecurityMode.Transport;
+                        tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.Windows;
+                    }
+
+                    return tcpBinding;
+                case "net.p2p":
+                    // Create binding.
+                    NetPeerTcpBinding p2pBinding = new NetPeerTcpBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        p2pBinding.Security.Mode = SecurityMode.Transport;
+                    }
+
+                    return p2pBinding;
+                case "net.pipe":
+                    // Create binding.
+                    NetNamedPipeBinding pipeBinding = new NetNamedPipeBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        pipeBinding.Security.Mode = NetNamedPipeSecurityMode.Transport;
+                    }
+
+                    return pipeBinding;
+                case "net.msmq":
+                    // Create binding.
+                    NetMsmqBinding msmqBinding = new NetMsmqBinding();
+                    if (enableSecurity)
+                    {
+                        // Enable security.
+                        msmqBinding.Security.Mode = NetMsmqSecurityMode.Transport;
+                    }
+
+                    return msmqBinding;
+                default:
+                    return null;
+            }
         }
 
         #endregion

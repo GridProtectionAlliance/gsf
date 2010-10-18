@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  10/15/2010 - Pinal C. Patel
+//       Updated to add a SOAP endpoint in addition to REST endpoint and enabled metadata publishing.
 //
 //*******************************************************************************************************
 
@@ -242,11 +244,26 @@ namespace TVA.Web.Embedded
         {
             // Initialize host and binding.
             ServiceHost host = new ServiceHost(serviceType, baseAddresses);
-            WebHttpBinding binding = new WebHttpBinding();
 
-            // Add an endpoint for the service.
-            ServiceEndpoint endpoint = host.AddServiceEndpoint(typeof(ISecurityService), binding, "");
-            endpoint.Behaviors.Add(new WebHttpBehavior());
+            // Enable metadata publishing.
+            ServiceMetadataBehavior serviceBehavior = host.Description.Behaviors.Find<ServiceMetadataBehavior>();
+            if (serviceBehavior == null)
+            {
+                serviceBehavior = new ServiceMetadataBehavior();
+                host.Description.Behaviors.Add(serviceBehavior);
+            }
+            serviceBehavior.HttpGetEnabled = true;
+
+            // Add REST endpoint.
+            WebHttpBinding restBinding = new WebHttpBinding();
+            WebHttpBehavior restBehavior = new WebHttpBehavior();
+            ServiceEndpoint restEndpoint = host.AddServiceEndpoint(typeof(ISecurityService), restBinding, "rest");
+            restBehavior.HelpEnabled = true;
+            restEndpoint.Behaviors.Add(restBehavior);
+
+            // Add SOAP endpoint.
+            host.AddServiceEndpoint(typeof(ISecurityService), new WSHttpBinding(), "soap");
+            host.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), "soap/mex");
 
             return host;
         }
