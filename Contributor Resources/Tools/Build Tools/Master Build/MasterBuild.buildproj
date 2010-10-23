@@ -39,6 +39,9 @@
 **       Modified the build archival process to allow for customization.
 **       Moved initialization if FilesToDelete list to CoreBuildProjects target.
 **       Implemented VersionPrecision logic in CoreVersionSource target.
+**  10/23/2010 - Pinal C. Patel
+**       Moved checkin of pending changes to CoreDeleteWorkspace task so version changes are 
+**       checked-in only if the entire build completes successfully.
 **
 *******************************************************************************************************
 -->
@@ -361,7 +364,6 @@
     <PropertyGroup>
       <BuildLabel Condition="'$(BuildLabel)' == ''">$(ProjectName)_v$(Major).$(Minor).$(Build).$(Revision)</BuildLabel>
     </PropertyGroup>
-    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22"/>
   </Target>
 
   <Target Name="AfterVersionSource"/>
@@ -454,6 +456,9 @@
   <Target Name="BeforeDeleteWorkspace"/>
 
   <Target Name="CoreDeleteWorkspace">
+    <!-- Checkin all of the pending changes. -->
+    <Message Text="Checking in pending changes..."/>
+    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22" ContinueOnError="true"/>
     <!-- Delete the temporary build workpsace. -->
     <Message Text="Deleting temporary workspace..."/>
     <Exec Command="%22$(TfsClient)%22 workspace /delete /server:$(TfsServer) %22$(Workspace)%22" ContinueOnError="true"/>
