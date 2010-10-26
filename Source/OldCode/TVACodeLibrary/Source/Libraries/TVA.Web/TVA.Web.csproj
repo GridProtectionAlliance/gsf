@@ -111,12 +111,15 @@
     </Compile>
     <Compile Include="Embedded\SecurityServiceHostFactory.cs" />
     <Compile Include="Services\ISelfHostingService.cs" />
+    <Compile Include="Services\Messaging\ClientInfo.cs" />
     <Compile Include="Services\Messaging\IMessageBusService.cs" />
     <Compile Include="Services\Messaging\IMessageBusServiceCallback.cs" />
     <Compile Include="Services\Messaging\Message.cs" />
+    <Compile Include="Services\Messaging\MessageBusSecurityPolicy.cs" />
     <Compile Include="Services\Messaging\MessageBusService.cs" />
     <Compile Include="Services\Messaging\NamespaceDoc.cs" />
     <Compile Include="Services\Messaging\RegistrationRequest.cs" />
+    <Compile Include="Services\Messaging\RegistrationInfo.cs" />
     <Compile Include="Services\NamespaceDoc.cs" />
     <Compile Include="Services\SelfHostingService.cs" />
     <Compile Include="Services\Serialization.cs" />

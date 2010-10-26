@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IMessageBusService.cs - Gbtc
+//  ClientInfo.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/06/2010 - Pinal C. Patel
+//  10/19/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  10/26/2010 - Pinal C. Patel
-//       Added management methods GetClients(), GetQueues() and GetTopics().
 //
 //*******************************************************************************************************
 
@@ -231,60 +229,89 @@
 */
 #endregion
 
-using System.Collections.Generic;
+using System;
+using System.Runtime.Serialization;
 using System.ServiceModel;
 
 namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// Defines a message bus for event-based messaging between disjoint systems.
+    /// Represents information about a client connected to the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.
     /// </summary>
-    [ServiceContract(SessionMode = SessionMode.Allowed, CallbackContract = typeof(IMessageBusServiceCallback))]
-    public interface IMessageBusService : ISelfHostingService
+    [DataContract()]
+    public class ClientInfo
     {
+        #region [ Members ]
+
+        // Fields
+
+        /// <summary>
+        /// Gets or sets the session identifier of the client.
+        /// </summary>
+        [DataMember()]
+        public string SessionId;
+
+        /// <summary>
+        /// Gets or sets the <see cref="DateTime"/> when the client connected to the <see cref="MessageBusService"/>.
+        /// </summary>
+        [DataMember()]
+        public DateTime ConnectedAt;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s produced by the client.
+        /// </summary>
+        [DataMember()]
+        public long MessagesProduced;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s consumed by the client.
+        /// </summary>
+        [DataMember()]
+        public long MessagesConsumed;
+
+        /// <summary>
+        /// Gets or sets the <see cref="OperationContext"/> object of the client.
+        /// </summary>
+        public OperationContext OperationContext;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientInfo"/> class.
+        /// </summary>
+        /// <param name="context">An <see cref="OperationContext"/> object of the client.</param>
+        internal ClientInfo(OperationContext context)
+        {
+            SessionId = context.SessionId;
+            ConnectedAt = DateTime.Now;
+            OperationContext = context;
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>
-        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
+        /// Determines if the specified <see cref="Object"/> is equal to the current <see cref="ClientInfo"/> object.
         /// </summary>
-        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        [OperationContract(IsOneWay = true)]
-        void Register(RegistrationRequest request);
+        /// <param name="obj">The <see cref="Object"/> to compare with the current <see cref="ClientInfo"/> object.</param>
+        /// <returns>true if both <see cref="Object"/>s  are equal; otherwise false.</returns>
+        public override bool Equals(object obj)
+        {
+            ClientInfo other = obj as ClientInfo;
+            return (other != null && other.SessionId == this.SessionId);
+        }
 
         /// <summary>
-        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
+        /// Gets a hash value for the current <see cref="ClientInfo"/> object.
         /// </summary>
-        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
-        [OperationContract(IsOneWay = true)]
-        void Unregister(RegistrationRequest request);
-
-        /// <summary>
-        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
-        /// </summary>
-        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        [OperationContract(IsOneWay = true)]
-        void Publish(Message message);
-
-        /// <summary>
-        /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<ClientInfo> GetClients();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<RegistrationInfo> GetQueues();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<RegistrationInfo> GetTopics();
+        /// <returns>An <see cref="Int32"/> value.</returns>
+        public override int GetHashCode()
+        {
+            return SessionId.GetHashCode();
+        }
 
         #endregion
     }

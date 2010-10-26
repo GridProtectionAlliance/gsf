@@ -29,6 +29,8 @@
 //         Deleted DataFlow since access restriction can now be imposed by enabling security.
 //         Added SecurityPolicy and PublishMetadata.
 //         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
+//  10/26/2010 - Pinal C. Patel
+//       Modified the implementation of ISupportLifecycle.Enabled property.
 //
 //*******************************************************************************************************
 
@@ -301,7 +303,6 @@ namespace TVA.Web.Services
         private bool m_publishMetadata;
         private bool m_persistSettings;
         private string m_settingsCategory;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
         private ServiceHost m_serviceHost;
@@ -423,11 +424,21 @@ namespace TVA.Web.Services
         {
             get
             {
-                return m_enabled;
+                return (m_serviceHost != null && m_serviceHost.State == CommunicationState.Opened);
             }
             set
             {
-                m_enabled = value;
+                if (value && !Enabled)
+                {
+                    if (!m_initialized)
+                        Initialize();
+                    else
+                        InitializeServiceHost();
+                }
+                else if (!value && Enabled)
+                {
+                    m_serviceHost.Close();
+                }
             }
         }
 
@@ -500,88 +511,9 @@ namespace TVA.Web.Services
         {
             if (!m_initialized)
             {
-                LoadSettings();
-                if (m_enabled && !string.IsNullOrEmpty(m_endpoints))
-                {
-                    // Initialize service host.
-                    string serviceUri = string.Format("http://localhost:{0}", GetUnusedPort());
-                    if (m_singleton)
-                        m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
-                    else
-                        m_serviceHost = new ServiceHost(this.GetType(), new Uri(serviceUri));
-
-                    // Enable metadata publishing.
-                    if (m_publishMetadata)
-                    {
-                        ServiceMetadataBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceMetadataBehavior>();
-                        if (serviceBehavior == null)
-                        {
-                            serviceBehavior = new ServiceMetadataBehavior();
-                            m_serviceHost.Description.Behaviors.Add(serviceBehavior);
-                        }
-                        serviceBehavior.HttpGetEnabled = true;
-                    }
-
-                    // Enable security on the service.
-                    if (!string.IsNullOrEmpty(m_securityPolicy))
-                    {
-                        ServiceAuthorizationBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
-                        if (serviceBehavior == null)
-                        {
-                            serviceBehavior = new ServiceAuthorizationBehavior();
-                            m_serviceHost.Description.Behaviors.Add(serviceBehavior);
-                        }
-                        serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
-                        List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-                        policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
-                        serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
-                    }
-
-                    // Add specified service endpoints.
-                    string serviceAddress;
-                    string[] serviceAddresses;
-                    Binding serviceBinding;
-                    ServiceEndpoint serviceEndpoint;
-                    serviceAddresses = m_endpoints.Split(';');
-                    for (int i = 0; i < serviceAddresses.Length; i++)
-                    {
-                        serviceAddress = serviceAddresses[i].Trim();
-                        serviceBinding = CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
-                        if (serviceBinding != null)
-                        {
-                            serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
-                            if (serviceBinding.GetType() == typeof(WebHttpBinding))
-                            {
-                                // Special handling for REST endpoint.
-                                WebHttpBehavior restBehavior = new WebHttpBehavior();
-                                if (m_publishMetadata)
-                                    restBehavior.HelpEnabled = true;
-
-                                serviceEndpoint.Behaviors.Add(restBehavior);
-                            }
-                            else if (m_publishMetadata)
-                            {
-                                // Add endpoint for service metadata.
-                                if (serviceAddress.StartsWith("http://"))
-                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), serviceAddress + "/mex");
-                                else if (serviceAddress.StartsWith("net.tcp://"))
-                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexTcpBinding(), serviceAddress + "/mex");
-                                else if (serviceAddress.StartsWith("net.pipe://"))
-                                    m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexNamedPipeBinding(), serviceAddress + "/mex");
-                            }
-                        }
-                    }
-
-                    // Allow for customization.
-                    OnServiceHostCreated();
-
-                    // Start the service.
-                    m_serviceHost.Open();
-                    OnServiceHostStarted();
-                }
-
-                // Initialize only once.
-                m_initialized = true;
+                LoadSettings();             // Load settings from the config file.
+                InitializeServiceHost();    // Initialize the service host.
+                m_initialized = true;       // Initialize only once.
             }
         }
 
@@ -600,7 +532,6 @@ namespace TVA.Web.Services
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Enabled", true].Update(m_enabled);
                 settings["Endpoints", true].Update(m_endpoints);
                 settings["Contract", true].Update(m_contract);
                 settings["Singleton", true].Update(m_singleton);
@@ -625,13 +556,11 @@ namespace TVA.Web.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if the web service is enabled; otherwise False.");
                 settings.Add("Endpoints", m_endpoints, "Semicolon delimited list of URIs where the web service can be accessed.");
                 settings.Add("Contract", m_contract, "Assembly qualified name of the contract interface implemented by the web service.");
                 settings.Add("Singleton", m_singleton, "True if the web service is singleton; otherwise False.");
                 settings.Add("SecurityPolicy", m_securityPolicy, "Assembly qualified name of the authorization policy to be used for securing the web service.");
                 settings.Add("PublishMetadata", m_publishMetadata, "True if the web service metadata is to be published at all the endpoints; otherwise False.");
-                Enabled = settings["Enabled"].ValueAs(m_enabled);
                 Endpoints = settings["Endpoints"].ValueAs(m_endpoints);
                 Contract = settings["Contract"].ValueAs(m_contract);
                 Singleton = settings["Singleton"].ValueAs(m_singleton);
@@ -656,6 +585,91 @@ namespace TVA.Web.Services
                 else
                     // Port is not in use - use this.
                     return randomPort;
+            }
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="ServiceHost"/>.
+        /// </summary>
+        protected virtual void InitializeServiceHost()
+        {
+            if (!string.IsNullOrEmpty(m_endpoints))
+            {
+                // Initialize service host.
+                string serviceUri = string.Format("http://localhost:{0}", GetUnusedPort());
+                if (m_singleton)
+                    m_serviceHost = new ServiceHost(this, new Uri(serviceUri));
+                else
+                    m_serviceHost = new ServiceHost(this.GetType(), new Uri(serviceUri));
+
+                // Enable metadata publishing.
+                if (m_publishMetadata)
+                {
+                    ServiceMetadataBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceMetadataBehavior>();
+                    if (serviceBehavior == null)
+                    {
+                        serviceBehavior = new ServiceMetadataBehavior();
+                        m_serviceHost.Description.Behaviors.Add(serviceBehavior);
+                    }
+                    serviceBehavior.HttpGetEnabled = true;
+                }
+
+                // Enable security on the service.
+                if (!string.IsNullOrEmpty(m_securityPolicy))
+                {
+                    ServiceAuthorizationBehavior serviceBehavior = m_serviceHost.Description.Behaviors.Find<ServiceAuthorizationBehavior>();
+                    if (serviceBehavior == null)
+                    {
+                        serviceBehavior = new ServiceAuthorizationBehavior();
+                        m_serviceHost.Description.Behaviors.Add(serviceBehavior);
+                    }
+                    serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
+                    List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
+                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
+                    serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
+                }
+
+                // Add specified service endpoints.
+                string serviceAddress;
+                string[] serviceAddresses;
+                Binding serviceBinding;
+                ServiceEndpoint serviceEndpoint;
+                serviceAddresses = m_endpoints.Split(';');
+                for (int i = 0; i < serviceAddresses.Length; i++)
+                {
+                    serviceAddress = serviceAddresses[i].Trim();
+                    serviceBinding = CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
+                    if (serviceBinding != null)
+                    {
+                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
+                        if (serviceBinding.GetType() == typeof(WebHttpBinding))
+                        {
+                            // Special handling for REST endpoint.
+                            WebHttpBehavior restBehavior = new WebHttpBehavior();
+                            if (m_publishMetadata)
+                                restBehavior.HelpEnabled = true;
+
+                            serviceEndpoint.Behaviors.Add(restBehavior);
+                        }
+                        else if (m_publishMetadata)
+                        {
+                            // Add endpoint for service metadata.
+                            if (serviceAddress.StartsWith("http://"))
+                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), serviceAddress + "/mex");
+                            else if (serviceAddress.StartsWith("net.tcp://"))
+                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexTcpBinding(), serviceAddress + "/mex");
+                            else if (serviceAddress.StartsWith("net.pipe://"))
+                                m_serviceHost.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexNamedPipeBinding(), serviceAddress + "/mex");
+                        }
+                    }
+                }
+
+                // Allow for customization.
+                OnServiceHostCreated();
+
+                // Start the service.
+                m_serviceHost.Open();
+                OnServiceHostStarted();
             }
         }
 
@@ -725,7 +739,7 @@ namespace TVA.Web.Services
         /// <param name="enableSecurity">A boolean value that indicated whether security is to be enabled on the <see cref="Binding"/>.</param>
         /// <returns>An <see cref="Binding"/> object if a valid <paramref name="address"/> is specified; otherwise null.</returns>
         /// <remarks>
-        /// Here is a list of valid schemes that can be specified in the <paramref name="address"/>:
+        /// This list shows all valid address schemes that can be specified in the <paramref name="address"/>:
         /// <list type="table">
         ///     <listheader>
         ///         <term>Address Scheme</term>
@@ -833,6 +847,12 @@ namespace TVA.Web.Services
                         // Enable security.
                         tcpBinding.Security.Mode = SecurityMode.Transport;
                         tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.Windows;
+                    }
+                    else
+                    {
+                        // Disable sercurity.
+                        tcpBinding.Security.Mode = SecurityMode.None;
+                        tcpBinding.Security.Transport.ClientCredentialType = TcpClientCredentialType.None;
                     }
 
                     return tcpBinding;

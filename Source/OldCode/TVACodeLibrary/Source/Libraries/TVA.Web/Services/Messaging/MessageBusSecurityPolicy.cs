@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  IMessageBusService.cs - Gbtc
+//  MessageBusSecurityPolicy.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/06/2010 - Pinal C. Patel
+//  10/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  10/26/2010 - Pinal C. Patel
-//       Added management methods GetClients(), GetQueues() and GetTopics().
 //
 //*******************************************************************************************************
 
@@ -231,61 +229,14 @@
 */
 #endregion
 
+using System;
 using System.Collections.Generic;
-using System.ServiceModel;
+using System.Linq;
+using System.Text;
 
 namespace TVA.Web.Services.Messaging
 {
-    /// <summary>
-    /// Defines a message bus for event-based messaging between disjoint systems.
-    /// </summary>
-    [ServiceContract(SessionMode = SessionMode.Allowed, CallbackContract = typeof(IMessageBusServiceCallback))]
-    public interface IMessageBusService : ISelfHostingService
+    class MessageBusSecurityPolicy
     {
-        #region [ Methods ]
-
-        /// <summary>
-        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
-        /// </summary>
-        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        [OperationContract(IsOneWay = true)]
-        void Register(RegistrationRequest request);
-
-        /// <summary>
-        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
-        /// </summary>
-        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
-        [OperationContract(IsOneWay = true)]
-        void Unregister(RegistrationRequest request);
-
-        /// <summary>
-        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
-        /// </summary>
-        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        [OperationContract(IsOneWay = true)]
-        void Publish(Message message);
-
-        /// <summary>
-        /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<ClientInfo> GetClients();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<RegistrationInfo> GetQueues();
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
-        ICollection<RegistrationInfo> GetTopics();
-
-        #endregion
     }
 }

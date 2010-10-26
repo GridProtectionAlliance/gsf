@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  MessageBusService.cs - Gbtc
+//  RegistrationInfo.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  10/06/2010 - Pinal C. Patel
+//  10/19/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  10/26/2010 - Pinal C. Patel
-//       Added management methods GetClients(), GetQueues() and GetTopics().
 //
 //*******************************************************************************************************
 
@@ -233,61 +231,95 @@
 
 using System;
 using System.Collections.Generic;
-using System.ServiceModel;
+using System.Linq;
+using System.Text;
+using System.Runtime.Serialization;
 using System.Threading;
-using TVA.Collections;
 
 namespace TVA.Web.Services.Messaging
 {
     /// <summary>
-    /// A message bus for event-based messaging between disjoint systems.
+    /// Represents information about a registration with the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.
     /// </summary>
-    [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-    public class MessageBusService : SelfHostingService, IMessageBusService
+    [DataContract()]
+    public class RegistrationInfo : IDisposable
     {
         #region [ Members ]
 
-        // Nested Types
-
-        private class PublishContext
-        {
-            public PublishContext(Message message, RegistrationInfo registration)
-            {
-                Message = message;
-                Registration = registration;
-            }
-
-            public Message Message;
-
-            public RegistrationInfo Registration;
-        }
-
         // Fields
-        private Dictionary<string, ClientInfo> m_clients;
-        private Dictionary<string, RegistrationInfo> m_queues;
-        private Dictionary<string, RegistrationInfo> m_topics;
-        private ReaderWriterLockSlim m_clientsLock;
-        private ReaderWriterLockSlim m_queuesLock;
-        private ReaderWriterLockSlim m_topicsLock;
-        private ProcessQueue<PublishContext> m_publishQueue;
+
         private bool m_disposed;
+
+        /// <summary>
+        /// Gets or sets the type for <see cref="Message"/>s being produced/consumed.
+        /// </summary>
+        [DataMember()]
+        public MessageType MessageType;
+
+        /// <summary>
+        /// Gets or sets the name for <see cref="Message"/>s being produced/consumed. 
+        /// </summary>
+        [DataMember()]
+        public string MessageName;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s received.
+        /// </summary>
+        [DataMember()]
+        public long MessagesReceived;
+
+        /// <summary>
+        /// Gets or sets the total number of <see cref="Message"/>s distributed.
+        /// </summary>
+        [DataMember()]
+        public long MessagesProcessed;
+
+        /// <summary>
+        /// Gets or sets the list of clients producing the <see cref="Message"/>s.
+        /// </summary>
+        [DataMember()]
+        public List<ClientInfo> Producers;
+
+        /// <summary>
+        /// Gets or sets the list of clients consuming the <see cref="Message"/>s.
+        /// </summary>
+        [DataMember()]
+        public List<ClientInfo> Consumers;
+
+        /// <summary>
+        /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Producers"/>.
+        /// </summary>
+        public readonly ReaderWriterLockSlim ProducersLock;
+
+        /// <summary>
+        /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Consumers"/>.
+        /// </summary>
+        public readonly ReaderWriterLockSlim ConsumersLock;      
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MessageBusService"/> class.
+        /// Initializes a new instance of the <see cref="RegistrationInfo"/> class.
         /// </summary>
-        public MessageBusService()
+        /// <param name="request">An <see cref="RegistrationRequest"/> object.</param>
+        internal RegistrationInfo(RegistrationRequest request)
         {
-            m_clients = new Dictionary<string, ClientInfo>(StringComparer.CurrentCultureIgnoreCase);
-            m_queues = new Dictionary<string, RegistrationInfo>(StringComparer.CurrentCultureIgnoreCase);
-            m_topics = new Dictionary<string, RegistrationInfo>(StringComparer.CurrentCultureIgnoreCase);
-            m_clientsLock = new ReaderWriterLockSlim();
-            m_queuesLock = new ReaderWriterLockSlim();
-            m_topicsLock = new ReaderWriterLockSlim();
-            m_publishQueue = ProcessQueue<PublishContext>.CreateRealTimeQueue(PublishMessages);
+            MessageType = request.MessageType;
+            MessageName = request.MessageName;
+            Producers = new List<ClientInfo>();
+            Consumers = new List<ClientInfo>();
+            ProducersLock = new ReaderWriterLockSlim();
+            ConsumersLock = new ReaderWriterLockSlim();
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources before the <see cref="RegistrationInfo"/> object is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~RegistrationInfo()
+        {
+            Dispose(false);
         }
 
         #endregion
@@ -299,159 +331,19 @@ namespace TVA.Web.Services.Messaging
         #region [ Methods ]
 
         /// <summary>
-        /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
+        /// Releases all the resources used by the <see cref="RegistrationInfo"/> object.
         /// </summary>
-        /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        public virtual void Register(RegistrationRequest request)
+        public void Dispose()
         {
-            // Save client information if not already present.
-            ClientInfo client;
-            lock (m_clients)
-            {
-                if (!m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
-                {
-                    client = new ClientInfo(OperationContext.Current);
-                    m_clients.Add(client.SessionId, client);
-                    client.OperationContext.Channel.Faulted += OnChannelFaulted;
-                    client.OperationContext.Channel.Closing += OnChannelClosing;
-                }
-            }
-
-            // Retrieve registration information from registry.
-            RegistrationInfo registration = null;
-            if (request.MessageType == MessageType.Queue)
-            {
-                lock (m_queues)
-                {
-                    if (!m_queues.TryGetValue(request.MessageName, out registration))
-                    {
-                        registration = new RegistrationInfo(request);
-                        m_queues.Add(request.MessageName, registration);
-                    }
-                }
-            }
-            else if (request.MessageType == MessageType.Topic)
-            {
-                lock (m_topics)
-                {
-                    if (!m_topics.TryGetValue(request.MessageName, out registration))
-                    {
-                        registration = new RegistrationInfo(request);
-                        m_topics.Add(request.MessageName, registration);
-                    }
-                }
-            }
-
-            // Update registration information with the new request.
-            List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
-            lock (clients)
-            {
-                if (!clients.Contains(client))
-                    clients.Add(client);
-            }
-
-            // Start the process queue.
-            if (!m_publishQueue.Enabled)
-                m_publishQueue.Enabled = true;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
-        /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
-        /// </summary>
-        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
-        public virtual void Unregister(RegistrationRequest request)
-        {
-            RegistrationInfo registration = null;
-            if (request.MessageType == MessageType.Queue)
-            {
-                lock (m_queues)
-                {
-                    m_queues.TryGetValue(request.MessageName, out registration);
-                }
-            }
-            else if (request.MessageType == MessageType.Topic)
-            {
-                lock (m_topics)
-                {
-                    m_topics.TryGetValue(request.MessageName, out registration);
-                }
-            }
-
-            List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
-            lock (clients)
-            {
-                clients.RemoveAt(clients.FindIndex(client => client.SessionId == OperationContext.Current.SessionId));
-            }
-        }
-
-        /// <summary>
-        /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
-        /// </summary>
-        /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        public virtual void Publish(Message message)
-        {
-            ClientInfo client;
-            lock (m_clients)
-            {
-                if (m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
-                    Interlocked.Increment(ref client.MessagesProduced);
-            }
-
-            RegistrationInfo registration = null;
-            if (message.Type == MessageType.Queue)
-            {
-                lock (m_queues)
-                {
-                    m_queues.TryGetValue(message.Name, out registration);
-                }
-            }
-            else if (message.Type == MessageType.Topic)
-            {
-                lock (m_topics)
-                {
-                    m_topics.TryGetValue(message.Name, out registration);
-                }
-            }
-
-            if (registration != null && m_publishQueue != null)
-            {
-                Interlocked.Increment(ref registration.MessagesReceived);
-                m_publishQueue.Add(new PublishContext(message, registration));
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        public ICollection<ClientInfo> GetClients()
-        {
-            return m_clients.Values;
-        }
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        public ICollection<RegistrationInfo> GetQueues()
-        {
-            return m_queues.Values;
-        }
-
-        /// <summary>
-        /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
-        /// </summary>
-        /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        public ICollection<RegistrationInfo> GetTopics()
-        {
-            return m_topics.Values;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MessageBusService"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="RegistrationInfo"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -461,148 +353,18 @@ namespace TVA.Web.Services.Messaging
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        if (m_publishQueue != null)
-                            m_publishQueue.Dispose();
+                        if (ProducersLock != null)
+                            ProducersLock.Dispose();
 
-                        if (m_clientsLock != null)
-                            m_clientsLock.Dispose();
-
-                        if (m_queuesLock != null)
-                            m_queuesLock.Dispose();
-
-                        if (m_topicsLock != null)
-                            m_topicsLock.Dispose();
-
-                        // Disconnect all clients.
-                        if (m_clients != null)
-                        {
-                            List<string> clientIds;
-                            lock (m_clients)
-                            {
-                                clientIds = new List<string>(m_clients.Keys);
-                            }
-                            foreach (string clientId in clientIds)
-                            {
-                                DisconnectClient(clientId);
-                            }
-                        }
-
-                        // Remove queue registrations.
-                        if (m_queues != null)
-                        {
-                            lock (m_queues)
-                            {
-                                foreach (RegistrationInfo registration in m_queues.Values)
-                                {
-                                    registration.Dispose();
-                                }
-                                m_queues.Clear();
-                            }
-                        }
-
-                        // Remove topic registrations.
-                        if (m_topics != null)
-                        {
-                            lock (m_topics)
-                            {
-                                foreach (RegistrationInfo registration in m_topics.Values)
-                                {
-                                    registration.Dispose();
-                                }
-                                m_topics.Clear();
-                            }
-                        }
+                        if (ConsumersLock != null)
+                            ConsumersLock.Dispose();
                     }
                 }
                 finally
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
-        }
-
-        private void PublishMessages(PublishContext[] contexts)
-        {
-            foreach (PublishContext context in contexts)
-            {
-                lock (context.Registration.Consumers)
-                {
-                    foreach (ClientInfo client in context.Registration.Consumers)
-                    {
-                        try
-                        {
-                            client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().MessageReceived(context.Message);
-                            Interlocked.Increment(ref client.MessagesConsumed);
-
-                            if (context.Message.Type == MessageType.Queue)
-                                break;
-                        }
-                        catch
-                        {
-                            client.OperationContext.Channel.Close();
-                        }
-                    }
-                }
-                Interlocked.Increment(ref context.Registration.MessagesProcessed);
-            }
-        }
-
-        private void DisconnectClient(string clientId)
-        {
-            ClientInfo client;
-            lock (m_clients)
-            {
-                if (m_clients.TryGetValue(clientId, out client))
-                {
-                    m_clients.Remove(clientId);
-                    client.OperationContext.Channel.Faulted -= OnChannelFaulted;
-                    client.OperationContext.Channel.Closing -= OnChannelClosing;
-                }
-            }
-
-            if (client != null)
-            {
-                lock (m_queues)
-                {
-                    foreach (RegistrationInfo registration in m_queues.Values)
-                    {
-                        lock (registration.Producers)
-                        {
-                            registration.Producers.Remove(client);
-                        }
-                        lock (registration.Consumers)
-                        {
-                            registration.Consumers.Remove(client);
-                        }
-                    }
-                }
-
-                lock (m_topics)
-                {
-                    foreach (RegistrationInfo registration in m_topics.Values)
-                    {
-                        lock (registration.Producers)
-                        {
-                            registration.Producers.Remove(client);
-                        }
-                        lock (registration.Consumers)
-                        {
-                            registration.Consumers.Remove(client);
-                        }
-                    }
-                }
-            }
-        }
-
-        private void OnChannelClosing(object sender, EventArgs e)
-        {
-            DisconnectClient(((IContextChannel)sender).SessionId);
-        }
-
-        private void OnChannelFaulted(object sender, EventArgs e)
-        {
-            DisconnectClient(((IContextChannel)sender).SessionId);
         }
 
         #endregion
