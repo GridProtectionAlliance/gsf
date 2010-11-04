@@ -329,7 +329,7 @@ namespace TVA.Security
         /// Gets the date and time when user must change the password.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 9)]
-        public DateTime PasswordChangeDataTime { get; set; }
+        public DateTime PasswordChangeDateTime { get; set; }
 
         /// <summary>
         /// Gets the date and time when user account was created.
@@ -396,7 +396,7 @@ namespace TVA.Security
             EmailAddress = string.Empty;
             SecurityQuestion = string.Empty;
             SecurityAnswer = string.Empty;
-            PasswordChangeDataTime = DateTime.MinValue;
+            PasswordChangeDateTime = DateTime.MinValue;
             AccountCreatedDateTime = DateTime.MinValue;
             IsDefined = false;
             IsExternal = false;

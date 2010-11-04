@@ -386,7 +386,7 @@ namespace TVA.Security
                             UserData.IsDisabled = true;
 
                         // Determine date when user must change the password.
-                        UserData.PasswordChangeDataTime = DateTime.MaxValue;
+                        UserData.PasswordChangeDateTime = DateTime.MaxValue;
                         if (!Convert.ToBoolean(userAccountControl & PASSWD_CANT_CHANGE) &&
                             !Convert.ToBoolean(userAccountControl & DONT_EXPIRE_PASSWORD))
                         {
@@ -394,14 +394,14 @@ namespace TVA.Security
                             if (passwordSetOn == 0)
                             {
                                 // User must change password on next logon.
-                                UserData.PasswordChangeDataTime = DateTime.MinValue;
+                                UserData.PasswordChangeDateTime = DateTime.MinValue;
                             }
                             else
                             {
                                 // User must change password periodically.
                                 SearchResult searchResult = searcher.FindOne();
                                 if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
-                                    UserData.PasswordChangeDataTime = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks((long)searchResult.Properties["maxPwdAge"][0]).Duration().Days);
+                                    UserData.PasswordChangeDateTime = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks((long)searchResult.Properties["maxPwdAge"][0]).Duration().Days);
                             }
                         }
                     }

@@ -355,7 +355,7 @@ namespace TVA.Security
                         if (!Convert.IsDBNull(userDataRow["UserIsLockedOut"]))
                             UserData.IsLockedOut = Convert.ToBoolean(userDataRow["UserIsLockedOut"]);
                         if (!Convert.IsDBNull(userDataRow["UserPasswordChangeDateTime"]))
-                            UserData.PasswordChangeDataTime = Convert.ToDateTime(userDataRow["UserPasswordChangeDateTime"]);
+                            UserData.PasswordChangeDateTime = Convert.ToDateTime(userDataRow["UserPasswordChangeDateTime"]);
                         if (!Convert.IsDBNull(userDataRow["UserAccountCreatedDateTime"]))
                             UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["UserAccountCreatedDateTime"]);
                     }
