@@ -35,6 +35,16 @@
 **  08/01/2010 - Pinal C. Patel
 **       Modified to force a build if a specific version of the source code is being built by 
 **       specifying the version using the SourceVersion property.
+**  10/09/2010 - Pinal C. Patel
+**       Modified the build archival process to allow for customization.
+**       Moved initialization if FilesToDelete list to CoreBuildProjects target.
+**       Implemented VersionPrecision logic in CoreVersionSource target.
+**  10/23/2010 - Pinal C. Patel
+**       Moved checkin of pending changes to CoreDeleteWorkspace task so version changes are 
+**       checked-in only if the entire build completes successfully.
+**  11/02/2010 - Pinal C. Patel
+**       Added missing logic in ArchiveBuildOutput target so binary and install archive files are 
+**       created only if there are files to be added to these arechives.
 **
 *******************************************************************************************************
 -->
@@ -85,25 +95,33 @@
     <SandcastleBuilder></SandcastleBuilder>
     <!-- Forces a build regardless of new changes since last build. -->
     <ForceBuild></ForceBuild>
+    <!-- Name of binaries archive file. -->
+    <BinariesArchiveFileName></BinariesArchiveFileName>
+    <!-- Name of installs archive file. -->
+    <InstallsArchiveFileName></InstallsArchiveFileName>
+    <!-- Working directory for creating binaries archive file. -->
+    <BinariesArchiveWorkingDirectory></BinariesArchiveWorkingDirectory>
+    <!-- Working directory for creating installs archive file. -->
+    <InstallsArchiveWorkingDirectory></InstallsArchiveWorkingDirectory>
   </PropertyGroup>
 
   <PropertyGroup>
     <!--
-         InitializeBuild
-           PrepareSettings    (Before > Core > After)
-           CheckEnvironment   (Before > Core > After)
-           CreateWorkspace    (Before > Core > After)
-         CompileBuild
-           PopulateWorkspace  (Before > Core > After)
-           VersionSource      (Before > Core > After)
-           BuildProjects      (Before > Core > After)
-           ExecuteUnitTests   (Before > Core > After)
-         FinalizeBuild
-           LabelBuild         (Before > Core > After)
-           CleanBuild         (Before > Core > After)
-           DeployBuild        (Before > Core > After)
-           DeleteWorkspace    (Before > Core > After)
-    -->
+        InitializeBuild
+          PrepareSettings    (Before > Core > After)
+          CheckEnvironment   (Before > Core > After)
+          CreateWorkspace    (Before > Core > After)
+        CompileBuild
+          PopulateWorkspace  (Before > Core > After)
+          VersionSource      (Before > Core > After)
+          BuildProjects      (Before > Core > After)
+          ExecuteUnitTests   (Before > Core > After)
+        FinalizeBuild
+          LabelBuild         (Before > Core > After)
+          CleanBuild         (Before > Core > After)
+          DeployBuild        (Before > Core > After)
+          DeleteWorkspace    (Before > Core > After)
+   -->
     <InitializeBuildDependsOn>
       PrepareSettings;
       CheckEnvironment;
@@ -257,6 +275,10 @@
       <SandcastleBuilder Condition="'$(SandcastleBuilder)' == ''">$(SHFBROOT)\SandcastleBuilderGUI.exe</SandcastleBuilder>
       <ForceBuild Condition="'$(ForceBuild)' == ''">false</ForceBuild>
       <ForceBuild Condition="'$(SourceVersion)' != 'T'">true</ForceBuild>
+      <BinariesArchiveFileName Condition="'$(BinariesArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Binaries.zip</BinariesArchiveFileName>
+      <InstallsArchiveFileName Condition="'$(InstallsArchiveFileName)' == ''">$(LocalFolder)\$(ProjectName).Installs.zip</InstallsArchiveFileName>
+      <BinariesArchiveWorkingDirectory Condition="'$(BinariesArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Binaries</BinariesArchiveWorkingDirectory>
+      <InstallsArchiveWorkingDirectory Condition="'$(InstallsArchiveWorkingDirectory)' == ''">$(LocalFolder)\Archives\Installs</InstallsArchiveWorkingDirectory>
     </PropertyGroup>
   </Target>
 
@@ -318,7 +340,7 @@
     <PropertyGroup>
       <ForceBuild Condition="'$(TotalChanges)' &gt; '2'">true</ForceBuild>
     </PropertyGroup>
-    <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>    
+    <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
 
   <Target Name="AfterPopulateWorkspace"/>
@@ -339,11 +361,12 @@
       <Output TaskParameter="Changeset" PropertyName="Revision"/>
     </TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
-    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}"/>
+    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' &lt;= '2'"/>
+    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
+    <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '4'"/>
     <PropertyGroup>
       <BuildLabel Condition="'$(BuildLabel)' == ''">$(ProjectName)_v$(Major).$(Minor).$(Build).$(Revision)</BuildLabel>
     </PropertyGroup>
-    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22"/>
   </Target>
 
   <Target Name="AfterVersionSource"/>
@@ -357,6 +380,13 @@
     <!-- Build all of the specified installs. -->
     <Message Text="Compiling installs..."/>
     <Exec Command="%22$(VisualStudio)%22 %22$(ProjectSolution)%22 /Project %22%(InstallsToBuild.FullPath)%22 /Build %22$(BuildFlavor)|$(BuildTarget)%22" Condition="'$(ProjectSolution)' != '' And '@(InstallsToBuild)' != ''"/>
+    <!-- Create list of files to be deleted from build output. -->
+    <ItemGroup>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
+      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
+    </ItemGroup>
   </Target>
 
   <Target Name="AfterBuildProjects"/>
@@ -386,12 +416,6 @@
   <Target Name="CoreCleanBuild">
     <!-- Clean output of the current build. -->
     <Message Text="Cleaning build output..."/>
-    <ItemGroup>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\setup.exe"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.pdb" Condition="'$(BuildFlavor)' == 'Release'"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe"/>
-      <FilesToDelete Include="$(BuildOutputFolder)\**\*.vshost.exe.manifest"/>
-    </ItemGroup>
     <Delete Files="@(FilesToDelete)" ContinueOnError="true"/>
   </Target>
 
@@ -408,10 +432,22 @@
     <MakeDir Directories="$(BuildDeployFolder)" Condition="!Exists('$(BuildDeployFolder)')"/>
     <Folder TaskAction="RemoveContent" Path="$(BuildDeployFolder)"/>
     <Copy SourceFiles="@(FilesToDeploy)" DestinationFolder="$(BuildDeployFolder)\%(FilesToDeploy.RecursiveDir)"/>
+    <CallTarget Targets="ArchiveBuildOutput"/>
+  </Target>
+
+  <Target Name="ArchiveBuildOutput" Condition="'@(BinariesToArchive)' != '' Or '@(InstallsToArchive)' != ''">
     <!-- Create specified archives of build content. -->
     <Message Text="Archiving build content..."/>
-    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Binaries.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(BinariesToArchive)' != ''"/>
-    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(LocalFolder)\$(ProjectName).Installs.zip" WorkingDirectory="$(LocalFolder)" Condition="'@(InstallsToArchive)' != ''"/>
+    <Copy SourceFiles="@(BinariesToArchive)" DestinationFolder="$(BinariesArchiveWorkingDirectory)\%(BinariesToArchive.RecursiveDir)"/>
+    <Copy SourceFiles="@(InstallsToArchive)" DestinationFolder="$(InstallsArchiveWorkingDirectory)\%(InstallsToArchive.RecursiveDir)"/>
+    <ItemGroup>
+      <BinariesToArchive Remove="@(BinariesToArchive)"/>
+      <InstallsToArchive Remove="@(InstallsToArchive)"/>
+      <BinariesToArchive Include="$(BinariesArchiveWorkingDirectory)\**\*.*"/>
+      <InstallsToArchive Include="$(InstallsArchiveWorkingDirectory)\**\*.*"/>
+    </ItemGroup>
+    <MSBuild.Community.Tasks.Zip Files="@(BinariesToArchive)" ZipFileName="$(BinariesArchiveFileName)" WorkingDirectory="$(BinariesArchiveWorkingDirectory)" Condition="'@(BinariesToArchive)' != ''"/>
+    <MSBuild.Community.Tasks.Zip Files="@(InstallsToArchive)" ZipFileName="$(InstallsArchiveFileName)" WorkingDirectory="$(InstallsArchiveWorkingDirectory)" Condition="'@(InstallsToArchive)' != ''"/>
     <ItemGroup>
       <Archives Include="$(LocalFolder)\*.zip"/>
     </ItemGroup>
@@ -423,6 +459,9 @@
   <Target Name="BeforeDeleteWorkspace"/>
 
   <Target Name="CoreDeleteWorkspace">
+    <!-- Checkin all of the pending changes. -->
+    <Message Text="Checking in pending changes..."/>
+    <Exec Command="%22$(TfsClient)%22 checkin /comment:%22$(ProjectName): Version change for build $(BuildLabel).%22 /recursive /noprompt %22$(LocalFolder)%22" ContinueOnError="true"/>
     <!-- Delete the temporary build workpsace. -->
     <Message Text="Deleting temporary workspace..."/>
     <Exec Command="%22$(TfsClient)%22 workspace /delete /server:$(TfsServer) %22$(Workspace)%22" ContinueOnError="true"/>

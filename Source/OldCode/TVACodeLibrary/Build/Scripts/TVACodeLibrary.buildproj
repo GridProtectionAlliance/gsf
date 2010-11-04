@@ -32,6 +32,11 @@
 **       Made building of strong-named class libraries optional using SkipSigning property.
 **  08/04/2010 - Pinal C. Patel
 **       Disabled automated zip file creation of binaries and installs.
+**  11/02/2010 - Pinal C. Patel
+**       Enabled automated zip file creation of binaries and installs.
+**       Fixed a typo in ProjectsToBuild list initialization that was preventing signed assemblies 
+**       from being created.
+**       Enabled version change in AssemblyFileVersion attribute for all of the versioned projects.
 **
 *******************************************************************************************************
 -->
@@ -60,6 +65,11 @@
        <!--List of files to be versioned.--> 
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
         <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
+        <VersionPrecision>4</VersionPrecision>
+      </FilesToVersion>
+      <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
+        <VersionRegex>(?'BeforeVersion'AssemblyFileVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
+        <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
     </ItemGroup>
   </Target>
@@ -68,7 +78,7 @@
     <ItemGroup>
        <!--List of projects to build.--> 
       <ProjectsToBuild Include="$(ProjectSolution)"/>
-      <ProjectsToBuild Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\**\*.Test.csproj" Condition="'$(SkipSigning)' == ''">
+      <ProjectsToBuild Include="$(LocalFolder)\Source\Libraries\**\*.csproj" Exclude="$(LocalFolder)\Source\Libraries\**\*.Tests.csproj" Condition="'$(SkipSigning)' == ''">
         <Properties>SignAssembly=true;AssemblyOriginatorKeyFile=$(LocalFolder)\Source\TVA.snk;OutputPath=$(BuildOutputFolder)\Libraries\Signed</Properties>
       </ProjectsToBuild>
       <ProjectsToBuild Include="$(LocalFolder)\Build\Scripts\$(ProjectName).shfbproj" Condition="'$(SkipHelpFiles)' == ''"/>
@@ -89,10 +99,10 @@
   
   <Target Name="BeforeDeployBuild">
     <ItemGroup>
-       <!--List of binaries to archive.--><!-- 
+       <!--List of binaries to archive.--> 
       <BinariesToArchive Include="$(BuildOutputFolder)\**\*.*"/>
-       --><!--List of installs to archive.--><!-- 
-      <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>-->
+       <!--List of installs to archive.--> 
+      <InstallsToArchive Include="$(BuildOutputFolder)\**\*.msi"/>
        <!--Destinations of archive files (*.zip).--> 
       <ArchiveDestinations Include="$(BuildDeployFolder)"/>
     </ItemGroup>

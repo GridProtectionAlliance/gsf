@@ -18,5 +18,5 @@
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe TVACodeLibrary.buildproj /p:ForceBuild=true;SkipPublicArchive=true /l:FileLogger,Microsoft.Build.Engine;logfile=TVACodeLibrary.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe TVACodeLibrary.buildproj /p:ForceBuild=true /l:FileLogger,Microsoft.Build.Engine;logfile=TVACodeLibrary.output
 PAUSE
