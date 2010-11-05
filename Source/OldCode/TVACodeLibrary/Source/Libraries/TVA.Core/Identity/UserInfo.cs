@@ -56,6 +56,8 @@
 //       Added publicly accessible ImpersonatePrivilegedAccount() method allow for the impersonation of
 //       privileged domain account outside of UserInfo class.
 //       Added a constructor to allow for the AD search root to be specified.
+//  11/04/2010 - Pinal C. Patel
+//       Modified Initialize() to initialize UserEntry only if the machine is joined to a domain.
 //
 //*******************************************************************************************************
 
@@ -279,6 +281,7 @@ using System;
 using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
+using System.Management;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
@@ -317,6 +320,29 @@ namespace TVA.Identity
     ///         Console.ReadLine();
     ///     }
     /// }
+    /// </code>
+    /// </example>
+    /// <example>
+    /// This example shows the config file section that can be used to specify the domain account to be used for Active Directory queries:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <activeDirectory>
+    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+    ///         encrypted="true" />
+    ///     </activeDirectory>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
     /// </code>
     /// </example>
     public class UserInfo : ISupportLifecycle, IPersistSettings
@@ -705,6 +731,21 @@ namespace TVA.Identity
             }
         }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether the current machine is joined to a domain.
+        /// </summary>
+        private bool IsJoinedToDomain
+        {
+            get
+            {
+                using (ManagementObject wmi = new ManagementObject(string.Format("Win32_ComputerSystem.Name='{0}'", Environment.MachineName)))
+                {
+                    wmi.Get();
+                    return (bool)wmi["PartOfDomain"];
+                }
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -728,50 +769,56 @@ namespace TVA.Identity
                 // Load settings from config file.
                 LoadSettings();
 
-                // Initialize the directory entry object used to retrieve AD info.
-                WindowsImpersonationContext currentContext = null;
-                try
+                if (IsJoinedToDomain)
                 {
-                    // Impersonate to the privileged account if specified.
-                    currentContext = ImpersonatePrivilegedAccount();
-
-                    // Initialize the Active Directory searcher object.
-                    DirectorySearcher searcher;
-                    if (string.IsNullOrEmpty(m_ldapPath))
-                        searcher = new DirectorySearcher();
-                    else
-                        searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
-
-                    // Get user's directory entry for AD interactions.
-                    using (searcher)
+                    // Initialize the directory entry object used to retrieve AD info.
+                    WindowsImpersonationContext currentContext = null;
+                    try
                     {
-                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                        SearchResult result = searcher.FindOne();
-                        if (result != null)
-                            m_userEntry = result.GetDirectoryEntry();
-                    }
+                        // Impersonate to the privileged account if specified.
+                        currentContext = ImpersonatePrivilegedAccount();
 
-                    // Try do derive the domain if one is not specified.
-                    if (string.IsNullOrEmpty(m_domain))
-                        if (!string.IsNullOrEmpty(m_privilegedDomain))
-                            // Use domain specified for privileged account.
-                            m_domain = m_privilegedDomain;
+                        // Initialize the Active Directory searcher object.
+                        DirectorySearcher searcher;
+                        if (string.IsNullOrEmpty(m_ldapPath))
+                            searcher = new DirectorySearcher();
                         else
-                            // Use the default logon domain of the host machine.
-                            m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
+                            searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
 
-                    m_enabled = true;       // Mark as enabled.
-                    m_initialized = true;   // Initialize only once.
+                        // Get user's directory entry for AD interactions.
+                        using (searcher)
+                        {
+                            searcher.Filter = "(SAMAccountName=" + m_username + ")";
+                            SearchResult result = searcher.FindOne();
+                            if (result != null)
+                                m_userEntry = result.GetDirectoryEntry();
+                        }
+
+                        // Try do derive the domain if one is not specified.
+                        if (string.IsNullOrEmpty(m_domain))
+                        {
+                            if (!string.IsNullOrEmpty(m_privilegedDomain))
+                                // Use domain specified for privileged account.
+                                m_domain = m_privilegedDomain;
+                            else
+                                // Use the default logon domain of the host machine.
+                                m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
+                        }
+
+                        m_enabled = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        m_userEntry = null;
+                        throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}'", LoginID), ex);
+                    }
+                    finally
+                    {
+                        EndImpersonation(currentContext);   // Undo impersonation if it was performed.
+                    }
                 }
-                catch (Exception ex)
-                {
-                    m_userEntry = null;
-                    throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}'", LoginID), ex);
-                }
-                finally
-                {
-                    EndImpersonation(currentContext);   // Undo impersonation if it was performed.
-                }
+                
+                m_initialized = true;   // Initialize only once.
             }
         }
 
@@ -913,18 +960,18 @@ namespace TVA.Identity
                 if (!m_enabled)
                     return string.Empty;
 
-                // Impersonate to the privileged account if specified.
-                currentContext = ImpersonatePrivilegedAccount();
+                if (m_userEntry != null)
+                {
+                    // Impersonate to the privileged account if specified.
+                    currentContext = ImpersonatePrivilegedAccount();
 
-                // Allow lookup to logged-on domain only to prevent timeouts.
-                if (string.Compare(m_domain, Environment.UserDomainName, true) != 0 ||
-                    string.Compare(Environment.MachineName, Environment.UserDomainName, true) == 0)
-                    return string.Empty;
-
-                if (m_userEntry == null)
-                    return string.Empty;
-                else
+                    // Return requested Active Directory property value.
                     return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
+                }
+                else
+                {
+                    return string.Empty;
+                }
             }
             catch
             {
