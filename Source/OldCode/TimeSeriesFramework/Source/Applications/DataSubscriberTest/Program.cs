@@ -13,6 +13,7 @@ namespace DataSubscriberTest
     {
         static DataSubscriber subscriber = new DataSubscriber();
         static long dataCount = 0;
+        static System.Timers.Timer timer = new System.Timers.Timer(10000);
 
         static void Main(string[] args)
         {
@@ -29,6 +30,9 @@ namespace DataSubscriberTest
             // Start subscriber connection cycle
             subscriber.Start();
 
+            timer.Elapsed += new System.Timers.ElapsedEventHandler(timer_Elapsed);            
+            timer.Start();
+
             Console.ReadLine();
 
             subscriber.Unsubscribe();
@@ -37,6 +41,17 @@ namespace DataSubscriberTest
             subscriber.ProcessException -= subscriber_ProcessException;
             subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
             subscriber.NewMeasurements -= subscriber_NewMeasurements;
+
+            timer.Elapsed -= timer_Elapsed;
+            timer.Stop();
+        }
+
+        static void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            //if (TVA.Security.Cryptography.Random.Boolean)
+                subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+            //else
+            //    subscriber.UnsynchronizedSubscribe(true, "DEVARCHIVE:1;DEVARCHIVE:2");
         }
 
         static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -51,7 +66,8 @@ namespace DataSubscriberTest
 
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)
         {
-            subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
+            //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
+            subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1");
         }
 
         static void subscriber_ProcessException(object sender, TVA.EventArgs<Exception> e)

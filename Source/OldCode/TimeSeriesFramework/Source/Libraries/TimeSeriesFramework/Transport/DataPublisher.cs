@@ -958,11 +958,16 @@ namespace TimeSeriesFramework.Transport
                                     // remove subscribed points since assignment and use of input measurement keys is synchronized
                                     // within the client subscription class
                                     if (addSubscription)
+                                    {
                                         // Adding client subscription to collection will automatically initialize it
                                         Add(subscription);
+                                    }
                                     else
+                                    {
                                         // Manually re-initialize existing client subscription
                                         subscription.Initialize();
+                                        subscription.Initialized = true;
+                                    }
 
                                     // Make sure adapter is started
                                     subscription.Start();
