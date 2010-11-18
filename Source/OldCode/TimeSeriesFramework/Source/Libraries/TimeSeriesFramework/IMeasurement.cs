@@ -35,7 +35,7 @@ namespace TimeSeriesFramework
     public delegate double MeasurementValueFilterFunction(IEnumerable<IMeasurement> source);
 
     /// <summary>
-    /// Represents an interface for an abstract measurement value measured by a device at an extact time.
+    /// Represents an interface for an abstract measurement value measured by a device at an exact time.
     /// </summary>
     /// <remarks>
     /// This interface abstractly represents a measured value at an exact time interval.
