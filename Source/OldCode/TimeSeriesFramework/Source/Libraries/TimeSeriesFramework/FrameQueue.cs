@@ -18,7 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//
+//  11/18/2010 - Mehulbhai P Thakkar
+//       Fixed bug in the Pop() method by checking if m_frameQueue has any element in it.
 //******************************************************************************************************
 
 using System;
@@ -264,14 +265,18 @@ namespace TimeSeriesFramework
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
             lock (m_frameList)
             {
-                LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
+                if (m_frameList.Count > 0)
+                {
+                    LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
 
-                // If next frame is available, go ahead and assign it...
-                if (nextNode != null)
-                    m_head = nextNode.Value;
+                    // If next frame is available, go ahead and assign it...
+                    if (nextNode != null)
+                        m_head = nextNode.Value;
 
-                // Clean up frame queues
-                m_frameList.RemoveFirst();
+                    // Clean up frame queues
+                    m_frameList.RemoveFirst();
+                }
+                
                 m_frameHash.Remove(m_publishedTicks);
             }
         }

@@ -18,7 +18,9 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/20/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
-//
+//  11/15/2010 - Mehulbhai P Thakkar
+//       Fixed bug when DataSubscriber tries to resubscribe by setting subscriber.Initialized manually 
+//       in ReceiveClientDataComplete event handler.
 //******************************************************************************************************
 
 using System;
