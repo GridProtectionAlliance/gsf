@@ -75,6 +75,9 @@
 //       Modified WriteData() overload that takes a collection of IDataPoint to not check file state.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  11/18/2010 - J. Ritchie Carroll
+//       Added a exception handler for reading (exposed via DataReadException event) to make sure
+//       bad data or corruption in an archive file does not stop the read process.
 //
 //******************************************************************************************************
 
@@ -424,6 +427,13 @@ namespace TVA.Historian.Files
         [Category("Data"),
         Description("Occurs when misaligned (by time) IDataPoint is received for archival.")]
         public event EventHandler<EventArgs<IDataPoint>> OutOfSequenceDataReceived;
+
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered while reading <see cref="IDataPoint"/> from the current or historic <see cref="ArchiveFile"/>.
+        /// </summary>
+        [Category("Data"),
+        Description("Occurs when an Exception is encountered while reading IDataPoint from the current or historic ArchiveFile.")]
+        public event EventHandler<EventArgs<Exception>> DataReadException;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while writing <see cref="IDataPoint"/> to the current or historic <see cref="ArchiveFile"/>.
@@ -1804,7 +1814,7 @@ namespace TVA.Historian.Files
             // Read data from all qualifying files.
             foreach (Info dataFile in dataFiles)
             {
-                ArchiveFile file =  null;
+                ArchiveFile file = null;
                 IList<ArchiveDataBlock> dataBlocks;
                 try
                 {
@@ -1825,11 +1835,15 @@ namespace TVA.Historian.Files
                     }
 
                     dataBlocks = file.Fat.FindDataBlocks(historianID, startTime, endTime);
+
                     if (dataBlocks.Count > 0)
                     {
                         // Read data from all matching data blocks.
                         for (int i = 0; i < dataBlocks.Count; i++)
                         {
+                            // Attach to data read exception event for the data block
+                            dataBlocks[i].DataReadException += DataReadException;
+
                             if (i == 0 || i == dataBlocks.Count - 1)
                             {
                                 // Scan for data through first and last data blocks.
@@ -1847,6 +1861,9 @@ namespace TVA.Historian.Files
                                     yield return data;
                                 }
                             }
+
+                            // Detach from data read exception event for the data block
+                            dataBlocks[i].DataReadException -= DataReadException;
                         }
                     }
                 }
@@ -2092,6 +2109,16 @@ namespace TVA.Historian.Files
         {
             if (OutOfSequenceDataReceived != null)
                 OutOfSequenceDataReceived(this, new EventArgs<IDataPoint>(dataPoint));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="DataReadException"/> event.
+        /// </summary>
+        /// <param name="ex"><see cref="Exception"/> to send to <see cref="DataReadException"/> event.</param>
+        protected virtual void OnDataReadException(Exception ex)
+        {
+            if (DataReadException != null)
+                DataReadException(this, new EventArgs<Exception>(ex));
         }
 
         /// <summary>
