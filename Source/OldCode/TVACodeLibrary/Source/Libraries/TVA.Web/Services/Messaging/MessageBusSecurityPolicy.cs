@@ -238,6 +238,44 @@ namespace TVA.Web.Services.Messaging
     /// <summary>
     /// Represents an <see cref="IAuthorizationPolicy">authorization policy</see> that can be used for enabling role-based security on <see cref="MessageBusService"/>.
     /// </summary>
+    /// <example>
+    /// This example shows the required config file entries when securing <see cref="MessageBusService"/>:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <securityProvider>
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///         encrypted="false" />
+    ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+    ///         description="The type to be used for enforcing security." encrypted="false" />
+    ///       <add name="IncludedResources" value="Topic.Name=*;Queue.Name=*" description="Semicolon delimited list of resources to be secured along with role names."
+    ///         encrypted="false" />
+    ///       <add name="ExcludedResources" value="*/mex;*/Publish;*/GetClients;*/GetQueues;*/GetTopics;*/SecurityService.svc/*"
+    ///         description="Semicolon delimited list of resources to be excluded from being secured."
+    ///         encrypted="false" />
+    ///     </securityProvider>
+    ///     <activeDirectory>
+    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+    ///         encrypted="false" />
+    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+    ///         encrypted="true" />
+    ///     </activeDirectory>
+    ///   </categorizedSettings>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
+    /// <seealso cref="MessageBusService"/>
     public class MessageBusSecurityPolicy : SecurityPolicy
     {
         #region [ Members ]

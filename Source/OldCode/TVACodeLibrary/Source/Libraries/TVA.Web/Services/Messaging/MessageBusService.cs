@@ -266,6 +266,192 @@ namespace TVA.Web.Services.Messaging
     /// <summary>
     /// A message bus for event-based messaging between disjoint systems.
     /// </summary>
+    /// <example>
+    /// This example shows how to host <see cref="MessageBusService"/> inside a console application:
+    /// <code>
+    /// using System;
+    /// using System.ServiceModel;
+    /// using System.ServiceModel.Description;
+    /// using System.Threading;
+    /// using TVA;
+    /// using TVA.Web.Services.Messaging;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Prompt for security option.
+    ///         Console.Write("Enable security (Y/N): ");
+    ///         bool enableSecurity = Console.ReadLine().ParseBoolean();
+    /// 
+    ///         // Initialize message bus service.
+    ///         MessageBusService service = new MessageBusService();
+    ///         service.Singleton = true;
+    ///         service.PublishMetadata = true;
+    ///         service.PersistSettings = false;
+    ///         service.Endpoints = "http.duplex://localhost:4501; net.tcp://locahost:4502";
+    ///         if (enableSecurity)
+    ///             service.SecurityPolicy = typeof(MessageBusSecurityPolicy).FullName;
+    ///         service.Initialize();
+    /// 
+    ///         // Show message bus service status.
+    ///         if (service.ServiceHost.State == CommunicationState.Opened)
+    ///         {
+    ///             Console.WriteLine("\r\n{0} is running:", service.GetType().Name);
+    ///             foreach (ServiceEndpoint endpoint in service.ServiceHost.Description.Endpoints)
+    ///             {
+    ///                 Console.WriteLine("- {0} ({1})", endpoint.Address, endpoint.Binding.GetType().Name);
+    ///             }
+    /// 
+    ///             new Thread(delegate() 
+    ///                 {
+    ///                     while (service.ServiceHost.State == CommunicationState.Opened)
+    ///                     {
+    ///                         Console.WriteLine();
+    ///                         Console.WriteLine();
+    ///                         Console.WriteLine("Status of {0}:", service.Name);
+    ///                         Console.WriteLine(service.Status);
+    ///                         Console.Write("Press Enter key to stop...");
+    /// 
+    ///                         Thread.Sleep(5000);
+    ///                     }
+    ///                 }).Start();
+    ///         }
+    ///         else
+    ///         {
+    ///             Console.WriteLine("\r\n{0} could not be started", service.GetType().Name);
+    ///         }
+    /// 
+    ///         // Shutdown.
+    ///         Console.ReadLine();
+    ///         service.Dispose();
+    ///     }
+    /// }
+    /// </code>
+    /// This example shows how to host <see cref="MessageBusService"/> inside a web application:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <system.serviceModel>
+    ///     <services>
+    ///       <service name="TVA.Web.Services.Messaging.MessageBusService">
+    ///         <endpoint address="" contract="TVA.Web.Services.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
+    ///         <endpoint address="mex" contract="IMetadataExchange" binding="mexHttpBinding" />
+    ///       </service>
+    ///     </services>
+    ///     <behaviors>
+    ///       <serviceBehaviors>
+    ///         <behavior>
+    ///           <serviceMetadata httpGetEnabled="true" />
+    ///           <serviceDebug includeExceptionDetailInFaults="false" />
+    ///         </behavior>
+    ///       </serviceBehaviors>
+    ///     </behaviors>
+    ///     <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
+    ///       <serviceActivations>
+    ///         <add relativeAddress="MessageBusService.svc" service="TVA.Web.Services.Messaging.MessageBusService" />
+    ///       </serviceActivations>
+    ///     </serviceHostingEnvironment>
+    ///   </system.serviceModel>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// This example shows how to publish <see cref="Message"/>s to <see cref="MessageBusService"/>:
+    /// <code>
+    /// using System;
+    /// using System.ServiceModel;
+    /// using System.Threading;
+    /// 
+    /// class Program : IMessageBusServiceCallback
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    /// 
+    ///         // Initialize auto-generated message bus service proxy.
+    ///         InstanceContext callbackContext = new InstanceContext(new Program());
+    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
+    /// 
+    ///         // Create registration request for publishing messages.
+    ///         RegistrationRequest registration = new RegistrationRequest();
+    ///         registration.MessageType = MessageType.Topic;
+    ///         registration.MessageName = "Topic.Frequency";
+    ///         registration.RegistrationType = RegistrationType.Produce;
+    ///         messageBusService.Register(registration);
+    /// 
+    ///         // Start publishing messages to the bus asynchronously.
+    ///         new Thread(delegate() 
+    ///             {
+    ///                 Message message = new Message();
+    ///                 message.Type = registration.MessageType;
+    ///                 message.Name = registration.MessageName;
+    /// 
+    ///                 Random random = new Random(59);
+    ///                 while (messageBusService.State == CommunicationState.Opened)
+    ///                 {
+    ///                     message.Time = DateTime.UtcNow;
+    ///                     message.Content = BitConverter.GetBytes(random.Next(61));
+    ///                     messageBusService.Publish(message);
+    /// 
+    ///                     Thread.Sleep(5000);
+    ///                 }
+    ///             }).Start();
+    /// 
+    ///         // Shutdown.
+    ///         Console.Write("Press Enter key to stop...");
+    ///         Console.ReadLine();
+    ///         messageBusService.Close();
+    ///     }
+    /// 
+    ///     public void ProcessMessage(Message message)
+    ///     {
+    ///         // This method will not be invoked since we are not consuming messages.
+    ///         throw new NotSupportedException();
+    ///     }
+    /// }
+    /// </code>
+    /// This example shows how to subscribe to <see cref="MessageBusService"/> for receiving <see cref="Message"/>s:
+    /// <code>
+    /// using System;
+    /// using System.ServiceModel;
+    /// 
+    /// class Program : IMessageBusServiceCallback
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    /// 
+    ///         // Initialize auto-generated message bus service proxy.
+    ///         InstanceContext callbackContext = new InstanceContext(new Program());
+    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
+    /// 
+    ///         // Subscribe with message bus service to receive messages.
+    ///         RegistrationRequest registration = new RegistrationRequest();
+    ///         registration.MessageType = MessageType.Topic;
+    ///         registration.MessageName = "Topic.Frequency";
+    ///         registration.RegistrationType = RegistrationType.Consume;
+    ///         messageBusService.Register(registration);
+    /// 
+    ///         // Shutdown.
+    ///         Console.WriteLine("Press Enter key to stop...");
+    ///         Console.WriteLine();
+    ///         Console.ReadLine();
+    ///         messageBusService.Close();
+    ///     }
+    /// 
+    ///     public void ProcessMessage(Message message)
+    ///     {
+    ///         Console.WriteLine("Message received: {0} Hz", BitConverter.ToInt32(message.Content, 0));
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
+    /// <seealso cref="Message"/>
+    /// <seealso cref="ClientInfo"/>
+    /// <seealso cref="RegistrationInfo"/>
+    /// <seealso cref="RegistrationRequest"/>
+    /// <seealso cref="MessageBusSecurityPolicy"/>
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
     public class MessageBusService : SelfHostingService, IMessageBusService
     {

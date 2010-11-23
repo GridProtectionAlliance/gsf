@@ -292,8 +292,6 @@ namespace TVA.Units
     ///     return nanoseconds * SI.Nano;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// Convert time in seconds to milliseconds:
     /// <code>
     /// public double GetMilliseconds(Time seconds)
@@ -301,8 +299,6 @@ namespace TVA.Units
     ///     return time / SI.Milli;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts minutes to hours:
     /// <code>
     /// public double GetHours(double minutes)

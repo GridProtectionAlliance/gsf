@@ -321,8 +321,6 @@ namespace TVA.Identity
     ///     }
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example shows the config file section that can be used to specify the domain account to be used for Active Directory queries:
     /// <code>
     /// <![CDATA[

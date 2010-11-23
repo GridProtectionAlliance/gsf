@@ -292,8 +292,6 @@ namespace TVA.Units
     ///     return kilograms * SI.Kilo;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts tons to pounds:
     /// <code>
     /// public double GetPounds(double tons)

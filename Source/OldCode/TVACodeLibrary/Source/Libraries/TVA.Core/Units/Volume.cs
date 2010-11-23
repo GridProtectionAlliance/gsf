@@ -292,8 +292,6 @@ namespace TVA.Units
     ///     return cubicmeters / SI.Kilo;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts teaspoons to cups:
     /// <code>
     /// public double GetCups(double teaspoons)
@@ -301,8 +299,6 @@ namespace TVA.Units
     ///     return Volume.FromTeaspoons(teaspoons).ToCups();
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts liters to fluid ounces:
     /// <code>
     /// public double GetFluidOunces(double liters)

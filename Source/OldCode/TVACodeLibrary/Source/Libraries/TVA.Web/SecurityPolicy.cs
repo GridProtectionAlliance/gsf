@@ -290,8 +290,6 @@ namespace TVA.Web
     /// </configuration>
     /// ]]>
     /// </code>
-    /// </example>
-    /// <example>
     /// Internal WCF service configuration:
     /// <code>
     /// <![CDATA[
@@ -334,8 +332,6 @@ namespace TVA.Web
     /// </configuration>
     /// ]]>
     /// </code>
-    /// </example>
-    /// <example>
     /// External WCF service configuration:
     /// <code>
     /// <![CDATA[

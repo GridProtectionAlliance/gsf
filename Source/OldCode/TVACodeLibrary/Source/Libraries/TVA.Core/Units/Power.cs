@@ -293,8 +293,6 @@ namespace TVA.Units
     ///     return watts / SI.Mega;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts megawatts to mechanical horsepower:
     /// <code>
     /// public double GetHorsepower(double megawatts)

@@ -292,8 +292,6 @@ namespace TVA.Units
     ///     return joules / SI.Mega;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts megajoules to kilowatt-hours:
     /// <code>
     /// public double GetKilowattHours(double megajoules)
@@ -301,8 +299,6 @@ namespace TVA.Units
     ///     return (new Energy(megajoules * SI.Mega)).ToWattHours() / SI.Kilo;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts kilowatt-hours to megawatt-hours:
     /// <code>
     /// public double GetMegawattHours(double kilowattHours)

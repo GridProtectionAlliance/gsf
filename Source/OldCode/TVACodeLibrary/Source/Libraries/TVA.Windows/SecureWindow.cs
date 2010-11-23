@@ -279,8 +279,6 @@ namespace TVA.Windows
     /// </configuration>
     /// ]]>
     /// </code>
-    /// </example>
-    /// <example>
     /// XAML to be used for the WPF window that inherits from <see cref="SecureWindow"/>:
     /// <code>
     /// <![CDATA[

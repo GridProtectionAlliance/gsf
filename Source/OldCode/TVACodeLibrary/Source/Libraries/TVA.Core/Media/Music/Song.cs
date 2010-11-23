@@ -316,8 +316,6 @@ namespace TVA.Media.Music
     ///     }
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example generates a familiar tune, plays the song and saves it to disk:
     /// <code>
     /// // Add reference to System.Speech

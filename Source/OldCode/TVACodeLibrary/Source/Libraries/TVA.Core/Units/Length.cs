@@ -292,8 +292,6 @@ namespace TVA.Units
     ///     return meters / SI.Kilo;
     /// }
     /// </code>
-    /// </example>
-    /// <example>
     /// This example converts feet to inches:
     /// <code>
     /// public double GetFeet(double inches)
