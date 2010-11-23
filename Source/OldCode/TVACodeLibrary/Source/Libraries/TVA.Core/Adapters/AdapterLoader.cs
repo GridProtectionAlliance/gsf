@@ -263,8 +263,6 @@ namespace TVA.Adapters
     /// Represents a generic loader of adapters.
     /// </summary>
     /// <typeparam name="T"><see cref="Type"/> of adapters to be loaded.</typeparam>
-    /// <seealso cref="Adapter"/>
-    /// <seealso cref="IAdapter"/>
     /// <example>
     /// This example show how to use the <see cref="AdapterLoader{T}"/> to isolate adapters in seperate <see cref="AppDomain"/>s and monitor their resource usage:
     /// <code>
@@ -428,6 +426,8 @@ namespace TVA.Adapters
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="Adapter"/>
+    /// <seealso cref="IAdapter"/>
     public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus
     {
         #region [ Members ]

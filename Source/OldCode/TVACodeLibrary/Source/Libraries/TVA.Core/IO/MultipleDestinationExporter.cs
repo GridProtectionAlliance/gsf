@@ -258,7 +258,6 @@ namespace TVA.IO
     /// <remarks>
     /// This class is useful for updating the same file on multiple servers (e.g., load balanced web server).
     /// </remarks>
-    /// <seealso cref="ExportDestination"/>
     /// <example>
     /// This example shows the use <see cref="MultipleDestinationExporter"/> for exporting data to multiple locations:
     /// <code>
@@ -330,6 +329,7 @@ namespace TVA.IO
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ExportDestination"/>
     [ToolboxBitmap(typeof(MultipleDestinationExporter))]
     public class MultipleDestinationExporter : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {

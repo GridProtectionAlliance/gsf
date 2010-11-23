@@ -253,7 +253,6 @@ namespace TVA.Diagnostics
     /// Represents a process performance monitor that operates similar to the Windows Performance Monitor utility
     /// that can be used to monitor system performance.
     /// </summary>
-    /// <seealso cref="PerformanceCounter"/>
     /// <example>
     /// This example shows how to use <see cref="PerformanceMonitor"/> for monitoring application performance:
     /// <code>
@@ -277,6 +276,7 @@ namespace TVA.Diagnostics
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="PerformanceCounter"/>
     public class PerformanceMonitor : IDisposable, IProvideStatus
     {
         #region [ Members ]

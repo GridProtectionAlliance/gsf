@@ -244,7 +244,6 @@ namespace TVA.Windows
     /// <summary>
     /// Represents a WPF window secured using role-based security.
     /// </summary>
-    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -297,6 +296,7 @@ namespace TVA.Windows
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
         #region [ Methods ]

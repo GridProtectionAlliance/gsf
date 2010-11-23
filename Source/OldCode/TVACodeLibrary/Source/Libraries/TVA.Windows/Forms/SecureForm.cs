@@ -247,7 +247,6 @@ namespace TVA.Windows.Forms
     /// <summary>
     /// Represents a windows form secured using role-based security.
     /// </summary>
-    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -284,6 +283,7 @@ namespace TVA.Windows.Forms
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ISecurityProvider"/>
     public partial class SecureForm : Form
     {
         #region [ Methods ]

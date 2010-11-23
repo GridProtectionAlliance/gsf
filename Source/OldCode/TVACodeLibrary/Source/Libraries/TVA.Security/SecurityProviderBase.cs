@@ -251,8 +251,6 @@ namespace TVA.Security
     /// <summary>
     /// Base class for a provider of role-based security in applications.
     /// </summary>
-    /// <seealso cref="SecurityIdentity"/>
-    /// <seealso cref="SecurityPrincipal"/>
     /// <example>
     /// This examples shows how to extend <see cref="SecurityProviderBase"/> to use a flat-file for the security datastore:
     /// <code>
@@ -341,6 +339,8 @@ namespace TVA.Security
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="SecurityIdentity"/>
+    /// <seealso cref="SecurityPrincipal"/>
     public abstract class SecurityProviderBase : ISecurityProvider
     {
         #region [ Members ]

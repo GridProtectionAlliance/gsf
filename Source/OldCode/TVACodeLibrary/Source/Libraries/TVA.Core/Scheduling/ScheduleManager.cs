@@ -269,7 +269,6 @@ namespace TVA.Scheduling
     /// <summary>
     /// Monitors multiple <see cref="Schedule"/> at an interval of one minute to check if they are due.
     /// </summary>
-    /// <seealso cref="Schedule"/>
     /// <example>
     /// This example shows how to use the <see cref="ScheduleManager"/> component:
     /// <code>
@@ -313,6 +312,7 @@ namespace TVA.Scheduling
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="Schedule"/>
     [ToolboxBitmap(typeof(ScheduleManager))]
     public class ScheduleManager : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings
     {

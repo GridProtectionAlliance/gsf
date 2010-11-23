@@ -254,7 +254,6 @@ namespace TVA.Web
     /// <summary>
     /// Represents an <see cref="IAuthorizationPolicy">authorization policy</see> that can be used by WCF services for enabling role-based security.
     /// </summary>
-    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Common config file entries:
     /// <code>
@@ -383,6 +382,7 @@ namespace TVA.Web
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ISecurityProvider"/>
     public class SecurityPolicy : IAuthorizationPolicy
     {
         #region [ Members ]

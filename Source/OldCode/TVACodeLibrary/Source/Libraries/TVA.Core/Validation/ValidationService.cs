@@ -238,7 +238,6 @@ namespace TVA.Validation
     /// <summary>
     /// A class that facilitates value validation using <see cref="IValidator"/> implementations.
     /// </summary>
-    /// <seealso cref="IValidator"/>
     /// <example>
     /// This example shows how to use <see cref="ValidationService"/> for input validation:
     /// <code>
@@ -286,6 +285,7 @@ namespace TVA.Validation
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="IValidator"/>
     public class ValidationService
     {
         #region [ Members ]

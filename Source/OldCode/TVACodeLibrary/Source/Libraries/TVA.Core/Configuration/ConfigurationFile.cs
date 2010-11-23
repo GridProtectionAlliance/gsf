@@ -268,9 +268,6 @@ namespace TVA.Configuration
     /// <summary>
     /// Represents a configuration file of a Windows or Web application.
     /// </summary>
-    /// <seealso cref="CategorizedSettingsSection"/>
-    /// <seealso cref="CategorizedSettingsElement"/>
-    /// <seealso cref="CategorizedSettingsElementCollection"/>
     /// <example>
     /// This example shows how to save and read settings from the config file:
     /// <code>
@@ -352,6 +349,9 @@ namespace TVA.Configuration
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="CategorizedSettingsSection"/>
+    /// <seealso cref="CategorizedSettingsElement"/>
+    /// <seealso cref="CategorizedSettingsElementCollection"/>
     public class ConfigurationFile
     {
         #region [ Members ]

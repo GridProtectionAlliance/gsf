@@ -257,7 +257,6 @@ namespace TVA.Web
     /// <summary>
     /// Represents an <see cref="IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
     /// </summary>
-    /// <seealso cref="ISecurityProvider"/>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -301,6 +300,7 @@ namespace TVA.Web
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ISecurityProvider"/>
     public class SecurityModule : IHttpModule
     {
         #region [ Members ]

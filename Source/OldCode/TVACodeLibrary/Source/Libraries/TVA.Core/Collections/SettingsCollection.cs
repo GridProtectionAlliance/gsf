@@ -238,7 +238,6 @@ namespace TVA.Collections
     /// <summary>
     /// A collection of settings that can be represented as a string of key-value pairs for easy persistance and also provide built-in validation support for the settings.
     /// </summary>
-    /// <seealso cref="ValidationService"/>
     /// <example>
     /// This example shows how to use <see cref="SettingsCollection"/> for key-value pair type settings and apply validation to them:
     /// <code>
@@ -280,6 +279,7 @@ namespace TVA.Collections
     /// }
     /// </code>
     /// </example>
+    /// <seealso cref="ValidationService"/>
     public class SettingsCollection : Dictionary<string, string>
     {
         #region [ Members ]

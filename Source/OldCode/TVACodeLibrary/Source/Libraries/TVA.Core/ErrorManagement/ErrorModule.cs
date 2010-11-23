@@ -247,7 +247,6 @@ namespace TVA.ErrorManagement
     /// <summary>
     /// Represents an HTTP module that can be used to handle exceptions globally in Web Sites and Web Services.
     /// </summary>
-    /// <seealso cref="ErrorLogger"/>
     /// <example>
     /// Below is the config file entry required for enabling error handling using <see cref="ErrorModule"/>:
     /// <code>
@@ -298,6 +297,7 @@ namespace TVA.ErrorManagement
     /// ]]>
     /// </code>
     /// </example>
+    /// <seealso cref="ErrorLogger"/>
     public class ErrorModule : IHttpModule
     {
         #region [ Members ]
