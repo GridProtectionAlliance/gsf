@@ -10,6 +10,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  10/29/2010 - Pinal C. Patel
+//       Renamed MessageReceived to ProcessMessage so Silverlight generated async proxy has 
+//       ProcessMessageReceived instead of MessageReceivedReceived.
 //
 //*******************************************************************************************************
 
@@ -243,9 +246,9 @@ namespace TVA.Web.Services.Messaging
         /// <summary>
         /// Invoked when a new <see cref="Message"/> is received from the <see cref="MessageBusService"/>.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message"><see cref="Message"/> received from the <see cref="MessageBusService"/>.</param>
         [OperationContract(IsOneWay = true)]
-        void MessageReceived(Message message);
+        void ProcessMessage(Message message);
 
         #endregion
     }

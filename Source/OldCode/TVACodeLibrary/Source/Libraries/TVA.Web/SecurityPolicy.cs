@@ -252,7 +252,7 @@ using TVA.Security;
 namespace TVA.Web
 {
     /// <summary>
-    /// Represents an authorization policy that can be used by WCF services for initializing security.
+    /// Represents an <see cref="IAuthorizationPolicy">authorization policy</see> that can be used by WCF services for enabling role-based security.
     /// </summary>
     /// <seealso cref="ISecurityProvider"/>
     /// <example>

@@ -255,7 +255,7 @@ namespace TVA.Web
     #endregion
 
     /// <summary>
-    /// Represents an HTTP module that can be used to enable site-wide role-based security.
+    /// Represents an <see cref="IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
     /// </summary>
     /// <seealso cref="ISecurityProvider"/>
     /// <example>

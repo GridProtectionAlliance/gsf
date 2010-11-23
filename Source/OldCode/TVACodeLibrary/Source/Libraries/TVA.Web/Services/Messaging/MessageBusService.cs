@@ -12,6 +12,9 @@
 //       Generated original version of source code.
 //  10/26/2010 - Pinal C. Patel
 //       Added management methods GetClients(), GetQueues() and GetTopics().
+//  11/23/2010 - Pinal C. Patel
+//       Added new BufferThreshold and ProcessingMode properties.
+//       Enhanced thread synchronization using ReaderWriterLockSlim for better performance.
 //
 //*******************************************************************************************************
 
@@ -234,11 +237,32 @@
 using System;
 using System.Collections.Generic;
 using System.ServiceModel;
+using System.Text;
 using System.Threading;
 using TVA.Collections;
+using TVA.Configuration;
 
 namespace TVA.Web.Services.Messaging
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Indicates how the distribution of <see cref="Message"/>s is processed by the <see cref="MessageBusService"/>.
+    /// </summary>
+    public enum MessageProcessingMode
+    {
+        /// <summary>
+        /// <see cref="Message"/> distribution is processed in parallel for increased distribution performance.
+        /// </summary>
+        Parallel,
+        /// <summary>
+        /// <see cref="Message"/> distribution is processed sequentially to preserve <see cref="Message"/> ordering.
+        /// </summary>
+        Sequential
+    }
+
+    #endregion
+
     /// <summary>
     /// A message bus for event-based messaging between disjoint systems.
     /// </summary>
@@ -262,7 +286,21 @@ namespace TVA.Web.Services.Messaging
             public RegistrationInfo Registration;
         }
 
+        // Constants
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="BufferThreshold"/> property.
+        /// </summary>
+        public const int DefaultBufferThreshold = -1;
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="ProcessingMode"/> property.
+        /// </summary>
+        public const MessageProcessingMode DefaultProcessingMode = MessageProcessingMode.Sequential;
+
         // Fields
+        private int m_bufferThreshold;
+        private MessageProcessingMode m_processingMode;
         private Dictionary<string, ClientInfo> m_clients;
         private Dictionary<string, RegistrationInfo> m_queues;
         private Dictionary<string, RegistrationInfo> m_topics;
@@ -280,23 +318,157 @@ namespace TVA.Web.Services.Messaging
         /// Initializes a new instance of the <see cref="MessageBusService"/> class.
         /// </summary>
         public MessageBusService()
+            : base()
         {
+            // Override base class settings.
+            Singleton = true;
+            PublishMetadata = true;
+            PersistSettings = true;
+
+            // Initialize member variables.
+            m_bufferThreshold = DefaultBufferThreshold;
+            m_processingMode = DefaultProcessingMode;
             m_clients = new Dictionary<string, ClientInfo>(StringComparer.CurrentCultureIgnoreCase);
             m_queues = new Dictionary<string, RegistrationInfo>(StringComparer.CurrentCultureIgnoreCase);
             m_topics = new Dictionary<string, RegistrationInfo>(StringComparer.CurrentCultureIgnoreCase);
             m_clientsLock = new ReaderWriterLockSlim();
             m_queuesLock = new ReaderWriterLockSlim();
             m_topicsLock = new ReaderWriterLockSlim();
-            m_publishQueue = ProcessQueue<PublishContext>.CreateRealTimeQueue(PublishMessages);
         }
 
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="MessageBusService"/> is currently enabled.
+        /// </summary>
+        public override bool Enabled
+        {
+            get
+            {
+                return (m_publishQueue != null && m_publishQueue.Enabled);
+            }
+            set
+            {
+                if (value && m_publishQueue == null)
+                    Initialize();
+
+                m_publishQueue.Enabled = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the descriptive status of the <see cref="MessageBusService"/>.
+        /// </summary>
+        public override string Status
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+                status.Append(base.Status);
+                if (m_publishQueue != null)
+                    status.Append(m_publishQueue.Status);
+
+                return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of <see cref="Message"/>s that can be buffered for distribution by the <see cref="MessageBusService"/> before the 
+        /// the oldest buffered <see cref="Message"/>s are discarded to keep memory consumption in check by avoiding <see cref="Message"/> flooding.
+        /// </summary>
+        /// <remarks>Set <see cref="BufferThreshold"/> to -1 to disable discarding of <see cref="Message"/>s.</remarks>
+        public int BufferThreshold
+        {
+            get
+            {
+                return m_bufferThreshold;
+            }
+            set
+            {
+                if (value < 0)
+                    value = -1;
+
+                m_bufferThreshold = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the <see cref="MessageProcessingMode"/> used by the <see cref="MessageBusService"/> for processing <see cref="Message"/> distribution.
+        /// </summary>
+        public MessageProcessingMode ProcessingMode
+        {
+            get
+            {
+                return m_processingMode;
+            }
+            set
+            {
+                m_processingMode = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Initializes the <see cref="MessageBusService"/>.
+        /// </summary>
+        /// <exception cref="NotSupportedException">The specified <see cref="ProcessingMode"/> is not supported.</exception>
+        public override void Initialize()
+        {
+            base.Initialize();
+            if (m_publishQueue == null)
+            {
+                // Instantiate the process queue.
+                if (m_processingMode == MessageProcessingMode.Parallel)
+                    m_publishQueue = ProcessQueue<PublishContext>.CreateAsynchronousQueue(PublishMessages);
+                else if (m_processingMode == MessageProcessingMode.Sequential)
+                    m_publishQueue = ProcessQueue<PublishContext>.CreateRealTimeQueue(PublishMessages);
+                else
+                    throw new NotSupportedException(string.Format("Processing mode '{0}' is not supported", m_processingMode));
+
+                // Start the process queue.
+                m_publishQueue.Start();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="MessageBusService"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["BufferThreshold", true].Update(m_bufferThreshold);
+                settings["ProcessingMode", true].Update(m_processingMode);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="MessageBusService"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("BufferThreshold", m_bufferThreshold, "Maximum number of messages that can be queued for distribution before the oldest ones are discarded.");
+                settings.Add("ProcessingMode", m_processingMode, "Processing mode (Parallel; Sequential) to be used for the distribution of messages.");
+                BufferThreshold = settings["BufferThreshold"].ValueAs(m_bufferThreshold);
+                ProcessingMode = settings["ProcessingMode"].ValueAs(m_processingMode);
+            }
+        }
 
         /// <summary>
         /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
@@ -306,53 +478,98 @@ namespace TVA.Web.Services.Messaging
         {
             // Save client information if not already present.
             ClientInfo client;
-            lock (m_clients)
+            m_clientsLock.EnterUpgradeableReadLock();
+            try
             {
                 if (!m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
                 {
-                    client = new ClientInfo(OperationContext.Current);
-                    m_clients.Add(client.SessionId, client);
-                    client.OperationContext.Channel.Faulted += OnChannelFaulted;
-                    client.OperationContext.Channel.Closing += OnChannelClosing;
+                    m_clientsLock.EnterWriteLock();
+                    try
+                    {
+                        client = new ClientInfo(OperationContext.Current);
+                        m_clients.Add(client.SessionId, client);
+                        client.OperationContext.Channel.Faulted += OnChannelFaulted;
+                        client.OperationContext.Channel.Closing += OnChannelClosing;
+                    }
+                    finally
+                    {
+                        m_clientsLock.ExitWriteLock();
+                    }
                 }
             }
+            finally
+            {
+                m_clientsLock.ExitUpgradeableReadLock();
+            }
 
-            // Retrieve registration information from registry.
-            RegistrationInfo registration = null;
+            // Retrieve registration information.
+            RegistrationInfo registration;
             if (request.MessageType == MessageType.Queue)
             {
-                lock (m_queues)
+                // Queue
+                m_queuesLock.EnterUpgradeableReadLock();
+                try
                 {
                     if (!m_queues.TryGetValue(request.MessageName, out registration))
                     {
-                        registration = new RegistrationInfo(request);
-                        m_queues.Add(request.MessageName, registration);
+                        m_queuesLock.EnterWriteLock();
+                        try
+                        {
+                            registration = new RegistrationInfo(request);
+                            m_queues.Add(request.MessageName, registration);
+                        }
+                        finally
+                        {
+                            m_queuesLock.ExitWriteLock();
+                        }
                     }
+                }
+                finally
+                {
+                    m_queuesLock.ExitUpgradeableReadLock();
                 }
             }
             else if (request.MessageType == MessageType.Topic)
             {
-                lock (m_topics)
+                // Topic
+                m_topicsLock.EnterUpgradeableReadLock();
+                try
                 {
                     if (!m_topics.TryGetValue(request.MessageName, out registration))
                     {
-                        registration = new RegistrationInfo(request);
-                        m_topics.Add(request.MessageName, registration);
+                        m_topicsLock.EnterWriteLock();
+                        try
+                        {
+                            registration = new RegistrationInfo(request);
+                            m_topics.Add(request.MessageName, registration);
+                        }
+                        finally
+                        {
+                            m_topicsLock.ExitWriteLock();
+                        }
                     }
                 }
+                finally
+                {
+                    m_topicsLock.ExitUpgradeableReadLock();
+                }
             }
-
-            // Update registration information with the new request.
-            List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
-            lock (clients)
+            else
             {
-                if (!clients.Contains(client))
-                    clients.Add(client);
+                // Unsupported
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", request.MessageType));
             }
 
-            // Start the process queue.
-            if (!m_publishQueue.Enabled)
-                m_publishQueue.Enabled = true;
+            // Update registration information.
+            if (registration != null)
+            {
+                List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
+                lock (clients)
+                {
+                    if (!clients.Contains(client))
+                        clients.Add(client);
+                }
+            }
         }
 
         /// <summary>
@@ -361,26 +578,48 @@ namespace TVA.Web.Services.Messaging
         /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
         public virtual void Unregister(RegistrationRequest request)
         {
-            RegistrationInfo registration = null;
+            // Retrieve registration information.
+            RegistrationInfo registration;
             if (request.MessageType == MessageType.Queue)
             {
-                lock (m_queues)
+                // Queue
+                m_queuesLock.EnterReadLock();
+                try
                 {
                     m_queues.TryGetValue(request.MessageName, out registration);
+                }
+                finally
+                {
+                    m_queuesLock.ExitReadLock();
                 }
             }
             else if (request.MessageType == MessageType.Topic)
             {
-                lock (m_topics)
+                // Topic
+                m_topicsLock.EnterReadLock();
+                try
                 {
                     m_topics.TryGetValue(request.MessageName, out registration);
                 }
+                finally
+                {
+                    m_topicsLock.ExitReadLock();
+                }
+            }
+            else
+            {
+                // Unsupported
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", request.MessageType));
             }
 
-            List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
-            lock (clients)
+            // Update registration information.
+            if (registration != null)
             {
-                clients.RemoveAt(clients.FindIndex(client => client.SessionId == OperationContext.Current.SessionId));
+                List<ClientInfo> clients = (request.RegistrationType == RegistrationType.Produce ? registration.Producers : registration.Consumers);
+                lock (clients)
+                {
+                    clients.RemoveAt(clients.FindIndex(client => client.SessionId == OperationContext.Current.SessionId));
+                }
             }
         }
 
@@ -390,29 +629,55 @@ namespace TVA.Web.Services.Messaging
         /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
         public virtual void Publish(Message message)
         {
+            // Retrieve publisher information.
             ClientInfo client;
-            lock (m_clients)
+            m_clientsLock.EnterReadLock();
+            try
             {
+                // Update statistics data.
                 if (m_clients.TryGetValue(OperationContext.Current.SessionId, out client))
                     Interlocked.Increment(ref client.MessagesProduced);
             }
+            finally
+            {
+                m_clientsLock.ExitReadLock();
+            }
 
-            RegistrationInfo registration = null;
+            // Retrieve registration information.
+            RegistrationInfo registration;
             if (message.Type == MessageType.Queue)
             {
-                lock (m_queues)
+                // Queue
+                m_queuesLock.EnterReadLock();
+                try
                 {
                     m_queues.TryGetValue(message.Name, out registration);
+                }
+                finally
+                {
+                    m_queuesLock.ExitReadLock();
                 }
             }
             else if (message.Type == MessageType.Topic)
             {
-                lock (m_topics)
+                // Topic
+                m_topicsLock.EnterReadLock();
+                try
                 {
                     m_topics.TryGetValue(message.Name, out registration);
                 }
+                finally
+                {
+                    m_topicsLock.ExitReadLock();
+                }
+            }
+            else
+            {
+                // Unsupported
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", message.Type));
             }
 
+            // Queue message for distribution.
             if (registration != null && m_publishQueue != null)
             {
                 Interlocked.Increment(ref registration.MessagesReceived);
@@ -461,6 +726,63 @@ namespace TVA.Web.Services.Messaging
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+
+                        // Disconnect all clients.
+                        if (m_clients != null)
+                        {
+                            List<string> clientIds;
+                            m_clientsLock.EnterReadLock();
+                            try
+                            {
+                                clientIds = new List<string>(m_clients.Keys);
+                            }
+                            finally
+                            {
+                                m_clientsLock.ExitReadLock();
+                            }
+
+                            foreach (string clientId in clientIds)
+                            {
+                                DisconnectClient(clientId);
+                            }
+                        }
+
+                        // Remove queue registrations.
+                        if (m_queues != null)
+                        {
+                            m_queuesLock.EnterWriteLock();
+                            try
+                            {
+                                foreach (RegistrationInfo registration in m_queues.Values)
+                                {
+                                    registration.Dispose();
+                                }
+                                m_queues.Clear();
+                            }
+                            finally
+                            {
+                                m_queuesLock.ExitWriteLock();
+                            }
+                        }
+
+                        // Remove topic registrations.
+                        if (m_topics != null)
+                        {
+                            m_topicsLock.EnterWriteLock();
+                            try
+                            {
+                                foreach (RegistrationInfo registration in m_topics.Values)
+                                {
+                                    registration.Dispose();
+                                }
+                                m_topics.Clear();
+                            }
+                            finally
+                            {
+                                m_topicsLock.ExitWriteLock();
+                            }
+                        }
+
                         if (m_publishQueue != null)
                             m_publishQueue.Dispose();
 
@@ -472,46 +794,6 @@ namespace TVA.Web.Services.Messaging
 
                         if (m_topicsLock != null)
                             m_topicsLock.Dispose();
-
-                        // Disconnect all clients.
-                        if (m_clients != null)
-                        {
-                            List<string> clientIds;
-                            lock (m_clients)
-                            {
-                                clientIds = new List<string>(m_clients.Keys);
-                            }
-                            foreach (string clientId in clientIds)
-                            {
-                                DisconnectClient(clientId);
-                            }
-                        }
-
-                        // Remove queue registrations.
-                        if (m_queues != null)
-                        {
-                            lock (m_queues)
-                            {
-                                foreach (RegistrationInfo registration in m_queues.Values)
-                                {
-                                    registration.Dispose();
-                                }
-                                m_queues.Clear();
-                            }
-                        }
-
-                        // Remove topic registrations.
-                        if (m_topics != null)
-                        {
-                            lock (m_topics)
-                            {
-                                foreach (RegistrationInfo registration in m_topics.Values)
-                                {
-                                    registration.Dispose();
-                                }
-                                m_topics.Clear();
-                            }
-                        }
                     }
                 }
                 finally
@@ -524,15 +806,17 @@ namespace TVA.Web.Services.Messaging
 
         private void PublishMessages(PublishContext[] contexts)
         {
+            // Process distribution of all the messages.
             foreach (PublishContext context in contexts)
             {
+                // Distribute message to all subscribed clients.
                 lock (context.Registration.Consumers)
                 {
                     foreach (ClientInfo client in context.Registration.Consumers)
                     {
                         try
                         {
-                            client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().MessageReceived(context.Message);
+                            client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().ProcessMessage(context.Message);
                             Interlocked.Increment(ref client.MessagesConsumed);
 
                             if (context.Message.Type == MessageType.Queue)
@@ -540,30 +824,62 @@ namespace TVA.Web.Services.Messaging
                         }
                         catch
                         {
-                            client.OperationContext.Channel.Close();
+                            // Disconnect the subscriber if an error is encountered during transmission.
+                            try
+                            {
+                                if (client.OperationContext.Channel.State == CommunicationState.Opened)
+                                    client.OperationContext.Channel.Close();
+                            }
+                            catch { }
                         }
                     }
                 }
                 Interlocked.Increment(ref context.Registration.MessagesProcessed);
             }
+
+            // Keep message buffer in check if specified.
+            if (m_bufferThreshold > 0 && m_publishQueue.Count > m_bufferThreshold)
+                m_publishQueue.RemoveRange(0, m_publishQueue.Count - m_bufferThreshold);
         }
 
         private void DisconnectClient(string clientId)
         {
+            // Retrieve client information.
             ClientInfo client;
-            lock (m_clients)
+            m_clientsLock.EnterUpgradeableReadLock();
+            try
             {
                 if (m_clients.TryGetValue(clientId, out client))
                 {
-                    m_clients.Remove(clientId);
-                    client.OperationContext.Channel.Faulted -= OnChannelFaulted;
-                    client.OperationContext.Channel.Closing -= OnChannelClosing;
+                    // Remove client.
+                    m_clientsLock.EnterWriteLock();
+                    try
+                    {
+                        m_clients.Remove(clientId);
+                        client.OperationContext.Channel.Faulted -= OnChannelFaulted;
+                        client.OperationContext.Channel.Closing -= OnChannelClosing;
+                    }
+                    finally
+                    {
+                        m_clientsLock.ExitWriteLock();
+                    }
+
+                    // Close channel.
+                    if (client.OperationContext.Channel.State == CommunicationState.Opened)
+                        client.OperationContext.Channel.Close();
                 }
             }
+            finally
+            {
+                m_clientsLock.ExitUpgradeableReadLock();
+            }
 
+            // Remove client registrations.
             if (client != null)
             {
-                lock (m_queues)
+                // Remove any queue registrations.
+                m_queuesLock.EnterReadLock();
+                try
                 {
                     foreach (RegistrationInfo registration in m_queues.Values)
                     {
@@ -577,8 +893,14 @@ namespace TVA.Web.Services.Messaging
                         }
                     }
                 }
+                finally
+                {
+                    m_queuesLock.ExitReadLock();
+                }
 
-                lock (m_topics)
+                // Remove any topic registrations.
+                m_topicsLock.EnterReadLock();
+                try
                 {
                     foreach (RegistrationInfo registration in m_topics.Values)
                     {
@@ -591,6 +913,10 @@ namespace TVA.Web.Services.Messaging
                             registration.Consumers.Remove(client);
                         }
                     }
+                }
+                finally
+                {
+                    m_topicsLock.ExitReadLock();
                 }
             }
         }

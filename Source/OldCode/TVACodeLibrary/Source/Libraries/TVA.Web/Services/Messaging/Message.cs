@@ -236,7 +236,7 @@ namespace TVA.Web.Services.Messaging
     #region [ Enumerations ]
 
     /// <summary>
-    /// Indicates how a <see cref="Message"/> is processed by the <see cref="MessageBusService"/>.
+    /// Indicates how a <see cref="Message"/> is distributed by the <see cref="MessageBusService"/>.
     /// </summary>
     public enum MessageType
     {

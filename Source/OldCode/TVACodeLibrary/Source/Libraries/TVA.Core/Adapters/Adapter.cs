@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/23/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  11/19/2010 - Pinal C. Patel
+//       Removed the persistance of Enabled property to the config file.
 //
 //*******************************************************************************************************
 
@@ -232,7 +234,6 @@
 using System;
 using System.Configuration;
 using System.Text;
-using TVA.Configuration;
 
 namespace TVA.Adapters
 {
@@ -382,7 +383,7 @@ namespace TVA.Adapters
                 status.Append(Domain.FriendlyName);
                 status.AppendLine();
                 status.Append("             Adapter state: ");
-                status.Append(m_enabled ? "Enabled" : "Disabled");
+                status.Append(Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.Append("              Memory usage: ");
                 status.Append(MemoryUsage.Equals(double.NaN) ? "Not tracked" : MemoryUsage.ToString("0 bytes"));
@@ -442,12 +443,6 @@ namespace TVA.Adapters
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
                     throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
-
-                // Save settings under the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Enabled", true].Update(m_enabled);
-                config.Save();
             }
         }
 
@@ -462,12 +457,6 @@ namespace TVA.Adapters
                 // Ensure that settings category is specified.
                 if (string.IsNullOrEmpty(m_settingsCategory))
                     throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
-
-                // Load settings from the specified category.
-                ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if this adapter is enabled; otherwise False.");
-                Enabled = settings["Enabled"].ValueAs(m_enabled);
             }
         }
 

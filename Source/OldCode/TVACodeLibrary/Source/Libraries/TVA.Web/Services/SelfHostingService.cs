@@ -31,6 +31,10 @@
 //         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
 //  10/26/2010 - Pinal C. Patel
 //       Modified the implementation of ISupportLifecycle.Enabled property.
+//  10/29/2010 - Pinal C. Patel
+//       Modified CreateServiceBinding() to explicitly disable security on created binding if specified.
+//  11/19/2010 - Pinal C. Patel
+//       Changed to inherit from Adapter to take advantage of app domain isolation through AdapterLoader.
 //
 //*******************************************************************************************************
 
@@ -252,7 +256,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IdentityModel.Policy;
 using System.Linq;
 using System.Net;
@@ -261,6 +264,7 @@ using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
+using TVA.Adapters;
 using TVA.Configuration;
 
 namespace TVA.Web.Services
@@ -268,7 +272,7 @@ namespace TVA.Web.Services
     /// <summary>
     /// A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
-    public class SelfHostingService : ISelfHostingService
+    public class SelfHostingService : Adapter, ISelfHostingService
     {
         #region [ Members ]
 
@@ -301,8 +305,6 @@ namespace TVA.Web.Services
         private bool m_singleton;
         private string m_securityPolicy;
         private bool m_publishMetadata;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private bool m_disposed;
         private bool m_initialized;
         private ServiceHost m_serviceHost;
@@ -315,10 +317,10 @@ namespace TVA.Web.Services
         /// Initializes a new instance of the web service.
         /// </summary>
         protected SelfHostingService()
+            : base()
         {
             Type type = this.GetType();
             m_contract = type.Namespace + ".I" + type.Name + ", " + type.AssemblyQualifiedName.Split(',')[1].Trim();
-            m_settingsCategory = type.Name;
         }
 
         /// <summary>
@@ -332,6 +334,33 @@ namespace TVA.Web.Services
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the web service is currently enabled.
+        /// </summary>
+        public override bool Enabled
+        {
+            get
+            {
+                return (m_serviceHost != null && m_serviceHost.State == CommunicationState.Opened);
+            }
+            set
+            {
+                if (value && !Enabled)
+                {
+                    // Enable
+                    if (!m_initialized)
+                        Initialize();
+                    else
+                        InitializeServiceHost();
+                }
+                else if (!value && Enabled)
+                {
+                    // Disable
+                    m_serviceHost.Close();
+                }
+            }
+        }
 
         /// <summary>
         /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
@@ -418,65 +447,6 @@ namespace TVA.Web.Services
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the web service is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return (m_serviceHost != null && m_serviceHost.State == CommunicationState.Opened);
-            }
-            set
-            {
-                if (value && !Enabled)
-                {
-                    if (!m_initialized)
-                        Initialize();
-                    else
-                        InitializeServiceHost();
-                }
-                else if (!value && Enabled)
-                {
-                    m_serviceHost.Close();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the web service settings are to be saved to the config file.
-        /// </summary>
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the category under which the web service settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_settingsCategory = value;
-            }
-        }
-
-        /// <summary>
         /// Gets the <see cref="WebServiceHost"/> hosting the web service.
         /// </summary>
         /// <remarks>
@@ -496,42 +466,29 @@ namespace TVA.Web.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the web service.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
         /// Initializes the web service.
         /// </summary>
-        public virtual void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
             if (!m_initialized)
             {
-                LoadSettings();             // Load settings from the config file.
                 InitializeServiceHost();    // Initialize the service host.
                 m_initialized = true;       // Initialize only once.
             }
         }
 
         /// <summary>
-        /// Saves web service settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Saves web service settings to the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void SaveSettings()
+        public override void SaveSettings()
         {
-            if (m_persistSettings)
+            base.SaveSettings();
+            if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
-
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["Endpoints", true].Update(m_endpoints);
                 settings["Contract", true].Update(m_contract);
                 settings["Singleton", true].Update(m_singleton);
@@ -542,20 +499,16 @@ namespace TVA.Web.Services
         }
 
         /// <summary>
-        /// Loads saved web service settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved web service settings from the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void LoadSettings()
+        public override void LoadSettings()
         {
-            if (m_persistSettings)
+            base.LoadSettings();
+            if (PersistSettings)
             {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
-
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("Endpoints", m_endpoints, "Semicolon delimited list of URIs where the web service can be accessed.");
                 settings.Add("Contract", m_contract, "Assembly qualified name of the contract interface implemented by the web service.");
                 settings.Add("Singleton", m_singleton, "True if the web service is singleton; otherwise False.");
@@ -677,25 +630,24 @@ namespace TVA.Web.Services
         /// Releases the unmanaged resources used by the web service and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.				
+                    // This will be done regardless of whether the object is finalized or disposed.
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
                         if (m_serviceHost != null)
                             m_serviceHost.Close();
                     }
                 }
                 finally
                 {
-                    m_disposed = true;  // Prevent duplicate dispose.
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }
@@ -799,6 +751,12 @@ namespace TVA.Web.Services
                         soap11Binding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
                         soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
                     }
+                    else
+                    {
+                        // Disable security.
+                        soap11Binding.Security.Mode = BasicHttpSecurityMode.None;
+                        soap11Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
+                    }
 
                     return soap11Binding;
                 case "http.soap12":
@@ -812,6 +770,12 @@ namespace TVA.Web.Services
                         soap12Binding.Security.Mode = SecurityMode.Transport;
                         soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
                     }
+                    else
+                    {
+                        // Disable security.
+                        soap12Binding.Security.Mode = SecurityMode.None;
+                        soap12Binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
+                    }
 
                     return soap12Binding;
                 case "http.duplex":
@@ -823,6 +787,11 @@ namespace TVA.Web.Services
                     {
                         // Enable security.
                         duplexBinding.Security.Mode = WSDualHttpSecurityMode.Message;
+                    }
+                    else
+                    {
+                        // Disable security.
+                        duplexBinding.Security.Mode = WSDualHttpSecurityMode.None;
                     }
 
                     return duplexBinding;
@@ -836,6 +805,12 @@ namespace TVA.Web.Services
                         // Enable security.
                         restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
                         restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+                    }
+                    else
+                    {
+                        // Disable security.
+                        restBinding.Security.Mode = WebHttpSecurityMode.None;
+                        restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.None;
                     }
 
                     return restBinding;
@@ -864,6 +839,11 @@ namespace TVA.Web.Services
                         // Enable security.
                         p2pBinding.Security.Mode = SecurityMode.Transport;
                     }
+                    else
+                    {
+                        // Disable security.
+                        p2pBinding.Security.Mode = SecurityMode.None;
+                    }
 
                     return p2pBinding;
                 case "net.pipe":
@@ -874,6 +854,11 @@ namespace TVA.Web.Services
                         // Enable security.
                         pipeBinding.Security.Mode = NetNamedPipeSecurityMode.Transport;
                     }
+                    else
+                    {
+                        // Disable security.
+                        pipeBinding.Security.Mode = NetNamedPipeSecurityMode.None;
+                    }
 
                     return pipeBinding;
                 case "net.msmq":
@@ -883,6 +868,11 @@ namespace TVA.Web.Services
                     {
                         // Enable security.
                         msmqBinding.Security.Mode = NetMsmqSecurityMode.Transport;
+                    }
+                    else
+                    {
+                        // Disable security.
+                        msmqBinding.Security.Mode = NetMsmqSecurityMode.None;
                     }
 
                     return msmqBinding;

@@ -12,6 +12,9 @@
 //       Generated original version of source code.
 //  10/26/2010 - Pinal C. Patel
 //       Added management methods GetClients(), GetQueues() and GetTopics().
+//  10/29/2010 - Pinal C. Patel
+//       Made all operations two-way (IsOneWay = false, the default) so OperationContext.RequestContext 
+//       is available when operations are invoked so security can be applied to them.
 //
 //*******************************************************************************************************
 
@@ -248,42 +251,42 @@ namespace TVA.Web.Services.Messaging
         /// Registers with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s.
         /// </summary>
         /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
-        [OperationContract(IsOneWay = true)]
+        [OperationContract()]
         void Register(RegistrationRequest request);
 
         /// <summary>
         /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
         /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
-        [OperationContract(IsOneWay = true)]
+        [OperationContract()]
         void Unregister(RegistrationRequest request);
 
         /// <summary>
         /// Sends the <paramref name="message"/> to the <see cref="MessageBusService"/> for distribution amongst its registered consumers.
         /// </summary>
         /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
-        [OperationContract(IsOneWay = true)]
+        [OperationContract()]
         void Publish(Message message);
 
         /// <summary>
         /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
+        [OperationContract()]
         ICollection<ClientInfo> GetClients();
 
         /// <summary>
         /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
+        [OperationContract()]
         ICollection<RegistrationInfo> GetQueues();
 
         /// <summary>
         /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        [OperationContract(IsOneWay = false)]
+        [OperationContract()]
         ICollection<RegistrationInfo> GetTopics();
 
         #endregion
