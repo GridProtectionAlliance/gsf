@@ -311,6 +311,7 @@ namespace TVA.Communication
     /// This example shows how to use <see cref="FileClient"/> for reading data to a file:
     /// <code>
     /// using System;
+    /// using TVA;
     /// using TVA.Communication;
     /// 
     /// class Program
