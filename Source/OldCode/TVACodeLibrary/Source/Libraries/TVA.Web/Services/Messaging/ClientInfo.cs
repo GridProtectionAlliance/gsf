@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/19/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  11/24/2010 - Pinal C. Patel
+//       Updated ConnectedAt to use UTC time.
 //
 //*******************************************************************************************************
 
@@ -252,7 +254,7 @@ namespace TVA.Web.Services.Messaging
         public string SessionId;
 
         /// <summary>
-        /// Gets or sets the <see cref="DateTime"/> when the client connected to the <see cref="MessageBusService"/>.
+        /// Gets or sets the UTC <see cref="DateTime"/> when the client connected to the <see cref="MessageBusService"/>.
         /// </summary>
         [DataMember()]
         public DateTime ConnectedAt;
@@ -285,7 +287,7 @@ namespace TVA.Web.Services.Messaging
         internal ClientInfo(OperationContext context)
         {
             SessionId = context.SessionId;
-            ConnectedAt = DateTime.Now;
+            ConnectedAt = DateTime.UtcNow;
             OperationContext = context;
         }
 

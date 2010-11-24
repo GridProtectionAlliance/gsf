@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  11/19/2010 - Pinal C. Patel
 //       Removed the persistance of Enabled property to the config file.
+//  11/24/2010 - Pinal C. Patel
+//       Modified Name property to use SettingsCategory instead of Type name.
 //
 //*******************************************************************************************************
 
@@ -367,7 +369,7 @@ namespace TVA.Adapters
         {
             get
             {
-                return this.GetType().Name;
+                return m_settingsCategory;
             }
         }
 

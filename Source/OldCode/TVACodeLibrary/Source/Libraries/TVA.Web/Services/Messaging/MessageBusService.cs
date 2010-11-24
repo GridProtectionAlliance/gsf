@@ -15,6 +15,8 @@
 //  11/23/2010 - Pinal C. Patel
 //       Added new BufferThreshold and ProcessingMode properties.
 //       Enhanced thread synchronization using ReaderWriterLockSlim for better performance.
+//  11/24/2010 - Pinal C. Patel
+//       Updated the text returned by Status property.
 //
 //*******************************************************************************************************
 
@@ -446,6 +448,154 @@ namespace TVA.Web.Services.Messaging
     ///     }
     /// }
     /// </code>
+    /// This example shows how to monitor <see cref="MessageBusService"/> remotely:
+    /// <code>
+    /// using System;
+    /// using System.ServiceModel;
+    /// using System.Threading;
+    /// using TVA;
+    /// 
+    /// class Program : IMessageBusServiceCallback
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // NOTE: Service reference to the message bus service must be added to generate the service proxy.
+    /// 
+    ///         // Initialize auto-generated message bus service proxy.
+    ///         InstanceContext callbackContext = new InstanceContext(new Program());
+    ///         MessageBusServiceClient messageBusService = new MessageBusServiceClient(callbackContext, "NetTcpBinding_IMessageBusService");
+    ///         messageBusService.ChannelFactory.Open();
+    /// 
+    ///         // Start querying messages bus service status asynchronously.
+    ///         new Thread(delegate()
+    ///         {
+    ///             while (messageBusService.State == CommunicationState.Opened)
+    ///             {
+    ///                 Console.Clear();
+    ///                 Console.WriteLine(new string('-', 79));
+    ///                 Console.WriteLine("|" + "Message Bus Status".CenterText(77) + "|");
+    ///                 Console.WriteLine(new string('-', 79));
+    ///                 Console.WriteLine();
+    /// 
+    ///                 // Show clients.
+    ///                 Console.Write("Client ID".PadRight(25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Connected".PadRight(21));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Produced".PadRight(15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Consumed".PadRight(15));
+    ///                 Console.WriteLine();
+    ///                 Console.Write(new string('-', 25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 21));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.WriteLine();
+    ///                 foreach (ClientInfo client in messageBusService.GetClients())
+    ///                 {
+    ///                     Console.Write(client.SessionId.TruncateRight(25).PadRight(25));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(client.ConnectedAt.ToString("MM/dd/yy hh:mm:ss tt").PadRight(21));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(client.MessagesProduced.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(client.MessagesConsumed.ToString().PadRight(15));
+    ///                     Console.WriteLine();
+    ///                 }
+    ///                 Console.WriteLine();
+    /// 
+    ///                 // Show queues.
+    ///                 Console.Write("Queue Name".PadRight(25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Producers".PadRight(10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Consumers".PadRight(10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Received".PadRight(15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Processed".PadRight(15));
+    ///                 Console.WriteLine();
+    ///                 Console.Write(new string('-', 25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.WriteLine();
+    ///                 foreach (RegistrationInfo queue in messageBusService.GetQueues())
+    ///                 {
+    ///                     Console.Write(queue.MessageName.PadRight(25));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(queue.Producers.Length.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(queue.Consumers.Length.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(queue.MessagesReceived.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(queue.MessagesProcessed.ToString().PadRight(15));
+    ///                     Console.WriteLine();
+    ///                 }
+    ///                 Console.WriteLine();
+    /// 
+    ///                 // Show topics.
+    ///                 Console.Write("Topic Name".PadRight(25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Producers".PadRight(10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Consumers".PadRight(10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Received".PadRight(15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write("Msg. Processed".PadRight(15));
+    ///                 Console.WriteLine();
+    ///                 Console.Write(new string('-', 25));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 10));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.Write(" ");
+    ///                 Console.Write(new string('-', 15));
+    ///                 Console.WriteLine();
+    ///                 foreach (RegistrationInfo topic in messageBusService.GetTopics())
+    ///                 {
+    ///                     Console.Write(topic.MessageName.PadRight(25));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(topic.Producers.Length.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(topic.Consumers.Length.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(topic.MessagesReceived.ToString().PadRight(15));
+    ///                     Console.Write(" ");
+    ///                     Console.Write(topic.MessagesProcessed.ToString().PadRight(15));
+    ///                     Console.WriteLine();
+    ///                 }
+    ///                 Console.WriteLine();
+    ///                 Console.Write("Press Enter key to stop...");
+    /// 
+    ///                 Thread.Sleep(5000);
+    ///             }
+    ///         }).Start();
+    /// 
+    ///         // Shutdown.
+    ///         Console.ReadLine();
+    ///         messageBusService.Close();
+    ///     }
+    /// 
+    ///     public void ProcessMessage(Message message)
+    ///     {
+    ///         // This method will not be invoked since we are not consuming messages.
+    ///         throw new NotSupportedException();
+    ///     }
+    /// }
+    /// </code>
     /// </example>
     /// <seealso cref="Message"/>
     /// <seealso cref="ClientInfo"/>
@@ -494,6 +644,7 @@ namespace TVA.Web.Services.Messaging
         private ReaderWriterLockSlim m_queuesLock;
         private ReaderWriterLockSlim m_topicsLock;
         private ProcessQueue<PublishContext> m_publishQueue;
+        private long m_discardedMessages;
         private bool m_disposed;
 
         #endregion
@@ -552,9 +703,43 @@ namespace TVA.Web.Services.Messaging
             get
             {
                 StringBuilder status = new StringBuilder();
-                status.Append(base.Status);
-                if (m_publishQueue != null)
-                    status.Append(m_publishQueue.Status);
+                ProcessQueueStatistics statistics = m_publishQueue.CurrentStatistics;
+                status.Append("          Buffer threshold: ");
+                status.Append(m_bufferThreshold == -1 ? "Disabled" : m_bufferThreshold.ToString());
+                status.AppendLine();
+                status.Append("           Processing mode: ");
+                status.Append(m_processingMode);
+                status.AppendLine();
+                m_clientsLock.EnterReadLock();
+                try
+                { status.AppendFormat("         Number of clients: {0}", m_clients.Count); }
+                finally
+                { m_clientsLock.ExitReadLock(); }
+                status.AppendLine();
+                m_queuesLock.EnterReadLock();
+                try
+                { status.AppendFormat("          Number of queues: {0}", m_queues.Count); }
+                finally
+                { m_queuesLock.ExitReadLock(); }
+                status.AppendLine();
+                m_topicsLock.EnterReadLock();
+                try
+                { status.AppendFormat("          Number of topics: {0}", m_topics.Count); }
+                finally
+                { m_topicsLock.ExitReadLock(); }
+                status.AppendLine();
+                status.Append("         Messages received: ");
+                status.Append(statistics.QueueCount + statistics.TotalProcessedItems + statistics.ItemsBeingProcessed + m_discardedMessages);
+                status.AppendLine();
+                status.Append("        Messages discarded: ");
+                status.Append(m_discardedMessages);
+                status.AppendLine();
+                status.Append("        Messages processed: ");
+                status.Append(statistics.TotalProcessedItems);
+                status.AppendLine();
+                status.Append("  Messages being processed: ");
+                status.Append(statistics.ItemsBeingProcessed);
+                status.AppendLine();
 
                 return status.ToString();
             }
@@ -1025,7 +1210,12 @@ namespace TVA.Web.Services.Messaging
 
             // Keep message buffer in check if specified.
             if (m_bufferThreshold > 0 && m_publishQueue.Count > m_bufferThreshold)
-                m_publishQueue.RemoveRange(0, m_publishQueue.Count - m_bufferThreshold);
+            {
+                int discardCount = m_publishQueue.Count - m_bufferThreshold;
+
+                m_publishQueue.RemoveRange(0, discardCount);
+                Interlocked.Add(ref m_discardedMessages, discardCount);
+            }
         }
 
         private void DisconnectClient(string clientId)
@@ -1051,8 +1241,12 @@ namespace TVA.Web.Services.Messaging
                     }
 
                     // Close channel.
-                    if (client.OperationContext.Channel.State == CommunicationState.Opened)
-                        client.OperationContext.Channel.Close();
+                    try
+                    {
+                        if (client.OperationContext.Channel.State == CommunicationState.Opened)
+                            client.OperationContext.Channel.Close();
+                    }
+                    catch { }
                 }
             }
             finally
