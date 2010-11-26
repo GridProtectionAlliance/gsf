@@ -33,6 +33,8 @@
 //  07/01/2010 - Pinal C. Patel
 //       Removed FileName, AppSettings and ConnectionStrings proxy properties and replaced them with
 //       new Configuration property to allow for full access to the application configuration.
+//  11/26/2010 - Pinal C. Patel
+//       Updated usage example to include user-scope setting sample.
 //
 //*******************************************************************************************************
 
@@ -275,20 +277,21 @@ namespace TVA.Configuration
     /// using System.Configuration;
     /// using TVA;
     /// using TVA.Configuration;
-    ///
+    /// 
     /// class Program
     /// {
     ///     static void Main(string[] args)
     ///     {
     ///         // Get the application config file.
     ///         ConfigurationFile config = ConfigurationFile.Current;
-    ///         
+    /// 
     ///         // Get the sections of config file.
+    ///         CategorizedSettingsElementCollection startup = config.Settings["Startup"];
     ///         CategorizedSettingsElementCollection passwords = config.Settings["Passwords"];
     ///         CategorizedSettingsElementCollection monitoring = config.Settings["Monitoring"];
     ///         KeyValueConfigurationCollection appSettings = config.Configuration.AppSettings.Settings;
     ///         ConnectionStringSettingsCollection connStrings = config.Configuration.ConnectionStrings.ConnectionStrings;
-    ///        
+    /// 
     ///         // Add settings to the config file under the "appSettings" section.
     ///         appSettings.Add("SaveSettingOnExit", true.ToString());
     ///         // Add settings to the config file under the "connectionStrings" section.
@@ -296,24 +299,28 @@ namespace TVA.Configuration
     ///         // Add settings to the config (if they don't exist) under a custom "monitoring" section.
     ///         monitoring.Add("RefreshInterval", 5, "Interval in seconds at which the Monitor screen is to be refreshed.");
     ///         monitoring.Add("MessagesSnapshot", 30000, "Maximum messages length to be displayed on the Monitor screen.");
-    ///         // Add passwords to the config file encrypted (if they don't exist) under a custom "passwords" section.
+    ///         // Add password to the config file encrypted (if it doesn't exist) under a custom "passwords" section.
     ///         passwords.Add("Admin", "Adm1nP4ss", "Password used for performing administrative tasks.", true);
+    ///         // Add user-scope setting to the config (if it doesn't exist) under a custom "startup" section.
+    ///         startup.Add("Theme", "Default", "Application theme to use for the session.", false, SettingScope.User);
     ///         config.Save();  // Save settings to the config file.
-    ///        
+    /// 
     ///         // Read saved settings from the config file.
     ///         bool saveSettingsOnExit = appSettings["SaveSettingOnExit"].Value.ParseBoolean();
     ///         string devConnectionString = connStrings["DevSql"].ConnectionString;
+    ///         string appTheme = startup["Theme"].Value;
     ///         string adminPassword = passwords["Admin"].Value;
     ///         int refreshInterval = monitoring["RefreshInterval"].ValueAsInt32();
     ///         int messagesSnapshot = monitoring["MessagesSnapshot"].ValueAsInt32();
-    ///        
+    /// 
     ///         // Print the retrieved settings to the console.
-    ///         Console.WriteLine(string.Format("SaveSettingOnExit = {0}", saveSettingsOnExit));
-    ///         Console.WriteLine(string.Format("DevSql = {0}", devConnectionString));
-    ///         Console.WriteLine(string.Format("Admin = {0}", adminPassword));
-    ///         Console.WriteLine(string.Format("RefreshInterval = {0}", refreshInterval));
-    ///         Console.WriteLine(string.Format("MessagesSnapshot = {0}", messagesSnapshot));
-    ///        
+    ///         Console.WriteLine("SaveSettingOnExit = {0}", saveSettingsOnExit);
+    ///         Console.WriteLine("DevSql = {0}", devConnectionString);
+    ///         Console.WriteLine("Theme = {0}", appTheme);
+    ///         Console.WriteLine("Admin = {0}", adminPassword);
+    ///         Console.WriteLine("RefreshInterval = {0}", refreshInterval);
+    ///         Console.WriteLine("MessagesSnapshot = {0}", messagesSnapshot);
+    /// 
     ///         Console.ReadLine();
     ///     }
     /// }
