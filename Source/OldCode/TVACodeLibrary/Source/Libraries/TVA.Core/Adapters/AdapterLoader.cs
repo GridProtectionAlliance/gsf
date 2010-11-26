@@ -357,7 +357,7 @@ namespace TVA.Adapters
     /// 
     /// /// &lt;summary&gt;
     /// /// Base adapter class.
-    /// /// &lt;/summary&lg;
+    /// /// &lt;/summary&gt;
     /// public abstract class PublishAdapterBase : Adapter
     /// {
     ///     public PublishAdapterBase()
