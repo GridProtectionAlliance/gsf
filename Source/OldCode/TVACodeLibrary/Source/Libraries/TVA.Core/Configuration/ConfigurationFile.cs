@@ -337,6 +337,10 @@ namespace TVA.Configuration
     ///     <add key="SaveSettingOnExit" value="True" />
     ///   </appSettings>
     ///   <categorizedSettings>
+    ///     <startup>
+    ///       <add name="Theme" value="Default" description="Application theme to use for the session."
+    ///         encrypted="false" scope="User" />
+    ///     </startup>
     ///     <passwords>
     ///       <add name="Admin" value="C+0j6fE/N0Q9b5xaeDKgvRmSeY9zJkO1EQCr7cHoG3x24tztlbBB54PfWsuMGXc/"
     ///         description="Password used for performing administrative tasks."
