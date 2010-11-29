@@ -18,6 +18,8 @@
 //       Fixed LoadImplementations() to correctly use FilePath.GetFileList().
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/29/2010 - Stephen C. Wills
+//       Updated GetRootType() method to include MarshalByRefObject in the root type exclusion list.
 //
 //*******************************************************************************************************
 
@@ -250,19 +252,21 @@ namespace TVA
     public static class TypeExtensions
     {
         /// <summary>
-        /// Gets the root type in the inheritace hierarchy from which the specified type inherits.
+        /// Gets the root type in the inheritace hierarchy from which the specified <paramref name="type"/> inherits.
         /// </summary>
         /// <param name="type">The <see cref="Type"/> whose root type is to be found.</param>
-        /// <returns>The root type in the inheritance hierarchy from which the specified type inherits.</returns>
+        /// <returns>The root type in the inheritance hierarchy from which the specified <paramref name="type"/> inherits.</returns>
         /// <remarks>
-        /// Unless input type is <see cref="Object"/>, the returned type will never be <see cref="Object"/>, 
-        /// even though all types ultimately inherit from it.
+        /// Unless input <paramref name="type"/> is <see cref="Object"/> or <see cref="MarshalByRefObject"/>, the returned type will never 
+        /// be <see cref="Object"/> or <see cref="MarshalByRefObject"/>, even though all types ultimately inherit from either one of them.
         /// </remarks>
         public static Type GetRootType(this Type type)
         {
-            // Recurse through types until you reach a base type of "System.Object"
-            if (type.BaseType != typeof(object)) return GetRootType(type.BaseType);
-            return type;
+            // Recurse through types until you reach a base type of "System.Object" or "System.MarshalByRef".
+            if (type.BaseType == null || type.BaseType == typeof(object) || type.BaseType == typeof(MarshalByRefObject))
+                return type;
+            else
+                return GetRootType(type.BaseType);
         }
 
         /// <summary>

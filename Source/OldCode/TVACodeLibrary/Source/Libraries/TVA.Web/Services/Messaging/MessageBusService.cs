@@ -388,6 +388,7 @@ namespace TVA.Web.Services.Messaging
     ///                 Message message = new Message();
     ///                 message.Type = registration.MessageType;
     ///                 message.Name = registration.MessageName;
+    ///                 message.Format = "application/octet-stream";
     /// 
     ///                 Random random = new Random(59);
     ///                 while (messageBusService.State == CommunicationState.Opened)
@@ -444,7 +445,10 @@ namespace TVA.Web.Services.Messaging
     /// 
     ///     public void ProcessMessage(Message message)
     ///     {
-    ///         Console.WriteLine("Message received: {0} Hz", BitConverter.ToInt32(message.Content, 0));
+    ///         if (message.Format != "application/octet-stream")
+    ///             Console.WriteLine("Message format '{0}' is not supported", message.Format);
+    ///         else
+    ///             Console.WriteLine("Message received: {0} Hz", BitConverter.ToInt32(message.Content, 0));
     ///     }
     /// }
     /// </code>
