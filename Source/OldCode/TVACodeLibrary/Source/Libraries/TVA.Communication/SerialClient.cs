@@ -20,6 +20,8 @@
 //       Modified Disconnect() to add error checking.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/29/2010 - Pinal C. Patel
+//       Corrected the implementation of ConnectAsync() method.
 //
 //*******************************************************************************************************
 
@@ -259,56 +261,56 @@ namespace TVA.Communication
     /// 
     /// class Program
     /// {
-    ///     static SerialClient m_client;
+    ///     static SerialClient s_client;
     /// 
     ///     static void Main(string[] args)
     ///     {
     ///         // Initialize the client.
-    ///         m_client = new SerialClient("Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False");
-    ///         m_client.Initialize();
+    ///         s_client = new SerialClient("Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False");
+    ///         s_client.Initialize();
     ///         // Register event handlers.
-    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
-    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
-    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-    ///         m_client.SendDataComplete += m_client_SendDataComplete;
-    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+    ///         s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+    ///         s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+    ///         s_client.SendDataComplete += s_client_SendDataComplete;
+    ///         s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
     ///         // Connect the client.
-    ///         m_client.Connect();
+    ///         s_client.Connect();
     /// 
     ///         // Write user input to the serial port.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
-    ///             m_client.Send(input);
+    ///             s_client.Send(input);
     ///         }
     /// 
     ///         // Disconnect the client on shutdown.
-    ///         m_client.Disconnect();
+    ///         s_client.Dispose();
     ///     }
     /// 
-    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     static void s_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client is connecting to serial port.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     static void s_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client connected to serial port.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     static void s_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client disconnected from serial port.");
     ///     }
     /// 
-    ///     static void m_client_SendDataComplete(object sender, EventArgs e)
+    ///     static void s_client_SendDataComplete(object sender, EventArgs e)
     ///     {
-    ///         Console.WriteLine(string.Format("Sent data - {0}", m_client.TextEncoding.GetString(m_client.Client.SendBuffer)));
+    ///         Console.WriteLine(string.Format("Sent data - {0}", s_client.TextEncoding.GetString(s_client.Client.SendBuffer)));
     ///     }
     /// 
-    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
     ///     {
-    ///         Console.WriteLine(string.Format("Received data - {0}", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///         Console.WriteLine(string.Format("Received data - {0}", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
     ///     }
     /// }
     /// </code>
@@ -328,11 +330,13 @@ namespace TVA.Communication
         private TransportProvider<SerialPort> m_serialClient;
         private Dictionary<string, string> m_connectData;
         private int m_receivedBytesThreshold;
+        private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
 #else
         private Thread m_connectionThread;
 #endif
+        private bool m_disposed;
 
         #endregion
 
@@ -444,7 +448,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            WaitHandle handle = base.ConnectAsync();
+            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_serialClient.ID = this.ClientID;
             m_serialClient.Secretkey = this.SharedSecret;
@@ -473,7 +477,33 @@ namespace TVA.Communication
 #endif
             m_connectionThread.Start();
 
-            return handle;
+            return m_connectionHandle;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="SerialClient"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_connectionHandle != null)
+                            m_connectionHandle.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
         }
 
         /// <summary>
@@ -569,6 +599,7 @@ namespace TVA.Communication
                 {
                     OnConnectionAttempt();
                     m_serialClient.Provider.Open();
+                    m_connectionHandle.Set();
                     OnConnectionEstablished();
 
                     break;
@@ -579,6 +610,7 @@ namespace TVA.Communication
                 }
                 catch (Exception ex)
                 {
+                    Thread.Sleep(1000);
                     connectionAttempts++;
                     OnConnectionException(ex);
                 }

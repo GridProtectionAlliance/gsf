@@ -36,6 +36,8 @@
 //  03/24/2010 - Pinal C. Patel
 //       Updated the interpretation of server property in ConnectionString to correctly interpret 
 //       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
+//  11/29/2010 - Pinal C. Patel
+//       Corrected the implementation of ConnectAsync() method.
 //
 //*******************************************************************************************************
 
@@ -292,55 +294,55 @@ namespace TVA.Communication
     /// 
     /// class Program
     /// {
-    ///     static UdpClient m_client;
+    ///     static UdpClient s_client;
     /// 
     ///     static void Main(string[] args)
     ///     {
     ///         // Initialize the client.
-    ///         m_client = new UdpClient("Server=localhost:8888; Port=8989");
-    ///         m_client.Handshake = false;
-    ///         m_client.ReceiveTimeout = -1;
-    ///         m_client.Encryption = CipherStrength.None;
-    ///         m_client.Compression = CompressionStrength.NoCompression;
-    ///         m_client.SecureSession = false;
-    ///         m_client.Initialize();
+    ///         s_client = new UdpClient("Server=localhost:8888; Port=8989");
+    ///         s_client.Handshake = false;
+    ///         s_client.ReceiveTimeout = -1;
+    ///         s_client.Encryption = CipherStrength.None;
+    ///         s_client.Compression = CompressionStrength.NoCompression;
+    ///         s_client.SecureSession = false;
+    ///         s_client.Initialize();
     ///         // Register event handlers.
-    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
-    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
-    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+    ///         s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+    ///         s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+    ///         s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
     ///         // Connect the client.
-    ///         m_client.Connect();
+    ///         s_client.Connect();
     /// 
     ///         // Transmit user input to the server.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
-    ///             m_client.Send(input);
+    ///             s_client.Send(input);
     ///         }
     /// 
     ///         // Disconnect the client on shutdown.
-    ///         m_client.Disconnect();
+    ///         s_client.Dispose();
     ///     }
     /// 
-    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     static void s_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client is connecting to server.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     static void s_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client connected to server.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     static void s_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client disconnected from server.");
     ///     }
     /// 
-    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
     ///     {
-    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///         Console.WriteLine(string.Format("Received data - {0}.", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
     ///     }
     /// }
     /// </code>
@@ -372,11 +374,13 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_udpClient;
         private Dictionary<string, string> m_connectData;
         private Func<TransportProvider<Socket>, bool> m_receivedGoodbye;
+        private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
 #else
         private Thread m_connectionThread;
 #endif
+        private bool m_disposed;
 
         #endregion
 
@@ -476,7 +480,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            WaitHandle handle = base.ConnectAsync();
+            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_udpClient = new TransportProvider<Socket>();
             m_udpClient.ID = this.ClientID;
@@ -510,7 +514,74 @@ namespace TVA.Communication
 #endif
             m_connectionThread.Start();
                 
-            return handle;
+            return m_connectionHandle;
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="UdpClient"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_connectionHandle != null)
+                            m_connectionHandle.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validates the specified <paramref name="connectionString"/>.
+        /// </summary>
+        /// <param name="connectionString">Connection string to be validated.</param>
+        /// <exception cref="ArgumentException">Port property is missing.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
+        protected override void ValidateConnectionString(string connectionString)
+        {
+            m_connectData = connectionString.ParseKeyValuePairs();
+
+            // Inject 'interface' property if missing.
+            if (!m_connectData.ContainsKey("interface"))
+                m_connectData.Add("interface", string.Empty);
+
+            // Backwards compatibility adjustments.
+            // New Format: Server=localhost:8888; Port=8989
+            // Old Format: Server=localhost; RemotePort=8888; LocalPort=8888
+            if (m_connectData.ContainsKey("localport") && !m_connectData.ContainsKey("port"))
+                m_connectData.Add("port", m_connectData["localport"]);
+
+            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
+                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["remoteport"]);
+
+            // Check if 'port' property is missing.
+            if (!m_connectData.ContainsKey("port"))
+                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
+
+            // Check if 'port' property is valid.
+            if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
+                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
+        }
+
+        /// <summary>
+        /// Gets the secret key to be used for ciphering client data.
+        /// </summary>
+        /// <returns>Cipher secret key.</returns>
+        protected override string GetSessionSecret()
+        {
+            return m_udpClient.Secretkey;
         }
 
         /// <summary>
@@ -519,7 +590,6 @@ namespace TVA.Communication
         private void OpenPort()
         {
             int connectionAttempts = 0;
-
             if (Handshake)
             {
                 // Handshaking must be performed. 
@@ -577,6 +647,7 @@ namespace TVA.Communication
             }
             else
             {
+                // No handshaking to be performed.
                 while (MaxConnectionAttempts == -1 || connectionAttempts < MaxConnectionAttempts)
                 {
                     try
@@ -597,6 +668,7 @@ namespace TVA.Communication
                                 m_udpClient.Provider.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(serverEndpoint.Address));
                         }
 
+                        m_connectionHandle.Set();
                         OnConnectionEstablished();
                         // Listen for incoming data only if endpoint is bound to a local interface.
                         if (m_udpClient.Provider.LocalEndPoint != null)
@@ -617,47 +689,6 @@ namespace TVA.Communication
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Validates the specified <paramref name="connectionString"/>.
-        /// </summary>
-        /// <param name="connectionString">Connection string to be validated.</param>
-        /// <exception cref="ArgumentException">Port property is missing.</exception>
-        /// <exception cref="ArgumentOutOfRangeException">Port property value is not between <see cref="Transport.PortRangeLow"/> and <see cref="Transport.PortRangeHigh"/>.</exception>
-        protected override void ValidateConnectionString(string connectionString)
-        {
-            m_connectData = connectionString.ParseKeyValuePairs();
-
-            // Inject 'interface' property if missing.
-            if (!m_connectData.ContainsKey("interface"))
-                m_connectData.Add("interface", string.Empty);
-
-            // Backwards compatibility adjustments.
-            // New Format: Server=localhost:8888; Port=8989
-            // Old Format: Server=localhost; RemotePort=8888; LocalPort=8888
-            if (m_connectData.ContainsKey("localport") && !m_connectData.ContainsKey("port"))
-                m_connectData.Add("port", m_connectData["localport"]);
-
-            if (m_connectData.ContainsKey("server") && m_connectData.ContainsKey("remoteport"))
-                m_connectData["server"] = string.Format("{0}:{1}", m_connectData["server"], m_connectData["remoteport"]);
-
-            // Check if 'port' property is missing.
-            if (!m_connectData.ContainsKey("port"))
-                throw new ArgumentException(string.Format("Port property is missing (Example: {0})", DefaultConnectionString));
-
-            // Check if 'port' property is valid.
-            if (!Transport.IsPortNumberValid(m_connectData["port"]) && int.Parse(m_connectData["port"]) != -1)
-                throw new ArgumentOutOfRangeException("connectionString", string.Format("Port number must be {0} or between {1} and {2}", -1, Transport.PortRangeLow, Transport.PortRangeHigh));
-        }
-
-        /// <summary>
-        /// Gets the secret key to be used for ciphering client data.
-        /// </summary>
-        /// <returns>Cipher secret key.</returns>
-        protected override string GetSessionSecret()
-        {
-            return m_udpClient.Secretkey;
         }
 
         /// <summary>
@@ -752,6 +783,7 @@ namespace TVA.Communication
                         udpClient.Secretkey = handshake.Secretkey;
 
                         // Client is now considered to be connected to the server.
+                        m_connectionHandle.Set();
                         OnConnectionEstablished();                        
                         ReceivePayloadAsync(udpClient);
                     }

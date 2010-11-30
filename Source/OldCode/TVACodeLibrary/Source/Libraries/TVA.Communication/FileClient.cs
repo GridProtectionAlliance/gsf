@@ -20,6 +20,8 @@
 //       Added new header and license agreement.
 //  06/23/2010 - Stephen C. Wills
 //       Modified to use the absolute file path.
+//  11/29/2010 - Pinal C. Patel
+//       Corrected the implementation of ConnectAsync() method.
 //
 //*******************************************************************************************************
 
@@ -244,9 +246,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Threading;
-using TVA;
-using TVA.IO;
 using TVA.Configuration;
+using TVA.IO;
 
 namespace TVA.Communication
 {
@@ -284,7 +285,7 @@ namespace TVA.Communication
     ///         }
     /// 
     ///         // Disconnect the client on shutdown.
-    ///         s_client.Disconnect();
+    ///         s_client.Dispose();
     ///     }
     /// 
     ///     static void s_client_ConnectionAttempt(object sender, EventArgs e)
@@ -335,7 +336,7 @@ namespace TVA.Communication
     ///         Console.ReadLine();
     /// 
     ///         // Disconnect the client on shutdown.
-    ///         s_client.Disconnect();
+    ///         s_client.Dispose();
     ///     }
     /// 
     ///     static void s_client_ConnectionAttempt(object sender, EventArgs e)
@@ -417,6 +418,7 @@ namespace TVA.Communication
         private TransportProvider<FileStream> m_fileClient;
         private Dictionary<string, string> m_connectData;
         private System.Timers.Timer m_receiveDataTimer;
+        private ManualResetEvent m_connectionHandle;
 #if ThreadTracking
         private ManagedThread m_connectionThread;
 #else
@@ -696,7 +698,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            WaitHandle handle = base.ConnectAsync();
+            m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
             m_fileClient.ID = this.ClientID;
             m_fileClient.Secretkey = this.SharedSecret;
@@ -709,7 +711,7 @@ namespace TVA.Communication
 #endif
             m_connectionThread.Start();
 
-            return handle;
+            return m_connectionHandle;
         }
 
         /// <summary>
@@ -776,6 +778,9 @@ namespace TVA.Communication
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        if (m_connectionHandle != null)
+                            m_connectionHandle.Dispose();
+
                         if (m_receiveDataTimer != null)
                         {
                             m_receiveDataTimer.Elapsed -= m_receiveDataTimer_Elapsed;
@@ -878,8 +883,9 @@ namespace TVA.Communication
                     // Open the file.
                     m_fileClient.Provider = new FileStream(FilePath.GetAbsolutePath(m_connectData["file"]), m_fileOpenMode, m_fileAccessMode, m_fileShareMode);
                     // Move to the specified offset.
-                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin); 
+                    m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
 
+                    m_connectionHandle.Set();
                     OnConnectionEstablished();
 
                     if (!m_receiveOnDemand)
@@ -911,6 +917,7 @@ namespace TVA.Communication
                 catch (Exception ex)
                 {
                     // Keep retrying connecting to the file.
+                    Thread.Sleep(1000);
                     connectionAttempts++;
                     OnConnectionException(ex);
                 }

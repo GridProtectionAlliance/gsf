@@ -29,6 +29,8 @@
 //  03/24/2010 - Pinal C. Patel
 //       Updated the interpretation of server property in ConnectionString to correctly interpret 
 //       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
+//  11/29/2010 - Pinal C. Patel
+//       Corrected the implementation of ConnectAsync() method.
 //
 //*******************************************************************************************************
 
@@ -276,57 +278,57 @@ namespace TVA.Communication
     /// 
     /// class Program
     /// {
-    ///     static TcpClient m_client;
+    ///     static TcpClient s_client;
     /// 
     ///     static void Main(string[] args)
     ///     {
     ///         // Initialize the client.
-    ///         m_client = new TcpClient("Server=localhost:8888");
-    ///         m_client.Handshake = false;
-    ///         m_client.PayloadAware = false;
-    ///         m_client.ReceiveTimeout = -1;
-    ///         m_client.MaxConnectionAttempts = 5;
-    ///         m_client.Encryption = CipherStrength.None;
-    ///         m_client.Compression = CompressionStrength.NoCompression;
-    ///         m_client.SecureSession = false;
-    ///         m_client.Initialize();
+    ///         s_client = new TcpClient("Server=localhost:8888");
+    ///         s_client.Handshake = false;
+    ///         s_client.PayloadAware = false;
+    ///         s_client.ReceiveTimeout = -1;
+    ///         s_client.MaxConnectionAttempts = 5;
+    ///         s_client.Encryption = CipherStrength.None;
+    ///         s_client.Compression = CompressionStrength.NoCompression;
+    ///         s_client.SecureSession = false;
+    ///         s_client.Initialize();
     ///         // Register event handlers.
-    ///         m_client.ConnectionAttempt += m_client_ConnectionAttempt;
-    ///         m_client.ConnectionEstablished += m_client_ConnectionEstablished;
-    ///         m_client.ConnectionTerminated += m_client_ConnectionTerminated;
-    ///         m_client.ReceiveDataComplete += m_client_ReceiveDataComplete;
+    ///         s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+    ///         s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+    ///         s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+    ///         s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
     ///         // Connect the client.
-    ///         m_client.Connect();
+    ///         s_client.Connect();
     /// 
     ///         // Transmit user input to the server.
     ///         string input;
     ///         while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
     ///         {
-    ///             m_client.Send(input);
+    ///             s_client.Send(input);
     ///         }
     /// 
     ///         // Disconnect the client on shutdown.
-    ///         m_client.Disconnect();
+    ///         s_client.Dispose();
     ///     }
     /// 
-    ///     static void m_client_ConnectionAttempt(object sender, EventArgs e)
+    ///     static void s_client_ConnectionAttempt(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client is connecting to server.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionEstablished(object sender, EventArgs e)
+    ///     static void s_client_ConnectionEstablished(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client connected to server.");
     ///     }
     /// 
-    ///     static void m_client_ConnectionTerminated(object sender, EventArgs e)
+    ///     static void s_client_ConnectionTerminated(object sender, EventArgs e)
     ///     {
     ///         Console.WriteLine("Client disconnected from server.");
     ///     }
     /// 
-    ///     static void m_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+    ///     static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
     ///     {
-    ///         Console.WriteLine(string.Format("Received data - {0}.", m_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+    ///         Console.WriteLine(string.Format("Received data - {0}.", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
     ///     }
     /// }
     /// </code>
@@ -353,6 +355,8 @@ namespace TVA.Communication
         private TransportProvider<Socket> m_tcpClient;
         private int m_connectionAttempts;
         private Dictionary<string, string> m_connectData;
+        private ManualResetEvent m_connectionHandle;
+        private bool m_disposed;
 
         #endregion
 
@@ -512,10 +516,10 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public override WaitHandle ConnectAsync()
         {
-            if (CurrentState != ClientState.Connected)
+            if (CurrentState == ClientState.Disconnected)
             {
-                // Initialize if unitialized.
-                Initialize();
+                if (m_connectionHandle == null)
+                    m_connectionHandle = (ManualResetEvent)base.ConnectAsync();
 
                 OnConnectionAttempt();
                 if (m_tcpClient.Provider == null)
@@ -524,11 +528,39 @@ namespace TVA.Communication
 
                 // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-                return m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient).AsyncWaitHandle;
+                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
+
+                return m_connectionHandle;
             }
             else
             {
                 throw new InvalidOperationException("Client is currently not disconnected");
+            }
+        }        
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="TcpClient"/> and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        if (m_connectionHandle != null)
+                            m_connectionHandle.Dispose();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
             }
         }
 
@@ -641,6 +673,7 @@ namespace TVA.Communication
                 else
                 {
                     // No handshaking to be performed.
+                    m_connectionHandle.Set();
                     OnConnectionEstablished();
                     ReceivePayloadAsync(tcpClient);
                 }
@@ -750,6 +783,7 @@ namespace TVA.Communication
                         tcpClient.Secretkey = handshake.Secretkey;
 
                         // Client is now considered to be connected to the server.
+                        m_connectionHandle.Set();
                         OnConnectionEstablished();
                         ReceivePayloadAsync(tcpClient);
                     }

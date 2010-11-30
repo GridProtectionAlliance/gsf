@@ -33,6 +33,9 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  11/29/2010 - Pinal C. Patel
+//       Updated the implementation of Connect() method so it blocks correctly after updates made to 
+//       ConnectAsync() method in the derived classes.
 //
 //*******************************************************************************************************
 
@@ -1167,9 +1170,10 @@ namespace TVA.Communication
         /// </summary>
         public virtual void Connect()
         {
-            // Start asynchronous connection attempt and block.
-            ConnectAsync().WaitOne();
-            // Block for any post-connection process to complete.
+            // Start asynchronous connection attempt.
+            ConnectAsync();
+
+            // Block until connection is established.
             do
             {
                 Thread.Sleep(100);

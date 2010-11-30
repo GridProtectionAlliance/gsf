@@ -18,7 +18,7 @@
 //       Fixed LoadImplementations() to correctly use FilePath.GetFileList().
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  11/29/2010 - Stephen C. Wills
+//  11/29/2010 - Pinal C. Patel
 //       Updated GetRootType() method to include MarshalByRefObject in the root type exclusion list.
 //
 //*******************************************************************************************************
