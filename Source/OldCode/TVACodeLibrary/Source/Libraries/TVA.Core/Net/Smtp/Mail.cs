@@ -20,6 +20,8 @@
 //       Added new header and license agreement.
 //  09/02/2010 - Pinal C. Patel
 //       Exposed underlying SmtpClient object via Client property for greater control.
+//  12/01/2010 - Pinal C. Patel
+//       Updated Send() method to parse To property value that could contain multiple email addresses.
 //
 //*******************************************************************************************************
 
@@ -518,8 +520,17 @@ namespace TVA.Net.Smtp
         /// </summary>
         public void Send()
         {
-            MailMessage emailMessage = new MailMessage(m_from, m_toRecipients, m_subject, m_body);
+            MailMessage emailMessage = new MailMessage();
+            emailMessage.From = new MailAddress(m_from);
+            emailMessage.Subject = m_subject;
+            emailMessage.Body = m_body;
             emailMessage.IsBodyHtml = m_isBodyHtml;
+
+            // Add the specified To recipients for the mail message.
+            foreach (string toRecipient in m_toRecipients.Split(new char[] { ';', ',' }))
+            {
+                emailMessage.To.Add(toRecipient.Trim());
+            }
 
             if (!string.IsNullOrEmpty(m_ccRecipients))
             {
