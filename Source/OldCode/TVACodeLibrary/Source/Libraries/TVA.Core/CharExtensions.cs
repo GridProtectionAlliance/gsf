@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -17,6 +18,8 @@
 //  01/04/2010 - Andrew K. Hill
 //       Modified the following methods per unit testing:
 //       IsAny(char, IEnumerable<char>)
+//  12/02/2010 - J. Ritchie Carroll
+//       Modified IsWordTerminator to use standard Unicode character tests.
 //
 //*******************************************************************************************************
 
@@ -236,6 +239,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 
@@ -247,7 +269,7 @@ namespace TVA
     public static class CharExtensions
     {
         // so that this only happens one time
-        private static char[] wordSeperators = { ' ', ',', '.', '?', '!', ':', ';', '&', '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*'};
+        private static char[] wordSeperators = { '\"', '/', '\\', '<', '>', '=', '{', '}', '(', ')', '[', ']', '@', '*'};
         private static char[] numericValues = { '-', '+', ',', '.' };
 
         /// <summary>
@@ -280,7 +302,7 @@ namespace TVA
         /// </remarks>
         public static bool IsWordTerminator(this char value)
         {
-            if (value < 32)
+            if (char.IsPunctuation(value) || char.IsWhiteSpace(value) || char.IsSymbol(value) || char.IsControl(value))
                 return true;
 
             return value.IsAny(wordSeperators);
