@@ -84,9 +84,20 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            foreach (IActionAdapter item in this)
+            try
             {
-                item.QueueMeasurementsForProcessing(measurements);
+                lock (this)
+                {
+                    foreach (IActionAdapter item in this)
+                    {
+                        if (item.Enabled)
+                            item.QueueMeasurementsForProcessing(measurements);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed to queue measurements to action adapters: " + ex.Message, ex));
             }
         }
 

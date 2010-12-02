@@ -47,7 +47,7 @@ namespace TimeSeriesFramework
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
         public TemporalMeasurement(double lagTime, double leadTime)
-            : this(uint.MaxValue, null, double.NaN, 0, lagTime, leadTime)
+            : this(uint.MaxValue, null, Guid.Empty, double.NaN, 0, lagTime, leadTime)
         {
         }
 
@@ -56,12 +56,13 @@ namespace TimeSeriesFramework
         /// </summary>
         /// <param name="id">Numeric ID of the <see cref="TemporalMeasurement"/>.</param>
         /// <param name="source">Source of the <see cref="TemporalMeasurement"/>(e.g., name of archive).</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <param name="value">Value of the <see cref="TemporalMeasurement"/>.</param>
         /// <param name="timestamp">Timestamp of the <see cref="TemporalMeasurement"/>.</param>
         /// <param name="lagTime">Past time deviation tolerance, in seconds - this becomes the amount of time to wait before publishing begins.</param>
         /// <param name="leadTime">Future time deviation tolerance, in seconds - this becomes the tolerated +/- accuracy of the local clock to real-time.</param>
-        public TemporalMeasurement(uint id, string source, double value, Ticks timestamp, double lagTime, double leadTime)
-            : base(id, source, value, timestamp)
+        public TemporalMeasurement(uint id, string source, Guid signalID, double value, Ticks timestamp, double lagTime, double leadTime)
+            : base(id, source, signalID, value, 0.0D, 1.0D, timestamp)
         {
             if (lagTime <= 0)
                 throw new ArgumentOutOfRangeException("lagTime", "lagTime must be greater than zero, but it can be less than one");
@@ -160,14 +161,18 @@ namespace TimeSeriesFramework
         /// </remarks>
         /// <param name="timestamp">New timestamp, in ticks, for <see cref="TemporalMeasurement"/>.</param>
         /// <param name="value">New value for <see cref="TemporalMeasurement"/>, only stored if <paramref name="timestamp"/> are newer than current <see cref="Ticks"/>.</param>
-        public void SetValue(Ticks timestamp, double value)
+        /// <returns><c>true</c> if value was updated; otherwise <c>false</c>.</returns>
+        public bool SetValue(Ticks timestamp, double value)
         {
             // We only store a value that is is newer than the current value
             if (timestamp > Timestamp)
             {
                 base.Value = value;
                 Timestamp = timestamp;
+                return true;
             }
+
+            return false;
         }
         
         #endregion

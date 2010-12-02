@@ -21,6 +21,7 @@ namespace DataSubscriberTest
             subscriber.StatusMessage += subscriber_StatusMessage;
             subscriber.ProcessException += subscriber_ProcessException;
             subscriber.ConnectionEstablished += subscriber_ConnectionEstablished;
+            subscriber.ConnectionTerminated += subscriber_ConnectionTerminated;
             subscriber.NewMeasurements += subscriber_NewMeasurements;
 
             // Initialize subscriber
@@ -40,6 +41,7 @@ namespace DataSubscriberTest
             subscriber.StatusMessage -= subscriber_StatusMessage;
             subscriber.ProcessException -= subscriber_ProcessException;
             subscriber.ConnectionEstablished -= subscriber_ConnectionEstablished;
+            subscriber.ConnectionTerminated -= subscriber_ConnectionTerminated;
             subscriber.NewMeasurements -= subscriber_NewMeasurements;
 
             timer.Elapsed -= timer_Elapsed;
@@ -48,10 +50,27 @@ namespace DataSubscriberTest
 
         static void timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            //if (TVA.Security.Cryptography.Random.Boolean)
-                subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
-            //else
-            //    subscriber.UnsynchronizedSubscribe(true, "DEVARCHIVE:1;DEVARCHIVE:2");
+            if (subscriber.IsConnected)
+            {
+                if (TVA.Security.Cryptography.Random.Boolean)
+                {
+                    Console.WriteLine("Initiating synchronized subscription...");
+                    subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                }
+                else
+                {
+                    if (TVA.Security.Cryptography.Random.Boolean)
+                    {
+                        Console.WriteLine("Initiating on-change unsynchronized subscription...");
+                        subscriber.UnsynchronizedSubscribe(true, false, "DEVARCHIVE:1;DEVARCHIVE:2");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Initiating throttled unsynchronized subscription...");
+                        subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", 5.0D, 1.0D, false);
+                    }
+                }
+            }
         }
 
         static void subscriber_NewMeasurements(object sender, EventArgs<ICollection<IMeasurement>> e)
@@ -67,7 +86,14 @@ namespace DataSubscriberTest
         static void subscriber_ConnectionEstablished(object sender, EventArgs e)
         {
             //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
-            subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1");
+            //subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1");
+            //subscriber.UnsynchronizedSubscribe(true, "DEVARCHIVE:1;DEVARCHIVE:2;DEVARCHIVE:3;DEVARCHIVE:4;DEVARCHIVE:5");
+        }
+
+        static void subscriber_ConnectionTerminated(object sender, EventArgs e)
+        {
+            Console.WriteLine("Connection to publisher was terminated, restarting connection cycle...");
+            subscriber.Start();
         }
 
         static void subscriber_ProcessException(object sender, TVA.EventArgs<Exception> e)

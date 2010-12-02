@@ -22,6 +22,7 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
@@ -32,7 +33,7 @@ namespace TimeSeriesFramework
     /// <summary>
     /// Represents the absolute latest measurement values received by a <see cref="ConcentratorBase"/> implementation.
     /// </summary>
-    public class ImmediateMeasurements : IDisposable
+    public class ImmediateMeasurements : IEnumerable<TemporalMeasurement>, IDisposable
     {
         #region [ Members ]
 
@@ -40,19 +41,36 @@ namespace TimeSeriesFramework
         private ConcentratorBase m_parent;
         private Dictionary<MeasurementKey, TemporalMeasurement> m_measurements;
         private Dictionary<string, List<MeasurementKey>> m_taggedMeasurements;
+        private Func<Ticks> m_realTimeFunction;
+        private double m_lagTime;                           // Allowed past time deviation tolerance, in seconds
+        private double m_leadTime;                          // Allowed future time deviation tolerance, in seconds
         private bool m_disposed;
 
         #endregion
 
         #region [ Constructors ]
 
-        internal ImmediateMeasurements(ConcentratorBase parent)
+        /// <summary>
+        /// Creates a new instance of the <see cref="ImmediateMeasurements"/> class.
+        /// </summary>
+        public ImmediateMeasurements()
         {
-            m_parent = parent;
-            m_parent.LagTimeUpdated += m_parent_LagTimeUpdated;
-            m_parent.LeadTimeUpdated += m_parent_LeadTimeUpdated;
             m_measurements = new Dictionary<MeasurementKey, TemporalMeasurement>();
             m_taggedMeasurements = new Dictionary<string, List<MeasurementKey>>();
+            m_realTimeFunction = () => PrecisionTimer.UtcNow.Ticks;
+        }
+
+        internal ImmediateMeasurements(ConcentratorBase parent)
+            : this()
+        {
+            m_parent = parent;
+
+            if (m_parent != null)
+            {
+                m_parent.LagTimeUpdated += OnLagTimeUpdated;
+                m_parent.LeadTimeUpdated += OnLeadTimeUpdated;
+                m_realTimeFunction = () => m_parent.RealTime;
+            }
         }
 
         /// <summary>
@@ -86,7 +104,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return Measurement(key).GetAdjustedValue(m_parent.RealTime);
+                return Measurement(key, Guid.Empty).GetAdjustedValue(m_realTimeFunction());
             }
         }
 
@@ -164,6 +182,86 @@ namespace TimeSeriesFramework
             }
         }
 
+        /// <summary>
+        /// Gets or sets function to return real-time.
+        /// </summary>
+        public Func<Ticks> RealTimeFunction
+        {
+            get
+            {
+                return m_realTimeFunction;
+            }
+            set
+            {
+                m_realTimeFunction = value;
+
+                if (m_realTimeFunction == null)
+                    m_realTimeFunction = () => PrecisionTimer.UtcNow.Ticks;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed past time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to past measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too old.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LagTime must be greater than zero, but it can be less than one.</exception>
+        public double LagTime
+        {
+            get
+            {
+                return m_lagTime;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", "LagTime must be greater than zero, but it can be less than one");
+
+                m_lagTime = value;
+                
+                lock (m_measurements)
+                {
+                    foreach (MeasurementKey key in m_measurements.Keys)
+                    {
+                        Measurement(key, Guid.Empty).LagTime = m_lagTime;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the allowed future time deviation tolerance, in seconds (can be subsecond).
+        /// </summary>
+        /// <remarks>
+        /// <para>Defines the time sensitivity to future measurement timestamps.</para>
+        /// <para>The number of seconds allowed before assuming a measurement timestamp is too advanced.</para>
+        /// </remarks>
+        /// <exception cref="ArgumentOutOfRangeException">LeadTime must be greater than zero, but it can be less than one.</exception>
+        public double LeadTime
+        {
+            get
+            {
+                return m_leadTime;
+            }
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException("value", "LeadTime must be greater than zero, but it can be less than one");
+
+                m_leadTime = value;
+
+                lock (m_measurements)
+                {
+                    foreach (MeasurementKey key in m_measurements.Keys)
+                    {
+                        Measurement(key, Guid.Empty).LeadTime = m_leadTime;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -191,8 +289,8 @@ namespace TimeSeriesFramework
                     {
                         if (m_parent != null)
                         {
-                            m_parent.LagTimeUpdated -= m_parent_LagTimeUpdated;
-                            m_parent.LeadTimeUpdated -= m_parent_LeadTimeUpdated;
+                            m_parent.LagTimeUpdated -= OnLagTimeUpdated;
+                            m_parent.LeadTimeUpdated -= OnLagTimeUpdated;
                         }
                         m_parent = null;
 
@@ -225,24 +323,34 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>We only store a new measurement value that is newer than the cached value.</summary>
-        internal void UpdateMeasurementValue(IMeasurement newMeasurement)
+        /// <param name="newMeasurement">New measurement value to update.</param>
+        public void UpdateMeasurementValue(IMeasurement newMeasurement)
         {
-            Measurement(newMeasurement.Key).SetValue(newMeasurement.Timestamp, newMeasurement.Value);
+            TemporalMeasurement measurement = Measurement(newMeasurement.Key, newMeasurement.SignalID);
+
+            if (measurement.SetValue(newMeasurement.Timestamp, newMeasurement.Value))
+            {
+                // Update quality flags if value was updated...
+                measurement.TimestampQualityIsGood = newMeasurement.TimestampQualityIsGood;
+                measurement.ValueQualityIsGood = newMeasurement.ValueQualityIsGood;
+            }
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         /// <param name="measurementID">An <see cref="UInt32"/> representing the measurement id.</param>
         /// <param name="source">A <see cref="String"/> indicating the source.</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(uint measurementID, string source)
+        public TemporalMeasurement Measurement(uint measurementID, string source, Guid signalID)
         {
-            return Measurement(new MeasurementKey(measurementID, source));
+            return Measurement(new MeasurementKey(measurementID, source), signalID);
         }
 
         /// <summary>Retrieves the specified immediate temporal measurement, creating it if needed.</summary>
         /// <param name="key">A <see cref="MeasurementKey"/> object indicating the key to use.</param>
+        /// <param name="signalID"><see cref="Guid"/> based signal ID of measurement.</param>
         /// <returns>A <see cref="TemporalMeasurement"/> object.</returns>
-        public TemporalMeasurement Measurement(MeasurementKey key)
+        public TemporalMeasurement Measurement(MeasurementKey key, Guid signalID)
         {
             lock (m_measurements)
             {
@@ -251,11 +359,22 @@ namespace TimeSeriesFramework
                 if (!m_measurements.TryGetValue(key, out value))
                 {
                     // Create new temporal measurement if it doesn't exist
-                    value = new TemporalMeasurement(key.ID, key.Source, double.NaN, m_parent.RealTime, m_parent.LagTime, m_parent.LeadTime);
+                    value = new TemporalMeasurement(key.ID, key.Source, signalID, double.NaN, m_realTimeFunction(), m_lagTime, m_leadTime);
                     m_measurements.Add(key, value);
                 }
 
                 return value;
+            }
+        }
+
+        /// <summary>
+        /// Clears the existing measurement cache.
+        /// </summary>
+        public void ClearMeasurementCache()
+        {
+            lock (m_measurements)
+            {
+                m_measurements.Clear();
             }
         }
 
@@ -383,27 +502,32 @@ namespace TimeSeriesFramework
             return maxValue;
         }
 
-        // We dyanmically respond to real-time changes in lead or lag time...
-        private void m_parent_LagTimeUpdated(double lagTime)
+        /// <summary>
+        /// Updates the tracked temporal measurements lag time.
+        /// </summary>
+        /// <param name="lagTime">New lag time.</param>
+        protected void OnLagTimeUpdated(double lagTime)
         {
-            lock (m_measurements)
-            {
-                foreach (MeasurementKey key in m_measurements.Keys)
-                {
-                    Measurement(key).LagTime = lagTime;
-                }
-            }
+            this.LagTime = lagTime;
         }
 
-        private void m_parent_LeadTimeUpdated(double leadTime)
+        /// <summary>
+        /// Updates the tracked temporal measurements lead time.
+        /// </summary>
+        /// <param name="leadTime">New lead time.</param>
+        protected void OnLeadTimeUpdated(double leadTime)
         {
-            lock (m_measurements)
-            {
-                foreach (MeasurementKey key in m_measurements.Keys)
-                {
-                    Measurement(key).LeadTime = leadTime;
-                }
-            }
+            this.LeadTime = leadTime;
+        }
+
+        IEnumerator<TemporalMeasurement> IEnumerable<TemporalMeasurement>.GetEnumerator()
+        {
+            return m_measurements.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return ((IEnumerable)m_measurements.Values).GetEnumerator();
         }
 
         #endregion

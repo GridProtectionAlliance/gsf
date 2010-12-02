@@ -79,10 +79,13 @@ namespace TimeSeriesFramework.Adapters
                 long processedMeasurements = 0;
 
                 // Calculate new total for all archive destined output adapters
-                foreach (IOutputAdapter item in this)
+                lock (this)
                 {
-                    if (item.OutputIsForArchive)
-                        processedMeasurements += item.ProcessedMeasurements;
+                    foreach (IOutputAdapter item in this)
+                    {
+                        if (item.OutputIsForArchive)
+                            processedMeasurements += item.ProcessedMeasurements;
+                    }
                 }
 
                 return processedMeasurements;
@@ -97,10 +100,13 @@ namespace TimeSeriesFramework.Adapters
         {
             get
             {
-                foreach (IOutputAdapter item in this)
+                lock (this)
                 {
-                    if (!item.OutputIsForArchive)
-                        return false;
+                    foreach (IOutputAdapter item in this)
+                    {
+                        if (!item.OutputIsForArchive)
+                            return false;
+                    }
                 }
 
                 return true;
@@ -118,9 +124,19 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            foreach (IOutputAdapter item in this)
+            try
             {
-                item.QueueMeasurementsForProcessing(measurements);
+                lock (this)
+                {
+                    foreach (IOutputAdapter item in this)
+                    {
+                        item.QueueMeasurementsForProcessing(measurements);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnProcessException(new InvalidOperationException("Failed to queue measurements to output adapters: " + ex.Message, ex));
             }
         }
 
@@ -136,9 +152,13 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void RemoveMeasurements(int total)
         {
-            foreach (IOutputAdapter item in this)
+            lock (this)
             {
-                item.RemoveMeasurements(total);
+                foreach (IOutputAdapter item in this)
+                {
+                    if (item.Enabled)
+                        item.RemoveMeasurements(total);
+                }
             }
         }
 

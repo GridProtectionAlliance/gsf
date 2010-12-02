@@ -220,9 +220,12 @@ namespace TimeSeriesFramework.Adapters
                 m_dataSource = value;
                 
                 // Update data source for items in this collection
-                foreach (T item in this)
+                lock (this)
                 {
-                    item.DataSource = m_dataSource;
+                    foreach (T item in this)
+                    {
+                        item.DataSource = m_dataSource;
+                    }
                 }
             }
         }
@@ -307,9 +310,12 @@ namespace TimeSeriesFramework.Adapters
                 long processedMeasurements = 0;
 
                 // Calculate new total for all archive destined output adapters
-                foreach (IAdapter item in this)
+                lock (this)
                 {
-                    processedMeasurements += item.ProcessedMeasurements;
+                    foreach (IAdapter item in this)
+                    {
+                        processedMeasurements += item.ProcessedMeasurements;
+                    }
                 }
 
                 return processedMeasurements;
@@ -435,24 +441,27 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
 
                     // Show the status of registered components.
-                    foreach (T item in this)
+                    lock (this)
                     {
-                        IProvideStatus statusProvider = item as IProvideStatus;
-
-                        if (statusProvider != null)
+                        foreach (T item in this)
                         {
-                            // This component provides status information.                       
-                            status.AppendLine();
-                            status.AppendFormat("Status of {0} component {1}, {2}:", typeof(T).Name, ++index, statusProvider.Name);
-                            status.AppendLine();
-                            try
+                            IProvideStatus statusProvider = item as IProvideStatus;
+
+                            if (statusProvider != null)
                             {
-                                status.Append(statusProvider.Status);
-                            }
-                            catch (Exception ex)
-                            {
-                                status.AppendFormat("Failed to retrieve status due to exception: {0}", ex.Message);
+                                // This component provides status information.                       
                                 status.AppendLine();
+                                status.AppendFormat("Status of {0} component {1}, {2}:", typeof(T).Name, ++index, statusProvider.Name);
+                                status.AppendLine();
+                                try
+                                {
+                                    status.Append(statusProvider.Status);
+                                }
+                                catch (Exception ex)
+                                {
+                                    status.AppendFormat("Failed to retrieve status due to exception: {0}", ex.Message);
+                                    status.AppendLine();
+                                }
                             }
                         }
                     }
@@ -545,20 +554,23 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("initializationTimeout", out setting))
                 InitializationTimeout = int.Parse(setting);
 
-            Clear();
-
-            if (DataSource.Tables.Contains(DataMember))
+            lock (this)
             {
-                foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
-                {
-                    if (TryCreateAdapter(adapterRow, out item))
-                        Add(item);
-                }
+                Clear();
 
-                Initialized = true;
+                if (DataSource.Tables.Contains(DataMember))
+                {
+                    foreach (DataRow adapterRow in DataSource.Tables[DataMember].Rows)
+                    {
+                        if (TryCreateAdapter(adapterRow, out item))
+                            Add(item);
+                    }
+
+                    Initialized = true;
+                }
+                else
+                    throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
             }
-            else
-                throw new InvalidOperationException(string.Format("Data set member \"{0}\" was not found in data source, check ConfigurationEntity. Failed to initialize {1}.", DataMember, Name));
         }
 
         /// <summary>
@@ -661,12 +673,15 @@ namespace TimeSeriesFramework.Adapters
         /// <returns><c>true</c> if adapter with the specified <paramref name="value"/> was found; otherwise <c>false</c>.</returns>
         protected virtual bool TryGetAdapter<TValue>(TValue value, Func<T, TValue, bool> testItem, out T adapter)
         {
-            foreach (T item in this)
+            lock (this)
             {
-                if (testItem(item, value))
+                foreach (T item in this)
                 {
-                    adapter = item;
-                    return true;
+                    if (testItem(item, value))
+                    {
+                        adapter = item;
+                        return true;
+                    }
                 }
             }
 
@@ -713,43 +728,46 @@ namespace TimeSeriesFramework.Adapters
                         // Found and created new item - update collection reference
                         bool foundItem = false;
 
-                        for (int i = 0; i < Count; i++)
+                        lock (this)
                         {
-                            oldAdapter = this[i];
-
-                            if (oldAdapter.ID == id)
+                            for (int i = 0; i < Count; i++)
                             {
-                                // Stop old item
-                                oldAdapter.Stop();
+                                oldAdapter = this[i];
 
-                                // Dispose old item, initialize new item
-                                this[i] = newAdapter;
+                                if (oldAdapter.ID == id)
+                                {
+                                    // Stop old item
+                                    oldAdapter.Stop();
+
+                                    // Dispose old item, initialize new item
+                                    this[i] = newAdapter;
+
+                                    // Start new item
+                                    if (AutoInitialize)
+                                        ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
+                                    else
+                                        newAdapter.Start();
+
+                                    foundItem = true;
+                                    break;
+                                }
+                            }
+
+                            // Add item to collection if it didn't exist
+                            if (!foundItem)
+                            {
+                                // Add new adapter to the collection
+                                Add(newAdapter);
 
                                 // Start new item
                                 if (AutoInitialize)
                                     ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
                                 else
                                     newAdapter.Start();
-
-                                foundItem = true;
-                                break;
                             }
+
+                            return true;
                         }
-
-                        // Add item to collection if it didn't exist
-                        if (!foundItem)
-                        {
-                            // Add new adapter to the collection
-                            Add(newAdapter);
-
-                            // Start new item
-                            if (AutoInitialize)
-                                ThreadPool.QueueUserWorkItem(StartItem, newAdapter);
-                            else
-                                newAdapter.Start();
-                        }
-
-                        return true;
                     }
 
                     break;
@@ -773,21 +791,24 @@ namespace TimeSeriesFramework.Adapters
 
             ResetStatistics();
 
-            foreach (T item in this)
+            lock (this)
             {
-                try
+                foreach (T item in this)
                 {
-                    // We start items from thread pool if auto-intializing since
-                    // start will block and wait for initialization to complete
-                    if (AutoInitialize)
-                        ThreadPool.QueueUserWorkItem(StartItem, item);
-                    else
-                        item.Start();
-                }
-                catch (Exception ex)
-                {
-                    // We report any errors encountered during type creation...
-                    OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
+                    try
+                    {
+                        // We start items from thread pool if auto-intializing since
+                        // start will block and wait for initialization to complete
+                        if (AutoInitialize)
+                            ThreadPool.QueueUserWorkItem(StartItem, item);
+                        else
+                            item.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        // We report any errors encountered during type creation...
+                        OnProcessException(new InvalidOperationException(string.Format("Failed to start adapter: {0}", ex.Message), ex));
+                    }
                 }
             }
 
@@ -820,9 +841,12 @@ namespace TimeSeriesFramework.Adapters
         {
             m_enabled = false;
 
-            foreach (T item in this)
+            lock (this)
             {
-                item.Stop();
+                foreach (T item in this)
+                {
+                    item.Stop();
+                }
             }
 
             // Stop data monitor...
@@ -910,9 +934,12 @@ namespace TimeSeriesFramework.Adapters
         protected override void ClearItems()
         {
             // Dispose each item before clearing the collection
-            foreach (T item in this)
+            lock (this)
             {
-                DisposeItem(item);
+                foreach (T item in this)
+                {
+                    DisposeItem(item);
+                }
             }
 
             base.ClearItems();
@@ -1088,27 +1115,46 @@ namespace TimeSeriesFramework.Adapters
 
         void ICollection<IAdapter>.Add(IAdapter item)
         {
-            Add((T)item);
+            lock (this)
+            {
+                Add((T)item);
+            }
         }
 
         bool ICollection<IAdapter>.Contains(IAdapter item)
         {
-            return Contains((T)item);
+            lock (this)
+            {
+                return Contains((T)item);
+            }
         }
 
         void ICollection<IAdapter>.CopyTo(IAdapter[] array, int arrayIndex)
         {
-            CopyTo(array.Cast<T>().ToArray(), arrayIndex);
+            lock (this)
+            {
+                CopyTo(array.Cast<T>().ToArray(), arrayIndex);
+            }
         }
 
         bool ICollection<IAdapter>.Remove(IAdapter item)
         {
-            return Remove((T)item);
+            lock (this)
+            {
+                return Remove((T)item);
+            }
         }
 
         IEnumerator<IAdapter> IEnumerable<IAdapter>.GetEnumerator()
         {
-            foreach (IAdapter item in this)
+            IAdapter[] adapters;
+
+            lock (this)
+            {
+                adapters = this.ToArray<IAdapter>();
+            }
+
+            foreach (IAdapter item in adapters)
             {
                 yield return item;
             }
@@ -1116,23 +1162,35 @@ namespace TimeSeriesFramework.Adapters
 
         int IList<IAdapter>.IndexOf(IAdapter item)
         {
-            return this.IndexOf((T)item);
+            lock (this)
+            {
+                return this.IndexOf((T)item);
+            }
         }
 
         void IList<IAdapter>.Insert(int index, IAdapter item)
         {
-            this.Insert(index, (T)item);
+            lock (this)
+            {
+                this.Insert(index, (T)item);
+            }
         }
 
         IAdapter IList<IAdapter>.this[int index]
         {
             get
             {
-                return this[index];
+                lock (this)
+                {
+                    return this[index];
+                }
             }
             set
             {
-                this[index] = (T)value;
+                lock (this)
+                {
+                    this[index] = (T)value;
+                }
             }
         }
 

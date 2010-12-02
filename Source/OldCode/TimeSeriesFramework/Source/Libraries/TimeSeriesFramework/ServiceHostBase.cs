@@ -807,29 +807,32 @@ namespace TimeSeriesFramework
         // Create newly defined adapters and remove adapters that are no longer present in the adapter collection configurations
         private void UpdateAdapterCollectionConfigurations()
         {
-            foreach (IAdapterCollection adapterCollection in m_allAdapters)
+            lock (m_allAdapters)
             {
-                string dataMember = adapterCollection.DataMember;
-
-                if (m_configuration.Tables.Contains(dataMember))
+                foreach (IAdapterCollection adapterCollection in m_allAdapters)
                 {
-                    // Remove adapters that are no longer present in the configuration
-                    for (int i = adapterCollection.Count - 1; i >= 0; i--)
+                    string dataMember = adapterCollection.DataMember;
+
+                    if (m_configuration.Tables.Contains(dataMember))
                     {
-                        IAdapter adapter = adapterCollection[i];
-                        DataRow[] adapterRows = m_configuration.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
+                        // Remove adapters that are no longer present in the configuration
+                        for (int i = adapterCollection.Count - 1; i >= 0; i--)
+                        {
+                            IAdapter adapter = adapterCollection[i];
+                            DataRow[] adapterRows = m_configuration.Tables[dataMember].Select(string.Format("ID = {0}", adapter.ID));
 
-                        if (adapterRows.Length == 0 && adapter.ID != 0)
-                            adapterCollection.Remove(adapter);
-                    }
+                            if (adapterRows.Length == 0 && adapter.ID != 0)
+                                adapterCollection.Remove(adapter);
+                        }
 
-                    // Create newly defined adapters
-                    foreach (DataRow adapterRow in m_configuration.Tables[dataMember].Rows)
-                    {
-                        IAdapter adapter;
+                        // Create newly defined adapters
+                        foreach (DataRow adapterRow in m_configuration.Tables[dataMember].Rows)
+                        {
+                            IAdapter adapter;
 
-                        if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
-                            adapterCollection.Add(adapter);
+                            if (!adapterCollection.TryGetAdapterByID(uint.Parse(adapterRow["ID"].ToNonNullString("0")), out adapter) && adapterCollection.TryCreateAdapter(adapterRow, out adapter))
+                                adapterCollection.Add(adapter);
+                        }
                     }
                 }
             }

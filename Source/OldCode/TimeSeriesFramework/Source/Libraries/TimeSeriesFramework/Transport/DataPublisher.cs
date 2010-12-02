@@ -21,6 +21,10 @@
 //  11/15/2010 - Mehulbhai P Thakkar
 //       Fixed bug when DataSubscriber tries to resubscribe by setting subscriber.Initialized manually 
 //       in ReceiveClientDataComplete event handler.
+//  12/02/2010 - J. Ritchie Carroll
+//       Fixed an issue for when DataSubcriber dynamically resubscribes with a different
+//       synchronization method (e.g., going from unsynchronized to synchronized)
+//
 //******************************************************************************************************
 
 using System;
@@ -237,38 +241,42 @@ namespace TimeSeriesFramework.Transport
             /// <param name="index">Index of <see cref="IFrame"/> within a second ranging from zero to <c><see cref="ConcentratorBase.FramesPerSecond"/> - 1</c>.</param>
             protected override void PublishFrame(IFrame frame, int index)
             {
-                MemoryStream data = new MemoryStream();
-                bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
-                byte[] buffer;
-
-                // Serialize data packet flags into response
-                DataPacketFlags flags = DataPacketFlags.Synchronized;
-
-                if (useCompactMeasurementFormat)
-                    flags |= DataPacketFlags.Compact;
-
-                data.WriteByte((byte)flags);
-
-                // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
-                // unsynchronized subcriptions always include timestamps in the serialized measurements
-                data.Write(EndianOrder.BigEndian.GetBytes((long)frame.Timestamp), 0, 8);
-
-                // Serialize total number of measurement values to follow
-                data.Write(EndianOrder.BigEndian.GetBytes(frame.Measurements.Values.Count), 0, 4);
-
-                // Serialize measurements to data buffer
-                foreach (IMeasurement measurement in frame.Measurements.Values)
+                if (!m_disposed)
                 {
+                    MemoryStream data = new MemoryStream();
+                    bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
+                    byte[] buffer;
+
+                    // Serialize data packet flags into response
+                    DataPacketFlags flags = DataPacketFlags.Synchronized;
+
                     if (useCompactMeasurementFormat)
-                        buffer = (new SerializableMeasurementSlim(measurement, false)).BinaryImage;
-                    else
-                        buffer = (new SerializableMeasurement(measurement)).BinaryImage;
+                        flags |= DataPacketFlags.Compact;
 
-                    data.Write(buffer, 0, buffer.Length);
+                    data.WriteByte((byte)flags);
+
+                    // Serialize frame timestamp into data packet - this only occurs in synchronized data packets,
+                    // unsynchronized subcriptions always include timestamps in the serialized measurements
+                    data.Write(EndianOrder.BigEndian.GetBytes((long)frame.Timestamp), 0, 8);
+
+                    // Serialize total number of measurement values to follow
+                    data.Write(EndianOrder.BigEndian.GetBytes(frame.Measurements.Values.Count), 0, 4);
+
+                    // Serialize measurements to data buffer
+                    foreach (IMeasurement measurement in frame.Measurements.Values)
+                    {
+                        if (useCompactMeasurementFormat)
+                            buffer = (new SerializableMeasurementSlim(measurement, false)).BinaryImage;
+                        else
+                            buffer = (new SerializableMeasurement(measurement)).BinaryImage;
+
+                        data.Write(buffer, 0, buffer.Length);
+                    }
+
+                    // Pusblish data packet to client
+                    if (m_parent != null)
+                        m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
                 }
-
-                // Pusblish data packet to client
-                m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
             }
 
             /// <summary>
@@ -317,6 +325,7 @@ namespace TimeSeriesFramework.Transport
             private DataPublisher m_parent;
             private Guid m_clientID;
             private bool m_useCompactMeasurementFormat;
+            private long m_lastPublishTime;
             private bool m_disposed;
 
             #endregion
@@ -469,15 +478,45 @@ namespace TimeSeriesFramework.Transport
                     }
                 }
 
-                if (filteredMeasurements.Count > 0 && !m_disposed)
-                    ThreadPool.QueueUserWorkItem(ProcessMeasurements, filteredMeasurements);
+                if (filteredMeasurements.Count > 0 && Enabled)
+                {
+                    if (TrackLatestMeasurements)
+                    {
+                        // Keep track of latest measurements
+                        base.QueueMeasurementsForProcessing(filteredMeasurements);
+
+                        // See if it is time to publish
+                        if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(LatestMeasurements.LagTime))
+                        {
+                            List<IMeasurement> currentMeasurements = new List<IMeasurement>();
+                            Measurement newMeasurement;
+
+                            // Create a new set of measurements that represent the latest known values setting value to NaN if it is old
+                            foreach (TemporalMeasurement measurement in LatestMeasurements)
+                            {
+                                newMeasurement = new Measurement(measurement.ID, measurement.Source, measurement.SignalID, measurement.GetAdjustedValue(RealTime), measurement.Adder, measurement.Multiplier, measurement.Timestamp);
+                                newMeasurement.TimestampQualityIsGood = measurement.TimestampQualityIsGood;
+                                newMeasurement.ValueQualityIsGood = measurement.ValueQualityIsGood;
+                                currentMeasurements.Add(newMeasurement);
+                            }
+                            
+                            // Publish latest data values...
+                            ThreadPool.QueueUserWorkItem(ProcessMeasurements, currentMeasurements);
+                        }
+                    }
+                    else
+                    {
+                        // Publish unsynchronized on data receipt otherwise...
+                        ThreadPool.QueueUserWorkItem(ProcessMeasurements, filteredMeasurements);
+                    }
+                }
             }
 
             private void ProcessMeasurements(object state)
             {
                 IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
 
-                if (state != null)
+                if (state != null && !m_disposed)
                 {
                     MemoryStream data = new MemoryStream();
                     bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
@@ -509,7 +548,11 @@ namespace TimeSeriesFramework.Transport
                     }
 
                     // Pusblish data packet to client
-                    m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+                    if (m_parent != null)
+                        m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
+
+                    // Track last publication time
+                    m_lastPublishTime = DateTime.UtcNow.Ticks;
                 }
             }
 
@@ -716,15 +759,19 @@ namespace TimeSeriesFramework.Transport
         {
             base.DisposeItem(item);
 
-            try
-            {
-                if (m_dataServer != null)
-                    m_dataServer.DisconnectOne(((IClientSubscription)item).ClientID);
-            }
-            catch (InvalidOperationException)
-            {
-                // This exception is thrown if client is no longer in the connection list - we can safely ignore this error
-            }
+            // The following code causes a forced disconnect between object disposes - not always what you want, for example when
+            // you are switching between synchronized and unsynchronized the old objects gets disposed, as it should, but you
+            // don't want to disconnect the client socket...
+
+            //try
+            //{
+            //    if (m_dataServer != null)
+            //        m_dataServer.DisconnectOne(((IClientSubscription)item).ClientID);
+            //}
+            //catch (InvalidOperationException)
+            //{
+            //    // This exception is thrown if client is no longer in the connection list - we can safely ignore this error
+            //}
         }
 
         /// <summary>
@@ -926,7 +973,14 @@ namespace TimeSeriesFramework.Transport
                                             if (subscription is UnsynchronizedClientSubscription)
                                             {
                                                 // Subscription is for unsynchronized measurements and consumer is requesting synchronized
-                                                Remove(subscription);
+                                                subscription.Stop();
+
+                                                lock (this)
+                                                {
+                                                    Remove(subscription);
+                                                }
+
+                                                // Create a new synchronized subscription
                                                 subscription = new SynchronizedClientSubscription(this, clientID);
                                                 addSubscription = true;
                                             }
@@ -936,7 +990,14 @@ namespace TimeSeriesFramework.Transport
                                             if (subscription is SynchronizedClientSubscription)
                                             {
                                                 // Subscription is for synchronized measurements and consumer is requesting unsynchronized
-                                                Remove(subscription);
+                                                subscription.Stop();
+
+                                                lock (this)
+                                                {
+                                                    Remove(subscription);
+                                                }
+
+                                                // Create a new unsynchronized subscription
                                                 subscription = new UnsynchronizedClientSubscription(this, clientID);
                                                 addSubscription = true;
                                             }
@@ -962,7 +1023,10 @@ namespace TimeSeriesFramework.Transport
                                     if (addSubscription)
                                     {
                                         // Adding client subscription to collection will automatically initialize it
-                                        Add(subscription);
+                                        lock (this)
+                                        {
+                                            Add(subscription);
+                                        }
                                     }
                                     else
                                     {
@@ -976,9 +1040,9 @@ namespace TimeSeriesFramework.Transport
 
                                     // Send success response
                                     if (subscription.InputMeasurementKeys != null)
-                                        message = string.Format("Client subscribed with {0} signals.", subscription.InputMeasurementKeys.Length);
+                                        message = string.Format("Client subscribed as {0}compact {1}synchronized with {2} signals.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un", subscription.InputMeasurementKeys.Length);
                                     else
-                                        message = string.Format("Client subscribed, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.");
+                                        message = string.Format("Client subscribed as {0}compact {1}synchronized, but no signals were specified. Make sure \"inputMeasurementKeys\" setting is properly defined.", useCompactMeasurementFormat ? "" : "non-", useSynchronizedSubscription ? "" : "un");
 
                                     SendClientResponse(clientID, ServerResponse.Succeeded, ServerCommand.Subscribe, message);
                                     OnStatusMessage(message);

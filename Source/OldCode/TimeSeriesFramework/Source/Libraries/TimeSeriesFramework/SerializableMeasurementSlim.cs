@@ -113,7 +113,7 @@ namespace TimeSeriesFramework
                 int index = 0;
 
                 // Allocate buffer to hold binary image
-                buffer = new byte[FixedLength];
+                buffer = new byte[BinaryLength];
 
                 // Encode signal ID
                 EndianOrder.BigEndian.CopyBytes(SignalID, buffer, index);

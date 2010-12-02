@@ -18,12 +18,15 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  12/02/2010 - J. Ritchie Carroll
+//       Added an immediate measurement tracking option for incoming data.
 //
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using TVA;
 
 namespace TimeSeriesFramework.Adapters
@@ -37,7 +40,7 @@ namespace TimeSeriesFramework.Adapters
     /// Derived classes are expected call <see cref="OnNewMeasurements"/> for any new measurements that may get created.
     /// </remarks>
     public abstract class FacileActionAdapterBase : AdapterBase, IActionAdapter
-	{
+    {
         #region [ Members ]
 
         // Events
@@ -67,7 +70,25 @@ namespace TimeSeriesFramework.Adapters
         public event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         // Fields
-        private int m_framesPerSecond;
+        private int m_framesPerSecond;                      // Defined frames per second, if defined
+        private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
+        private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
+        private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
+        private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="FacileActionAdapterBase"/> class.
+        /// </summary>
+        protected FacileActionAdapterBase()
+        {
+            m_latestMeasurements = new ImmediateMeasurements();
+            m_latestMeasurements.RealTimeFunction = () => RealTime;
+            m_useLocalClockAsRealTime = true;
+        }
 
         #endregion
 
@@ -92,6 +113,96 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets flag to start tracking the absolute latest received measurement values.
+        /// </summary>
+        /// <remarks>
+        /// Lastest received measurement value will be available via the <see cref="LatestMeasurements"/> property.
+        /// </remarks>
+        public virtual bool TrackLatestMeasurements
+        {
+            get
+            {
+                return m_trackLatestMeasurements;
+            }
+            set
+            {
+                m_trackLatestMeasurements = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets reference to the collection of absolute latest received measurement values.
+        /// </summary>
+        public virtual ImmediateMeasurements LatestMeasurements
+        {
+            get
+            {
+                return m_latestMeasurements;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines whether or not to use the local clock time as real time.
+        /// </summary>
+        /// <remarks>
+        /// Use your local system clock as real time only if the time is locally GPS-synchronized,
+        /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+        /// Turn this off if the class is intended to process historical data.
+        /// </remarks>
+        public virtual bool UseLocalClockAsRealTime
+        {
+            get
+            {
+                return m_useLocalClockAsRealTime;
+            }
+            set
+            {
+                m_useLocalClockAsRealTime = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets the the most accurate time value that is available. If <see cref="UseLocalClockAsRealTime"/> = <c>true</c>, then
+        /// this function will return <see cref="DateTime.UtcNow"/>. Otherwise, this function will return the timestamp of the
+        /// most recent measurement.
+        /// </summary>
+        public Ticks RealTime
+        {
+            get
+            {
+                if (UseLocalClockAsRealTime || !TrackLatestMeasurements)
+                {
+                    // Assumes local system clock is the best value we have for real time.
+                    return PrecisionTimer.UtcNow.Ticks;
+                }
+                else
+                {
+                    // Assume lastest measurement timestamp is the best value we have for real-time.
+                    return m_realTimeTicks;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets primary keys of input measurements the <see cref="FacileActionAdapterBase"/> expects, if any.
+        /// </summary>
+        public override MeasurementKey[] InputMeasurementKeys
+        {
+            get
+            {
+                return base.InputMeasurementKeys;
+            }
+            set
+            {
+                base.InputMeasurementKeys = value;
+
+                // Clear measurement cache when updating input measurement keys
+                if (TrackLatestMeasurements)
+                    LatestMeasurements.ClearMeasurementCache();
+            }
+        }
+
+        /// <summary>
         /// Returns the detailed status of the data input source.
         /// </summary>
         /// <remarks>
@@ -105,6 +216,8 @@ namespace TimeSeriesFramework.Adapters
 
                 status.Append(base.Status);
                 status.AppendFormat("        Defined frame rate: {0} frames/sec", FramesPerSecond);
+                status.AppendLine();
+                status.AppendFormat("      Measurement tracking: {0}", m_trackLatestMeasurements ? "Enabled" : "Disabled");
                 status.AppendLine();
 
                 return status.ToString();
@@ -124,9 +237,28 @@ namespace TimeSeriesFramework.Adapters
 
             Dictionary<string, string> settings = Settings;
             string setting;
-            
+
             if (settings.TryGetValue("framesPerSecond", out setting))
-                m_framesPerSecond = int.Parse(setting);
+                FramesPerSecond = int.Parse(setting);
+
+            if (settings.TryGetValue("useLocalClockAsRealTime", out setting))
+                UseLocalClockAsRealTime = setting.ParseBoolean();
+
+            if (settings.TryGetValue("trackLatestMeasurements", out setting))
+                TrackLatestMeasurements = setting.ParseBoolean();
+
+            if (TrackLatestMeasurements)
+            {
+                if (settings.TryGetValue("lagTime", out setting))
+                    LatestMeasurements.LagTime = double.Parse(setting);
+                else
+                    LatestMeasurements.LagTime = 10.0;
+
+                if (settings.TryGetValue("leadTime", out setting))
+                    LatestMeasurements.LeadTime = double.Parse(setting);
+                else
+                    LatestMeasurements.LeadTime = 5.0;
+            }
         }
 
         /// <summary>
@@ -142,7 +274,25 @@ namespace TimeSeriesFramework.Adapters
         /// Queues a collection of measurements for processing.
         /// </summary>
         /// <param name="measurements">Measurements to queue for processing.</param>
-        public abstract void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
+        public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
+        {
+            // If enabled, facile adapter will track the absolute latest measurement values.
+            if (m_trackLatestMeasurements)
+            {
+                bool useLocalClockAsRealTime = UseLocalClockAsRealTime;
+
+                foreach (IMeasurement measurement in measurements)
+                {
+                    m_latestMeasurements.UpdateMeasurementValue(measurement);
+
+                    // Track latest timestamp as real-time, if requested.
+                    // This class is not currently going through hassle of determining if
+                    // the latest timestamp is reasonable...
+                    if (!useLocalClockAsRealTime && measurement.Timestamp > m_realTimeTicks)
+                        m_realTimeTicks = measurement.Timestamp;
+                }
+            }
+        }
 
         /// <summary>
         /// Raises the <see cref="NewMeasurements"/> event.
@@ -185,5 +335,5 @@ namespace TimeSeriesFramework.Adapters
         }
 
         #endregion
-    }	
+    }
 }

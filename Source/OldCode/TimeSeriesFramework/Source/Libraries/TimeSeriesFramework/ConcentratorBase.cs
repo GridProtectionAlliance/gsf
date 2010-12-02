@@ -1884,7 +1884,8 @@ namespace TimeSeriesFramework
                 }
 
                 // Wait for next publication signal
-                m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout);
+                if (m_publicationWaitHandle != null)
+                    m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout);
             }
         }
 

@@ -193,7 +193,7 @@ namespace TimeSeriesFramework.Transport
         /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
         /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
-        /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real time.</param>
+        /// <param name="useLocalClockAsRealTime">Boolean value that determines whether or not to use the local clock time as real-time.</param>
         /// <param name="ignoreBadTimestamps">Boolean value that determines if bad timestamps (as determined by measurement's timestamp quality) should be ignored when sorting measurements.</param>
         /// <param name="allowSortsByArrival"> Gets or sets flag that determines whether or not to allow incoming measurements with bad timestamps to be sorted by arrival time.</param>
         /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
@@ -221,10 +221,22 @@ namespace TimeSeriesFramework.Transport
         /// Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+        /// <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
-        public virtual void UnsynchronizedSubscribe(bool compactFormat, string filterExpression)
+        /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
+        /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
+        /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
+        public virtual void UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
         {
-            Subscribe(false, compactFormat, string.Format("inputMeasurementKeys={{{0}}}; ", filterExpression));
+            StringBuilder connectionString = new StringBuilder();
+
+            connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
+            connectionString.AppendFormat("lagTime={0}; ", lagTime);
+            connectionString.AppendFormat("leadTime={0}; ", leadTime);
+            connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression);
+            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
+            
+            Subscribe(false, compactFormat, connectionString.ToString());
         }
 
         /// <summary>
@@ -536,13 +548,13 @@ namespace TimeSeriesFramework.Transport
 
         private void m_dataClient_ReceiveDataTimeout(object sender, EventArgs e)
         {
-            OnProcessException(new InvalidOperationException("Data subsciber timed out while receiving data from publisher connection"));
+            OnProcessException(new InvalidOperationException("Data subscriber timed out while receiving data from publisher connection"));
         }
 
         private void m_dataClient_ReceiveDataException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data subsciber encountered an exception while receiving data from publisher connection: " + ex.Message, ex));
+            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving data from publisher connection: " + ex.Message, ex));
         }
 
         private void m_dataClient_HandshakeProcessUnsuccessful(object sender, EventArgs e)

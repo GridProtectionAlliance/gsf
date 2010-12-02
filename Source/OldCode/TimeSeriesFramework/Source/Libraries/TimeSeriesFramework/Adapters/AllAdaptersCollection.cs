@@ -76,15 +76,18 @@ namespace TimeSeriesFramework.Adapters
         {
             Initialized = false;
 
-            foreach (IAdapterCollection item in this)
+            lock (this)
             {
-                try
+                foreach (IAdapterCollection item in this)
                 {
-                    item.Initialize();
-                }
-                catch (Exception ex)
-                {
-                    OnProcessException(ex);
+                    try
+                    {
+                        item.Initialize();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnProcessException(ex);
+                    }
                 }
             }
             
@@ -100,12 +103,15 @@ namespace TimeSeriesFramework.Adapters
         /// <returns><c>true</c> if adapter with the specified <paramref name="id"/> was found; otherwise <c>false</c>.</returns>
         public bool TryGetAnyAdapterByID(uint id, out IAdapter adapter, out IAdapterCollection adapterCollection)
         {
-            foreach (IAdapterCollection collection in this)
+            lock (this)
             {
-                if (collection.TryGetAdapterByID(id, out adapter))
+                foreach (IAdapterCollection collection in this)
                 {
-                    adapterCollection = collection;
-                    return true;
+                    if (collection.TryGetAdapterByID(id, out adapter))
+                    {
+                        adapterCollection = collection;
+                        return true;
+                    }
                 }
             }
 
@@ -124,10 +130,13 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public override bool TryInitializeAdapterByID(uint id)
         {
-            foreach (IAdapterCollection collection in this)
+            lock (this)
             {
-                if (collection.TryInitializeAdapterByID(id))
-                    return true;
+                foreach (IAdapterCollection collection in this)
+                {
+                    if (collection.TryInitializeAdapterByID(id))
+                        return true;
+                }
             }
 
             return false;
