@@ -1147,11 +1147,12 @@ namespace TimeSeriesFramework.Adapters
 
         IEnumerator<IAdapter> IEnumerable<IAdapter>.GetEnumerator()
         {
-            IAdapter[] adapters;
+            IAdapter[] adapters = new IAdapter[Count];
 
             lock (this)
             {
-                adapters = this.ToArray<IAdapter>();
+                for (int i = 0; i < Count; i++)
+                    adapters[i] = this[i];
             }
 
             foreach (IAdapter item in adapters)
