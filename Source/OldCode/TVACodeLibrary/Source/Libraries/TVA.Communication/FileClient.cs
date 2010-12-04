@@ -22,6 +22,8 @@
 //       Modified to use the absolute file path.
 //  11/29/2010 - Pinal C. Patel
 //       Corrected the implementation of ConnectAsync() method.
+//  12/04/2010 - Pinal C. Patel
+//       Removed locking around m_fileClient.Provider since it was unnecessary.
 //
 //*******************************************************************************************************
 
@@ -401,7 +403,7 @@ namespace TVA.Communication
         /// Specifies the default value for the <see cref="FileAccessMode"/> property.
         /// </summary>
         public const FileAccess DefaultFileAccessMode = FileAccess.ReadWrite;
-        
+
         /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
@@ -763,7 +765,7 @@ namespace TVA.Communication
                 FileAccessMode = settings["FileAccessMode"].ValueAs(m_fileAccessMode);
             }
         }
-       
+
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="FileClient"/> and optionally releases the managed resources.
         /// </summary>
@@ -830,10 +832,7 @@ namespace TVA.Communication
             WaitHandle handle;
 
             // Send data to the file asynchronously.
-            lock (m_fileClient.Provider)
-            {
-                handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
-            }
+            handle = m_fileClient.Provider.BeginWrite(data, offset, length, SendDataAsyncCallback, null).AsyncWaitHandle;
 
             // Notify that the send operation has started.
             m_fileClient.SendBuffer = data;
@@ -854,11 +853,7 @@ namespace TVA.Communication
             try
             {
                 // Send operation is complete.
-                lock (m_fileClient)
-                {
-                    m_fileClient.Provider.EndWrite(asyncResult);
-                    m_fileClient.Provider.Flush();
-                }
+                m_fileClient.Provider.EndWrite(asyncResult);
                 OnSendDataComplete();
             }
             catch (Exception ex)
@@ -935,10 +930,7 @@ namespace TVA.Communication
                 while (m_fileClient.Provider.Position < m_fileClient.Provider.Length)
                 {
                     // Retrieve data from the file.
-                    lock (m_fileClient.Provider)
-                    {
-                        m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferOffset, m_fileClient.ReceiveBuffer.Length);
-                    }
+                    m_fileClient.ReceiveBufferLength = m_fileClient.Provider.Read(m_fileClient.ReceiveBuffer, m_fileClient.ReceiveBufferOffset, m_fileClient.ReceiveBuffer.Length);
                     m_fileClient.Statistics.UpdateBytesReceived(m_fileClient.ReceiveBufferLength);
 
                     // Notify of the retrieved data.
@@ -947,10 +939,7 @@ namespace TVA.Communication
                     // Re-read the file if the user wants to repeat when done reading the file.
                     if (m_autoRepeat && m_fileClient.Provider.Position == m_fileClient.Provider.Length)
                     {
-                        lock (m_fileClient.Provider)
-                        {
-                            m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
-                        }
+                        m_fileClient.Provider.Seek(m_startingOffset, SeekOrigin.Begin);
                     }
 
                     // Stop processing the file if user has either opted to receive data on demand or receive data at a predefined interval.
