@@ -35,6 +35,8 @@
 //       new Configuration property to allow for full access to the application configuration.
 //  11/26/2010 - Pinal C. Patel
 //       Updated usage example to include user-scope setting sample.
+//  12/05/2010 - Pinal C. Patel
+//       Added Culture property that can be used for specifying a culture to use for value conversion.
 //
 //*******************************************************************************************************
 
@@ -257,6 +259,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Web.Configuration;
@@ -451,6 +454,7 @@ namespace TVA.Configuration
 
         // Fields
         private string m_cryptoKey;
+        private CultureInfo m_culture;
         private System.Configuration.Configuration m_configuration;
         private UserConfigurationFile m_userConfiguration;
 
@@ -463,6 +467,7 @@ namespace TVA.Configuration
         /// </summary>        
         internal ConfigurationFile(string configFilePath)
         {
+            m_culture = CultureInfo.CurrentCulture;
             m_configuration = GetConfiguration(configFilePath);
             if (m_configuration.HasFile)
                 ValidateConfigurationFile(m_configuration.FilePath);
@@ -476,6 +481,24 @@ namespace TVA.Configuration
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="CultureInfo"/> to use for the conversion of setting values to and from <see cref="string"/>.
+        /// </summary>
+        public CultureInfo Culture
+        {
+            get
+            {
+                return m_culture;
+            }
+            set
+            {
+                if (value != null)
+                    m_culture = value;
+                else
+                    m_culture = CultureInfo.CurrentCulture;
+            }
+        }
 
         /// <summary>
         /// Get the underlying <see cref="System.Configuration.Configuration"/> that can be accessed using this <see cref="ConfigurationFile"/> object.

@@ -34,6 +34,8 @@
 //       Removed unnecessary overloads of Update() for manageability.
 //  04/22/2010 - Pinal C. Patel
 //       Fixed encryption related bug introduced when adding support for user scope settings.
+//  12/05/2010 - Pinal C. Patel
+//       Modified Update() and ValueAs() to specify CultureInfo for the conversion.
 //
 //*******************************************************************************************************
 
@@ -527,7 +529,7 @@ namespace TVA.Configuration
         {
             this.Scope = scope;
             this.Encrypted = encrypted;
-            this.Value = value.ToNonNullString();
+            this.Value = Common.TypeConvertToString(value, m_category.Section.File.Culture);
             this.Description = description;
         }
 
@@ -563,7 +565,7 @@ namespace TVA.Configuration
                     return defaultValue;
                 else
                     // Value is not empty string - convert to target type.
-                    return value.ConvertToType<T>();
+                    return value.ConvertToType<T>(null, m_category.Section.File.Culture);
             }
             catch
             {

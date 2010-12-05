@@ -20,6 +20,9 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  12/05/2010 - Pinal C. Patel
+//       Added Culture property that can be used for specifying a culture to use for value conversion
+//       and updated all value conversions to use the specified culture.
 //
 //*******************************************************************************************************
 
@@ -243,6 +246,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Reflection;
 using TVA.Reflection;
 using TVA.Security.Cryptography;
@@ -262,6 +266,7 @@ namespace TVA.Configuration
         #region [ Members ]
 
         // Fields
+        private CultureInfo m_culture;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireSerializeSettingAttribute;
         private bool m_disposed;
@@ -279,6 +284,7 @@ namespace TVA.Configuration
         /// </param>
         protected SettingsBase(bool requireSerializeSettingAttribute)
         {
+            m_culture = CultureInfo.CurrentCulture;
             m_requireSerializeSettingAttribute = requireSerializeSettingAttribute;
             m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
         }
@@ -295,6 +301,24 @@ namespace TVA.Configuration
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the <see cref="CultureInfo"/> to use for the conversion of setting values to and from <see cref="string"/>.
+        /// </summary>
+        public CultureInfo Culture 
+        {
+            get
+            {
+                return m_culture;
+            }
+            set
+            {
+                if (value != null)
+                    m_culture = value;
+                else
+                    m_culture = CultureInfo.CurrentCulture;
+            }
+        }
 
         /// <summary>
         /// Gets or sets <see cref="BindingFlags"/> used to access fields and properties of dervied class.
@@ -493,7 +517,7 @@ namespace TVA.Configuration
             if (value == null)
                 CreateSetting(name, setting, EncryptValue(name, setting, ""));
             else
-                CreateSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value)));
+                CreateSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
         }
 
         /// <summary>
@@ -508,7 +532,7 @@ namespace TVA.Configuration
             if (value == null)
                 StoreSetting(name, setting, EncryptValue(name, setting, ""));
             else
-                StoreSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value)));
+                StoreSetting(name, setting, EncryptValue(name, setting, Common.TypeConvertToString(value, m_culture)));
         }
 
         /// <summary>
@@ -521,7 +545,7 @@ namespace TVA.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>();
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(null, m_culture);
         }
 
         /// <summary>
@@ -534,7 +558,7 @@ namespace TVA.Configuration
         {
             string setting = GetSettingName(name);
 
-            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType(type);
+            return DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<object>(type, m_culture);
         }
 
         /// <summary>
@@ -547,7 +571,7 @@ namespace TVA.Configuration
         {
             string setting = GetSettingName(name);
 
-            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>();
+            value = DecryptValue(name, setting, RetrieveSetting(name, setting)).ConvertToType<T>(null, m_culture);
         }
 
         // Encrypt setting value and return a base64 encoded value

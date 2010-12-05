@@ -57,6 +57,8 @@
 //      RegexDecode - Fix to throw ArgumentNullException instead of NullReferenceException for null value
 //  12/03/2010 - J. Ritchie Carroll
 //      Modifed ParseKeyValuePairs such that it could handle nested pairs to any needed depth.
+//  12/05/2010 - Pinal C. Patel
+//       Added an overload for ConvertToType() that takes CultureInfo as a parameter.
 //
 //*******************************************************************************************************
 
@@ -298,6 +300,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -362,72 +365,85 @@ namespace TVA
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified type T,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
         /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
-        /// <see cref="Common.TypeConvertToString"/> method for an easy way to do this.
+        /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
         public static T ConvertToType<T>(this string value)
         {
-            // <pex>
-            if (value == (string)null)
-                throw new ArgumentNullException("value");
-            // </pex>
-
-            T obj = default(T);
-
-            try
-            {
-                // This does not result in null for all failed conversions
-                obj = (T)value.ConvertToType(typeof(T));
-            }
-            catch (Exception)
-            {
-            }
-
-            if (obj == null)
-                obj = default(T);
-
-            return obj;
+            return ConvertToType<T>(value, null);
         }
 
         /// <summary>
         /// Converts this string into the specified type.
         /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
         /// <param name="value">Source string to convert to type.</param>
         /// <param name="type"><see cref="Type"/> to convert string to.</param>
-        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; null if conversion fails.</returns>
+        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
         /// <remarks>
         /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
         /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
         /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
-        /// <see cref="Common.TypeConvertToString"/> method for an easy way to do this.
+        /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
         /// </remarks>
-        public static object ConvertToType(this string value, Type type)
+        public static T ConvertToType<T>(this string value, Type type)
         {
-            // If the desired return type is a string, don't do anymore work...
-            if (type == typeof(string))
-                return value;
+            return ConvertToType<T>(value, type, null);
+        }
 
-            if (!string.IsNullOrEmpty(value))
+        /// <summary>
+        /// Converts this string into the specified type.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> to convert string to.</typeparam>
+        /// <param name="value">Source string to convert to type.</param>
+        /// <param name="type"><see cref="Type"/> to convert string to.</param>
+        /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
+        /// <returns><see cref="String"/> converted to specfied <see cref="Type"/>; default value of specified type T if conversion fails.</returns>
+        /// <remarks>
+        /// This function makes use of a <see cref="TypeConverter"/> to convert this <see cref="String"/> to the specified <paramref name="type"/>,
+        /// the best way to make sure <paramref name="value"/> can be converted back to its original type is to use the same
+        /// <see cref="TypeConverter"/> to convert the original object to a <see cref="String"/>; see the
+        /// <see cref="Common.TypeConvertToString(object)"/> method for an easy way to do this.
+        /// </remarks>
+        public static T ConvertToType<T>(this string value, Type type, CultureInfo culture)
+        {
+            // Check if the specified value is null.
+            if (string.IsNullOrEmpty(value))
+                throw new ArgumentNullException("value");
+
+            // Initialize return type if not specified.
+            if (type == null)
+                type = typeof(T);
+
+            // Initialize culture info if not specified.
+            if (culture == null)
+                culture = CultureInfo.CurrentCulture;
+
+            try
             {
                 if (type == typeof(bool))
                 {
                     // Handle booleans as a special case to allow numeric entries as well as true/false
-                    return value.ParseBoolean();
+                    return (T)((object)value.ParseBoolean());
                 }
                 else
                 {
                     if (type == typeof(IConvertible))
                     {
                         // This is faster for native types than using type converter...
-                        return Convert.ChangeType(value, type);
+                        return (T)Convert.ChangeType(value, type, culture);
                     }
-
-                    // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
-                    TypeConverter converter = TypeDescriptor.GetConverter(type);
-                    return converter.ConvertFromString(value);
+                    else
+                    {
+                        // Handle objects that have type converters (e.g., Enum, Color, Point, etc.)
+                        TypeConverter converter = TypeDescriptor.GetConverter(type);
+                        return (T)converter.ConvertFromString(null, culture, value);
+                    }
                 }
             }
-
-            return null;
+            catch
+            {
+                return default(T);
+            }
         }
 
         /// <summary>

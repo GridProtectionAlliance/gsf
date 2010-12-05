@@ -22,6 +22,8 @@
 //       Modified GetApplicationType() to remove dependency on HttpContext.Current.
 //  09/28/2010 - Pinal C. Patel
 //       Cached the current ApplicationType returned by GetApplicationType() for better performance.
+//  12/05/2010 - Pinal C. Patel
+//       Added an overload for TypeConvertToString() that takes CultureInfo as a parameter.
 //
 //*******************************************************************************************************
 
@@ -243,6 +245,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Web.Hosting;
@@ -482,11 +485,40 @@ namespace TVA
         /// </remarks>
         public static string TypeConvertToString(object value)
         {
+            return TypeConvertToString(value, null);
+        }
+
+        /// <summary>
+        /// Converts <paramref name="value"/> to a <see cref="String"/> using an appropriate <see cref="TypeConverter"/>.
+        /// </summary>
+        /// <param name="value">Value to convert to a <see cref="String"/>.</param>
+        /// <param name="culture"><see cref="CultureInfo"/> to use for the conversion.</param>
+        /// <returns><paramref name="value"/> converted to a <see cref="String"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// If <see cref="TypeConverter"/> fails, the value's <c>ToString()</c> value will be returned.
+        /// Returned value will never be null, if no value exists an empty string ("") will be returned.
+        /// </para>
+        /// <para>
+        /// You can use the <see cref="StringExtensions.ConvertToType{T}(string)"/> string extension method to
+        /// convert the string back to its original <see cref="Type"/>.
+        /// </para>
+        /// </remarks>
+        public static string TypeConvertToString(object value, CultureInfo culture)
+        {
+            // Check if the specified value is null.
+            if (value == null)
+                throw new ArgumentNullException("value");
+
+            // Initialize culture info if not specified.
+            if (culture == null)
+                culture = CultureInfo.CurrentCulture;
+
             try
             {
                 // Attempt to use type converter to set field value
                 TypeConverter converter = TypeDescriptor.GetConverter(value);
-                return converter.ConvertToString(value).ToNonNullString();
+                return converter.ConvertToString(null, culture, value).ToNonNullString();
             }
             catch
             {
