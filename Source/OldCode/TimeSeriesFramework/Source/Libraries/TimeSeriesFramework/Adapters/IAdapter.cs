@@ -149,6 +149,7 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
         /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
         void AssignParentCollection(IAdapterCollection parent);
 
         /// <summary>

@@ -650,11 +650,19 @@ namespace TimeSeriesFramework.Adapters
             m_enabled = false;
             m_stopTime = PrecisionTimer.UtcNow.Ticks;
         }
-        
-        // Assigns the reference to the parent adapter collection that will contain this adapter.
-        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
+        protected virtual void AssignParentCollection(IAdapterCollection parent)
         {
             m_parent = parent;
+        }
+
+        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        {
+            AssignParentCollection(parent);
         }
 
         /// <summary>
