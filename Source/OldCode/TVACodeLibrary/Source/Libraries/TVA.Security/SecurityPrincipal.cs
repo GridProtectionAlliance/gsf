@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  03/22/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  12/03/2010 - Pinal C. Patel
+//       Modified IsInRole() to allow for translation of role name before applying security using it.
 //
 //*******************************************************************************************************
 
@@ -301,7 +303,7 @@ namespace TVA.Security
                 // Check if user has any one of the specified roles.
                 foreach (string role in roles.Split(','))
                 {
-                    if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(role.Trim(), currentRole))) != null)
+                    if (m_identity.Provider.UserData.Roles.FirstOrDefault(currentRole => (SecurityProviderUtility.IsRegexMatch(m_identity.Provider.TranslateRole(role.Trim()), currentRole))) != null)
                         return true;
                 }
 

@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  07/08/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  12/03/2010 - Pinal C. Patel
+//       Override the default behavior of TranslateRole() to translate a SID to its role name.
 //
 //*******************************************************************************************************
 
@@ -241,6 +243,10 @@ namespace TVA.Security
     /// <summary>
     /// Represents an <see cref="ISecurityProvider"/> that uses Active Directory for its backend datastore and credential authentication.
     /// </summary>
+    /// <remarks>
+    /// A <a href="http://en.wikipedia.org/wiki/Security_Identifier" target="_blank">Security Identifier</a> can also be specified in 
+    /// <b>IncludedResources</b> instead of a role name in the format of 'SID:&lt;Security Identifier&gt;' (Example: SID:S-1-5-21-19610888-1443184010-1631745340-269783).
+    /// </remarks>
     /// <example>
     /// Required config file entries:
     /// <code>
@@ -481,6 +487,20 @@ namespace TVA.Security
             }
 
             return UserData.IsAuthenticated;
+        }
+
+        /// <summary>
+        /// Performs a translation of the specified user <paramref name="role"/>.
+        /// </summary>
+        /// <param name="role">The user role to be translated.</param>
+        /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
+        public override string TranslateRole(string role)
+        {
+            // Perform a translation from SID to Role only if the input starts with 'SID:'.
+            if (role.StartsWith("SID:", StringComparison.CurrentCultureIgnoreCase))
+                return new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
+
+            return role;
         }
 
         private long ConvertToLong(object largeInteger)

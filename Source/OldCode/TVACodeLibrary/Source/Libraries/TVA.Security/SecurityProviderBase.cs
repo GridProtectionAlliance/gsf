@@ -20,6 +20,8 @@
 //       Added LogError() and LogLogin() methods.
 //  06/25/2010 - Pinal C. Patel
 //       Fixed a bug in the caching mechanism employed in Current static property.
+//  12/03/2010 - Pinal C. Patel
+//       Added TranslateRole() to allow providers to perform translation on role name.
 //
 //*******************************************************************************************************
 
@@ -242,7 +244,6 @@
 using System;
 using System.Configuration;
 using System.Linq;
-using System.Security.Principal;
 using System.Threading;
 using TVA.Configuration;
 
@@ -513,6 +514,23 @@ namespace TVA.Security
 
         #region [ Methods ]
 
+        #region [ Abstract ]
+
+        /// <summary>
+        /// When overridden in a derived class, refreshes the <see cref="UserData"/>.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        public abstract bool RefreshData();
+
+        /// <summary>
+        /// When overridden in a derived class, authenticates the user.
+        /// </summary>
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public abstract bool Authenticate(string password);
+
+        #endregion
+
         /// <summary>
         /// Releases all the resources used by the security provider.
         /// </summary>
@@ -581,17 +599,15 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// When overridden in a derived class, refreshes the <see cref="UserData"/>.
+        /// Performs a translation of the specified user <paramref name="role"/>.
         /// </summary>
-        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
-        public abstract bool RefreshData();
-
-        /// <summary>
-        /// When overridden in a derived class, authenticates the user.
-        /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
-        /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public abstract bool Authenticate(string password);
+        /// <param name="role">The user role to be translated.</param>
+        /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
+        public virtual string TranslateRole(string role)
+        {
+            // Most providers will not perform any kind of translation on role names.
+            return role;  
+        }
 
         /// <summary>
         /// Releases the unmanaged resources used by the security provider and optionally releases the managed resources.

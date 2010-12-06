@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  12/03/2010 - Pinal C. Patel
+//       Added TranslateRole() to allow providers to perform translation on role name.
 //
 //*******************************************************************************************************
 
@@ -229,8 +231,6 @@
 */
 #endregion
 
-using System;
-using System.Security.Principal;
 using TVA.Configuration;
 
 namespace TVA.Security
@@ -273,6 +273,13 @@ namespace TVA.Security
         /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         bool Authenticate(string password);
+
+        /// <summary>
+        /// Performs a translation of the specified user <paramref name="role"/>.
+        /// </summary>
+        /// <param name="role">The user role to be translated.</param>
+        /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
+        string TranslateRole(string role);
 
         #endregion
     }
