@@ -23,12 +23,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using TimeSeriesFramework.Adapters;
 using TVA;
-using TVA.Collections;
 using TVA.Communication;
-using System.Text;
-using System.IO;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -50,7 +49,7 @@ namespace TimeSeriesFramework.Transport
         public event EventHandler ConnectionTerminated;
 
         // Fields
-        private TcpClient m_dataClient;
+        private TVA.Communication.TcpClient m_dataClient;
         private List<ServerCommand> m_requests;
         private bool m_synchronizedSubscription;
         private bool m_disposed;
@@ -554,7 +553,9 @@ namespace TimeSeriesFramework.Transport
         private void m_dataClient_ReceiveDataException(object sender, EventArgs<Exception> e)
         {
             Exception ex = e.Argument;
-            OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving data from publisher connection: " + ex.Message, ex));
+
+            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+                OnProcessException(new InvalidOperationException("Data subscriber encountered an exception while receiving data from publisher connection: " + ex.Message, ex));
         }
 
         private void m_dataClient_HandshakeProcessUnsuccessful(object sender, EventArgs e)

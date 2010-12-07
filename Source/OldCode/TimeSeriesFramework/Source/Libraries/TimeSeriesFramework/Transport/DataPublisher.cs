@@ -36,7 +36,6 @@ using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
-using System.Net.Sockets;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -274,7 +273,7 @@ namespace TimeSeriesFramework.Transport
                         data.Write(buffer, 0, buffer.Length);
                     }
 
-                    // Pusblish data packet to client
+                    // Publish data packet to client
                     if (m_parent != null)
                         m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
                 }
@@ -520,10 +519,9 @@ namespace TimeSeriesFramework.Transport
 
             private void ProcessMeasurements(object state)
             {
-                IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
-
                 if (state != null && !m_disposed)
                 {
+                    IEnumerable<IMeasurement> measurements = state as IEnumerable<IMeasurement>;
                     MemoryStream data = new MemoryStream();
                     bool useCompactMeasurementFormat = m_useCompactMeasurementFormat;
                     byte[] buffer;
@@ -553,7 +551,7 @@ namespace TimeSeriesFramework.Transport
                         data.Write(buffer, 0, buffer.Length);
                     }
 
-                    // Pusblish data packet to client
+                    // Publish data packet to client
                     if (m_parent != null)
                         m_parent.SendClientResponse(m_clientID, ServerResponse.DataPacket, ServerCommand.Subscribe, data.ToArray());
 
@@ -1111,7 +1109,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is ObjectDisposedException) && !(ex is SocketException && ((SocketException)ex).ErrorCode == 10054))
+            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
         }
 
