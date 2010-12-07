@@ -24,6 +24,8 @@
 //       Cached the current ApplicationType returned by GetApplicationType() for better performance.
 //  12/05/2010 - Pinal C. Patel
 //       Added an overload for TypeConvertToString() that takes CultureInfo as a parameter.
+//  12/07/2010 - Pinal C. Patel
+//       Updated TypeConvertToString() to return an empty string if the passed in value is null.
 //
 //*******************************************************************************************************
 
@@ -506,9 +508,9 @@ namespace TVA
         /// </remarks>
         public static string TypeConvertToString(object value, CultureInfo culture)
         {
-            // Check if the specified value is null.
+            // Don't proceed further if value is null.
             if (value == null)
-                throw new ArgumentNullException("value");
+                return string.Empty;
 
             // Initialize culture info if not specified.
             if (culture == null)

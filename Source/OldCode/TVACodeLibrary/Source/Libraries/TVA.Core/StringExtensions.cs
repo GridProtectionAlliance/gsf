@@ -59,6 +59,8 @@
 //      Modifed ParseKeyValuePairs such that it could handle nested pairs to any needed depth.
 //  12/05/2010 - Pinal C. Patel
 //       Added an overload for ConvertToType() that takes CultureInfo as a parameter.
+//  12/07/2010 - Pinal C. Patel
+//       Updated ConvertToType() to return the type default if passed in string is null or empty.
 //
 //*******************************************************************************************************
 
@@ -406,9 +408,9 @@ namespace TVA
         /// </remarks>
         public static T ConvertToType<T>(this string value, Type type, CultureInfo culture)
         {
-            // Check if the specified value is null.
+            // Don't proceed further if string is empty.
             if (string.IsNullOrEmpty(value))
-                throw new ArgumentNullException("value");
+                return default(T);
 
             // Initialize return type if not specified.
             if (type == null)
