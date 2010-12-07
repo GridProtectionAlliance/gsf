@@ -1102,7 +1102,9 @@ namespace TimeSeriesFramework.Transport
         private void m_dataServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending data to client connection: " + ex.Message, ex));
+            
+            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+                OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending data to client connection: " + ex.Message, ex));
         }
 
         private void m_dataServer_ReceiveClientDataException(object sender, EventArgs<Guid, Exception> e)
