@@ -940,9 +940,9 @@ namespace TimeSeriesFramework.Adapters
                 {
                     DisposeItem(item);
                 }
-            }
 
-            base.ClearItems();
+                base.ClearItems();
+            }
         }
 
         /// <summary>
@@ -952,9 +952,12 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item">The <see cref="IAdapter"/> implementation to insert.</param>
         protected override void InsertItem(int index, T item)
         {
-            // Wire up item events and handle item initialization
-            InitializeItem(item);
-            base.InsertItem(index, item);
+            lock (this)
+            {
+                // Wire up item events and handle item initialization
+                InitializeItem(item);
+                base.InsertItem(index, item);
+            }
         }
 
         /// <summary>
@@ -964,13 +967,16 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="item">The <see cref="IAdapter"/> implementation to assign.</param>
         protected override void SetItem(int index, T item)
         {
-            // Dispose of existing item
-            DisposeItem(this[index]);
+            lock (this)
+            {
+                // Dispose of existing item
+                DisposeItem(this[index]);
 
-            // Wire up item events and handle initialization of new item
-            InitializeItem(item);
+                // Wire up item events and handle initialization of new item
+                InitializeItem(item);
 
-            base.SetItem(index, item);
+                base.SetItem(index, item);
+            }
         }
 
         /// <summary>
@@ -980,8 +986,11 @@ namespace TimeSeriesFramework.Adapters
         protected override void RemoveItem(int index)
         {
             // Dispose of item before removing it from the collection
-            DisposeItem(this[index]);
-            base.RemoveItem(index);
+            lock (this)
+            {
+                DisposeItem(this[index]);
+                base.RemoveItem(index);
+            }
         }
 
         /// <summary>
@@ -1147,10 +1156,12 @@ namespace TimeSeriesFramework.Adapters
 
         IEnumerator<IAdapter> IEnumerable<IAdapter>.GetEnumerator()
         {
-            IAdapter[] adapters = new IAdapter[Count];
+            IAdapter[] adapters;
 
             lock (this)
             {
+                adapters = new IAdapter[Count];
+
                 for (int i = 0; i < Count; i++)
                     adapters[i] = this[i];
             }
