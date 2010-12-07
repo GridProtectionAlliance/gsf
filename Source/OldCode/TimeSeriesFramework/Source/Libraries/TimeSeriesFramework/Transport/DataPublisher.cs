@@ -36,6 +36,7 @@ using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
+using System.Net.Sockets;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -767,16 +768,6 @@ namespace TimeSeriesFramework.Transport
             // The following code causes a forced disconnect between object disposes - not always what you want, for example when
             // you are switching between synchronized and unsynchronized the old objects gets disposed, as it should, but you
             // don't want to disconnect the client socket...
-
-            //try
-            //{
-            //    if (m_dataServer != null)
-            //        m_dataServer.DisconnectOne(((IClientSubscription)item).ClientID);
-            //}
-            //catch (InvalidOperationException)
-            //{
-            //    // This exception is thrown if client is no longer in the connection list - we can safely ignore this error
-            //}
         }
 
         /// <summary>
@@ -1120,7 +1111,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is ObjectDisposedException))
+            if (!(ex is ObjectDisposedException) && !(ex is SocketException && ((SocketException)ex).ErrorCode == 10054))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
         }
 
