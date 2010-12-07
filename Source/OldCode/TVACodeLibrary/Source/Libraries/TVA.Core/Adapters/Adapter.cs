@@ -14,6 +14,8 @@
 //       Removed the persistance of Enabled property to the config file.
 //  11/24/2010 - Pinal C. Patel
 //       Modified Name property to use SettingsCategory instead of Type name.
+//  12/07/2010 - Pinal C. Patel
+//       Updated PersistSettings property to default to false instead of true.
 //
 //*******************************************************************************************************
 
@@ -265,7 +267,6 @@ namespace TVA.Adapters
         public Adapter()
         {
             m_created = DateTime.Now;
-            m_persistSettings = true;
             m_settingsCategory = this.GetType().Name;
         }
 
