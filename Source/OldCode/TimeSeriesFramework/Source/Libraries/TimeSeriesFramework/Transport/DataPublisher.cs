@@ -866,6 +866,11 @@ namespace TimeSeriesFramework.Transport
                 {
                     // This happens when there is still data to be sent to a disconnected client - we can safely ignore this exception
                 }
+                catch (System.Net.Sockets.SocketException ex)
+                {
+                    if (ex.ErrorCode != 10054)
+                        OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
+                }            
                 catch (Exception ex)
                 {
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
