@@ -486,7 +486,12 @@ namespace TimeSeriesFramework.Transport
                         base.QueueMeasurementsForProcessing(filteredMeasurements);
 
                         // See if it is time to publish
-                        if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(LatestMeasurements.LagTime))
+                        if (m_lastPublishTime == 0)
+                        {
+                            // Allow at least one set of measurements to be defined before initial publication
+                            m_lastPublishTime = 1;
+                        }
+                        else if (DateTime.UtcNow.Ticks > m_lastPublishTime + Ticks.FromSeconds(LatestMeasurements.LagTime))
                         {
                             List<IMeasurement> currentMeasurements = new List<IMeasurement>();
                             Measurement newMeasurement;
@@ -499,7 +504,7 @@ namespace TimeSeriesFramework.Transport
                                 newMeasurement.ValueQualityIsGood = measurement.ValueQualityIsGood;
                                 currentMeasurements.Add(newMeasurement);
                             }
-                            
+
                             // Publish latest data values...
                             ThreadPool.QueueUserWorkItem(ProcessMeasurements, currentMeasurements);
                         }
