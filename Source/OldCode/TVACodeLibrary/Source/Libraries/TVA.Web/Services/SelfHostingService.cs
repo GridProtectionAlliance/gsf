@@ -35,6 +35,9 @@
 //       Modified CreateServiceBinding() to explicitly disable security on created binding if specified.
 //  11/19/2010 - Pinal C. Patel
 //       Changed to inherit from Adapter to take advantage of app domain isolation through AdapterLoader.
+//  12/09/2010 - Pinal C. Patel
+//       Modified GetUnusedPort() to use TVA.Security.Cryptography.Random instead of System.Random to
+//       unsure unique numbers.
 //
 //*******************************************************************************************************
 
@@ -528,7 +531,7 @@ namespace TVA.Web.Services
         /// <returns>An <see cref="Int32"/> value.</returns>
         protected virtual int GetUnusedPort()
         {
-            int randomPort = new Random().Next(1024, 65535);
+            int randomPort = TVA.Security.Cryptography.Random.Int32Between(1024, 65535);
             IPEndPoint[] tcpListeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
             while (true)
             {

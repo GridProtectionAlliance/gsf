@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/18/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  12/09/2010 - Pinal C. Patel
+//       Renamed Login operation to Authenticate and added GetUserData and RefreshUserData operations.
 //
 //*******************************************************************************************************
 
@@ -248,7 +250,21 @@ namespace TVA.Web.Embedded
         /// <param name="username">Username of the user.</param>
         /// <param name="password">Password of the user.</param>
         /// <returns>An <see cref="UserData"/> object of the user.</returns>
-        [OperationContract(), WebGet(UriTemplate = "/login/{username}/{password}")]
-        UserData Login(string username, string password);
+        [OperationContract(), WebGet(UriTemplate = "/authenticate/{username}/{password}")]
+        UserData Authenticate(string username, string password);
+
+        /// <summary>
+        /// Returns information about the current user. 
+        /// </summary>
+        /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/getuserdata")]
+        UserData GetUserData();
+
+        /// <summary>
+        /// Refreshes and returns information about the current user. 
+        /// </summary>
+        /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/refreshuserdata")]
+        UserData RefreshUserData();
     }
 }

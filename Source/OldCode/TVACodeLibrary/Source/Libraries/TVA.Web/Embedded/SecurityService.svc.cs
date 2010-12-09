@@ -13,6 +13,8 @@
 //  05/24/2010 - Pinal C. Patel
 //       Modified the service so it could be hosted in ASP.NET compatibility mode.
 //       Modified Login() to initialize the provider once and cache it for subsequent uses.
+//  12/09/2010 - Pinal C. Patel
+//       Renamed Login operation to Authenticate and added GetUserData and RefreshUserData operations.
 //
 //*******************************************************************************************************
 
@@ -232,7 +234,6 @@
 */
 #endregion
 
-using System.ComponentModel;
 using System.ServiceModel.Activation;
 using TVA.Security;
 using TVA.Web.Services;
@@ -251,14 +252,38 @@ namespace TVA.Web.Embedded
         /// <param name="username">Username of the user.</param>
         /// <param name="password">Password of the user.</param>
         /// <returns>An <see cref="UserData"/> object of the user.</returns>
-        [Description("Authenticates a user and caches the security context upon successful authentication for subsequent use.")]
-        public UserData Login(string username, string password)
+        public UserData Authenticate(string username, string password)
         {
             ISecurityProvider provider = SecurityProviderUtility.CreateProvider(username);
             if (provider.Authenticate(password))
                 SecurityProviderCache.CurrentProvider = provider;
 
             return provider.UserData;
+        }
+
+        /// <summary>
+        /// Returns information about the current user. 
+        /// </summary>
+        /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        public UserData GetUserData()
+        {
+            if (SecurityProviderCache.CurrentProvider == null)
+                return null;
+
+            return SecurityProviderCache.CurrentProvider.UserData;
+        }
+
+        /// <summary>
+        /// Refreshes and returns information about the current user. 
+        /// </summary>
+        /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        public UserData RefreshUserData()
+        {
+            if (SecurityProviderCache.CurrentProvider == null)
+                return null;
+
+            SecurityProviderCache.CurrentProvider.RefreshData();
+            return SecurityProviderCache.CurrentProvider.UserData;
         }
     }
 }
