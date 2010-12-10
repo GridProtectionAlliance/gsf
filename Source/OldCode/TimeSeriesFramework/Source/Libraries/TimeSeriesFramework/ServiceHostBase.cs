@@ -1364,8 +1364,8 @@ namespace TimeSeriesFramework
 
                                         for (int i = 0; i < parameterInfo.Length; i++)
                                         {
-                                            parameterValue = requestInfo.Request.Arguments["OrderedArg" + (3 + i)];
-                                            parameters[i] = parameterValue.ConvertToType(parameterInfo[i].ParameterType);
+                                            parameterValue = requestInfo.Request.Arguments["OrderedArg" + (3 + i)];                                            
+                                            parameters[i] = parameterValue.ConvertToType<object>(parameterInfo[i].ParameterType);
                                         }
 
                                         // Invoke adapter command with specified parameters
