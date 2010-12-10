@@ -12,6 +12,10 @@
 //       Generated original version of source code.
 //  10/15/2010 - Pinal C. Patel
 //       Updated to add a SOAP endpoint in addition to REST endpoint and enabled metadata publishing.
+//  12/10/2010 - Pinal C. Patel
+//       Updated SOAP endpoint to use BasicHttpBinding instead of WSHttpBinding which has security 
+//       disabled by default and does not require SSL when security needs to be enabled on the client 
+//       side when service is hosted in IIS with integrated security for intranet use.
 //
 //*******************************************************************************************************
 
@@ -262,8 +266,8 @@ namespace TVA.Web.Embedded
             restEndpoint.Behaviors.Add(restBehavior);
 
             // Add SOAP endpoint.
-            host.AddServiceEndpoint(typeof(ISecurityService), new WSHttpBinding(), "soap");
-            host.AddServiceEndpoint(ServiceMetadataBehavior.MexContractName, MetadataExchangeBindings.CreateMexHttpBinding(), "soap/mex");
+            host.AddServiceEndpoint(typeof(ISecurityService), new BasicHttpBinding(), "soap");
+            host.AddServiceEndpoint(typeof(IMetadataExchange), new BasicHttpBinding(), "soap/mex");
 
             return host;
         }

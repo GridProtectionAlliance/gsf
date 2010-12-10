@@ -239,7 +239,7 @@ using TVA.Web.Services;
 namespace TVA.Web.Embedded
 {
     /// <summary>
-    /// Embedded WCF REST service contract used for securing external facing WCF services.
+    /// Embedded WCF service contract used for securing external facing WCF services.
     /// </summary>
     [ServiceContract()]
     public interface ISecurityService : ISelfHostingService
