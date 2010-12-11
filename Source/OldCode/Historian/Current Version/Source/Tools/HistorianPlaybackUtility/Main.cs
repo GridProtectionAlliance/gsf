@@ -24,6 +24,8 @@
 //       Modified to work with a live archive.
 //  10/11/2010 - Mihir Brahmbhatt
 //       Updated header and license agreement.
+//  12/12/2010 - Pinal C. Patel
+//       Fixed a bug that was preventing all of the exported data from being written to output file.
 //
 //******************************************************************************************************
 
@@ -35,6 +37,7 @@ using System.IO.Ports;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using TVA;
 using TVA.Communication;
 using TVA.Configuration;
 using TVA.Historian;
@@ -81,10 +84,13 @@ namespace HistorianPlaybackUtility
 
         // Fields
         private bool m_watermarkEnabled;
+        private long m_transmitStarts;
+        private long m_transmitCompletes;
+        private long m_transmitExceptions;
         private List<Thread> m_activeThreads;
         private ArchiveFile m_archiveFile;
         private IClient m_transmitClient;
-        private System.Timers.Timer m_rollverWatcher;
+        private System.Timers.Timer m_rolloverWatcher;
         private ManualResetEvent m_rolloverWaitHandle;
 
         #endregion
@@ -121,7 +127,7 @@ namespace HistorianPlaybackUtility
                 OutputCannelTabs.TabPages.Remove(SerialSettingsTab);
             }
 
-             // Initialize member variables.
+            // Initialize member variables.
             m_activeThreads = new List<Thread>();
             m_archiveFile = new ArchiveFile();
             m_archiveFile.StateFile = new StateFile();
@@ -133,10 +139,10 @@ namespace HistorianPlaybackUtility
             m_archiveFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
             m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
-            m_rollverWatcher = new System.Timers.Timer();
-            m_rollverWatcher.Interval = 1000;
-            m_rollverWatcher.Elapsed += RollverWatcher_Elapsed;
-            m_rollverWatcher.Start();
+            m_rolloverWatcher = new System.Timers.Timer();
+            m_rolloverWatcher.Interval = 1000;
+            m_rolloverWatcher.Elapsed += RolloverWatcher_Elapsed;
+            m_rolloverWatcher.Start();
             m_rolloverWaitHandle = new ManualResetEvent(true);
         }
 
@@ -241,12 +247,26 @@ namespace HistorianPlaybackUtility
                 {
                     m_activeThreads.Remove(Thread.CurrentThread);
                     if (m_activeThreads.Count == 0)
+                    {
+                        ShowUpdateMessage("Waiting for pending transmissions to complete...");
+                        while (m_transmitStarts != (m_transmitCompletes + m_transmitExceptions))
+                        {
+                            Thread.Sleep(1000);
+                        }
+                        ShowUpdateMessage("Transmissions complete ({0} errors).", m_transmitExceptions);
+
+                        m_transmitClient.SendDataStart -= m_transmitClient_SendDataStart;
+                        m_transmitClient.SendDataComplete -= m_transmitClient_SendDataComplete;
+                        m_transmitClient.SendDataException -= m_transmitClient_SendDataException;
+                        m_transmitClient.Dispose();
+
                         this.BeginInvoke((ThreadStart)delegate()
                         {
                             StopProcessing.Visible = false;
                             StartProcessing.Visible = true;
                             SplitContainerTop.Enabled = true;
                         });
+                    }
                 }
             }
         }
@@ -271,6 +291,14 @@ namespace HistorianPlaybackUtility
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
+            StopProcessing_Click(sender, EventArgs.Empty);
+
+            if (m_rolloverWatcher != null)
+                m_rolloverWatcher.Dispose();
+
+            if (m_rolloverWaitHandle != null)
+                m_rolloverWaitHandle.Close();
+
             if (m_archiveFile.StateFile != null)
                 m_archiveFile.StateFile.Dispose();
 
@@ -282,15 +310,6 @@ namespace HistorianPlaybackUtility
 
             if (m_archiveFile != null)
                 m_archiveFile.Dispose();
-
-            if (m_transmitClient != null)
-                m_transmitClient.Dispose();
-
-            if (m_rollverWatcher != null)
-                m_rollverWatcher.Dispose();
-
-            if (m_rolloverWaitHandle != null)
-                m_rolloverWaitHandle.Close();
 
             this.SaveLayout();
         }
@@ -451,6 +470,9 @@ namespace HistorianPlaybackUtility
                 state.Add(RepeatDataProcessing.Checked);
                 state.Add(OutputPlainTextDataFormat.Text);
                 state.Add(int.Parse(ProcessDataAtIntervalSampleRate.Text));
+                m_transmitStarts = 0;
+                m_transmitCompletes = 0;
+                m_transmitExceptions = 0;
                 switch (OutputCannelTabs.SelectedIndex)
                 {
                     case 0: // TCP
@@ -468,6 +490,9 @@ namespace HistorianPlaybackUtility
                 }
                 m_transmitClient.Handshake = false;
                 m_transmitClient.MaxConnectionAttempts = 10;
+                m_transmitClient.SendDataStart += m_transmitClient_SendDataStart;
+                m_transmitClient.SendDataComplete += m_transmitClient_SendDataComplete;
+                m_transmitClient.SendDataException += m_transmitClient_SendDataException;
                 ShowUpdateMessage("Client initialized!");
 
                 // Connect the newly created client.
@@ -568,7 +593,7 @@ namespace HistorianPlaybackUtility
             ShowUpdateMessage("Completed building list of historic archive files.");
         }
 
-        private void RollverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void RolloverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             if (m_archiveFile.IntercomFile.IsOpen)
             {
@@ -589,7 +614,23 @@ namespace HistorianPlaybackUtility
                 }
             }
         }
-        
+
+        private void m_transmitClient_SendDataStart(object sender, EventArgs e)
+        {
+            m_transmitStarts++;
+        }
+
+        private void m_transmitClient_SendDataComplete(object sender, EventArgs e)
+        {
+            m_transmitCompletes++;
+        }
+
+
+        private void m_transmitClient_SendDataException(object sender, EventArgs<Exception> e)
+        {
+            m_transmitExceptions++;
+        }
+
         #endregion
 
         #endregion
