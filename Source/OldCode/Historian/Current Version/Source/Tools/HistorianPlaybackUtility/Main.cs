@@ -139,10 +139,11 @@ namespace HistorianPlaybackUtility
             m_archiveFile.FileAccessMode = FileAccess.Read;
             m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
             m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
-            m_rolloverWatcher = new System.Timers.Timer();
-            m_rolloverWatcher.Interval = 1000;
-            m_rolloverWatcher.Elapsed += RolloverWatcher_Elapsed;
-            m_rolloverWatcher.Start();
+            m_archiveFile.DataReadException += ArchiveFile_DataReadException;
+            m_rollverWatcher = new System.Timers.Timer();
+            m_rollverWatcher.Interval = 1000;
+            m_rollverWatcher.Elapsed += RollverWatcher_Elapsed;
+            m_rollverWatcher.Start();
             m_rolloverWaitHandle = new ManualResetEvent(true);
         }
 
@@ -192,6 +193,7 @@ namespace HistorianPlaybackUtility
                 }
 
                 ShowUpdateMessage("Started processing point {0} on thread {1}...", ids, Thread.CurrentThread.ManagedThreadId);
+
                 while (true)
                 {
                     foreach (string id in ids.Split(','))
@@ -207,9 +209,13 @@ namespace HistorianPlaybackUtility
                             {
                                 m_transmitClient.SendAsync(new PacketType1(sample).BinaryImage, 0, PacketType1.ByteCount);
                                 count++;
-                                if (!m_rolloverWaitHandle.WaitOne(0))
-                                    break;                  // Abort for rollover.
-                                Thread.Sleep(sleepTime);    // Sleep for throttling.
+
+                                // Abort for rollover, when needed
+                                if (!m_rolloverWaitHandle.WaitOne(0)) break;
+
+                                // Sleep for throttling, if requested
+                                if (sleepTime > 0)
+                                    Thread.Sleep(sleepTime);
                             }
                         }
                         else
@@ -220,9 +226,14 @@ namespace HistorianPlaybackUtility
                                 buffer = Encoding.ASCII.GetBytes(string.Format(dataFormat, sample, sample, sample, sample));
                                 m_transmitClient.SendAsync(buffer, 0, buffer.Length);
                                 count++;
+
+                                // Abort for rollover, when needed
                                 if (!m_rolloverWaitHandle.WaitOne(0))
-                                    break;                  // Abort for rollover.
-                                Thread.Sleep(sleepTime);    // Sleep for throttling.
+                                    break;
+
+                                // Sleep for throttling, if requested
+                                if (sleepTime > 0)
+                                    Thread.Sleep(sleepTime);
                             }
                         }
                         ShowUpdateMessage("Processed {0} measurements for point {1}.", count, id);
@@ -273,11 +284,15 @@ namespace HistorianPlaybackUtility
 
         private void ShowUpdateMessage(string message, params object[] args)
         {
-            this.BeginInvoke((ThreadStart)delegate()
+            this.Invoke((ThreadStart)delegate()
             {
-                MessagesOutput.AppendText(string.Format("[{0}] ", DateTime.Now.ToString()));
-                MessagesOutput.AppendText(string.Format(message, args));
-                MessagesOutput.AppendText("\r\n");
+                StringBuilder outputText = new StringBuilder();
+
+                outputText.AppendFormat("[{0}] ", DateTime.Now.ToString());
+                outputText.AppendFormat(message, args);
+                outputText.Append("\r\n");
+
+                MessagesOutput.AppendText(outputText.ToString());
                 Application.DoEvents();
             });
         }
@@ -309,7 +324,12 @@ namespace HistorianPlaybackUtility
                 m_archiveFile.MetadataFile.Dispose();
 
             if (m_archiveFile != null)
+            {
+                m_archiveFile.HistoricFileListBuildStart -= ArchiveFile_HistoricFileListBuildStart;
+                m_archiveFile.HistoricFileListBuildComplete -= ArchiveFile_HistoricFileListBuildComplete;
+                m_archiveFile.DataReadException -= ArchiveFile_DataReadException;
                 m_archiveFile.Dispose();
+            }
 
             this.SaveLayout();
         }
@@ -579,7 +599,7 @@ namespace HistorianPlaybackUtility
 
         private void OutputPlainTextData_CheckedChanged(object sender, EventArgs e)
         {
-            OutputPlainTextDataFormat.Text = "{0:I},{1:T},{2:V},{3:Q}";
+            OutputPlainTextDataFormat.Text = "{0:I},{1:T},{2:V},{3:Q}\r\n";
             OutputPlainTextDataFormat.Enabled = true;
         }
 
@@ -593,24 +613,33 @@ namespace HistorianPlaybackUtility
             ShowUpdateMessage("Completed building list of historic archive files.");
         }
 
-        private void RolloverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        private void ArchiveFile_DataReadException(object sender, TVA.EventArgs<Exception> e)
+        {
+            ShowUpdateMessage("Exception encountered during data read: " + e.Argument.Message);
+        }
+
+        private void RollverWatcher_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             if (m_archiveFile.IntercomFile.IsOpen)
             {
                 IntercomRecord record = m_archiveFile.IntercomFile.Read(1);
-                // Pause processing.
-                if (record.RolloverInProgress && m_archiveFile.IsOpen)
+
+                if (record != null)
                 {
-                    m_rolloverWaitHandle.Reset();
-                    m_archiveFile.Close();
-                    ShowUpdateMessage("Archive rollover in progress...");
-                }
-                // Resume processing.
-                if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
-                {
-                    m_archiveFile.Open();
-                    m_rolloverWaitHandle.Set();
-                    ShowUpdateMessage("Archive rollover complete!");
+                    // Pause processing.
+                    if (record.RolloverInProgress && m_archiveFile.IsOpen)
+                    {
+                        m_rolloverWaitHandle.Reset();
+                        m_archiveFile.Close();
+                        ShowUpdateMessage("Archive rollover in progress...");
+                    }
+                    // Resume processing.
+                    if (!record.RolloverInProgress && !m_archiveFile.IsOpen)
+                    {
+                        m_archiveFile.Open();
+                        m_rolloverWaitHandle.Set();
+                        ShowUpdateMessage("Archive rollover complete!");
+                    }
                 }
             }
         }

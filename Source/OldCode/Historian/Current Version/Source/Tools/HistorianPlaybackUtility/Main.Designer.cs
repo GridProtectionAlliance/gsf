@@ -778,6 +778,8 @@
             // SaveFile
             // 
             this.SaveFile.Filter = "All Files (*.*)|*.*";
+            this.SaveFile.OverwritePrompt = false;
+            this.SaveFile.Title = "Save / Append to Text File";
             // 
             // Main
             // 
