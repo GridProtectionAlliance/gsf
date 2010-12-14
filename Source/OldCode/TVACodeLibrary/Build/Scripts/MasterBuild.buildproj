@@ -45,9 +45,6 @@
 **  11/02/2010 - Pinal C. Patel
 **       Added missing logic in ArchiveBuildOutput target so binary and install archive files are 
 **       created only if there are files to be added to these arechives.
-**  12/12/2010 - Pinal C. Patel
-**       Updated versioning scheme to not use the Changeset number for the Revision number since 
-**       the maximum allowable value for Revision is 65534.
 **
 *******************************************************************************************************
 -->
@@ -355,12 +352,15 @@
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Version VersionFile="$(VersionFile)" RevisionType="BuildIncrement">
+    <Version VersionFile="$(VersionFile)">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
-      <Output TaskParameter="Revision" PropertyName="Revision"/>
     </Version>
+    <TfsVersion TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)">
+      <Output TaskParameter="Changeset" PropertyName="Revision"/>
+    </TfsVersion>
+    <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' &lt;= '2'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build).$(Revision)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '4'"/>
