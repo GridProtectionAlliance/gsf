@@ -140,10 +140,10 @@ namespace HistorianPlaybackUtility
             m_archiveFile.HistoricFileListBuildStart += ArchiveFile_HistoricFileListBuildStart;
             m_archiveFile.HistoricFileListBuildComplete += ArchiveFile_HistoricFileListBuildComplete;
             m_archiveFile.DataReadException += ArchiveFile_DataReadException;
-            m_rollverWatcher = new System.Timers.Timer();
-            m_rollverWatcher.Interval = 1000;
-            m_rollverWatcher.Elapsed += RollverWatcher_Elapsed;
-            m_rollverWatcher.Start();
+            m_rolloverWatcher = new System.Timers.Timer();
+            m_rolloverWatcher.Interval = 1000;
+            m_rolloverWatcher.Elapsed += RollverWatcher_Elapsed;
+            m_rolloverWatcher.Start();
             m_rolloverWaitHandle = new ManualResetEvent(true);
         }
 
