@@ -61,7 +61,14 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// This option will produce the best result but has a processing penalty.
         /// </remarks>
-        Filtered
+        Filtered,
+        /// <summary>
+        /// Downsamples to the measurement that has the best quality closest to frame time.
+        /// </summary>
+        /// <remarks>
+        /// This option chooses the measurement closest to the frame time with the best quality.
+        /// </remarks>
+        BestQuality
     }
 
     #endregion

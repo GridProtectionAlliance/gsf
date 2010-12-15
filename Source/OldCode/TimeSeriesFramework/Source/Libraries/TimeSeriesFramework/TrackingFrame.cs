@@ -109,7 +109,7 @@ namespace TimeSeriesFramework
         {
             IMeasurement derivedMeasurement;
             List<IMeasurement> m_values;
-            
+
             switch (m_downsamplingMethod)
             {
                 case DownsamplingMethod.LastReceived:
@@ -135,7 +135,7 @@ namespace TimeSeriesFramework
                                     // This measurement came in out-of-order and is closer to frame timestamp, so 
                                     // we sort this measurement instead of the original
                                     m_values[0] = measurement;
-                                    
+
                                     // Keep track of total number of derived measurements
                                     m_derivedMeasurements++;
 
@@ -145,7 +145,7 @@ namespace TimeSeriesFramework
                                 // Prior measurement is closer to frame than new one
                                 return null;
                             }
-                        }                       
+                        }
                     }
 
                     // No prior measurement exists, track this initial one
@@ -191,6 +191,56 @@ namespace TimeSeriesFramework
                                 }
 
                                 // No change from existing measurement
+                                return null;
+                            }
+                        }
+                    }
+
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
+
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
+
+                    return measurement;
+                case DownsamplingMethod.BestQuality:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
+                        {
+                            // Get first tracked value (should only be one for "Closest")
+                            derivedMeasurement = m_values[0];
+
+                            if (derivedMeasurement != null)
+                            {
+                                // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
+                                if
+                                (
+                                    (
+                                        (!derivedMeasurement.ValueQualityIsGood || !derivedMeasurement.TimestampQualityIsGood)
+                                            && 
+                                        (measurement.ValueQualityIsGood || measurement.TimestampQualityIsGood)
+                                    )
+                                        ||
+                                    (
+                                        measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp
+                                    )
+                                )
+                                {
+                                    // This measurement has a better quality or came in out-of-order and is closer to frame timestamp, so 
+                                    // we sort this measurement instead of the original
+                                    m_values[0] = measurement;
+
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
+
+                                    return measurement;
+                                }
+
+                                // Prior measurement is closer to frame than new one
                                 return null;
                             }
                         }
