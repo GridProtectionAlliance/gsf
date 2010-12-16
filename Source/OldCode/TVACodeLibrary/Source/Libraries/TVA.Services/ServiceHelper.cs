@@ -54,6 +54,9 @@
 //  10/14/2010 - Pinal C. Patel
 //       Updated security implementation to include the entire client request text including command 
 //       and arguments instead of just the command.
+//  12/16/2010 - Pinal C. Patel
+//       Added SupportSystemCommands property that can be used to enable or disable system-level access 
+//       via the build-in commands.
 //
 //*******************************************************************************************************
 
@@ -406,6 +409,11 @@ namespace TVA.Services
         public const bool DefaultSupportTelnetSessions = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="SupportSystemCommands"/> property.
+        /// </summary>
+        public const bool DefaultSupportSystemCommands = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="SecureRemoteInteractions"/> property.
         /// </summary>
         public const bool DefaultSecureRemoteInteractions = false;
@@ -514,10 +522,11 @@ namespace TVA.Services
         private bool m_monitorServiceHealth;
         private int m_requestHistoryLimit;
         private bool m_supportTelnetSessions;
-        private string m_telnetSessionPassword;
+        private bool m_supportSystemCommands;
         private bool m_secureRemoteInteractions;
         private bool m_persistSettings;
         private string m_settingsCategory;
+        private string m_telnetSessionPassword;
         private ServiceBase m_parentService;
         private ServerBase m_remotingServer;
         private LogFile m_statusLog;
@@ -557,6 +566,7 @@ namespace TVA.Services
             m_monitorServiceHealth = DefaultMonitorServiceHealth;
             m_requestHistoryLimit = DefaultRequestHistoryLimit;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
+            m_supportSystemCommands = DefaultSupportSystemCommands;
             m_secureRemoteInteractions = DefaultSecureRemoteInteractions;
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
@@ -721,6 +731,24 @@ namespace TVA.Services
             set
             {
                 m_supportTelnetSessions = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="ServiceHelper"/> commands will have support for system-level access (-system switch).
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultSupportSystemCommands),
+        Description("Indicates whether the ServiceHelper commands will have support for system-level access (-system switch).")]
+        public bool SupportSystemCommands
+        {
+            get
+            {
+                return m_supportSystemCommands;
+            }
+            set
+            {
+                m_supportSystemCommands = value;
             }
         }
 
@@ -1156,6 +1184,7 @@ namespace TVA.Services
                 settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
                 settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
                 settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
+                settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
                 settings["SecureRemoteInteractions", true].Update(m_secureRemoteInteractions);
                 config.Save();
             }
@@ -1205,6 +1234,7 @@ namespace TVA.Services
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
                 settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
+                settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
                 settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
                 if (settings["TelnetSessionPassword"] != null)
                     m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
@@ -1214,6 +1244,7 @@ namespace TVA.Services
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
                 SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
+                SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
                 SecureRemoteInteractions = settings["SecureRemoteInteractions"].ValueAs(m_secureRemoteInteractions);
             }
         }
@@ -2283,8 +2314,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
-
-                if (showAdvancedHelp)
+                if (m_supportSystemCommands && showAdvancedHelp)
                 {
                     helpMessage.AppendLine();
                     helpMessage.Append("       -system".PadRight(20));
@@ -2298,8 +2328,60 @@ namespace TVA.Services
             else
             {
                 bool listSystemProcesses = requestInfo.Request.Arguments.Exists("system");
+                if (listSystemProcesses && m_supportSystemCommands)
+                {
+                    // Enumerate "system" processes when -system parameter is specified
+                    StringBuilder responseMessage = new StringBuilder();
 
-                if (!listSystemProcesses)
+                    responseMessage.AppendFormat("Processes running on {0}:", Environment.MachineName);
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
+                    responseMessage.Append("ID".PadRight(5));
+                    responseMessage.Append(' ');
+                    responseMessage.Append("Name".PadRight(25));
+                    responseMessage.Append(' ');
+                    responseMessage.Append("Priority".PadRight(15));
+                    responseMessage.Append(' ');
+                    responseMessage.Append("Responding".PadRight(10));
+                    responseMessage.Append(' ');
+                    responseMessage.Append("Start Time".PadRight(20));
+                    responseMessage.AppendLine();
+                    responseMessage.Append(new string('-', 5));
+                    responseMessage.Append(' ');
+                    responseMessage.Append(new string('-', 25));
+                    responseMessage.Append(' ');
+                    responseMessage.Append(new string('-', 15));
+                    responseMessage.Append(' ');
+                    responseMessage.Append(new string('-', 10));
+                    responseMessage.Append(' ');
+                    responseMessage.Append(new string('-', 20));
+
+                    foreach (Process process in Process.GetProcesses())
+                    {
+                        try
+                        {
+                            responseMessage.Append(process.StartInfo.UserName);
+                            responseMessage.AppendLine();
+                            responseMessage.Append(process.Id.ToString().PadRight(5));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(process.ProcessName.PadRight(25));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(process.PriorityClass.ToString().PadRight(15));
+                            responseMessage.Append(' ');
+                            responseMessage.Append((process.Responding ? "Yes" : "No").PadRight(10));
+                            responseMessage.Append(' ');
+                            responseMessage.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
+                        }
+                        catch
+                        {
+                        }
+                    }
+                    responseMessage.AppendLine();
+                    responseMessage.AppendLine();
+
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
+                }
+                else
                 {
                     if (m_processes.Count > 0)
                     {
@@ -2365,59 +2447,6 @@ namespace TVA.Services
                         // No processes defined in the service to be displayed.
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No processes are defined in {0}.\r\n\r\n", Name);
                     }
-                }
-                else
-                {
-                    // We enumerate "system" processes when -system parameter is specified
-                    StringBuilder responseMessage = new StringBuilder();
-
-                    responseMessage.AppendFormat("Processes running on {0}:", Environment.MachineName);
-                    responseMessage.AppendLine();
-                    responseMessage.AppendLine();
-                    responseMessage.Append("ID".PadRight(5));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Name".PadRight(25));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Priority".PadRight(15));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Responding".PadRight(10));
-                    responseMessage.Append(' ');
-                    responseMessage.Append("Start Time".PadRight(20));
-                    responseMessage.AppendLine();
-                    responseMessage.Append(new string('-', 5));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 25));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 15));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 10));
-                    responseMessage.Append(' ');
-                    responseMessage.Append(new string('-', 20));
-
-                    foreach (Process process in Process.GetProcesses())
-                    {
-                        try
-                        {
-                            responseMessage.Append(process.StartInfo.UserName);
-                            responseMessage.AppendLine();
-                            responseMessage.Append(process.Id.ToString().PadRight(5));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(process.ProcessName.PadRight(25));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(process.PriorityClass.ToString().PadRight(15));
-                            responseMessage.Append(' ');
-                            responseMessage.Append((process.Responding ? "Yes" : "No").PadRight(10));
-                            responseMessage.Append(' ');
-                            responseMessage.Append(process.StartTime.ToString("MM/dd/yy hh:mm:ss tt").PadRight(20));
-                        }
-                        catch
-                        {
-                        }
-                    }
-                    responseMessage.AppendLine();
-                    responseMessage.AppendLine();
-
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
             }
         }
@@ -2887,7 +2916,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
                 helpMessage.Append("Displays list of all service or system processes");
-                if (showAdvancedHelp)
+                if (m_supportSystemCommands && showAdvancedHelp)
                 {
                     helpMessage.AppendLine();
                     helpMessage.Append("       -system".PadRight(20));
@@ -2912,10 +2941,29 @@ namespace TVA.Services
                     AbortProcess(requestInfo);
                 }
 
-                if (!systemProcess)
+                if (systemProcess && m_supportSystemCommands)
                 {
-                    ServiceProcess processToStart = FindProcess(processName);
+                    // Start system process.
+                    try
+                    {
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
+                        Process startedProcess = Process.Start(processName, processArgs);
 
+                        if (startedProcess != null)
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
+                        else
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
+                    }
+                    catch (Exception ex)
+                    {
+                        m_errorLogger.Log(ex);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
+                    }
+                }
+                else
+                {
+                    // Start service process.
+                    ServiceProcess processToStart = FindProcess(processName);
                     if (processToStart != null)
                     {
                         if (processToStart.CurrentState != ServiceProcessState.Processing)
@@ -2944,24 +2992,6 @@ namespace TVA.Services
                     else
                     {
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
-                        Process startedProcess = Process.Start(processName, processArgs);
-
-                        if (startedProcess != null)
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
-                        else
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
-                    }
-                    catch (Exception ex)
-                    {
-                        m_errorLogger.Log(ex);
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                     }
                 }
 
@@ -2996,8 +3026,7 @@ namespace TVA.Services
                 helpMessage.AppendLine();
                 helpMessage.Append("       -list".PadRight(20));
                 helpMessage.Append("Displays list of all service or system processes");
-
-                if (showAdvancedHelp)
+                if (m_supportSystemCommands && showAdvancedHelp)
                 {
                     helpMessage.AppendLine();
                     helpMessage.Append("       -system".PadRight(20));
@@ -3017,32 +3046,10 @@ namespace TVA.Services
                 bool systemProcess = requestInfo.Request.Arguments.Exists("system");
                 bool listProcesses = requestInfo.Request.Arguments.Exists("list");
 
-                if (!systemProcess)
+                if (systemProcess && m_supportSystemCommands)
                 {
-                    ServiceProcess processToAbort = FindProcess(processName);
-
-                    if (processToAbort != null)
-                    {
-                        if (processToAbort.CurrentState == ServiceProcessState.Processing)
-                        {
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
-                            processToAbort.Abort();
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
-                        }
-                        else
-                        {
-                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
-                        }
-                    }
-                    else
-                    {
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
-                    }
-                }
-                else
-                {
+                    // Abort system process.
                     Process processToAbort = null;
-
                     if (string.Compare(processName, "Me", true) == 0)
                     {
                         processName = Process.GetCurrentProcess().ProcessName;
@@ -3090,6 +3097,28 @@ namespace TVA.Services
                     else
                     {
                         UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
+                    }
+                }
+                else
+                {
+                    // Abort service process.
+                    ServiceProcess processToAbort = FindProcess(processName);
+                    if (processToAbort != null)
+                    {
+                        if (processToAbort.CurrentState == ServiceProcessState.Processing)
+                        {
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
+                            processToAbort.Abort();
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
+                        }
+                        else
+                        {
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
+                        }
+                    }
+                    else
+                    {
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
 
