@@ -136,6 +136,7 @@
     <Compile Include="Drawing\BitmapExtensions.cs" />
     <Compile Include="Drawing\NamespaceDoc.cs" />
     <Compile Include="EndianOrder.cs" />
+    <Compile Include="EnumExtensions.cs" />
     <Compile Include="ErrorManagement\ErrorDialog.cs">
       <SubType>Form</SubType>
     </Compile>
