@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+*******************************************************************************************************
+**  TfsHistory.targets - Gbtc
+**
+**  Tennessee Valley Authority, 2009
+**  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
+**
+**  This software is made freely available under the TVA Open Source Agreement (see below).
+**
+**  Code Modification History:
+**  ===================================================================================================
+**  07/30/2010 - Pinal C. Patel
+**       Generated original version of source code.
+**  12/25/2010 - Pinal C. Patel
+**       Updated to correctly handle error condition.
+**
+*******************************************************************************************************
+-->
+
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="TfsHistory" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
+    <ParameterGroup>
+      <TfsClient Required="true"/>
+      <LocalPath Required="true"/>
+      <VersionSpec Required="true"/>
+      <TotalChanges ParameterType="System.Int32" Output="true"/>
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs">
+        <![CDATA[
+        using Microsoft.Build.Framework;
+        using Microsoft.Build.Utilities;
+        using System;
+        using System.Collections.Generic;
+        using System.Diagnostics;
+
+        public class TfsHistory : Task
+        {
+            private string m_tfsClient;
+            private string m_localPath;
+            private string m_versionSpec;
+            private int m_totalChanges;
+            private List<string> m_output;
+            private string m_errorMessage;
+
+            public TfsHistory()
+            {
+                // Initialize member variables.
+                m_output = new List<string>();
+            }
+
+            public string TfsClient
+            {
+                get { return m_tfsClient; }
+                set { m_tfsClient = value; }
+            }
+
+            public string LocalPath
+            {
+                get { return m_localPath; }
+                set { m_localPath = value; }
+            }
+          
+            public string VersionSpec
+            {
+                get { return m_versionSpec; }
+                set { m_versionSpec = value; }
+            }
+
+            [Output()]
+            public int TotalChanges
+            {
+                get { return m_totalChanges; }
+            }
+
+            public override bool Execute()
+            {
+                try
+                {                   
+                    // Launch TFS Client and wait for it to complete.
+                    using (Process p = new Process())
+                    {
+                      p.StartInfo.FileName = m_tfsClient;
+                      p.StartInfo.Arguments = string.Format(@"history ""{0}"" /version:{1} /recursive /noprompt", m_localPath, m_versionSpec);
+                      p.StartInfo.UseShellExecute = false;
+                      p.StartInfo.RedirectStandardOutput = true;
+                      p.StartInfo.RedirectStandardError = true;
+                      p.OutputDataReceived += OnOutputDataReceived;
+                      p.ErrorDataReceived += OnErrorDataReceived;
+                      p.Start();
+                      p.BeginOutputReadLine();
+                      p.BeginErrorReadLine();
+                      p.WaitForExit();
+                  }
+                  
+                  // Check if the command encountered an error.
+                  if (!string.IsNullOrEmpty(m_errorMessage))
+                      throw new Exception(m_errorMessage);
+
+                  // Count the number of changes returned by the query.
+                  if (m_output.Count > 2)
+                      m_totalChanges = m_output.Count - 2;
+              
+                  return true;
+                }
+                catch (Exception ex)
+                {
+                    // Notify about the exception.
+                    m_totalChanges = -1;
+                    Log.LogError(ex.Message);
+                    
+                    return false;
+                }
+            }
+
+            private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                // Accumulate the output for processing.
+                if (!string.IsNullOrEmpty(e.Data))
+                    m_output.Add(e.Data);
+            }
+            
+            private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                // Capture the encountered error.
+                if (!string.IsNullOrEmpty(e.Data))
+                    m_errorMessage = e.Data;
+            }
+        }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+</Project>
