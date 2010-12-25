@@ -45,6 +45,9 @@
 **  11/02/2010 - Pinal C. Patel
 **       Added missing logic in ArchiveBuildOutput target so binary and install archive files are 
 **       created only if there are files to be added to these archives.
+**  12/25/2010 - Pinal C. Patel
+**       Updated the versioning logic to not use the changeset for revision number since the maximum
+**       value allowed for revision number is 65534.
 **
 *******************************************************************************************************
 -->
@@ -326,19 +329,14 @@
   <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
     <!-- Check for new changes since the last build. -->
     <Message Text="Checking for changes..."/>
-    <Attrib Files="$(VersionFile)" ReadOnly="false"/>
-    <Version VersionFile="$(VersionFile)">
-      <Output TaskParameter="Revision" PropertyName="Changeset"/>
-    </Version>
-    <Attrib Files="$(VersionFile)" ReadOnly="true"/>
-    <PropertyGroup>
-      <Changeset Condition="'$(Changeset)' &lt; '1'">1</Changeset>
-    </PropertyGroup>
-    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="C$(Changeset)~">
+    <ReadLinesFromFile File="$(VersionFile)">
+      <Output TaskParameter="Lines" ItemName="VersionNumber"/>
+    </ReadLinesFromFile>
+    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="L$(ProjectName)_v@(VersionNumber)~T" ContinueOnError="true">
       <Output TaskParameter="TotalChanges" PropertyName="TotalChanges"/>
     </TfsHistory>
     <PropertyGroup>
-      <ForceBuild Condition="'$(TotalChanges)' &gt; '2'">true</ForceBuild>
+      <ForceBuild Condition="'$(TotalChanges)' == '-1' Or '$(TotalChanges)' &gt; '1'">true</ForceBuild>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
@@ -352,14 +350,12 @@
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Version VersionFile="$(VersionFile)" BuildType="Increment">
+    <Version VersionFile="$(VersionFile)" BuildType="Increment" RevisionType="Reset">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
+      <Output TaskParameter="Revision" PropertyName="Revision"/>
     </Version>
-    <TfsVersion TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)">
-      <Output TaskParameter="Changeset" PropertyName="Revision"/>
-    </TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' &lt;= '2'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
@@ -406,7 +402,7 @@
   <Target Name="CoreLabelBuild" Condition="'$(BuildLabel)' != ''">
     <!-- Apply label for the current build. -->
     <Message Text="Labeling build $(BuildLabel)..."/>
-    <Exec Command="%22$(TfsClient)%22 label /comment:%22Label applied for build $(BuildLabel).%22 %22$(BuildLabel)%22 %22$(LocalFolder)%22"/>
+    <Exec Command="%22$(TfsClient)%22 label %22$(BuildLabel)%22 %22$(LocalFolder)%22 /comment:%22Label applied for build $(BuildLabel).%22 /recursive"/>
   </Target>
 
   <Target Name="AfterLabelBuild"/>

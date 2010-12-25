@@ -13,6 +13,8 @@
 **  ===================================================================================================
 **  07/30/2010 - Pinal C. Patel
 **       Generated original version of source code.
+**  12/25/2010 - Pinal C. Patel
+**       Updated to correctly handle error condition.
 **
 *******************************************************************************************************
 -->
@@ -42,6 +44,7 @@
             private string m_versionSpec;
             private int m_totalChanges;
             private List<string> m_output;
+            private string m_errorMessage;
 
             public TfsHistory()
             {
@@ -84,11 +87,18 @@
                       p.StartInfo.Arguments = string.Format(@"history ""{0}"" /version:{1} /recursive /noprompt", m_localPath, m_versionSpec);
                       p.StartInfo.UseShellExecute = false;
                       p.StartInfo.RedirectStandardOutput = true;
+                      p.StartInfo.RedirectStandardError = true;
                       p.OutputDataReceived += OnOutputDataReceived;
+                      p.ErrorDataReceived += OnErrorDataReceived;
                       p.Start();
                       p.BeginOutputReadLine();
+                      p.BeginErrorReadLine();
                       p.WaitForExit();
                   }
+                  
+                  // Check if the command encountered an error.
+                  if (!string.IsNullOrEmpty(m_errorMessage))
+                      throw new Exception(m_errorMessage);
 
                   // Count the number of changes returned by the query.
                   if (m_output.Count > 2)
@@ -99,18 +109,26 @@
                 catch (Exception ex)
                 {
                     // Notify about the exception.
+                    m_totalChanges = -1;
                     Log.LogError(ex.Message);
+                    
                     return false;
                 }
             }
 
-            private void  OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+            private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
             {
                 // Accumulate the output for processing.
                 if (!string.IsNullOrEmpty(e.Data))
                     m_output.Add(e.Data);
             }
-
+            
+            private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
+            {
+                // Capture the encountered error.
+                if (!string.IsNullOrEmpty(e.Data))
+                    m_errorMessage = e.Data;
+            }
         }
         ]]>
       </Code>
