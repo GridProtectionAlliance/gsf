@@ -420,6 +420,7 @@ namespace TimeSeriesFramework
         private long m_publishedMeasurements;               // Total number of published measurements
         private long m_downsampledMeasurements;             // Total number of downsampled measurements
         private long m_missedSortsByTimeout;                // Total number of unsorted measurements due to timeout waiting for lock
+        private long m_waitHandleExpirations;               // Total number of wait handle expirations encounted due to delayed precision timer releases
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
         private Ticks m_totalPublishTime;                   // Total cumulative frame user function publication time (in ticks) - used to calculate average
@@ -655,7 +656,9 @@ namespace TimeSeriesFramework
 
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
-                    m_maximumPublicationTimeout = (int)m_ticksPerFrame * 2;
+
+                    // We calculate the maximum wait time for frame publication in milliseconds per frame plus 5%
+                    m_maximumPublicationTimeout = (int)((m_ticksPerFrame + m_ticksPerFrame * 0.05D) / Ticks.PerMillisecond);
 
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
@@ -1110,6 +1113,17 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Gets the total number of wait handle expirations encounted due to delayed precision timer releases.
+        /// </summary>
+        public long WaitHandleExpirations
+        {
+            get
+            {
+                return m_waitHandleExpirations;
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of frames ahead of schedule processed by the concentrator.
         /// </summary>
         public long FramesAheadOfSchedule
@@ -1237,6 +1251,10 @@ namespace TimeSeriesFramework
                 status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
                 status.AppendLine();
                 status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendLine();
+                status.AppendFormat("       Wait handle timeout: {0} milliseconds", m_maximumPublicationTimeout);
+                status.AppendLine();
+                status.AppendFormat("   Wait handle expirations: {0}", m_waitHandleExpirations);
                 status.AppendLine();
                 status.AppendFormat("    Total published frames: {0}", m_publishedFrames);
                 status.AppendLine();
@@ -1414,6 +1432,7 @@ namespace TimeSeriesFramework
             m_publishedMeasurements = 0;
             m_measurementsSortedByArrival = 0;
             m_missedSortsByTimeout = 0;
+            m_waitHandleExpirations = 0;
             m_framesAheadOfSchedule = 0;
             m_publishedFrames = 0;
             m_totalPublishTime = 0;
@@ -1842,7 +1861,7 @@ namespace TimeSeriesFramework
 #endif
 
                             // Calculate index of this frame within its second - note that we have to calculate this
-                            // value instead of using m_frameIndex since it is is possible for multiple frames to be
+                            // value instead of using frameIndex since it is is possible for multiple frames to be
                             // published within one frame period if the system is stressed
                             frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
@@ -1890,9 +1909,10 @@ namespace TimeSeriesFramework
                     }
                 }
 
-                // Wait for next publication signal
+                // Wait for next publication signal, timing out if signal takes too long
                 if (m_publicationWaitHandle != null)
-                    m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout);
+                    if (!m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                        Interlocked.Increment(ref m_waitHandleExpirations);
             }
         }
 

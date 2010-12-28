@@ -209,6 +209,9 @@ namespace TimeSeriesFramework.Adapters
             try
             {
                 bool performedDisconnect = Enabled;
+                
+                // Stop the connection cycle
+                m_connectionTimer.Enabled = false;
 
                 base.Stop();
 
@@ -273,13 +276,17 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                OnStatusMessage("Attempting connection...");
+                // So long as user hasn't requested to stop, attempt connection
+                if (Enabled)
+                {
+                    OnStatusMessage("Attempting connection...");
 
-                // Attempt connection to data source
-                AttemptConnection();
+                    // Attempt connection to data source
+                    AttemptConnection();
 
-                if (!UseAsyncConnect)
-                    OnConnected();
+                    if (!UseAsyncConnect)
+                        OnConnected();
+                }
             }
             catch (ThreadAbortException)
             {

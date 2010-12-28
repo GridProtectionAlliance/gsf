@@ -211,7 +211,7 @@ namespace TimeSeriesFramework
                     {
                         if (m_values != null && m_values.Count > 0)
                         {
-                            // Get first tracked value (should only be one for "Closest")
+                            // Get first tracked value (should only be one for "BestQuality")
                             derivedMeasurement = m_values[0];
 
                             if (derivedMeasurement != null)
