@@ -233,7 +233,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression);
-            connectionString.AppendFormat("useLocalClockAsRealTime={0}; ", useLocalClockAsRealTime);
+            connectionString.AppendFormat("useLocalClockAsRealTime={0}", useLocalClockAsRealTime);
             
             Subscribe(false, compactFormat, connectionString.ToString());
         }
