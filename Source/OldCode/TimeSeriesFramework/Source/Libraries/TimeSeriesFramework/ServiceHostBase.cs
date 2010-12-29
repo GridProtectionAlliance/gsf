@@ -370,7 +370,7 @@ namespace TimeSeriesFramework
                 }
             }
 
-            if (string.IsNullOrEmpty(m_nodeIDQueryString))
+            if (string.IsNullOrWhiteSpace(m_nodeIDQueryString))
                 m_nodeIDQueryString = "'" + m_nodeID + "'";
 
             try
@@ -632,10 +632,10 @@ namespace TimeSeriesFramework
                         connectionTypeName = settings["ConnectionType"].ToNonNullString();
                         adapterTypeName = settings["AdapterType"].ToNonNullString();
 
-                        if (string.IsNullOrEmpty(connectionTypeName))
+                        if (string.IsNullOrWhiteSpace(connectionTypeName))
                             throw new InvalidOperationException("Database connection type was not defined.");
 
-                        if (string.IsNullOrEmpty(adapterTypeName))
+                        if (string.IsNullOrWhiteSpace(adapterTypeName))
                             throw new InvalidOperationException("Database adapter type was not defined.");
 
                         assembly = Assembly.Load(new AssemblyName(assemblyName));
@@ -773,13 +773,13 @@ namespace TimeSeriesFramework
                         methodName = row["MethodName"].ToNonNullString();
                         arguments = row["Arguments"].ToNonNullString();
 
-                        if (string.IsNullOrEmpty(assemblyName))
+                        if (string.IsNullOrWhiteSpace(assemblyName))
                             throw new InvalidOperationException("Data operation assembly name was not defined.");
 
-                        if (string.IsNullOrEmpty(typeName))
+                        if (string.IsNullOrWhiteSpace(typeName))
                             throw new InvalidOperationException("Data operation type name was not defined.");
 
-                        if (string.IsNullOrEmpty(methodName))
+                        if (string.IsNullOrWhiteSpace(methodName))
                             throw new InvalidOperationException("Data operation method name was not defined.");
 
                         // Load data operation from containing assembly and type
@@ -1046,7 +1046,6 @@ namespace TimeSeriesFramework
 
                 if (statusProvider != null)
                     name = statusProvider.Name.NotEmpty(sender.GetType().Name);
-
                 else if (sender != null && sender is string)
                     name = (string)sender;
                 else
@@ -1100,32 +1099,47 @@ namespace TimeSeriesFramework
             string adapterID = requestInfo.Request.Arguments["OrderedArg1"];
             collection = GetRequestedCollection(requestInfo);
 
-            if (!string.IsNullOrEmpty(adapterID))
+            if (!string.IsNullOrWhiteSpace(adapterID))
             {
-                if (adapterID.IsAllNumbers())
-                {
-                    // Adapter ID is numeric, lookup by adapter ID
-                    uint id = uint.Parse(adapterID);
+                uint id;
 
-                    // Try requested collection
+                adapterID = adapterID.Trim();
+
+                if (adapterID.IsAllNumbers() && uint.TryParse(adapterID, out id))
+                {
+                    // Adapter ID is numeric, try numeric lookup by adapter ID in requested collection
                     if (collection.TryGetAdapterByID(id, out adapter))
+                    {
                         return adapter;
+                    }
                     // Try looking for ID in any collection if all runtime ID's are unique
                     else if (m_uniqueAdapterIDs && m_allAdapters.TryGetAnyAdapterByID(id, out adapter, out collection))
+                    {
                         return adapter;
+                    }
                     else
                     {
                         collection = GetRequestedCollection(requestInfo);
-                        SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\" in {1}.", id, collection.Name);
+                        SendResponse(requestInfo, false, "Failed to find adapter with ID \"{0}\".", id);
                     }
                 }
                 else
                 {
-                    // Adapter ID is alpha-numeric, lookup by adapter name
+                    // Adapter ID is alpha-numeric, try text-based lookup by adapter name in requested collection
                     if (collection.TryGetAdapterByName(adapterID, out adapter))
+                    {
                         return adapter;
+                    }
+                    // Try looking for adapter name in any collection
+                    else if (m_allAdapters.TryGetAnyAdapterByName(adapterID, out adapter, out collection))
+                    {
+                        return adapter;
+                    }
                     else
-                        SendResponse(requestInfo, false, "Failed to find adapter \"{0}\" in {1}.", adapterID, collection.Name);
+                    {
+                        collection = GetRequestedCollection(requestInfo);
+                        SendResponse(requestInfo, false, "Failed to find adapter named \"{0}\".", adapterID);
+                    }
                 }
             }
 
@@ -1436,7 +1450,7 @@ namespace TimeSeriesFramework
                                     if (returnValue == null)
                                         SendResponse(requestInfo, true, "Command \"{0}\" successfully invoked.", command);
                                     else
-                                        SendResponseWithAttachment(requestInfo, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
+                                        SendResponseWithAttachment(requestInfo, true, returnValue, "Command \"{0}\" successfully invoked, return value = {1}", command, returnValue.ToNonNullString("null"));
                                 }
                             }
                             else
@@ -1557,7 +1571,7 @@ namespace TimeSeriesFramework
                                     methodList.Append(')');
                                     methodList.AppendLine();
 
-                                    if (!string.IsNullOrEmpty(commandAttribute.Description))
+                                    if (!string.IsNullOrWhiteSpace(commandAttribute.Description))
                                     {
                                         methodList.Append("        ");
                                         methodList.Append(commandAttribute.Description);
@@ -1944,7 +1958,7 @@ namespace TimeSeriesFramework
             {
                 StringBuilder helpMessage = new StringBuilder();
 
-                helpMessage.Append("Attempts to restart the hose service.");
+                helpMessage.Append("Attempts to restart the host service.");
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
                 helpMessage.Append("   Usage:");
@@ -2008,16 +2022,24 @@ namespace TimeSeriesFramework
         /// <param name="success">Flag that determines if this response to client request was a success.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success)
         {
-            string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-
-            // Send response to service
-            m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType));
-
-            if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+            try
             {
-                string arguments = requestInfo.Request.Arguments.ToString();
-                string message = responseType + (string.IsNullOrEmpty(arguments) ? "" : "(" + arguments + ")");
-                m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+
+                // Send response to service
+                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType));
+
+                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+                {
+                    string arguments = requestInfo.Request.Arguments.ToString();
+                    string message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")");
+                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
 
@@ -2030,55 +2052,72 @@ namespace TimeSeriesFramework
         /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args)
         {
-            string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
-            string message;
-
-            if (args.Length == 0)
-                message = status + "\r\n\r\n";
-            else
-                message = string.Format(status, args) + "\r\n\r\n";
-
-            // Send response to service
-            m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType, message));
-
-            if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+            try
             {
-                string arguments = requestInfo.Request.Arguments.ToString();
-                message = responseType + (string.IsNullOrEmpty(arguments) ? "" : "(" + arguments + ")") + " - " + message;
-                m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+                string message;
+
+                if (args.Length == 0)
+                    message = status + "\r\n\r\n";
+                else
+                    message = string.Format(status, args) + "\r\n\r\n";
+
+                // Send response to service
+                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, new ServiceResponse(responseType, message));
+
+                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+                {
+                    string arguments = requestInfo.Request.Arguments.ToString();
+                    message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")") + " - " + message;
+                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
 
         /// <summary>
-        /// Sends an actionable success response to client with a formatted message and attachment.
+        /// Sends an actionable response to client with a formatted message and attachment.
         /// </summary>
         /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="success">Flag that determines if this response to client request was a success.</param>
         /// <param name="attachment">Attachment to send with response.</param>
         /// <param name="status">Formatted status message to send with response.</param>
         /// <param name="args">Arguments of the formatted status message.</param>
-        protected virtual void SendResponseWithAttachment(ClientRequestInfo requestInfo, object attachment, string status, params object[] args)
+        protected virtual void SendResponseWithAttachment(ClientRequestInfo requestInfo, bool success, object attachment, string status, params object[] args)
         {
-            string responseType = requestInfo.Request.Command + ":Success";
-            string message;
-            
-            if (args.Length == 0)
-                message = status + "\r\n\r\n";
-            else
-                message = string.Format(status, args) + "\r\n\r\n";
-
-            ServiceResponse response = new ServiceResponse(responseType, message);
-
-            // Add attachments to service response
-            response.Attachments.Add(attachment);
-
-            // Send response to service
-            m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, response);
-
-            if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+            try
             {
-                string arguments = requestInfo.Request.Arguments.ToString();
-                message = responseType + (string.IsNullOrEmpty(arguments) ? "" : "(" + arguments + ")") + " - " + message;
-                m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
+                string message;
+
+                if (args.Length == 0)
+                    message = status + "\r\n\r\n";
+                else
+                    message = string.Format(status, args) + "\r\n\r\n";
+
+                ServiceResponse response = new ServiceResponse(responseType, message);
+
+                // Add attachments to service response
+                response.Attachments.Add(attachment);
+
+                // Send response to service
+                m_serviceHelper.SendResponse(requestInfo.Sender.ClientID, response);
+
+                if (m_serviceHelper.LogStatusUpdates && m_serviceHelper.StatusLog.IsOpen)
+                {
+                    string arguments = requestInfo.Request.Arguments.ToString();
+                    message = responseType + (string.IsNullOrWhiteSpace(arguments) ? "" : "(" + arguments + ")") + " - " + message;
+                    m_serviceHelper.StatusLog.WriteTimestampedLine(message);
+                }
+            }
+            catch (Exception ex)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to send client response with attachment \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
 
@@ -2090,7 +2129,15 @@ namespace TimeSeriesFramework
         /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void DisplayResponseMessage(ClientRequestInfo requestInfo, string status, params object[] args)
         {
-            m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}\r\n\r\n", status), args);
+            try
+            {
+                m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}\r\n\r\n", status), args);
+            }
+            catch (Exception ex)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+            }
         }
 
         /// <summary>
@@ -2108,7 +2155,7 @@ namespace TimeSeriesFramework
             catch (Exception ex)
             {
                 m_serviceHelper.ErrorLogger.Log(ex);
-                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status due to an exception.\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
             }
         }
 
@@ -2120,7 +2167,15 @@ namespace TimeSeriesFramework
         /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
         {
-            DisplayStatusMessage(string.Format(status, args), type);
+            try
+            {
+                DisplayStatusMessage(string.Format(status, args), type);
+            }
+            catch (Exception ex)
+            {
+                m_serviceHelper.ErrorLogger.Log(ex);
+                m_serviceHelper.UpdateStatus(UpdateType.Alarm, "Failed to update client status \"" + status.ToNonNullString() + "\" due to an exception: " + ex.Message + "\r\n\r\n");
+            }
         }
 
         #endregion

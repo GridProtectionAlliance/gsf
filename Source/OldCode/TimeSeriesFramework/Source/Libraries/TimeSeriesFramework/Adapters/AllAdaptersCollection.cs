@@ -121,6 +121,32 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Attempts to get any adapter in all collections with the specified <paramref name="name"/>.
+        /// </summary>
+        /// <param name="name">Name of adapter to get.</param>
+        /// <param name="adapter">Adapter reference if found; otherwise null.</param>
+        /// <param name="adapterCollection">Adapter collection reference if <paramref name="adapter"/> is found; otherwise null.</param>
+        /// <returns><c>true</c> if adapter with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
+        public bool TryGetAnyAdapterByName(string name, out IAdapter adapter, out IAdapterCollection adapterCollection)
+        {
+            lock (this)
+            {
+                foreach (IAdapterCollection collection in this)
+                {
+                    if (collection.TryGetAdapterByName(name, out adapter))
+                    {
+                        adapterCollection = collection;
+                        return true;
+                    }
+                }
+            }
+
+            adapter = null;
+            adapterCollection = null;
+            return false;
+        }
+
+        /// <summary>
         /// Attempts to initialize (or reinitialize) an individual <see cref="IAdapter"/> based on its ID from any collection.
         /// </summary>
         /// <param name="id">The numeric ID associated with the <see cref="IAdapter"/> to be initialized.</param>

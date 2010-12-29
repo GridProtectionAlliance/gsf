@@ -586,7 +586,7 @@ namespace TimeSeriesFramework
                 string tagName = measurement.TagName;
                 string keyText = measurement.Key.ToString();
 
-                if (string.IsNullOrEmpty(tagName))
+                if (string.IsNullOrWhiteSpace(tagName))
                     return keyText;
                 else
                     return string.Format("{0} [{1}]", tagName, keyText);

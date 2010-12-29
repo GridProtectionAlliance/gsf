@@ -181,7 +181,7 @@ namespace TimeSeriesFramework.Adapters
                 m_connectionString = value;
 
                 // Preparse settings upon connection string assignment
-                if (string.IsNullOrEmpty(m_connectionString))
+                if (string.IsNullOrWhiteSpace(m_connectionString))
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
@@ -541,7 +541,7 @@ namespace TimeSeriesFramework.Adapters
             if (DataSource == null)
                 throw new NullReferenceException(string.Format("DataSource is null, cannot load {0}", Name));
 
-            if (string.IsNullOrEmpty(DataMember))
+            if (string.IsNullOrWhiteSpace(DataMember))
                 throw new InvalidOperationException(string.Format("DataMember is null or empty, cannot load {0}", Name));
 
             Initialized = false;
@@ -600,11 +600,11 @@ namespace TimeSeriesFramework.Adapters
                 connectionString = adapterRow["ConnectionString"].ToNonNullString();
                 id = uint.Parse(adapterRow["ID"].ToNonNullString("0"));
 
-                if (string.IsNullOrEmpty(typeName))
-                    throw new InvalidOperationException("Type was undefined");
+                if (string.IsNullOrWhiteSpace(typeName))
+                    throw new InvalidOperationException("No adapter type was defined");
 
                 if (!File.Exists(assemblyName))
-                    throw new InvalidOperationException("Assembly does not exist");
+                    throw new InvalidOperationException("Specified adapter assembly does not exist");
 
                 assembly = Assembly.LoadFrom(assemblyName);
                 adapter = (T)Activator.CreateInstance(assembly.GetType(typeName));

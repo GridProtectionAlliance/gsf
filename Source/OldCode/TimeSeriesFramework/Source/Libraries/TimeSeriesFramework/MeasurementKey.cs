@@ -50,8 +50,8 @@ namespace TimeSeriesFramework
         /// <exception cref="ArgumentNullException">source cannot be null.</exception>
         public MeasurementKey(uint id, string source)
         {
-            if (string.IsNullOrEmpty(source))
-                throw new ArgumentNullException("source", "MeasurementKey source cannot be null");
+            if (string.IsNullOrWhiteSpace(source))
+                throw new ArgumentNullException("source", "MeasurementKey source cannot be null or empty");
 
             m_id = id;
             m_source = source.ToUpper();

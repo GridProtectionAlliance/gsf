@@ -807,7 +807,7 @@ namespace TimeSeriesFramework.Transport
         /// <returns><c>true</c> if send was successful; otherwise <c>false</c>.</returns>
         protected virtual bool SendClientResponse(Guid clientID, ServerResponse response, ServerCommand command, string formattedStatus, params object[] args)
         {
-            if (!string.IsNullOrEmpty(formattedStatus))
+            if (!string.IsNullOrWhiteSpace(formattedStatus))
                 return SendClientResponse(clientID, response, command, Encoding.Unicode.GetBytes(string.Format(formattedStatus, args)));
 
             return SendClientResponse(clientID, response, command);

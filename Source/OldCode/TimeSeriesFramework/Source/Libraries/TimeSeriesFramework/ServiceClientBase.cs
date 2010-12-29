@@ -189,7 +189,7 @@ namespace TimeSeriesFramework
                     // Write a blank line to the console.
                     Console.WriteLine();
 
-                    if (!string.IsNullOrEmpty(userInput))
+                    if (!string.IsNullOrWhiteSpace(userInput))
                     {
                         // The user typed in a command and didn't just hit <ENTER>. 
                         switch (userInput.ToUpper())
@@ -314,7 +314,7 @@ namespace TimeSeriesFramework
             string message = e.Argument.Message;
 
             // Handle response message, if any
-            if (!string.IsNullOrEmpty(response))
+            if (!string.IsNullOrWhiteSpace(response))
             {
                 // Reponse types are formatted as "Command:Success" or "Command:Failure"
                 string[] parts = response.Split(':');
@@ -334,7 +334,7 @@ namespace TimeSeriesFramework
 
                 if (success)
                 {
-                    if (string.IsNullOrEmpty(message))
+                    if (string.IsNullOrWhiteSpace(message))
                         Console.Write(string.Format("{0} command processed successfully.\r\n\r\n", action));
                     else
                         Console.Write(string.Format("{0}\r\n\r\n", message));
@@ -343,7 +343,7 @@ namespace TimeSeriesFramework
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
 
-                    if (string.IsNullOrEmpty(message))
+                    if (string.IsNullOrWhiteSpace(message))
                         Console.Write(string.Format("{0} failure.\r\n\r\n", action));
                     else
                         Console.Write(string.Format("{0} failure: {1}\r\n\r\n", action, message));

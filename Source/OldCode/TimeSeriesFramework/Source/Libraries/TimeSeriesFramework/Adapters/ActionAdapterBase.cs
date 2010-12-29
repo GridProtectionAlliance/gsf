@@ -170,7 +170,7 @@ namespace TimeSeriesFramework.Adapters
                 m_connectionString = value;
 
                 // Preparse settings upon connection string assignment
-                if (string.IsNullOrEmpty(m_connectionString))
+                if (string.IsNullOrWhiteSpace(m_connectionString))
                     m_settings = new Dictionary<string, string>();
                 else
                     m_settings = m_connectionString.ParseKeyValuePairs();
