@@ -50,6 +50,9 @@ namespace TimeSeriesFramework
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates a new instance of the <see cref="ServiceClientBase"/> class.
+        /// </summary>
         public ServiceClientBase()
             : base()
         {
@@ -71,6 +74,10 @@ namespace TimeSeriesFramework
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Handles service start event.
+        /// </summary>
+        /// <param name="args">Service start arguments.</param>
         public virtual void Start(string[] args)
         {
             string userInput = null;
@@ -271,6 +278,11 @@ namespace TimeSeriesFramework
             Console.WriteLine();
         }
 
+        /// <summary>
+        /// Client helper service update reception handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event argument containing update type and associated message data.</param>
         protected virtual void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
         {
             // Output status updates from the service to the console window.
@@ -291,6 +303,11 @@ namespace TimeSeriesFramework
             Console.ForegroundColor = m_originalFgColor;
         }
 
+        /// <summary>
+        /// Client helper service response reception handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event argument containing the service response.</param>
         protected virtual void ClientHelper_ReceivedServiceResponse(object sender, EventArgs<ServiceResponse> e)
         {
             string response = e.Argument.Type;
@@ -336,6 +353,11 @@ namespace TimeSeriesFramework
             }            
         }
 
+        /// <summary>
+        /// Client helper telnet session established handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
         protected virtual void ClientHelper_TelnetSessionEstablished(object sender, EventArgs e)
         {
             // Change the console color scheme to indicate active telnet session.
@@ -345,6 +367,11 @@ namespace TimeSeriesFramework
             Console.Clear();
         }
 
+        /// <summary>
+        /// Client helper telnet session terminated handler.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
         protected virtual void ClientHelper_TelnetSessionTerminated(object sender, EventArgs e)
         {
             // Revert to original color scheme to indicate end of telnet session.

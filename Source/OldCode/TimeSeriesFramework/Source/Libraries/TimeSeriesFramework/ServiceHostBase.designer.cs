@@ -37,26 +37,42 @@ namespace TimeSeriesFramework
             OnStop();
         }
 
+        /// <summary>
+        /// Handles service start event.
+        /// </summary>
+        /// <param name="args">Service startup arguments, if any.</param>
         protected override void OnStart(string[] args)
         {
             m_serviceHelper.OnStart(args);
         }
 
+        /// <summary>
+        /// Handles service stop event.
+        /// </summary>
         protected override void OnStop()
         {
             m_serviceHelper.OnStop();
         }
 
+        /// <summary>
+        /// Handles service pause event.
+        /// </summary>
         protected override void OnPause()
         {
             m_serviceHelper.OnPause();
         }
 
+        /// <summary>
+        /// Handles service continue event.
+        /// </summary>
         protected override void OnContinue()
         {
             m_serviceHelper.OnResume();
         }
 
+        /// <summary>
+        /// Handles service shut down event.
+        /// </summary>
         protected override void OnShutdown()
         {
             m_serviceHelper.OnShutdown();

@@ -250,7 +250,7 @@ namespace TimeSeriesFramework.Adapters
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                if (value != null)
+                if (value != null && value.Length > 0)
                 {
                     m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
                     m_inputMeasurementKeysHash.Sort();

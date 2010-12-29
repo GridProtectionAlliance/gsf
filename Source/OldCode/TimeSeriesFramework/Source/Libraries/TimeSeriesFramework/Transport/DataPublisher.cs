@@ -743,10 +743,10 @@ namespace TimeSeriesFramework.Transport
         }
 
         /// <summary>
-        /// Gets a short one-line status of this <see cref="CommonPhasorServices"/>.
+        /// Gets a short one-line status of this <see cref="DataPublisher"/>.
         /// </summary>
         /// <param name="maxLength">Maximum number of available characters for display.</param>
-        /// <returns>A short one-line summary of the current status of the <see cref="CommonPhasorServices"/>.</returns>
+        /// <returns>A short one-line summary of the current status of the <see cref="DataPublisher"/>.</returns>
         public override string GetShortStatus(int maxLength)
         {
             if (m_dataServer != null)

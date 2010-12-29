@@ -300,7 +300,7 @@ namespace TimeSeriesFramework.Adapters
                 m_inputMeasurementKeys = value;
 
                 // Update input key lookup hash table
-                if (value != null)
+                if (value != null && value.Length > 0)
                 {
                     m_inputMeasurementKeysHash = new List<MeasurementKey>(value);
                     m_inputMeasurementKeysHash.Sort();
@@ -805,28 +805,33 @@ namespace TimeSeriesFramework.Adapters
             Match filterMatch;
 
             value = value.Trim();
-            lock (s_filterExpression)
-            {
-                filterMatch = s_filterExpression.Match(value);
-            }
 
-            if (filterMatch.Success)
+            if (!string.IsNullOrWhiteSpace(value))
             {
-                string tableName = filterMatch.Result("${TableName}").Trim();
-                string expression = filterMatch.Result("${Expression}").Trim();
-                string sortField = filterMatch.Result("${SortField}").Trim();
-
-                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                lock (s_filterExpression)
                 {
-                    keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
+                    filterMatch = s_filterExpression.Match(value);
                 }
-            }
-            else
-            {
-                // Add manually defined measurement keys
-                foreach (string item in value.Split(';'))
+
+                if (filterMatch.Success)
                 {
-                    keys.Add(MeasurementKey.Parse(item));
+                    string tableName = filterMatch.Result("${TableName}").Trim();
+                    string expression = filterMatch.Result("${Expression}").Trim();
+                    string sortField = filterMatch.Result("${SortField}").Trim();
+
+                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                    {
+                        keys.Add(MeasurementKey.Parse(row["ID"].ToString()));
+                    }
+                }
+                else
+                {
+                    // Add manually defined measurement keys
+                    foreach (string item in value.Split(';'))
+                    {
+                        if (!string.IsNullOrWhiteSpace(item))
+                            keys.Add(MeasurementKey.Parse(item));
+                    }
                 }
             }
 
@@ -847,82 +852,95 @@ namespace TimeSeriesFramework.Adapters
             Match filterMatch;
 
             value = value.Trim();
-            lock (s_filterExpression)
-            {
-                filterMatch = s_filterExpression.Match(value);
-            }
 
-            if (filterMatch.Success)
+            if (!string.IsNullOrWhiteSpace(value))
             {
-                string tableName = filterMatch.Result("${TableName}").Trim();
-                string expression = filterMatch.Result("${Expression}").Trim();
-                string sortField = filterMatch.Result("${SortField}").Trim();
-
-                foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
+                lock (s_filterExpression)
                 {
-                    key = MeasurementKey.Parse(row["ID"].ToString());
-                    measurement = new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
-                    measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                    measurements.Add(measurement);
+                    filterMatch = s_filterExpression.Match(value);
                 }
-            }
-            else
-            {
-                string[] elem;
-                double adder, multipler;
 
-                foreach (string item in value.Split(';'))
+                if (filterMatch.Success)
                 {
-                    elem = item.Trim().Split(',');
+                    string tableName = filterMatch.Result("${TableName}").Trim();
+                    string expression = filterMatch.Result("${Expression}").Trim();
+                    string sortField = filterMatch.Result("${SortField}").Trim();
 
-                    key = MeasurementKey.Parse(elem[0]);
-
-                    // Adder and multipler may be optionally specified
-                    if (elem.Length > 1)
-                        adder = double.Parse(elem[1].Trim());
-                    else
-                        adder = 0.0D;
-
-                    if (elem.Length > 2)
-                        multipler = double.Parse(elem[2].Trim());
-                    else
-                        multipler = 1.0D;
-
-                    // Create a new measurement for the provided field level information
-                    measurement = new Measurement(key.ID, key.Source, string.Empty, adder, multipler);
-
-                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
-                    try
+                    foreach (DataRow row in dataSource.Tables[tableName].Select(expression, sortField))
                     {
-                        if (dataSource.Tables.Contains("ActiveMeasurements"))
+                        key = MeasurementKey.Parse(row["ID"].ToString());
+                        measurement = new Measurement(key.ID, key.Source, row["PointTag"].ToNonNullString(), double.Parse(row["Adder"].ToString()), double.Parse(row["Multiplier"].ToString()));
+                        measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                        measurements.Add(measurement);
+                    }
+                }
+                else
+                {
+                    string[] elem;
+                    double adder, multipler;
+
+                    foreach (string item in value.Split(';'))
+                    {
+                        if (!string.IsNullOrWhiteSpace(item))
                         {
-                            DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+                            elem = item.Trim().Split(',');
 
-                            if (filteredRows.Length > 0)
+                            key = MeasurementKey.Parse(elem[0]);
+
+                            // Adder and multipler may be optionally specified
+                            if (elem.Length > 1)
                             {
-                                DataRow row = filteredRows[0];
-
-                                measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
-                                measurement.TagName = row["PointTag"].ToNonNullString();
-
-                                // Manually specified adder and multiplier take precedence but if none were specified,
-                                // then those defined in the meta-data are used instead
-                                if (elem.Length < 3)
-                                    measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
-
-                                if (elem.Length < 2)
-                                    measurement.Adder = double.Parse(row["Adder"].ToString());
+                                if (!double.TryParse(elem[1].Trim(), out adder))
+                                    adder = 0.0D;
                             }
+                            else
+                                adder = 0.0D;
+
+                            if (elem.Length > 2)
+                            {
+                                if (!double.TryParse(elem[2].Trim(), out multipler))
+                                    multipler = 1.0D;
+                            }
+                            else
+                                multipler = 1.0D;
+
+                            // Create a new measurement for the provided field level information
+                            measurement = new Measurement(key.ID, key.Source, string.Empty, adder, multipler);
+
+                            // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                            try
+                            {
+                                if (dataSource.Tables.Contains("ActiveMeasurements"))
+                                {
+                                    DataRow[] filteredRows = dataSource.Tables["ActiveMeasurements"].Select(string.Format("ID = '{0}'", key.ToString()));
+
+                                    if (filteredRows.Length > 0)
+                                    {
+                                        DataRow row = filteredRows[0];
+
+                                        measurement.SignalID = row["SignalID"].ToNonNullString(Guid.Empty.ToString()).ConvertToType<Guid>();
+                                        measurement.TagName = row["PointTag"].ToNonNullString();
+
+                                        // Manually specified adder and multiplier take precedence but if none were specified,
+                                        // then those defined in the meta-data are used instead
+                                        if (elem.Length < 3)
+                                            measurement.Multiplier = double.Parse(row["Multiplier"].ToString());
+
+                                        if (elem.Length < 2)
+                                            measurement.Adder = double.Parse(row["Adder"].ToString());
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                // Errors here are not catastrophic, this simply limits the available meta-data
+                                measurement.SignalID = Guid.Empty;
+                                measurement.TagName = string.Empty;
+                            }
+
+                            measurements.Add(measurement);
                         }
                     }
-                    catch
-                    {
-                        // Errors here are not catastrophic, this simply limits the available meta-data
-                        measurement.SignalID = Guid.Empty;
-                        measurement.TagName = string.Empty;
-                    }
-
-                    measurements.Add(measurement);
                 }
             }
 

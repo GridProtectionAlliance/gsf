@@ -196,7 +196,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets reference to the <see cref="InputAdaptersCollection"/>.
+        /// Gets reference to the <see cref="InputAdapterCollection"/>.
         /// </summary>
         protected InputAdapterCollection InputAdapters
         {
@@ -838,7 +838,13 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Cache the current system configuration so it can be used if primary configuration source is unavailable
+        /// <summary>
+        /// Caches the current system configuration.
+        /// </summary>
+        /// <param name="configuration">Configuration <see cref="DataSet"/>.</param>
+        /// <remarks>
+        /// This method allows caching of the current system configuration so it can be used if primary configuration source is unavailable.
+        /// </remarks>
         protected virtual void CacheCurrentConfiguration(DataSet configuration)
         {
             try
@@ -984,13 +990,21 @@ namespace TimeSeriesFramework
             DisplayStatusMessage("[{0}] {1}", UpdateType.Alarm, GetDerivedName(sender), ex.Message);
         }
 
-        // Handle disposed events from all adapters
+        /// <summary>
+        /// Handler for disposed events from all adatpers.
+        /// </summary>
+        /// <param name="sender">Sending object.</param>
+        /// <param name="e">Event arguments, if any.</param>
         protected virtual void DisposedHandler(object sender, EventArgs e)
         {
             DisplayStatusMessage("[{0}] Disposed.", UpdateType.Information, GetDerivedName(sender));
         }
 
-        // Handle health monitoring processing
+        /// <summary>
+        /// Handler for scheduled health monitor display.
+        /// </summary>
+        /// <param name="name">Scheduled event name.</param>
+        /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void HealthMonitorProcessHandler(string name, object[] parameters)
         {
             string requestCommand = "Health";
@@ -1006,14 +1020,22 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Handle status export processing
+        /// <summary>
+        /// Handler for scheduled adapter status export.
+        /// </summary>
+        /// <param name="name">Scheduled event name.</param>
+        /// <param name="parameters">Scheduled event parameters.</param>
         protected virtual void StatusExportProcessHandler(string name, object[] parameters)
         {
             // Every thirty minutes we export a human readable service status to a text file for external display
             m_statusExporter.ExportData(m_serviceHelper.Status);
         }
 
-        // Attempt to get name of component raising an event
+        /// <summary>
+        /// Gets derived name of specified object.
+        /// </summary>
+        /// <param name="sender">Sending object from which to derive name.</param>
+        /// <returns>Derived name of specified object.</returns>
         protected virtual string GetDerivedName(object sender)
         {
             string name;
@@ -1040,7 +1062,11 @@ namespace TimeSeriesFramework
 
         #region [ Remote Client Request Handlers ]
 
-        // Get requested adapters collection
+        /// <summary>
+        /// Gets requested <see cref="IAdapterCollection"/>.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <returns>Requested <see cref="IAdapterCollection"/>.</returns>
         protected virtual IAdapterCollection GetRequestedCollection(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.Exists("A"))
@@ -1051,14 +1077,23 @@ namespace TimeSeriesFramework
                 return m_inputAdapters;
         }
 
-        // Get requested adapter
+        /// <summary>
+        /// Gets requested <see cref="IAdapter"/>.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <returns>Requested <see cref="IAdapter"/>.</returns>
         protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo)
         {
             IAdapterCollection collection;
             return GetRequestedAdapter(requestInfo, out collection);
         }
 
-        // Get requested adapter and its parent collection
+        /// <summary>
+        /// Gets requested <see cref="IAdapter"/> and its containing <see cref="IAdapterCollection"/>.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="collection">Containing <see cref="IAdapterCollection"/> for <see cref="IAdapter"/>.</param>
+        /// <returns>Requested <see cref="IAdapter"/>.</returns>
         protected virtual IAdapter GetRequestedAdapter(ClientRequestInfo requestInfo, out IAdapterCollection collection)
         {
             IAdapter adapter;
@@ -1097,7 +1132,10 @@ namespace TimeSeriesFramework
             return null;
         }
 
-        // List specified adapters
+        /// <summary>
+        /// Displays status of specified adapter or collection.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void ListRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1198,19 +1236,29 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Start specified adapter
+        /// <summary>
+        /// Starts specified adapter.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void StartRequestHandler(ClientRequestInfo requestInfo)
         {
             ActionRequestHandler(requestInfo, adapter => adapter.Start());
         }
 
-        // Stop specified adapter
+        /// <summary>
+        /// Stops specified adapter.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void StopRequestHandler(ClientRequestInfo requestInfo)
         {
             ActionRequestHandler(requestInfo, adapter => adapter.Stop());
         }
 
-        // Abstract handler for adapter actions
+        /// <summary>
+        /// Generic adapter request handler.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="adapterAction">Action to perform on <see cref="IAdapter"/>.</param>
         protected virtual void ActionRequestHandler(ClientRequestInfo requestInfo, Action<IAdapter> adapterAction)
         {
             string actionName = requestInfo.Request.Command.ToTitleCase();
@@ -1264,7 +1312,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Reflected invoke command request handler
+        /// <summary>
+        /// Invokes specified adapter command.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void InvokeRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1403,7 +1454,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Reflected list commands request handler
+        /// <summary>
+        /// Lists possible commands of specified adapter.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void ListCommandsRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1529,7 +1583,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Initialize specified adapter or collection of adapters
+        /// <summary>
+        /// Performs initialization or reinitialization of specified adapter or collection.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void InitializeRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1636,7 +1693,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Reload system configuration 
+        /// <summary>
+        /// Manually reloads system configuration.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void ReloadConfigRequstHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1670,7 +1730,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Update configuration file options
+        /// <summary>
+        /// Updates an option in the configuration file.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void UpdateConfigFileRequestHandler(ClientRequestInfo requestInfo)
         {
             int orderedArgCount = requestInfo.Request.Arguments.OrderedArgCount;
@@ -1828,7 +1891,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Attempts to authenticate (or reauthenticate) to network shares
+        /// <summary>
+        /// Attempts to authenticate or reauthenticate to network shares.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void AuthenticateRequestHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1868,7 +1934,10 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Attempts to restart service
+        /// <summary>
+        /// Attempts to restart the hose service.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
         protected virtual void RestartServiceHandler(ClientRequestInfo requestInfo)
         {
             if (requestInfo.Request.Arguments.ContainsHelpRequest)
@@ -1932,7 +2001,11 @@ namespace TimeSeriesFramework
 
         #region [ Broadcast Message Handling ]
 
-        // Send actionable response to client
+        /// <summary>
+        /// Sends an actionable response to client.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="success">Flag that determines if this response to client request was a success.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success)
         {
             string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
@@ -1948,7 +2021,13 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Send actionable response to client with message
+        /// <summary>
+        /// Sends an actionable response to client with a formatted message.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="success">Flag that determines if this response to client request was a success.</param>
+        /// <param name="status">Formatted status message to send with response.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void SendResponse(ClientRequestInfo requestInfo, bool success, string status, params object[] args)
         {
             string responseType = requestInfo.Request.Command + (success ? ":Success" : ":Failure");
@@ -1970,7 +2049,13 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Send actionable response to client with attachments (assumes successful response)
+        /// <summary>
+        /// Sends an actionable success response to client with a formatted message and attachment.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="attachment">Attachment to send with response.</param>
+        /// <param name="status">Formatted status message to send with response.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void SendResponseWithAttachment(ClientRequestInfo requestInfo, object attachment, string status, params object[] args)
         {
             string responseType = requestInfo.Request.Command + ":Success";
@@ -1997,13 +2082,22 @@ namespace TimeSeriesFramework
             }
         }
 
-        // Display response message (send to request sender)
+        /// <summary>
+        /// Displays a response message to client requestor.
+        /// </summary>
+        /// <param name="requestInfo"><see cref="ClientRequestInfo"/> instance containing the client request.</param>
+        /// <param name="status">Formatted status message to send to client.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void DisplayResponseMessage(ClientRequestInfo requestInfo, string status, params object[] args)
         {
             m_serviceHelper.UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, string.Format("{0}\r\n\r\n", status), args);
         }
 
-        // Display status messages (broadcast to all clients)
+        /// <summary>
+        /// Displays a broadcast message to all subscribed clients.
+        /// </summary>
+        /// <param name="status">Status message to send to all clients.</param>
+        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
         protected virtual void DisplayStatusMessage(string status, UpdateType type)
         {
             try
@@ -2018,6 +2112,12 @@ namespace TimeSeriesFramework
             }
         }
 
+        /// <summary>
+        /// Displays a broadcast message to all subscribed clients.
+        /// </summary>
+        /// <param name="status">Formatted status message to send to all clients.</param>
+        /// <param name="type"><see cref="UpdateType"/> of message to send.</param>
+        /// <param name="args">Arguments of the formatted status message.</param>
         protected virtual void DisplayStatusMessage(string status, UpdateType type, params object[] args)
         {
             DisplayStatusMessage(string.Format(status, args), type);

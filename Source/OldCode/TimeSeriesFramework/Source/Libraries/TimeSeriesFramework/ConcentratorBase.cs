@@ -427,6 +427,7 @@ namespace TimeSeriesFramework
         private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
         private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
         private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
+        private long m_lastDiscardedMeasurementLatency;     // Latency of last measurement that was discarded by the concentrator
         private bool m_disposed;                            // Disposed flag detects redundant calls to dispose method
 
         #endregion
@@ -1058,6 +1059,17 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Gets the calculated latency of the last <see cref="IMeasurement"/> that was discarded by the concentrator.
+        /// </summary>
+        public Ticks LastDiscardedMeasurementLatency
+        {
+            get
+            {
+                return m_lastDiscardedMeasurementLatency;
+            }
+        }
+
+        /// <summary>
         /// Gets the total number of published measurements.
         /// </summary>
         public long PublishedMeasurements
@@ -1208,7 +1220,7 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
                 status.AppendLine();
-                status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "enabled" : "disabled");
+                status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "Enabled" : "Disabled");
                 status.AppendLine();
                 status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
                 status.AppendLine();
@@ -1232,6 +1244,8 @@ namespace TimeSeriesFramework
                     status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
                     status.Append(" - ");
                     status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
+                    status.AppendLine();
                 }
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
@@ -1437,6 +1451,7 @@ namespace TimeSeriesFramework
             m_publishedFrames = 0;
             m_totalPublishTime = 0;
             m_lastDiscardedMeasurement = null;
+            m_lastDiscardedMeasurementLatency = 0;
         }
 
         /// <summary>
@@ -1607,6 +1622,7 @@ namespace TimeSeriesFramework
                     // This measurement was marked to be discarded.
                     measurement.IsDiscarded = true;
                     m_lastDiscardedMeasurement = measurement;
+                    m_lastDiscardedMeasurementLatency = RealTime - m_lastDiscardedMeasurement.Timestamp;
 
                     // Track total number of discarded measurements
                     Interlocked.Increment(ref m_discardedMeasurements);
