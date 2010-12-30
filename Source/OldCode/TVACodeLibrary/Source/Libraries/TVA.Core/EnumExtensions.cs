@@ -265,77 +265,24 @@ namespace TVA
     public static class EnumExtensions
     {
         /// <summary>
-        /// Retrieves name of the constant in the specified enumeration that has the specified value.
-        /// </summary>
-        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve.</param>
-        /// <returns><see cref="Enum"/> name of the specified value.</returns>
-        static public string GetName(this Enum enumeration, object value)
-        {
-            return Enum.GetName(enumeration.GetType(), value);
-        }
-
-        /// <summary>
-        /// Retrieves the enumeration constant value that has the specified name.
-        /// </summary>
-        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <param name="name">Name to search for.</param>
-        /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
-        /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="name"/>, or <c>null</c>
-        /// if no macthing enumerated value was found.</returns>
-        public static object GetValue(this Enum enumeration, string name, bool ignoreCase = false)
-        {
-            foreach (object value in Enum.GetValues(enumeration.GetType()))
-            {
-                if (string.Compare(name, enumeration.GetName(value), ignoreCase) == 0)
-                    return value;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Retrieves the description of this <see cref="Enum"/> extracted from the <see cref="DescriptionAttribute"/>, or the enumeration name
+        /// Retrieves the description of the value that this <see cref="Enum"/> represents extracted from the <see cref="DescriptionAttribute"/>, or the enumeration name
         /// if no description is available.
         /// </summary>
         /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
         /// <returns>Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
         public static string GetDescription(this Enum enumeration)
         {
-            string description = enumeration.GetType().GetDescription();
+            string name = enumeration.ToString();
+            string description = enumeration.GetType().GetField(name).GetDescription();
 
-            if (!string.IsNullOrEmpty(description))
+            if (!string.IsNullOrWhiteSpace(description))
                 return description;
-            else
-                return enumeration.GetType().Name;
-        }
 
-        /// <summary>
-        /// Retrieves the description of the constant extracted from the <see cref="DescriptionAttribute"/> in this <see cref="Enum"/> that has the specified value, or
-        /// the name of the enumerated value if no description is available.
-        /// </summary>
-        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve name.</param>
-        /// <returns>Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
-        public static string GetDescription(this Enum enumeration, object value)
-        {
-            string name = enumeration.GetName(value);
-
-            if (name != null)
-            {
-                string description = enumeration.GetType().GetField(name).GetDescription();
-
-                if (!string.IsNullOrWhiteSpace(description))
-                    return description;
-                
-                return name;
-            }
-
-            return null;
+            return name;
         }
 
         // Internal extension to lookup description from DescriptionAttribute
-        private static string GetDescription(this MemberInfo value)
+        private static string GetDescription(this FieldInfo value)
         {
             if (value != null)
             {
@@ -348,42 +295,22 @@ namespace TVA
             return string.Empty;
         }
 
-        // This function doesn't make sense...
-        ///// <summary>
-        ///// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
-        ///// </summary>
-        ///// <param name="description">Description to be used for lookup of the enumeration.</param>
-        ///// <param name="type"><see cref="Type"/> of the enumeration.</param>
-        ///// <returns>An enumeration of the specified <paramref name="type"/> if a match is found, otherwise null.</returns>
-        ///// <exception cref="ArgumentException">The <paramref name="type"/> is not an enumeration.</exception>
-        //public static Enum GetEnumFromDescription(this string description, Type type)
-        //{
-        //    if (!type.IsEnum)
-        //        throw new ArgumentException("Type must be an enum", "type");
-
-        //    // Iterate through all of the enumeration values.
-        //    foreach (FieldInfo field in type.GetFields())
-        //    {
-        //        if (field.GetDescription() == description)
-        //            return (Enum)Enum.Parse(type, field.Name);
-        //    }
-
-        //    return null;
-        //}
-
         /// <summary>
-        /// Retrieves the <see cref="Enum"/> constant value that has a description matching the one extracted from the <see cref="DescriptionAttribute"/>, if available.
+        /// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
         /// </summary>
-        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <param name="description">Description to search for.</param>
+        /// <param name="description">Description to be used for lookup of the enumeration.</param>
+        /// <param name="type"><see cref="Type"/> of the enumeration.</param>
         /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
-        /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="description"/>, or <c>null</c>
-        /// if no macthing enumerated value was found.</returns>
-        public static object GetValueByDescription(this Enum enumeration, string description, bool ignoreCase = false)
+        /// <returns>An enumeration of the specified <paramref name="type"/> if a match is found, otherwise null.</returns>
+        /// <exception cref="ArgumentException">The <paramref name="type"/> is not an enumeration.</exception>
+        public static object GetEnumFromDescription(this string description, Type type, bool ignoreCase = false)
         {
-            foreach (object value in Enum.GetValues(enumeration.GetType()))
+            if (!type.IsEnum)
+                throw new ArgumentException("Type must be an enum", "type");
+
+            foreach (object value in Enum.GetValues(type))
             {
-                if (string.Compare(description, enumeration.GetDescription(value), ignoreCase) == 0)
+                if (string.Compare(description, ((Enum)value).GetDescription(), ignoreCase) == 0)
                     return value;
             }
 
@@ -391,15 +318,36 @@ namespace TVA
         }
 
         /// <summary>
-        /// Retrieves a formatted name of the constant in this <see cref="Enum"/> that has the specified value for visual display.
+        /// Gets the enumeration value with the specified name.
+        /// </summary>
+        /// <param name="name">Name to search for.</param>
+        /// <param name="type"><see cref="Type"/> of the enumeration.</param>
+        /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
+        /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="name"/>, or <c>null</c>
+        /// if no macthing enumerated value was found.</returns>
+        public static object GetEnumValueByName(this string name, Type type, bool ignoreCase = false)
+        {
+            if (!type.IsEnum)
+                throw new ArgumentException("Type must be an enum", "type");
+
+            foreach (object value in Enum.GetValues(type))
+            {
+                if (string.Compare(name, ((Enum)value).ToString(), ignoreCase) == 0)
+                    return value;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Retrieves a formatted name of the value that this <see cref="Enum"/> represents for visual display.
         /// </summary>
         /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
-        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve name.</param>
         /// <returns>Formatted enumeration name of the specified value for visual display.</returns>
-        static public string GetFormattedName(this Enum enumeration, object value)
+        static public string GetFormattedName(this Enum enumeration)
         {
             StringBuilder image = new StringBuilder();
-            char[] chars = enumeration.GetName(value).ToCharArray();
+            char[] chars = enumeration.ToString().ToCharArray();
             char letter;
 
             for (int i = 0; i < chars.Length; i++)
