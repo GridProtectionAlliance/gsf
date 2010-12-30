@@ -13,6 +13,8 @@
 //       Generated original version of source code based on code from Tom Fischer.
 //  12/30/2010 - J. Ritchie Carroll
 //       Corrections / additions.
+//  12/30/2010 - Pinal C. Patel
+//       Renamed GetEnumFromDescription() to GetEnumValueByDescription() to avoid confusion.
 //
 //*******************************************************************************************************
 
@@ -281,20 +283,6 @@ namespace TVA
             return name;
         }
 
-        // Internal extension to lookup description from DescriptionAttribute
-        private static string GetDescription(this FieldInfo value)
-        {
-            if (value != null)
-            {
-                DescriptionAttribute descriptionAttribute;
-
-                if (value.TryGetAttribute(out descriptionAttribute))
-                    return descriptionAttribute.Description;
-            }
-
-            return string.Empty;
-        }
-
         /// <summary>
         /// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
         /// </summary>
@@ -303,7 +291,7 @@ namespace TVA
         /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
         /// <returns>An enumeration of the specified <paramref name="type"/> if a match is found, otherwise null.</returns>
         /// <exception cref="ArgumentException">The <paramref name="type"/> is not an enumeration.</exception>
-        public static object GetEnumFromDescription(this string description, Type type, bool ignoreCase = false)
+        public static object GetEnumValueByDescription(this string description, Type type, bool ignoreCase = false)
         {
             if (!type.IsEnum)
                 throw new ArgumentException("Type must be an enum", "type");
@@ -344,7 +332,7 @@ namespace TVA
         /// </summary>
         /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
         /// <returns>Formatted enumeration name of the specified value for visual display.</returns>
-        static public string GetFormattedName(this Enum enumeration)
+        public static string GetFormattedName(this Enum enumeration)
         {
             StringBuilder image = new StringBuilder();
             char[] chars = enumeration.ToString().ToCharArray();
@@ -382,6 +370,20 @@ namespace TVA
             }
 
             return image.ToString();
+        }
+
+        // Internal extension to lookup description from DescriptionAttribute
+        private static string GetDescription(this FieldInfo value)
+        {
+            if (value != null)
+            {
+                DescriptionAttribute descriptionAttribute;
+
+                if (value.TryGetAttribute(out descriptionAttribute))
+                    return descriptionAttribute.Description;
+            }
+
+            return string.Empty;
         }
     }
 }

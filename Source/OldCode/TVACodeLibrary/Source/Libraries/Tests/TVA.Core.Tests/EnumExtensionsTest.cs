@@ -274,7 +274,7 @@ namespace TVA.Core.Tests
             // Arrange
             string description = TestEnumOneDescription;
             // Act
-            TestEnum enumeration = (TestEnum)description.GetEnumFromDescription(typeof(TestEnum));
+            TestEnum enumeration = (TestEnum)description.GetEnumValueByDescription(typeof(TestEnum));
             // Assert
             Assert.AreEqual(TestEnum.One, enumeration);
         }
@@ -285,7 +285,7 @@ namespace TVA.Core.Tests
             // Arrange
             string description = "No such description";
             // Act
-            object enumeration = description.GetEnumFromDescription(typeof(TestEnum));
+            object enumeration = description.GetEnumValueByDescription(typeof(TestEnum));
             // Assert
             Assert.AreEqual(null, enumeration);
         }
@@ -296,7 +296,7 @@ namespace TVA.Core.Tests
             // Arrange
             string description = "No such description";
             // Act
-            object enumeration = description.GetEnumFromDescription(typeof(object));
+            object enumeration = description.GetEnumValueByDescription(typeof(object));
             // Assert
             Assert.AreEqual(null, enumeration);
         }
