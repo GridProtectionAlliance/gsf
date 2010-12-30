@@ -198,7 +198,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="timeResolution">Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.</param>
         /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
         /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
-        public virtual void SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived)
+        /// <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -213,7 +214,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("allowPreemptivePublishing={0}; ", allowPreemptivePublishing);
             connectionString.AppendFormat("downsamplingMethod={0}", downsamplingMethod.ToString());
 
-            Subscribe(true, compactFormat, connectionString.ToString());
+            return Subscribe(true, compactFormat, connectionString.ToString());
         }
 
         /// <summary>
@@ -225,7 +226,8 @@ namespace TimeSeriesFramework.Transport
         /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
         /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
         /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
-        public virtual void UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
+        /// <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
+        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
         {
             StringBuilder connectionString = new StringBuilder();
 
@@ -235,7 +237,7 @@ namespace TimeSeriesFramework.Transport
             connectionString.AppendFormat("inputMeasurementKeys={{{0}}}; ", filterExpression);
             connectionString.AppendFormat("useLocalClockAsRealTime={0}", useLocalClockAsRealTime);
             
-            Subscribe(false, compactFormat, connectionString.ToString());
+            return Subscribe(false, compactFormat, connectionString.ToString());
         }
 
         /// <summary>

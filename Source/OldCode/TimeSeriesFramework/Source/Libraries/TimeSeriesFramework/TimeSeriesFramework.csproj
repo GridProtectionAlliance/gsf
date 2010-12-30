@@ -60,7 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Adapters\ConnectionStringParameter.cs" />
+    <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="ConcentratorBase.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
