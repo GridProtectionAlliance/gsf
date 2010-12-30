@@ -5,11 +5,14 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  12/21/2010 - Pinal C. Patel
 //       Generated original version of source code based on code from Tom Fischer.
+//  12/30/2010 - J. Ritchie Carroll
+//       Corrections / additions.
 //
 //*******************************************************************************************************
 
@@ -229,9 +232,30 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text;
+using TVA.Reflection;
 
 namespace TVA
 {
@@ -241,54 +265,175 @@ namespace TVA
     public static class EnumExtensions
     {
         /// <summary>
-        /// Get the description of this <paramref name="enumeration"/> specified using <see cref="DescriptionAttribute"/>.
+        /// Retrieves name of the constant in the specified enumeration that has the specified value.
         /// </summary>
-        /// <param name="enumeration">Enumeration whose description is to be retrieved.</param>
-        /// <returns>Description of the enumeration if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
-        public static string GetDescription(this Enum enumeration)
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve.</param>
+        /// <returns><see cref="Enum"/> name of the specified value.</returns>
+        static public string GetName(this Enum enumeration, object value)
         {
-            string description = GetDescription(enumeration.GetType().GetField(enumeration.ToString()));
-            if (!string.IsNullOrEmpty(description))
-                return description;
-            else
-                return enumeration.ToString();
+            return Enum.GetName(enumeration.GetType(), value);
         }
 
         /// <summary>
-        /// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
+        /// Retrieves the enumeration constant value that has the specified name.
         /// </summary>
-        /// <param name="description">Description to be used for lookup of the enumeration.</param>
-        /// <param name="type"><see cref="Type"/> of the enumeration.</param>
-        /// <returns>An enumeration of the specified <paramref name="type"/> if a match is found, otherwise null.</returns>
-        /// <exception cref="ArgumentException">The <paramref name="type"/> is not an enumeration.</exception>
-        public static Enum GetEnumFromDescription(this string description, Type type)
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <param name="name">Name to search for.</param>
+        /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
+        /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="name"/>, or <c>null</c>
+        /// if no macthing enumerated value was found.</returns>
+        public static object GetValue(this Enum enumeration, string name, bool ignoreCase = false)
         {
-            if (!type.IsEnum)
-                throw new ArgumentException("Type must be an enum", "type");
-
-            // Iterate through all of the enumerations.
-            foreach (FieldInfo field in type.GetFields())
+            foreach (object value in Enum.GetValues(enumeration.GetType()))
             {
-                if (GetDescription(field) == description)
-                    return (Enum)Enum.Parse(type, field.Name);
+                if (string.Compare(name, enumeration.GetName(value), ignoreCase) == 0)
+                    return value;
             }
 
             return null;
         }
 
-        private static string GetDescription(FieldInfo value)
+        /// <summary>
+        /// Retrieves the description of this <see cref="Enum"/> extracted from the <see cref="DescriptionAttribute"/>, or the enumeration name
+        /// if no description is available.
+        /// </summary>
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <returns>Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
+        public static string GetDescription(this Enum enumeration)
         {
-            // Iterate through all of the attributes.
-            object[] attributes = value.GetCustomAttributes(false);
-            foreach (object attribute in attributes)
+            string description = enumeration.GetType().GetDescription();
+
+            if (!string.IsNullOrEmpty(description))
+                return description;
+            else
+                return enumeration.GetType().Name;
+        }
+
+        /// <summary>
+        /// Retrieves the description of the constant extracted from the <see cref="DescriptionAttribute"/> in this <see cref="Enum"/> that has the specified value, or
+        /// the name of the enumerated value if no description is available.
+        /// </summary>
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve name.</param>
+        /// <returns>Description of the <see cref="Enum"/> if specified, otherwise the <see cref="string"/> representation of this <paramref name="enumeration"/>.</returns>
+        public static string GetDescription(this Enum enumeration, object value)
+        {
+            string name = enumeration.GetName(value);
+
+            if (name != null)
             {
-                // Look for the description attribute.
-                DescriptionAttribute descriptionAttribute = attribute as DescriptionAttribute;
-                if (descriptionAttribute != null)
+                string description = enumeration.GetType().GetField(name).GetDescription();
+
+                if (!string.IsNullOrWhiteSpace(description))
+                    return description;
+                
+                return name;
+            }
+
+            return null;
+        }
+
+        // Internal extension to lookup description from DescriptionAttribute
+        private static string GetDescription(this MemberInfo value)
+        {
+            if (value != null)
+            {
+                DescriptionAttribute descriptionAttribute;
+
+                if (value.TryGetAttribute(out descriptionAttribute))
                     return descriptionAttribute.Description;
             }
 
             return string.Empty;
+        }
+
+        // This function doesn't make sense...
+        ///// <summary>
+        ///// Gets the enumeration of the specified <paramref name="type"/> whose description matches this <paramref name="description"/>.
+        ///// </summary>
+        ///// <param name="description">Description to be used for lookup of the enumeration.</param>
+        ///// <param name="type"><see cref="Type"/> of the enumeration.</param>
+        ///// <returns>An enumeration of the specified <paramref name="type"/> if a match is found, otherwise null.</returns>
+        ///// <exception cref="ArgumentException">The <paramref name="type"/> is not an enumeration.</exception>
+        //public static Enum GetEnumFromDescription(this string description, Type type)
+        //{
+        //    if (!type.IsEnum)
+        //        throw new ArgumentException("Type must be an enum", "type");
+
+        //    // Iterate through all of the enumeration values.
+        //    foreach (FieldInfo field in type.GetFields())
+        //    {
+        //        if (field.GetDescription() == description)
+        //            return (Enum)Enum.Parse(type, field.Name);
+        //    }
+
+        //    return null;
+        //}
+
+        /// <summary>
+        /// Retrieves the <see cref="Enum"/> constant value that has a description matching the one extracted from the <see cref="DescriptionAttribute"/>, if available.
+        /// </summary>
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <param name="description">Description to search for.</param>
+        /// <param name="ignoreCase"><c>true</c> to ignore case during the comparison; otherwise, <c>false</c>.</param>
+        /// <returns>Specific value of the enumerated constant in terms of its underlying type associated with the specified <paramref name="description"/>, or <c>null</c>
+        /// if no macthing enumerated value was found.</returns>
+        public static object GetValueByDescription(this Enum enumeration, string description, bool ignoreCase = false)
+        {
+            foreach (object value in Enum.GetValues(enumeration.GetType()))
+            {
+                if (string.Compare(description, enumeration.GetDescription(value), ignoreCase) == 0)
+                    return value;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Retrieves a formatted name of the constant in this <see cref="Enum"/> that has the specified value for visual display.
+        /// </summary>
+        /// <param name="enumeration"><see cref="Enum"/> to operate on.</param>
+        /// <param name="value">Specific value of the particular enumerated constant in terms of its underlying type to retrieve name.</param>
+        /// <returns>Formatted enumeration name of the specified value for visual display.</returns>
+        static public string GetFormattedName(this Enum enumeration, object value)
+        {
+            StringBuilder image = new StringBuilder();
+            char[] chars = enumeration.GetName(value).ToCharArray();
+            char letter;
+
+            for (int i = 0; i < chars.Length; i++)
+            {
+                letter = chars[i];
+
+                // Create word spaces at every capital letter
+                if (Char.IsUpper(letter) && image.Length > 0)
+                {
+                    // Test for "ID" sequence exception
+                    if (i < chars.Length - 1 && letter == 'I')
+                    {
+                        if (chars[i + 1] == 'D')
+                        {
+                            image.Append(" ID");
+                            i++;
+                        }
+                        else
+                        {
+                            image.Append(' ');
+                            image.Append(letter);
+                        }
+                    }
+                    else
+                    {
+                        image.Append(' ');
+                        image.Append(letter);
+                    }
+                }
+                else
+                    image.Append(letter);
+            }
+
+            return image.ToString();
         }
     }
 }
