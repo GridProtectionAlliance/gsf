@@ -110,7 +110,7 @@ namespace TimeSeriesFramework.Transport
 
         // Nested Types
 
-        // Client subscription action adatper interface
+        // Client subscription action adapter interface
         private interface IClientSubscription : IActionAdapter
         {
             /// <summary>

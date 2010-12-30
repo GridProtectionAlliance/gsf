@@ -991,7 +991,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Handler for disposed events from all adatpers.
+        /// Handler for disposed events from all adapters.
         /// </summary>
         /// <param name="sender">Sending object.</param>
         /// <param name="e">Event arguments, if any.</param>
