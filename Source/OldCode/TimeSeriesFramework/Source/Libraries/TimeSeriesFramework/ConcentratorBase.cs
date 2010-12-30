@@ -658,8 +658,8 @@ namespace TimeSeriesFramework
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
-                    // We calculate the maximum wait time for frame publication in milliseconds per frame plus 5%
-                    m_maximumPublicationTimeout = (int)((m_ticksPerFrame + m_ticksPerFrame * 0.05D) / Ticks.PerMillisecond);
+                    // We calculate the maximum wait time for frame publication in whole milliseconds per frame plus 2%
+                    m_maximumPublicationTimeout = (int)((m_ticksPerFrame + m_ticksPerFrame * 0.02D) / Ticks.PerMillisecond);
 
                     if (m_frameQueue != null)
                         m_frameQueue.FramesPerSecond = m_framesPerSecond;
@@ -1244,8 +1244,8 @@ namespace TimeSeriesFramework
                     status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
                     status.Append(" - ");
                     status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
-                    status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
                     status.AppendLine();
+                    status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
                 }
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
