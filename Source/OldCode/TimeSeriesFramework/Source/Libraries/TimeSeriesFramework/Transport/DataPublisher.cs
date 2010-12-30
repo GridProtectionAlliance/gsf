@@ -887,8 +887,11 @@ namespace TimeSeriesFramework.Transport
         {
             IClientSubscription clientSubscription;
 
-            if (TryGetClientSubscription(clientID, out clientSubscription))
-                Remove(clientSubscription);
+            lock (this)
+            {
+                if (TryGetClientSubscription(clientID, out clientSubscription))
+                    Remove(clientSubscription);
+            }
         }
 
         // Attempt to find client subscription
