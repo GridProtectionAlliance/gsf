@@ -30,6 +30,88 @@
             Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
             </summary>
         </member>
+        <member name="T:TVA.Security.SecurityProviderUtility">
+            <summary>
+            A helper class containing methods used in the implementation of role-based security.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecurityProviderUtility.StrongPasswordRegex">
+            <summary>
+            Regular expression used for validating the passwords of external users.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.CreateProvider(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Security.ISecurityProvider"/> based on the settings in the config file.
+            </summary>
+            <param name="username">Username of the user for whom the <see cref="T:TVA.Security.ISecurityProvider"/> is to be created.</param>
+            <returns>An object that implements <see cref="T:TVA.Security.ISecurityProvider"/>.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceSecurable(System.String)">
+            <summary>
+            Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceAccessible(System.String)">
+            <summary>
+            Determines if the current user, as defined by the <see cref="P:System.Threading.Thread.CurrentPrincipal"/>, has permission to access 
+            the specified <paramref name="resource"/> based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsRegexMatch(System.String,System.String)">
+            <summary>
+            Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
+            </summary>
+            <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
+            <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
+            <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.EncryptPassword(System.String)">
+            <summary>
+            Encrypts the password to a one-way hash using the SHA1 hash algorithm.
+            </summary>
+            <param name="password">Password to be encrypted.</param>
+            <returns>Encrypted password.</returns>
+        </member>
+        <member name="T:TVA.Security.SecurityProviderCache">
+            <summary>
+            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
+            <summary>
+            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
+            <summary>
+            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
+            <summary>
+            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
+            <summary>
+            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
+            </summary>
+        </member>
         <member name="T:TVA.Security.ISecurityProvider">
             <summary>
             Defines a provider of role-based security in applications.
@@ -70,47 +152,39 @@
             Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
             </summary>
         </member>
-        <member name="T:TVA.Security.SqlSecurityProvider">
+        <member name="T:TVA.Security.SecurityIdentity">
             <summary>
-            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses SQL Server for its backend datastore and authenticates 
-            internal users against the Active Directory and external users against the SQL Server backend datastore.
+            A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
             </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-                    description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            </example>
+            <seealso cref="T:TVA.Security.SecurityPrincipal"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Security.SecurityIdentity.#ctor(TVA.Security.ISecurityProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityIdentity"/> class.
+            </summary>
+            <param name="provider">An <see cref="T:TVA.Security.ISecurityProvider"/> of the user.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
+        </member>
+        <member name="P:TVA.Security.SecurityIdentity.AuthenticationType">
+            <summary>
+            Gets the type of authentication used to identify the user.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityIdentity.IsAuthenticated">
+            <summary>
+            Gets a boolean value that indicates whether the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityIdentity.Name">
+            <summary>
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityIdentity.Provider">
+            <summary>
+            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> of the user.
+            </summary>
         </member>
         <member name="T:TVA.Security.LdapSecurityProvider">
             <summary>
@@ -393,121 +467,6 @@
             Gets the original <see cref="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
             </summary>
         </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SqlSecurityProvider"/> class.
-            </summary>
-            <param name="username">Name that uniquely identifies the user.</param>
-        </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.RefreshData">
-            <summary>
-            Refreshes the <see cref="T:TVA.Security.UserData"/>.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.Authenticate(System.String)">
-            <summary>
-            Authenticates the user.
-            </summary>
-            <param name="password">Password to be used for authentication.</param>
-            <returns>true if the user is authenticated, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.LogLogin(System.Boolean)">
-            <summary>
-            Logs user authentication attempt.
-            </summary>
-            <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
-            <returns>true if logging was successful, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.LogError(System.String,System.String)">
-            <summary>
-            Logs information about an encountered exception to the backend datastore.
-            </summary>
-            <param name="source">Source of the exception.</param>
-            <param name="message">Detailed description of the exception.</param>
-            <returns>true if logging was successful, otherwise false.</returns>
-        </member>
-        <member name="T:TVA.Security.SecurityIdentity">
-            <summary>
-            A class that implements <see cref="T:System.Security.Principal.IIdentity"/> interface to facilitate custom role-based security.
-            </summary>
-            <seealso cref="T:TVA.Security.SecurityPrincipal"/>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Security.SecurityIdentity.#ctor(TVA.Security.ISecurityProvider)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityIdentity"/> class.
-            </summary>
-            <param name="provider">An <see cref="T:TVA.Security.ISecurityProvider"/> of the user.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="provider"/> is null.</exception>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.AuthenticationType">
-            <summary>
-            Gets the type of authentication used to identify the user.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.IsAuthenticated">
-            <summary>
-            Gets a boolean value that indicates whether the user has been authenticated.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.Name">
-            <summary>
-            Gets the user's login name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityIdentity.Provider">
-            <summary>
-            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> of the user.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.SecurityProviderUtility">
-            <summary>
-            A helper class containing methods used in the implementation of role-based security.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.SecurityProviderUtility.StrongPasswordRegex">
-            <summary>
-            Regular expression used for validating the passwords of external users.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.CreateProvider(System.String)">
-            <summary>
-            Creates a new <see cref="T:TVA.Security.ISecurityProvider"/> based on the settings in the config file.
-            </summary>
-            <param name="username">Username of the user for whom the <see cref="T:TVA.Security.ISecurityProvider"/> is to be created.</param>
-            <returns>An object that implements <see cref="T:TVA.Security.ISecurityProvider"/>.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceSecurable(System.String)">
-            <summary>
-            Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
-            </summary>
-            <param name="resource">Name of the resource to be checked.</param>
-            <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceAccessible(System.String)">
-            <summary>
-            Determines if the current user, as defined by the <see cref="P:System.Threading.Thread.CurrentPrincipal"/>, has permission to access 
-            the specified <paramref name="resource"/> based on settings in the config file.
-            </summary>
-            <param name="resource">Name of the resource to be checked.</param>
-            <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsRegexMatch(System.String,System.String)">
-            <summary>
-            Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
-            </summary>
-            <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
-            <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
-            <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.EncryptPassword(System.String)">
-            <summary>
-            Encrypts the password to a one-way hash using the SHA1 hash algorithm.
-            </summary>
-            <param name="password">Password to be encrypted.</param>
-            <returns>Encrypted password.</returns>
-        </member>
         <member name="T:TVA.Security.NamespaceDoc">
             <summary>
             Contains fundamental classes that define the security framework for role-based security.
@@ -624,40 +583,81 @@
             Gets a read-only list of all the roles assigned to the user.
             </summary>
         </member>
-        <member name="T:TVA.Security.SecurityProviderCache">
+        <member name="T:TVA.Security.SqlSecurityProvider">
             <summary>
-            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
+            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses SQL Server for its backend datastore and authenticates 
+            internal users against the Active Directory and external users against the SQL Server backend datastore.
             </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
+                    description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
         </member>
-        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
+        <member name="M:TVA.Security.SqlSecurityProvider.#ctor(System.String)">
             <summary>
-            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
+            Initializes a new instance of the <see cref="T:TVA.Security.SqlSecurityProvider"/> class.
             </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
+        <member name="M:TVA.Security.SqlSecurityProvider.RefreshData">
             <summary>
-            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
+            Refreshes the <see cref="T:TVA.Security.UserData"/>.
             </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
-        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
+        <member name="M:TVA.Security.SqlSecurityProvider.Authenticate(System.String)">
             <summary>
-            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
+            Authenticates the user.
             </summary>
+            <param name="password">Password to be used for authentication.</param>
+            <returns>true if the user is authenticated, otherwise false.</returns>
         </member>
-        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
+        <member name="M:TVA.Security.SqlSecurityProvider.LogLogin(System.Boolean)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
+            Logs user authentication attempt.
             </summary>
+            <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
+            <returns>true if logging was successful, otherwise false.</returns>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
+        <member name="M:TVA.Security.SqlSecurityProvider.LogError(System.String,System.String)">
             <summary>
-            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
+            Logs information about an encountered exception to the backend datastore.
             </summary>
-        </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
-            <summary>
-            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
-            </summary>
+            <param name="source">Source of the exception.</param>
+            <param name="message">Detailed description of the exception.</param>
+            <returns>true if logging was successful, otherwise false.</returns>
         </member>
     </members>
 </doc>
