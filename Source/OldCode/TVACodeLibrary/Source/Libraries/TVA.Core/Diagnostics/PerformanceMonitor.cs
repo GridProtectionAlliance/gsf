@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -22,6 +23,8 @@
 //       Added new header and license agreement.
 //  06/21/2010 - Stephen C. Wills
 //       Fixed issue with monitor not disposing of counters properly.
+//  01/03/2011 - J. Ritchie Carroll
+//       Added counters for CLR memory consumption, IPv6 incoming / outgoing rates and lifetime status.
 //
 //*******************************************************************************************************
 
@@ -241,11 +244,31 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using System.Timers;
+using TVA.Units;
 
 namespace TVA.Diagnostics
 {
@@ -337,27 +360,43 @@ namespace TVA.Diagnostics
             // Add default process counters.
             if (PerformanceCounterCategory.Exists("Process"))
             {
-                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Percent / CPU", Environment.ProcessorCount);
-                AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", 1024);
+                //                                                                           1234567890123456
+                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average% / CPU", Environment.ProcessorCount);
+                AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
                 AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
                 AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
                 AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "Total Threads", 1);
-                AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", 1048576);
+                AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
             }
 
             // Add default networking counters.
             if (PerformanceCounterCategory.Exists("IPv4"))
             {
-                AddCounter("IPv4", "Datagrams Sent/sec", "", "Outgoing Packet Rate", "Datagrams / sec", 1);
-                AddCounter("IPv4", "Datagrams Received/sec", "", "Incoming Packet Rate", "Datagrams / sec", 1);
+                //                                            12345678901234567890
+                AddCounter("IPv4", "Datagrams Sent/sec", "", "IPv4 Outgoing Rate", "Datagrams / sec", 1);
+                //                                                12345678901234567890
+                AddCounter("IPv4", "Datagrams Received/sec", "", "IPv4 Incoming Rate", "Datagrams / sec", 1);
             }
             else if (PerformanceCounterCategory.Exists("IP"))
             {
-                AddCounter("IP", "Datagrams Sent/sec", "", "Outgoing Packet Rate", "Datagrams / sec", 1);
-                AddCounter("IP", "Datagrams Received/sec", "", "Incoming Packet Rate", "Datagrams / sec", 1);
+                AddCounter("IP", "Datagrams Sent/sec", "", "IP Outgoing Rate", "Datagrams / sec", 1);
+                AddCounter("IP", "Datagrams Received/sec", "", "IP Incoming Rate", "Datagrams / sec", 1);
+            }
+            
+            if (PerformanceCounterCategory.Exists("IPv6"))
+            {
+                //                                            12345678901234567890
+                AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
+                //                                                12345678901234567890
+                AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
             }
 
             // Add default .NET counters.
+            if (PerformanceCounterCategory.Exists(".NET CLR Memory"))
+            {
+                AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
+            }
+
             if (PerformanceCounterCategory.Exists(".NET CLR LocksAndThreads"))
             {
                 AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
@@ -605,6 +644,84 @@ namespace TVA.Diagnostics
                         status.AppendLine();
                     }
                 }
+
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                // Statistics calculated using last 500 counter values sampled every 12.5 seconds.
+
+                string samplingInterval = "second";
+
+                if (m_samplingTimer.Interval != 1000.0D)
+                    samplingInterval = m_samplingTimer.Interval.ToString("0.0") + " seconds";
+
+                status.AppendFormat("{0}Statistics calculated using last {1} counter values sampled every {2}.{3}", Environment.NewLine, PerformanceCounter.DefaultSamplingWindow, samplingInterval, Environment.NewLine);
+
+                return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets the lifetime status statistics of the <see cref="PerformanceMonitor"/> object.
+        /// </summary>
+        public string LifetimeStatus
+        {
+            get
+            {
+                StringBuilder status = new StringBuilder();
+
+                // Status header.
+                status.Append("Counter".PadRight(20));
+                status.Append(' ');
+                //             1234567890123
+                status.Append("Lifetime Max.".CenterText(13));
+                status.Append(' ');
+                //             1234567890123
+                status.Append("Lifetime Avg.".CenterText(13));
+                status.Append(' ');
+                //             1234567890123
+                status.Append("Total Samples".CenterText(13));
+                status.Append(' ');
+                status.Append("Units".CenterText(16));
+                status.AppendLine();
+                status.Append(new string('-', 20));
+                status.Append(' ');
+                status.Append(new string('-', 13));
+                status.Append(' ');
+                status.Append(new string('-', 13));
+                status.Append(' ');
+                status.Append(new string('-', 13));
+                status.Append(' ');
+                status.Append(new string('-', 16));
+                status.AppendLine();
+
+                lock (m_counters)
+                {
+                    foreach (PerformanceCounter counter in m_counters)
+                    {
+                        // Counter status.
+                        status.Append(counter.AliasName.PadLeft(20));
+                        status.Append(' ');
+                        status.Append(counter.LifetimeMaximumValue.ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.LifetimeAverageValue.ToString("0.00").CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.LifetimeSampleCount.ToString().CenterText(13));
+                        status.Append(' ');
+                        status.Append(counter.ValueUnit);
+                        status.AppendLine();
+                    }
+                }
+
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                // Lifetime statistics calculated over all values sampled every 12.5 seconds.
+
+                string samplingInterval = "second";
+
+                if (m_samplingTimer.Interval != 1000.0D)
+                    samplingInterval = m_samplingTimer.Interval.ToString("0.0") + " seconds";
+
+                status.AppendFormat("{0}Lifetime statistics calculated over all values sampled every {1}.{2}", Environment.NewLine, samplingInterval, Environment.NewLine);
 
                 return status.ToString();
             }

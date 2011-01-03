@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -18,6 +19,8 @@
 //       Added new header and license agreement.
 //  06/21/2010 - Stephen C. Wills
 //       Fixed issue with counters not disposing properly.
+//  01/03/2011 - J. Ritchie Carroll
+//       Added total lifetime counter statistics.
 //
 //*******************************************************************************************************
 
@@ -237,6 +240,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -300,6 +322,9 @@ namespace TVA.Diagnostics
         private int m_samplingWindow;
         private System.Diagnostics.PerformanceCounter m_counter;
         private List<float> m_samples;
+        private float m_lifetimeMaximum;
+        private decimal m_lifetimeTotal;
+        private long m_lifetimeSampleCount;
         private bool m_disposed;
 
         #endregion
@@ -521,6 +546,39 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
+        /// Gets the maximum sample value over the entire lifetime of the <see cref="BaseCounter"/>.
+        /// </summary>
+        public float LifetimeMaximumValue
+        {
+            get
+            {
+                return m_lifetimeMaximum;
+            }
+        }
+
+        /// <summary>
+        /// Gets the average sample value over the entire lifetime of the <see cref="BaseCounter"/>.
+        /// </summary>
+        public float LifetimeAverageValue
+        {
+            get
+            {
+                return (float)(m_lifetimeTotal / (decimal)m_lifetimeSampleCount);
+            }
+        }
+
+        /// <summary>
+        /// Gets the total values sampled over the entire lifetime of the <see cref="BaseCounter"/>.
+        /// </summary>
+        public long LifetimeSampleCount
+        {
+            get
+            {
+                return m_lifetimeSampleCount;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="System.Diagnostics.PerformanceCounter"/> object that this <see cref="PerformanceCounter"/> objects wraps.
         /// </summary>
         public System.Diagnostics.PerformanceCounter BaseCounter
@@ -581,10 +639,35 @@ namespace TVA.Diagnostics
         {
             if (m_counter != null)
             {
-                m_samples.Add(m_counter.NextValue());         // Update counter samples.
+                float currentSample = m_counter.NextValue();
+
+                // Update counter sample set
+                m_samples.Add(currentSample);
+
+                // Maintain counter samples rolling window size
                 while (m_samples.Count > m_samplingWindow)
                 {
-                    m_samples.RemoveAt(0);                    // Keep the counter samples window rolling.
+                    m_samples.RemoveAt(0);                    
+                }
+
+                // Track lifetime maximum value
+                if (currentSample > m_lifetimeMaximum)
+                    m_lifetimeMaximum = currentSample;
+
+                // Track lifetime average components
+                checked
+                {
+                    try
+                    {
+                        m_lifetimeSampleCount++;
+                        m_lifetimeTotal += (decimal)currentSample;
+                    }
+                    catch (OverflowException)
+                    {
+                        // If we overflow lifetime total, we restart total with current sample
+                        m_lifetimeSampleCount = 1;
+                        m_lifetimeTotal = (decimal)currentSample;
+                    }
                 }
             }
         }
