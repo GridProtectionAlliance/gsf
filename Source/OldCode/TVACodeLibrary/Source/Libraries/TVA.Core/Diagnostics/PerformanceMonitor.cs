@@ -382,8 +382,8 @@ namespace TVA.Diagnostics
                 AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
                 AddCounter(".NET CLR Memory", "Large Object Heap size", m_processName, "Large Object Heap", "Megabytes", SI2.Mega);
                 //                                                                                      1234567890123456
-                AddCounter(".NET CLR Exceptions", "# Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
-                AddCounter(".NET CLR Exceptions", "# Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
+                AddCounter(".NET CLR Exceptions", "# of Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
+                AddCounter(".NET CLR Exceptions", "# of Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
 
                 // Add default networking counters
                 if (PerformanceCounterCategory.Exists("IPv4"))
