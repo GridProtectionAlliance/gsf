@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -57,6 +58,10 @@
 //  12/16/2010 - Pinal C. Patel
 //       Added SupportSystemCommands property that can be used to enable or disable system-level access 
 //       via the build-in commands.
+//  01/04/2011 - J. Ritchie Carroll
+//       Changed default performance sampling interval on services to every 5 seconds instead of every
+//       second to reduce overhead and increase performance. Added a "-lifetime" option to the Health
+//       command to show lifetime performance statistics. Made sampling interval a user config option.
 //
 //*******************************************************************************************************
 
@@ -276,6 +281,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -399,6 +423,11 @@ namespace TVA.Services
         public const bool DefaultMonitorServiceHealth = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="HealthMonitorInterval"/> property.
+        /// </summary>
+        public const double DefaultHealthMonitorInterval = 5.0D;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="RequestHistoryLimit"/> property.
         /// </summary>
         public const int DefaultRequestHistoryLimit = 50;
@@ -520,6 +549,7 @@ namespace TVA.Services
         private int m_maxStatusUpdatesLength;
         private int m_maxStatusUpdatesFrequency;
         private bool m_monitorServiceHealth;
+        private double m_healthMonitorInterval;
         private int m_requestHistoryLimit;
         private bool m_supportTelnetSessions;
         private bool m_supportSystemCommands;
@@ -564,6 +594,7 @@ namespace TVA.Services
             m_maxStatusUpdatesLength = DefaultMaxStatusUpdatesLength;
             m_maxStatusUpdatesFrequency = DefaultMaxStatusUpdatesFrequency;
             m_monitorServiceHealth = DefaultMonitorServiceHealth;
+            m_healthMonitorInterval = DefaultHealthMonitorInterval;
             m_requestHistoryLimit = DefaultRequestHistoryLimit;
             m_supportTelnetSessions = DefaultSupportTelnetSessions;
             m_supportSystemCommands = DefaultSupportSystemCommands;
@@ -691,6 +722,27 @@ namespace TVA.Services
             set
             {
                 m_monitorServiceHealth = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval, in seconds, over which to sample the performance monitor for health statistics.
+        /// </summary>
+        [Category("Settings"),
+        DefaultValue(DefaultHealthMonitorInterval),
+        Description("Indicates the interval, in seconds, over which to sample the performance monitor for health statistics.")]
+        public double HealthMonitorInterval
+        {
+            get
+            {
+                return m_healthMonitorInterval;
+            }
+            set
+            {
+                m_healthMonitorInterval = value;
+
+                if (m_performanceMonitor != null)
+                    m_performanceMonitor.SamplingInterval = m_healthMonitorInterval * 1000.0D;
             }
         }
 
@@ -1182,6 +1234,7 @@ namespace TVA.Services
                 settings["MaxStatusUpdatesLength", true].Update(m_maxStatusUpdatesLength);
                 settings["MaxStatusUpdatesFrequency", true].Update(m_maxStatusUpdatesFrequency);
                 settings["MonitorServiceHealth", true].Update(m_monitorServiceHealth);
+                settings["HealthMonitorInterval", true].Update(m_healthMonitorInterval);
                 settings["RequestHistoryLimit", true].Update(m_requestHistoryLimit);
                 settings["SupportTelnetSessions", true].Update(m_supportTelnetSessions);
                 settings["SupportSystemCommands", true].Update(m_supportSystemCommands);
@@ -1228,20 +1281,25 @@ namespace TVA.Services
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+
                 settings.Add("LogStatusUpdates", m_logStatusUpdates, "True if status update messages are to be logged to a text file; otherwise False.");
                 settings.Add("MaxStatusUpdatesLength", m_maxStatusUpdatesLength, "Maximum numbers of characters allowed in update status messages without getting suppressed from being displayed.");
                 settings.Add("MaxStatusUpdatesFrequency", m_maxStatusUpdatesFrequency, "Maximum number of status update messages that can be issued in a second without getting suppressed from being displayed.");
                 settings.Add("MonitorServiceHealth", m_monitorServiceHealth, "True if the service health is to be monitored; otherwise False.");
+                settings.Add("HealthMonitorInterval", m_healthMonitorInterval, "The interval, in seconds, over which to sample the performance montitor for health statistics.");
                 settings.Add("RequestHistoryLimit", m_requestHistoryLimit, "Number of client request entries to be kept in the history.");
                 settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
                 settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
                 settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
+                
                 if (settings["TelnetSessionPassword"] != null)
                     m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
+                
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
                 MaxStatusUpdatesLength = settings["MaxStatusUpdatesLength"].ValueAs(m_maxStatusUpdatesLength);
                 MaxStatusUpdatesFrequency = settings["MaxStatusUpdatesFrequency"].ValueAs(m_maxStatusUpdatesFrequency);
                 MonitorServiceHealth = settings["MonitorServiceHealth"].ValueAs(m_monitorServiceHealth);
+                HealthMonitorInterval = settings["HealthMonitorInterval"].ValueAs(m_healthMonitorInterval);
                 RequestHistoryLimit = settings["RequestHistoryLimit"].ValueAs(m_requestHistoryLimit);
                 SupportTelnetSessions = settings["SupportTelnetSessions"].ValueAs(m_supportTelnetSessions);
                 SupportSystemCommands = settings["SupportSystemCommands"].ValueAs(m_supportSystemCommands);
@@ -1304,15 +1362,17 @@ namespace TVA.Services
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+                
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
                 {
                     m_clientRequestHandlers.Add(new ClientRequestHandler("Telnet", "Allows for a telnet session to the service server", RemoteTelnetSession, false));
                 }
+
                 // Enable health monitoring if requested.
                 if (m_monitorServiceHealth)
                 {
-                    m_performanceMonitor = new PerformanceMonitor();
+                    m_performanceMonitor = new PerformanceMonitor(m_healthMonitorInterval * 1000.0D, true);
                     m_clientRequestHandlers.Add(new ClientRequestHandler("Health", "Displays a report of resource utilization for the service", ShowHealthReport));
                 }
             }
@@ -2661,6 +2721,9 @@ namespace TVA.Services
                 helpMessage.Append("       -?".PadRight(20));
                 helpMessage.Append("Displays this help message");
                 helpMessage.AppendLine();
+                helpMessage.Append("       -lifetime".PadRight(20));
+                helpMessage.Append("Shows utilization over entire service lifetime");
+                helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
                 UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
@@ -2668,7 +2731,12 @@ namespace TVA.Services
             else
             {
                 if (m_performanceMonitor != null)
-                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.Status + "\r\n");
+                {
+                    if (requestInfo.Request.Arguments.Exists("lifetime"))
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.LifetimeStatus + "\r\n");
+                    else
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.Status + "\r\n");
+                }
                 else
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "Performance monitor is not available.");
             }

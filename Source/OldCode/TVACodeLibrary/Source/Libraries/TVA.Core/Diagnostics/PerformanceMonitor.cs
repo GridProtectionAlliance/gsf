@@ -25,6 +25,9 @@
 //       Fixed issue with monitor not disposing of counters properly.
 //  01/03/2011 - J. Ritchie Carroll
 //       Added counters for CLR memory consumption, IPv6 incoming / outgoing rates and lifetime status.
+//  01/04/2011 - J. Ritchie Carroll
+//       Made addition of default counters optional in case user wants a custom monitor.
+//       Added new and reorganized default counters.
 //
 //*******************************************************************************************************
 
@@ -269,6 +272,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Timers;
 using TVA.Units;
+using System.Collections.ObjectModel;
 
 namespace TVA.Diagnostics
 {
@@ -307,9 +311,9 @@ namespace TVA.Diagnostics
         // Constants
 
         /// <summary>
-        /// Default interval of sampling the <see cref="Counters"/>.
+        /// Default interval for sampling the <see cref="Counters"/>.
         /// </summary>
-        public const int DefaultSamplingInterval = 1000;
+        public const double DefaultSamplingInterval = 1000.0D;
 
         // Fields
         private string m_processName;
@@ -332,9 +336,10 @@ namespace TVA.Diagnostics
         /// <summary>
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
-        /// <param name="samplingInterval">Interval at which the <see cref="Counters"/> are to be sampled.</param>
-        public PerformanceMonitor(double samplingInterval)
-            : this(Process.GetCurrentProcess().ProcessName, samplingInterval)
+        /// <param name="samplingInterval">Interval, in milliseconds, at which the <see cref="Counters"/> are to be sampled.</param>
+        /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
+        public PerformanceMonitor(double samplingInterval, bool addDefaultCounters = true)
+            : this(Process.GetCurrentProcess().ProcessName, samplingInterval, addDefaultCounters)
         {
         }
 
@@ -342,8 +347,9 @@ namespace TVA.Diagnostics
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
         /// <param name="processName">Name of the <see cref="Process"/> whose performance is to be monitored.</param>
-        public PerformanceMonitor(string processName)
-            : this(processName, DefaultSamplingInterval)
+        /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
+        public PerformanceMonitor(string processName, bool addDefaultCounters = true)
+            : this(processName, DefaultSamplingInterval, addDefaultCounters)
         {
         }
 
@@ -351,55 +357,56 @@ namespace TVA.Diagnostics
         /// Initializes a new instance of the <see cref="PerformanceMonitor"/> class.
         /// </summary>
         /// <param name="processName">Name of the <see cref="Process"/> whose performance is to be monitored.</param>
-        /// <param name="samplingInterval">Interval at which the <see cref="Counters"/> are to be sampled.</param>
-        public PerformanceMonitor(string processName, double samplingInterval)
+        /// <param name="samplingInterval">Interval, in milliseconds, at which the <see cref="Counters"/> are to be sampled.</param>
+        /// <param name="addDefaultCounters">Set to <c>true</c> to add default counters; otherwise <c>false</c>.</param>
+        public PerformanceMonitor(string processName, double samplingInterval, bool addDefaultCounters = true)
         {
+            if (processName == null)
+                throw new ArgumentNullException("processName");
+
             m_processName = processName;
             m_counters = new List<PerformanceCounter>();
 
-            // Add default process counters.
-            if (PerformanceCounterCategory.Exists("Process"))
+            if (addDefaultCounters)
             {
-                //                                                                           1234567890123456
-                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average% / CPU", Environment.ProcessorCount);
+                // Add default process and .NET counters
+                AddCounter("Process", "% Processor Time", m_processName, "CPU Utilization", "Average % / CPU", Environment.ProcessorCount);
                 AddCounter("Process", "IO Data Bytes/sec", m_processName, "I/O Data Rate", "Kilobytes / sec", SI2.Kilo);
                 AddCounter("Process", "IO Data Operations/sec", m_processName, "I/O Activity Rate", "Operations / sec", 1);
                 AddCounter("Process", "Handle Count", m_processName, "Process Handle Count", "Total Handles", 1);
-                AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "Total Threads", 1);
-                AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
-            }
-
-            // Add default networking counters.
-            if (PerformanceCounterCategory.Exists("IPv4"))
-            {
-                //                                            12345678901234567890
-                AddCounter("IPv4", "Datagrams Sent/sec", "", "IPv4 Outgoing Rate", "Datagrams / sec", 1);
-                //                                                12345678901234567890
-                AddCounter("IPv4", "Datagrams Received/sec", "", "IPv4 Incoming Rate", "Datagrams / sec", 1);
-            }
-            else if (PerformanceCounterCategory.Exists("IP"))
-            {
-                AddCounter("IP", "Datagrams Sent/sec", "", "IP Outgoing Rate", "Datagrams / sec", 1);
-                AddCounter("IP", "Datagrams Received/sec", "", "IP Incoming Rate", "Datagrams / sec", 1);
-            }
-            
-            if (PerformanceCounterCategory.Exists("IPv6"))
-            {
-                //                                            12345678901234567890
-                AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
-                //                                                12345678901234567890
-                AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
-            }
-
-            // Add default .NET counters.
-            if (PerformanceCounterCategory.Exists(".NET CLR Memory"))
-            {
-                AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
-            }
-
-            if (PerformanceCounterCategory.Exists(".NET CLR LocksAndThreads"))
-            {
+                AddCounter("Process", "Thread Count", m_processName, "Process Thread Count", "System Threads", 1);
+                AddCounter(".NET CLR LocksAndThreads", "# of current logical Threads", m_processName, "CLR Thread Count", "Managed Threads", 1);
+                AddCounter(".NET CLR LocksAndThreads", "Current Queue Length", m_processName, "Thread Queue Size", "Waiting Threads", 1);
                 AddCounter(".NET CLR LocksAndThreads", "Contention Rate / sec", m_processName, "Lock Contention Rate", "Attempts / sec", 1);
+                AddCounter("Process", "Working Set", m_processName, "Process Memory Usage", "Megabytes", SI2.Mega);
+                AddCounter(".NET CLR Memory", "# Bytes in all Heaps", m_processName, "CLR Memory Usage", "Megabytes", SI2.Mega);
+                AddCounter(".NET CLR Memory", "Large Object Heap size", m_processName, "Large Object Heap", "Megabytes", SI2.Mega);
+                //                                                                                      1234567890123456
+                AddCounter(".NET CLR Exceptions", "# Exceps Thrown", m_processName, "Exception Count", "Total Exceptions", 1);
+                AddCounter(".NET CLR Exceptions", "# Exceps Thrown / sec", m_processName, "Exception Rate", "Exceptions / sec", 1);
+
+                // Add default networking counters
+                if (PerformanceCounterCategory.Exists("IPv4"))
+                {
+                    //                                            12345678901234567890
+                    AddCounter("IPv4", "Datagrams Sent/sec", "", "IPv4 Outgoing Rate", "Datagrams / sec", 1);
+                    //                                                12345678901234567890
+                    AddCounter("IPv4", "Datagrams Received/sec", "", "IPv4 Incoming Rate", "Datagrams / sec", 1);
+                }
+                else if (PerformanceCounterCategory.Exists("IP"))
+                {
+                    AddCounter("IP", "Datagrams Sent/sec", "", "IP Outgoing Rate", "Datagrams / sec", 1);
+                    AddCounter("IP", "Datagrams Received/sec", "", "IP Incoming Rate", "Datagrams / sec", 1);
+                }
+
+                if (PerformanceCounterCategory.Exists("IPv6"))
+                {
+                    AddCounter("IPv6", "Datagrams Sent/sec", "", "IPv6 Outgoing Rate", "Datagrams / sec", 1);
+                    AddCounter("IPv6", "Datagrams Received/sec", "", "IPv6 Incoming Rate", "Datagrams / sec", 1);
+                }
+
+                // Perform initial sample for counters since in case timer interval is large
+                SampleCounters();
             }
 
             m_samplingTimer = new Timer(samplingInterval);
@@ -444,7 +451,7 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
-        /// Gets or sets the interval at which the <see cref="Counters"/> are to be sampled.
+        /// Gets or sets the interval, in milliseconds, at which the <see cref="Counters"/> are to be sampled.
         /// </summary>
         public double SamplingInterval
         {
@@ -459,17 +466,16 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
-        /// Gets a list of <see cref="PerformanceCounter"/> objects monitored by the <see cref="PerformanceMonitor"/> object.
+        /// Gets a read-only list of the <see cref="PerformanceCounter"/> objects monitored by the <see cref="PerformanceMonitor"/> object.
         /// </summary>
-        /// <remarks>
-        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="PerformanceMonitor"/>, a lock must be 
-        /// obtain on <see cref="Counters"/> before accessing it.
-        /// </remarks>
-        public List<PerformanceCounter> Counters
+        public ReadOnlyCollection<PerformanceCounter> Counters
         {
-            get 
+            get
             {
-                return m_counters;
+                lock (m_counters)
+                {
+                    return new ReadOnlyCollection<PerformanceCounter>(m_counters);
+                }
             }
         }
 
@@ -481,7 +487,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("% Processor Time");
+                return FindCounter("% Processor Time");
             }
         }
 
@@ -493,7 +499,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Datagrams Sent/sec");
+                return FindCounter("Datagrams Sent/sec");
             }
         }
 
@@ -505,7 +511,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Datagrams Received/sec");
+                return FindCounter("Datagrams Received/sec");
             }
         }
 
@@ -517,7 +523,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Contention Rate / sec");
+                return FindCounter("Contention Rate / sec");
             }
         }
 
@@ -529,7 +535,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Working Set");
+                return FindCounter("Working Set");
             }
         }
 
@@ -542,7 +548,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("IO Data Bytes/sec");
+                return FindCounter("IO Data Bytes/sec");
             }
         }
 
@@ -555,7 +561,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("IO Data Operations/sec");
+                return FindCounter("IO Data Operations/sec");
             }
         }
 
@@ -568,7 +574,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Handle Count");
+                return FindCounter("Handle Count");
             }
         }
 
@@ -581,7 +587,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return FindCounters("Thread Count");
+                return FindCounter("Thread Count");
             }
         }
 
@@ -652,7 +658,7 @@ namespace TVA.Diagnostics
                 string samplingInterval = "second";
 
                 if (m_samplingTimer.Interval != 1000.0D)
-                    samplingInterval = m_samplingTimer.Interval.ToString("0.0") + " seconds";
+                    samplingInterval = (m_samplingTimer.Interval / 1000.0D).ToString("0.0") + " seconds";
 
                 status.AppendFormat("{0}Statistics calculated using last {1} counter values sampled every {2}.{3}", Environment.NewLine, PerformanceCounter.DefaultSamplingWindow, samplingInterval, Environment.NewLine);
 
@@ -668,6 +674,7 @@ namespace TVA.Diagnostics
             get
             {
                 StringBuilder status = new StringBuilder();
+                long sampleCount = 0;
 
                 // Status header.
                 status.Append("Counter".PadRight(20));
@@ -679,7 +686,7 @@ namespace TVA.Diagnostics
                 status.Append("Lifetime Avg.".CenterText(13));
                 status.Append(' ');
                 //             1234567890123
-                status.Append("Total Samples".CenterText(13));
+                status.Append("Inv(Scalar)".CenterText(13));
                 status.Append(' ');
                 status.Append("Units".CenterText(16));
                 status.AppendLine();
@@ -705,23 +712,26 @@ namespace TVA.Diagnostics
                         status.Append(' ');
                         status.Append(counter.LifetimeAverageValue.ToString("0.00").CenterText(13));
                         status.Append(' ');
-                        status.Append(counter.LifetimeSampleCount.ToString().CenterText(13));
+                        status.Append(counter.ValueDivisor.ToString().CenterText(13));
                         status.Append(' ');
                         status.Append(counter.ValueUnit);
                         status.AppendLine();
+
+                        if (sampleCount == 0)
+                            sampleCount = counter.LifetimeSampleCount;
                     }
                 }
 
                 //          1         2         3         4         5         6         7         8
                 // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
-                // Lifetime statistics calculated over all values sampled every 12.5 seconds.
+                // Statistics calculated using 121878905 counter values sampled every 5.0 seconds.
 
                 string samplingInterval = "second";
 
                 if (m_samplingTimer.Interval != 1000.0D)
-                    samplingInterval = m_samplingTimer.Interval.ToString("0.0") + " seconds";
+                    samplingInterval = (m_samplingTimer.Interval / 1000.0D).ToString("0.0") + " seconds";
 
-                status.AppendFormat("{0}Lifetime statistics calculated over all values sampled every {1}.{2}", Environment.NewLine, samplingInterval, Environment.NewLine);
+                status.AppendFormat("{0}Statistics calculated using {1} counter values sampled every {2}.{3}", Environment.NewLine, sampleCount, samplingInterval, Environment.NewLine);
 
                 return status.ToString();
             }
@@ -841,11 +851,27 @@ namespace TVA.Diagnostics
         }
 
         /// <summary>
+        /// Removes a <see cref="PerformanceCounter"/> being monitored.
+        /// </summary>
+        /// <param name="counter">The <see cref="PerformanceCounter"/> object to be unmonitored.</param>
+        public void RemoveCounter(PerformanceCounter counter)
+        {
+            lock (m_counters)
+            {
+                m_counters.Remove(counter);
+            }
+        }
+
+        /// <summary>
         /// Returns a <see cref="PerformanceCounter"/> object matching the specified counter name.
         /// </summary>
         /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
         /// <returns>A <see cref="PerformanceCounter"/> object if a match is found; otherwise null.</returns>
-        public PerformanceCounter FindCounters(string counterName)
+        /// <remarks>
+        /// First <see cref="PerformanceCounter"/> with matching name is returned. If same name exists within
+        /// muliple monitored categories, use <see cref="FindCounter(string,string)"/> overload instead.
+        /// </remarks>
+        public PerformanceCounter FindCounter(string counterName)
         {
             lock (m_counters)
             {
@@ -859,7 +885,30 @@ namespace TVA.Diagnostics
             return null;    // No match found.
         }
 
-        private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        /// <summary>
+        /// Returns a <see cref="PerformanceCounter"/> object matching the specified counter name.
+        /// </summary>
+        /// <param name="categoryName">Category of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <param name="counterName">Name of the <see cref="PerformanceCounter"/> to be retrieved.</param>
+        /// <returns>A <see cref="PerformanceCounter"/> object if a match is found; otherwise null.</returns>
+        public PerformanceCounter FindCounter(string categoryName, string counterName)
+        {
+            lock (m_counters)
+            {
+                foreach (PerformanceCounter counter in m_counters)
+                {
+                    if (string.Compare(counter.BaseCounter.CategoryName, categoryName, true) == 0 && string.Compare(counter.BaseCounter.CounterName, counterName, true) == 0)
+                        return counter; // Return the match.
+                }
+            }
+
+            return null;    // No match found.
+        }
+
+        /// <summary>
+        /// Sample all defined counters.
+        /// </summary>
+        public void SampleCounters()
         {
             lock (m_counters)
             {
@@ -868,6 +917,11 @@ namespace TVA.Diagnostics
                     counter.Sample();
                 }
             }
+        }
+
+        private void m_samplingTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            SampleCounters();
         }
 
         #endregion

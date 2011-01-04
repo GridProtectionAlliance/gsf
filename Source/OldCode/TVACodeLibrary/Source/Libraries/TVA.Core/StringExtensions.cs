@@ -61,6 +61,8 @@
 //       Added an overload for ConvertToType() that takes CultureInfo as a parameter.
 //  12/07/2010 - Pinal C. Patel
 //       Updated ConvertToType() to return the type default if passed in string is null or empty.
+//  01/04/2011 - J. Ritchie Carroll
+//       Modified ConvertToType culture default to InvariantCulture for English style parsing defaults.
 //
 //*******************************************************************************************************
 
@@ -284,7 +286,7 @@
 
 //******************************************************************************************************
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
 //
 //  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
@@ -418,7 +420,7 @@ namespace TVA
 
             // Initialize culture info if not specified.
             if (culture == null)
-                culture = CultureInfo.CurrentCulture;
+                culture = CultureInfo.InvariantCulture;
 
             try
             {
@@ -1225,7 +1227,7 @@ namespace TVA
             if (string.IsNullOrEmpty(value))
                 return "";
 
-            return System.Globalization.CultureInfo.CurrentUICulture.TextInfo.ToTitleCase(value.ToLower());
+            return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToLower());
         }
 
         /// <summary>

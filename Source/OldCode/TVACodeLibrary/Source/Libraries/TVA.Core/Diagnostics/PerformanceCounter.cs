@@ -21,6 +21,8 @@
 //       Fixed issue with counters not disposing properly.
 //  01/03/2011 - J. Ritchie Carroll
 //       Added total lifetime counter statistics.
+//  01/04/2011 - J. Ritchie Carroll
+//       Fixed issue with application of value divisor on lifetime statistics.
 //
 //*******************************************************************************************************
 
@@ -308,7 +310,7 @@ namespace TVA.Diagnostics
         /// <summary>
         /// Default divisor to be applied to the statistical value.
         /// </summary>
-        public const float DefaultValueDivisor = 1;
+        public const float DefaultValueDivisor = 1.0F;
 
         /// <summary>
         /// Default number of samples over which statistical values are to be calculated.
@@ -381,9 +383,11 @@ namespace TVA.Diagnostics
             this.AliasName = aliasName;
             this.ValueUnit = valueUnit;
             this.ValueDivisor = valueDivisor;
+
             m_samplingWindow = DefaultSamplingWindow;
             m_samples = new List<float>();
             m_counter = new System.Diagnostics.PerformanceCounter(categoryName, counterName, instanceName);
+
             Reset();
         }
 
@@ -412,6 +416,7 @@ namespace TVA.Diagnostics
             {
                 if (string.IsNullOrEmpty(value))
                     throw new ArgumentNullException("value");
+
                 m_aliasName = value;
             }
         }
@@ -451,6 +456,7 @@ namespace TVA.Diagnostics
             {
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
+
                 m_valueDivisor = value;
             }
         }
@@ -470,6 +476,7 @@ namespace TVA.Diagnostics
             {
                 if (value <= 0)
                     throw new ArgumentOutOfRangeException("value", "Value must be greater than 0");
+
                 m_samplingWindow = value;
             }
         }
@@ -498,8 +505,8 @@ namespace TVA.Diagnostics
             {
                 if (m_samples.Count <= 0)
                     return float.NaN;
-                else
-                    return m_samples[m_samples.Count - 1] / m_valueDivisor;
+
+                return m_samples[m_samples.Count - 1] / m_valueDivisor;
             }
         }
 
@@ -512,8 +519,8 @@ namespace TVA.Diagnostics
             {
                 if (m_samples.Count <= 0)
                     return float.NaN;
-                else
-                    return m_samples.Min() / m_valueDivisor;
+
+                return m_samples.Min() / m_valueDivisor;
             }
         }
 
@@ -526,8 +533,8 @@ namespace TVA.Diagnostics
             {
                 if (m_samples.Count <= 0)
                     return float.NaN;
-                else
-                    return m_samples.Max() / m_valueDivisor;
+
+                return m_samples.Max() / m_valueDivisor;
             }
         }
 
@@ -540,8 +547,8 @@ namespace TVA.Diagnostics
             {
                 if (m_samples.Count <= 0)
                     return float.NaN;
-                else
-                    return m_samples.Average() / m_valueDivisor;
+
+                return m_samples.Average() / m_valueDivisor;
             }
         }
 
@@ -552,7 +559,7 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return m_lifetimeMaximum;
+                return m_lifetimeMaximum / m_valueDivisor;
             }
         }
 
@@ -563,7 +570,10 @@ namespace TVA.Diagnostics
         {
             get
             {
-                return (float)(m_lifetimeTotal / (decimal)m_lifetimeSampleCount);
+                if (m_lifetimeSampleCount > 0)
+                    return (float)(m_lifetimeTotal / (decimal)m_lifetimeSampleCount) / m_valueDivisor;
+
+                return float.NaN;
             }
         }
 
@@ -647,7 +657,7 @@ namespace TVA.Diagnostics
                 // Maintain counter samples rolling window size
                 while (m_samples.Count > m_samplingWindow)
                 {
-                    m_samples.RemoveAt(0);                    
+                    m_samples.RemoveAt(0);
                 }
 
                 // Track lifetime maximum value
