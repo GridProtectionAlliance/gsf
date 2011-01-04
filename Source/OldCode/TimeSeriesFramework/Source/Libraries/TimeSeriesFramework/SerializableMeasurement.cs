@@ -185,7 +185,7 @@ namespace TimeSeriesFramework
         public int Initialize(byte[] buffer, int startIndex, int count)
         {
             if (count < FixedLength)
-                throw new InvalidOperationException("Not enough buffer available to deserialized measurement.");
+                throw new InvalidOperationException("Not enough buffer available to deserialize measurement.");
 
             int length, index = startIndex;
 

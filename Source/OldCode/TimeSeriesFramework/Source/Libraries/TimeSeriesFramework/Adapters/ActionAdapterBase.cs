@@ -86,9 +86,11 @@ namespace TimeSeriesFramework.Adapters
         /// </summary>
         protected ActionAdapterBase() : base()
         {
+            m_name = this.GetType().Name;
+            m_settings = new Dictionary<string, string>();
+
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
-            m_settings = new Dictionary<string, string>();
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
             
             // For most implementations millisecond resolution will be sufficient
@@ -571,10 +573,18 @@ namespace TimeSeriesFramework.Adapters
             base.Stop();
         }
 
-        // Assigns the reference to the parent adapter collection that will contain this adapter.
-        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        /// <summary>
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        /// <param name="parent">Parent adapter collection.</param>
+        protected virtual void AssignParentCollection(IAdapterCollection parent)
         {
             m_parent = parent;
+        }
+
+        void IAdapter.AssignParentCollection(IAdapterCollection parent)
+        {
+            AssignParentCollection(parent);
         }
 
         /// <summary>

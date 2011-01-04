@@ -187,7 +187,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
         /// </summary>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="framesPerSecond">The desired number of data frames per second.</param>
         /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
         /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
@@ -220,7 +220,7 @@ namespace TimeSeriesFramework.Transport
         /// <summary>
         /// Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
         /// </summary>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
@@ -244,7 +244,7 @@ namespace TimeSeriesFramework.Transport
         /// Subscribes (or re-subscribes) to a data publisher for a set of data points.
         /// </summary>
         /// <param name="synchronized">Boolean value that determines if subscription should be synchronized.</param>
-        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>false</c> for bandwidth conservation.</param>
+        /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
         /// <param name="connectionString">Connection string that defines required and optional parameters for the subscription.</param>
         /// <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
         public virtual bool Subscribe(bool synchronized, bool compactFormat, string connectionString)

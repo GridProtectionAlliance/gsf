@@ -147,7 +147,7 @@ namespace TimeSeriesFramework.Transport
             public SynchronizedClientSubscription(DataPublisher parent, Guid clientID)
             {
                 // Pass parent reference into base class
-                ((IAdapter)this).AssignParentCollection(parent);
+                AssignParentCollection(parent);
 
                 m_parent = parent;
                 m_clientID = clientID;
@@ -340,7 +340,7 @@ namespace TimeSeriesFramework.Transport
             public UnsynchronizedClientSubscription(DataPublisher parent, Guid clientID)
             {
                 // Pass parent reference into base class
-                ((IAdapter)this).AssignParentCollection(parent);
+                AssignParentCollection(parent);
 
                 m_parent = parent;
                 m_clientID = clientID;

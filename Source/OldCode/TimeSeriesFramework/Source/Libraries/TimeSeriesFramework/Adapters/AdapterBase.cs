@@ -106,8 +106,10 @@ namespace TimeSeriesFramework.Adapters
         protected AdapterBase()
         {
             m_name = this.GetType().Name;
-            m_initializeWaitHandle = new ManualResetEvent(false);
             m_settings = new Dictionary<string, string>();
+
+            // Create wait handle to use for adapter initialization
+            m_initializeWaitHandle = new ManualResetEvent(false);
             m_initializationTimeout = DefaultInitializationTimeout;
         }
 
@@ -652,7 +654,7 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="IAdapter"/>.
+        /// Assigns the reference to the parent <see cref="IAdapterCollection"/> that will contain this <see cref="AdapterBase"/>.
         /// </summary>
         /// <param name="parent">Parent adapter collection.</param>
         protected virtual void AssignParentCollection(IAdapterCollection parent)
