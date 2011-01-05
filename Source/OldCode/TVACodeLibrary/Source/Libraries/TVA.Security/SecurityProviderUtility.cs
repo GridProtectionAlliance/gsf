@@ -10,6 +10,10 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  01/05/2011 - Pinal C. Patel
+//       Added PasswordRequirement, NotificationSmtpServer and NotificationSenderEmail settings to the
+//       config file.
+//       Added GeneratePassword(), ValidatePassword() and SendNotification() methods.
 //
 //*******************************************************************************************************
 
@@ -231,12 +235,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Security;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Web.Security;
+using TVA.Collections;
 using TVA.Configuration;
+using TVA.Net.Smtp;
 
 namespace TVA.Security
 {
@@ -249,15 +253,13 @@ namespace TVA.Security
 
         //Constants
 
-        private const string DefaultSettingsCategory = "SecurityProvider";
+        private const string SettingsCategory = "SecurityProvider";
         private const string DefaultProviderType = "TVA.Security.SqlSecurityProvider, TVA.Security";
         private const string DefaultIncludedResources = "*=*";
         private const string DefaultExcludedResources = "";
-
-        /// <summary>
-        /// Regular expression used for validating the passwords of external users.
-        /// </summary>
-        private const string StrongPasswordRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
+        private const string DefaultPasswordRequirement = @"^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&*()_+`{}|;':"",./<>?\-\=\[\]\\]).*$";
+        private const string DefaultNotificationSmtpServer = Mail.DefaultSmtpServer;
+        private const string DefaultNotificationSenderEmail = "sender@company.com";
 
         #endregion
 
@@ -267,19 +269,28 @@ namespace TVA.Security
         private static string s_providerType;
         private static ICollection<string> s_excludedResources;
         private static IDictionary<string, string> s_includedResources;
+        private static string s_passwordRequirement;
+        private static string s_notificationSmtpServer;
+        private static string s_notificationSenderEmail;
 
         // Static Constructor
         static SecurityProviderUtility()
         {
             // Load settings from config file.
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[DefaultSettingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
             settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
             settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
             settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
+            settings.Add("PasswordRequirement", DefaultPasswordRequirement, "Regular expression that specifies the password policy to be enforced on user accounts.");
+            settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
+            settings.Add("NotificationSenderEmail", DefaultNotificationSenderEmail, "Email address of the sender of email notification messages.");
             s_providerType = settings["ProviderType"].ValueAsString();
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
+            s_passwordRequirement = settings["PasswordRequirement"].ValueAsString();
+            s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();
+            s_notificationSenderEmail = settings["NotificationSenderEmail"].ValueAsString();
         }
 
         // Static Methods
@@ -292,7 +303,7 @@ namespace TVA.Security
         public static ISecurityProvider CreateProvider(string username)
         {
             // Instantiate the provider.
-            ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;               
+            ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
 
             // Initialize the provider.
             provider.Initialize();
@@ -359,7 +370,6 @@ namespace TVA.Security
             return Regex.IsMatch(target, string.Format("^{0}$", spec), RegexOptions.IgnoreCase);
         }
 
-
         /// <summary>
         /// Encrypts the password to a one-way hash using the SHA1 hash algorithm.
         /// </summary>
@@ -367,28 +377,83 @@ namespace TVA.Security
         /// <returns>Encrypted password.</returns>
         public static string EncryptPassword(string password)
         {
+            // We prepend salt text to the password and then has it to make it even more secure.
+            return FormsAuthentication.HashPasswordForStoringInConfigFile(@"O3990\P78f9E66b:a35_V©6M13©6~2&[" + password, "SHA1");
+        }
 
-            if (Regex.IsMatch(password, StrongPasswordRegex))
+        /// <summary>
+        /// Generates a random password of the specified <paramref name="length"/> with at least one uppercase letter, one lowercase letter, one special character and one digit.
+        /// </summary>
+        /// <param name="length">Length of the password to generate.</param>
+        /// <returns>Randomly generated password of the specified <paramref name="length"/>.</returns>
+        /// <exception cref="ArgumentException">A value of less than 8 is specified for the <paramref name="length"/>.</exception>
+        public static string GeneratePassword(int length)
+        {
+            if (length < 8)
+                throw new ArgumentException("Value must be at least 8", "length");
+
+            // ASCII character ranges:
+            // Lower case - 97 to 122
+            // Upper case - 65 to 90
+            // Special character - 33 to 47
+            // Digits - 48 to 57
+
+            int cursor = 0;
+            int lower = Cryptography.Random.Int32Between(1, length / 2);
+            int upper = Cryptography.Random.Int32Between(1, (length - lower) / 2);
+            int special = Cryptography.Random.Int32Between(1, (length - (lower + upper)) / 2);
+            int digits = length - (lower + upper + special);
+            char[] password = new char[length];
+            for (int i = 0; i < lower; i++)
             {
-                // We prepend salt text to the password and then has it to make it even more secure.
-                return FormsAuthentication.HashPasswordForStoringInConfigFile("O3990\\P78f9E66b:a35_VÂ©6M13Â©6~2&[" + password, "SHA1");
+                password[cursor] = (char)Cryptography.Random.Int32Between(97, 122);
+                cursor++;
             }
+            for (int i = 0; i < upper; i++)
+            {
+                password[cursor] = (char)Cryptography.Random.Int32Between(65, 90);
+                cursor++;
+            }
+            for (int i = 0; i < special; i++)
+            {
+                password[cursor] = (char)Cryptography.Random.Int32Between(33, 47);
+                cursor++;
+            }
+            for (int i = 0; i < digits; i++)
+            {
+                password[cursor] = (char)Cryptography.Random.Int32Between(48, 57);
+                cursor++;
+            }
+
+            // Scramble for more randomness.
+            List<char> scrambledPassword = new List<char>(password);
+            scrambledPassword.Scramble();
+
+            return new string(scrambledPassword.ToArray());
+        }
+
+        /// <summary>
+        /// Determines if the specified <paramref name="password"/> is valid based on password requirement specified in the config file.
+        /// </summary>
+        /// <param name="password">Password to be validated.</param>
+        /// <returns>true if the password is valid, otherwise false.</returns>
+        public static bool ValidatePassword(string password)
+        {
+            if (Regex.IsMatch(password, s_passwordRequirement))
+                return true;
             else
-            {
-                // Password does not meet the strong password rule defined below, so we don't encrypt the password.
-                StringBuilder message = new StringBuilder();
-                message.Append("Password does not meet the following criteria:");
-                message.AppendLine();
-                message.Append("- Password must be at least 8 characters");
-                message.AppendLine();
-                message.Append("- Password must contain at least 1 digit");
-                message.AppendLine();
-                message.Append("- Password must contain at least 1 upper case letter");
-                message.AppendLine();
-                message.Append("- Password must contain at least 1 lower case letter");
+                return false;
+        }
 
-                throw new SecurityException(message.ToString());
-            }
+        /// <summary>
+        /// Sends email notification message to the specified <paramref name="recipient"/> using settings specified in the config file.
+        /// </summary>
+        /// <param name="recipient">Email address of the notification recipient.</param>
+        /// <param name="subject">Subject of the notification.</param>
+        /// <param name="body">Content of the notification.</param>
+        public static void SendNotification(string recipient, string subject, string body)
+        {
+            Mail.Send(s_notificationSenderEmail, recipient, subject, body, false, s_notificationSmtpServer);
         }
 
         #endregion

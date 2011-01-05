@@ -12,6 +12,9 @@
 //       Generated original version of source code.
 //  12/03/2010 - Pinal C. Patel
 //       Added TranslateRole() to allow providers to perform translation on role name.
+//  01/05/2011 - Pinal C. Patel
+//       Added CanRefreshData, CanUpdateData, CanResetPassword and CanChangePassword properties along 
+//       with accompanying RefreshData(), UpdateData(), ResetPassword()  and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -257,15 +260,29 @@ namespace TVA.Security
         /// </summary>
         UserData UserData { get; }
 
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
+        /// </summary>
+        bool CanRefreshData { get; }
+
+        /// <summary>
+        /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
+        /// </summary>
+        bool CanUpdateData { get; }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
+        /// </summary>
+        bool CanResetPassword { get; }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
+        /// </summary>
+        bool CanChangePassword { get; }
+
         #endregion
 
         #region [ Methods ]
-
-        /// <summary>
-        /// Refreshes the <see cref="UserData"/>.
-        /// </summary>
-        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
-        bool RefreshData();
 
         /// <summary>
         /// Authenticates the user.
@@ -273,6 +290,33 @@ namespace TVA.Security
         /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         bool Authenticate(string password);
+
+        /// <summary>
+        /// Refreshes the <see cref="UserData"/> from the backend datastore.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        bool RefreshData();
+
+        /// <summary>
+        /// Updates the <see cref="UserData"/> in the backend datastore.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
+        bool UpdateData();
+
+        /// <summary>
+        /// Resets user password in the backend datastore.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to the user's security question.</param>
+        /// <returns>true if the password is reset, otherwise false.</returns>
+        bool ResetPassword(string securityAnswer);
+
+        /// <summary>
+        /// Changes user password in the backend datastore.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        bool ChangePassword(string oldPassword, string newPassword);
 
         /// <summary>
         /// Performs a translation of the specified user <paramref name="role"/>.

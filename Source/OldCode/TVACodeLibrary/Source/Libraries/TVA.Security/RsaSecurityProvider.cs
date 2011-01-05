@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  SecureWindow.cs - Gbtc
+//  RsaSecurityProvider.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  06/17/2010 - Pinal C. Patel
+//  11/26/2010 - Pinal C. Patel
 //       Generated original version of source code.
-//  08/11/2010 - Pinal C. Patel
-//       Made key methods virtual for extensibility.
 //
 //*******************************************************************************************************
 
@@ -231,129 +229,14 @@
 */
 #endregion
 
-using System;
-using System.ComponentModel;
-using System.Security;
-using System.Security.Principal;
-using System.Threading;
-using System.Windows;
-using TVA.Security;
+//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Text;
 
-namespace TVA.Windows
-{
-    /// <summary>
-    /// Represents a WPF window secured using role-based security.
-    /// </summary>
-    /// <example>
-    /// Required config file entries:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <configSections>
-    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-    ///   </configSections>
-    ///   <categorizedSettings>
-    ///     <securityProvider>
-    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-    ///         description="Connection string to be used for connection to the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
-    ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
-    ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-    ///         encrypted="false" />
-    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
-    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-    ///         encrypted="false" />
-    ///     </securityProvider>
-    ///     <activeDirectory>
-    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-    ///         encrypted="true" />
-    ///     </activeDirectory>
-    ///   </categorizedSettings>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// XAML to be used for the WPF window that inherits from <see cref="SecureWindow"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <src:SecureWindow x:Class="SecureWpfApplication.Window1"
-    ///     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    ///     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-    ///     xmlns:src="clr-namespace:TVA.Windows;assembly=TVA.Windows"
-    ///     Title="Window1" Height="300" Width="300">
-    ///     <Grid>
-    /// 
-    ///     </Grid>
-    /// </src:SecureWindow>
-    /// ]]>
-    /// </code>
-    /// </example>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecureWindow : Window
-    {
-        #region [ Methods ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SecureWindow"/> class.
-        /// </summary>
-        public SecureWindow()
-        {
-            this.Initialized += SecureWindow_Initialized;
-        }
-
-        /// <summary>
-        /// Gets the name of resource being accessed.
-        /// </summary>
-        /// <returns>Name of the resource being accessed.</returns>
-        protected virtual string GetResourceName()
-        {
-            if (!string.IsNullOrEmpty(this.Name))
-                return this.Name;
-            else
-                return this.GetType().Name;
-        }
-
-        private void SecureWindow_Initialized(object sender, EventArgs e)
-        {
-            // Don't proceed if the window is opened in design mode.
-            if (DesignerProperties.GetIsInDesignMode(this))
-                return;
-
-            // Check if the resource is excluded from being secured.
-            string resource = GetResourceName();
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
-                return;
-
-            // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
-                Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-            // Setup the security provider for role-based security.
-            if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-
-            // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-                throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
-
-            // Perform a top-level permission check on the resource being accessed.
-            if (!SecurityProviderUtility.IsResourceAccessible(resource))
-                throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
-        }
-
-        #endregion
-    }
-}
+//namespace TVA.Security
+//{
+//    class RsaSecurityProvider
+//    {
+//    }
+//}

@@ -22,6 +22,9 @@
 //       Fixed a bug in the caching mechanism employed in Current static property.
 //  12/03/2010 - Pinal C. Patel
 //       Added TranslateRole() to allow providers to perform translation on role name.
+//  01/05/2011 - Pinal C. Patel
+//       Added CanRefreshData, CanUpdateData, CanResetPassword and CanChangePassword properties along 
+//       with accompanying RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -334,6 +337,13 @@ namespace TVA.Security
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
+    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
+    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///   </categorizedSettings>
     /// </configuration>
@@ -374,6 +384,10 @@ namespace TVA.Security
         private bool m_persistSettings;
         private string m_settingsCategory;
         private UserData m_userData;
+        private bool m_canRefreshData;
+        private bool m_canUpdateData;
+        private bool m_canResetPassword;
+        private bool m_canChangePassword;
         private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
@@ -386,7 +400,11 @@ namespace TVA.Security
         /// Initializes a new instance of the security provider.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        protected SecurityProviderBase(string username)
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+        /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        protected SecurityProviderBase(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
         {
             // Verify specified username.
             if (string.IsNullOrEmpty(username))
@@ -398,6 +416,10 @@ namespace TVA.Security
 
             // Initialize member variables.
             m_userData = new UserData(username);
+            m_canRefreshData = canRefreshData;
+            m_canUpdateData = canUpdateData;
+            m_canResetPassword = canResetPassword;
+            m_canChangePassword = canChangePassword;
             m_applicationName = DefaultApplicationName;
             m_connectionString = DefaultConnectionString;
             m_persistSettings = DefaultPersistSettings;
@@ -446,22 +468,7 @@ namespace TVA.Security
             }
         }
 
-        /// <summary>
-        /// Gets the <see cref="UserData"/> object containing information about the user.
-        /// </summary>
-        public UserData UserData
-        {
-            get
-            {
-                return m_userData;
-            }
-            protected set
-            {
-                m_userData = value;
-            }
-        }
-
-        /// <summary>
+         /// <summary>
         /// Gets or sets a boolean value that indicates whether security provider settings are to be saved to the config file.
         /// </summary>
         public bool PersistSettings
@@ -510,6 +517,61 @@ namespace TVA.Security
             }
         }
 
+        /// <summary>
+        /// Gets the <see cref="UserData"/> object containing information about the user.
+        /// </summary>
+        public virtual UserData UserData
+        {
+            get
+            {
+                return m_userData;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="RefreshData"/> operation is supported.
+        /// </summary>
+        public virtual bool CanRefreshData
+        {
+            get
+            {
+                return m_canRefreshData;
+            }
+        }
+
+        /// <summary>
+        /// Geta a boolean value that indicates whether <see cref="UpdateData"/> operation is supported.
+        /// </summary>
+        public virtual bool CanUpdateData 
+        {
+            get
+            {
+                return m_canUpdateData;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
+        /// </summary>
+        public virtual bool CanResetPassword 
+        {
+            get
+            {
+                return m_canResetPassword;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="ChangePassword"/> operation is supported.
+        /// </summary>
+        public virtual bool CanChangePassword 
+        {
+            get
+            {
+                return m_canChangePassword;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -517,17 +579,38 @@ namespace TVA.Security
         #region [ Abstract ]
 
         /// <summary>
-        /// When overridden in a derived class, refreshes the <see cref="UserData"/>.
-        /// </summary>
-        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
-        public abstract bool RefreshData();
-
-        /// <summary>
         /// When overridden in a derived class, authenticates the user.
         /// </summary>
         /// <param name="password">Password to be used for authentication.</param>
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public abstract bool Authenticate(string password);
+
+        /// <summary>
+        /// When overridden in a derived class, refreshes the <see cref="UserData"/> from the backend datastore.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is refreshed, otherwise false.</returns>
+        public abstract bool RefreshData();
+
+        /// <summary>
+        /// When overridden in a derived class, updates the <see cref="UserData"/> in the backend datastore.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
+        public abstract bool UpdateData();
+
+        /// <summary>
+        /// When overridden in a derived class, resets user password in the backend datastore.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to the user's security question.</param>
+        /// <returns>true if the password is reset, otherwise false.</returns>
+        public abstract bool ResetPassword(string securityAnswer);
+
+        /// <summary>
+        /// When overridden in a derived class, changes user password in the backend datastore.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        public abstract bool ChangePassword(string oldPassword, string newPassword);
 
         #endregion
 
@@ -547,10 +630,11 @@ namespace TVA.Security
         {
             if (!m_initialized)
             {
-                LoadSettings();
-                RefreshData();
-                Authenticate(string.Empty);
-                m_initialized = true; // Initialize only once.
+                LoadSettings();             // Load settings from config file.
+                if (CanRefreshData)
+                    RefreshData();          // Load user data from datastore.
+                Authenticate(string.Empty); // Authenticate user credentials.
+                m_initialized = true;       // Initialize only once.
             }
         }
 

@@ -13,6 +13,10 @@
 //  06/02/2010 - Pinal C. Patel
 //       Added sample customization config file entries to code comments.
 //       Modified to set the text cursor focus on input fields for ease of use.
+//  01/05/2011 - Pinal C. Patel
+//       Added HelpPage and FooterText customization settings that can be specified in the config file.
+//       Added the ability to change and reset passwords.
+//       Updated UI for compatibility across multiple browsers including mobile devices.
 //
 //*******************************************************************************************************
 
@@ -233,10 +237,13 @@
 #endregion
 
 using System;
+using System.Security;
+using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 using TVA.Configuration;
 using TVA.Security;
+using TVA.Web.UI;
 
 namespace TVA.Web.Embedded
 {
@@ -254,9 +261,10 @@ namespace TVA.Web.Embedded
     ///   </configSections>
     ///   <categorizedSettings>
     ///     <securityPortal>
-    ///       <add name="CompanyName" value="My Company" description="Name of the company." encrypted="false" />
-    ///       <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
     ///       <add name="CompanyLogo" value="~/images/MyCompanyLogo.png" description="Image file of the company's logo." encrypted="false" />
+    ///       <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
+    ///       <add name="HelpPage" value="~/files/Help.pdf" description="Link to the help page." encrypted="false" />
+    ///       <add name="FooterText" value="(C) My Company. All rights reserved." description="Text to be displayed in the footer." encrypted="false" />
     ///     </securityPortal>
     ///   </categorizedSettings>
     /// </configuration>
@@ -268,16 +276,23 @@ namespace TVA.Web.Embedded
         #region [ Members ]
 
         // Constants
+        private const string UsernameKey = "Username";
         private const string CookieName = "SecurityPortal";
         private const string StaticPageTitle = "Security Portal";
         private const string SettingsCategory = "SecurityPortal";
-        private const string UnauthorizedErrorCode = "401";
-        private const string AccessDeniedErrorCode = "403";
+        private const string StatusCodeRequestKey = "s";
+        private const string ReturnUrlRequestKey = "r";
+        private const string UnauthorizedStatusCode = "401";
+        private const string AccessDeniedStatusCode = "403";
+        private const string PasswordResetStatusCode = "401.11";
+        private const string PasswordChangeStatusCode = "403.11";
+        private const string EmbeddedHelpFile = "TVA.Web.Embedded.Files.Help.pdf";
         private const string EmbeddedHelpImage = "TVA.Web.Embedded.Images.Help.png";
         private const string EmbeddedWarningImage = "TVA.Web.Embedded.Images.Warning.png";
         private const string EmbeddedCompanyLogo = "TVA.Web.Embedded.Images.TVALogo.png";
-        private const string DefaultCompanyName = "Tennessee Valley Authority";
+        private const string EmbeddedStyleSheet = "TVA.Web.Embedded.Styles.SecurityPortal.css";
         private const string DefaultCompanyLink = "http://www.tva.gov";
+        private const string DefaultFooterText = "© Tennessee Valley Authority. All rights reserved.";
 
         #endregion
 
@@ -297,79 +312,140 @@ namespace TVA.Web.Embedded
             // Setup company logo.
             setting = settings["CompanyLogo"];
             if (setting != null)
-                LogoImage.ImageUrl = setting.Value;
+                LogoLink.ImageUrl = setting.Value;
             else
-                LogoImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
-
-            // Setup company name.
-            setting = settings["CompanyName"];
-            if (setting != null)
-                CompanyLink.Text = setting.Value;
-            else
-                CompanyLink.Text = DefaultCompanyName;
+                LogoLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
 
             // Setup company link.
             setting = settings["CompanyLink"];
             if (setting != null)
-                CompanyLink.NavigateUrl = setting.Value;
+                LogoLink.NavigateUrl = setting.Value;
             else
-                CompanyLink.NavigateUrl = DefaultCompanyLink;
+                LogoLink.NavigateUrl = DefaultCompanyLink;
+
+            // Setup help link.
+            setting = settings["HelpPage"];
+            if (setting != null)
+                HelpLink.NavigateUrl = setting.Value;
+            else
+                HelpLink.NavigateUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpFile);
+
+            // Setup footer information.
+            setting = settings["FooterText"];
+            if (setting != null)
+                FooterLabel.Text = setting.Value;
+            else
+                FooterLabel.Text = DefaultFooterText;
 
             HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
             WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
+            StyleSheet.Attributes["href"] = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedStyleSheet);
 
-            if (Request["s"] == UnauthorizedErrorCode || SecurityProviderCache.CurrentProvider == null)
+            if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || SecurityProviderCache.CurrentProvider == null)
             {
+                // Show login.
                 Page.Title = StaticPageTitle + " :: Login";
-
                 LoginPanel.Visible = true;
-                ContentPlaceHolder.Controls.Clear();
                 ContentPlaceHolder.Controls.Add(LoginPanel);
 
-                if (string.IsNullOrEmpty(UsernameInput.Text))
+                // Setup UI.
+                LoginButton.SetSubmitOnce();
+                LoginPanel.DefaultButton = LoginButton.ID;
+                ForgotPassword.NavigateUrl = GetRedirectUrl(PasswordResetStatusCode);
+                if (!Page.IsPostBack)
                 {
-                    UsernameInput.Text = Response.Cookies[CookieName]["Username"];
-                    if (string.IsNullOrEmpty(UsernameInput.Text))
+                    LoginUsername.Text = GetSavedUsername();
+                    if (string.IsNullOrEmpty(LoginUsername.Text))
                     {
-                        UsernameInput.Focus();
+                        LoginUsername.Focus();
                     }
                     else
                     {
-                        PasswordInput.Focus();
-                        RememberMeCheckBox.Checked = true;
+                        LoginPassword.Focus();
+                        RememberUsername.Checked = true;
                     }
                 }
             }
-            else if (Request["s"] == AccessDeniedErrorCode)
+            else if (Request[StatusCodeRequestKey] == AccessDeniedStatusCode)
             {
+                // Show access denied.
                 Page.Title = StaticPageTitle + " :: Access Denied";
-
                 AccessDeniedPanel.Visible = true;
-                ContentPlaceHolder.Controls.Clear();
                 ContentPlaceHolder.Controls.Add(AccessDeniedPanel);
+            }
+            else if (Request[StatusCodeRequestKey] == PasswordChangeStatusCode)
+            {
+                // Show change password.
+                Page.Title = StaticPageTitle + " :: Change Password";
+                ChangePasswordPanel.Visible = true;
+                ContentPlaceHolder.Controls.Add(ChangePasswordPanel);
+
+                // Setup UI.
+                ChangeButton.SetSubmitOnce();
+                ChangePasswordPanel.DefaultButton = ChangeButton.ID;
+                if (!Page.IsPostBack)
+                {
+                    ChangePasswordUsername.Text = GetSavedUsername();
+                    if (string.IsNullOrEmpty(ChangePasswordUsername.Text))
+                        ChangePasswordUsername.Focus();
+                    else
+                        ChangePasswordOldPassword.Focus();
+                }
+            }
+            else if (Request[StatusCodeRequestKey] == PasswordResetStatusCode)
+            {
+                // Show reset password.
+                Page.Title = StaticPageTitle + " :: Reset Password";
+                if (ViewState[UsernameKey] == null)
+                {
+                    // Check for reset support.
+                    ResetPasswordCheckPanel.Visible = true;
+                    ContentPlaceHolder.Controls.Add(ResetPasswordCheckPanel);
+
+                    // Setup UI.
+                    ResetCheckButton.SetSubmitOnce();
+                    ResetPasswordUsername.Focus();
+                    ResetPasswordCheckPanel.DefaultButton = ResetCheckButton.ID;
+                }
+                else
+                {
+                    // Perform password reset.
+                    ResetPasswordFinalPanel.Visible = true;
+                    ContentPlaceHolder.Controls.Add(ResetPasswordFinalPanel);
+
+                    // Setup UI.
+                    ResetFinalButton.SetSubmitOnce();
+                    ResetPasswordSecurityAnswer.Focus();
+                    ResetPasswordFinalPanel.DefaultButton = ResetFinalButton.ID;
+                    ResetPasswordSecurityQuestion.Text = ViewState["SecurityQuestion"].ToString();
+                    MessageLabel.Text = string.Empty;
+                }
             }
             else
             {
-                UserData data = SecurityProviderCache.CurrentProvider.UserData;
-                UsernameLabel.Text = data.Username;
-                CompanyLabel.Text = data.CompanyName;
-                FirstNameInput.Text = data.FirstName;
-                LastNameInput.Text = data.LastName;
-                EmailAddressInput.Text = data.EmailAddress;
-                PhoneNumberInput.Text = data.PhoneNumber;
-                if (!data.IsExternal)
-                {
-                    FirstNameInput.Enabled = false;
-                    LastNameInput.Enabled = false;
-                    EmailAddressInput.Enabled = false;
-                    PhoneNumberInput.Enabled = false;
-                }
-
+                // Show my account.
                 Page.Title = StaticPageTitle + " :: My Account";
-                UpdateButton.Enabled = false;
                 MyAccountPanel.Visible = true;
                 ContentPlaceHolder.Controls.Clear();
                 ContentPlaceHolder.Controls.Add(MyAccountPanel);
+
+                // Setup UI.
+                UpdateButton.SetSubmitOnce();
+                MyAccountPanel.DefaultButton = UpdateButton.ID;
+                if (!Page.IsPostBack)
+                {
+                    ISecurityProvider provider = SecurityProviderCache.CurrentProvider;
+                    ShowUserData(provider);
+                    if (!provider.CanUpdateData)
+                    {
+                        AccountUserFirstName.Enabled = false;
+                        AccountUserLastName.Enabled = false;
+                        AccountUserEmailAddress.Enabled = false;
+                        AccountUserPhoneNumber.Enabled = false;
+                        AccountUserSecurityAnswer.Enabled = false;
+                        UpdateButton.Enabled = false;
+                    }
+                }
             }
         }
 
@@ -383,21 +459,20 @@ namespace TVA.Web.Embedded
             try
             {
                 // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(UsernameInput.Text);
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(LoginUsername.Text);
                 provider.Initialize();
-                if (provider.Authenticate(PasswordInput.Text))
+                if (provider.Authenticate(LoginPassword.Text))
                 {
-                    // Setup security provider for subsequent uses.
+                    // Credentials were authenticated successfully.
                     SecurityProviderCache.CurrentProvider = provider;
-
-                    if (RememberMeCheckBox.Checked)
+                    if (RememberUsername.Checked)
                     {
-                        Response.Cookies[CookieName]["Username"] = UsernameInput.Text;
+                        Response.Cookies[CookieName][UsernameKey] = LoginUsername.Text;
                         Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(1);
                     }
                     else
                     {
-                        Response.Cookies[CookieName]["Username"] = string.Empty;
+                        Response.Cookies[CookieName][UsernameKey] = string.Empty;
                         Response.Cookies[CookieName].Expires = DateTime.Now.AddYears(-1);
                     }
 
@@ -406,13 +481,37 @@ namespace TVA.Web.Embedded
                 }
                 else
                 {
-                    // Display login failure message.
-                    ErrorMessageLabel.Text = "The username or password is invalid. Please try again.";
+                    // Check why authentication failed.
+                    if (provider.UserData.PasswordChangeDateTime != DateTime.MinValue &&
+                        provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
+                    {
+                        // User must change password.
+                        if (provider.CanChangePassword)
+                            Response.Redirect(GetRedirectUrl(PasswordChangeStatusCode), false);
+                        else
+                            ShowMessage("Account password has expired.", true);
+                    }
+                    else
+                    {
+                        // Show why login failed.
+                        if (!ShowFailureReason(provider))
+                            ShowMessage("Authentication was not successful.", true);
+                    }
                 }
             }
-            catch (Exception ex)
+            catch (SecurityException ex)
             {
-                ErrorMessageLabel.Text = string.Format("Login failed due to an error - {0}", ex.Message);
+                // Show security related error messages.
+                ShowMessage(string.Format("{0}.", ex.Message), true);
+            }
+            catch
+            {
+                // Show ambiguous message for other errors.
+                ShowMessage("Login failed due to an unexpected error.", true);
+            }
+            finally
+            {
+                LoginPassword.Focus();
             }
         }
 
@@ -423,22 +522,284 @@ namespace TVA.Web.Embedded
         /// <param name="e">Arguments of this event.</param>
         protected void UpdateButton_Click(object sender, EventArgs e)
         {
+            ISecurityProvider provider = null;
             try
             {
+                provider = SecurityProviderCache.CurrentProvider;
+                if (provider.CanUpdateData)
+                {
+                    provider.UserData.FirstName = AccountUserFirstName.Text;
+                    provider.UserData.LastName = AccountUserLastName.Text;
+                    provider.UserData.EmailAddress = AccountUserEmailAddress.Text;
+                    provider.UserData.PhoneNumber = AccountUserPhoneNumber.Text;
+                    provider.UserData.SecurityAnswer = AccountUserSecurityAnswer.Text;
+                    provider.UpdateData();
 
+                    ShowMessage("Information has been updated successfully!", false);
+                }
+                else
+                {
+                    ShowMessage("Account does not support updating of information.", true);
+                }
             }
-            catch (Exception)
+            catch (SecurityException ex)
             {
-                throw;
+                // Show security related error messages.
+                ShowMessage(string.Format("{0}.", ex.Message), true);
             }
+            catch
+            {
+                // Show ambiguous message for other errors.
+                ShowMessage("Update failed due to an unexpected error.", true);
+            }
+            finally
+            {
+                ShowUserData(provider);
+            }
+        }
+
+        /// <summary>
+        /// Changes user password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void ChangeButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Initialize the security provider.
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ChangePasswordUsername.Text);
+                provider.Initialize();
+                if (provider.CanChangePassword)
+                {
+                    // Attempt to change password.
+                    if (provider.ChangePassword(ChangePasswordOldPassword.Text, ChangePasswordNewPassword.Text) &&
+                        provider.Authenticate(ChangePasswordNewPassword.Text))
+                    {
+                        // Password changed and authenticated successfully.
+                        SecurityProviderCache.CurrentProvider = provider;
+                        Response.Redirect(GetReferrerUrl(), false);
+                    }
+                    else
+                    {
+                        // Show why password change failed.
+                        if (!ShowFailureReason(provider))
+                        {
+                            if (!provider.UserData.IsAuthenticated)
+                                ShowMessage("Authentication was not successful.", true);
+                            else
+                                ShowMessage("Password change was not successful.", true);
+                        }
+                    }
+                }
+                else
+                {
+                    // Changing password is not supported.
+                    ShowMessage("Account does not support password change.", true);
+                }
+            }
+            catch (SecurityException ex)
+            {
+                // Show security related error messages.
+                ShowMessage(string.Format("{0}.", ex.Message), true);
+            }
+            catch
+            {
+                // Show ambiguous message for other errors.
+                ShowMessage("Password change failed due to an unexpected error.", true);
+            }
+            finally
+            {
+                ChangePasswordOldPassword.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Checks if user password can be reset.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void ResetCheckButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Initialize the security provider.
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
+                provider.Initialize();
+                if (provider.CanResetPassword)
+                {
+                    // Proceed to resetting password.
+                    if (!string.IsNullOrEmpty(provider.UserData.SecurityQuestion) &&
+                        !string.IsNullOrEmpty(provider.UserData.SecurityAnswer))
+                    {
+                        ViewState.Add(UsernameKey, ResetPasswordUsername.Text);
+                        ViewState.Add("SecurityQuestion", provider.UserData.SecurityQuestion);
+
+                        Page.ClientScript.RegisterStartupScript(Page.GetType(), "PostBack", Page.ClientScript.GetPostBackEventReference(Page, null), true);
+                    }
+                    else
+                    {
+                        ShowMessage("Security question and answer must be set to reset password.", true);
+                    }
+                }
+                else
+                {
+                    // Resetting password is not supported.
+                    ShowMessage("Account does not support password reset.", true);
+                }
+            }
+            catch (SecurityException ex)
+            {
+                // Show security related error messages.
+                ShowMessage(string.Format("{0}.", ex.Message), true);
+            }
+            catch
+            {
+                // Show ambiguous message for other errors.
+                ShowMessage("Password reset failed due to an unexpected error.", true);
+            }
+            finally
+            {
+                ResetPasswordUsername.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Resets user password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        protected void ResetFinalButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Initialize the security provider.
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(ResetPasswordUsername.Text);
+                provider.Initialize();
+                if (provider.CanResetPassword)
+                {
+                    // Attempt to reset password.
+                    if (provider.ResetPassword(ResetPasswordSecurityAnswer.Text))
+                    {
+                        // Password reset was successful.
+                        ShowMessage("Your new password has been emailed to you.", false);
+                    }
+                    else
+                    {
+                        // Show why password reset failed.
+                        if (!ShowFailureReason(provider))
+                            ShowMessage("Password reset was not successful.", true);
+                    }
+                }
+                else
+                {
+                    // Resetting password is not supported.
+                    ShowMessage("Account does not support password reset.", true);
+                }
+            }
+            catch (SecurityException ex)
+            {
+                // Show security related error messages.
+                ShowMessage(string.Format("{0}.", ex.Message), true);
+            }
+            catch
+            {
+                // Show ambiguous message for other errors.
+                ShowMessage("Password reset failed due to an unexpected error.", true);
+            }
+            finally
+            {
+                ResetPasswordSecurityAnswer.Focus();
+            }
+        }
+
+        private string GetSavedUsername()
+        {
+            if (Request.Cookies[CookieName] == null)
+                return string.Empty;
+            else
+                return Request.Cookies[CookieName][UsernameKey];
         }
 
         private string GetReferrerUrl()
         {
-            if (Request["r"] != null)
-                return Request["r"];
+            if (Request[ReturnUrlRequestKey] != null)
+                return Request[ReturnUrlRequestKey];
             else
                 return Request.UrlReferrer.AbsolutePath;
+        }
+
+        private string GetRedirectUrl(string newStatusCode)
+        {
+            StringBuilder url = new StringBuilder();
+            if (string.IsNullOrEmpty(Request.Url.Query))
+            {
+                url.AppendFormat("{0}?", Request.Url.AbsoluteUri.TrimEnd('/'));
+            }
+            else
+            {
+                url.AppendFormat("{0}?", Request.Url.AbsoluteUri.Replace(Request.Url.Query, ""));
+
+                foreach (string pair in Request.Url.Query.TrimStart('?').Split('&'))
+                {
+                    string[] pairSplit = pair.Split('=');
+                    if (string.Compare(pairSplit[0], StatusCodeRequestKey, true) != 0)
+                        url.AppendFormat("{0}={1}&", pairSplit[0], pairSplit[1]);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(newStatusCode))
+                url.AppendFormat("{0}={1}", StatusCodeRequestKey, newStatusCode);
+
+            return url.ToString().TrimEnd('?', '&');
+        }
+
+        private void ShowUserData(ISecurityProvider provider)
+        {
+            AccountUserFirstName.Focus();
+            AccountUsername.Text = provider.UserData.Username;
+            AccountUserCompany.Text = provider.UserData.CompanyName;
+            AccountUserFirstName.Text = provider.UserData.FirstName;
+            AccountUserLastName.Text = provider.UserData.LastName;
+            AccountUserEmailAddress.Text = provider.UserData.EmailAddress;
+            AccountUserPhoneNumber.Text = provider.UserData.PhoneNumber;
+            if (string.IsNullOrEmpty(provider.UserData.SecurityQuestion))
+            {
+                AccountUserSecurityQuestion.Visible = false;
+                AccountUserSecurityAnswer.Visible = false;
+                AccountUserSecurityAnswerValidator.Visible = false;
+            }
+            else
+            {
+                AccountUserSecurityQuestion.Text = provider.UserData.SecurityQuestion;
+                AccountUserSecurityAnswer.Text = provider.UserData.SecurityAnswer;
+            }
+        }
+
+        private void ShowMessage(string message, bool isError)
+        {
+            MessageLabel.Text = string.Format("{0}<br /><br />", message);
+            if (isError)
+                MessageLabel.CssClass = "ErrorMessage";
+            else
+                MessageLabel.CssClass = "InformationMessage";
+        }
+
+        private bool ShowFailureReason(ISecurityProvider provider)
+        {
+            if (!provider.UserData.IsDefined)
+                // No such account.
+                ShowMessage("Account does not exist.", true);
+            else if (provider.UserData.IsDisabled)
+                // Account is disabled.
+                ShowMessage("Account is currently disabled.", true);
+            else if (provider.UserData.IsLockedOut)
+                // Account is locked.
+                ShowMessage("Account is currently locked.", true);
+            else
+                return false;
+
+            return true;
         }
 
         #endregion

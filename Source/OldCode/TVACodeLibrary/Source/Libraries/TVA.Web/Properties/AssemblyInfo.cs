@@ -32,7 +32,9 @@ using TVA.Web.Hosting;
 [assembly: EmbeddedResourceFile("TVA.Web.Embedded.SecurityPortal.aspx", "TVA.Web.Embedded")]
 [assembly: EmbeddedResourceFile("TVA.Web.Embedded.SecurityService.svc", "TVA.Web.Embedded")]
 
-// Embedd images used by embedded controls.
+// Embedd resources used by embedded controls.
+[assembly: WebResource("TVA.Web.Embedded.Files.Help.pdf", "application/pdf")]
 [assembly: WebResource("TVA.Web.Embedded.Images.TVALogo.png", "img/png")]
 [assembly: WebResource("TVA.Web.Embedded.Images.Help.png", "img/png")]
 [assembly: WebResource("TVA.Web.Embedded.Images.Warning.png", "img/png")]
+[assembly: WebResource("TVA.Web.Embedded.Styles.SecurityPortal.css", "text/css")]

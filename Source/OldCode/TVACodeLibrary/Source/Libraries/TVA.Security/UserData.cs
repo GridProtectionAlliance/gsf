@@ -326,13 +326,13 @@ namespace TVA.Security
         public string SecurityAnswer { get; set; }
 
         /// <summary>
-        /// Gets the date and time when user must change the password.
+        /// Gets the UTC date and time when user must change the password.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 9)]
         public DateTime PasswordChangeDateTime { get; set; }
 
         /// <summary>
-        /// Gets the date and time when user account was created.
+        /// Gets the UTC date and time when user account was created.
         /// </summary>
         [XmlAttribute(), DataMember(Order = 10)]
         public DateTime AccountCreatedDateTime { get; set; }

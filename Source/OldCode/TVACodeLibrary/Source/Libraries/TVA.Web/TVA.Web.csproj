@@ -123,6 +123,7 @@
     <Compile Include="Services\NamespaceDoc.cs" />
     <Compile Include="Services\SelfHostingService.cs" />
     <Compile Include="Services\Serialization.cs" />
+    <Compile Include="UI\ClientSideExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Core\TVA.Core.csproj">
@@ -167,6 +168,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\Styles\SecurityPortal.css" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Embedded\Files\Help.pdf" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

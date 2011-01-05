@@ -12,6 +12,8 @@
 //       Generated original version of source code.
 //  12/03/2010 - Pinal C. Patel
 //       Override the default behavior of TranslateRole() to translate a SID to its role name.
+//  01/05/2011 - Pinal C. Patel
+//       Added overrides to RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -269,6 +271,13 @@ namespace TVA.Security
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
+    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
+    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///     <activeDirectory>
     ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -303,9 +312,22 @@ namespace TVA.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="LdapSecurityProvider"/> class.
         /// </summary>
-        /// <param name="username"></param>
+        /// <param name="username">Name that uniquely identifies the user.</param>
         public LdapSecurityProvider(string username)
-            : base(username)
+            : this(username, true, false, false, true)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LdapSecurityProvider"/> class.
+        /// </summary>
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+        /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        protected LdapSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
+            : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
         {
         }
 
@@ -332,8 +354,63 @@ namespace TVA.Security
 
         #region [ Methods ]
 
+        #region [ Not Supported ]
+
         /// <summary>
-        /// Refreshes the <see cref="UserData"/>.
+        /// Updates the <see cref="UserData"/> in the backend datastore.
+        /// </summary>
+        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
+        /// <exception cref="NotSupportedException">Always</exception>
+        public override bool UpdateData()
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
+        /// Resets user password in the backend datastore.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to the user's security question.</param>
+        /// <returns>true if the password is reset, otherwise false.</returns>
+        /// <exception cref="NotSupportedException">Always</exception>
+        public override bool ResetPassword(string securityAnswer)
+        {
+            throw new NotSupportedException();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Authenticates the user.
+        /// </summary>
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public override bool Authenticate(string password)
+        {
+            // Check prerequisites.
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
+                (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
+                return false;
+
+            if (string.IsNullOrEmpty(password))
+            {
+                // Validate with current thread principal.
+                m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                UserData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(UserData.LoginID) &&
+                                                string.Compare(m_windowsPrincipal.Identity.Name, UserData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
+            }
+            else
+            {
+                // Validate by performing network logon.
+                string[] userParts = UserData.LoginID.Split('\\');
+                m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
+                UserData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
+            }
+
+            return UserData.IsAuthenticated;
+        }
+
+        /// <summary>
+        /// Refreshes the <see cref="UserData"/> from the backend datastore.
         /// </summary>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
@@ -422,24 +499,6 @@ namespace TVA.Security
                             UserData.Roles.Add(groupName);
                     }
 
-                    //// Retrieve all groups the user is a member of.
-                    //int startIndex, substringLength;
-                    //foreach (string role in user.UserEntry.Properties["memberOf"])
-                    //{
-                    //    startIndex = role.IndexOf("CN=", StringComparison.CurrentCultureIgnoreCase);
-                    //    if (startIndex >= 0)
-                    //    {
-                    //        startIndex += 3;
-                    //        substringLength = role.IndexOf(',');
-                    //        if (substringLength >= 0)
-                    //            substringLength -= startIndex;
-                    //        else
-                    //            substringLength = role.Length;
-
-                    //        UserData.Groups.Add(role.Substring(startIndex, substringLength));
-                    //    }
-                    //}
-
                     return true;
                 }
                 else
@@ -462,31 +521,57 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Authenticates the user.
+        /// Changes user password in the backend datastore.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
-        /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public override bool Authenticate(string password)
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        public override bool ChangePassword(string oldPassword, string newPassword)
         {
-            if (!UserData.IsDefined)
+            // Check prerequisites.
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
                 return false;
 
-            if (string.IsNullOrEmpty(password))
+            UserInfo user = null;
+            WindowsImpersonationContext context = null;
+            try
             {
-                // Validate with current thread principal.
-                m_windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
-                UserData.IsAuthenticated = m_windowsPrincipal != null && !string.IsNullOrEmpty(UserData.LoginID) &&
-                                                string.Compare(m_windowsPrincipal.Identity.Name, UserData.LoginID, true) == 0 && m_windowsPrincipal.Identity.IsAuthenticated;
-            }
-            else
-            {
-                // Validate by performing network logon.
-                string[] userParts = UserData.LoginID.Split('\\');
-                m_windowsPrincipal = UserInfo.AuthenticateUser(userParts[0], userParts[1], password) as WindowsPrincipal;
-                UserData.IsAuthenticated = m_windowsPrincipal != null && m_windowsPrincipal.Identity.IsAuthenticated;
-            }
+                // Verify old password.
+                UserData.PasswordChangeDateTime = DateTime.MinValue;
+                if (!Authenticate(oldPassword))
+                    return false;
 
-            return UserData.IsAuthenticated;
+                if (!ConnectionString.StartsWith("LDAP://", StringComparison.CurrentCultureIgnoreCase) ||
+                    !ConnectionString.StartsWith("LDAPS://", StringComparison.CurrentCultureIgnoreCase))
+                    // Use default LDAP path.
+                    user = new UserInfo(UserData.Username);
+                else
+                    // Use specified LDAP path.
+                    user = new UserInfo(UserData.Username, ConnectionString);
+
+                // Initialize user entry.
+                user.PersistSettings = true;
+                user.Initialize();
+
+                // Impersonate privileged user.
+                context = user.ImpersonatePrivilegedAccount();
+
+                // Change user password.
+                user.UserEntry.Invoke("ChangePassword", oldPassword, newPassword);
+                user.UserEntry.CommitChanges();
+
+                return true;
+            }
+            finally
+            {
+                if (user != null)
+                    user.Dispose();
+
+                if (context != null)
+                    context.Undo();
+
+                RefreshData();
+            }
         }
 
         /// <summary>

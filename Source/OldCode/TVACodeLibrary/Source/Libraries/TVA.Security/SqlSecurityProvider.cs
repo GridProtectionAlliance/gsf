@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  01/05/2011 - Pinal C. Patel
+//       Added overrides to RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -233,10 +235,9 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Security.Principal;
-using System.Threading;
+using System.Security;
+using System.Text;
 using TVA.Data;
-using TVA.Identity;
 
 namespace TVA.Security
 {
@@ -266,6 +267,13 @@ namespace TVA.Security
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
+    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
+    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+    ///         encrypted="false" />
+    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+    ///         encrypted="false" />
     ///     </securityProvider>
     ///     <activeDirectory>
     ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -281,7 +289,7 @@ namespace TVA.Security
     /// </code>
     /// </example>
     public class SqlSecurityProvider : LdapSecurityProvider
-    {      
+    {
         #region [ Constructors ]
 
         /// <summary>
@@ -289,8 +297,57 @@ namespace TVA.Security
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
         public SqlSecurityProvider(string username)
-            : base(username)
+            : this(username, true, false, false, true)
         {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SqlSecurityProvider"/> class.
+        /// </summary>
+        /// <param name="username">Name that uniquely identifies the user.</param>
+        /// <param name="canRefreshData">true if the security provider can refresh <see cref="UserData"/> from the backend datastore, otherwise false.</param>
+        /// <param name="canUpdateData">true if the security provider can update <see cref="UserData"/> in the backend datastore, otherwise false.</param>
+        /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+        /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        protected SqlSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
+            : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
+        {
+        }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Geta a boolean value that indicates whether <see cref="SecurityProviderBase.UpdateData"/> operation is supported.
+        /// </summary>
+        public override bool CanUpdateData
+        {
+            get
+            {
+                if (UserData.IsDefined && UserData.IsExternal)
+                    // Data update supported on external user accounts.
+                    return true;
+                else
+                    // Data update not supported on internal user accounts.
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
+        /// </summary>
+        public override bool CanResetPassword
+        {
+            get
+            {
+                if (UserData.IsDefined && UserData.IsExternal)
+                    // Password reset supported on external user accounts.
+                    return true;
+                else
+                    // Password reset not supported on internal user accounts.
+                    return false;
+            }
         }
 
         #endregion
@@ -298,7 +355,39 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Refreshes the <see cref="UserData"/>.
+        /// Authenticates the user.
+        /// </summary>
+        /// <param name="password">Password to be used for authentication.</param>
+        /// <returns>true if the user is authenticated, otherwise false.</returns>
+        public override bool Authenticate(string password)
+        {
+            // Check prerequisites.
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
+                (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
+                return false;
+
+            try
+            {
+                // Authenticate user credentials.
+                UserData.IsAuthenticated = false;
+                if (!UserData.IsExternal)
+                    // Authenticate against active directory.
+                    LogLogin(base.Authenticate(password));
+                else if (!string.IsNullOrEmpty(password))
+                    // Authenticate against backend datastore.
+                    LogLogin(UserData.IsAuthenticated = (UserData.Password == SecurityProviderUtility.EncryptPassword(password)));
+
+                return UserData.IsAuthenticated;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Refreshes the <see cref="UserData"/> from the backend datastore.
         /// </summary>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
@@ -363,7 +452,7 @@ namespace TVA.Security
                     {
                         base.RefreshData();
                     }
-      
+
                     UserData.Groups.Clear();
                     foreach (DataRow group in userData.Tables[1].Rows)
                     {
@@ -389,35 +478,154 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Authenticates the user.
+        /// Updates the <see cref="UserData"/> in the backend datastore.
         /// </summary>
-        /// <param name="password">Password to be used for authentication.</param>
-        /// <returns>true if the user is authenticated, otherwise false.</returns>
-        public override bool Authenticate(string password)
+        /// <returns>true if <see cref="UserData"/> is updated, otherwise false.</returns>
+        /// <exception cref="NotSupportedException"><see cref="CanUpdateData"/> is false.</exception>
+        public override bool UpdateData()
         {
-            if (!UserData.IsDefined)
+            // Verify update is supported.
+            if (!CanUpdateData)
+                throw new NotSupportedException();
+
+            // Verify user is authenticated.
+            if (!UserData.IsAuthenticated)
                 return false;
 
             try
             {
-                // Authenticate user credentials.
-                UserData.IsAuthenticated = false;
-                if (!UserData.IsExternal)
-                    // Authenticate against active directory.
-                    base.Authenticate(password);
-                else
-                    // Authenticate against backend datastore.
-                    UserData.IsAuthenticated = UserData.Password == SecurityProviderUtility.EncryptPassword(password);
+                using (SqlConnection dbConnection = GetDatabaseConnection())
+                {
+                    if (dbConnection == null)
+                        return false;
 
-                // Log user authentication result.
-                LogLogin(UserData.IsAuthenticated);
+                    dbConnection.ExecuteNonQuery("UPDATE dbo.Users SET UserFirstName = @FirstName, UserLastName = @LastName, UserPhoneNumber = @PhoneNumber, UserEmailAddress = @EmailAddress, UserSecurityAnswer = @SecurityAnswer WHERE UserName = @UserName", new SqlParameter("FirstName", UserData.FirstName), new SqlParameter("LastName", UserData.LastName), new SqlParameter("PhoneNumber", UserData.PhoneNumber), new SqlParameter("EmailAddress", UserData.EmailAddress), new SqlParameter("SecurityAnswer", UserData.SecurityAnswer), new SqlParameter("UserName", UserData.Username));
+                }
 
-                return UserData.IsAuthenticated;
+                return true;
             }
             catch (Exception ex)
             {
                 LogError(ex.Source, ex.ToString());
                 throw;
+            }
+            finally
+            {
+                RefreshData();
+            }
+        }
+
+        /// <summary>
+        /// Resets user password in the backend datastore.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to the user's security question.</param>
+        /// <returns>true if the password is reset, otherwise false.</returns>
+        /// <exception cref="NotSupportedException"><see cref="CanResetPassword"/> is false.</exception>
+        /// <exception cref="SecurityException"><paramref name="securityAnswer"/> is incorrect.</exception>
+        public override bool ResetPassword(string securityAnswer)
+        {
+            // Verify reset is supported.
+            if (!CanResetPassword)
+                throw new NotSupportedException();
+
+            // Check prerequisites.
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
+                return false;
+
+            // Verify answer to security question.
+            if (string.Compare(UserData.SecurityAnswer, securityAnswer, true) != 0)
+                throw new SecurityException("Answer to the security question is incorrect");
+
+            try
+            {
+                using (SqlConnection dbConnection = GetDatabaseConnection())
+                {
+                    if (dbConnection == null)
+                        return false;
+
+                    // Generate new random password.
+                    string password = SecurityProviderUtility.GeneratePassword(10);
+                    UserData.Password = SecurityProviderUtility.EncryptPassword(password);
+
+                    // Reset password in backend datastore.
+                    dbConnection.ExecuteNonQuery("dbo.ResetPassword", UserData.Username, UserData.SecurityQuestion, UserData.SecurityAnswer, UserData.Password);
+
+                    // Send notification message to the user.
+                    StringBuilder message = new StringBuilder();
+                    message.AppendFormat("Hello {0},\r\n\r\n", UserData.FirstName);
+                    message.AppendFormat("Your new password: {0}\r\n\r\n", password);
+                    message.Append("Please use your new password to login to your account. At first login you ");
+                    message.Append("will be prompted to change your password as a security measure.\r\n\r\n");
+                    SecurityProviderUtility.SendNotification(UserData.EmailAddress, "Password Reset Request", message.ToString());
+                }
+
+                return true;
+            }
+            catch (SecurityException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+            finally
+            {
+                RefreshData();
+            }
+        }
+
+        /// <summary>
+        /// Changes user password in the backend datastore.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        /// <exception cref="SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
+        public override bool ChangePassword(string oldPassword, string newPassword)
+        {
+            // Check prerequisites.
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
+                return false;
+
+            try
+            {
+                // Perform password change for internal users.
+                if (!UserData.IsExternal)
+                    return base.ChangePassword(oldPassword, newPassword);
+
+                // Verify old password.
+                UserData.PasswordChangeDateTime = DateTime.MinValue;
+                if (!Authenticate(oldPassword))
+                    return false;
+
+                // Verify new password.
+                if (!SecurityProviderUtility.ValidatePassword(newPassword))
+                    throw new SecurityException("New password does not meet password requirements");
+
+                using (SqlConnection dbConnection = GetDatabaseConnection())
+                {
+                    if (dbConnection == null)
+                        return false;
+
+                    dbConnection.ExecuteNonQuery("dbo.ChangePassword", UserData.Username, UserData.Password, SecurityProviderUtility.EncryptPassword(newPassword));
+                }
+
+                return true;
+            }
+            catch (SecurityException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                LogError(ex.Source, ex.ToString());
+                throw;
+            }
+            finally
+            {
+                RefreshData();
             }
         }
 
