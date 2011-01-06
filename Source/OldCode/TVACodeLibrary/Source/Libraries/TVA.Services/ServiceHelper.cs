@@ -2733,9 +2733,9 @@ namespace TVA.Services
                 if (m_performanceMonitor != null)
                 {
                     if (requestInfo.Request.Arguments.Exists("lifetime"))
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.LifetimeStatus + "\r\n");
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
                     else
-                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, m_performanceMonitor.Status + "\r\n");
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
                 }
                 else
                     UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "Performance monitor is not available.");
