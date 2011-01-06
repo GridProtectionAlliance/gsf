@@ -83,6 +83,7 @@
     <Compile Include="Radius\RadiusClient.cs" />
     <Compile Include="Radius\RadiusPacket.cs" />
     <Compile Include="Radius\RadiusPacketAttribute.cs" />
+    <Compile Include="RestrictAccessAttribute.cs" />
     <Compile Include="RsaSecurityProvider.cs" />
     <Compile Include="SqlSecurityProvider.cs" />
     <Compile Include="ISecurityProvider.cs" />

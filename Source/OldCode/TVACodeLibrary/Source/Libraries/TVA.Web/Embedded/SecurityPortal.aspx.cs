@@ -17,6 +17,8 @@
 //       Added HelpPage and FooterText customization settings that can be specified in the config file.
 //       Added the ability to change and reset passwords.
 //       Updated UI for compatibility across multiple browsers including mobile devices.
+//  01/06/2011 - Pinal C. Patel
+//       Fixed a bug that required users to login before password could be reset.
 //
 //*******************************************************************************************************
 
@@ -341,32 +343,7 @@ namespace TVA.Web.Embedded
             WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
             StyleSheet.Attributes["href"] = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedStyleSheet);
 
-            if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || SecurityProviderCache.CurrentProvider == null)
-            {
-                // Show login.
-                Page.Title = StaticPageTitle + " :: Login";
-                LoginPanel.Visible = true;
-                ContentPlaceHolder.Controls.Add(LoginPanel);
-
-                // Setup UI.
-                LoginButton.SetSubmitOnce();
-                LoginPanel.DefaultButton = LoginButton.ID;
-                ForgotPassword.NavigateUrl = GetRedirectUrl(PasswordResetStatusCode);
-                if (!Page.IsPostBack)
-                {
-                    LoginUsername.Text = GetSavedUsername();
-                    if (string.IsNullOrEmpty(LoginUsername.Text))
-                    {
-                        LoginUsername.Focus();
-                    }
-                    else
-                    {
-                        LoginPassword.Focus();
-                        RememberUsername.Checked = true;
-                    }
-                }
-            }
-            else if (Request[StatusCodeRequestKey] == AccessDeniedStatusCode)
+            if (Request[StatusCodeRequestKey] == AccessDeniedStatusCode)
             {
                 // Show access denied.
                 Page.Title = StaticPageTitle + " :: Access Denied";
@@ -419,6 +396,31 @@ namespace TVA.Web.Embedded
                     ResetPasswordFinalPanel.DefaultButton = ResetFinalButton.ID;
                     ResetPasswordSecurityQuestion.Text = ViewState["SecurityQuestion"].ToString();
                     MessageLabel.Text = string.Empty;
+                }
+            }
+            else if (Request[StatusCodeRequestKey] == UnauthorizedStatusCode || SecurityProviderCache.CurrentProvider == null || !User.Identity.IsAuthenticated)
+            {
+                // Show login.
+                Page.Title = StaticPageTitle + " :: Login";
+                LoginPanel.Visible = true;
+                ContentPlaceHolder.Controls.Add(LoginPanel);
+
+                // Setup UI.
+                LoginButton.SetSubmitOnce();
+                LoginPanel.DefaultButton = LoginButton.ID;
+                ForgotPassword.NavigateUrl = GetRedirectUrl(PasswordResetStatusCode);
+                if (!Page.IsPostBack)
+                {
+                    LoginUsername.Text = GetSavedUsername();
+                    if (string.IsNullOrEmpty(LoginUsername.Text))
+                    {
+                        LoginUsername.Focus();
+                    }
+                    else
+                    {
+                        LoginPassword.Focus();
+                        RememberUsername.Checked = true;
+                    }
                 }
             }
             else
