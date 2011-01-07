@@ -28,7 +28,7 @@ namespace TimeSeriesFramework.Adapters
     /// <summary>
     /// Marks a parameter as being a connection string parameter used to configure an <see cref="IAdapter"/>.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter)]
+    [AttributeUsage(AttributeTargets.Property)]
     public sealed class ConnectionStringParameterAttribute : Attribute
     {
     }
