@@ -151,15 +151,21 @@ namespace TimeSeriesFramework.Adapters
         /// many measurements have been archived per minute. Historians would normally set this property
         /// to <c>true</c>; other custom exports would set this property to <c>false</c>.
         /// </remarks>
-        public abstract bool OutputIsForArchive { get; }
-        
+        public abstract bool OutputIsForArchive
+        {
+            get;
+        }
+
         /// <summary>
         /// Gets flag that determines if the data output stream connects asynchronously.
         /// </summary>
         /// <remarks>
         /// Derived classes should return true when data output stream connects asynchronously, otherwise return false.
         /// </remarks>
-        protected abstract bool UseAsyncConnect { get; }
+        protected abstract bool UseAsyncConnect
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the connection attempt interval, in milliseconds, for the data output adapter.
@@ -319,6 +325,9 @@ namespace TimeSeriesFramework.Adapters
             try
             {
                 bool performedDisconnect = Enabled;
+
+                // Stop the connection cycle
+                m_connectionTimer.Enabled = false;
 
                 base.Stop();
 
@@ -502,13 +511,17 @@ namespace TimeSeriesFramework.Adapters
         {
             try
             {
-                OnStatusMessage("Attempting connection...");
+                // So long as user hasn't requested to stop, attempt connection
+                if (Enabled)
+                {
+                    OnStatusMessage("Attempting connection...");
 
-                // Attempt connection to data output adapter (e.g., call historian API connect function).
-                AttemptConnection();
+                    // Attempt connection to data output adapter (e.g., call historian API connect function).
+                    AttemptConnection();
 
-                if (!UseAsyncConnect)
-                    OnConnected();
+                    if (!UseAsyncConnect)
+                        OnConnected();
+                }
             }
             catch (ThreadAbortException)
             {
@@ -517,7 +530,7 @@ namespace TimeSeriesFramework.Adapters
             catch (Exception ex)
             {
                 OnProcessException(new InvalidOperationException(string.Format("Connection attempt failed: {0}", ex.Message), ex));
-                
+
                 // So long as user hasn't requested to stop, keep trying connection
                 if (Enabled)
                     Start();
