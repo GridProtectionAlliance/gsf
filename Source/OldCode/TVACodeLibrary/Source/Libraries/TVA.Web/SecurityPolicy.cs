@@ -277,9 +277,6 @@ namespace TVA.Web
     ///       <add name="ExcludedResources" value="*/SecurityService.svc*"
     ///         description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
-    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
-    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
-    ///         encrypted="false" />
     ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
     ///         encrypted="false" />
     ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 

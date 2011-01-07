@@ -11,9 +11,8 @@
 //  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //  01/05/2011 - Pinal C. Patel
-//       Added PasswordRequirement, NotificationSmtpServer and NotificationSenderEmail settings to the
-//       config file.
-//       Added GeneratePassword(), ValidatePassword() and SendNotification() methods.
+//       Added NotificationSmtpServer and NotificationSenderEmail settings to the config file along with
+//       GeneratePassword() and SendNotification() utility methods.
 //
 //*******************************************************************************************************
 
@@ -257,7 +256,6 @@ namespace TVA.Security
         private const string DefaultProviderType = "TVA.Security.SqlSecurityProvider, TVA.Security";
         private const string DefaultIncludedResources = "*=*";
         private const string DefaultExcludedResources = "";
-        private const string DefaultPasswordRequirement = @"^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&*()_+`{}|;':"",./<>?\-\=\[\]\\]).*$";
         private const string DefaultNotificationSmtpServer = Mail.DefaultSmtpServer;
         private const string DefaultNotificationSenderEmail = "sender@company.com";
 
@@ -269,7 +267,6 @@ namespace TVA.Security
         private static string s_providerType;
         private static ICollection<string> s_excludedResources;
         private static IDictionary<string, string> s_includedResources;
-        private static string s_passwordRequirement;
         private static string s_notificationSmtpServer;
         private static string s_notificationSenderEmail;
 
@@ -282,13 +279,11 @@ namespace TVA.Security
             settings.Add("ProviderType", DefaultProviderType, "The type to be used for enforcing security.");
             settings.Add("IncludedResources", DefaultIncludedResources, "Semicolon delimited list of resources to be secured along with role names.");
             settings.Add("ExcludedResources", DefaultExcludedResources, "Semicolon delimited list of resources to be excluded from being secured.");
-            settings.Add("PasswordRequirement", DefaultPasswordRequirement, "Regular expression that specifies the password policy to be enforced on user accounts.");
             settings.Add("NotificationSmtpServer", DefaultNotificationSmtpServer, "SMTP server to be used for sending out email notification messages.");
             settings.Add("NotificationSenderEmail", DefaultNotificationSenderEmail, "Email address of the sender of email notification messages.");
             s_providerType = settings["ProviderType"].ValueAsString();
             s_includedResources = settings["IncludedResources"].ValueAsString().ParseKeyValuePairs();
             s_excludedResources = settings["ExcludedResources"].ValueAsString().Split(';');
-            s_passwordRequirement = settings["PasswordRequirement"].ValueAsString();
             s_notificationSmtpServer = settings["NotificationSmtpServer"].ValueAsString();
             s_notificationSenderEmail = settings["NotificationSenderEmail"].ValueAsString();
         }
@@ -430,19 +425,6 @@ namespace TVA.Security
             scrambledPassword.Scramble();
 
             return new string(scrambledPassword.ToArray());
-        }
-
-        /// <summary>
-        /// Determines if the specified <paramref name="password"/> is valid based on password requirement specified in the config file.
-        /// </summary>
-        /// <param name="password">Password to be validated.</param>
-        /// <returns>true if the password is valid, otherwise false.</returns>
-        public static bool ValidatePassword(string password)
-        {
-            if (Regex.IsMatch(password, s_passwordRequirement))
-                return true;
-            else
-                return false;
         }
 
         /// <summary>

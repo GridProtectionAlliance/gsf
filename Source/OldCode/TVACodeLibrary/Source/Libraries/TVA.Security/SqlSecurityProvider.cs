@@ -237,6 +237,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using TVA.Data;
 
 namespace TVA.Security
@@ -267,9 +268,6 @@ namespace TVA.Security
     ///         encrypted="false" />
     ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
     ///         encrypted="false" />
-    ///       <add name="PasswordRequirement" value="^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&amp;*()_+`{}|;':&quot;,./&lt;&gt;?\-\=\[\]\\]).*$"
-    ///         description="Regular expression that specifies the password policy to be enforced on user accounts."
-    ///         encrypted="false" />
     ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
     ///         encrypted="false" />
     ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
@@ -290,6 +288,15 @@ namespace TVA.Security
     /// </example>
     public class SqlSecurityProvider : LdapSecurityProvider
     {
+        #region [ Members ]
+
+        // Constants
+        private const int MinimumPasswordLength = 8;
+        private const string PasswordRequirementRegex = @"^.*(?=.{8,})(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[~!@#$%^&*()_+`{}|;':"",./<>?\-\=\[\]\\]).*$";
+        private const string PasswordRequirementError = "Password must be at lease 8 characters long with at least one upper case, one lower case, one number and one special character";
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -544,7 +551,7 @@ namespace TVA.Security
                         return false;
 
                     // Generate new random password.
-                    string password = SecurityProviderUtility.GeneratePassword(10);
+                    string password = SecurityProviderUtility.GeneratePassword(MinimumPasswordLength);
                     UserData.Password = SecurityProviderUtility.EncryptPassword(password);
 
                     // Reset password in backend datastore.
@@ -601,8 +608,8 @@ namespace TVA.Security
                     return false;
 
                 // Verify new password.
-                if (!SecurityProviderUtility.ValidatePassword(newPassword))
-                    throw new SecurityException("New password does not meet password requirements");
+                if (!Regex.IsMatch(newPassword, PasswordRequirementRegex))
+                    throw new SecurityException(PasswordRequirementError);
 
                 using (SqlConnection dbConnection = GetDatabaseConnection())
                 {
