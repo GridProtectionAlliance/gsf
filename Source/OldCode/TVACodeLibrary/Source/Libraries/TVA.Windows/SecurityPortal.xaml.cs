@@ -1,19 +1,18 @@
-﻿//*******************************************************************************************************
-//  SecureWindow.cs - Gbtc
+﻿//******************************************************************************************************
+//  SecurityPortal.xaml.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2010
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
-//  -----------------------------------------------------------------------------------------------------
-//  06/17/2010 - Pinal C. Patel
+//  ----------------------------------------------------------------------------------------------------
+//  12/14/2010 - Mehulbhai P Thakkar
 //       Generated original version of source code.
-//  08/11/2010 - Pinal C. Patel
-//       Made key methods virtual for extensibility.
 //
-//*******************************************************************************************************
+//******************************************************************************************************
 
 #region [ TVA Open Source Agreement ]
 /*
@@ -231,142 +230,304 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
-using System.ComponentModel;
-using System.Security;
-using System.Security.Principal;
-using System.Threading;
 using System.Windows;
+using TVA.Configuration;
 using TVA.Security;
 
 namespace TVA.Windows
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents a WPF window secured using role-based security.
+    /// Enumerable list of portlets to be displayed on the screen.
     /// </summary>
-    /// <example>
-    /// Required config file entries:
-    /// <code>
-    /// <![CDATA[
-    /// <?xml version="1.0"?>
-    /// <configuration>
-    ///   <configSections>
-    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-    ///   </configSections>
-    ///   <categorizedSettings>
-    ///     <securityProvider>
-    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-    ///         description="Connection string to be used for connection to the backend security datastore."
-    ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
-    ///         description="The type to be used for enforcing security." encrypted="false" />
-    ///       <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
-    ///         encrypted="false" />
-    ///       <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-    ///         encrypted="false" />
-    ///       <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-    ///         encrypted="false" />
-    ///     </securityProvider>
-    ///     <activeDirectory>
-    ///       <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-    ///         encrypted="false" />
-    ///       <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-    ///         encrypted="true" />
-    ///     </activeDirectory>
-    ///   </categorizedSettings>
-    /// </configuration>
-    /// ]]>
-    /// </code>
-    /// XAML to be used for the WPF window that inherits from <see cref="SecureWindow"/>:
-    /// <code>
-    /// <![CDATA[
-    /// <src:SecureWindow x:Class="SecureWpfApplication.Window1"
-    ///     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    ///     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-    ///     xmlns:src="clr-namespace:TVA.Windows;assembly=TVA.Windows"
-    ///     Title="Window1" Height="300" Width="300">
-    ///     <Grid>
-    /// 
-    ///     </Grid>
-    /// </src:SecureWindow>
-    /// ]]>
-    /// </code>
-    /// </example>
-    /// <seealso cref="ISecurityProvider"/>
-    public class SecureWindow : Window
+    public enum DisplayType
     {
-        #region [ Methods ]
+        Login,
+        AccessDenied,
+        ChangePassword
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Represents a WPF window aking for user's credentials and other security related interfaces.
+    /// </summary>
+    public partial class SecurityPortal : Window
+    {
+        #region [ Members ]
+
+        private const string SettingsCategory = "systemSettings";
+        DisplayType m_messageType;
+
+        #endregion
+
+        #region [ Constructor ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SecureWindow"/> class.
+        /// Initializes a new WPF window.
         /// </summary>
-        public SecureWindow()
+        /// <param name="messageType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
+        public SecurityPortal(DisplayType messageType)
         {
-            this.Initialized += SecureWindow_Initialized;
-        }
+            InitializeComponent();
+            m_messageType = messageType;
+            this.Loaded += new RoutedEventHandler(SecurityPortal_Loaded);
+            ButtonLogin.Click += new RoutedEventHandler(ButtonLogin_Click);
+            ButtonExit.Click += new RoutedEventHandler(ButtonExit_Click);
+            ButtonOk.Click += new RoutedEventHandler(ButtonOk_Click);
+            ButtonChange.Click += new RoutedEventHandler(ButtonChange_Click);
+            ButtonChangePassowrdLink.Click += new RoutedEventHandler(ButtonChangePassowrdLink_Click);
+            ButtonForgotPassowrdLink.Click += new RoutedEventHandler(ButtonForgotPassowrdLink_Click);
+            ButtonLoginLink.Click += new RoutedEventHandler(ButtonLoginLink_Click);
+            
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            CategorizedSettingsElement setting = null;
 
-        /// <summary>
-        /// Gets the name of resource being accessed.
-        /// </summary>
-        /// <returns>Name of the resource being accessed.</returns>
-        protected virtual string GetResourceName()
-        {
-            if (!string.IsNullOrEmpty(this.Name))
-                return this.Name;
-            else
-                return this.GetType().Name;
-        }
-
-        private void SecureWindow_Initialized(object sender, EventArgs e)
-        {
-            // Don't proceed if the window is opened in design mode.
-            if (DesignerProperties.GetIsInDesignMode(this))
-                return;
-
-            // Check if the resource is excluded from being secured.
-            string resource = GetResourceName();
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
-                return;
-
-            // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
-                Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-            // Setup the security provider for role-based security.
-            if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-
-            // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-            {                
-                //throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
-                SecurityPortal securityPortal = new SecurityPortal(DisplayType.Login);
-                if (!(bool)securityPortal.ShowDialog())
-                {
-                    resource = string.Empty;
-                    Application.Current.Shutdown();
-                }
+            setting = settings["ApplicationName"];
+            if (setting != null)
+            {
+                TextBlockApplicationLogin.Text = setting.Value + " :: Login";
+                TextBlockAccessDenied.Text = setting.Value + " :: Access Denied";
+                TextBlockChangePassword.Text = setting.Value + " :: Change Password";
             }
 
-            // Perform a top-level permission check on the resource being accessed.
-            if (!string.IsNullOrEmpty(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
-            {                
-                //throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
-                SecurityPortal securityPortal = new SecurityPortal(DisplayType.AccessDenied);
-                if (!(bool)securityPortal.ShowDialog() && securityPortal.Owner == null)
-                {
-                    this.Close();
-                    Application.Current.Shutdown();
-                }
-            }
+            ManageScreenVisualization();
+
+            //open this up on top of all other windows.
+            this.Topmost = true;
         }
 
         #endregion
+
+        #region [ Event Handlers ]
+        
+        /// <summary>
+        /// Logins the user.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonLogin_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Initialize the security provider.
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
+                provider.Initialize();
+                if (provider.Authenticate(TextBoxPassword.Password))
+                {
+                    // Setup security provider for subsequent uses.
+                    SecurityProviderCache.CurrentProvider = provider;
+                    TextBlockGlobalMessage.Text = string.Empty;
+                    this.DialogResult = true;
+                }
+                else
+                {
+                    // Display login failure message.
+                    TextBlockGlobalMessage.Text = "The username or password is invalid. Please try again.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TextBlockGlobalMessage.Text = string.Format("Login failed due to an error - {0}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Shutsdown application.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonExit_Click(object sender, RoutedEventArgs e)
+        {            
+            //Application.Current.Shutdown();
+            this.DialogResult = false;
+        }
+
+        /// <summary>
+        /// Closes window.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonOk_Click(object sender, RoutedEventArgs e)
+        {
+            //GridLogin.Visibility = Visibility.Visible;
+            //StackPanelAccessDenied.Visibility = Visibility.Collapsed;
+            this.DialogResult = false;
+        }
+
+        /// <summary>
+        /// Displays help for the user on how to reset password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonForgotPassowrdLink_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Please contact application administrator to reset your password.");
+        }
+
+        /// <summary>
+        /// Navigates users to Change Password screen.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonChangePassowrdLink_Click(object sender, RoutedEventArgs e)
+        {
+            m_messageType = DisplayType.ChangePassword;
+            ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Navigates users back to Login screen.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
+        {
+            m_messageType = DisplayType.Login;
+            ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Attempts to change user's password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void ButtonChange_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //check if old and new password are different.
+                if (TextBoxOldPassword.Password == TextBoxNewPassword.Password)
+                    throw new Exception("New password cannot be same as old password.");
+
+                //check is new password and confirm password are same.
+                if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
+                    throw new Exception("New password and confirm password should be same.");
+                
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
+                provider.Initialize();
+                if (provider.CanChangePassword)
+                {
+                    //Attempt to change password.
+                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
+                        provider.Authenticate(TextBoxNewPassword.Password))
+                    {
+                        // Password changed and authenticated successfully.
+                        SecurityProviderCache.CurrentProvider = provider;
+                        TextBlockGlobalMessage.Text = "Password changed successfully.";
+                        m_messageType = DisplayType.Login;
+                        ManageScreenVisualization();
+                        TextBoxUserName.Focus();
+                    }
+                    else
+                    {
+                        // Show why password change failed.
+                        if (!ShowFailureReason(provider))
+                        {
+                            if (!provider.UserData.IsAuthenticated)
+                                TextBlockGlobalMessage.Text = "Authentication was not successful.";
+                            else
+                                TextBlockGlobalMessage.Text = "Password change was not successful.";
+                        }
+                    }
+                }
+                else
+                    TextBlockGlobalMessage.Text = "Account does not support password change.";
+                
+            }
+            catch (Exception ex)
+            {
+                TextBlockGlobalMessage.Text = "ERROR: " + ex.Message;
+                TextBoxOldPassword.SelectAll();
+                TextBoxOldPassword.Focus();
+            }
+        }
+
+        /// <summary>
+        /// Handles page loaded event.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        void SecurityPortal_Loaded(object sender, RoutedEventArgs e)
+        {
+            //ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Handles mouse down event anywhere on the screen so user can click and drag this window around.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
+                this.DragMove();
+        }
+
+        #endregion
+
+        #region " Methods"
+
+        /// <summary>
+        /// Displays requested screen section based on received request.
+        /// </summary>
+        void ManageScreenVisualization()
+        {
+            //Initially hide everything on all screens.
+            GridLogin.Visibility = Visibility.Collapsed;
+            StackPanelAccessDenied.Visibility = Visibility.Collapsed;
+            GridChangePassword.Visibility = Visibility.Collapsed;
+
+            if (m_messageType == DisplayType.Login)
+                GridLogin.Visibility = Visibility.Visible;
+            else if (m_messageType == DisplayType.AccessDenied)
+                StackPanelAccessDenied.Visibility = Visibility.Visible;
+            else if (m_messageType == DisplayType.ChangePassword)
+                GridChangePassword.Visibility = Visibility.Visible;            
+        }
+
+        bool ShowFailureReason(ISecurityProvider provider)
+        {
+            TextBlockGlobalMessage.Text = string.Empty;
+
+            if (!provider.UserData.IsDefined)
+                // No such account.
+                TextBlockGlobalMessage.Text = "Account does not exist.";
+            else if (provider.UserData.IsDisabled)
+                // Account is disabled.
+                TextBlockGlobalMessage.Text = "Account is currently disabled.";
+            else if (provider.UserData.IsLockedOut)
+                // Account is locked.
+                TextBlockGlobalMessage.Text = "Account is currently locked.";
+            else
+                return false;
+
+            return true;
+        }
+
+        #endregion
+
     }
 }

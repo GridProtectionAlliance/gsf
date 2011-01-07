@@ -1,0 +1,188 @@
+﻿<Window x:Class="TVA.Windows.SecurityPortal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="SecurityPortal" ShowInTaskbar="False" Background="Transparent"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
+        WindowStyle="None" MouseDown="Window_MouseDown">
+
+    <Window.Resources>
+
+        <sys:Double x:Key="RegularTextSize">14</sys:Double>
+        <sys:Double x:Key="LargeTextSize">18</sys:Double>
+        <sys:Double x:Key="RegularItemSize">150</sys:Double>
+        <sys:Double x:Key="SmallItemSize">100</sys:Double>
+        <sys:Double x:Key="XXSmallItemSize">30</sys:Double>
+        <sys:Double x:Key="RegularItemHeight">25</sys:Double>
+
+        <RadialGradientBrush x:Key="ContentBackgroundBrush">
+            <GradientStop Color="#FFFFFFFF"/>
+            <GradientStop Color="#FF07426F" Offset="5"/>
+        </RadialGradientBrush>
+
+        <DropShadowEffect x:Key="TextBlockDarkShadowEffect" BlurRadius="20" Color="#FF666666" Direction="1" ShadowDepth="2"/>
+
+        <ControlTemplate x:Key="HyperlinkStyleButtonTemplate" TargetType="Button">
+            <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource RegularTextSize}" TextDecorations="Underline"  Cursor="Hand"/>
+        </ControlTemplate>
+
+    </Window.Resources>
+
+    <Border CornerRadius="5" BorderThickness="1" BorderBrush="#FF073E69">
+
+        <Grid Background="{StaticResource ContentBackgroundBrush}">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" x:Name="GridRowExit"/>
+                <RowDefinition Height="Auto" x:Name="GridRowMessage"/>
+                <RowDefinition Height="Auto" x:Name="GridRowLogin"/>
+                <RowDefinition Height="Auto" x:Name="GridRowAccessDenied"/>
+                <RowDefinition Height="Auto" x:Name="GridRowChangePassword"/>
+                <RowDefinition Height="Auto" x:Name="GridRowForgotPassword"/>
+                <RowDefinition Height="Auto" x:Name="GridRowMyAccountInfo"/>
+            </Grid.RowDefinitions>
+                
+            <Button x:Name="ButtonExit" Content="X" Width="{StaticResource XXSmallItemSize}" HorizontalAlignment="Right" FontWeight="Bold" Margin="5" ToolTip="Exit Application"/>
+
+            <TextBlock x:Name="TextBlockGlobalMessage" Grid.Row="1" Width="470" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="5" Foreground="Red"/>
+
+            <Grid x:Name="GridLogin" Grid.Row="2">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="TextBlockApplicationLogin" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Login" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Red" HorizontalAlignment="Center"></TextBlock>
+                
+                <!--<TextBlock x:Name="TextBlockMessage" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" FontSize="{StaticResource RegularTextSize}" Foreground="Red"/>-->
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5">
+                Application you are trying to access requires you to login. <LineBreak/>
+                Please login using your account username and password. <LineBreak />
+                If you do not have an account, please request one by contacting application administrator.
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="Username" FontSize="{StaticResource RegularTextSize}" Margin="5"/>
+                    <TextBlock Text="*" Foreground="Red"/>
+                </StackPanel>
+
+                <TextBox x:Name="TextBoxUserName" Grid.Row="3" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
+                    <TextBlock Text="*" Foreground="Red"/>
+                </StackPanel>
+
+                <PasswordBox x:Name="TextBoxPassword" Grid.Row="4" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="1">
+                    <Button x:Name="ButtonLogin" Content="Login" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Margin="5,5,25,5"/>                    
+                </StackPanel>
+                
+                <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button x:Name="ButtonForgotPassowrdLink" Content="Forgot Password" Template="{StaticResource HyperlinkStyleButtonTemplate}" Margin="5,5,25,5" />
+                    <Button x:Name="ButtonChangePassowrdLink" Content="Change Password" Template="{StaticResource HyperlinkStyleButtonTemplate}" Margin="5" />
+                </StackPanel>
+                
+            </Grid>
+
+            <StackPanel x:Name="StackPanelAccessDenied" Orientation="Vertical" Grid.Row="3" Visibility="Collapsed">
+                <TextBlock x:Name="TextBlockAccessDenied" Text="Access Denied" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Red" HorizontalAlignment="Center"></TextBlock>
+                <TextBlock FontSize="{StaticResource RegularTextSize}" Margin="5">
+                You do not have permission to access the requested secure resource.<LineBreak />
+                Please contact application administrator to request access to secure resource.
+                </TextBlock>
+                
+                <Button x:Name="ButtonOk" Content="OK" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Center" FontWeight="Bold" Margin="5"/>
+                
+            </StackPanel>
+
+            <Grid x:Name="GridChangePassword" Grid.Row="4">
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="TextBlockChangePassword" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Text="Change Password" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Red" HorizontalAlignment="Center"></TextBlock>
+
+                <!--<TextBlock x:Name="TextBlockChangePasswordMessage" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" FontSize="{StaticResource RegularTextSize}" Foreground="Red"/>-->
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5">
+                You are required to change your password periodically for security reasons. <LineBreak/>
+                In order to change your password you must enter your username and current password<LineBreak /> for verification.                 
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="Username" FontSize="{StaticResource RegularTextSize}" Margin="5"/>
+                    <TextBlock Text="*" Foreground="Red"/>
+                </StackPanel>
+
+                <TextBox x:Name="TextBoxChangePasswordUserName" Grid.Row="3" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="Old Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
+                    <TextBlock Text="*" Foreground="Red"/>
+                </StackPanel>
+
+                <PasswordBox x:Name="TextBoxOldPassword" Grid.Row="4" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="New Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
+                    <TextBlock Text="*" Foreground="Red"/>
+                    <Grid ToolTip="Cannot be same as old password" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Ellipse Width="16" Height="16" Fill="#FF2588D8"/>
+                        <TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="#FFFFFFFF" />
+                    </Grid>
+                </StackPanel>
+
+                <PasswordBox x:Name="TextBoxNewPassword" Grid.Row="5" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+
+                <StackPanel Orientation="Horizontal" Grid.Row="6" Grid.Column="0" HorizontalAlignment="Right">
+                    <TextBlock Text="Confirm Password" FontSize="{StaticResource RegularTextSize}" Margin="5" />
+                    <TextBlock Text="*" Foreground="Red"/>
+                    <Grid ToolTip="Must be same as new password" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Ellipse Width="16" Height="16" Fill="#FF2588D8"/>
+                        <TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" FontWeight="Bold" Foreground="#FFFFFFFF" />
+                    </Grid>
+                </StackPanel>
+
+                <PasswordBox x:Name="TextBoxConfirmPassword" Grid.Row="6" Grid.Column="1" Width="{StaticResource RegularItemSize}" Height="{StaticResource RegularItemHeight}" HorizontalAlignment="Left" Margin="5" />
+                
+                <StackPanel Orientation="Horizontal" Grid.Row="7" Grid.Column="1">
+                    <Button x:Name="ButtonChange" Content="Change" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Left" FontWeight="Bold" Margin="5"/>
+                </StackPanel>
+
+                <Button x:Name="ButtonLoginLink" Content="Login" Grid.Row="8" Grid.Column="1" Template="{StaticResource HyperlinkStyleButtonTemplate}" HorizontalAlignment="Right" Margin="5" />
+                
+            </Grid>
+
+        </Grid>
+
+    </Border>
+    
+</Window>
