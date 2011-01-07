@@ -104,12 +104,12 @@ namespace TimeSeriesFramework.Adapters
                 {
                     foreach (IOutputAdapter item in this)
                     {
-                        if (!item.OutputIsForArchive)
-                            return false;
+                        if (item.OutputIsForArchive)
+                            return true;
                     }
                 }
 
-                return true;
+                return false;
             }
         }
 
