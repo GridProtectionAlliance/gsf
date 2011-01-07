@@ -17,6 +17,8 @@
 //       Enhanced thread synchronization using ReaderWriterLockSlim for better performance.
 //  11/24/2010 - Pinal C. Patel
 //       Updated the text returned by Status property.
+//  01/07/2011 - Pinal C. Patel
+//       Fixed initialization bug that prevented the service from functioning when hosted inside ASP.NET.
 //
 //*******************************************************************************************************
 
@@ -335,11 +337,32 @@ namespace TVA.Web.Services.Messaging
     /// <![CDATA[
     /// <?xml version="1.0"?>
     /// <configuration>
+    ///   <configSections>
+    ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+    ///   </configSections>
+    ///   <categorizedSettings>
+    ///     <messageBusService>
+    ///       <add name="Endpoints" value="" description="Semicolon delimited list of URIs where the web service can be accessed."
+    ///         encrypted="false" />
+    ///       <add name="Contract" value="TVA.Web.Services.Messaging.IMessageBusService, TVA.Web"
+    ///         description="Assembly qualified name of the contract interface implemented by the web service."
+    ///         encrypted="false" />
+    ///       <add name="Singleton" value="True" description="True if the web service is singleton; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="SecurityPolicy" value="" description="Assembly qualified name of the authorization policy to be used for securing the web service."
+    ///         encrypted="false" />
+    ///       <add name="PublishMetadata" value="True" description="True if the web service metadata is to be published at all the endpoints; otherwise False."
+    ///         encrypted="false" />
+    ///       <add name="BufferThreshold" value="-1" description="Maximum number of messages that can be queued for distribution before the oldest ones are discarded."
+    ///         encrypted="false" />
+    ///       <add name="ProcessingMode" value="Sequential" description="Processing mode (Parallel; Sequential) to be used for the distribution of messages."
+    ///         encrypted="false" />
+    ///     </messageBusService>
+    ///   </categorizedSettings>
     ///   <system.serviceModel>
     ///     <services>
     ///       <service name="TVA.Web.Services.Messaging.MessageBusService">
     ///         <endpoint address="" contract="TVA.Web.Services.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
-    ///         <endpoint address="mex" contract="IMetadataExchange" binding="mexHttpBinding" />
     ///       </service>
     ///     </services>
     ///     <behaviors>
@@ -352,7 +375,7 @@ namespace TVA.Web.Services.Messaging
     ///     </behaviors>
     ///     <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
     ///       <serviceActivations>
-    ///         <add relativeAddress="MessageBusService.svc" service="TVA.Web.Services.Messaging.MessageBusService" />
+    ///         <add relativeAddress="MessageBusService.svc" service="TVA.Web.Services.Messaging.MessageBusService, TVA.Web" />
     ///       </serviceActivations>
     ///     </serviceHostingEnvironment>
     ///   </system.serviceModel>
@@ -707,7 +730,6 @@ namespace TVA.Web.Services.Messaging
             get
             {
                 StringBuilder status = new StringBuilder();
-                ProcessQueueStatistics statistics = m_publishQueue.CurrentStatistics;
                 status.Append("          Buffer threshold: ");
                 status.Append(m_bufferThreshold == -1 ? "Disabled" : m_bufferThreshold.ToString());
                 status.AppendLine();
@@ -732,18 +754,23 @@ namespace TVA.Web.Services.Messaging
                 finally
                 { m_topicsLock.ExitReadLock(); }
                 status.AppendLine();
-                status.Append("         Messages received: ");
-                status.Append(statistics.QueueCount + statistics.TotalProcessedItems + statistics.ItemsBeingProcessed + m_discardedMessages);
-                status.AppendLine();
-                status.Append("        Messages discarded: ");
-                status.Append(m_discardedMessages);
-                status.AppendLine();
-                status.Append("        Messages processed: ");
-                status.Append(statistics.TotalProcessedItems);
-                status.AppendLine();
-                status.Append("  Messages being processed: ");
-                status.Append(statistics.ItemsBeingProcessed);
-                status.AppendLine();
+
+                if (m_publishQueue != null)
+                {
+                    ProcessQueueStatistics statistics = m_publishQueue.CurrentStatistics;
+                    status.Append("         Messages received: ");
+                    status.Append(statistics.QueueCount + statistics.TotalProcessedItems + statistics.ItemsBeingProcessed + m_discardedMessages);
+                    status.AppendLine();
+                    status.Append("        Messages discarded: ");
+                    status.Append(m_discardedMessages);
+                    status.AppendLine();
+                    status.Append("        Messages processed: ");
+                    status.Append(statistics.TotalProcessedItems);
+                    status.AppendLine();
+                    status.Append("  Messages being processed: ");
+                    status.Append(statistics.ItemsBeingProcessed);
+                    status.AppendLine();
+                }
 
                 return status.ToString();
             }
@@ -851,6 +878,9 @@ namespace TVA.Web.Services.Messaging
         /// <param name="request">An <see cref="RegistrationRequest"/> containing registration data.</param>
         public virtual void Register(RegistrationRequest request)
         {
+            // Initialize if uninitialized.
+            Initialize();
+
             // Save client information if not already present.
             ClientInfo client;
             m_clientsLock.EnterUpgradeableReadLock();

@@ -275,6 +275,105 @@ namespace TVA.Web.Services
     /// <summary>
     /// A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
+    /// <example>
+    /// This example shows how to create a WCF service derived from <see cref="SelfHostingService"/> that is capable of hosting itself:
+    /// <code>
+    /// using System.ServiceModel;
+    /// using System.ServiceModel.Web;
+    /// using TVA.Web.Services;
+    /// 
+    /// namespace Services
+    /// {
+    ///     [ServiceContract()]
+    ///     public interface IService : ISelfHostingService
+    ///     {
+    ///         [OperationContract(), WebGet(UriTemplate = "/hello/{name}")]
+    ///         string Hello(string name);
+    ///     }
+    /// 
+    ///     public class Service : SelfHostingService, IService
+    ///     {
+    ///         public string Hello(string name)
+    ///         {
+    ///             return string.Format("Hello {0}!", name);
+    ///         }
+    ///     }
+    /// }
+    /// </code>
+    /// This example shows how to activate a WCF service derived from <see cref="SelfHostingService"/> that is capable of hosting itself:
+    /// <code>
+    /// using System;
+    /// using System.ServiceModel;
+    /// using System.ServiceModel.Description;
+    /// using System.ServiceModel.Web;
+    /// using Services;
+    /// using TVA.Web.Services;
+    /// 
+    /// class Program
+    /// {
+    ///     static void Main(string[] args)
+    ///     {
+    ///         // Initialize web service.
+    ///         Service service = new Service();
+    ///         service.PublishMetadata = true;
+    ///         service.Endpoints = "http.soap11://localhost:4500/soap; http.rest://localhost:4500/rest";
+    ///         service.Initialize();
+    /// 
+    ///         // Show web service status.
+    ///         if (service.ServiceHost.State == CommunicationState.Opened)
+    ///         {
+    ///             Console.WriteLine("\r\n{0} is running:", service.GetType().Name);
+    ///             foreach (ServiceEndpoint endpoint in service.ServiceHost.Description.Endpoints)
+    ///             {
+    ///                 Console.WriteLine("- {0} ({1})", endpoint.Address, endpoint.Binding.GetType().Name);
+    ///             }
+    ///             Console.Write("\r\nPress Enter key to stop...");
+    ///         }
+    ///         else
+    ///         {
+    ///             Console.WriteLine("\r\n{0} could not be started", service.GetType().Name);
+    ///         }
+    /// 
+    ///         // Shutdown.
+    ///         Console.ReadLine();
+    ///         service.Dispose();
+    ///     }
+    /// }
+    /// </code>
+    /// This example shows how to host a WCF service derived from <see cref="SelfHostingService"/> inside ASP.NET:
+    /// <code>
+    /// <![CDATA[
+    /// <?xml version="1.0"?>
+    /// <configuration>
+    ///   <system.serviceModel>
+    ///     <services>
+    ///       <service name="Services.Service">
+    ///         <endpoint address="soap" contract="Services.IService" binding="basicHttpBinding"/>
+    ///         <endpoint address="rest" contract="Services.IService" binding="webHttpBinding" behaviorConfiguration="restBehavior"/>
+    ///       </service>
+    ///     </services>
+    ///     <behaviors>
+    ///       <serviceBehaviors>
+    ///         <behavior>
+    ///           <serviceMetadata httpGetEnabled="true"/>
+    ///         </behavior>
+    ///       </serviceBehaviors>
+    ///       <endpointBehaviors>
+    ///         <behavior name="restBehavior">
+    ///           <webHttp helpEnabled="true"/>
+    ///         </behavior>
+    ///       </endpointBehaviors>
+    ///     </behaviors>
+    ///     <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
+    ///       <serviceActivations>
+    ///         <add relativeAddress="Service.svc" service="Services.Service, Services"/>
+    ///       </serviceActivations>
+    ///     </serviceHostingEnvironment>
+    ///   </system.serviceModel>
+    /// </configuration>
+    /// ]]>
+    /// </code>
+    /// </example>
     public class SelfHostingService : Adapter, ISelfHostingService
     {
         #region [ Members ]
