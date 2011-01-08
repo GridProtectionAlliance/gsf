@@ -50,6 +50,7 @@
 **       value allowed for revision number is 65534.
 **  01/08/2011 - Pinal C. Patel
 **       Made TfsServer a must-override property.
+**       Allowed for customization of versioning scheme by consuming script.
 **
 *******************************************************************************************************
 -->
@@ -88,6 +89,14 @@
     <BuildInteractive></BuildInteractive>
     <!-- File containing the build version. -->
     <VersionFile></VersionFile>
+    <!-- Versioning scheme major number change type. -->
+    <VersionMajorChange></VersionMajorChange>
+    <!-- Versioning scheme minor number change type. -->
+    <VersionMinorChange></VersionMinorChange>
+    <!-- Versioning scheme build number change type. -->
+    <VersionBuildChange></VersionBuildChange>
+    <!-- Versioning scheme revision number change type. -->
+    <VersionRevisionChange></VersionRevisionChange>
     <!-- Version of the source code to build. -->
     <SourceVersion></SourceVersion>
     <!-- Paths to Team Foundation Client. -->
@@ -263,8 +272,8 @@
   <Target Name="CorePrepareSettings">
     <!-- Assign default values to unassigned properties. -->
     <Message Text="Preparing settings for build..."/>
-    <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
+    <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
     <PropertyGroup>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\$(ProjectName)</LocalFolder>
@@ -352,7 +361,7 @@
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Version VersionFile="$(VersionFile)" BuildType="Increment" RevisionType="Reset">
+    <Version VersionFile="$(VersionFile)" Major="$(VersionMajorChange)" Minor="$(VersionMinorChange)" BuildType="$(VersionBuildChange)" RevisionType="$(VersionRevisionChange)">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>

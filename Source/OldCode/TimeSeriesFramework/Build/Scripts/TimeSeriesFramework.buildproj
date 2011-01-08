@@ -15,6 +15,7 @@
 **       Generated original version of source code.
 **  01/08/2011 - Pinal C. Patel
 **       Updated to set the TftServer property.
+**       Updated to set versioning scheme settings.
 **
 *******************************************************************************************************
 -->
@@ -25,9 +26,12 @@
 
   <Target Name="BeforePrepareSettings">
     <PropertyGroup>
-      <!-- Must-override setting(s). -->
-      <TfsServer>https://tfs.codeplex.com/tfs/tfs07</TfsServer>
+      <!-- Must-override settings. -->
       <ProjectName>TimeSeriesFramework</ProjectName>
+      <TfsServer>https://tfs.codeplex.com/tfs/tfs07</TfsServer>
+      <!-- Versioning scheme settings. -->
+      <VersionBuildChange>Increment</VersionBuildChange>
+      <VersionRevisionChange>Reset</VersionRevisionChange>
     </PropertyGroup>
   </Target>
 
