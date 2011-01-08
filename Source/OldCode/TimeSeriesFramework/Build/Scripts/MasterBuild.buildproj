@@ -48,6 +48,8 @@
 **  12/25/2010 - Pinal C. Patel
 **       Updated the versioning logic to not use the changeset for revision number since the maximum
 **       value allowed for revision number is 65534.
+**  01/08/2011 - Pinal C. Patel
+**       Made TfsServer a must-override property.
 **
 *******************************************************************************************************
 -->
@@ -261,9 +263,9 @@
   <Target Name="CorePrepareSettings">
     <!-- Assign default values to unassigned properties. -->
     <Message Text="Preparing settings for build..."/>
+    <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
     <PropertyGroup>
-      <TfsServer Condition="'$(TfsServer)' == ''">https://tfs.codeplex.com/tfs/tfs07</TfsServer>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\$(ProjectName)</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>

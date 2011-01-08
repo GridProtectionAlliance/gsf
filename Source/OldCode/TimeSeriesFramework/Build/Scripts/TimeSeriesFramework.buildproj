@@ -13,6 +13,8 @@
 **  ===================================================================================================
 **  12/25/2010 - Pinal C. Patel
 **       Generated original version of source code.
+**  01/08/2011 - Pinal C. Patel
+**       Updated to set the TftServer property.
 **
 *******************************************************************************************************
 -->
@@ -24,6 +26,7 @@
   <Target Name="BeforePrepareSettings">
     <PropertyGroup>
       <!-- Must-override setting(s). -->
+      <TfsServer>https://tfs.codeplex.com/tfs/tfs07</TfsServer>
       <ProjectName>TimeSeriesFramework</ProjectName>
     </PropertyGroup>
   </Target>
