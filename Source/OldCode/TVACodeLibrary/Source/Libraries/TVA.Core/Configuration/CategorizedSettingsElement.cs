@@ -418,7 +418,8 @@ namespace TVA.Configuration
                     return;
 
                 // Ensure only Eval() can replace Eval().
-                if (Regex.IsMatch(currentValue, EvalRegex) && !Regex.IsMatch(value, EvalRegex))
+                if (Regex.IsMatch(currentValue, EvalRegex, RegexOptions.IgnoreCase) && 
+                    !Regex.IsMatch(value, EvalRegex, RegexOptions.IgnoreCase))
                     return;
 
                 value = EncryptValue(value);
@@ -942,7 +943,7 @@ namespace TVA.Configuration
         {
             ConfigurationFile config = m_category.Section.File;
             CategorizedSettingsElement setting;
-            foreach (Match match in Regex.Matches(value, EvalRegex))
+            foreach (Match match in Regex.Matches(value, EvalRegex, RegexOptions.IgnoreCase))
             {
                 setting = config.Settings[match.Groups["Section"].Value][match.Groups["Setting"].Value];
                 if (setting != null)
