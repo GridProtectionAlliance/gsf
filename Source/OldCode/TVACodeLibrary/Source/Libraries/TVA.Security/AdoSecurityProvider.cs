@@ -281,7 +281,7 @@ namespace TVA.Security
     ///         <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
     ///     </systemSettings>
     ///     <securityProvider>
-    ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+    ///       <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
@@ -351,6 +351,9 @@ namespace TVA.Security
                 }
             }
 
+            /// <summary>
+            /// Gets the type of data adapter for configured ADO.NET data source.
+            /// </summary>
             public Type AdapterType
             {
                 get { return s_adapterType; }
@@ -689,6 +692,13 @@ namespace TVA.Security
             }
         }
 
+        /// <summary>
+        /// Changes user password in the backend datastore.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        /// <exception cref="SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
         public override bool ChangePassword(string oldPassword, string newPassword)
         {
             // Check prerequisites.

@@ -253,6 +253,7 @@ using System;
 using System.Windows;
 using TVA.Configuration;
 using TVA.Security;
+using System.Security;
 
 namespace TVA.Windows
 {
@@ -457,6 +458,13 @@ namespace TVA.Windows
                     TextBlockGlobalMessage.Text = "Account does not support password change.";
                 
             }
+            catch (SecurityException ex)
+            {
+                // Show security related error messages.
+                TextBlockGlobalMessage.Text = "ERROR: " + ex.Message;
+                TextBoxOldPassword.SelectAll();
+                TextBoxOldPassword.Focus();
+            }
             catch (Exception ex)
             {
                 TextBlockGlobalMessage.Text = "ERROR: " + ex.Message;
@@ -507,6 +515,7 @@ namespace TVA.Windows
             else if (m_messageType == DisplayType.ChangePassword)
                 GridChangePassword.Visibility = Visibility.Visible;            
         }
+
 
         bool ShowFailureReason(ISecurityProvider provider)
         {
