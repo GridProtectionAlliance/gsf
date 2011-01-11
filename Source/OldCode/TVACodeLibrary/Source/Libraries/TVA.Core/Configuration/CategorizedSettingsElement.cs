@@ -36,6 +36,8 @@
 //       Fixed encryption related bug introduced when adding support for user scope settings.
 //  12/05/2010 - Pinal C. Patel
 //       Modified Update() and ValueAs() to specify CultureInfo for the conversion.
+//  01/11/2011 - Pinal C. Patel
+//       Added support for use of Eval() in Value to reference other setting values.
 //
 //*******************************************************************************************************
 
@@ -257,6 +259,7 @@
 
 using System;
 using System.Configuration;
+using System.Text.RegularExpressions;
 using TVA.Security.Cryptography;
 
 namespace TVA.Configuration
@@ -310,6 +313,7 @@ namespace TVA.Configuration
         public const SettingScope DefaultScope = SettingScope.Application;
 
         private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
+        private const string EvalRegex = @"Eval\((?<Section>[\w\d]+)\.(?<Setting>[\w\d]+)\)";
 
         // Fields
         private string m_cryptoKey;
@@ -378,22 +382,43 @@ namespace TVA.Configuration
         /// Gets or sets the value of the setting.
         /// </summary>
         /// <returns>The value of the setting.</returns>
+        /// <remarks>
+        /// <see cref="Value"/> can reference the value of another setting using <b>Eval([Section].[Setting])</b> syntax shown in the example below:
+        /// <code>
+        /// <![CDATA[
+        /// <?xml version="1.0"?>
+        /// <configuration>
+        ///   <configSections>
+        ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+        ///   </configSections>
+        ///   <categorizedSettings>
+        ///     <database>
+        ///       <add name="SettingsTable" value="dbo.Settings" description="Table that contains the settings." 
+        ///         encrypted="false" />
+        ///       <add name="AdminEmail" value="SELECT * FROM Eval(Database.SettingsTable) WHERE Name = 'AdminEmail'" 
+        ///         description="Email address of the administrator." encrypted="false" />
+        ///     </database>
+        ///   </categorizedSettings>
+        /// </configuration>
+        /// ]]>
+        /// </code>
+        /// </remarks>
         [ConfigurationProperty("value", IsRequired = true, DefaultValue = DefaultValue)]
         public string Value
         {
             get
             {
-                string value = (string)base["value"];
-                if (Scope == SettingScope.User)
-                    // Setting is user specific so retrive value from user settings store.
-                    value = Category.Section.File.UserSettings.Read(Category.Name, Name, value);
-
-                return DecryptValue(value);
+                return EvaluateValue(DecryptValue(GetRawValue()));
             }
             set
             {
                 // Continue only if values are different.
-                if (value.ToNonNullString().Equals(Value))
+                string currentValue = DecryptValue(GetRawValue());
+                if (value.ToNonNullString().Equals(currentValue))
+                    return;
+
+                // Ensure only Eval() can replace Eval().
+                if (Regex.IsMatch(currentValue, EvalRegex) && !Regex.IsMatch(value, EvalRegex))
                     return;
 
                 value = EncryptValue(value);
@@ -867,6 +892,16 @@ namespace TVA.Configuration
             return ValueAs(defaultValue);
         }
 
+        private string GetRawValue()
+        {
+            string value = (string)base["value"];
+            if (Scope == SettingScope.User)
+                // Setting is user specific so retrive value from user settings store.
+                value = Category.Section.File.UserSettings.Read(Category.Name, Name, value);
+
+            return value;
+        }
+
         private string EncryptValue(string value)
         {
             if (Encrypted && !string.IsNullOrEmpty(value))
@@ -881,6 +916,7 @@ namespace TVA.Configuration
                     throw new ConfigurationErrorsException(string.Format("Failed to encrypt '{0}'", value), ex);
                 }
             }
+
             return value;
         }
 
@@ -891,12 +927,27 @@ namespace TVA.Configuration
                 try
                 {
                     // Decrypts the element's value.
-                    return value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
+                    value = value.Decrypt(m_cryptoKey, CipherStrength.Aes256);
                 }
                 catch (Exception ex)
                 {
                     throw new ConfigurationErrorsException(string.Format("Failed to decrypt '{0}'", value), ex);
                 }
+            }
+
+            return value;
+        }
+
+        private string EvaluateValue(string value)
+        {
+            ConfigurationFile config = m_category.Section.File;
+            CategorizedSettingsElement setting;
+            foreach (Match match in Regex.Matches(value, EvalRegex))
+            {
+                setting = config.Settings[match.Groups["Section"].Value][match.Groups["Setting"].Value];
+                if (setting != null)
+                    // Replace Eval() with actual setting value.
+                    value = value.Replace(match.Value, setting.Value);
             }
 
             return value;
