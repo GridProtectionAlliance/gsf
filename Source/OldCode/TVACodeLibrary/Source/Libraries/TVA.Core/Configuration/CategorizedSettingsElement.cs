@@ -37,7 +37,8 @@
 //  12/05/2010 - Pinal C. Patel
 //       Modified Update() and ValueAs() to specify CultureInfo for the conversion.
 //  01/11/2011 - Pinal C. Patel
-//       Added support for use of Eval() in Value to reference other setting values.
+//       Added support for use of Eval() in Value to reference other setting values and static members
+//       of .NET types.
 //
 //*******************************************************************************************************
 
@@ -259,6 +260,7 @@
 
 using System;
 using System.Configuration;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using TVA.Security.Cryptography;
 
@@ -313,7 +315,7 @@ namespace TVA.Configuration
         public const SettingScope DefaultScope = SettingScope.Application;
 
         private const string DefaultCryptoKey = "0679d9ae-aca5-4702-a3f5-604415096987";
-        private const string EvalRegex = @"Eval\((?<Section>[\w\d]+)\.(?<Setting>[\w\d]+)\)";
+        private const string EvalRegex = @"Eval\((?<Container>(?<Accessor>[\w\d]+\.?)+)\.(?<Target>[\w\d]+)\)";
 
         // Fields
         private string m_cryptoKey;
@@ -383,7 +385,8 @@ namespace TVA.Configuration
         /// </summary>
         /// <returns>The value of the setting.</returns>
         /// <remarks>
-        /// <see cref="Value"/> can reference the value of another setting using <b>Eval([Section].[Setting])</b> syntax shown in the example below:
+        /// <see cref="Value"/> can reference the value of another setting using <b>Eval([Section].[Setting])</b> syntax or the value of a known .NET 
+        /// type's static member (field, non-indexed property or parameterless method) using <b>Eval([Type].[Member])</b> syntax as shown in the example below:
         /// <code>
         /// <![CDATA[
         /// <?xml version="1.0"?>
@@ -397,6 +400,8 @@ namespace TVA.Configuration
         ///         encrypted="false" />
         ///       <add name="AdminEmail" value="SELECT * FROM Eval(Database.SettingsTable) WHERE Name = 'AdminEmail'" 
         ///         description="Email address of the administrator." encrypted="false" />
+        ///       <add name="AuditQuery" value="SELECT * FROM dbo.Log WHERE EntryTime < 'Eval(System.DateTime.UtcNow)'" 
+        ///         description="Query for retrieving audit records." encrypted="false" />
         ///     </database>
         ///   </categorizedSettings>
         /// </configuration>
@@ -945,10 +950,42 @@ namespace TVA.Configuration
             CategorizedSettingsElement setting;
             foreach (Match match in Regex.Matches(value, EvalRegex, RegexOptions.IgnoreCase))
             {
-                setting = config.Settings[match.Groups["Section"].Value][match.Groups["Setting"].Value];
+                // Try replacing Eval() with the actual value.
+                setting = config.Settings[match.Groups["Container"].Value][match.Groups["Target"].Value];
                 if (setting != null)
-                    // Replace Eval() with actual setting value.
+                {
+                    // Replacement is the value of another setting.
                     value = value.Replace(match.Value, setting.Value);
+                }
+                else
+                {
+                    // Replacement could be the value of .NET type's static member.
+                    Type target = Type.GetType(match.Groups["Container"].Value);
+                    if (target != null)
+                    {
+                        // Specified .NET type is found.
+                        MemberInfo[] members = target.GetMember(match.Groups["Target"].Value, BindingFlags.Public | BindingFlags.Static);
+                        if (members.Length > 0)
+                        {
+                            // Specified target member is found in the .NET type.
+                            switch (members[0].MemberType)
+                            {
+                                case MemberTypes.Field:
+                                    // Member is a static field.
+                                    value = value.Replace(match.Value, ((FieldInfo)members[0]).GetValue(null).ToNonNullString());
+                                    break;
+                                case MemberTypes.Method:
+                                    // Member is a static method.
+                                    value = value.Replace(match.Value, ((MethodInfo)members[0]).Invoke(null, new object[0]).ToNonNullString());
+                                    break;
+                                case MemberTypes.Property:
+                                    // Member is a static property.
+                                    value = value.Replace(match.Value, ((PropertyInfo)members[0]).GetValue(null, new object[0]).ToNonNullString());
+                                    break;
+                            }
+                        }
+                    }
+                }
             }
 
             return value;
