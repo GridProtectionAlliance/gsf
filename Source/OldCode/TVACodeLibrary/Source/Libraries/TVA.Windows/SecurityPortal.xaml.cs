@@ -264,8 +264,17 @@ namespace TVA.Windows
     /// </summary>
     public enum DisplayType
     {
+        /// <summary>
+        /// Login screen.
+        /// </summary>
         Login,
+        /// <summary>
+        /// Access Denied screen.
+        /// </summary>
         AccessDenied,
+        /// <summary>
+        /// Change Password screen.
+        /// </summary>
         ChangePassword
     }
 

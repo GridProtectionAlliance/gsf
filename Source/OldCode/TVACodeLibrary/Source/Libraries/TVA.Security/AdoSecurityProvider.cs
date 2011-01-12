@@ -526,23 +526,7 @@ namespace TVA.Security
                     return false;
             }
         }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether <see cref="ResetPassword"/> operation is supported.
-        /// </summary>
-        public override bool CanResetPassword
-        {
-            get
-            {
-                if (UserData.IsDefined && UserData.IsExternal)
-                    // Password reset supported on external user accounts.
-                    return true;
-                else
-                    // Password reset not supported on internal user accounts.
-                    return false;
-            }
-        }
-
+               
         #endregion
 
         #region [ Methods ]
