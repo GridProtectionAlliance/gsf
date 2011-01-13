@@ -148,6 +148,10 @@
                   <add name="ExcludedResources" value="*/mex;*/Publish;*/GetClients;*/GetQueues;*/GetTopics;*/SecurityService.svc/*"
                     description="Semicolon delimited list of resources to be excluded from being secured."
                     encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
                   <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -188,8 +192,12 @@
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
-                  <add name="ExcludedResources" value="*/SecurityService.svc/*"
+                  <add name="ExcludedResources" value="*/SecurityService.svc*"
                     description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
                     encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
@@ -813,6 +821,105 @@
             <summary>
             A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
             </summary>
+            <example>
+            This example shows how to create a WCF service derived from <see cref="T:TVA.Web.Services.SelfHostingService"/> that is capable of hosting itself:
+            <code>
+            using System.ServiceModel;
+            using System.ServiceModel.Web;
+            using TVA.Web.Services;
+            
+            namespace Services
+            {
+                [ServiceContract()]
+                public interface IService : ISelfHostingService
+                {
+                    [OperationContract(), WebGet(UriTemplate = "/hello/{name}")]
+                    string Hello(string name);
+                }
+            
+                public class Service : SelfHostingService, IService
+                {
+                    public string Hello(string name)
+                    {
+                        return string.Format("Hello {0}!", name);
+                    }
+                }
+            }
+            </code>
+            This example shows how to activate a WCF service derived from <see cref="T:TVA.Web.Services.SelfHostingService"/> that is capable of hosting itself:
+            <code>
+            using System;
+            using System.ServiceModel;
+            using System.ServiceModel.Description;
+            using System.ServiceModel.Web;
+            using Services;
+            using TVA.Web.Services;
+            
+            class Program
+            {
+                static void Main(string[] args)
+                {
+                    // Initialize web service.
+                    Service service = new Service();
+                    service.PublishMetadata = true;
+                    service.Endpoints = "http.soap11://localhost:4500/soap; http.rest://localhost:4500/rest";
+                    service.Initialize();
+            
+                    // Show web service status.
+                    if (service.ServiceHost.State == CommunicationState.Opened)
+                    {
+                        Console.WriteLine("\r\n{0} is running:", service.GetType().Name);
+                        foreach (ServiceEndpoint endpoint in service.ServiceHost.Description.Endpoints)
+                        {
+                            Console.WriteLine("- {0} ({1})", endpoint.Address, endpoint.Binding.GetType().Name);
+                        }
+                        Console.Write("\r\nPress Enter key to stop...");
+                    }
+                    else
+                    {
+                        Console.WriteLine("\r\n{0} could not be started", service.GetType().Name);
+                    }
+            
+                    // Shutdown.
+                    Console.ReadLine();
+                    service.Dispose();
+                }
+            }
+            </code>
+            This example shows how to host a WCF service derived from <see cref="T:TVA.Web.Services.SelfHostingService"/> inside ASP.NET:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <system.serviceModel>
+                <services>
+                  <service name="Services.Service">
+                    <endpoint address="soap" contract="Services.IService" binding="basicHttpBinding"/>
+                    <endpoint address="rest" contract="Services.IService" binding="webHttpBinding" behaviorConfiguration="restBehavior"/>
+                  </service>
+                </services>
+                <behaviors>
+                  <serviceBehaviors>
+                    <behavior>
+                      <serviceMetadata httpGetEnabled="true"/>
+                    </behavior>
+                  </serviceBehaviors>
+                  <endpointBehaviors>
+                    <behavior name="restBehavior">
+                      <webHttp helpEnabled="true"/>
+                    </behavior>
+                  </endpointBehaviors>
+                </behaviors>
+                <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
+                  <serviceActivations>
+                    <add relativeAddress="Service.svc" service="Services.Service, Services"/>
+                  </serviceActivations>
+                </serviceHostingEnvironment>
+              </system.serviceModel>
+            </configuration>
+            ]]>
+            </code>
+            </example>
         </member>
         <member name="T:TVA.Web.Services.ISelfHostingService">
             <summary>
@@ -1098,15 +1205,25 @@
               </configSections>
               <categorizedSettings>
                 <securityPortal>
-                  <add name="CompanyName" value="My Company" description="Name of the company." encrypted="false" />
-                  <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
                   <add name="CompanyLogo" value="~/images/MyCompanyLogo.png" description="Image file of the company's logo." encrypted="false" />
+                  <add name="CompanyLink" value="http://www.mycompany.com" description="Link to the company's web site." encrypted="false" />
+                  <add name="HelpPage" value="~/files/Help.pdf" description="Link to the help page." encrypted="false" />
+                  <add name="FooterText" value="(C) My Company. All rights reserved." description="Text to be displayed in the footer." encrypted="false" />
                 </securityPortal>
               </categorizedSettings>
             </configuration>
             ]]>
             </code>
             </example>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.StyleSheet">
+            <summary>
+            StyleSheet control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
         </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.MainForm">
             <summary>
@@ -1117,9 +1234,9 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.LogoImage">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LogoLink">
             <summary>
-            LogoImage control.
+            LogoLink control.
             </summary>
             <remarks>
             Auto-generated field.
@@ -1135,15 +1252,6 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.CompanyLink">
-            <summary>
-            CompanyLink control.
-            </summary>
-            <remarks>
-            Auto-generated field.
-            To modify move field declaration from designer file to code-behind file.
-            </remarks>
-        </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.ContentPlaceHolder">
             <summary>
             ContentPlaceHolder control.
@@ -1153,9 +1261,18 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.ErrorMessageLabel">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.MessageLabel">
             <summary>
-            ErrorMessageLabel control.
+            MessageLabel control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.FooterLabel">
+            <summary>
+            FooterLabel control.
             </summary>
             <remarks>
             Auto-generated field.
@@ -1171,27 +1288,54 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.UsernameInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LoginUsernameValidator">
             <summary>
-            UsernameInput control.
+            LoginUsernameValidator control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.PasswordInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LoginUsername">
             <summary>
-            PasswordInput control.
+            LoginUsername control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.RememberMeCheckBox">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.RememberUsername">
             <summary>
-            RememberMeCheckBox control.
+            RememberUsername control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LoginPasswordValidator">
+            <summary>
+            LoginPasswordValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LoginPassword">
+            <summary>
+            LoginPassword control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ForgotPassword">
+            <summary>
+            ForgotPassword control.
             </summary>
             <remarks>
             Auto-generated field.
@@ -1207,6 +1351,186 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordCheckPanel">
+            <summary>
+            ResetPasswordCheckPanel control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordUsernameValidator">
+            <summary>
+            ResetPasswordUsernameValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordUsername">
+            <summary>
+            ResetPasswordUsername control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetCheckButton">
+            <summary>
+            ResetCheckButton control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordFinalPanel">
+            <summary>
+            ResetPasswordFinalPanel control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordSecurityQuestion">
+            <summary>
+            ResetPasswordSecurityQuestion control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetPasswordSecurityAnswer">
+            <summary>
+            ResetPasswordSecurityAnswer control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ResetFinalButton">
+            <summary>
+            ResetFinalButton control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordPanel">
+            <summary>
+            ChangePasswordPanel control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordUsernameValidator">
+            <summary>
+            ChangePasswordUsernameValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordUsername">
+            <summary>
+            ChangePasswordUsername control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordOldPasswordValidator">
+            <summary>
+            ChangePasswordOldPasswordValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordOldPassword">
+            <summary>
+            ChangePasswordOldPassword control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordNewPasswordValidator1">
+            <summary>
+            ChangePasswordNewPasswordValidator1 control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordNewPasswordValidator2">
+            <summary>
+            ChangePasswordNewPasswordValidator2 control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordNewPassword">
+            <summary>
+            ChangePasswordNewPassword control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordConfirmNewPasswordValidator1">
+            <summary>
+            ChangePasswordConfirmNewPasswordValidator1 control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordConfirmNewPasswordValidator2">
+            <summary>
+            ChangePasswordConfirmNewPasswordValidator2 control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePasswordConfirmNewPassword">
+            <summary>
+            ChangePasswordConfirmNewPassword control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangeButton">
+            <summary>
+            ChangeButton control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.MyAccountPanel">
             <summary>
             MyAccountPanel control.
@@ -1216,54 +1540,117 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.UsernameLabel">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUsername">
             <summary>
-            UsernameLabel control.
+            AccountUsername control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.CompanyLabel">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserCompany">
             <summary>
-            CompanyLabel control.
+            AccountUserCompany control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.FirstNameInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserFirstNameValidator">
             <summary>
-            FirstNameInput control.
+            AccountUserFirstNameValidator control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.LastNameInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserFirstName">
             <summary>
-            LastNameInput control.
+            AccountUserFirstName control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.EmailAddressInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserLastNameValidator">
             <summary>
-            EmailAddressInput control.
+            AccountUserLastNameValidator control.
             </summary>
             <remarks>
             Auto-generated field.
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="F:TVA.Web.Embedded.SecurityPortal.PhoneNumberInput">
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserLastName">
             <summary>
-            PhoneNumberInput control.
+            AccountUserLastName control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserEmailAddressValidator">
+            <summary>
+            AccountUserEmailAddressValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserEmailAddress">
+            <summary>
+            AccountUserEmailAddress control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserPhoneNumberAddressValidator">
+            <summary>
+            AccountUserPhoneNumberAddressValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserPhoneNumber">
+            <summary>
+            AccountUserPhoneNumber control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserSecurityQuestion">
+            <summary>
+            AccountUserSecurityQuestion control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserSecurityAnswerValidator">
+            <summary>
+            AccountUserSecurityAnswerValidator control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.AccountUserSecurityAnswer">
+            <summary>
+            AccountUserSecurityAnswer control.
             </summary>
             <remarks>
             Auto-generated field.
@@ -1314,6 +1701,27 @@
         <member name="M:TVA.Web.Embedded.SecurityPortal.UpdateButton_Click(System.Object,System.EventArgs)">
             <summary>
             Updates user data.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ChangeButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetCheckButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            Checks if user password can be reset.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetFinalButton_Click(System.Object,System.EventArgs)">
+            <summary>
+            Resets user password.
             </summary>
             <param name="sender">Source of this event.</param>
             <param name="e">Arguments of this event.</param>
@@ -1519,6 +1927,24 @@
             </remarks>
             <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
+        <member name="T:TVA.Web.UI.ClientSideExtensions">
+            <summary>
+            Defines javascript client-side extensions for web controls.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.SetDefaultButton(System.Web.UI.WebControls.TextBox,System.Web.UI.Control)">
+            <summary>
+            Registers a default button to be activated when the ENTER key is pressed inside this <paramref name="textbox"/>.
+            </summary>
+            <param name="textbox"><see cref="T:System.Web.UI.WebControls.TextBox"/> for which the default button is to be registered.</param>
+            <param name="control">Button <see cref="T:System.Web.UI.Control"/> to be assigned as the default action handler.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.SetSubmitOnce(System.Web.UI.WebControls.Button)">
+            <summary>
+            Registers this <paramref name="button"/> to be disabled after one click to prevent multiple postbacks.
+            </summary>
+            <param name="button"><see cref="T:System.Web.UI.WebControls.Button"/> for which submit once script is to be registered.</param>
+        </member>
         <member name="T:TVA.Web.Embedded.NamespaceDoc">
             <summary>
             Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
@@ -1626,11 +2052,32 @@
             <![CDATA[
             <?xml version="1.0"?>
             <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <messageBusService>
+                  <add name="Endpoints" value="" description="Semicolon delimited list of URIs where the web service can be accessed."
+                    encrypted="false" />
+                  <add name="Contract" value="TVA.Web.Services.Messaging.IMessageBusService, TVA.Web"
+                    description="Assembly qualified name of the contract interface implemented by the web service."
+                    encrypted="false" />
+                  <add name="Singleton" value="True" description="True if the web service is singleton; otherwise False."
+                    encrypted="false" />
+                  <add name="SecurityPolicy" value="" description="Assembly qualified name of the authorization policy to be used for securing the web service."
+                    encrypted="false" />
+                  <add name="PublishMetadata" value="True" description="True if the web service metadata is to be published at all the endpoints; otherwise False."
+                    encrypted="false" />
+                  <add name="BufferThreshold" value="-1" description="Maximum number of messages that can be queued for distribution before the oldest ones are discarded."
+                    encrypted="false" />
+                  <add name="ProcessingMode" value="Sequential" description="Processing mode (Parallel; Sequential) to be used for the distribution of messages."
+                    encrypted="false" />
+                </messageBusService>
+              </categorizedSettings>
               <system.serviceModel>
                 <services>
                   <service name="TVA.Web.Services.Messaging.MessageBusService">
                     <endpoint address="" contract="TVA.Web.Services.Messaging.IMessageBusService" binding="wsDualHttpBinding" />
-                    <endpoint address="mex" contract="IMetadataExchange" binding="mexHttpBinding" />
                   </service>
                 </services>
                 <behaviors>
@@ -1643,7 +2090,7 @@
                 </behaviors>
                 <serviceHostingEnvironment multipleSiteBindingsEnabled="true">
                   <serviceActivations>
-                    <add relativeAddress="MessageBusService.svc" service="TVA.Web.Services.Messaging.MessageBusService" />
+                    <add relativeAddress="MessageBusService.svc" service="TVA.Web.Services.Messaging.MessageBusService, TVA.Web" />
                   </serviceActivations>
                 </serviceHostingEnvironment>
               </system.serviceModel>
@@ -2106,8 +2553,12 @@
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
-                  <add name="ExcludedResources" value="*/WebResource.axd;*/SecurityPortal.aspx"
+                  <add name="ExcludedResources" value="*/WebResource.axd*;*/SecurityPortal.aspx*"
                     description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
                     encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
@@ -2147,6 +2598,12 @@
             Gets the name of resource being accessed.
             </summary>
             <returns><see cref="P:System.Web.HttpApplication.Request"/>.<see cref="P:System.Web.HttpRequest.Url"/>.<see cref="P:System.Uri.PathAndQuery"/> property value.</returns>
+        </member>
+        <member name="M:TVA.Web.SecurityModule.IsAccessRestricted">
+            <summary>
+            Determines if access to the requested resource is restricted by <see cref="T:TVA.Security.RestrictAccessAttribute"/>.
+            </summary>
+            <returns>true if access to the requested resource is restricted, otherwise false.</returns>
         </member>
         <member name="T:TVA.Web.SecurityModule.SessionEnabledHandler">
             <summary>

@@ -451,6 +451,18 @@
             Extensions to all <see cref="T:System.Type"/> objects.
             </summary>
         </member>
+        <member name="M:TVA.TypeExtensions.IsNumeric(System.Type)">
+            <summary>
+            Determines if the specified type is a native structure that represents a numeric value.
+            </summary>
+            <param name="type">The <see cref="T:System.Type"/> being tested.</param>
+            <returns><c>true</c> if the specified type is a native structure that represents a numeric value.</returns>
+            <remarks>
+            For this method a boolean value is not considered numeric even though it can be thought of as a bit.
+            This expression returns <c>true</c> if the type is one of the following:<br/><br/>
+                SByte, Byte, Int16, UInt16, Int24, UInt24, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
+            </remarks>
+        </member>
         <member name="M:TVA.TypeExtensions.GetRootType(System.Type)">
             <summary>
             Gets the root type in the inheritace hierarchy from which the specified <paramref name="type"/> inherits.
@@ -19636,6 +19648,30 @@
             Gets or sets the value of the setting.
             </summary>
             <returns>The value of the setting.</returns>
+            <remarks>
+            <see cref="P:TVA.Configuration.CategorizedSettingsElement.Value"/> can reference the value of another setting using <b>Eval([Section].[Setting])</b> syntax or the value of a known .NET 
+            type's static member (field, non-indexed property or parameterless method) using <b>Eval([Type].[Member])</b> syntax as shown in the example below:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <database>
+                  <add name="SettingsTable" value="dbo.Settings" description="Table that contains the settings." 
+                    encrypted="false" />
+                  <add name="AdminEmail" value="SELECT * FROM Eval(Database.SettingsTable) WHERE Name = 'AdminEmail'" 
+                    description="Email address of the administrator." encrypted="false" />
+                  <add name="AuditQuery" value="SELECT * FROM dbo.Log WHERE EntryTime < 'Eval(System.DateTime.UtcNow)'" 
+                    description="Query for retrieving audit records." encrypted="false" />
+                </database>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </remarks>
         </member>
         <member name="P:TVA.Configuration.CategorizedSettingsElement.Description">
             <summary>
@@ -23315,6 +23351,11 @@
             </summary>
             <param name="pairs">Dictionary of key-value pairs.</param>
             <returns>A string of key-value pairs.</returns>
+            <remarks>
+            Values will be escaped within braces to contain nested key value pair expressions like
+            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
+            ";" or "=" are detected in the value of the key/value pair.
+            </remarks>
         </member>
         <member name="M:TVA.StringExtensions.JoinKeyValuePairs(System.Collections.Generic.Dictionary{System.String,System.String},System.Char,System.Char)">
             <summary>
@@ -23324,6 +23365,31 @@
             <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
             <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
             <returns>A string of key-value pairs.</returns>
+            <remarks>
+            Values will be escaped within braces to contain nested key value pair expressions like
+            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
+            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are
+            detected in the value of the key/value pair.
+            </remarks>
+        </member>
+        <member name="M:TVA.StringExtensions.JoinKeyValuePairs(System.Collections.Generic.Dictionary{System.String,System.String},System.Char,System.Char,System.Char,System.Char)">
+            <summary>
+            Combines a dictionary of key-value pairs in to a string.
+            </summary>
+            <param name="pairs">Dictionary of key-value pairs.</param>
+            <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
+            <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
+            <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
+            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
+            <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
+            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
+            <returns>A string of key-value pairs.</returns>
+            <remarks>
+            Values will be escaped within <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/>
+            to contain nested key value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
+            when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
+            value of the key/value pair.
+            </remarks>
         </member>
         <member name="M:TVA.StringExtensions.ParseKeyValuePairs(System.String)">
             <summary>
