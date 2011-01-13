@@ -74,6 +74,10 @@
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
                     encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
                   <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -144,6 +148,10 @@
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
                     encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
                   <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -190,6 +198,21 @@
             Enumerable list of portlets to be displayed on the screen.
             </summary>
         </member>
+        <member name="F:TVA.Windows.DisplayType.Login">
+            <summary>
+            Login screen.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.DisplayType.AccessDenied">
+            <summary>
+            Access Denied screen.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.DisplayType.ChangePassword">
+            <summary>
+            Change Password screen.
+            </summary>
+        </member>
         <member name="T:TVA.Windows.SecurityPortal">
             <summary>
             Represents a WPF window aking for user's credentials and other security related interfaces.
@@ -225,12 +248,52 @@
             <param name="sender">Source of this event.</param>
             <param name="e">Arguments of this event.</param>
         </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonForgotPassowrdLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Displays help for the user on how to reset password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonChangePassowrdLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Navigates users to Change Password screen.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonLoginLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Navigates users back to Login screen.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonChange_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Attempts to change user's password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
         <member name="M:TVA.Windows.SecurityPortal.SecurityPortal_Loaded(System.Object,System.Windows.RoutedEventArgs)">
             <summary>
             Handles page loaded event.
             </summary>
             <param name="sender">Source of this event.</param>
             <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.Window_MouseDown(System.Object,System.Windows.Input.MouseButtonEventArgs)">
+            <summary>
+            Handles mouse down event anywhere on the screen so user can click and drag this window around.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ManageScreenVisualization">
+            <summary>
+            Displays requested screen section based on received request.
+            </summary>
         </member>
         <member name="M:TVA.Windows.SecurityPortal.InitializeComponent">
             <summary>

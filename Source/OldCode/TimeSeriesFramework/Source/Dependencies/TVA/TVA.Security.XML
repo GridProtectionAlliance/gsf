@@ -72,12 +72,12 @@
         </member>
         <member name="P:TVA.Security.UserData.PasswordChangeDateTime">
             <summary>
-            Gets the date and time when user must change the password.
+            Gets the UTC date and time when user must change the password.
             </summary>
         </member>
         <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
             <summary>
-            Gets the date and time when user account was created.
+            Gets the UTC date and time when user account was created.
             </summary>
         </member>
         <member name="P:TVA.Security.UserData.IsDefined">
@@ -120,11 +120,6 @@
             A helper class containing methods used in the implementation of role-based security.
             </summary>
         </member>
-        <member name="F:TVA.Security.SecurityProviderUtility.StrongPasswordRegex">
-            <summary>
-            Regular expression used for validating the passwords of external users.
-            </summary>
-        </member>
         <member name="M:TVA.Security.SecurityProviderUtility.CreateProvider(System.String)">
             <summary>
             Creates a new <see cref="T:TVA.Security.ISecurityProvider"/> based on the settings in the config file.
@@ -161,6 +156,22 @@
             </summary>
             <param name="password">Password to be encrypted.</param>
             <returns>Encrypted password.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.GeneratePassword(System.Int32)">
+            <summary>
+            Generates a random password of the specified <paramref name="length"/> with at least one uppercase letter, one lowercase letter, one special character and one digit.
+            </summary>
+            <param name="length">Length of the password to generate.</param>
+            <returns>Randomly generated password of the specified <paramref name="length"/>.</returns>
+            <exception cref="T:System.ArgumentException">A value of less than 8 is specified for the <paramref name="length"/>.</exception>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.SendNotification(System.String,System.String,System.String)">
+            <summary>
+            Sends email notification message to the specified <paramref name="recipient"/> using settings specified in the config file.
+            </summary>
+            <param name="recipient">Email address of the notification recipient.</param>
+            <param name="subject">Subject of the notification.</param>
+            <param name="body">Content of the notification.</param>
         </member>
         <member name="T:TVA.Security.SecurityIdentity">
             <summary>
@@ -225,6 +236,10 @@
                   <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
                     encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
@@ -327,6 +342,10 @@
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
                     encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
                 </securityProvider>
               </categorizedSettings>
             </configuration>
@@ -341,18 +360,39 @@
             Defines a provider of role-based security in applications.
             </summary>
         </member>
-        <member name="M:TVA.Security.ISecurityProvider.RefreshData">
-            <summary>
-            Refreshes the <see cref="P:TVA.Security.ISecurityProvider.UserData"/>.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is refreshed, otherwise false.</returns>
-        </member>
         <member name="M:TVA.Security.ISecurityProvider.Authenticate(System.String)">
             <summary>
             Authenticates the user.
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> from the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.UpdateData">
+            <summary>
+            Updates the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> in the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is updated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)">
+            <summary>
+            Resets user password in the backend datastore.
+            </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.ISecurityProvider.TranslateRole(System.String)">
             <summary>
@@ -376,6 +416,26 @@
             Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
             </summary>
         </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanRefreshData">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.RefreshData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.UpdateData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanResetPassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanChangePassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)"/> operation is supported.
+            </summary>
+        </member>
         <member name="F:TVA.Security.SecurityProviderBase.DefaultApplicationName">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Security.SecurityProviderBase.ApplicationName"/> property.
@@ -396,22 +456,20 @@
             Specifies the default value for the <see cref="P:TVA.Security.SecurityProviderBase.SettingsCategory"/> property.
             </summary>
         </member>
-        <member name="M:TVA.Security.SecurityProviderBase.#ctor(System.String)">
+        <member name="M:TVA.Security.SecurityProviderBase.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Initializes a new instance of the security provider.
             </summary>
             <param name="username">Name that uniquely identifies the user.</param>
+            <param name="canRefreshData">true if the security provider can refresh <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> from the backend datastore, otherwise false.</param>
+            <param name="canUpdateData">true if the security provider can update <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> in the backend datastore, otherwise false.</param>
+            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         </member>
         <member name="M:TVA.Security.SecurityProviderBase.Finalize">
             <summary>
             Releases the unmanaged resources before the security provider is reclaimed by <see cref="T:System.GC"/>.
             </summary>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderBase.RefreshData">
-            <summary>
-            When overridden in a derived class, refreshes the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/>.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.SecurityProviderBase.Authenticate(System.String)">
             <summary>
@@ -419,6 +477,33 @@
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderBase.RefreshData">
+            <summary>
+            When overridden in a derived class, refreshes the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> from the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderBase.UpdateData">
+            <summary>
+            When overridden in a derived class, updates the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> in the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is updated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderBase.ResetPassword(System.String)">
+            <summary>
+            When overridden in a derived class, resets user password in the backend datastore.
+            </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderBase.ChangePassword(System.String,System.String)">
+            <summary>
+            When overridden in a derived class, changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.SecurityProviderBase.Dispose">
             <summary>
@@ -465,11 +550,6 @@
             Gets or sets the connection string to be used for connection to the backend security datastore.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderBase.UserData">
-            <summary>
-            Gets the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> object containing information about the user.
-            </summary>
-        </member>
         <member name="P:TVA.Security.SecurityProviderBase.PersistSettings">
             <summary>
             Gets or sets a boolean value that indicates whether security provider settings are to be saved to the config file.
@@ -486,17 +566,61 @@
             Gets or sets a boolean value that indicates whether the security provider is currently enabled.
             </summary>
         </member>
+        <member name="P:TVA.Security.SecurityProviderBase.UserData">
+            <summary>
+            Gets the <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> object containing information about the user.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.CanRefreshData">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.RefreshData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.CanResetPassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.ResetPassword(System.String)"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderBase.CanChangePassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.ChangePassword(System.String,System.String)"/> operation is supported.
+            </summary>
+        </member>
         <member name="M:TVA.Security.LdapSecurityProvider.#ctor(System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Security.LdapSecurityProvider"/> class.
             </summary>
-            <param name="username"></param>
+            <param name="username">Name that uniquely identifies the user.</param>
         </member>
-        <member name="M:TVA.Security.LdapSecurityProvider.RefreshData">
+        <member name="M:TVA.Security.LdapSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
-            Refreshes the <see cref="T:TVA.Security.UserData"/>.
+            Initializes a new instance of the <see cref="T:TVA.Security.LdapSecurityProvider"/> class.
             </summary>
-            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+            <param name="username">Name that uniquely identifies the user.</param>
+            <param name="canRefreshData">true if the security provider can refresh <see cref="T:TVA.Security.UserData"/> from the backend datastore, otherwise false.</param>
+            <param name="canUpdateData">true if the security provider can update <see cref="T:TVA.Security.UserData"/> in the backend datastore, otherwise false.</param>
+            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.UpdateData">
+            <summary>
+            Updates the <see cref="T:TVA.Security.UserData"/> in the backend datastore.
+            </summary>
+            <returns>true if <see cref="T:TVA.Security.UserData"/> is updated, otherwise false.</returns>
+            <exception cref="T:System.NotSupportedException">Always</exception>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.ResetPassword(System.String)">
+            <summary>
+            Resets user password in the backend datastore.
+            </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+            <exception cref="T:System.NotSupportedException">Always</exception>
         </member>
         <member name="M:TVA.Security.LdapSecurityProvider.Authenticate(System.String)">
             <summary>
@@ -504,6 +628,20 @@
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="T:TVA.Security.UserData"/> from the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.LdapSecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.LdapSecurityProvider.TranslateRole(System.String)">
             <summary>
@@ -557,6 +695,33 @@
             Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
             </summary>
         </member>
+        <member name="T:TVA.Security.RestrictAccessAttribute">
+            <summary>
+            Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor(System.String[])">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            </summary>
+            <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.CheckAccess">
+            <summary>
+            Checks if the current thread principal has at least one of the <see cref="P:TVA.Security.RestrictAccessAttribute.Roles"/> in order to have access.
+            </summary>
+            <returns>true if the current thread principal has access, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
+            <summary>
+            Gets or sets the list of either roles the current thread principal must have in order to have access.
+            </summary>
+        </member>
         <member name="T:TVA.Security.SqlSecurityProvider">
             <summary>
             Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses SQL Server for its backend datastore and authenticates 
@@ -584,6 +749,10 @@
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
                     encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
                   <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
@@ -605,11 +774,15 @@
             </summary>
             <param name="username">Name that uniquely identifies the user.</param>
         </member>
-        <member name="M:TVA.Security.SqlSecurityProvider.RefreshData">
+        <member name="M:TVA.Security.SqlSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
-            Refreshes the <see cref="T:TVA.Security.UserData"/>.
+            Initializes a new instance of the <see cref="T:TVA.Security.SqlSecurityProvider"/> class.
             </summary>
-            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+            <param name="username">Name that uniquely identifies the user.</param>
+            <param name="canRefreshData">true if the security provider can refresh <see cref="T:TVA.Security.UserData"/> from the backend datastore, otherwise false.</param>
+            <param name="canUpdateData">true if the security provider can update <see cref="T:TVA.Security.UserData"/> in the backend datastore, otherwise false.</param>
+            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         </member>
         <member name="M:TVA.Security.SqlSecurityProvider.Authenticate(System.String)">
             <summary>
@@ -617,6 +790,37 @@
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="T:TVA.Security.UserData"/> from the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.UpdateData">
+            <summary>
+            Updates the <see cref="T:TVA.Security.UserData"/> in the backend datastore.
+            </summary>
+            <returns>true if <see cref="T:TVA.Security.UserData"/> is updated, otherwise false.</returns>
+            <exception cref="T:System.NotSupportedException"><see cref="P:TVA.Security.SqlSecurityProvider.CanUpdateData"/> is false.</exception>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.ResetPassword(System.String)">
+            <summary>
+            Resets user password in the backend datastore.
+            </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+            <exception cref="T:System.NotSupportedException"><see cref="P:TVA.Security.SqlSecurityProvider.CanResetPassword"/> is false.</exception>
+            <exception cref="T:System.Security.SecurityException"><paramref name="securityAnswer"/> is incorrect.</exception>
+        </member>
+        <member name="M:TVA.Security.SqlSecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+            <exception cref="T:System.Security.SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
         </member>
         <member name="M:TVA.Security.SqlSecurityProvider.LogLogin(System.Boolean)">
             <summary>
@@ -632,6 +836,16 @@
             <param name="source">Source of the exception.</param>
             <param name="message">Detailed description of the exception.</param>
             <returns>true if logging was successful, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.SqlSecurityProvider.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SqlSecurityProvider.CanResetPassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.SqlSecurityProvider.ResetPassword(System.String)"/> operation is supported.
+            </summary>
         </member>
         <member name="T:TVA.Security.SecurityPrincipal">
             <summary>
@@ -682,11 +896,15 @@
                     <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
                 </systemSettings>
                 <securityProvider>
-                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
                   <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />    
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
                     encrypted="false" />
                 </securityProvider>
                 <activeDirectory>
@@ -709,6 +927,16 @@
             </summary>
             <param name="username">Name that uniquely identifies the user.</param>
         </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.AdoSecurityProvider"/> class.
+            </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
+            <param name="canRefreshData">true if the security provider can refresh <see cref="T:TVA.Security.UserData"/> from the backend datastore, otherwise false.</param>
+            <param name="canUpdateData">true if the security provider can update <see cref="T:TVA.Security.UserData"/> in the backend datastore, otherwise false.</param>
+            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        </member>
         <member name="M:TVA.Security.AdoSecurityProvider.RefreshData">
             <summary>
             Refreshes the <see cref="T:TVA.Security.UserData"/>.
@@ -721,6 +949,15 @@
             </summary>
             <param name="password">Password to be used for authentication.</param>
             <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+            <exception cref="T:System.Security.SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
         </member>
         <member name="M:TVA.Security.AdoSecurityProvider.LogLogin(System.Boolean)">
             <summary>
@@ -736,6 +973,11 @@
             <param name="source">Source of the exception.</param>
             <param name="message">Detailed description of the exception.</param>
             <returns>true if logging was successful, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.AdoSecurityProvider.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
+            </summary>
         </member>
         <member name="T:TVA.Security.AdoSecurityProvider.DataConnection">
             <summary>
@@ -766,6 +1008,11 @@
         <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.Connection">
             <summary>
             Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.AdapterType">
+            <summary>
+            Gets the type of data adapter for configured ADO.NET data source.
             </summary>
         </member>
     </members>
