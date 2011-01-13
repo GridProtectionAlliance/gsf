@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -20,6 +21,8 @@
 //       Added new header and license agreement.
 //  11/29/2010 - Pinal C. Patel
 //       Updated GetRootType() method to include MarshalByRefObject in the root type exclusion list.
+//  01/14/2011 - J. Ritchie Carroll
+//       Added is numeric type extension.
 //
 //*******************************************************************************************************
 
@@ -239,8 +242,28 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using TVA.IO;
 
@@ -251,6 +274,24 @@ namespace TVA
     /// </summary>
     public static class TypeExtensions
     {
+        // Native data types that represent numbers
+        private static Type[] s_numericTypes = { typeof(SByte), typeof(Byte), typeof(Int16), typeof(UInt16), typeof(Int24), typeof(UInt24), typeof(Int32), typeof(UInt32), typeof(Int64), typeof(UInt64), typeof(Single), typeof(Double), typeof(Decimal) };
+
+        /// <summary>
+        /// Determines if the specified type is a native structure that represents a numeric value.
+        /// </summary>
+        /// <param name="type">The <see cref="Type"/> being tested.</param>
+        /// <returns><c>true</c> if the specified type is a native structure that represents a numeric value.</returns>
+        /// <remarks>
+        /// For this method a boolean value is not considered numeric even though it can be thought of as a bit.
+        /// This expression returns <c>true</c> if the type is one of the following:<br/><br/>
+        ///     SByte, Byte, Int16, UInt16, Int24, UInt24, Int32, UInt32, Int64, UInt64, Single, Double, Decimal
+        /// </remarks>
+        public static bool IsNumeric(this Type type)
+        {
+            return s_numericTypes.Contains(type);
+        }
+
         /// <summary>
         /// Gets the root type in the inheritace hierarchy from which the specified <paramref name="type"/> inherits.
         /// </summary>

@@ -63,6 +63,9 @@
 //       Updated ConvertToType() to return the type default if passed in string is null or empty.
 //  01/04/2011 - J. Ritchie Carroll
 //       Modified ConvertToType culture default to InvariantCulture for English style parsing defaults.
+//  01/14/2011 - J. Ritchie Carroll
+//       Modified JoinKeyValuePairs to delineate values that contain nested key value pair expressions
+//       such that the generated expression can correctly parsed.
 //
 //*******************************************************************************************************
 
@@ -484,6 +487,11 @@ namespace TVA
         /// </summary>
         /// <param name="pairs">Dictionary of key-value pairs.</param>
         /// <returns>A string of key-value pairs.</returns>
+        /// <remarks>
+        /// Values will be escaped within braces to contain nested key value pair expressions like
+        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
+        /// ";" or "=" are detected in the value of the key/value pair.
+        /// </remarks>
         public static string JoinKeyValuePairs(this Dictionary<string, string> pairs)
         {
             return pairs.JoinKeyValuePairs(';', '=');
@@ -496,17 +504,52 @@ namespace TVA
         /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
         /// <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
         /// <returns>A string of key-value pairs.</returns>
+        /// <remarks>
+        /// Values will be escaped within braces to contain nested key value pair expressions like
+        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
+        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are
+        /// detected in the value of the key/value pair.
+        /// </remarks>
         public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter, char keyValueDelimeter)
+        {
+            return pairs.JoinKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
+        }
+
+        /// <summary>
+        /// Combines a dictionary of key-value pairs in to a string.
+        /// </summary>
+        /// <param name="pairs">Dictionary of key-value pairs.</param>
+        /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
+        /// <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
+        /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
+        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
+        /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
+        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
+        /// <returns>A string of key-value pairs.</returns>
+        /// <remarks>
+        /// Values will be escaped within <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/>
+        /// to contain nested key value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
+        /// when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
+        /// value of the key/value pair.
+        /// </remarks>
+        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter, char keyValueDelimeter, char startValueDelimeter, char endValueDelimeter)
         {
             // <pex>
             if (pairs == (Dictionary<string, string>)null)
                 throw new ArgumentNullException("pairs");
             // </pex>
+            char[] delimiters = { parameterDelimeter, keyValueDelimeter };
             StringBuilder result = new StringBuilder();
+            string value;
 
             foreach (string key in pairs.Keys)
             {
-                result.AppendFormat("{0}{1}{2}{3}", key, keyValueDelimeter, pairs[key], parameterDelimeter);
+                value = pairs[key];
+
+                if (value.IndexOfAny(delimiters) >= 0)
+                    value = startValueDelimeter + value + endValueDelimeter;
+
+                result.AppendFormat("{0}{1}{2}{3}", key, keyValueDelimeter, value, parameterDelimeter);
             }
 
             return result.ToString();
