@@ -62,6 +62,8 @@
 //       Changed default performance sampling interval on services to every 5 seconds instead of every
 //       second to reduce overhead and increase performance. Added a "-lifetime" option to the Health
 //       command to show lifetime performance statistics. Made sampling interval a user config option.
+//  01/17/2011 - J. Ritchie Carroll
+//       Added default "version" and "time" service commands.
 //
 //*******************************************************************************************************
 
@@ -306,6 +308,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
@@ -317,6 +320,7 @@ using TVA.Configuration;
 using TVA.Diagnostics;
 using TVA.ErrorManagement;
 using TVA.IO;
+using TVA.Reflection;
 using TVA.Scheduling;
 using TVA.Security;
 
@@ -1362,6 +1366,8 @@ namespace TVA.Services
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Unschedule", "Unschedules a process defined in the service", UnscheduleProcess));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("SaveSchedules", "Saves process schedules to the config file", SaveSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion));
+                m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
                 
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
@@ -3451,6 +3457,87 @@ namespace TVA.Services
                     requestInfo.Request = ClientRequest.Parse("Schedules");
                     ShowSchedules(requestInfo);
                 }
+            }
+        }
+
+        private void ShowVersion(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current service version.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Version -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                StringBuilder versionInfo = new StringBuilder();
+                AssemblyInfo serviceAssembly = AssemblyInfo.EntryAssembly;
+                string serviceName;
+
+                if (m_parentService != null && !string.IsNullOrWhiteSpace(m_parentService.ServiceName))
+                    serviceName = m_parentService.ServiceName;
+                else
+                    serviceName = AppDomain.CurrentDomain.FriendlyName;
+
+                versionInfo.AppendFormat("{0} Service Version:\r\n\r\n", serviceName);
+                versionInfo.AppendFormat("  App Domain: {0}, running on .NET {1}\r\n", AppDomain.CurrentDomain.FriendlyName, Environment.Version.ToString());
+                versionInfo.AppendFormat("   Code Base: {0}\r\n", serviceAssembly.CodeBase);
+                versionInfo.AppendFormat("  Build Date: {0}\r\n", serviceAssembly.BuildDate.ToString());
+                versionInfo.AppendFormat("     Version: {0}\r\n", serviceAssembly.Version.ToString());
+                versionInfo.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, versionInfo.ToString());
+            }
+        }
+
+        private void ShowTime(ClientRequestInfo requestInfo)
+        {
+            if (requestInfo.Request.Arguments.ContainsHelpRequest)
+            {
+                StringBuilder helpMessage = new StringBuilder();
+
+                helpMessage.Append("Shows the current system time.");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Usage:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       Time -options");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+                helpMessage.Append("   Options:");
+                helpMessage.AppendLine();
+                helpMessage.Append("       -?".PadRight(20));
+                helpMessage.Append("Displays this help message");
+                helpMessage.AppendLine();
+                helpMessage.AppendLine();
+
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
+            }
+            else
+            {
+                //          1         2         3         4         5         6         7         8
+                // 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+                //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
+                // Total system runtime: xx days yy hours zz minutes ii seconds
+                if (m_remotingServer != null)
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, " Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                else
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
         }
 
