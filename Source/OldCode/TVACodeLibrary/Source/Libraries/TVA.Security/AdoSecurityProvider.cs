@@ -566,7 +566,7 @@ namespace TVA.Security
                     param.ParameterName = "@name";
                     param.Value = UserData.Username;
                     command.Parameters.Add(param);
-                    command.CommandText = "Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From [User] Where Name = @name";                    
+                    command.CommandText = "Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name";                    
                     userDataTable.Load(command.ExecuteReader());
 
                     if (userDataTable.Rows.Count == 0) 
@@ -606,27 +606,27 @@ namespace TVA.Security
                     
                     UserData.Groups.Clear();
                     
-                    command.CommandText = "Select GroupID, GroupName, GroupDescription From GroupUsersDetail Where UserName = @name";
+                    command.CommandText = "Select SecurityGroupID, SecurityGroupName, SecurityGroupDescription From SecurityGroupUserAccountDetail Where UserName = @name";
                     userGroupDataTable.Load(command.ExecuteReader());
 
                     foreach (DataRow group in userGroupDataTable.Rows)
                     {
-                        if (!Convert.IsDBNull(group["GroupName"]))
-                            UserData.Groups.Add(Convert.ToString(group["GroupName"]));
+                        if (!Convert.IsDBNull(group["SecurityGroupName"]))
+                            UserData.Groups.Add(Convert.ToString(group["SecurityGroupName"]));
                     }
 
                     UserData.Roles.Clear();
                     
-                    command.CommandText = "Select RoleID, RoleName, RoleDescription From RoleUsersDetail Where UserName = @name";
+                    command.CommandText = "Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleUserAccountDetail Where UserName = @name";
                     userRoleDataTable.Load(command.ExecuteReader());
-                                        
-                    command.CommandText = "Select RoleGroupsDetail.RoleID, RoleGroupsDetail.RoleName, RoleGroupsDetail.RoleDescription From RoleGroupsDetail, GroupUsersDetail Where RoleGroupsDetail.GroupID = GroupUsersDetail.GroupID AND GroupUsersDetail.UserName = @name";
+
+                    command.CommandText = "Select ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail Where ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name";
                     userRoleDataTable.Load(command.ExecuteReader());
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
-                        if (!Convert.IsDBNull(role["RoleName"]) && !UserData.Roles.Contains(Convert.ToString(role["RoleName"])))
-                            UserData.Roles.Add(Convert.ToString(role["RoleName"]));
+                        if (!Convert.IsDBNull(role["ApplicationRoleName"]) && !UserData.Roles.Contains(Convert.ToString(role["ApplicationRoleName"])))
+                            UserData.Roles.Add(Convert.ToString(role["ApplicationRoleName"]));
                     }
 
                     return true;
@@ -715,7 +715,7 @@ namespace TVA.Security
 
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;                    
-                    command.CommandText = "Update [User] Set Password = @newPassword Where [Name] = @name AND Password = @oldPassword";
+                    command.CommandText = "Update UserAccount Set Password = @newPassword Where [Name] = @name AND Password = @oldPassword";
                     IDbDataParameter param = command.CreateParameter();
                     param.ParameterName = "@newPassword";
                     param.Value = SecurityProviderUtility.EncryptPassword(newPassword);

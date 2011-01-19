@@ -394,7 +394,7 @@ namespace TVA.Windows
         /// <param name="e">Arguments of this event.</param>
         void ButtonForgotPassowrdLink_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Please contact application administrator to reset your password.");
+            MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
         }
 
         /// <summary>
