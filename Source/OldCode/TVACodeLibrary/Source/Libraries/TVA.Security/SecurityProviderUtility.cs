@@ -297,12 +297,17 @@ namespace TVA.Security
         /// <returns>An object that implements <see cref="ISecurityProvider"/>.</returns>
         public static ISecurityProvider CreateProvider(string username)
         {
+            // Initialize the username.
+            if (string.IsNullOrEmpty(username))
+                username = Thread.CurrentPrincipal.Identity.Name;
+
             // Instantiate the provider.
             ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
 
             // Initialize the provider.
             provider.Initialize();
 
+            // Return initialized provider.
             return provider;
         }
 

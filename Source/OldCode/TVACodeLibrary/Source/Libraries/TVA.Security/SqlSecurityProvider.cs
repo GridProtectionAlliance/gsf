@@ -317,7 +317,7 @@ namespace TVA.Security
         /// <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected SqlSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
-            : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
+            : base(RemoveDomain(username), canRefreshData, canUpdateData, canResetPassword, canChangePassword)
         {
         }
 
@@ -458,6 +458,8 @@ namespace TVA.Security
                     else
                     {
                         base.RefreshData();
+                        if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
+                            UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
                     }
 
                     UserData.Groups.Clear();
@@ -602,11 +604,6 @@ namespace TVA.Security
                 if (!UserData.IsExternal)
                     return base.ChangePassword(oldPassword, newPassword);
 
-                // Verify old password.
-                UserData.PasswordChangeDateTime = DateTime.MinValue;
-                if (!Authenticate(oldPassword))
-                    return false;
-
                 // Verify new password.
                 if (!Regex.IsMatch(newPassword, PasswordRequirementRegex))
                     throw new SecurityException(PasswordRequirementError);
@@ -711,6 +708,21 @@ namespace TVA.Security
             }
 
             throw new InitializationException("Unable to initialize connection to backend security datastore", exception);
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        private static string RemoveDomain(string username)
+        {
+            // Remove domain from username.
+            if (username.Contains("\\"))
+                username = username.Split('\\')[1];
+
+            return username;
         }
 
         #endregion

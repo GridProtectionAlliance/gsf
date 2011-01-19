@@ -234,8 +234,10 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.DirectoryServices;
 using System.Reflection;
+using System.Security;
 using System.Security.Principal;
 using System.Threading;
 using TVA.Identity;
@@ -424,8 +426,8 @@ namespace TVA.Security
             WindowsImpersonationContext context = null;
             try
             {
-                if (!ConnectionString.StartsWith("LDAP://", StringComparison.CurrentCultureIgnoreCase) ||
-                    !ConnectionString.StartsWith("LDAPS://", StringComparison.CurrentCultureIgnoreCase))
+                string ldapPath = GetLdapPath();
+                if (string.IsNullOrEmpty(ldapPath))
                 {
                     // Use default LDAP path.
                     user = new UserInfo(UserData.Username);
@@ -434,8 +436,8 @@ namespace TVA.Security
                 else
                 {
                     // Use specified LDAP path.
-                    user = new UserInfo(UserData.Username, ConnectionString);
-                    searcher = new DirectorySearcher(new DirectoryEntry(ConnectionString));
+                    user = new UserInfo(UserData.Username, ldapPath);
+                    searcher = new DirectorySearcher(new DirectoryEntry(ldapPath));
                 }
 
                 user.PersistSettings = true;
@@ -474,7 +476,7 @@ namespace TVA.Security
                             if (passwordSetOn == 0)
                             {
                                 // User must change password on next logon.
-                                UserData.PasswordChangeDateTime = DateTime.MinValue;
+                                UserData.PasswordChangeDateTime = DateTime.UtcNow;
                             }
                             else
                             {
@@ -533,18 +535,13 @@ namespace TVA.Security
             WindowsImpersonationContext context = null;
             try
             {
-                // Verify old password.
-                UserData.PasswordChangeDateTime = DateTime.MinValue;
-                if (!Authenticate(oldPassword))
-                    return false;
-
-                if (!ConnectionString.StartsWith("LDAP://", StringComparison.CurrentCultureIgnoreCase) ||
-                    !ConnectionString.StartsWith("LDAPS://", StringComparison.CurrentCultureIgnoreCase))
+                string ldapPath = GetLdapPath();
+                if (string.IsNullOrEmpty(ldapPath))
                     // Use default LDAP path.
                     user = new UserInfo(UserData.Username);
                 else
                     // Use specified LDAP path.
-                    user = new UserInfo(UserData.Username, ConnectionString);
+                    user = new UserInfo(UserData.Username, ldapPath);
 
                 // Initialize user entry.
                 user.PersistSettings = true;
@@ -558,6 +555,14 @@ namespace TVA.Security
                 user.UserEntry.CommitChanges();
 
                 return true;
+            }
+            catch (TargetInvocationException ex)
+            {
+                // Propagate Active Directory error.
+                if (ex.InnerException == null)
+                    throw new SecurityException(ex.Message, ex);
+                else
+                    throw new SecurityException(ex.InnerException.Message, ex);
             }
             finally
             {
@@ -583,6 +588,26 @@ namespace TVA.Security
                 return new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
 
             return role;
+        }
+
+        private string GetLdapPath()
+        {
+            if (ConnectionString.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
+                ConnectionString.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return ConnectionString;
+            }
+            else
+            {
+                foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
+                {
+                    if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) || 
+                        pair.Value.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
+                        return pair.Value;
+                }
+            }
+
+            return null;
         }
 
         private long ConvertToLong(object largeInteger)

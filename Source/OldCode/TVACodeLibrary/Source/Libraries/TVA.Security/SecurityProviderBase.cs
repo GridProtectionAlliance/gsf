@@ -246,8 +246,6 @@
 
 using System;
 using System.Configuration;
-using System.Linq;
-using System.Threading;
 using TVA.Configuration;
 
 namespace TVA.Security
@@ -403,14 +401,6 @@ namespace TVA.Security
         /// <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
         protected SecurityProviderBase(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
         {
-            // Verify specified username.
-            if (string.IsNullOrEmpty(username))
-                username = Thread.CurrentPrincipal.Identity.Name;
-
-            // Remove domain from username.
-            if (username.Contains('\\'))
-                username = username.Split('\\')[1];
-
             // Initialize member variables.
             m_userData = new UserData(username);
             m_canRefreshData = canRefreshData;
