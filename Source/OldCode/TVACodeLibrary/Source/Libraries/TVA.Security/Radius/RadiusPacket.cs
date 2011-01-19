@@ -229,563 +229,563 @@
 */
 #endregion
 
-//using System;
-//using System.Collections.Generic;
-//using System.Security.Cryptography;
-//using System.Text;
-//using TVA.Parsing;
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
+using TVA.Parsing;
 
-//namespace TVA.Security.Radius
-//{
-//    #region [ Enumerations ]
+namespace TVA.Security.Radius
+{
+    #region [ Enumerations ]
 
-//    /// <summary>
-//    /// Specifies the type of RADIUS packet.
-//    /// </summary>
-//    public enum PacketType
-//    {
-//        /// <summary>
-//        /// Packet sent to a RADIUS server for verification of credentials.
-//        /// </summary>
-//        AccessRequest = 1,
-//        /// <summary>
-//        /// Packet sent by a RADIUS server when credential verification is successful.
-//        /// </summary>
-//        AccessAccept = 2,
-//        /// <summary>
-//        /// Packet sent by a RADIUS server when credential verification is unsuccessful.
-//        /// </summary>
-//        AccessReject = 3,
-//        /// <summary>
-//        /// Not used. No description available.
-//        /// </summary>
-//        AccountingRequest = 4,
-//        /// <summary>
-//        /// Not used. No description available.
-//        /// </summary>
-//        AccountingResponse = 5,
-//        /// <summary>
-//        /// Not used. No description available. [RFC 2882]
-//        /// </summary>
-//        AccountingStatus = 6,
-//        /// <summary>
-//        /// Not used. No description available. [RFC 2882]
-//        /// </summary>
-//        PasswordRequest = 7,
-//        /// <summary>
-//        /// Not used. No description available. [RFC 2882]
-//        /// </summary>
-//        PasswordAccept = 8,
-//        /// <summary>
-//        /// Not used. No description available. [RFC 2882]
-//        /// </summary>
-//        PasswordReject = 9,
-//        /// <summary>
-//        /// Not used. No description available. [RFC 2882]
-//        /// </summary>
-//        AccountingMessage = 10,
-//        /// <summary>
-//        /// Packet sent by a RADIUS server when further information is needed for credential verification.
-//        /// </summary>
-//        AccessChallenge = 11,
-//        /// <summary>
-//        /// Not used. No description available.
-//        /// </summary>
-//        StatuServer = 12,
-//        /// <summary>
-//        /// Not used. No description available.
-//        /// </summary>
-//        StatusClient = 13
-//    }
+    /// <summary>
+    /// Specifies the type of RADIUS packet.
+    /// </summary>
+    public enum PacketType
+    {
+        /// <summary>
+        /// Packet sent to a RADIUS server for verification of credentials.
+        /// </summary>
+        AccessRequest = 1,
+        /// <summary>
+        /// Packet sent by a RADIUS server when credential verification is successful.
+        /// </summary>
+        AccessAccept = 2,
+        /// <summary>
+        /// Packet sent by a RADIUS server when credential verification is unsuccessful.
+        /// </summary>
+        AccessReject = 3,
+        /// <summary>
+        /// Not used. No description available.
+        /// </summary>
+        AccountingRequest = 4,
+        /// <summary>
+        /// Not used. No description available.
+        /// </summary>
+        AccountingResponse = 5,
+        /// <summary>
+        /// Not used. No description available. [RFC 2882]
+        /// </summary>
+        AccountingStatus = 6,
+        /// <summary>
+        /// Not used. No description available. [RFC 2882]
+        /// </summary>
+        PasswordRequest = 7,
+        /// <summary>
+        /// Not used. No description available. [RFC 2882]
+        /// </summary>
+        PasswordAccept = 8,
+        /// <summary>
+        /// Not used. No description available. [RFC 2882]
+        /// </summary>
+        PasswordReject = 9,
+        /// <summary>
+        /// Not used. No description available. [RFC 2882]
+        /// </summary>
+        AccountingMessage = 10,
+        /// <summary>
+        /// Packet sent by a RADIUS server when further information is needed for credential verification.
+        /// </summary>
+        AccessChallenge = 11,
+        /// <summary>
+        /// Not used. No description available.
+        /// </summary>
+        StatuServer = 12,
+        /// <summary>
+        /// Not used. No description available.
+        /// </summary>
+        StatusClient = 13
+    }
 
-//    #endregion
+    #endregion
 
-//    /// <summary>
-//    /// Represents a data packet transferred between RADIUS client and server.
-//    /// </summary>
-//    public class RadiusPacket : ISupportBinaryImage
-//    {
-//        // 0                   1                   2                   3
-//        // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//        //|     Code      |  Identifier   |            Length             |
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//        //|                                                               |
-//        //|                         Authenticator                         |
-//        //|                                                               |
-//        //|                                                               |
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//        //|  Attributes ...
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-
+    /// <summary>
+    /// Represents a data packet transferred between RADIUS client and server.
+    /// </summary>
+    public class RadiusPacket : ISupportBinaryImage
+    {
+        // 0                   1                   2                   3
+        // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //|     Code      |  Identifier   |            Length             |
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //|                                                               |
+        //|                         Authenticator                         |
+        //|                                                               |
+        //|                                                               |
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+        //|  Attributes ...
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-//        #region [ Members ]
+        #region [ Members ]
 
-//        // Fields
-//        private PacketType m_type;
-//        private byte m_identifier;
-//        private byte[] m_authenticator;
-//        private List<RadiusPacketAttribute> m_attributes;
+        // Fields
+        private PacketType m_type;
+        private byte m_identifier;
+        private byte[] m_authenticator;
+        private List<RadiusPacketAttribute> m_attributes;
 
-//        #endregion
+        #endregion
 
-//        #region [ Constructors ]
+        #region [ Constructors ]
 
-//        /// <summary>
-//        /// Creates a default instance of RADIUS packet.
-//        /// </summary>
-//        public RadiusPacket()
-//        {
-//            m_identifier = (byte)(Cryptography.Random.Between(0, 255));
-//            m_authenticator = new byte[16];
-//            m_attributes = new List<RadiusPacketAttribute>();
-//        }
+        /// <summary>
+        /// Creates a default instance of RADIUS packet.
+        /// </summary>
+        public RadiusPacket()
+        {
+            m_identifier = (byte)(Cryptography.Random.Between(0, 255));
+            m_authenticator = new byte[16];
+            m_attributes = new List<RadiusPacketAttribute>();
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet.
-//        /// </summary>
-//        /// <param name="type">Type of the packet.</param>
-//        public RadiusPacket(PacketType type)
-//            : this()
-//        {
-//            m_type = type;
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet.
+        /// </summary>
+        /// <param name="type">Type of the packet.</param>
+        public RadiusPacket(PacketType type)
+            : this()
+        {
+            m_type = type;
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet.
-//        /// </summary>
-//        /// <param name="binaryImage">A byte array.</param>
-//        /// <param name="startIndex">Starting point in the byte array.</param>
-//        public RadiusPacket(byte[] binaryImage, int startIndex)
-//            : this()
-//        {
-//            Initialize(binaryImage, startIndex, binaryImage.Length);
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet.
+        /// </summary>
+        /// <param name="binaryImage">A byte array.</param>
+        /// <param name="startIndex">Starting point in the byte array.</param>
+        public RadiusPacket(byte[] binaryImage, int startIndex)
+            : this()
+        {
+            Initialize(binaryImage, startIndex, binaryImage.Length);
+        }
 
-//        #endregion
+        #endregion
 
-//        #region [ Properties ]
+        #region [ Properties ]
 
-//        /// <summary>
-//        /// Gets or sets the type of the packet.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Type of the packet.</returns>
-//        public PacketType Type
-//        {
-//            get
-//            {
-//                return m_type;
-//            }
-//            set
-//            {
-//                m_type = value;
-//            }
-//        }
+        /// <summary>
+        /// Gets or sets the type of the packet.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Type of the packet.</returns>
+        public PacketType Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+            }
+        }
 
-//        /// <summary>
-//        /// Gets or sets the packet identifier.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Identifier of the packet.</returns>
-//        public byte Identifier
-//        {
-//            get
-//            {
-//                return m_identifier;
-//            }
-//            set
-//            {
-//                m_identifier = value;
-//            }
-//        }
+        /// <summary>
+        /// Gets or sets the packet identifier.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Identifier of the packet.</returns>
+        public byte Identifier
+        {
+            get
+            {
+                return m_identifier;
+            }
+            set
+            {
+                m_identifier = value;
+            }
+        }
 
-//        /// <summary>
-//        /// Gets or sets the packet authenticator.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Authenticator of the packet.</returns>
-//        public byte[] Authenticator
-//        {
-//            get
-//            {
-//                return m_authenticator;
-//            }
-//            set
-//            {
-//                if (value != null)
-//                {
-//                    if (value.Length == 16)
-//                    {
-//                        m_authenticator = value;
-//                    }
-//                    else
-//                    {
-//                        throw new ArgumentException("Authenticator must 16-byte long.");
-//                    }
-//                }
-//                else
-//                {
-//                    throw new ArgumentNullException("Authenticator");
-//                }
-//            }
-//        }
+        /// <summary>
+        /// Gets or sets the packet authenticator.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Authenticator of the packet.</returns>
+        public byte[] Authenticator
+        {
+            get
+            {
+                return m_authenticator;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    if (value.Length == 16)
+                    {
+                        m_authenticator = value;
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Authenticator must 16-byte long.");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentNullException("Authenticator");
+                }
+            }
+        }
 
-//        /// <summary>
-//        /// Gets a list of packet attributes.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Attributes of the packet.</returns>
-//        public List<RadiusPacketAttribute> Attributes
-//        {
-//            get
-//            {
-//                return m_attributes;
-//            }
-//        }
+        /// <summary>
+        /// Gets a list of packet attributes.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Attributes of the packet.</returns>
+        public List<RadiusPacketAttribute> Attributes
+        {
+            get
+            {
+                return m_attributes;
+            }
+        }
 
-//        /// <summary>
-//        /// Gets the binary lenght of the packet.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>32-bit signed integer value.</returns>
-//        public int BinaryLength
-//        {
-//            get
-//            {
-//                // 20 bytes are fixed + length of all attributes combined
-//                int length = 20;
-//                foreach (RadiusPacketAttribute attribute in m_attributes)
-//                {
-//                    length += attribute.BinaryLength;
-//                }
+        /// <summary>
+        /// Gets the binary lenght of the packet.
+        /// </summary>
+        /// <value></value>
+        /// <returns>32-bit signed integer value.</returns>
+        public int BinaryLength
+        {
+            get
+            {
+                // 20 bytes are fixed + length of all attributes combined
+                int length = 20;
+                foreach (RadiusPacketAttribute attribute in m_attributes)
+                {
+                    length += attribute.BinaryLength;
+                }
 
-//                return length;
-//            }
-//        }
+                return length;
+            }
+        }
 
-//        /// <summary>
-//        /// Gets the binary image of the packet.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>A byte array.</returns>
-//        public byte[] BinaryImage
-//        {
-//            get
-//            {
-//                byte[] image = new byte[BinaryLength];
-//                image[0] = System.Convert.ToByte(m_type);
-//                image[1] = m_identifier;
-//                Array.Copy(GetBytes((ushort)BinaryLength), 0, image, 2, 2);
-//                Array.Copy(m_authenticator, 0, image, 4, m_authenticator.Length);
-//                int cursor = 20;
-//                foreach (RadiusPacketAttribute attribute in m_attributes)
-//                {
-//                    Array.Copy(attribute.BinaryImage, 0, image, cursor, attribute.BinaryLength);
-//                    cursor += attribute.BinaryLength;
-//                }
+        /// <summary>
+        /// Gets the binary image of the packet.
+        /// </summary>
+        /// <value></value>
+        /// <returns>A byte array.</returns>
+        public byte[] BinaryImage
+        {
+            get
+            {
+                byte[] image = new byte[BinaryLength];
+                image[0] = System.Convert.ToByte(m_type);
+                image[1] = m_identifier;
+                Array.Copy(GetBytes((ushort)BinaryLength), 0, image, 2, 2);
+                Array.Copy(m_authenticator, 0, image, 4, m_authenticator.Length);
+                int cursor = 20;
+                foreach (RadiusPacketAttribute attribute in m_attributes)
+                {
+                    Array.Copy(attribute.BinaryImage, 0, image, cursor, attribute.BinaryLength);
+                    cursor += attribute.BinaryLength;
+                }
 
-//                return image;
-//            }
-//        }
+                return image;
+            }
+        }
 
-//        #endregion
+        #endregion
 
-//        #region [ Methods ]
+        #region [ Methods ]
 
-//        /// <summary>
-//        /// Initializes <see cref="RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
-//        /// </summary>
-//        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacket"/>.</param>
-//        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-//        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-//        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacket"/>.</returns>
-//        public int Initialize(byte[] binaryImage, int startIndex, int length)
-//        {
-//            if ((binaryImage != null) && binaryImage.Length >= 20)
-//            {
-//                // We have a valid buffer to work with.
-//                UInt16 size;
-//                m_type = (PacketType)(binaryImage[startIndex]);
-//                m_identifier = binaryImage[startIndex + 1];
-//                size = ToUInt16(binaryImage, startIndex + 2);
-//                Array.Copy(binaryImage, 4, m_authenticator, 0, m_authenticator.Length);
-//                // Parse any attributes in the packet.
-//                int cursor = 20;
-//                while (cursor < size)
-//                {
-//                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(binaryImage, startIndex + cursor);
-//                    m_attributes.Add(attribute);
-//                    cursor += attribute.BinaryLength;
-//                }
+        /// <summary>
+        /// Initializes <see cref="RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacket"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacket"/>.</returns>
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
+            if ((binaryImage != null) && binaryImage.Length >= 20)
+            {
+                // We have a valid buffer to work with.
+                UInt16 size;
+                m_type = (PacketType)(binaryImage[startIndex]);
+                m_identifier = binaryImage[startIndex + 1];
+                size = ToUInt16(binaryImage, startIndex + 2);
+                Array.Copy(binaryImage, 4, m_authenticator, 0, m_authenticator.Length);
+                // Parse any attributes in the packet.
+                int cursor = 20;
+                while (cursor < size)
+                {
+                    RadiusPacketAttribute attribute = new RadiusPacketAttribute(binaryImage, startIndex + cursor);
+                    m_attributes.Add(attribute);
+                    cursor += attribute.BinaryLength;
+                }
 
-//                return BinaryLength;
-//            }
-//            else
-//            {
-//                throw new ArgumentException("Buffer is not valid.");
-//            }
-//        }
+                return BinaryLength;
+            }
+            else
+            {
+                throw new ArgumentException("Buffer is not valid.");
+            }
+        }
 
-//        /// <summary>
-//        /// Gets the value of the specified attribute if it is present in the packet.
-//        /// </summary>
-//        /// <param name="type">Type of the attribute whose value is to be retrieved.</param>
-//        /// <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
-//        public byte[] GetAttributeValue(AttributeType type)
-//        {
-//            foreach (RadiusPacketAttribute attrib in m_attributes)
-//            {
-//                // Attribute found, return its value.
-//                if (attrib.Type == type)
-//                {
-//                    return attrib.Value;
-//                }
-//            }
+        /// <summary>
+        /// Gets the value of the specified attribute if it is present in the packet.
+        /// </summary>
+        /// <param name="type">Type of the attribute whose value is to be retrieved.</param>
+        /// <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
+        public byte[] GetAttributeValue(AttributeType type)
+        {
+            foreach (RadiusPacketAttribute attrib in m_attributes)
+            {
+                // Attribute found, return its value.
+                if (attrib.Type == type)
+                {
+                    return attrib.Value;
+                }
+            }
 
-//            return null; // Attribute is not present in the packet.
-//        }
+            return null; // Attribute is not present in the packet.
+        }
 
-//        #endregion
+        #endregion
 
-//        #region [ Static ]
+        #region [ Static ]
 
-//        // Static Fields
+        // Static Fields
 
-//        /// <summary>
-//        /// Encoding format for encoding text.
-//        /// </summary>
-//        public static Encoding Encoding = Encoding.UTF8;
+        /// <summary>
+        /// Encoding format for encoding text.
+        /// </summary>
+        public static Encoding Encoding = Encoding.UTF8;
 
-//        // Static Methods
+        // Static Methods
 
-//        /// <summary>
-//        /// Gets bytes for the specified text.
-//        /// </summary>
-//        /// <param name="value">Text blob.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] GetBytes(string value)
-//        {
-//            return Encoding.GetBytes(value);
-//        }
+        /// <summary>
+        /// Gets bytes for the specified text.
+        /// </summary>
+        /// <param name="value">Text blob.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] GetBytes(string value)
+        {
+            return Encoding.GetBytes(value);
+        }
 
-//        /// <summary>
-//        /// Gets bytes for the specified 16-bit signed integer value.
-//        /// </summary>
-//        /// <param name="value">16-bit signed integer value.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] GetBytes(short value)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.GetBytes(value);
-//        }
+        /// <summary>
+        /// Gets bytes for the specified 16-bit signed integer value.
+        /// </summary>
+        /// <param name="value">16-bit signed integer value.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] GetBytes(short value)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.GetBytes(value);
+        }
 
-//        /// <summary>
-//        /// Gets bytes for the specified 16-bit unsigned integer value.
-//        /// </summary>
-//        /// <param name="value">16-bit unsigned integer value.</param>
-//        /// <returns>A byte array.</returns>
-//        [CLSCompliant(false)]
-//        public static byte[] GetBytes(UInt16 value)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.GetBytes(value);
-//        }
+        /// <summary>
+        /// Gets bytes for the specified 16-bit unsigned integer value.
+        /// </summary>
+        /// <param name="value">16-bit unsigned integer value.</param>
+        /// <returns>A byte array.</returns>
+        [CLSCompliant(false)]
+        public static byte[] GetBytes(UInt16 value)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.GetBytes(value);
+        }
 
-//        /// <summary>
-//        /// Gets bytes for the specified 32-bit signed integer value.
-//        /// </summary>
-//        /// <param name="value">32-bit signed integer value.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] GetBytes(int value)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.GetBytes(value);
-//        }
+        /// <summary>
+        /// Gets bytes for the specified 32-bit signed integer value.
+        /// </summary>
+        /// <param name="value">32-bit signed integer value.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] GetBytes(int value)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.GetBytes(value);
+        }
 
-//        /// <summary>
-//        /// Gets bytes for the specified 32-bit unsigned integer value.
-//        /// </summary>
-//        /// <param name="value">32-bit unsigned integer value.</param>
-//        /// <returns>A byte array.</returns>
-//        [CLSCompliant(false)]
-//        public static byte[] GetBytes(UInt32 value)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.GetBytes(value);
-//        }
+        /// <summary>
+        /// Gets bytes for the specified 32-bit unsigned integer value.
+        /// </summary>
+        /// <param name="value">32-bit unsigned integer value.</param>
+        /// <returns>A byte array.</returns>
+        [CLSCompliant(false)]
+        public static byte[] GetBytes(UInt32 value)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.GetBytes(value);
+        }
 
-//        /// <summary>
-//        /// Converts the specified byte array to text.
-//        /// </summary>
-//        /// <param name="buffer">A byte array.</param>
-//        /// <param name="index">Starting point in the byte array.</param>
-//        /// <param name="length">Number of bytes to be converted.</param>
-//        /// <returns>A text blob.</returns>
-//        public static string ToText(byte[] buffer, int index, int length)
-//        {
-//            return Encoding.GetString(buffer, index, length);
-//        }
+        /// <summary>
+        /// Converts the specified byte array to text.
+        /// </summary>
+        /// <param name="buffer">A byte array.</param>
+        /// <param name="index">Starting point in the byte array.</param>
+        /// <param name="length">Number of bytes to be converted.</param>
+        /// <returns>A text blob.</returns>
+        public static string ToText(byte[] buffer, int index, int length)
+        {
+            return Encoding.GetString(buffer, index, length);
+        }
 
-//        /// <summary>
-//        /// Converts the specified byte array to a signed 16-bit integer value.
-//        /// </summary>
-//        /// <param name="buffer">A byte array.</param>
-//        /// <param name="index">Starting point in the byte array.</param>
-//        /// <returns>A 16-bit signed integer value.</returns>
-//        public static short ToInt16(byte[] buffer, int index)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.ToInt16(buffer, index);
-//        }
+        /// <summary>
+        /// Converts the specified byte array to a signed 16-bit integer value.
+        /// </summary>
+        /// <param name="buffer">A byte array.</param>
+        /// <param name="index">Starting point in the byte array.</param>
+        /// <returns>A 16-bit signed integer value.</returns>
+        public static short ToInt16(byte[] buffer, int index)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.ToInt16(buffer, index);
+        }
 
-//        /// <summary>
-//        /// Converts the specified byte array to an unsigned 16-bit integer value.
-//        /// </summary>
-//        /// <param name="buffer">A byte array.</param>
-//        /// <param name="index">Starting point in the byte array.</param>
-//        /// <returns>A 16-bit unsigned integer value.</returns>
-//        [CLSCompliant(false)]
-//        public static UInt16 ToUInt16(byte[] buffer, int index)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.ToUInt16(buffer, index);
-//        }
+        /// <summary>
+        /// Converts the specified byte array to an unsigned 16-bit integer value.
+        /// </summary>
+        /// <param name="buffer">A byte array.</param>
+        /// <param name="index">Starting point in the byte array.</param>
+        /// <returns>A 16-bit unsigned integer value.</returns>
+        [CLSCompliant(false)]
+        public static UInt16 ToUInt16(byte[] buffer, int index)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.ToUInt16(buffer, index);
+        }
 
-//        /// <summary>
-//        /// Converts the specified byte array to a signed 32-bit integer value.
-//        /// </summary>
-//        /// <param name="buffer">A byte array.</param>
-//        /// <param name="index">Starting point in the byte array.</param>
-//        /// <returns>A 32-bit signed integer value.</returns>
-//        public static int ToInt32(byte[] buffer, int index)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.ToInt32(buffer, index);
-//        }
+        /// <summary>
+        /// Converts the specified byte array to a signed 32-bit integer value.
+        /// </summary>
+        /// <param name="buffer">A byte array.</param>
+        /// <param name="index">Starting point in the byte array.</param>
+        /// <returns>A 32-bit signed integer value.</returns>
+        public static int ToInt32(byte[] buffer, int index)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.ToInt32(buffer, index);
+        }
 
-//        /// <summary>
-//        /// Converts the specified byte array to an unsigned 32-bit integer value.
-//        /// </summary>
-//        /// <param name="buffer">A byte array.</param>
-//        /// <param name="index">Starting point in the byte array.</param>
-//        /// <returns>A 32-bit unsigned integer value.</returns>
-//        [CLSCompliant(false)]
-//        public static UInt32 ToUInt32(byte[] buffer, int index)
-//        {
-//            // Integer values are in Big-endian (most significant byte first) format.
-//            return EndianOrder.BigEndian.ToUInt32(buffer, index);
-//        }
+        /// <summary>
+        /// Converts the specified byte array to an unsigned 32-bit integer value.
+        /// </summary>
+        /// <param name="buffer">A byte array.</param>
+        /// <param name="index">Starting point in the byte array.</param>
+        /// <returns>A 32-bit unsigned integer value.</returns>
+        [CLSCompliant(false)]
+        public static UInt32 ToUInt32(byte[] buffer, int index)
+        {
+            // Integer values are in Big-endian (most significant byte first) format.
+            return EndianOrder.BigEndian.ToUInt32(buffer, index);
+        }
 
-//        /// <summary>
-//        /// Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
-//        /// </summary>
-//        /// <param name="sharedSecret">The shared secret to be used in generating the output.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] CreateRequestAuthenticator(string sharedSecret)
-//        {
-//            // We create a input buffer that'll be used to create a 16-byte value using the RSA MD5 algorithm.
-//            // Since the output value (The Authenticator) has to be unique over the life of the shared secret,
-//            // we prepend a randomly generated "salt" text to ensure the uniqueness of the output value.
-//            byte[] randomBuffer = new byte[16];
-//            byte[] secretBuffer = RadiusPacket.GetBytes(sharedSecret);
-//            Cryptography.Random.GetBytes(randomBuffer);
+        /// <summary>
+        /// Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
+        /// </summary>
+        /// <param name="sharedSecret">The shared secret to be used in generating the output.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] CreateRequestAuthenticator(string sharedSecret)
+        {
+            // We create a input buffer that'll be used to create a 16-byte value using the RSA MD5 algorithm.
+            // Since the output value (The Authenticator) has to be unique over the life of the shared secret,
+            // we prepend a randomly generated "salt" text to ensure the uniqueness of the output value.
+            byte[] randomBuffer = new byte[16];
+            byte[] secretBuffer = RadiusPacket.GetBytes(sharedSecret);
+            Cryptography.Random.GetBytes(randomBuffer);
 
-//            return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
-//        }
+            return new MD5CryptoServiceProvider().ComputeHash(randomBuffer.Combine(secretBuffer));
+        }
 
-//        /// <summary>
-//        /// Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
-//        /// </summary>
-//        /// <param name="sharedSecret">The shared secret key.</param>
-//        /// <param name="requestPacket">RADIUS packet sent from client to server.</param>
-//        /// <param name="responsePacket">RADIUS packet sent from server to client.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] CreateResponseAuthenticator(string sharedSecret, RadiusPacket requestPacket, RadiusPacket responsePacket)
-//        {
-//            byte[] requestBytes = requestPacket.BinaryImage;
-//            byte[] responseBytes = responsePacket.BinaryImage;
-//            byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
-//            byte[] inputBuffer = new byte[responseBytes.Length + sharedSecretBytes.Length];
+        /// <summary>
+        /// Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
+        /// </summary>
+        /// <param name="sharedSecret">The shared secret key.</param>
+        /// <param name="requestPacket">RADIUS packet sent from client to server.</param>
+        /// <param name="responsePacket">RADIUS packet sent from server to client.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] CreateResponseAuthenticator(string sharedSecret, RadiusPacket requestPacket, RadiusPacket responsePacket)
+        {
+            byte[] requestBytes = requestPacket.BinaryImage;
+            byte[] responseBytes = responsePacket.BinaryImage;
+            byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
+            byte[] inputBuffer = new byte[responseBytes.Length + sharedSecretBytes.Length];
 
-//            // Response authenticator is generated as follows:
-//            // MD5(Code + Identifier + Length + Request Authenticator + Attributes + Shared Secret)
-//            //   where:
-//            //   Code, Identifier, Length & Attributes are from the response RADIUS packet
-//            //   Request Authenticator if from the request RADIUS packet
-//            //   Shared Secret is the shared secret ket
+            // Response authenticator is generated as follows:
+            // MD5(Code + Identifier + Length + Request Authenticator + Attributes + Shared Secret)
+            //   where:
+            //   Code, Identifier, Length & Attributes are from the response RADIUS packet
+            //   Request Authenticator if from the request RADIUS packet
+            //   Shared Secret is the shared secret ket
 
-//            Array.Copy(responseBytes, 0, inputBuffer, 0, responseBytes.Length);
-//            Array.Copy(requestBytes, 4, inputBuffer, 4, 16);
-//            Array.Copy(sharedSecretBytes, 0, inputBuffer, responseBytes.Length, sharedSecretBytes.Length);
+            Array.Copy(responseBytes, 0, inputBuffer, 0, responseBytes.Length);
+            Array.Copy(requestBytes, 4, inputBuffer, 4, 16);
+            Array.Copy(sharedSecretBytes, 0, inputBuffer, responseBytes.Length, sharedSecretBytes.Length);
 
-//            return new MD5CryptoServiceProvider().ComputeHash(inputBuffer);
-//        }
+            return new MD5CryptoServiceProvider().ComputeHash(inputBuffer);
+        }
 
-//        /// <summary>
-//        /// Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
-//        /// </summary>
-//        /// <param name="password">User's password.</param>
-//        /// <param name="sharedSecret">Shared secret key.</param>
-//        /// <param name="requestAuthenticator">Request authenticator byte array.</param>
-//        /// <returns>A byte array.</returns>
-//        public static byte[] EncryptPassword(string password, string sharedSecret, byte[] requestAuthenticator)
-//        {
-//            // Max length of the password can be 130 according to RFC 2865. Since 128 is the closest multiple
-//            // of 16 (password segment length), we allow the password to be no longer than 128 characters.
-//            if (password.Length <= 128)
-//            {
-//                byte[] result;
-//                byte[] xorBytes = null;
-//                byte[] passwordBytes = RadiusPacket.GetBytes(password);
-//                byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
-//                byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
-//                MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider();
-//                if (passwordBytes.Length % 16 == 0)
-//                {
-//                    // Length of password is a multiple of 16.
-//                    result = new byte[passwordBytes.Length];
-//                }
-//                else
-//                {
-//                    // Length of password is not a multiple of 16, so we'll take the multiple of 16 that's next
-//                    // closest to the password's length and leave the empty space at the end as padding.
-//                    result = new byte[((passwordBytes.Length / 16) * 16) + 16];
-//                }
+        /// <summary>
+        /// Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
+        /// </summary>
+        /// <param name="password">User's password.</param>
+        /// <param name="sharedSecret">Shared secret key.</param>
+        /// <param name="requestAuthenticator">Request authenticator byte array.</param>
+        /// <returns>A byte array.</returns>
+        public static byte[] EncryptPassword(string password, string sharedSecret, byte[] requestAuthenticator)
+        {
+            // Max length of the password can be 130 according to RFC 2865. Since 128 is the closest multiple
+            // of 16 (password segment length), we allow the password to be no longer than 128 characters.
+            if (password.Length <= 128)
+            {
+                byte[] result;
+                byte[] xorBytes = null;
+                byte[] passwordBytes = RadiusPacket.GetBytes(password);
+                byte[] sharedSecretBytes = RadiusPacket.GetBytes(sharedSecret);
+                byte[] md5HashInputBytes = new byte[sharedSecretBytes.Length + 16];
+                MD5CryptoServiceProvider md5Provider = new MD5CryptoServiceProvider();
+                if (passwordBytes.Length % 16 == 0)
+                {
+                    // Length of password is a multiple of 16.
+                    result = new byte[passwordBytes.Length];
+                }
+                else
+                {
+                    // Length of password is not a multiple of 16, so we'll take the multiple of 16 that's next
+                    // closest to the password's length and leave the empty space at the end as padding.
+                    result = new byte[((passwordBytes.Length / 16) * 16) + 16];
+                }
 
-//                // Copy the password to the result buffer where it'll be XORed.
-//                Array.Copy(passwordBytes, 0, result, 0, passwordBytes.Length);
-//                // For the first 16-byte segment of the password, password characters are to be XORed with the
-//                // MD5 hash value that's computed as follows:
-//                //   MD5(Shared secret key + Request authenticator)
-//                Array.Copy(sharedSecretBytes, 0, md5HashInputBytes, 0, sharedSecretBytes.Length);
-//                Array.Copy(requestAuthenticator, 0, md5HashInputBytes, sharedSecretBytes.Length, requestAuthenticator.Length);
-//                for (int i = 0; i <= result.Length - 1; i += 16)
-//                {
-//                    // Perform XOR-based encryption of the password in 16-byte segments.
-//                    if (i > 0)
-//                    {
-//                        // For passwords that are more than 16 characters in length, each consecutive 16-byte
-//                        // segment of the password is XORed with MD5 hash value that's computed as follows:
-//                        //   MD5(Shared secret key + XOR bytes used in the previous segment)
-//                        Array.Copy(xorBytes, 0, md5HashInputBytes, sharedSecretBytes.Length, xorBytes.Length);
-//                    }
-//                    xorBytes = md5Provider.ComputeHash(md5HashInputBytes);
+                // Copy the password to the result buffer where it'll be XORed.
+                Array.Copy(passwordBytes, 0, result, 0, passwordBytes.Length);
+                // For the first 16-byte segment of the password, password characters are to be XORed with the
+                // MD5 hash value that's computed as follows:
+                //   MD5(Shared secret key + Request authenticator)
+                Array.Copy(sharedSecretBytes, 0, md5HashInputBytes, 0, sharedSecretBytes.Length);
+                Array.Copy(requestAuthenticator, 0, md5HashInputBytes, sharedSecretBytes.Length, requestAuthenticator.Length);
+                for (int i = 0; i <= result.Length - 1; i += 16)
+                {
+                    // Perform XOR-based encryption of the password in 16-byte segments.
+                    if (i > 0)
+                    {
+                        // For passwords that are more than 16 characters in length, each consecutive 16-byte
+                        // segment of the password is XORed with MD5 hash value that's computed as follows:
+                        //   MD5(Shared secret key + XOR bytes used in the previous segment)
+                        Array.Copy(xorBytes, 0, md5HashInputBytes, sharedSecretBytes.Length, xorBytes.Length);
+                    }
+                    xorBytes = md5Provider.ComputeHash(md5HashInputBytes);
 
-//                    // XOR the password bytes in the current segment with the XOR bytes.
-//                    for (int j = i; j <= (i + 16) - 1; j++)
-//                    {
-//                        result[j] = (byte)(result[j] ^ xorBytes[j]);
-//                    }
-//                }
+                    // XOR the password bytes in the current segment with the XOR bytes.
+                    for (int j = i; j <= (i + 16) - 1; j++)
+                    {
+                        result[j] = (byte)(result[j] ^ xorBytes[j]);
+                    }
+                }
 
-//                return result;
-//            }
-//            else
-//            {
-//                throw new ArgumentException("Password can be a maximum of 128 characters in length.");
-//            }
-//        }
+                return result;
+            }
+            else
+            {
+                throw new ArgumentException("Password can be a maximum of 128 characters in length.");
+            }
+        }
 
-//        #endregion
-//    }
-//}
+        #endregion
+    }
+}

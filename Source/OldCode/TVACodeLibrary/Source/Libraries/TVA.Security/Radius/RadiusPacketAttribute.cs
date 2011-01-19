@@ -229,396 +229,396 @@
 */
 #endregion
 
-//using System;
-//using System.Net;
-//using TVA.Parsing;
+using System;
+using System.Net;
+using TVA.Parsing;
 
-//namespace TVA.Security.Radius
-//{
-//    #region [ Enumerations ]
+namespace TVA.Security.Radius
+{
+    #region [ Enumerations ]
 
-//    /// <summary>
-//    /// Specifies the type of RADIUS packet attribute.
-//    /// </summary>
-//    public enum AttributeType
-//    {
-//        /// <summary>
-//        /// Attribute indicates the name of the user to be authenticated.
-//        /// </summary>
-//        UserName = 1,
-//        /// <summary>
-//        /// Attribute indicates the password of the user to be authenticated.
-//        /// </summary>
-//        UserPassword = 2,
-//        /// <summary>
-//        /// Attribute indicates the response provided by a PPP CHAP user in reponse to the challenge.
-//        /// </summary>
-//        ChapPassword = 3,
-//        /// <summary>
-//        /// Attribute indicates the identifying IP address of the NAS requesting user authentication.
-//        /// </summary>
-//        NasIpAddress = 4,
-//        /// <summary>
-//        /// Attribute indicates the physical port number of the NAS which is authenticating the user.
-//        /// </summary>
-//        NasPort = 5,
-//        /// <summary>
-//        /// Attribute indicates the type of service the user has requested, or the type of service to be provided.
-//        /// </summary>
-//        ServiceType = 6,
-//        /// <summary>
-//        /// Attribute indicates the framing to be used for framed access.
-//        /// </summary>
-//        FramedProtocol = 7,
-//        /// <summary>
-//        /// Attribute indicates the address to be configured for the user.
-//        /// </summary>
-//        FramedIpAddress = 8,
-//        /// <summary>
-//        /// Attribute indicates the IP netmask to be configured for the user when user is a router to a network.
-//        /// </summary>
-//        FramedIpNetmask = 9,
-//        /// <summary>
-//        /// Attribute indicates the routing method for the user when user is a router to a network.
-//        /// </summary>
-//        FramedRouting = 10,
-//        /// <summary>
-//        /// Attribute indicates the name of the filter list for this user.
-//        /// </summary>
-//        FilterId = 11,
-//        /// <summary>
-//        /// Attribute indicates the MTU to be configured for the user when it is not negotiated by some other means.
-//        /// </summary>
-//        FramedMtu = 12,
-//        /// <summary>
-//        /// Attribute indicates a compression protocol to be used for the link.
-//        /// </summary>
-//        FramedCompression = 13,
-//        /// <summary>
-//        /// Attribute indicates the system with which to connect the user when LoginService attribute is included.
-//        /// </summary>
-//        LoginIpHost = 14,
-//        /// <summary>
-//        /// Attribute indicates the service to use to connect the user to the login host.
-//        /// </summary>
-//        LoginService = 15,
-//        /// <summary>
-//        /// Attribute indicates the TCP port with which the user is to be connected when LoginService attribute
-//        /// is included.
-//        /// </summary>
-//        LoginTcpPort = 16,
-//        /// <summary>
-//        /// Attribute indicates the text which may be displayed to the user.
-//        /// </summary>
-//        ReplyMessage = 18,
-//        /// <summary>
-//        /// Attribute indicates a dialing string to be used for callback.
-//        /// </summary>
-//        CallbackNumber = 19,
-//        /// <summary>
-//        /// Attribute indicates the name of a place to be called.
-//        /// </summary>
-//        CallbackId = 20,
-//        /// <summary>
-//        /// Attribute provides routing information to be configured for the user on the NAS.
-//        /// </summary>
-//        FramedRoute = 22,
-//        /// <summary>
-//        /// Attribute indicates the IPX Network number to be configured for the user.
-//        /// </summary>
-//        FramedIpxNetwork = 23,
-//        /// <summary>
-//        /// Attribute available to be sent by the server to the client in an AccessChallenge and must be sent
-//        /// unmodified from the client to the server in the new AccessRequest reply to the challenge.
-//        /// </summary>
-//        State = 24,
-//        /// <summary>
-//        /// Attribute available to be sent by the server to the client in an AccessAccept and should be sent
-//        /// unmodified by the client to the accounting server as part of the AccountingRequest.
-//        /// </summary>
-//        Class = 25,
-//        /// <summary>
-//        /// Attribute available to allow vendors to support their own extended attributes.
-//        /// </summary>
-//        VendorSpecific = 26,
-//        /// <summary>
-//        /// Attribute sets the maximum number of seconds of service to be provided to the user before termination
-//        /// of the session or prompt.
-//        /// </summary>
-//        SessionTimeout = 27,
-//        /// <summary>
-//        /// Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before
-//        /// termination of the session or prompt.
-//        /// </summary>
-//        IdleTimeout = 28,
-//        /// <summary>
-//        /// Attribute indicates the action the NAS should take when the specified service is complete.
-//        /// </summary>
-//        TerminationAction = 29,
-//        /// <summary>
-//        /// Attribute indicates the phone number that the user called using DNIS or similar technology.
-//        /// </summary>
-//        CallerStationId = 30,
-//        /// <summary>
-//        /// Attribute indicates the phone number the call came from using ANI or similar technology.
-//        /// </summary>
-//        CallingStationId = 31,
-//        /// <summary>
-//        /// Attribute indicates a string identifier for the NAS originating the AccessRequest.
-//        /// </summary>
-//        NasIdentifier = 32,
-//        /// <summary>
-//        /// Attribute indicates the state a proxy server forwarding requests to the server.
-//        /// </summary>
-//        ProxyState = 33,
-//        /// <summary>
-//        /// Attribute indicates the system with which the user is to be connected by LAT.
-//        /// </summary>
-//        LoginLatService = 34,
-//        /// <summary>
-//        /// Attribute indicates the Node with which the user is to be automatically connected by LAT.
-//        /// </summary>
-//        LoginLatNode = 35,
-//        /// <summary>
-//        /// Attribute indicates the string identifier for the LAT group codes which the user is authorized to use.
-//        /// </summary>
-//        LoginLatGroup = 36,
-//        /// <summary>
-//        /// Attribute indicates the AppleTalk network number which should be used for the serial link to the user.
-//        /// </summary>
-//        FramedAppleTalkLink = 37,
-//        /// <summary>
-//        /// Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk
-//        /// node for the user.
-//        /// </summary>
-//        FramedAppleTalkNetwork = 38,
-//        /// <summary>
-//        /// Attribute indicates the AppleTalk Default Zone to be used for this user.
-//        /// </summary>
-//        FramedAppleTalkZone = 39,
-//        /// <summary>
-//        /// Attribute contains the CHAP Challenge sent by the NAS to a PPP CHAP user.
-//        /// </summary>
-//        ChapChallenge = 60,
-//        /// <summary>
-//        /// Attribute indicates the type of physical port of the NAS which is authenticating the user.
-//        /// </summary>
-//        NasPortType = 61,
-//        /// <summary>
-//        /// Attribute sets the maximum number of ports to be provided to the user by the NAS.
-//        /// </summary>
-//        PortLimit = 62,
-//        /// <summary>
-//        /// Attribute indicates the Port with which the user is to be connected by the LAT.
-//        /// </summary>
-//        LoginLatPort = 63
-//    }
+    /// <summary>
+    /// Specifies the type of RADIUS packet attribute.
+    /// </summary>
+    public enum AttributeType
+    {
+        /// <summary>
+        /// Attribute indicates the name of the user to be authenticated.
+        /// </summary>
+        UserName = 1,
+        /// <summary>
+        /// Attribute indicates the password of the user to be authenticated.
+        /// </summary>
+        UserPassword = 2,
+        /// <summary>
+        /// Attribute indicates the response provided by a PPP CHAP user in reponse to the challenge.
+        /// </summary>
+        ChapPassword = 3,
+        /// <summary>
+        /// Attribute indicates the identifying IP address of the NAS requesting user authentication.
+        /// </summary>
+        NasIpAddress = 4,
+        /// <summary>
+        /// Attribute indicates the physical port number of the NAS which is authenticating the user.
+        /// </summary>
+        NasPort = 5,
+        /// <summary>
+        /// Attribute indicates the type of service the user has requested, or the type of service to be provided.
+        /// </summary>
+        ServiceType = 6,
+        /// <summary>
+        /// Attribute indicates the framing to be used for framed access.
+        /// </summary>
+        FramedProtocol = 7,
+        /// <summary>
+        /// Attribute indicates the address to be configured for the user.
+        /// </summary>
+        FramedIpAddress = 8,
+        /// <summary>
+        /// Attribute indicates the IP netmask to be configured for the user when user is a router to a network.
+        /// </summary>
+        FramedIpNetmask = 9,
+        /// <summary>
+        /// Attribute indicates the routing method for the user when user is a router to a network.
+        /// </summary>
+        FramedRouting = 10,
+        /// <summary>
+        /// Attribute indicates the name of the filter list for this user.
+        /// </summary>
+        FilterId = 11,
+        /// <summary>
+        /// Attribute indicates the MTU to be configured for the user when it is not negotiated by some other means.
+        /// </summary>
+        FramedMtu = 12,
+        /// <summary>
+        /// Attribute indicates a compression protocol to be used for the link.
+        /// </summary>
+        FramedCompression = 13,
+        /// <summary>
+        /// Attribute indicates the system with which to connect the user when LoginService attribute is included.
+        /// </summary>
+        LoginIpHost = 14,
+        /// <summary>
+        /// Attribute indicates the service to use to connect the user to the login host.
+        /// </summary>
+        LoginService = 15,
+        /// <summary>
+        /// Attribute indicates the TCP port with which the user is to be connected when LoginService attribute
+        /// is included.
+        /// </summary>
+        LoginTcpPort = 16,
+        /// <summary>
+        /// Attribute indicates the text which may be displayed to the user.
+        /// </summary>
+        ReplyMessage = 18,
+        /// <summary>
+        /// Attribute indicates a dialing string to be used for callback.
+        /// </summary>
+        CallbackNumber = 19,
+        /// <summary>
+        /// Attribute indicates the name of a place to be called.
+        /// </summary>
+        CallbackId = 20,
+        /// <summary>
+        /// Attribute provides routing information to be configured for the user on the NAS.
+        /// </summary>
+        FramedRoute = 22,
+        /// <summary>
+        /// Attribute indicates the IPX Network number to be configured for the user.
+        /// </summary>
+        FramedIpxNetwork = 23,
+        /// <summary>
+        /// Attribute available to be sent by the server to the client in an AccessChallenge and must be sent
+        /// unmodified from the client to the server in the new AccessRequest reply to the challenge.
+        /// </summary>
+        State = 24,
+        /// <summary>
+        /// Attribute available to be sent by the server to the client in an AccessAccept and should be sent
+        /// unmodified by the client to the accounting server as part of the AccountingRequest.
+        /// </summary>
+        Class = 25,
+        /// <summary>
+        /// Attribute available to allow vendors to support their own extended attributes.
+        /// </summary>
+        VendorSpecific = 26,
+        /// <summary>
+        /// Attribute sets the maximum number of seconds of service to be provided to the user before termination
+        /// of the session or prompt.
+        /// </summary>
+        SessionTimeout = 27,
+        /// <summary>
+        /// Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before
+        /// termination of the session or prompt.
+        /// </summary>
+        IdleTimeout = 28,
+        /// <summary>
+        /// Attribute indicates the action the NAS should take when the specified service is complete.
+        /// </summary>
+        TerminationAction = 29,
+        /// <summary>
+        /// Attribute indicates the phone number that the user called using DNIS or similar technology.
+        /// </summary>
+        CallerStationId = 30,
+        /// <summary>
+        /// Attribute indicates the phone number the call came from using ANI or similar technology.
+        /// </summary>
+        CallingStationId = 31,
+        /// <summary>
+        /// Attribute indicates a string identifier for the NAS originating the AccessRequest.
+        /// </summary>
+        NasIdentifier = 32,
+        /// <summary>
+        /// Attribute indicates the state a proxy server forwarding requests to the server.
+        /// </summary>
+        ProxyState = 33,
+        /// <summary>
+        /// Attribute indicates the system with which the user is to be connected by LAT.
+        /// </summary>
+        LoginLatService = 34,
+        /// <summary>
+        /// Attribute indicates the Node with which the user is to be automatically connected by LAT.
+        /// </summary>
+        LoginLatNode = 35,
+        /// <summary>
+        /// Attribute indicates the string identifier for the LAT group codes which the user is authorized to use.
+        /// </summary>
+        LoginLatGroup = 36,
+        /// <summary>
+        /// Attribute indicates the AppleTalk network number which should be used for the serial link to the user.
+        /// </summary>
+        FramedAppleTalkLink = 37,
+        /// <summary>
+        /// Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk
+        /// node for the user.
+        /// </summary>
+        FramedAppleTalkNetwork = 38,
+        /// <summary>
+        /// Attribute indicates the AppleTalk Default Zone to be used for this user.
+        /// </summary>
+        FramedAppleTalkZone = 39,
+        /// <summary>
+        /// Attribute contains the CHAP Challenge sent by the NAS to a PPP CHAP user.
+        /// </summary>
+        ChapChallenge = 60,
+        /// <summary>
+        /// Attribute indicates the type of physical port of the NAS which is authenticating the user.
+        /// </summary>
+        NasPortType = 61,
+        /// <summary>
+        /// Attribute sets the maximum number of ports to be provided to the user by the NAS.
+        /// </summary>
+        PortLimit = 62,
+        /// <summary>
+        /// Attribute indicates the Port with which the user is to be connected by the LAT.
+        /// </summary>
+        LoginLatPort = 63
+    }
 
-//    #endregion
+    #endregion
 
-//    /// <summary>
-//    /// Represents an attribute of <see cref="RadiusPacket"/>.
-//    /// </summary>
-//    public class RadiusPacketAttribute : ISupportBinaryImage
-//    {
-//        // 0                   1                   2
-//        // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-//        //|     Type      |    Length     |  Value ...
-//        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+    /// <summary>
+    /// Represents an attribute of <see cref="RadiusPacket"/>.
+    /// </summary>
+    public class RadiusPacketAttribute : ISupportBinaryImage
+    {
+        // 0                   1                   2
+        // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+        //|     Type      |    Length     |  Value ...
+        //+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 
-//        #region [ Members ]
+        #region [ Members ]
 
-//        // Fields
-//        private AttributeType m_type;
-//        private byte[] m_value;
+        // Fields
+        private AttributeType m_type;
+        private byte[] m_value;
 
-//        #endregion
+        #endregion
 
-//        #region [ Constructors ]
+        #region [ Constructors ]
 
-//        /// <summary>
-//        /// Creates a default instance of RADIUS packet attribute.
-//        /// </summary>
-//        public RadiusPacketAttribute()
-//        {
-//            // No initialization required.
-//        }
+        /// <summary>
+        /// Creates a default instance of RADIUS packet attribute.
+        /// </summary>
+        public RadiusPacketAttribute()
+        {
+            // No initialization required.
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet attribute.
-//        /// </summary>
-//        /// <param name="type">Type of the attribute.</param>
-//        /// <param name="value">Text value of the attribute.</param>
-//        public RadiusPacketAttribute(AttributeType type, string value)
-//            : this(type, RadiusPacket.GetBytes(value))
-//        {
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet attribute.
+        /// </summary>
+        /// <param name="type">Type of the attribute.</param>
+        /// <param name="value">Text value of the attribute.</param>
+        public RadiusPacketAttribute(AttributeType type, string value)
+            : this(type, RadiusPacket.GetBytes(value))
+        {
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet attribute.
-//        /// </summary>
-//        /// <param name="type">Type of the attribute.</param>
-//        /// <param name="value">32-bit unsigned integer value of the attribute.</param>
-//        [CLSCompliant(false)]
-//        public RadiusPacketAttribute(AttributeType type, UInt32 value)
-//            : this(type, RadiusPacket.GetBytes(value))
-//        {
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet attribute.
+        /// </summary>
+        /// <param name="type">Type of the attribute.</param>
+        /// <param name="value">32-bit unsigned integer value of the attribute.</param>
+        [CLSCompliant(false)]
+        public RadiusPacketAttribute(AttributeType type, UInt32 value)
+            : this(type, RadiusPacket.GetBytes(value))
+        {
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet attribute.
-//        /// </summary>
-//        /// <param name="type">Type of the attribute.</param>
-//        /// <param name="value">IP address value of the attribute.</param>
-//        public RadiusPacketAttribute(AttributeType type, IPAddress value)
-//            : this(type, value.GetAddressBytes())
-//        {
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet attribute.
+        /// </summary>
+        /// <param name="type">Type of the attribute.</param>
+        /// <param name="value">IP address value of the attribute.</param>
+        public RadiusPacketAttribute(AttributeType type, IPAddress value)
+            : this(type, value.GetAddressBytes())
+        {
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet attribute.
-//        /// </summary>
-//        /// <param name="type">Type of the attribute.</param>
-//        /// <param name="value">Byte array value of the attribute.</param>
-//        public RadiusPacketAttribute(AttributeType type, byte[] value)
-//        {
-//            this.Type = type;
-//            this.Value = value;
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet attribute.
+        /// </summary>
+        /// <param name="type">Type of the attribute.</param>
+        /// <param name="value">Byte array value of the attribute.</param>
+        public RadiusPacketAttribute(AttributeType type, byte[] value)
+        {
+            this.Type = type;
+            this.Value = value;
+        }
 
-//        /// <summary>
-//        /// Creates an instance of RADIUS packet attribute.
-//        /// </summary>
-//        /// <param name="binaryImage">A byte array.</param>
-//        /// <param name="startIndex">Starting point in the byte array.</param>
-//        public RadiusPacketAttribute(byte[] binaryImage, int startIndex)
-//        {
-//            Initialize(binaryImage, startIndex, binaryImage.Length);
-//        }
+        /// <summary>
+        /// Creates an instance of RADIUS packet attribute.
+        /// </summary>
+        /// <param name="binaryImage">A byte array.</param>
+        /// <param name="startIndex">Starting point in the byte array.</param>
+        public RadiusPacketAttribute(byte[] binaryImage, int startIndex)
+        {
+            Initialize(binaryImage, startIndex, binaryImage.Length);
+        }
 
-//        #endregion
+        #endregion
 
-//        #region [ Properties ]
+        #region [ Properties ]
 
-//        /// <summary>
-//        /// Gets or sets the type of the attribute.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Type of the attribute.</returns>
-//        public AttributeType Type
-//        {
-//            get
-//            {
-//                return m_type;
-//            }
-//            set
-//            {
-//                m_type = value;
-//            }
-//        }
+        /// <summary>
+        /// Gets or sets the type of the attribute.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Type of the attribute.</returns>
+        public AttributeType Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+            }
+        }
 
-//        /// <summary>
-//        /// Gets or sets the value of the attribute.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>Value of the attribute.</returns>
-//        public byte[] Value
-//        {
-//            get
-//            {
-//                return m_value;
-//            }
-//            set
-//            {
-//                if ((value != null) && value.Length > 0)
-//                {
-//                    // By definition, attribute value cannot be null or zero-length.
-//                    m_value = value;
-//                }
-//                else
-//                {
-//                    throw new ArgumentNullException("Value");
-//                }
-//            }
-//        }
+        /// <summary>
+        /// Gets or sets the value of the attribute.
+        /// </summary>
+        /// <value></value>
+        /// <returns>Value of the attribute.</returns>
+        public byte[] Value
+        {
+            get
+            {
+                return m_value;
+            }
+            set
+            {
+                if ((value != null) && value.Length > 0)
+                {
+                    // By definition, attribute value cannot be null or zero-length.
+                    m_value = value;
+                }
+                else
+                {
+                    throw new ArgumentNullException("Value");
+                }
+            }
+        }
 
-//        /// <summary>
-//        /// Gets the binary lenght of the attribute.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>32-bit signed integer value.</returns>
-//        public int BinaryLength
-//        {
-//            get
-//            {
-//                // 2 bytes are fixed + length of the value
-//                if (m_value == null)
-//                {
-//                    return 2;
-//                }
-//                else
-//                {
-//                    return 2 + m_value.Length;
-//                }
-//            }
-//        }
+        /// <summary>
+        /// Gets the binary lenght of the attribute.
+        /// </summary>
+        /// <value></value>
+        /// <returns>32-bit signed integer value.</returns>
+        public int BinaryLength
+        {
+            get
+            {
+                // 2 bytes are fixed + length of the value
+                if (m_value == null)
+                {
+                    return 2;
+                }
+                else
+                {
+                    return 2 + m_value.Length;
+                }
+            }
+        }
 
-//        /// <summary>
-//        /// Gets the binary image of the attribute.
-//        /// </summary>
-//        /// <value></value>
-//        /// <returns>A byte array.</returns>
-//        public byte[] BinaryImage
-//        {
-//            get
-//            {
-//                byte[] image = new byte[BinaryLength];
-//                image[0] = System.Convert.ToByte(m_type);
-//                image[1] = (byte)BinaryLength;
-//                if ((m_value != null) && m_value.Length > 0)
-//                {
-//                    Array.Copy(m_value, 0, image, 2, m_value.Length);
-//                }
-//                else
-//                {
-//                    throw new ArgumentNullException("Value", "Attribute value cannot be null or zero-length.");
-//                }
+        /// <summary>
+        /// Gets the binary image of the attribute.
+        /// </summary>
+        /// <value></value>
+        /// <returns>A byte array.</returns>
+        public byte[] BinaryImage
+        {
+            get
+            {
+                byte[] image = new byte[BinaryLength];
+                image[0] = System.Convert.ToByte(m_type);
+                image[1] = (byte)BinaryLength;
+                if ((m_value != null) && m_value.Length > 0)
+                {
+                    Array.Copy(m_value, 0, image, 2, m_value.Length);
+                }
+                else
+                {
+                    throw new ArgumentNullException("Value", "Attribute value cannot be null or zero-length.");
+                }
 
-//                return image;
-//            }
-//        }
+                return image;
+            }
+        }
 
-//        #endregion
+        #endregion
 
-//        #region [ Methods ]
+        #region [ Methods ]
 
-//        /// <summary>
-//        /// Initializes <see cref="RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
-//        /// </summary>
-//        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
-//        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-//        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-//        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacketAttribute"/>.</returns>
-//        public int Initialize(byte[] binaryImage, int startIndex, int length)
-//        {
+        /// <summary>
+        /// Initializes <see cref="RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
+        /// </summary>
+        /// <param name="binaryImage">Binary image to be used for initializing <see cref="RadiusPacketAttribute"/>.</param>
+        /// <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+        /// <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+        /// <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="RadiusPacketAttribute"/>.</returns>
+        public int Initialize(byte[] binaryImage, int startIndex, int length)
+        {
 
-//            if ((binaryImage != null) && binaryImage.Length >= 2)
-//            {
-//                // We have a valid buffer to work with.
-//                m_type = (AttributeType)(binaryImage[startIndex]);
-//                m_value = new byte[System.Convert.ToInt16(binaryImage[startIndex + 1] - 2)];
-//                Array.Copy(binaryImage, startIndex + 2, m_value, 0, m_value.Length);
+            if ((binaryImage != null) && binaryImage.Length >= 2)
+            {
+                // We have a valid buffer to work with.
+                m_type = (AttributeType)(binaryImage[startIndex]);
+                m_value = new byte[System.Convert.ToInt16(binaryImage[startIndex + 1] - 2)];
+                Array.Copy(binaryImage, startIndex + 2, m_value, 0, m_value.Length);
 
-//                return BinaryLength;
-//            }
-//            else
-//            {
-//                throw new ArgumentException("Buffer is not valid.");
-//            }
+                return BinaryLength;
+            }
+            else
+            {
+                throw new ArgumentException("Buffer is not valid.");
+            }
 
-//        }
+        }
 
-//        #endregion
-//    }
-//}
+        #endregion
+    }
+}
