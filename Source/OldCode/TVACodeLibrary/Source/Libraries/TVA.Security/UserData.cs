@@ -14,6 +14,8 @@
 //       Added non-serializable LoginID property to keep track of the NTID for internal users.
 //  07/12/2010 - Pinal C. Patel
 //       Added IsDisabled property.
+//  01/14/2011 - Pinal C. Patel
+//       Updated field attributes used by XmlSerializer.
 //
 //*******************************************************************************************************
 
@@ -243,10 +245,18 @@ namespace TVA.Security
     /// <summary>
     /// A serializable class that contains information about a user defined in the security datastore.
     /// </summary>
-    [XmlType(), DataContract(Namespace = "")]
+    [XmlType(Namespace = ""), DataContract(Namespace = "")]
     public class UserData
     {
         #region [ Constructors ]
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserData"/> class.
+        /// </summary>
+        public UserData()
+            : this(string.Empty)
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserData"/> class.
@@ -274,110 +284,110 @@ namespace TVA.Security
         /// <summary>
         /// Gets the user's login name.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 0)]
+        [XmlElement(), DataMember(Order = 0)]
         public string Username { get; set; }
 
         /// <summary>
         /// Gets the user's password.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 1)]
+        [XmlElement(), DataMember(Order = 1)]
         public string Password { get; set; }
 
         /// <summary>
         /// Gets the user's first name.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 2)]
+        [XmlElement(), DataMember(Order = 2)]
         public string FirstName { get; set; }
 
         /// <summary>
         /// Gets the user's last name.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 3)]
+        [XmlElement(), DataMember(Order = 3)]
         public string LastName { get; set; }
 
         /// <summary>
         /// Gets the user's company name.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 4)]
+        [XmlElement(), DataMember(Order = 4)]
         public string CompanyName { get; set; }
 
         /// <summary>
         /// Gets the user's phone number.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 5)]
+        [XmlElement(), DataMember(Order = 5)]
         public string PhoneNumber { get; set; }
 
         /// <summary>
         /// Gets the user's email address.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 6)]
+        [XmlElement(), DataMember(Order = 6)]
         public string EmailAddress { get; set; }
 
         /// <summary>
         /// Gets the user's security question.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 7)]
+        [XmlElement(), DataMember(Order = 7)]
         public string SecurityQuestion { get; set; }
 
         /// <summary>
         /// Gets the user's security answer.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 8)]
+        [XmlElement(), DataMember(Order = 8)]
         public string SecurityAnswer { get; set; }
 
         /// <summary>
         /// Gets the UTC date and time when user must change the password.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 9)]
+        [XmlElement(), DataMember(Order = 9)]
         public DateTime PasswordChangeDateTime { get; set; }
 
         /// <summary>
         /// Gets the UTC date and time when user account was created.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 10)]
+        [XmlElement(), DataMember(Order = 10)]
         public DateTime AccountCreatedDateTime { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user is defined in the backend security datastore.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 11)]
+        [XmlElement(), DataMember(Order = 11)]
         public bool IsDefined { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 12)]
+        [XmlElement(), DataMember(Order = 12)]
         public bool IsExternal { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user account has been disabled.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 13)]
+        [XmlElement(), DataMember(Order = 13)]
         public bool IsDisabled { get; set; }
 
         /// <summary>
         /// Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 14)]
+        [XmlElement(), DataMember(Order = 14)]
         public bool IsLockedOut { get; set; }
 
         /// <summary>
         /// Gets a boolean value indicating whether or not the user has been authenticated.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 15)]
+        [XmlElement(), DataMember(Order = 15)]
         public bool IsAuthenticated { get; set; }
 
         /// <summary>
         /// Gets a read-only list of all the groups the user belongs to.
         /// </summary>
-        [XmlAttribute(), DataMember(Order = 16)]
-        public IList<string> Groups { get; set; }
+        [XmlArray(), XmlArrayItem("Group"), DataMember(Order = 16)]
+        public List<string> Groups { get; set; }
 
         /// <summary>
         /// Gets a read-only list of all the roles assigned to the user.
         /// </summary>
-        [XmlAttribute, DataMember(Order = 17)]
-        public IList<string> Roles { get; set; }
+        [XmlArray(), XmlArrayItem("Role"), DataMember(Order = 17)]
+        public List<string> Roles { get; set; }
 
         #endregion
 

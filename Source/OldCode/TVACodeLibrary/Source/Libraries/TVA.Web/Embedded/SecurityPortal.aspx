@@ -68,7 +68,7 @@
             </tr>
             <tr>
                 <td>
-                    <asp:CheckBox runat="server" ID="RememberUsername" Text="Remember username" />
+                    <asp:CheckBox runat="server" ID="RememberUsername" Text="Remember username" TabIndex="-1" />
                 </td>
             </tr>
             <tr>
@@ -84,7 +84,7 @@
             </tr>
             <tr>
                 <td>
-                    <asp:HyperLink runat="server" ID="ForgotPassword">Forgot password?</asp:HyperLink>
+                    <asp:HyperLink runat="server" ID="ForgotPassword" TabIndex="-1">Forgot password?</asp:HyperLink>
                 </td>
             </tr>
             <tr>

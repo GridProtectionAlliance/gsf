@@ -15,6 +15,8 @@
 //       Modified Login() to initialize the provider once and cache it for subsequent uses.
 //  12/09/2010 - Pinal C. Patel
 //       Renamed Login operation to Authenticate and added GetUserData and RefreshUserData operations.
+//  01/14/2011 - Pinal C. Patel
+//       Added ResetPassword() and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -241,8 +243,75 @@ using TVA.Web.Services;
 namespace TVA.Web.Embedded
 {
     /// <summary>
-    /// Embedded WCF service used for securing external facing WCF services.
+    /// Embedded WCF service that can be used for securing applications using role-based security.
     /// </summary>
+    /// <remarks>
+    /// This list shows the endpoints exposed by <see cref="SecurityService"/>:
+    /// <list type="table">
+    ///     <listheader>
+    ///         <term>URI</term>
+    ///         <description>Protocol</description>
+    ///     </listheader>
+    ///     <item>
+    ///         <term><b>~/SecurityService.svc/soap</b></term>
+    ///         <description>SOAP 1.1</description>
+    ///     </item>
+    ///     <item>
+    ///         <term><b>~/SecurityService.svc/rest</b></term>
+    ///         <description>REST</description>
+    ///     </item>
+    /// </list>
+    /// </remarks>
+    /// <example>
+    /// This example shows how to consume the REST endpoint of <see cref="SecurityService"/> using <a href="http://jquery.com/" target="_blank">jQuery</a>:
+    /// <code>
+    /// <![CDATA[
+    /// <script src="jquery.js" type="text/javascript" />
+    /// <script language="javascript" type="text/javascript">
+    ///     $(document).ready(function () { login(); });
+    /// 
+    ///     function login() {
+    ///         $.get("~/SecurityService.svc/rest/getuserdata", loginCallback);
+    ///     }
+    /// 
+    ///     function loginCallback(data) {
+    ///         var user = new UserData(data);
+    ///         if (!user.isAuthenticated) {
+    ///             alert('Access is denied.');
+    ///         }
+    ///         else {
+    ///             alert('Welcome ' + user.firstName + '!');
+    ///         }
+    ///     }
+    /// 
+    ///     function UserData(xml) {
+    ///         this.username = $(xml).find('Username').text();
+    ///         this.password = $(xml).find('Password').text();
+    ///         this.firstName = $(xml).find('FirstName').text();
+    ///         this.lastName = $(xml).find('LastName').text();
+    ///         this.companyName = $(xml).find('CompanyName').text();
+    ///         this.phoneNumber = $(xml).find('PhoneNumber').text();
+    ///         this.emailAddress = $(xml).find('EmailAddress').text();
+    ///         this.securityQuestion = $(xml).find('SecurityQuestion').text();
+    ///         this.securityAnswer = $(xml).find('SecurityAnswer').text();
+    ///         this.passwordChangeDateTime = $(xml).find('PasswordChangeDateTime').text();
+    ///         this.accountCreatedDateTime = $(xml).find('AccountCreatedDateTime').text();
+    ///         this.isDefined = $(xml).find('IsDefined').text() === 'true';
+    ///         this.isExternal = $(xml).find('IsExternal').text() === 'true';
+    ///         this.isDisabled = $(xml).find('IsDisabled').text() === 'true';
+    ///         this.isLockedOut = $(xml).find('IsLockedOut').text() === 'true';
+    ///         this.isAuthenticated = $(xml).find('IsAuthenticated').text() === 'true';
+    ///         // Retrieve user groups.
+    ///         this.groups = groups = new Array();
+    ///         $(xml).find('Group').each(function () { groups.push($(this).text()); });
+    ///         // Retrieve user roles.
+    ///         this.roles = roles = new Array();
+    ///         $(xml).find('Role').each(function () { roles.push($(this).text()); });
+    ///     }
+    /// </script>
+    /// ]]>
+    /// </code>
+    /// </example>
     [AspNetCompatibilityRequirements(RequirementsMode = AspNetCompatibilityRequirementsMode.Allowed)]
     public class SecurityService : SelfHostingService, ISecurityService
     {
@@ -268,7 +337,7 @@ namespace TVA.Web.Embedded
         public UserData GetUserData()
         {
             if (SecurityProviderCache.CurrentProvider == null)
-                return null;
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             return SecurityProviderCache.CurrentProvider.UserData;
         }
@@ -280,10 +349,45 @@ namespace TVA.Web.Embedded
         public UserData RefreshUserData()
         {
             if (SecurityProviderCache.CurrentProvider == null)
-                return null;
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
-            SecurityProviderCache.CurrentProvider.RefreshData();
+            if (SecurityProviderCache.CurrentProvider.CanRefreshData)
+                SecurityProviderCache.CurrentProvider.RefreshData();
+
             return SecurityProviderCache.CurrentProvider.UserData;
+        }
+
+        /// <summary>
+        /// Resets user password.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to user's security question.</param>
+        /// <returns>true if password is reset, otherwise false.</returns>
+        public bool ResetPassword(string securityAnswer)
+        {
+            if (SecurityProviderCache.CurrentProvider == null)
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+
+            if (!SecurityProviderCache.CurrentProvider.CanResetPassword)
+                return false;
+            else
+                return SecurityProviderCache.CurrentProvider.ResetPassword(securityAnswer);
+        }
+
+        /// <summary>
+        /// Changes user password.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        public bool ChangePassword(string oldPassword, string newPassword)
+        {
+            if (SecurityProviderCache.CurrentProvider == null)
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+
+            if (!SecurityProviderCache.CurrentProvider.CanChangePassword)
+                return false;
+            else
+                return SecurityProviderCache.CurrentProvider.ChangePassword(oldPassword, newPassword);
         }
     }
 }

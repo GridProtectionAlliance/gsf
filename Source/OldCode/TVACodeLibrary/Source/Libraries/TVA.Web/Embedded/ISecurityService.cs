@@ -12,6 +12,10 @@
 //       Generated original version of source code.
 //  12/09/2010 - Pinal C. Patel
 //       Renamed Login operation to Authenticate and added GetUserData and RefreshUserData operations.
+//  01/14/2011 - Pinal C. Patel
+//       Changed XML serializer from DataContractSerializer to XmlSerializer for more control over 
+//       serialization of data.
+//       Added ResetPassword() and ChangePassword() methods.
 //
 //*******************************************************************************************************
 
@@ -241,7 +245,7 @@ namespace TVA.Web.Embedded
     /// <summary>
     /// Embedded WCF service contract used for securing external facing WCF services.
     /// </summary>
-    [ServiceContract()]
+    [ServiceContract(), XmlSerializerFormat()]
     public interface ISecurityService : ISelfHostingService
     {
         /// <summary>
@@ -266,5 +270,22 @@ namespace TVA.Web.Embedded
         /// <returns>An <see cref="UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
         [OperationContract(), WebGet(UriTemplate = "/refreshuserdata")]
         UserData RefreshUserData();
+
+        /// <summary>
+        /// Resets user password.
+        /// </summary>
+        /// <param name="securityAnswer">Answer to user's security question.</param>
+        /// <returns>true if password is reset, otherwise false.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/resetpassword/{securityAnswer}")]
+        bool ResetPassword(string securityAnswer);
+
+        /// <summary>
+        /// Changes user password.
+        /// </summary>
+        /// <param name="oldPassword">User's current password.</param>
+        /// <param name="newPassword">User's new password.</param>
+        /// <returns>true if the password is changed, otherwise false.</returns>
+        [OperationContract(), WebGet(UriTemplate = "/changepassword/{oldPassword}/{newPassword}")]
+        bool ChangePassword(string oldPassword, string newPassword);
     }
 }

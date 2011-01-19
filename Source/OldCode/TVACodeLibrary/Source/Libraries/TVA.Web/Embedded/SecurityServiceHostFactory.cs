@@ -16,6 +16,9 @@
 //       Updated SOAP endpoint to use BasicHttpBinding instead of WSHttpBinding which has security 
 //       disabled by default and does not require SSL when security needs to be enabled on the client 
 //       side when service is hosted in IIS with integrated security for intranet use.
+//  01/07/2011 - Pinal C. Patel
+//       Updated to sync endpoint security setting with that of the hosting environment so that the 
+//       service can be used in both intranet and internet setting.
 //
 //*******************************************************************************************************
 
@@ -236,16 +239,30 @@
 #endregion
 
 using System;
+using System.Net;
+using System.Reflection;
 using System.ServiceModel;
 using System.ServiceModel.Activation;
 using System.ServiceModel.Description;
 
 namespace TVA.Web.Embedded
 {
-    internal class SecurityServiceHostFactory : WebServiceHostFactory
+    internal class SecurityServiceHostFactory : ServiceHostFactory
     {
+        #region [ Members ]
+
+        // Constants
+        private string TypeName = "System.ServiceModel.Activation.HostedAspNetEnvironment, System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35";
+
+        #endregion
+
+        #region [ Methods ]
+
         protected override ServiceHost CreateServiceHost(Type serviceType, Uri[] baseAddresses)
         {
+            // Check security requirement.
+            bool enableSecurity = (GetAuthenticationSchemes(baseAddresses[0]) & AuthenticationSchemes.Anonymous) != AuthenticationSchemes.Anonymous;
+
             // Initialize host and binding.
             ServiceHost host = new ServiceHost(serviceType, baseAddresses);
 
@@ -262,14 +279,40 @@ namespace TVA.Web.Embedded
             WebHttpBinding restBinding = new WebHttpBinding();
             WebHttpBehavior restBehavior = new WebHttpBehavior();
             ServiceEndpoint restEndpoint = host.AddServiceEndpoint(typeof(ISecurityService), restBinding, "rest");
+            if (enableSecurity)
+            {
+                // Enable security on the binding.
+                restBinding.Security.Mode = WebHttpSecurityMode.TransportCredentialOnly;
+                restBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+            }
             restBehavior.HelpEnabled = true;
             restEndpoint.Behaviors.Add(restBehavior);
 
             // Add SOAP endpoint.
-            host.AddServiceEndpoint(typeof(ISecurityService), new BasicHttpBinding(), "soap");
-            host.AddServiceEndpoint(typeof(IMetadataExchange), new BasicHttpBinding(), "soap/mex");
+            BasicHttpBinding soapBinding = new BasicHttpBinding();
+            if (enableSecurity)
+            {
+                // Enable security on the binding.
+                soapBinding.Security.Mode = BasicHttpSecurityMode.TransportCredentialOnly;
+                soapBinding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Windows;
+            }
+            host.AddServiceEndpoint(typeof(ISecurityService), soapBinding, "soap");
+            host.AddServiceEndpoint(typeof(IMetadataExchange), soapBinding, "soap/mex");
 
             return host;
         }
+
+        /// <summary>
+        /// Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+        /// </summary>
+        private AuthenticationSchemes GetAuthenticationSchemes(Uri baseAddress)
+        {
+            Type type = Type.GetType(TypeName);
+            object instance = Activator.CreateInstance(type, true);
+
+            return (AuthenticationSchemes)instance.GetType().InvokeMember("GetAuthenticationSchemes", BindingFlags.InvokeMethod, null, instance, new object[] { baseAddress });
+        }
+
+        #endregion
     }
 }

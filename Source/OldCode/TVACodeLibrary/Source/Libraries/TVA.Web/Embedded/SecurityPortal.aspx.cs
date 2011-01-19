@@ -504,7 +504,7 @@ namespace TVA.Web.Embedded
             catch (SecurityException ex)
             {
                 // Show security related error messages.
-                ShowMessage(string.Format("{0}.", ex.Message), true);
+                ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
             catch
             {
@@ -547,7 +547,7 @@ namespace TVA.Web.Embedded
             catch (SecurityException ex)
             {
                 // Show security related error messages.
-                ShowMessage(string.Format("{0}.", ex.Message), true);
+                ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
             catch
             {
@@ -575,23 +575,27 @@ namespace TVA.Web.Embedded
                 if (provider.CanChangePassword)
                 {
                     // Attempt to change password.
-                    if (provider.ChangePassword(ChangePasswordOldPassword.Text, ChangePasswordNewPassword.Text) &&
-                        provider.Authenticate(ChangePasswordNewPassword.Text))
+                    if (provider.ChangePassword(ChangePasswordOldPassword.Text, ChangePasswordNewPassword.Text))
                     {
-                        // Password changed and authenticated successfully.
-                        SecurityProviderCache.CurrentProvider = provider;
-                        Response.Redirect(GetReferrerUrl(), false);
+                        // Password changed successfully.
+                        if (provider.Authenticate(ChangePasswordNewPassword.Text))
+                        {
+                            // Password authenticated successfully.
+                            SecurityProviderCache.CurrentProvider = provider;
+                            Response.Redirect(GetReferrerUrl(), false);
+                        }
+                        else
+                        {
+                            // Show why authentication failed.
+                            if (!ShowFailureReason(provider))
+                                ShowMessage("Authentication was not successful.", true);
+                        }
                     }
                     else
                     {
                         // Show why password change failed.
                         if (!ShowFailureReason(provider))
-                        {
-                            if (!provider.UserData.IsAuthenticated)
-                                ShowMessage("Authentication was not successful.", true);
-                            else
                                 ShowMessage("Password change was not successful.", true);
-                        }
                     }
                 }
                 else
@@ -603,7 +607,7 @@ namespace TVA.Web.Embedded
             catch (SecurityException ex)
             {
                 // Show security related error messages.
-                ShowMessage(string.Format("{0}.", ex.Message), true);
+                ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
             catch
             {
@@ -653,7 +657,7 @@ namespace TVA.Web.Embedded
             catch (SecurityException ex)
             {
                 // Show security related error messages.
-                ShowMessage(string.Format("{0}.", ex.Message), true);
+                ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
             catch
             {
@@ -702,7 +706,7 @@ namespace TVA.Web.Embedded
             catch (SecurityException ex)
             {
                 // Show security related error messages.
-                ShowMessage(string.Format("{0}.", ex.Message), true);
+                ShowMessage(ex.Message.EnsureEnd('.'), true);
             }
             catch
             {
