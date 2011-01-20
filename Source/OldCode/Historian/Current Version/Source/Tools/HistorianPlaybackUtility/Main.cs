@@ -92,6 +92,7 @@ namespace HistorianPlaybackUtility
         private IClient m_transmitClient;
         private System.Timers.Timer m_rolloverWatcher;
         private ManualResetEvent m_rolloverWaitHandle;
+        private string m_lastSelectedArchiveLocation;
 
         #endregion
 
@@ -145,6 +146,10 @@ namespace HistorianPlaybackUtility
             m_rolloverWatcher.Elapsed += RollverWatcher_Elapsed;
             m_rolloverWatcher.Start();
             m_rolloverWaitHandle = new ManualResetEvent(true);
+            m_lastSelectedArchiveLocation = ConfigurationFile.Current.Settings.General["ArchiveLocation", true].ValueAs("");
+
+            // Update archive location text box to contain the archive location from the configuration file.
+            ArchiveLocationInput.Text = m_lastSelectedArchiveLocation;
         }
 
         #endregion
@@ -308,6 +313,12 @@ namespace HistorianPlaybackUtility
         {
             StopProcessing_Click(sender, EventArgs.Empty);
 
+            if (m_lastSelectedArchiveLocation != null)
+            {
+                ConfigurationFile.Current.Settings.General["ArchiveLocation", true].Value = m_lastSelectedArchiveLocation;
+                ConfigurationFile.Current.Save();
+            }
+
             if (m_rolloverWatcher != null)
                 m_rolloverWatcher.Dispose();
 
@@ -336,9 +347,15 @@ namespace HistorianPlaybackUtility
 
         private void ArchiveLocationBrowse_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            // Restore the last selected archive location.
+            FolderBrowser.SelectedPath = m_lastSelectedArchiveLocation;
+
             // Prompt user for primary archive location.
             if (FolderBrowser.ShowDialog(this) == DialogResult.OK)
+            {
+                m_lastSelectedArchiveLocation = FolderBrowser.SelectedPath;
                 ArchiveLocationInput.Text = FolderBrowser.SelectedPath;
+            }
         }
 
         private void ArchiveLocationInput_TextChanged(object sender, EventArgs e)
