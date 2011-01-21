@@ -314,9 +314,9 @@ namespace TVA.Web.Embedded
             // Setup company logo.
             setting = settings["CompanyLogo"];
             if (setting != null)
-                LogoLink.ImageUrl = setting.Value;
+                LogoImage.ImageUrl = setting.Value;
             else
-                LogoLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
+                LogoImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedCompanyLogo);
 
             // Setup company link.
             setting = settings["CompanyLink"];
@@ -339,7 +339,7 @@ namespace TVA.Web.Embedded
             else
                 FooterLabel.Text = DefaultFooterText;
 
-            HelpLink.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
+            HelpImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedHelpImage);
             WarningImage.ImageUrl = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedWarningImage);
             StyleSheet.Attributes["href"] = Page.ClientScript.GetWebResourceUrl(typeof(SecurityPortal), EmbeddedStyleSheet);
 

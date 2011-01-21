@@ -40,6 +40,15 @@ namespace TVA.Web.Embedded {
         protected global::System.Web.UI.WebControls.HyperLink LogoLink;
         
         /// <summary>
+        /// LogoImage control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Image LogoImage;
+        
+        /// <summary>
         /// HelpLink control.
         /// </summary>
         /// <remarks>
@@ -47,6 +56,15 @@ namespace TVA.Web.Embedded {
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.HyperLink HelpLink;
+        
+        /// <summary>
+        /// HelpImage control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Image HelpImage;
         
         /// <summary>
         /// ContentPlaceHolder control.

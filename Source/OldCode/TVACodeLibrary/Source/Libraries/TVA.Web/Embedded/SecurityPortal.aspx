@@ -16,10 +16,16 @@
                 <table style="width: 100%">
                     <tr>
                         <td align="left">
-                            <asp:HyperLink runat="server" ID="LogoLink" CssClass="Images" Target="_blank" ToolTip="Logo">[LogoLink]</asp:HyperLink>
+                            <asp:HyperLink runat="server" ID="LogoLink" Target="_blank">
+                                <asp:Image runat="server" ID="LogoImage" CssClass="Images" AlternateText="Logo">
+                                </asp:Image>
+                            </asp:HyperLink>
                         </td>
                         <td align="right" valign="bottom">
-                            <asp:HyperLink runat="server" ID="HelpLink" CssClass="Images" Target="_blank" ToolTip="Help">[HelpLink]</asp:HyperLink>
+                            <asp:HyperLink runat="server" ID="HelpLink" Target="_blank">
+                                <asp:Image runat="server" ID="HelpImage" CssClass="Images" AlternateText="Help">
+                                </asp:Image>
+                            </asp:HyperLink>
                         </td>
                     </tr>
                 </table>
