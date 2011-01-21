@@ -253,7 +253,7 @@ namespace TVA.Security
         //Constants
 
         private const string SettingsCategory = "SecurityProvider";
-        private const string DefaultProviderType = "TVA.Security.SqlSecurityProvider, TVA.Security";
+        private const string DefaultProviderType = "TVA.Security.LdapSecurityProvider, TVA.Security";
         private const string DefaultIncludedResources = "*=*";
         private const string DefaultExcludedResources = "";
         private const string DefaultNotificationSmtpServer = Mail.DefaultSmtpServer;

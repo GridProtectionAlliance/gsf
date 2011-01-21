@@ -255,12 +255,11 @@ namespace TVA.Windows
     ///   </configSections>
     ///   <categorizedSettings>
     ///     <securityProvider>
-    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+    ///       <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-    ///         description="Connection string to be used for connection to the backend security datastore."
+    ///       <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
     ///         encrypted="false" />
-    ///       <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+    ///       <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
     ///         encrypted="false" />
