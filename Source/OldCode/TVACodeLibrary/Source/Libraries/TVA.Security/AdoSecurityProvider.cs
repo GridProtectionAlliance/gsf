@@ -714,8 +714,11 @@ namespace TVA.Security
                         return false;
 
                     IDbCommand command = dbConnection.CreateCommand();
-                    command.CommandType = CommandType.Text;                    
-                    command.CommandText = "Update UserAccount Set Password = @newPassword Where [Name] = @name AND Password = @oldPassword";
+                    command.CommandType = CommandType.Text;
+                    if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                        command.CommandText = "Update UserAccount Set [Password] = @newPassword Where Name = @name AND [Password] = @oldPassword";
+                    else
+                        command.CommandText = "Update UserAccount Set Password = @newPassword Where Name = @name AND Password = @oldPassword";
                     IDbDataParameter param = command.CreateParameter();
                     param.ParameterName = "@newPassword";
                     param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
