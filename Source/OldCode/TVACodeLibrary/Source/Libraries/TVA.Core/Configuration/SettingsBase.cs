@@ -327,6 +327,7 @@ namespace TVA.Configuration
         /// <summary>
         /// Gets or sets the <see cref="CultureInfo"/> to use for the conversion of setting values to and from <see cref="string"/>.
         /// </summary>
+        [Browsable(false), SerializeSetting(false)]
         public CultureInfo Culture 
         {
             get
