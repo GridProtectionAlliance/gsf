@@ -271,7 +271,7 @@ namespace TVA.Web.Embedded
     ///     $(document).ready(function () { login(); });
     /// 
     ///     function login() {
-    ///         $.get("~/SecurityService.svc/rest/getuserdata", loginCallback);
+    ///         $.get("SecurityService.svc/rest/getuserdata", loginCallback);
     ///     }
     /// 
     ///     function loginCallback(data) {
