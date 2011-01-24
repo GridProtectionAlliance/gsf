@@ -13,6 +13,9 @@
 //  01/05/2011 - Pinal C. Patel
 //       Added NotificationSmtpServer and NotificationSenderEmail settings to the config file along with
 //       GeneratePassword() and SendNotification() utility methods.
+//  01/24/2011 - Pinal C. Patel
+//       Updated the logic in IsResourceAccessible() to stop looking at other included resources once a 
+//       match is found for the resource being evaluated.
 //
 //*******************************************************************************************************
 
@@ -346,9 +349,8 @@ namespace TVA.Security
             // Check if the resource has a role-based access restriction on it.
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
             {
-                if (IsRegexMatch(inclusion.Key, resource) &&
-                    (Thread.CurrentPrincipal.IsInRole(inclusion.Value)))
-                    return true;
+                if (IsRegexMatch(inclusion.Key, resource))
+                    return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
             }
 
             return false;
