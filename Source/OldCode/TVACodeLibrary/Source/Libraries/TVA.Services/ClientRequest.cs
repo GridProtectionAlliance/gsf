@@ -21,6 +21,8 @@
 //  10/14/2010 - Pinal C. Patel
 //       Overrode ToString() method to provide a text representation of ClientRequest.
 //       Recoded static Parse() method to make it more robust.
+//  01/24/201 - Pinal C. Patel
+//       Modified ToString() remove leading and trailing white spaces.
 //
 //*******************************************************************************************************
 
@@ -251,9 +253,9 @@ namespace TVA.Services
     /// </summary>
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
-	[Serializable()]
+    [Serializable()]
     public class ClientRequest
-	{
+    {
         #region [ Members ]
 
         // Fields
@@ -353,7 +355,7 @@ namespace TVA.Services
         /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
         public override string ToString()
         {
-            return string.Format("{0} {1}", m_command, m_arguments);
+            return string.Format("{0} {1}", m_command, m_arguments).Trim();
         }
 
         #endregion
@@ -388,6 +390,5 @@ namespace TVA.Services
         }
 
         #endregion
-	}
+    }
 }
- 
