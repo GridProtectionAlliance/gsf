@@ -237,7 +237,7 @@ namespace TVA.Security
     /// <summary>
     /// Represents an <see cref="Attribute"/> that can be used restrict access to a class when using role-based security.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class RestrictAccessAttribute : Attribute
     {
         #region [ Members ]

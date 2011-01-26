@@ -392,20 +392,11 @@ namespace TVA.Web
         /// <returns>true if access to the requested resource is restricted, otherwise false.</returns>
         protected virtual bool IsAccessRestricted()
         {
-            bool accessRestricted = false;
             object[] attributes = m_application.Context.Handler.GetType().GetCustomAttributes(typeof(RestrictAccessAttribute), true);
             if (attributes.Length > 0)
-            {
-                // Since more than one attribute can be specified, we must combine the results of access checks.
-                foreach (RestrictAccessAttribute accessAttribute in attributes)
-                {
-                    accessRestricted = accessRestricted | !accessAttribute.CheckAccess();
-                    if (accessRestricted == true)
-                        break;  // No need to check further.
-                }
-            }
-
-            return accessRestricted;
+                return !((RestrictAccessAttribute)attributes[0]).CheckAccess();
+            else
+                return false;
         }
 
         private void Application_PostMapRequestHandler(object sender, EventArgs e)
