@@ -10,6 +10,10 @@
 //  -----------------------------------------------------------------------------------------------------
 //  06/25/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  01/27/2011 - Pinal C. Patel
+//       Updated SetupPrincipal() to call AppDomain.SetThreadPrincipal() to set the thread principal
+//       in addition to settings the current thread principal so the thread principal is set correctly 
+//       inside WPF applications.
 //
 //*******************************************************************************************************
 
@@ -419,6 +423,7 @@ namespace TVA.Security
 
             // Setup the current thread principal.
             Thread.CurrentPrincipal = principal;
+            AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
 
             // Setup ASP.NET remote user principal.
             if (HttpContext.Current != null)
