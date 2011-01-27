@@ -303,6 +303,7 @@ namespace TVA.Security
         #region [ Static ]
 
         // Static Fields
+        private static bool s_threadPolicySet;
         private static IDictionary<string, CacheContext> s_cache;
         private static System.Timers.Timer s_cacheMonitorTimer;
 
@@ -423,7 +424,11 @@ namespace TVA.Security
 
             // Setup the current thread principal.
             Thread.CurrentPrincipal = principal;
-            AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
+            if (!s_threadPolicySet)
+            {
+                AppDomain.CurrentDomain.SetThreadPrincipal(Thread.CurrentPrincipal);
+                s_threadPolicySet = true;
+            }
 
             // Setup ASP.NET remote user principal.
             if (HttpContext.Current != null)
