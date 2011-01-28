@@ -491,7 +491,7 @@ namespace TVA.IO
         /// <summary>
         /// Specifies the default value for the <see cref="MaximumRetryAttempts"/> property.
         /// </summary>
-        public const int DefaultMaximumRetryAttempts = 4; // That is 4 retries plus the original attempt for a total 5 total attempts
+        public const int DefaultMaximumRetryAttempts = 4; // That is 4 retries plus the original attempt for a total of 5 attempts
 
         /// <summary>
         /// Specifies the default value for the <see cref="RetryDelayInterval"/> property.
@@ -529,6 +529,7 @@ namespace TVA.IO
         private bool m_persistSettings;
         private string m_settingsCategory;
         private long m_totalExports;
+        private long m_failedExportAttempts;
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
         private bool m_exportInProgress;
@@ -779,17 +780,22 @@ namespace TVA.IO
                 status.Append("            Export enabled: ");
                 status.Append(m_enabled);
                 status.AppendLine();
+                status.Append("       Temporary file path: ");
+                status.Append(Path.GetTempPath());
+                status.AppendLine();
                 status.AppendLine("       Export destinations: ");
+                status.AppendLine();
                 lock (this)
                 {
                     int count = 1;
 
                     foreach (ExportDestination export in m_exportDestinations)
                     {
-                        status.AppendFormat("         {0}: {1}\r\n", count, FilePath.TrimFileName(export.DestinationFile, 65));
+                        status.AppendFormat("         {0}: {1}\r\n", count.ToString().PadLeft(2, '0'), FilePath.TrimFileName(export.DestinationFile, 65));
                         count++;
                     }
                 }
+                status.AppendLine();
                 status.Append("       File export timeout: ");
                 status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
                 status.AppendLine();
@@ -798,6 +804,9 @@ namespace TVA.IO
                 status.AppendLine();
                 status.Append("      Retry delay interval: ");
                 status.Append(m_retryDelayInterval.ToString() + " milliseconds");
+                status.AppendLine();
+                status.Append("    Failed export attempts: ");
+                status.Append(m_failedExportAttempts);
                 status.AppendLine();
                 status.Append("      Total exports so far: ");
                 status.Append(m_totalExports);
@@ -1146,18 +1155,25 @@ namespace TVA.IO
         /// </remarks>
         public void ExportData(byte[] fileData)
         {
-            // Ensure that only one export will be queued and exporting at once
-            lock (this)
+            if (m_enabled)
             {
-                if (m_exportInProgress)
+                // Ensure that only one export will be queued and exporting at once
+                lock (this)
                 {
-                    OnProcessException(new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress."));
+                    if (m_exportInProgress)
+                    {
+                        OnProcessException(new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress."));
+                    }
+                    else
+                    {
+                        m_exportInProgress = true;
+                        ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
+                    }
                 }
-                else
-                {
-                    m_exportInProgress = true;
-                    ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
-                }
+            }
+            else
+            {
+                OnProcessException(new InvalidOperationException("Export failed: exporter is not currently enabled."));
             }
         }
 
@@ -1213,7 +1229,7 @@ namespace TVA.IO
                         {
                             // Exports failed to complete in specified allowed time, set timeout flag for each export state
                             Array.ForEach(exportStates, exportState => exportState.Timeout = true);
-                            OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(4));
+                            OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(2).ToLower());
                         }
                     }
                     catch (ThreadAbortException)
@@ -1235,25 +1251,8 @@ namespace TVA.IO
                             }
                         }
 
-                        // Delete the temporary file
-                        if (!string.IsNullOrEmpty(filename))
-                        {
-                            // Although errors are not expected from deleting the temporary file, we report
-                            // any that may occur
-                            try
-                            {
-                                if (File.Exists(filename))
-                                    File.Delete(filename);
-                            }
-                            catch (ThreadAbortException)
-                            {
-                                throw;  // This exception is normal, we'll just rethrow this back up the try stack
-                            }
-                            catch (Exception ex)
-                            {
-                                OnProcessException(new InvalidOperationException(string.Format("Exception encountered while trying to remove temporary file: {0}", ex.Message), ex));
-                            }
-                        }
+                        // Delete the temporary file - we queue this up in case the export threads may still be trying their last copy attempt
+                        ThreadPool.QueueUserWorkItem(DeleteTemporaryFile, filename);
                     }
                 }
             }
@@ -1271,6 +1270,7 @@ namespace TVA.IO
         {
             ExportState exportState = null;
             Exception exportException = null;
+            int failedExportCount = 0;
 
             try
             {
@@ -1293,11 +1293,13 @@ namespace TVA.IO
                         }
                         catch (Exception ex)
                         {
-                            // Stack exception history to provide full failure log for each export attempt
+                            // Stack exception history to provide a full inner exception failure log for each export attempt
                             if (exportException == null)
-                                exportException = new IOException(string.Format("Export attempt {0} failed: {1}", attempt + 1, ex.Message), ex);
+                                exportException = ex;
                             else
-                                exportException = new IOException(string.Format("Export attempt {0} failed: {1}", attempt + 1, ex.Message), exportException);
+                                exportException = new IOException(string.Format("Attempt {0} exception: {1}", attempt + 1, ex.Message), exportException);
+
+                            failedExportCount++;
 
                             // Abort retry attempts if export has timed out or maximum exports have been attempted
                             if (!m_enabled || exportState.Timeout || attempt >= m_maximumRetryAttempts)
@@ -1318,17 +1320,52 @@ namespace TVA.IO
             catch (Exception ex)
             {
                 string destinationFileName = null;
+                bool timeout = false;
 
                 if (exportState != null)
+                {
                     destinationFileName = exportState.DestinationFileName;
+                    timeout = exportState.Timeout;
+                }
 
-                OnProcessException(new InvalidOperationException(string.Format("Exception encountered during export for {0}: {1}", destinationFileName.ToNonNullString("[undefined]"), ex.Message), ex));
+                OnProcessException(new InvalidOperationException(string.Format("Export attempt aborted {0} {1} exception{2} for \"{3}\" - {4}", timeout ? "due to timeout with" : "after", failedExportCount, failedExportCount > 1 ? "s" : "", destinationFileName.ToNonNullString("[undefined]"), ex.Message), ex));
             }
             finally
             {
                 // Release waiting thread
                 if (exportState != null && exportState.WaitHandle != null)
                     exportState.WaitHandle.Set();
+
+                // Track total number of failed export attempts
+                Interlocked.Add(ref m_failedExportAttempts, failedExportCount);
+            }
+        }
+
+        private void DeleteTemporaryFile(object state)
+        {
+            string filename = state as string;
+
+            if (!string.IsNullOrEmpty(filename))
+            {
+                try
+                {
+                    // Hold up for the specified retry time in case the export threads may still be trying their last copy attempt. This is important
+                    // if the timeouts are synchronized and there is one more export about to be attempted before the timeout flag is checked.
+                    Thread.Sleep(m_retryDelayInterval);
+
+                    // Delete the temporary file
+                    if (File.Exists(filename))
+                        File.Delete(filename);
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;  // This exception is normal, we'll just rethrow this back up the try stack
+                }
+                catch (Exception ex)
+                {
+                    // Although errors are not expected from deleting the temporary file, we report any that may occur
+                    OnProcessException(new InvalidOperationException(string.Format("Exception encountered while trying to remove temporary file: {0}", ex.Message), ex));
+                }
             }
         }
 
