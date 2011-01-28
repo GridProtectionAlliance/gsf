@@ -518,13 +518,18 @@ namespace TVA.Windows
             GridChangePassword.Visibility = Visibility.Collapsed;
 
             if (m_messageType == DisplayType.Login)
+            {
                 GridLogin.Visibility = Visibility.Visible;
+                TextBoxUserName.Focus();
+            }
             else if (m_messageType == DisplayType.AccessDenied)
                 StackPanelAccessDenied.Visibility = Visibility.Visible;
             else if (m_messageType == DisplayType.ChangePassword)
-                GridChangePassword.Visibility = Visibility.Visible;            
+            {
+                GridChangePassword.Visibility = Visibility.Visible;
+                TextBoxChangePasswordUserName.Focus();
+            }
         }
-
 
         bool ShowFailureReason(ISecurityProvider provider)
         {
