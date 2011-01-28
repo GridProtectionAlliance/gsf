@@ -586,7 +586,7 @@ namespace TVA.IO
         /// <remarks>
         /// Set to Timeout.Infinite (-1) for no timeout.
         /// </remarks>
-        [Category("Settings"), DefaultValue(DefaultExportTimeout), Description("Total allowed time in milliseconds for each export to execute.")]
+        [Category("Settings"), DefaultValue(DefaultExportTimeout), Description("Total allowed time for each export to execute, in milliseconds. Set to -1 for no specific timeout.")]
         public int ExportTimeout
         {
             get
@@ -603,9 +603,9 @@ namespace TVA.IO
         /// Gets or sets the maximum number of retries that will be attempted during an export if the export fails.
         /// </summary>
         /// <remarks>
-        /// Total file export attempts = 1 + <see cref="MaximumRetryAttempts"/>.
+        /// Total file export attempts = 1 + <see cref="MaximumRetryAttempts"/>. Set to zero to only attempt export once.
         /// </remarks>
-        [Category("Settings"), DefaultValue(DefaultMaximumRetryAttempts), Description("Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt copy once.")]
+        [Category("Settings"), DefaultValue(DefaultMaximumRetryAttempts), Description("Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt export once.")]
         public int MaximumRetryAttempts
         {
             get
@@ -899,8 +899,12 @@ namespace TVA.IO
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                
                 settings.Clear();
-                settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for each export to execute in milliseconds.");
+                settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for each export to execute, in milliseconds. Set to -1 for no specific timeout.");
+                settings["MaximumRetryAttempts", true].Update(m_maximumRetryAttempts, "Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt export once.");
+                settings["RetryDelayInterval", true].Update(m_retryDelayInterval, "Interval to wait, in milliseconds, before retrying an export if the export fails.");
+
                 lock (this)
                 {
                     settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
@@ -938,11 +942,13 @@ namespace TVA.IO
                 if (settings.Count == 0)
                     return;    // Don't proceed if export destinations don't exist in config file.
 
+                ExportDestination destination;
                 string entryRoot;
                 int count;
 
-                ExportDestination destination;
                 m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
+                m_maximumRetryAttempts = settings["MaximumRetryAttempts", true].ValueAs(m_maximumRetryAttempts);
+                m_retryDelayInterval = settings["RetryDelayInterval", true].ValueAs(m_retryDelayInterval);
                 count = settings["ExportCount", true].ValueAsInt32();
 
                 lock (this)
