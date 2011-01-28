@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -30,6 +31,8 @@
 //       Added GetApplicationDataFolder() method.
 //  04/21/2010 - Pinal C. Patel
 //       Updated GetApplicationDataFolder() to include the company name if available.
+//  01/28/2011 - J. Ritchie Carroll
+//       Added IsValidFileName function.
 //
 //*******************************************************************************************************
 
@@ -249,6 +252,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -365,7 +387,7 @@ namespace TVA.IO
         /// Disconnects the specified network share.
         /// </summary>
         /// <param name="sharename">UNC share name to disconnect from.</param>
-        /// <param name="force">true to force a disconnect; otherwise false.</param>
+        /// <param name="force"><c>true</c> to force a disconnect; otherwise <c>false</c>.</param>
         public static void DisconnectFromNetworkShare(string sharename, bool force)
         {
             int result = WNetCancelConnection2(sharename, 0, force);
@@ -378,8 +400,8 @@ namespace TVA.IO
         /// </summary>
         /// <param name="fileSpecs">The file specs used for matching the specified file name.</param>
         /// <param name="fileName">The file name to be tested against the specified file specs for a match.</param>
-        /// <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
-        /// <returns>true if the specified file name matches any of the given file specs; otherwise false.</returns>
+        /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
+        /// <returns><c>true</c> if the specified file name matches any of the given file specs; otherwise <c>false</c>.</returns>
         public static bool IsFilePatternMatch(string[] fileSpecs, string fileName, bool ignoreCase)
         {
             bool found = false;
@@ -401,12 +423,49 @@ namespace TVA.IO
         /// </summary>
         /// <param name="fileSpec">The file spec used for matching the specified file name.</param>
         /// <param name="fileName">The file name to be tested against the specified file spec for a match.</param>
-        /// <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
-        /// <returns>true if the specified file name matches the given file spec; otherwise false.</returns>
+        /// <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
+        /// <returns><c>true</c> if the specified file name matches the given file spec; otherwise <c>false</c>.</returns>
         public static bool IsFilePatternMatch(string fileSpec, string fileName, bool ignoreCase)
         {
             return (new Regex(GetFilePatternRegularExpression(fileSpec), (ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))).IsMatch(fileName);
         }
+
+        /// <summary>
+        /// Determines if the specified file name and path is valid.
+        /// </summary>
+        /// <param name="filePath">The file name with optional path to test for validity.</param>
+        /// <returns><c>true</c> if the specified <paramref name="filePath"/> is a valid name; otherwise <c>false</c>.</returns>
+        public static bool IsValidFileName(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return false;
+
+            try
+            {
+                // Attempt to parse directory and file name - this will catch most issues
+                string directory = Path.GetDirectoryName(filePath);
+                string filename = Path.GetFileName(filePath);
+
+                // Check for invalid directory characters
+                if (!string.IsNullOrWhiteSpace(directory) && directory.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+                    return false;
+
+                // Check for invalid file name characters
+                if (string.IsNullOrWhiteSpace(filename) || filename.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                    return false;
+
+                // Recurse in to check validity of each directory name
+                if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(Path.GetFileName(directory)))
+                    return IsValidFileName(directory);
+            }
+            catch
+            {
+                // If you can't parse a file name or directory, file path is definitely not valid
+                return false;
+            }
+
+            return true;
+        }  
 
         /// <summary>
         /// Gets the file name and extension from the specified file path.

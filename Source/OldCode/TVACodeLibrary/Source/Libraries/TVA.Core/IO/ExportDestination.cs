@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -235,6 +236,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -277,13 +297,13 @@ namespace TVA.IO
         /// <param name="domain">Domain used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
         /// <param name="userName">User name used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
         /// <param name="password">Password used to authenticate network connection if <paramref name="connectToShare"/> is true.</param>
-        public ExportDestination(string destinationFile, bool connectToShare, string domain, string userName, string password)
+        public ExportDestination(string destinationFile, bool connectToShare, string domain = "", string userName = "", string password = "")
         {
-            this.m_destinationFile = destinationFile;
-            this.m_connectToShare = connectToShare;
-            this.m_domain = domain;
-            this.m_userName = userName;
-            this.m_password = password;
+            m_destinationFile = destinationFile;
+            m_connectToShare = connectToShare;
+            m_domain = domain;
+            m_userName = userName;
+            m_password = password;
         }
 
         #endregion
@@ -296,8 +316,14 @@ namespace TVA.IO
         [Editor(typeof(FileNameEditor), typeof(UITypeEditor))]
         public string DestinationFile
         {
-            get { return m_destinationFile; }
-            set { m_destinationFile = value; }
+            get
+            {
+                return m_destinationFile;
+            }
+            set
+            {
+                m_destinationFile = value;
+            }
         }
 
         /// <summary>
@@ -305,8 +331,14 @@ namespace TVA.IO
         /// </summary>
         public bool ConnectToShare
         {
-            get { return m_connectToShare; }
-            set { m_connectToShare = value; }
+            get
+            {
+                return m_connectToShare;
+            }
+            set
+            {
+                m_connectToShare = value;
+            }
         }
 
         /// <summary>
@@ -314,8 +346,14 @@ namespace TVA.IO
         /// </summary>
         public string Domain
         {
-            get { return m_domain; }
-            set { m_domain = value; }
+            get
+            {
+                return m_domain;
+            }
+            set
+            {
+                m_domain = value;
+            }
         }
 
         /// <summary>
@@ -323,8 +361,14 @@ namespace TVA.IO
         /// </summary>
         public string UserName
         {
-            get { return m_userName; }
-            set { m_userName = value; }
+            get
+            {
+                return m_userName;
+            }
+            set
+            {
+                m_userName = value;
+            }
         }
 
         /// <summary>
@@ -332,8 +376,14 @@ namespace TVA.IO
         /// </summary>
         public string Password
         {
-            get { return m_password; }
-            set { m_password = value; }
+            get
+            {
+                return m_password;
+            }
+            set
+            {
+                m_password = value;
+            }
         }
 
         /// <summary>
@@ -349,7 +399,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Path and filename of <see cref="ExportDestination.DestinationFile"/>.
+        /// Path and filename of <see cref="ExportDestination.DestinationFile"/> without drive or server share prefix.
         /// </summary>
         [Browsable(false)]
         public string FileName
@@ -370,7 +420,7 @@ namespace TVA.IO
         /// <returns>A <see cref="String"/> that represents the current <see cref="ExportDestination"/>.</returns>
         public override string ToString()
         {
-            return FilePath.GetFileName(m_destinationFile);
+            return m_destinationFile;
         }
 
         #endregion

@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -19,6 +20,8 @@
 //       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  01/27/2011 - J. Ritchie Carroll
+//       Modified internal operation to minimize risk of file dead lock and/or memory overload.
 //
 //*******************************************************************************************************
 
@@ -238,6 +241,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -249,6 +271,7 @@ using System.Text;
 using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
+using System.Collections.ObjectModel;
 
 namespace TVA.IO
 {
@@ -335,6 +358,119 @@ namespace TVA.IO
     {
         #region [ Members ]
 
+        // Nested Types
+
+        /// <summary>
+        /// Defines state information for an export.
+        /// </summary>
+        private class ExportState : IDisposable
+        {
+            #region [ Members ]
+
+            // Fields
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Constructors ]
+
+            /// <summary>
+            /// Creates a new <see cref="ExportState"/>.
+            /// </summary>
+            public ExportState()
+            {
+                WaitHandle = new AutoResetEvent(false);
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources before the <see cref="ExportState"/> object is reclaimed by <see cref="GC"/>.
+            /// </summary>
+            ~ExportState()
+            {
+                Dispose(false);
+            }
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets or sets the source file name for the <see cref="ExportState"/>.
+            /// </summary>
+            public string SourceFileName
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Gets or sets the destination file name for the <see cref="ExportState"/>.
+            /// </summary>
+            public string DestinationFileName
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Gets or sets the event wait handle for the <see cref="ExportState"/>.
+            /// </summary>
+            public AutoResetEvent WaitHandle
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// Gets or sets a flag that is used to determine if export process has timed out.
+            /// </summary>
+            public bool Timeout
+            {
+                get;
+                set;
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases all the resources used by the <see cref="ExportState"/> object.
+            /// </summary>
+            public void Dispose()
+            {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+            }
+
+            /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="ExportState"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected virtual void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                        {
+                            if (WaitHandle != null)
+                                WaitHandle.Dispose();
+
+                            WaitHandle = null;
+                        }
+                    }
+                    finally
+                    {
+                        m_disposed = true;  // Prevent duplicate dispose.
+                    }
+                }
+            }
+
+            #endregion
+        }
+
         // Constants
 
         /// <summary>
@@ -351,6 +487,16 @@ namespace TVA.IO
         /// Specifies the default value for the <see cref="SettingsCategory"/> property.
         /// </summary>
         public const string DefaultSettingsCategory = "ExportDestinations";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="MaximumRetryAttempts"/> property.
+        /// </summary>
+        public const int DefaultMaximumRetryAttempts = 4; // That is 4 retries plus the original attempt for a total 5 total attempts
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="RetryDelayInterval"/> property.
+        /// </summary>
+        public const int DefaultRetryDelayInterval = 1000;
 
         // Events
 
@@ -369,15 +515,26 @@ namespace TVA.IO
         [Description("Occurs when status information for the MultipleDestinationExporter object is being reported.")]
         public event EventHandler<EventArgs<string>> StatusMessage;
 
-        // Fields
+        /// <summary>
+        /// Event is raised when there is an exception encountered while processing.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T}.Argument"/> is the exception that was thrown.
+        /// </remarks>
+        [Description("Occurs when an exception occurs in the MultipleDestinationExporter.")]
+        public event EventHandler<EventArgs<Exception>> ProcessException;
 
+        // Fields
         private int m_exportTimeout;
         private bool m_persistSettings;
         private string m_settingsCategory;
         private long m_totalExports;
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
-        private ProcessQueue<byte[]> m_exportQueue;
+        private bool m_exportInProgress;
+        private int m_maximumRetryAttempts;
+        private int m_retryDelayInterval;
+        private bool m_enabled;
         private bool m_disposed;
 
         #endregion
@@ -407,19 +564,16 @@ namespace TVA.IO
         /// Initializes a new instance of the <see cref="MultipleDestinationExporter"/> class.
         /// </summary>
         /// <param name="settingsCategory">The config file settings category under which the export destinations are defined.</param>
-        /// <param name="exportTimeout">The total allowed time in milliseconds for all exports to execute.</param>
+        /// <param name="exportTimeout">The total allowed time in milliseconds for each export to execute.</param>
         public MultipleDestinationExporter(string settingsCategory, int exportTimeout)
             : base()
         {
             m_exportTimeout = exportTimeout;
             m_settingsCategory = settingsCategory;
             m_persistSettings = DefaultPersistSettings;
+            m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
+            m_retryDelayInterval = DefaultRetryDelayInterval;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
-            m_exportDestinations = new List<ExportDestination>();
-
-            // Set up a synchronous process queue to handle exports that will limit total export time to export interval
-            m_exportQueue = ProcessQueue<byte[]>.CreateSynchronousQueue(WriteExportFiles, 10, m_exportTimeout, false, false);
-            m_exportQueue.ProcessException += ProcessExceptionHandler;
         }
 
         #endregion
@@ -427,14 +581,12 @@ namespace TVA.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the total allowed time in milliseconds for all exports to execute.
+        /// Gets or sets the total allowed time in milliseconds for each export to execute.
         /// </summary>
         /// <remarks>
         /// Set to Timeout.Infinite (-1) for no timeout.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultExportTimeout),
-        Description("Total allowed time in milliseconds for all exports to execute.")]
+        [Category("Settings"), DefaultValue(DefaultExportTimeout), Description("Total allowed time in milliseconds for each export to execute.")]
         public int ExportTimeout
         {
             get
@@ -444,8 +596,47 @@ namespace TVA.IO
             set
             {
                 m_exportTimeout = value;
-                if (m_exportQueue != null)
-                    m_exportQueue.ProcessTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of retries that will be attempted during an export if the export fails.
+        /// </summary>
+        /// <remarks>
+        /// Total file export attempts = 1 + <see cref="MaximumRetryAttempts"/>.
+        /// </remarks>
+        [Category("Settings"), DefaultValue(DefaultMaximumRetryAttempts), Description("Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt copy once.")]
+        public int MaximumRetryAttempts
+        {
+            get
+            {
+                return m_maximumRetryAttempts;
+            }
+            set
+            {
+                m_maximumRetryAttempts = value;
+
+                if (m_maximumRetryAttempts < 0)
+                    m_maximumRetryAttempts = 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the interval to wait, in milliseconds, before retrying an export if the export fails.
+        /// </summary>
+        [Category("Settings"), DefaultValue(DefaultRetryDelayInterval), Description("Interval to wait, in milliseconds, before retrying an export if the export fails.")]
+        public int RetryDelayInterval
+        {
+            get
+            {
+                return m_retryDelayInterval;
+            }
+            set
+            {
+                m_retryDelayInterval = value;
+
+                if (m_retryDelayInterval <= 0)
+                    m_retryDelayInterval = DefaultRetryDelayInterval;
             }
         }
 
@@ -453,9 +644,7 @@ namespace TVA.IO
         /// Gets or sets a boolean value that indicates whether the settings of <see cref="MultipleDestinationExporter"/> object are 
         /// to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the settings of MultipleDestinationExporter object are to be saved to the config file.")]
+        [Category("Persistance"), DefaultValue(DefaultPersistSettings), Description("Indicates whether the settings of MultipleDestinationExporter object are to be saved to the config file.")]
         public bool PersistSettings
         {
             get
@@ -473,9 +662,7 @@ namespace TVA.IO
         /// to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the settings of MultipleDestinationExporter object are to be saved to the config file if the PersistSettings property is set to true.")]
+        [Category("Persistance"), DefaultValue(DefaultSettingsCategory), Description("Category under which the settings of MultipleDestinationExporter object are to be saved to the config file if the PersistSettings property is set to true.")]
         public string SettingsCategory
         {
             get
@@ -494,8 +681,7 @@ namespace TVA.IO
         /// <summary>
         /// Gets or sets the <see cref="Encoding"/> to be used to encode text data being exported.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual Encoding TextEncoding
         {
             get
@@ -518,17 +704,16 @@ namespace TVA.IO
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="MultipleDestinationExporter"/> object is currently enabled.
         /// </summary>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool Enabled
         {
             get
             {
-                return m_exportQueue.Enabled;
+                return m_enabled;
             }
             set
             {
-                m_exportQueue.Enabled = value;
+                m_enabled = value;
             }
         }
 
@@ -548,17 +733,20 @@ namespace TVA.IO
         /// Gets a list of currently defined <see cref="ExportDestination"/>.
         /// </summary>
         /// <remarks>
-        /// Thread-safety Warning: Due to the asynchronous nature of <see cref="MultipleDestinationExporter"/>, a lock must be 
-        /// obtained on <see cref="ExportDestinations"/> before accessing it.
+        /// Use the <see cref="Initialize(IEnumerable{ExportDestination})"/> method to change the export destination collection.
         /// </remarks>
-        [Category("Settings"),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
-        Description("Gets a list of all the defined export destinations to be used by the MultipleDestinationExporter.")]
-        public List<ExportDestination> ExportDestinations
+        [Category("Settings"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content), Description("Gets a list of all the defined export destinations to be used by the MultipleDestinationExporter.")]
+        public ReadOnlyCollection<ExportDestination> ExportDestinations
         {
             get
             {
-                return m_exportDestinations;
+                lock (this)
+                {
+                    if (m_exportDestinations != null)
+                        return new ReadOnlyCollection<ExportDestination>(m_exportDestinations);
+                }
+
+                return null;
             }
         }
 
@@ -588,21 +776,32 @@ namespace TVA.IO
                 status.Append("     Configuration section: ");
                 status.Append(m_settingsCategory);
                 status.AppendLine();
-                status.Append("       Export destinations: ");
-                lock (m_exportDestinations)
-                {
-                    status.Append(m_exportDestinations.ToDelimitedString(','));
-                }
+                status.Append("            Export enabled: ");
+                status.Append(m_enabled);
                 status.AppendLine();
-                status.Append(" Cumulative export timeout: ");
+                status.AppendLine("       Export destinations: ");
+                lock (this)
+                {
+                    int count = 1;
+
+                    foreach (ExportDestination export in m_exportDestinations)
+                    {
+                        status.AppendFormat("         {0}: {1}\r\n", count, FilePath.TrimFileName(export.DestinationFile, 65));
+                        count++;
+                    }
+                }
+                status.Append("       File export timeout: ");
                 status.Append(m_exportTimeout == Timeout.Infinite ? "Infinite" : m_exportTimeout + " milliseconds");
+                status.AppendLine();
+                status.Append("    Maximum retry attempts: ");
+                status.Append(m_maximumRetryAttempts);
+                status.AppendLine();
+                status.Append("      Retry delay interval: ");
+                status.Append(m_retryDelayInterval.ToString() + " milliseconds");
                 status.AppendLine();
                 status.Append("      Total exports so far: ");
                 status.Append(m_totalExports);
                 status.AppendLine();
-
-                if (m_exportQueue != null)
-                    status.Append(m_exportQueue.Status);
 
                 return status.ToString();
             }
@@ -613,37 +812,29 @@ namespace TVA.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
+        /// Releases the unmanaged resources used by the <see cref="MultipleDestinationExporter"/> object and optionally releases the managed resources.
         /// </summary>
-        /// <remarks>
-        /// If not being used as a component (i.e., user creates their own instance of this class), this method
-        /// must be called in order to initialize exports.  Event if used as a component this method can be
-        /// called at anytime to reintialize the exports with new configuration information.
-        /// </remarks>
-        public void Initialize()
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected override void Dispose(bool disposing)
         {
-            // We provide a simple default set of export destinations since no others are specified.
-            Initialize(new ExportDestination[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
-        }
-
-        /// <summary>
-        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
-        /// </summary>
-        /// <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
-        /// <remarks>
-        /// If not being used as a component (i.e., user creates their own instance of this class), this method
-        /// must be called in order to initialize exports.  Even if used as a component this method can be
-        /// called at anytime to reintialize the exports with new configuration information.
-        /// </remarks>
-        public void Initialize(IEnumerable<ExportDestination> defaultDestinations)
-        {
-            // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
-#if ThreadTracking
-            ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
-            thread.Name = "TVA.IO.MultipleDestinationExporter.Initialize()";
-#else
-            ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
-#endif
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        Shutdown();
+                        SaveSettings();
+                    }
+                }
+                finally
+                {
+                    m_disposed = true;          // Prevent duplicate dispose.
+                    base.Dispose(disposing);    // Call base class Dispose().
+                }
+            }
         }
 
         /// <summary>
@@ -709,8 +900,8 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
                 settings.Clear();
-                settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for all exports to execute in milliseconds.");
-                lock (m_exportDestinations)
+                settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for each export to execute in milliseconds.");
+                lock (this)
                 {
                     settings["ExportCount", true].Update(m_exportDestinations.Count, "Total number of export files to produce.");
                     for (int x = 0; x < m_exportDestinations.Count; x++)
@@ -744,7 +935,8 @@ namespace TVA.IO
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
 
-                if (settings.Count == 0) return;    // Don't proceed if export destinations don't exist in config file.
+                if (settings.Count == 0)
+                    return;    // Don't proceed if export destinations don't exist in config file.
 
                 string entryRoot;
                 int count;
@@ -752,10 +944,11 @@ namespace TVA.IO
                 ExportDestination destination;
                 m_exportTimeout = settings["ExportTimeout", true].ValueAs(m_exportTimeout);
                 count = settings["ExportCount", true].ValueAsInt32();
-                m_exportDestinations = new List<ExportDestination>(count);
 
-                lock (m_exportDestinations)
+                lock (this)
                 {
+                    m_exportDestinations = new List<ExportDestination>(count);
+
                     for (int x = 0; x < count; x++)
                     {
                         entryRoot = string.Format("ExportDestination{0}", x + 1);
@@ -768,33 +961,130 @@ namespace TVA.IO
                         destination.UserName = settings[string.Format("{0}.UserName", entryRoot), true].ValueAsString();
                         destination.Password = settings[string.Format("{0}.Password", entryRoot), true].ValueAsString();
 
-                        // Save new export destination
-                        m_exportDestinations.Add(destination);
+                        // Save new export destination if destination file name has been defined and is valid
+                        if (FilePath.IsValidFileName(destination.DestinationFile))
+                            m_exportDestinations.Add(destination);
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Start multiple file export.
+        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
         /// </summary>
-        /// <param name="fileData">Text based data to export to each destination.</param>
-        public void ExportData(string fileData)
+        /// <remarks>
+        /// If not being used as a component (i.e., user creates their own instance of this class), this method
+        /// must be called in order to initialize exports.  Event if used as a component this method can be
+        /// called at anytime to reintialize the exports with new configuration information.
+        /// </remarks>
+        public void Initialize()
         {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
-            if (m_exportQueue != null)
-                m_exportQueue.Add(m_textEncoding.GetBytes(fileData));
+            // We provide a simple default set of export destinations since no others are specified.
+            Initialize(new ExportDestination[] { new ExportDestination("C:\\filename.txt", false, "domain", "username", "password") });
         }
 
         /// <summary>
-        /// Start multiple file export.
+        /// Initializes (or reinitializes) <see cref="MultipleDestinationExporter"/> from configuration settings.
         /// </summary>
-        /// <param name="fileData">Binary data to export to each destination.</param>
-        public void ExportData(byte[] fileData)
+        /// <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
+        /// <remarks>
+        /// If not being used as a component (i.e., user creates their own instance of this class), this method
+        /// must be called in order to initialize exports.  Even if used as a component this method can be
+        /// called at anytime to reintialize the exports with new configuration information.
+        /// </remarks>
+        public void Initialize(IEnumerable<ExportDestination> defaultDestinations)
         {
-            // Queue data for export - multiple exports may take some time, so we do this on another thread...
-            if (m_exportQueue != null)
-                m_exportQueue.Add(fileData);
+            // So as to not delay calling thread due to share authentication, we perform initialization on another thread...
+#if ThreadTracking
+            ManagedThread thread = ManagedThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
+            thread.Name = "TVA.IO.MultipleDestinationExporter.Initialize()";
+#else
+            ThreadPool.QueueUserWorkItem(Initialize, defaultDestinations.ToList());
+#endif
+        }
+
+        private void Initialize(object state)
+        {
+            // In case we are reinitializing class, we shutdown any prior queue operations and close any existing network connections...
+            Shutdown();
+
+            // Retrieve any specified default export destinations
+            lock (this)
+            {
+                m_exportDestinations = state as List<ExportDestination>;
+            }
+
+            // Load export destinations from the config file - if nothing is in config file yet,
+            // the default settings (passed in via state) will be used instead. Consumers
+            // wishing to dynamically change export settings in code will need to make sure
+            // PersistSettings is false in order to load specified code settings instead of
+            // those that may be saved in the configuration file
+            LoadSettings();
+
+            ExportDestination[] destinations;
+
+            lock (this)
+            {
+                // Cache a local copy of export destinations to reduce lock time,
+                // network share authentication may take some time
+                destinations = m_exportDestinations.ToArray();
+            }
+
+            for (int x = 0; x < destinations.Length; x++)
+            {
+                // Connect to network shares if necessary
+                if (destinations[x].ConnectToShare)
+                {
+                    // Attempt connection to external network share
+                    try
+                    {
+                        OnStatusMessage("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
+
+                        FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
+
+                        OnStatusMessage("Network share authentication to {0} succeeded.", destinations[x].Share);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Something unexpected happened during attempt to connect to network share - so we'll report it...
+                        OnProcessException(new IOException(string.Format("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message), ex));
+                    }
+                }
+            }
+
+            m_enabled = true;
+
+            // Notify that initialization is complete.
+            OnInitialized();
+        }
+
+        // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
+        private void Shutdown()
+        {
+            m_enabled = false;
+
+            lock (this)
+            {
+                if (m_exportDestinations != null)
+                {
+                    // We'll be nice and disconnect network shares when this class is disposed...
+                    for (int x = 0; x < m_exportDestinations.Count; x++)
+                    {
+                        if (m_exportDestinations[x].ConnectToShare)
+                        {
+                            try
+                            {
+                                FilePath.DisconnectFromNetworkShare(m_exportDestinations[x].Share);
+                            }
+                            catch (Exception ex)
+                            {
+                                // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
+                                OnProcessException(new IOException(string.Format("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message), ex));
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -818,163 +1108,222 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="MultipleDestinationExporter"/> object and optionally releases the managed resources.
+        /// Raises <see cref="ProcessException"/> event.
         /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        /// <param name="ex">Processing <see cref="Exception"/>.</param>
+        protected virtual void OnProcessException(Exception ex)
         {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        Shutdown();
-                        SaveSettings();
+            if (ProcessException != null)
+                ProcessException(this, new EventArgs<Exception>(ex));
+        }
 
-                        if (m_exportQueue != null)
-                        {
-                            m_exportQueue.ProcessException -= ProcessExceptionHandler;
-                            m_exportQueue.Dispose();
-                        }
-                    }
-                }
-                finally
+        /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Text based data to export to each destination.</param>
+        /// <remarks>
+        /// This is assumed to be the full content of the file to export. This class does not queue data since
+        /// the export is not intended to append to an existing file but rather replace an existing one.
+        /// </remarks>
+        public void ExportData(string fileData)
+        {
+            ExportData(m_textEncoding.GetBytes(fileData));
+        }
+
+        /// <summary>
+        /// Start multiple file export.
+        /// </summary>
+        /// <param name="fileData">Binary data to export to each destination.</param>
+        /// <remarks>
+        /// This is assumed to be the full content of the file to export. This class does not queue data since
+        /// the export is not intended to append to an existing file but rather replace an existing one.
+        /// </remarks>
+        public void ExportData(byte[] fileData)
+        {
+            // Ensure that only one export will be queued and exporting at once
+            lock (this)
+            {
+                if (m_exportInProgress)
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    OnProcessException(new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress."));
+                }
+                else
+                {
+                    m_exportInProgress = true;
+                    ThreadPool.QueueUserWorkItem(ExecuteExports, fileData);
                 }
             }
         }
 
-        private void Initialize(object state)
+        private void ExecuteExports(object state)
         {
-            // In case we are reinitializing class, we shutdown any prior queue operations and close any existing network connections...
-            Shutdown();
-
-            // Retrieve any specified default export destinations
-            lock (m_exportDestinations)
+            // Outer try/finally is used only to make sure m_exportInProgress state is reset regardless of success or failure of export
+            try
             {
-                m_exportDestinations = state as List<ExportDestination>;
-            }
+                // Dereference file bytes to be exported
+                byte[] fileData = state as byte[];
 
-            // Load export destinations from the config file - if nothing is in config file yet,
-            // the default settings (passed in via state) will be used instead
-            LoadSettings();
-
-            List<ExportDestination> destinations;
-
-            lock (m_exportDestinations)
-            {
-                // Cache a local copy of export destinations to reduce lock time,
-                // network share authentication may take some time
-                destinations = new List<ExportDestination>(m_exportDestinations);
-            }
-
-            for (int x = 0; x < destinations.Count; x++)
-            {
-                // Connect to network shares if necessary
-                if (destinations[x].ConnectToShare)
+                if (m_enabled && fileData != null)
                 {
-                    // Attempt connection to external network share
+                    string filename = null;
+                    ExportState[] exportStates = null;
+                    ExportDestination[] destinations;
+
                     try
                     {
-                        OnStatusMessage("Attempting network share authentication for user {0}\\{1} to {2}...", destinations[x].Domain, destinations[x].UserName, destinations[x].Share);
+                        //  Get a temporary file name
+                        filename = Path.GetTempFileName();
 
-                        FilePath.ConnectToNetworkShare(destinations[x].Share, destinations[x].UserName, destinations[x].Password, destinations[x].Domain);
+                        // Export data to the temporary file
+                        File.WriteAllBytes(filename, fileData);
 
-                        OnStatusMessage("Network share authentication to {0} succeeded.", destinations[x].Share);
+                        lock (this)
+                        {
+                            // Cache a local copy of export destinations to reduce lock time
+                            destinations = m_exportDestinations.ToArray();
+                        }
+
+                        // Define a new export state for each export destination
+                        exportStates = new ExportState[destinations.Length];
+
+                        for (int i = 0; i < exportStates.Length; i++)
+                        {
+                            exportStates[i] = new ExportState()
+                            {
+                                SourceFileName = filename,
+                                DestinationFileName = destinations[i].DestinationFile
+                            };
+                        }
+
+                        // Spool threads to attempt copy of export files
+                        for (int i = 0; i < destinations.Length; i++)
+                        {
+                            ThreadPool.QueueUserWorkItem(CopyFileToDestination, exportStates[i]);
+                        }
+
+                        // Wait for exports to complete - even if user specifies to wait indefinitely spooled copy routines
+                        // will eventually return since there is a specified maximum retry count
+                        if (!WaitHandle.WaitAll(exportStates.Select(exportState => exportState.WaitHandle).ToArray(), m_exportTimeout))
+                        {
+                            // Exports failed to complete in specified allowed time, set timeout flag for each export state
+                            Array.ForEach(exportStates, exportState => exportState.Timeout = true);
+                            OnStatusMessage("Timed out attempting export, waited for {0}.", Ticks.FromMilliseconds(m_exportTimeout).ToElapsedTimeString(4));
+                        }
+                    }
+                    catch (ThreadAbortException)
+                    {
+                        throw;  // This exception is normal, we'll just rethrow this back up the try stack
                     }
                     catch (Exception ex)
                     {
-                        // Something unexpected happened during attempt to connect to network share - so we'll report it...
-                        OnStatusMessage("Network share authentication to {0} failed due to exception: {1}", destinations[x].Share, ex.Message);
+                        OnProcessException(new InvalidOperationException(string.Format("Exception encountered during export preparation: {0}", ex.Message), ex));
                     }
-                }
-            }
-
-            m_exportQueue.Start();          // Start export queue.
-            OnInitialized();                // Notify that initialization is complete.
-        }
-
-        // This is all of the needed dispose functionality, but since the class can be re-initialized this is a separate method
-        private void Shutdown()
-        {
-            if (m_exportQueue != null)
-            {
-                m_exportQueue.Stop();
-                m_exportQueue.Clear();
-            }
-
-            if (m_exportDestinations != null)
-            {
-                lock (m_exportDestinations)
-                {
-                    // We'll be nice and disconnect network shares when this class is disposed...
-                    for (int x = 0; x < m_exportDestinations.Count; x++)
+                    finally
                     {
-                        if (m_exportDestinations[x].ConnectToShare)
+                        // Dispose the export state wait handles
+                        if (exportStates != null)
                         {
+                            foreach (ExportState exportState in exportStates)
+                            {
+                                exportState.Dispose();
+                            }
+                        }
+
+                        // Delete the temporary file
+                        if (!string.IsNullOrEmpty(filename))
+                        {
+                            // Although errors are not expected from deleting the temporary file, we report
+                            // any that may occur
                             try
                             {
-                                FilePath.DisconnectFromNetworkShare(m_exportDestinations[x].Share);
+                                if (File.Exists(filename))
+                                    File.Delete(filename);
+                            }
+                            catch (ThreadAbortException)
+                            {
+                                throw;  // This exception is normal, we'll just rethrow this back up the try stack
                             }
                             catch (Exception ex)
                             {
-                                // Something unexpected happened during attempt to disconnect from network share - so we'll report it...
-                                OnStatusMessage("Network share disconnect from {0} failed due to exception: {1}", m_exportDestinations[x].Share, ex.Message);
+                                OnProcessException(new InvalidOperationException(string.Format("Exception encountered while trying to remove temporary file: {0}", ex.Message), ex));
                             }
                         }
                     }
                 }
             }
-        }
-
-        private void WriteExportFiles(byte[] fileData)
-        {
-            string filename;
-            List<ExportDestination> destinations;
-
-            lock (m_exportDestinations)
+            finally
             {
-                // Cache a local copy of export destinations to reduce lock time,
-                // exports may take some time
-                destinations = new List<ExportDestination>(m_exportDestinations);
-            }
-
-            // Loop through each defined export file
-            for (int x = 0; x < destinations.Count; x++)
-            {
-                try
+                // Synchronously reset export progress state
+                lock (this)
                 {
-                    //  Get next export file name
-                    filename = destinations[x].DestinationFile;
-
-                    if (File.Exists(filename))
-                        FilePath.WaitForWriteLock(filename, 1); // Wait for a lock on the file.
-
-                    File.WriteAllBytes(filename, fileData);     // Export data to the file.
-                    m_totalExports++;                           // Track successful exports.
-                }
-                catch (ThreadAbortException)
-                {
-                    throw;  // This exception is normal, we'll just rethrow this back up the try stack
-                }
-                catch (Exception ex)
-                {
-                    // Something unexpected happened during export - we'll report it but keep going, could be
-                    // that export destination was offline (not uncommon when system is being rebooted, etc.)
-                    OnStatusMessage("Exception encountered during export for {0}: {1}", destinations[x].DestinationFile, ex.Message);
+                    m_exportInProgress = false;
                 }
             }
         }
 
-        private void ProcessExceptionHandler(object sender, EventArgs<Exception> e)
+        private void CopyFileToDestination(object state)
         {
-            // Something unexpected happened during export
-            OnStatusMessage("Export exception: {0}", e.Argument.Message);
+            ExportState exportState = null;
+            Exception exportException = null;
+
+            try
+            {
+                exportState = state as ExportState;
+
+                if (exportState != null)
+                {
+                    // File copy may fail if destination is locked, so we setup to retry this operation
+                    // waiting the specified period between attempts
+                    for (int attempt = 0; attempt < 1 + m_maximumRetryAttempts; attempt++)
+                    {
+                        try
+                        {
+                            // Attempt to copy file to destination, overwriting if it already exists
+                            File.Copy(exportState.SourceFileName, exportState.DestinationFileName, true);
+                        }
+                        catch (ThreadAbortException)
+                        {
+                            throw;  // This exception is normal, we'll just rethrow this back up the try stack
+                        }
+                        catch (Exception ex)
+                        {
+                            // Stack exception history to provide full failure log for each export attempt
+                            if (exportException == null)
+                                exportException = new IOException(string.Format("Export attempt {0} failed: {1}", attempt + 1, ex.Message), ex);
+                            else
+                                exportException = new IOException(string.Format("Export attempt {0} failed: {1}", attempt + 1, ex.Message), exportException);
+
+                            // Abort retry attempts if export has timed out or maximum exports have been attempted
+                            if (!m_enabled || exportState.Timeout || attempt >= m_maximumRetryAttempts)
+                                throw exportException;
+                            else
+                                Thread.Sleep(m_retryDelayInterval);
+                        }
+                    }
+
+                    // Track successful exports
+                    m_totalExports++;
+                }
+            }
+            catch (ThreadAbortException)
+            {
+                throw;  // This exception is normal, we'll just rethrow this back up the try stack
+            }
+            catch (Exception ex)
+            {
+                string destinationFileName = null;
+
+                if (exportState != null)
+                    destinationFileName = exportState.DestinationFileName;
+
+                OnProcessException(new InvalidOperationException(string.Format("Exception encountered during export for {0}: {1}", destinationFileName.ToNonNullString("[undefined]"), ex.Message), ex));
+            }
+            finally
+            {
+                // Release waiting thread
+                if (exportState != null && exportState.WaitHandle != null)
+                    exportState.WaitHandle.Set();
+            }
         }
 
         #endregion
