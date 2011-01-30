@@ -17,6 +17,9 @@
 //  09/21/2009 - Pinal C. Patel
 //       Fixed a bug in AddHeader() that was putting the length of the provided buffer in the header 
 //       instead of the length specified in the method parameter.
+//  01/30/2011 - Pinal C. Patel
+//       Fixed a bug in AddHeader() that created an insufficient return buffer when the specified offset 
+//       was non-zero resulting in "out of bounds" exception.
 //
 //*******************************************************************************************************
 
@@ -270,7 +273,7 @@ namespace TVA.Communication
             // The resulting buffer will be at least 4 bytes bigger than the payload.
 
             // Resulting buffer = x bytes for payload marker + 4 bytes for the payload size + The payload
-            byte[] result = new byte[(length - offset) + marker.Length + LengthSegment];
+            byte[] result = new byte[length + marker.Length + LengthSegment];
 
             // First, copy the the payload marker to the buffer.
             Buffer.BlockCopy(marker, 0, result, 0, marker.Length);
