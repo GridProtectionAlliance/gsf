@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  08/20/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  01/30/2011 - Pinal C. Patel
+//       Updated to subscribe to new ProcessException event of MultiDestinationExporter class.
 //
 //******************************************************************************************************
 
@@ -37,13 +39,13 @@ using System.Xml;
 using Microsoft.Win32;
 using TimeSeriesFramework.Adapters;
 using TVA;
+using TVA.Communication;
 using TVA.Configuration;
 using TVA.Data;
 using TVA.IO;
 using TVA.Reflection;
 using TVA.Services;
 using TVA.Units;
-using TVA.Communication;
 
 namespace TimeSeriesFramework
 {
@@ -436,12 +438,14 @@ namespace TimeSeriesFramework
             m_healthExporter = new MultipleDestinationExporter("HealthExporter", Timeout.Infinite);
             m_healthExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Health.txt"), false, "", "", "") });
             m_healthExporter.StatusMessage += StatusMessageHandler;
+            m_healthExporter.ProcessException += ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_healthExporter);
 
             // Create status exporter
             m_statusExporter = new MultipleDestinationExporter("StatusExporter", Timeout.Infinite);
             m_statusExporter.Initialize(new ExportDestination[] { new ExportDestination(FilePath.GetAbsolutePath("Status.txt"), false, "", "", "") });
             m_statusExporter.StatusMessage += StatusMessageHandler;
+            m_statusExporter.ProcessException += ProcessExceptionHandler;
             m_serviceHelper.ServiceComponents.Add(m_statusExporter);
 
             // Define scheduled service processes
@@ -509,6 +513,7 @@ namespace TimeSeriesFramework
                 m_healthExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_healthExporter);
                 m_healthExporter.StatusMessage -= StatusMessageHandler;
+                m_healthExporter.ProcessException -= ProcessExceptionHandler;
                 m_healthExporter.Dispose();
             }
             m_healthExporter = null;
@@ -519,6 +524,7 @@ namespace TimeSeriesFramework
                 m_statusExporter.Enabled = false;
                 m_serviceHelper.ServiceComponents.Remove(m_statusExporter);
                 m_statusExporter.StatusMessage -= StatusMessageHandler;
+                m_statusExporter.ProcessException -= ProcessExceptionHandler;
                 m_statusExporter.Dispose();
             }
             m_statusExporter = null;
