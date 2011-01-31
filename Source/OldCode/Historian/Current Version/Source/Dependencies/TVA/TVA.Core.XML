@@ -20449,6 +20449,16 @@
             Specifies the default value for the <see cref="P:TVA.IO.MultipleDestinationExporter.SettingsCategory"/> property.
             </summary>
         </member>
+        <member name="F:TVA.IO.MultipleDestinationExporter.DefaultMaximumRetryAttempts">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.IO.MultipleDestinationExporter.MaximumRetryAttempts"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.IO.MultipleDestinationExporter.DefaultRetryDelayInterval">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.IO.MultipleDestinationExporter.RetryDelayInterval"/> property.
+            </summary>
+        </member>
         <member name="M:TVA.IO.MultipleDestinationExporter.#ctor">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.IO.MultipleDestinationExporter"/> class.
@@ -20465,28 +20475,13 @@
             Initializes a new instance of the <see cref="T:TVA.IO.MultipleDestinationExporter"/> class.
             </summary>
             <param name="settingsCategory">The config file settings category under which the export destinations are defined.</param>
-            <param name="exportTimeout">The total allowed time in milliseconds for all exports to execute.</param>
+            <param name="exportTimeout">The total allowed time in milliseconds for each export to execute.</param>
         </member>
-        <member name="M:TVA.IO.MultipleDestinationExporter.Initialize">
+        <member name="M:TVA.IO.MultipleDestinationExporter.Dispose(System.Boolean)">
             <summary>
-            Initializes (or reinitializes) <see cref="T:TVA.IO.MultipleDestinationExporter"/> from configuration settings.
+            Releases the unmanaged resources used by the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object and optionally releases the managed resources.
             </summary>
-            <remarks>
-            If not being used as a component (i.e., user creates their own instance of this class), this method
-            must be called in order to initialize exports.  Event if used as a component this method can be
-            called at anytime to reintialize the exports with new configuration information.
-            </remarks>
-        </member>
-        <member name="M:TVA.IO.MultipleDestinationExporter.Initialize(System.Collections.Generic.IEnumerable{TVA.IO.ExportDestination})">
-            <summary>
-            Initializes (or reinitializes) <see cref="T:TVA.IO.MultipleDestinationExporter"/> from configuration settings.
-            </summary>
-            <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
-            <remarks>
-            If not being used as a component (i.e., user creates their own instance of this class), this method
-            must be called in order to initialize exports.  Even if used as a component this method can be
-            called at anytime to reintialize the exports with new configuration information.
-            </remarks>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TVA.IO.MultipleDestinationExporter.BeginInit">
             <summary>
@@ -20520,17 +20515,26 @@
             </summary>
             <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.IO.MultipleDestinationExporter.SettingsCategory"/> has a value of null or empty string.</exception>
         </member>
-        <member name="M:TVA.IO.MultipleDestinationExporter.ExportData(System.String)">
+        <member name="M:TVA.IO.MultipleDestinationExporter.Initialize">
             <summary>
-            Start multiple file export.
+            Initializes (or reinitializes) <see cref="T:TVA.IO.MultipleDestinationExporter"/> from configuration settings.
             </summary>
-            <param name="fileData">Text based data to export to each destination.</param>
+            <remarks>
+            If not being used as a component (i.e., user creates their own instance of this class), this method
+            must be called in order to initialize exports.  Event if used as a component this method can be
+            called at anytime to reintialize the exports with new configuration information.
+            </remarks>
         </member>
-        <member name="M:TVA.IO.MultipleDestinationExporter.ExportData(System.Byte[])">
+        <member name="M:TVA.IO.MultipleDestinationExporter.Initialize(System.Collections.Generic.IEnumerable{TVA.IO.ExportDestination})">
             <summary>
-            Start multiple file export.
+            Initializes (or reinitializes) <see cref="T:TVA.IO.MultipleDestinationExporter"/> from configuration settings.
             </summary>
-            <param name="fileData">Binary data to export to each destination.</param>
+            <param name="defaultDestinations">Provides a default set of export destinations if none exist in configuration settings.</param>
+            <remarks>
+            If not being used as a component (i.e., user creates their own instance of this class), this method
+            must be called in order to initialize exports.  Even if used as a component this method can be
+            called at anytime to reintialize the exports with new configuration information.
+            </remarks>
         </member>
         <member name="M:TVA.IO.MultipleDestinationExporter.OnInitialized">
             <summary>
@@ -20544,11 +20548,31 @@
             <param name="status">Status message to report.</param>
             <param name="args"><see cref="M:System.String.Format(System.String,System.Object[])"/> parameters used for status message.</param>
         </member>
-        <member name="M:TVA.IO.MultipleDestinationExporter.Dispose(System.Boolean)">
+        <member name="M:TVA.IO.MultipleDestinationExporter.OnProcessException(System.Exception)">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object and optionally releases the managed resources.
+            Raises <see cref="E:TVA.IO.MultipleDestinationExporter.ProcessException"/> event.
             </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            <param name="ex">Processing <see cref="T:System.Exception"/>.</param>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportData(System.String)">
+            <summary>
+            Start multiple file export.
+            </summary>
+            <param name="fileData">Text based data to export to each destination.</param>
+            <remarks>
+            This is assumed to be the full content of the file to export. This class does not queue data since
+            the export is not intended to append to an existing file but rather replace an existing one.
+            </remarks>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportData(System.Byte[])">
+            <summary>
+            Start multiple file export.
+            </summary>
+            <param name="fileData">Binary data to export to each destination.</param>
+            <remarks>
+            This is assumed to be the full content of the file to export. This class does not queue data since
+            the export is not intended to append to an existing file but rather replace an existing one.
+            </remarks>
         </member>
         <member name="E:TVA.IO.MultipleDestinationExporter.Initialized">
             <summary>
@@ -20563,13 +20587,34 @@
             <see cref="F:TVA.EventArgs`1.Argument"/> is the status message being reported by the <see cref="T:TVA.IO.MultipleDestinationExporter"/>.
             </remarks>
         </member>
+        <member name="E:TVA.IO.MultipleDestinationExporter.ProcessException">
+            <summary>
+            Event is raised when there is an exception encountered while processing.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the exception that was thrown.
+            </remarks>
+        </member>
         <member name="P:TVA.IO.MultipleDestinationExporter.ExportTimeout">
             <summary>
-            Gets or sets the total allowed time in milliseconds for all exports to execute.
+            Gets or sets the total allowed time in milliseconds for each export to execute.
             </summary>
             <remarks>
             Set to Timeout.Infinite (-1) for no timeout.
             </remarks>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.MaximumRetryAttempts">
+            <summary>
+            Gets or sets the maximum number of retries that will be attempted during an export if the export fails.
+            </summary>
+            <remarks>
+            Total file export attempts = 1 + <see cref="P:TVA.IO.MultipleDestinationExporter.MaximumRetryAttempts"/>. Set to zero to only attempt export once.
+            </remarks>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.RetryDelayInterval">
+            <summary>
+            Gets or sets the interval to wait, in milliseconds, before retrying an export if the export fails.
+            </summary>
         </member>
         <member name="P:TVA.IO.MultipleDestinationExporter.PersistSettings">
             <summary>
@@ -20604,8 +20649,7 @@
             Gets a list of currently defined <see cref="T:TVA.IO.ExportDestination"/>.
             </summary>
             <remarks>
-            Thread-safety Warning: Due to the asynchronous nature of <see cref="T:TVA.IO.MultipleDestinationExporter"/>, a lock must be 
-            obtained on <see cref="P:TVA.IO.MultipleDestinationExporter.ExportDestinations"/> before accessing it.
+            Use the <see cref="M:TVA.IO.MultipleDestinationExporter.Initialize(System.Collections.Generic.IEnumerable{TVA.IO.ExportDestination})"/> method to change the export destination collection.
             </remarks>
         </member>
         <member name="P:TVA.IO.MultipleDestinationExporter.Name">
@@ -20616,6 +20660,52 @@
         <member name="P:TVA.IO.MultipleDestinationExporter.Status">
             <summary>
             Gets the descriptive status of the <see cref="T:TVA.IO.MultipleDestinationExporter"/> object.
+            </summary>
+        </member>
+        <member name="T:TVA.IO.MultipleDestinationExporter.ExportState">
+            <summary>
+            Defines state information for an export.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportState.#ctor">
+            <summary>
+            Creates a new <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportState.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportState.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.MultipleDestinationExporter.ExportState.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.ExportState.SourceFileName">
+            <summary>
+            Gets or sets the source file name for the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.ExportState.DestinationFileName">
+            <summary>
+            Gets or sets the destination file name for the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.ExportState.WaitHandle">
+            <summary>
+            Gets or sets the event wait handle for the <see cref="T:TVA.IO.MultipleDestinationExporter.ExportState"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.MultipleDestinationExporter.ExportState.Timeout">
+            <summary>
+            Gets or sets a flag that is used to determine if export process has timed out.
             </summary>
         </member>
         <member name="T:TVA.IO.FilePath">
@@ -20643,7 +20733,7 @@
             Disconnects the specified network share.
             </summary>
             <param name="sharename">UNC share name to disconnect from.</param>
-            <param name="force">true to force a disconnect; otherwise false.</param>
+            <param name="force"><c>true</c> to force a disconnect; otherwise <c>false</c>.</param>
         </member>
         <member name="M:TVA.IO.FilePath.IsFilePatternMatch(System.String[],System.String,System.Boolean)">
             <summary>
@@ -20651,8 +20741,8 @@
             </summary>
             <param name="fileSpecs">The file specs used for matching the specified file name.</param>
             <param name="fileName">The file name to be tested against the specified file specs for a match.</param>
-            <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
-            <returns>true if the specified file name matches any of the given file specs; otherwise false.</returns>
+            <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
+            <returns><c>true</c> if the specified file name matches any of the given file specs; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.IO.FilePath.IsFilePatternMatch(System.String,System.String,System.Boolean)">
             <summary>
@@ -20660,8 +20750,15 @@
             </summary>
             <param name="fileSpec">The file spec used for matching the specified file name.</param>
             <param name="fileName">The file name to be tested against the specified file spec for a match.</param>
-            <param name="ignoreCase">true to specify a case-insensitive match; otherwise false.</param>
-            <returns>true if the specified file name matches the given file spec; otherwise false.</returns>
+            <param name="ignoreCase"><c>true</c> to specify a case-insensitive match; otherwise <c>false</c>.</param>
+            <returns><c>true</c> if the specified file name matches the given file spec; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TVA.IO.FilePath.IsValidFileName(System.String)">
+            <summary>
+            Determines if the specified file name and path is valid.
+            </summary>
+            <param name="filePath">The file name with optional path to test for validity.</param>
+            <returns><c>true</c> if the specified <paramref name="filePath"/> is a valid name; otherwise <c>false</c>.</returns>
         </member>
         <member name="M:TVA.IO.FilePath.GetFileName(System.String)">
             <summary>
@@ -29035,7 +29132,7 @@
         </member>
         <member name="P:TVA.IO.ExportDestination.FileName">
             <summary>
-            Path and filename of <see cref="P:TVA.IO.ExportDestination.DestinationFile"/>.
+            Path and filename of <see cref="P:TVA.IO.ExportDestination.DestinationFile"/> without drive or server share prefix.
             </summary>
         </member>
         <member name="T:TVA.IO.Checksums.Xor8">

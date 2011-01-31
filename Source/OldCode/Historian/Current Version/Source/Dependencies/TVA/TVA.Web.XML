@@ -136,12 +136,11 @@
               </configSections>
               <categorizedSettings>
                 <securityProvider>
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
                     encrypted="false" />
-                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-                    description="Connection string to be used for connection to the backend security datastore."
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="Topic.Name=*;Queue.Name=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -183,12 +182,11 @@
               </configSections>
               <categorizedSettings>
                 <securityProvider>
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
                     encrypted="false" />
-                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-                    description="Connection string to be used for connection to the backend security datastore."
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
@@ -814,8 +812,75 @@
         </member>
         <member name="T:TVA.Web.Embedded.SecurityService">
             <summary>
-            Embedded WCF service used for securing external facing WCF services.
+            Embedded WCF service that can be used for securing applications using role-based security.
             </summary>
+            <remarks>
+            This list shows the endpoints exposed by <see cref="T:TVA.Web.Embedded.SecurityService"/>:
+            <list type="table">
+                <listheader>
+                    <term>URI</term>
+                    <description>Protocol</description>
+                </listheader>
+                <item>
+                    <term><b>~/SecurityService.svc/soap</b></term>
+                    <description>SOAP 1.1</description>
+                </item>
+                <item>
+                    <term><b>~/SecurityService.svc/rest</b></term>
+                    <description>REST</description>
+                </item>
+            </list>
+            </remarks>
+            <example>
+            This example shows how to consume the REST endpoint of <see cref="T:TVA.Web.Embedded.SecurityService"/> using <a href="http://jquery.com/" target="_blank">jQuery</a>:
+            <code>
+            <![CDATA[
+            <script src="jquery.js" type="text/javascript" />
+            <script language="javascript" type="text/javascript">
+                $(document).ready(function () { login(); });
+            
+                function login() {
+                    $.get("SecurityService.svc/rest/getuserdata", loginCallback);
+                }
+            
+                function loginCallback(data) {
+                    var user = new UserData(data);
+                    if (!user.isAuthenticated) {
+                        alert('Access is denied.');
+                    }
+                    else {
+                        alert('Welcome ' + user.firstName + '!');
+                    }
+                }
+            
+                function UserData(xml) {
+                    this.username = $(xml).find('Username').text();
+                    this.password = $(xml).find('Password').text();
+                    this.firstName = $(xml).find('FirstName').text();
+                    this.lastName = $(xml).find('LastName').text();
+                    this.companyName = $(xml).find('CompanyName').text();
+                    this.phoneNumber = $(xml).find('PhoneNumber').text();
+                    this.emailAddress = $(xml).find('EmailAddress').text();
+                    this.securityQuestion = $(xml).find('SecurityQuestion').text();
+                    this.securityAnswer = $(xml).find('SecurityAnswer').text();
+                    this.passwordChangeDateTime = $(xml).find('PasswordChangeDateTime').text();
+                    this.accountCreatedDateTime = $(xml).find('AccountCreatedDateTime').text();
+                    this.isDefined = $(xml).find('IsDefined').text() === 'true';
+                    this.isExternal = $(xml).find('IsExternal').text() === 'true';
+                    this.isDisabled = $(xml).find('IsDisabled').text() === 'true';
+                    this.isLockedOut = $(xml).find('IsLockedOut').text() === 'true';
+                    this.isAuthenticated = $(xml).find('IsAuthenticated').text() === 'true';
+                    // Retrieve user groups.
+                    this.groups = groups = new Array();
+                    $(xml).find('Group').each(function () { groups.push($(this).text()); });
+                    // Retrieve user roles.
+                    this.roles = roles = new Array();
+                    $(xml).find('Role').each(function () { roles.push($(this).text()); });
+                }
+            </script>
+            ]]>
+            </code>
+            </example>
         </member>
         <member name="T:TVA.Web.Services.SelfHostingService">
             <summary>
@@ -1170,6 +1235,21 @@
             </summary>
             <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
         </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
+            <summary>
+            Resets user password.
+            </summary>
+            <param name="securityAnswer">Answer to user's security question.</param>
+            <returns>true if password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
         <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
             <summary>
             Authenticates a user and caches the security context upon successful authentication for subsequent use.
@@ -1189,6 +1269,21 @@
             Refreshes and returns information about the current user. 
             </summary>
             <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.ResetPassword(System.String)">
+            <summary>
+            Resets user password.
+            </summary>
+            <param name="securityAnswer">Answer to user's security question.</param>
+            <returns>true if password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityService.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
         </member>
         <member name="T:TVA.Web.Embedded.SecurityPortal">
             <summary>
@@ -1243,9 +1338,27 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.LogoImage">
+            <summary>
+            LogoImage control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.HelpLink">
             <summary>
             HelpLink control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.HelpImage">
+            <summary>
+            HelpImage control.
             </summary>
             <remarks>
             Auto-generated field.
@@ -2529,6 +2642,11 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
             <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         </member>
+        <member name="M:TVA.Web.Embedded.SecurityServiceHostFactory.GetAuthenticationSchemes(System.Uri)">
+            <summary>
+            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+            </summary>
+        </member>
         <member name="T:TVA.Web.SecurityModule">
             <summary>
             Represents an <see cref="T:System.Web.IHttpModule">HTTP module</see> that can be used to enable site-wide role-based security.
@@ -2544,12 +2662,11 @@
               </configSections>
               <categorizedSettings>
                 <securityProvider>
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured as defined in the backend security datastore."
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
                     encrypted="false" />
-                  <add name="ConnectionString" value="Primary={Server=DB1;Database=AppSec;Trusted_Connection=True};Backup={Server=DB2;Database=AppSec;Trusted_Connection=True}"
-                    description="Connection string to be used for connection to the backend security datastore."
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
                     encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.SqlSecurityProvider, TVA.Security"
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
                     description="The type to be used for enforcing security." encrypted="false" />
                   <add name="IncludedResources" value="*/*.*=*" description="Semicolon delimited list of resources to be secured along with role names."
                     encrypted="false" />
