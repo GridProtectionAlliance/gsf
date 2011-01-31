@@ -688,7 +688,7 @@ namespace TVA.Web.Embedded
                     if (provider.ResetPassword(ResetPasswordSecurityAnswer.Text))
                     {
                         // Password reset was successful.
-                        ShowMessage("Your new password has been emailed to you.", false);
+                        ShowMessage("Password reset request has been processed.", false);
                     }
                     else
                     {
