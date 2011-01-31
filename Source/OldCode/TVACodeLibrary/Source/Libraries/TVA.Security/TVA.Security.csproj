@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="AdoSecurityProvider.cs" />
     <Compile Include="LdapSecurityProvider.cs" />
+    <Compile Include="Radius\NamespaceDoc.cs" />
     <Compile Include="Radius\RadiusClient.cs" />
     <Compile Include="Radius\RadiusPacket.cs" />
     <Compile Include="Radius\RadiusPacketAttribute.cs" />
