@@ -409,6 +409,7 @@ namespace TVA.Web.Embedded
                 LoginButton.SetSubmitOnce();
                 LoginPanel.DefaultButton = LoginButton.ID;
                 ForgotPassword.NavigateUrl = GetRedirectUrl(PasswordResetStatusCode);
+                ChangePassword.NavigateUrl = GetRedirectUrl(PasswordChangeStatusCode);
                 if (!Page.IsPostBack)
                 {
                     LoginUsername.Text = GetSavedUsername();

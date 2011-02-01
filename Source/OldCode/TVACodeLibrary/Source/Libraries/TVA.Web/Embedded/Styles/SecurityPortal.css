@@ -15,11 +15,15 @@
 //*******************************************************************************************************
 */
 
-body, input, a:link, a:visited, a:hover
+body, input
 {
     color: #3e3e3e;
     font-family: Trebuchet MS, Tahoma, Arial;
     font-size: 10pt;
+}
+a:link, a:visited, a:hover
+{
+    color: inherit;
 }
 a:link, a:visited
 {
@@ -62,11 +66,6 @@ a:hover
 {
     color: #ffffff;
 }
-.Images
-{
-    padding: 5px;
-    border: none;
-}
 .PanelTitle
 {
     color: #000000;
@@ -82,6 +81,15 @@ a:hover
 .InformationMessage
 {
     color: #0000ff;
+}
+.Images
+{
+    padding: 5px;
+    border: none;
+}
+.SmallText
+{
+    font-size: 8pt;
 }
 .TextInputHalf
 {

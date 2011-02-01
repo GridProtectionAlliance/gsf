@@ -74,7 +74,8 @@
             </tr>
             <tr>
                 <td>
-                    <asp:CheckBox runat="server" ID="RememberUsername" Text="Remember username" TabIndex="-1" />
+                    <asp:CheckBox runat="server" ID="RememberUsername" Text="Remember username" TabIndex="-1"
+                        CssClass="SmallText" />
                 </td>
             </tr>
             <tr>
@@ -90,7 +91,18 @@
             </tr>
             <tr>
                 <td>
-                    <asp:HyperLink runat="server" ID="ForgotPassword" TabIndex="-1">Forgot password?</asp:HyperLink>
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>
+                                <asp:HyperLink runat="server" ID="ForgotPassword" TabIndex="-1" CssClass="SmallText"
+                                    ToolTip="Forgot your password">Forgot password?</asp:HyperLink>
+                            </td>
+                            <td align="right">
+                                <asp:HyperLink runat="server" ID="ChangePassword" TabIndex="-1" CssClass="SmallText"
+                                    ToolTip="Change your password">Change password?</asp:HyperLink>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
             <tr>
