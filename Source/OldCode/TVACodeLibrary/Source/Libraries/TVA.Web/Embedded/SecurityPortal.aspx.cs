@@ -732,8 +732,10 @@ namespace TVA.Web.Embedded
         {
             if (Request[ReturnUrlRequestKey] != null)
                 return Request[ReturnUrlRequestKey];
-            else
+            else if (Request.UrlReferrer != null)
                 return Request.UrlReferrer.AbsolutePath;
+            else
+                return Request.Url.AbsolutePath;
         }
 
         private string GetRedirectUrl(string newStatusCode)
