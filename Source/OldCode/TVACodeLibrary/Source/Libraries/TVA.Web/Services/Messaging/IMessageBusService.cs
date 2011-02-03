@@ -11,10 +11,13 @@
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //  10/26/2010 - Pinal C. Patel
-//       Added management methods GetClients(), GetQueues() and GetTopics().
+//       Added management operations GetClients(), GetQueues() and GetTopics().
 //  10/29/2010 - Pinal C. Patel
 //       Made all operations two-way (IsOneWay = false, the default) so OperationContext.RequestContext 
 //       is available when operations are invoked so security can be applied to them.
+//  02/03/2011 - Pinal C. Patel
+//       Added GetLatestMessage() operation that can be used to retrieve the latest message published 
+//       to the subscribers of a topic.
 //
 //*******************************************************************************************************
 
@@ -257,7 +260,7 @@ namespace TVA.Web.Services.Messaging
         /// <summary>
         /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
-        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
+        /// <param name="request">The <see cref="RegistrationRequest"/> used when registering.</param>
         [OperationContract()]
         void Unregister(RegistrationRequest request);
 
@@ -267,6 +270,14 @@ namespace TVA.Web.Services.Messaging
         /// <param name="message">The <see cref="Message"/> that is to be distributed.</param>
         [OperationContract()]
         void Publish(Message message);
+
+        /// <summary>
+        /// Gets the latest <see cref="Message"/> distributed to the subscribers of the specified <paramref name="topic"/>.
+        /// </summary>
+        /// <param name="topic">The topic <see cref="RegistrationRequest"/> used when registering.</param>
+        /// <returns>The latest <see cref="Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
+        [OperationContract()]
+        Message GetLatestMessage(RegistrationRequest topic);
 
         /// <summary>
         /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.

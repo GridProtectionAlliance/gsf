@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/19/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  02/03/2011 - Pinal C. Patel
+//       Added LatestMessage field to save the very latest message distributed out to subscribers.
 //
 //*******************************************************************************************************
 
@@ -231,8 +233,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
 using System.Threading;
 
@@ -287,6 +287,11 @@ namespace TVA.Web.Services.Messaging
         public List<ClientInfo> Consumers;
 
         /// <summary>
+        /// Gets or sets the latest <see cref="Message"/> distributed to the subscribers.
+        /// </summary>
+        public Message LatestMessage;
+
+        /// <summary>
         /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Producers"/>.
         /// </summary>
         public readonly ReaderWriterLockSlim ProducersLock;
@@ -294,7 +299,7 @@ namespace TVA.Web.Services.Messaging
         /// <summary>
         /// Gets the <see cref="ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="Consumers"/>.
         /// </summary>
-        public readonly ReaderWriterLockSlim ConsumersLock;      
+        public readonly ReaderWriterLockSlim ConsumersLock;
 
         #endregion
 

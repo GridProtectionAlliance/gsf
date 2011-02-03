@@ -11,7 +11,7 @@
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
 //  10/26/2010 - Pinal C. Patel
-//       Added management methods GetClients(), GetQueues() and GetTopics().
+//       Added management operations GetClients(), GetQueues() and GetTopics().
 //  11/23/2010 - Pinal C. Patel
 //       Added new BufferThreshold and ProcessingMode properties.
 //       Enhanced thread synchronization using ReaderWriterLockSlim for better performance.
@@ -19,6 +19,9 @@
 //       Updated the text returned by Status property.
 //  01/07/2011 - Pinal C. Patel
 //       Fixed initialization bug that prevented the service from functioning when hosted inside ASP.NET.
+//  02/03/2011 - Pinal C. Patel
+//       Added GetLatestMessage() operation that can be used to retrieve the latest message published 
+//       to the subscribers of a topic.
 //
 //*******************************************************************************************************
 
@@ -962,7 +965,7 @@ namespace TVA.Web.Services.Messaging
             else
             {
                 // Unsupported
-                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", request.MessageType));
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported by this operation", request.MessageType));
             }
 
             // Update registration information.
@@ -980,7 +983,7 @@ namespace TVA.Web.Services.Messaging
         /// <summary>
         /// Unregisters a previous registration with the <see cref="MessageBusService"/> to produce or consume <see cref="Message"/>s
         /// </summary>
-        /// <param name="request">The original <see cref="RegistrationRequest"/> used when registering.</param>
+        /// <param name="request">The <see cref="RegistrationRequest"/> used when registering.</param>
         public virtual void Unregister(RegistrationRequest request)
         {
             // Retrieve registration information.
@@ -1014,7 +1017,7 @@ namespace TVA.Web.Services.Messaging
             else
             {
                 // Unsupported
-                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", request.MessageType));
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported by this operation", request.MessageType));
             }
 
             // Update registration information.
@@ -1079,7 +1082,7 @@ namespace TVA.Web.Services.Messaging
             else
             {
                 // Unsupported
-                throw new NotSupportedException(string.Format("Message type '{0}' is not supported", message.Type));
+                throw new NotSupportedException(string.Format("Message type '{0}' is not supported by this operation", message.Type));
             }
 
             // Queue message for distribution.
@@ -1091,10 +1094,48 @@ namespace TVA.Web.Services.Messaging
         }
 
         /// <summary>
+        /// Gets the latest <see cref="Message"/> distributed to the subscribers of the specified <paramref name="topic"/>.
+        /// </summary>
+        /// <param name="topic">The topic <see cref="RegistrationRequest"/> used when registering.</param>
+        /// <returns>The latest <see cref="Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
+        public virtual Message GetLatestMessage(RegistrationRequest topic)
+        {
+            // Retrieve registration information.
+            RegistrationInfo registration;
+            m_topicsLock.EnterReadLock();
+            try
+            {
+                m_topics.TryGetValue(topic.MessageName, out registration);
+            }
+            finally
+            {
+                m_topicsLock.ExitReadLock();
+            }
+
+            // Retrieve the latest message.
+            if (registration != null)
+            {
+                lock (registration.Consumers)
+                {
+                    if (registration.Consumers.Exists(consumer => consumer.SessionId == OperationContext.Current.SessionId))
+                        // Requestor has subscribed to the topic.
+                        return registration.LatestMessage;
+                    else
+                        // Requestor didn't subscribe to the topic.
+                        return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Gets a list of all clients connected to the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="ClientInfo"/> objects.</returns>
-        public ICollection<ClientInfo> GetClients()
+        public virtual ICollection<ClientInfo> GetClients()
         {
             return m_clients.Values;
         }
@@ -1103,7 +1144,7 @@ namespace TVA.Web.Services.Messaging
         /// Gets a list of all <see cref="MessageType.Queue"/>s registered on the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        public ICollection<RegistrationInfo> GetQueues()
+        public virtual ICollection<RegistrationInfo> GetQueues()
         {
             return m_queues.Values;
         }
@@ -1112,7 +1153,7 @@ namespace TVA.Web.Services.Messaging
         /// Gets a list of all <see cref="MessageType.Topic"/>s registered on the <see cref="MessageBusService"/>.
         /// </summary>
         /// <returns>An <see cref="ICollection{T}"/> of <see cref="RegistrationInfo"/> objects.</returns>
-        public ICollection<RegistrationInfo> GetTopics()
+        public virtual ICollection<RegistrationInfo> GetTopics()
         {
             return m_topics.Values;
         }
@@ -1212,34 +1253,50 @@ namespace TVA.Web.Services.Messaging
         private void PublishMessages(PublishContext[] contexts)
         {
             // Process distribution of all the messages.
+            int requeCursor = 0;
             foreach (PublishContext context in contexts)
             {
-                // Distribute message to all subscribed clients.
                 lock (context.Registration.Consumers)
                 {
-                    foreach (ClientInfo client in context.Registration.Consumers)
+                    if (context.Registration.Consumers.Count > 0)
                     {
-                        try
+                        // Distribute message to all subscribed clients.
+                        foreach (ClientInfo client in context.Registration.Consumers)
                         {
-                            client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().ProcessMessage(context.Message);
-                            Interlocked.Increment(ref client.MessagesConsumed);
-
-                            if (context.Message.Type == MessageType.Queue)
-                                break;
-                        }
-                        catch
-                        {
-                            // Disconnect the subscriber if an error is encountered during transmission.
                             try
                             {
-                                if (client.OperationContext.Channel.State == CommunicationState.Opened)
-                                    client.OperationContext.Channel.Close();
+                                client.OperationContext.GetCallbackChannel<IMessageBusServiceCallback>().ProcessMessage(context.Message);
+                                Interlocked.Increment(ref client.MessagesConsumed);
+
+                                if (context.Message.Type == MessageType.Queue)
+                                    // Queue messages gets delivered to the first client only.
+                                    break;
                             }
-                            catch { }
+                            catch
+                            {
+                                // Disconnect the subscriber if an error is encountered during transmission.
+                                try
+                                {
+                                    if (client.OperationContext.Channel.State == CommunicationState.Opened)
+                                        client.OperationContext.Channel.Close();
+                                }
+                                catch { }
+                            }
                         }
+                        PublishComplete(context);
+                    }
+                    else
+                    {
+                        // No clients are subscribed to the queue or topic.
+                        if (context.Message.Type == MessageType.Queue)
+                            // Preserve queue messages since their delivery is guaranteed.
+                            m_publishQueue.Insert(requeCursor++, context);
+                        else
+                            // Discard topic messages since their delivery is not guaranteed.
+                            PublishComplete(context);
                     }
                 }
-                Interlocked.Increment(ref context.Registration.MessagesProcessed);
+
             }
 
             // Keep message buffer in check if specified.
@@ -1250,6 +1307,15 @@ namespace TVA.Web.Services.Messaging
                 m_publishQueue.RemoveRange(0, discardCount);
                 Interlocked.Add(ref m_discardedMessages, discardCount);
             }
+        }
+
+        private void PublishComplete(PublishContext context)
+        {
+            // Save the message for on-demand request of subscribers.
+            context.Registration.LatestMessage = context.Message;
+
+            // Update the count for the number of messages processed.
+            Interlocked.Increment(ref context.Registration.MessagesProcessed);
         }
 
         private void DisconnectClient(string clientId)

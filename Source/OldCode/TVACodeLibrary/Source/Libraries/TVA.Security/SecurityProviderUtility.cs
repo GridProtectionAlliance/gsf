@@ -16,6 +16,9 @@
 //  01/24/2011 - Pinal C. Patel
 //       Updated the logic in IsResourceAccessible() to stop looking at other included resources once a 
 //       match is found for the resource being evaluated.
+//  02/03/2011 - Pinal C. Patel
+//       Updated the logic in IsResourceSecurable() and IsResourceAccessible() to allow for multiple
+//       resources to be specified delimited by ',' with the same role requirements in the config file.
 //
 //*******************************************************************************************************
 
@@ -331,8 +334,11 @@ namespace TVA.Security
             // Check if resource is included explicitly.
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
             {
-                if (IsRegexMatch(inclusion.Key, resource))
-                    return true;
+                foreach (string item in inclusion.Key.Split(','))
+                {
+                    if (IsRegexMatch(item.Trim(), resource))
+                        return true;
+                }
             }
 
             return false;
@@ -349,8 +355,11 @@ namespace TVA.Security
             // Check if the resource has a role-based access restriction on it.
             foreach (KeyValuePair<string, string> inclusion in s_includedResources)
             {
-                if (IsRegexMatch(inclusion.Key, resource))
-                    return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+                foreach (string item in inclusion.Key.Split(','))
+                {
+                    if (IsRegexMatch(item.Trim(), resource))
+                        return Thread.CurrentPrincipal.IsInRole(inclusion.Value);
+                }
             }
 
             return false;
