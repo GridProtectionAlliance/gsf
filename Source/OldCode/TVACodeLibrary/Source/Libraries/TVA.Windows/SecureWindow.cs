@@ -334,7 +334,7 @@ namespace TVA.Windows
                 return;
 
             // Setup thread principal to current windows principal.
-            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
+            if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is TVA.Security.SecurityPrincipal))
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
             // Setup the security provider for role-based security.
