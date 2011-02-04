@@ -44,7 +44,13 @@
 **       checked-in only if the entire build completes successfully.
 **  11/02/2010 - Pinal C. Patel
 **       Added missing logic in ArchiveBuildOutput target so binary and install archive files are 
-**       created only if there are files to be added to these arechives.
+**       created only if there are files to be added to these archives.
+**  12/25/2010 - Pinal C. Patel
+**       Updated the versioning logic to not use the changeset for revision number since the maximum
+**       value allowed for revision number is 65534.
+**  01/08/2011 - Pinal C. Patel
+**       Made TfsServer a must-override property.
+**       Allowed for customization of versioning scheme by consuming script.
 **
 *******************************************************************************************************
 -->
@@ -83,6 +89,14 @@
     <BuildInteractive></BuildInteractive>
     <!-- File containing the build version. -->
     <VersionFile></VersionFile>
+    <!-- Versioning scheme major number change type. -->
+    <VersionMajorChange></VersionMajorChange>
+    <!-- Versioning scheme minor number change type. -->
+    <VersionMinorChange></VersionMinorChange>
+    <!-- Versioning scheme build number change type. -->
+    <VersionBuildChange></VersionBuildChange>
+    <!-- Versioning scheme revision number change type. -->
+    <VersionRevisionChange></VersionRevisionChange>
     <!-- Version of the source code to build. -->
     <SourceVersion></SourceVersion>
     <!-- Paths to Team Foundation Client. -->
@@ -107,21 +121,21 @@
 
   <PropertyGroup>
     <!--
-        InitializeBuild
-          PrepareSettings    (Before > Core > After)
-          CheckEnvironment   (Before > Core > After)
-          CreateWorkspace    (Before > Core > After)
-        CompileBuild
-          PopulateWorkspace  (Before > Core > After)
-          VersionSource      (Before > Core > After)
-          BuildProjects      (Before > Core > After)
-          ExecuteUnitTests   (Before > Core > After)
-        FinalizeBuild
-          LabelBuild         (Before > Core > After)
-          CleanBuild         (Before > Core > After)
-          DeployBuild        (Before > Core > After)
-          DeleteWorkspace    (Before > Core > After)
-   -->
+         InitializeBuild
+           PrepareSettings    (Before > Core > After)
+           CheckEnvironment   (Before > Core > After)
+           CreateWorkspace    (Before > Core > After)
+         CompileBuild
+           PopulateWorkspace  (Before > Core > After)
+           VersionSource      (Before > Core > After)
+           BuildProjects      (Before > Core > After)
+           ExecuteUnitTests   (Before > Core > After)
+         FinalizeBuild
+           LabelBuild         (Before > Core > After)
+           CleanBuild         (Before > Core > After)
+           DeployBuild        (Before > Core > After)
+           DeleteWorkspace    (Before > Core > After)
+    -->
     <InitializeBuildDependsOn>
       PrepareSettings;
       CheckEnvironment;
@@ -259,8 +273,8 @@
     <!-- Assign default values to unassigned properties. -->
     <Message Text="Preparing settings for build..."/>
     <Error Condition="'$(ProjectName)' == ''" Text="ProjectName property must be set."/>
+    <Error Condition="'$(TfsServer)' == ''" Text="TfsServer property must be set."/>
     <PropertyGroup>
-      <TfsServer Condition="'$(TfsServer)' == ''">https://tfs.codeplex.com/tfs/tfs05</TfsServer>
       <ServerFolder Condition="'$(ServerFolder)' == ''">$/$(ProjectName)/Main</ServerFolder>
       <LocalFolder Condition="'$(LocalFolder)' == ''">$(TEMP)\MSBuild\$(ProjectName)</LocalFolder>
       <BuildFlavor Condition="'$(BuildFlavor)' == ''">Release</BuildFlavor>
@@ -326,19 +340,14 @@
   <Target Name="CheckForChanges" Condition="'$(ForceBuild)' != 'true'">
     <!-- Check for new changes since the last build. -->
     <Message Text="Checking for changes..."/>
-    <Attrib Files="$(VersionFile)" ReadOnly="false"/>
-    <Version VersionFile="$(VersionFile)">
-      <Output TaskParameter="Revision" PropertyName="Changeset"/>
-    </Version>
-    <Attrib Files="$(VersionFile)" ReadOnly="true"/>
-    <PropertyGroup>
-      <Changeset Condition="'$(Changeset)' &lt; '1'">1</Changeset>
-    </PropertyGroup>
-    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="C$(Changeset)~">
+    <ReadLinesFromFile File="$(VersionFile)">
+      <Output TaskParameter="Lines" ItemName="VersionNumber"/>
+    </ReadLinesFromFile>
+    <TfsHistory TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)" VersionSpec="L$(ProjectName)_v@(VersionNumber)~T" ContinueOnError="true">
       <Output TaskParameter="TotalChanges" PropertyName="TotalChanges"/>
     </TfsHistory>
     <PropertyGroup>
-      <ForceBuild Condition="'$(TotalChanges)' &gt; '2'">true</ForceBuild>
+      <ForceBuild Condition="'$(TotalChanges)' == '-1' Or '$(TotalChanges)' &gt; '1'">true</ForceBuild>
     </PropertyGroup>
     <Message Text="Build is skipped - No new changes." Condition="'$(ForceBuild)' != 'true'"/>
   </Target>
@@ -352,14 +361,12 @@
     <Message Text="Versioning source code..."/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22$(VersionFile)%22"/>
     <Exec Command="%22$(TfsClient)%22 checkout /noprompt %22%(FilesToVersion.FullPath)%22"/>
-    <Version VersionFile="$(VersionFile)">
+    <Version VersionFile="$(VersionFile)" Major="$(VersionMajorChange)" Minor="$(VersionMinorChange)" BuildType="$(VersionBuildChange)" RevisionType="$(VersionRevisionChange)">
       <Output TaskParameter="Major" PropertyName="Major"/>
       <Output TaskParameter="Minor" PropertyName="Minor"/>
       <Output TaskParameter="Build" PropertyName="Build"/>
+      <Output TaskParameter="Revision" PropertyName="Revision"/>
     </Version>
-    <TfsVersion TfsClient="$(TfsClient)" LocalPath="$(LocalFolder)">
-      <Output TaskParameter="Changeset" PropertyName="Revision"/>
-    </TfsVersion>
     <FileUpdate Files="$(VersionFile)" Regex="(\d+)\.(\d+)\.(\d+)\.(\d+)" ReplacementText="$1.$2.$3.$(Revision)"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' &lt;= '2'"/>
     <FileUpdate Files="%(FilesToVersion.FullPath)" Regex="%(FilesToVersion.VersionRegex)" ReplacementText="${BeforeVersion}$(Major).$(Minor).$(Build)${AfterVersion}" Condition="'%(FilesToVersion.VersionPrecision)' == '3'"/>
@@ -406,7 +413,7 @@
   <Target Name="CoreLabelBuild" Condition="'$(BuildLabel)' != ''">
     <!-- Apply label for the current build. -->
     <Message Text="Labeling build $(BuildLabel)..."/>
-    <Exec Command="%22$(TfsClient)%22 label /comment:%22Label applied for build $(BuildLabel).%22 %22$(BuildLabel)%22 %22$(LocalFolder)%22"/>
+    <Exec Command="%22$(TfsClient)%22 label %22$(BuildLabel)%22 %22$(LocalFolder)%22 /comment:%22Label applied for build $(BuildLabel).%22 /recursive"/>
   </Target>
 
   <Target Name="AfterLabelBuild"/>

@@ -37,6 +37,9 @@
 **       Fixed a typo in ProjectsToBuild list initialization that was preventing signed assemblies 
 **       from being created.
 **       Enabled version change in AssemblyFileVersion attribute for all of the versioned projects.
+**  02/04/2011 - Pinal C. Patel
+**       Updated to set the TftServer property.
+**       Updated to set versioning scheme settings.
 **
 *******************************************************************************************************
 -->
@@ -49,6 +52,9 @@
     <PropertyGroup>
        <!--Must-override setting(s).--> 
       <ProjectName>TVACodeLibrary</ProjectName>
+      <TfsServer>https://tfs.codeplex.com/tfs/tfs05</TfsServer>
+      <!-- Versioning scheme settings. -->
+      <VersionRevisionChange>Increment</VersionRevisionChange>
     </PropertyGroup>
   </Target>
 
