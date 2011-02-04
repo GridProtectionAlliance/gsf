@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -16,6 +17,8 @@
 //       Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  02/04/2011 - J. Ritchie Carroll
+//       Added WindowsAPI methods used to define automation of service failure actions.
 //
 //*******************************************************************************************************
 
@@ -235,18 +238,313 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Original Name    : Verifide.ServiceUtils.dll
+// Description		: Extension to System.ServiceProcess.ServiceInstallerEx
+//					  to enable configuration of advanced options
+// Date				: 1/14/04
+//
+//	Copyright (C) 2004 Narendra (Neil) Baliga
+//
+//	This library is free software; you can redistribute it and/or
+//	modify it as you wish. It is distributed in the hope that it will 
+//	be useful,but WITHOUT ANY WARRANTY; without even the implied 
+//	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+//
+/////////////////////////////////////////////////////////////////////////////
+
+#endregion
+
 using System;
 using System.Runtime.InteropServices;
 
 namespace TVA.Interop
 {
     /// <summary>
-    /// Defines common Windows API functions.
+    /// Defines common Windows API functions and structures.
     /// </summary>
     public static class WindowsApi
     {
+        /// <summary>
+        /// Win32 SERVICE_DESCRIPTION structure.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// A description of NULL indicates no service description exists. The service description is NULL when the service is created.
+        /// </para>
+        /// <para>
+        /// The description is simply a comment that explains the purpose of the service. For example, for the DHCP service,
+        /// you could use the description "Provides internet addresses for computer on your network."
+        /// </para>
+        /// </remarks>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SERVICE_DESCRIPTION
+        {
+            /// <summary>
+            /// The description of the service.
+            /// </summary>
+            /// <remarks>
+            /// If this member is NULL, the description remains unchanged. If this value is an empty string (""), the current description is deleted.
+            /// </remarks>
+            public string lpDescription;
+        }
+
+        /// <summary>
+        /// Win32 SC_ACTION_TYPE enumeration.
+        /// </summary>
+        public enum SC_ACTION_TYPE : uint
+        {
+            /// <summary>
+            /// No action.
+            /// </summary>
+            SC_ACTION_NONE = 0x00000000,
+            /// <summary>
+            /// Restart the service.
+            /// </summary>
+            SC_ACTION_RESTART = 0x00000001,
+            /// <summary>
+            /// Reboot the computer.
+            /// </summary>
+            SC_ACTION_REBOOT = 0x00000002,
+            /// <summary>
+            /// Run a command.
+            /// </summary>
+            SC_ACTION_RUN_COMMAND = 0x00000003
+        }
+
+        /// <summary>
+        /// Win32 SC_ACTION structure.
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SC_ACTION
+        {
+            /// <summary>
+            /// The <see cref="SC_ACTION_TYPE"/> to be performed. 
+            /// </summary>
+            [MarshalAs(UnmanagedType.U4)]
+            public SC_ACTION_TYPE Type;
+            /// <summary>
+            /// The time to wait before performing the specified action, in milliseconds.
+            /// </summary>
+            [MarshalAs(UnmanagedType.U4)]
+            public int Delay;
+        }
+
+        /// <summary>
+        /// Win32 SERVICE_FAILURE_ACTIONS structure.
+        /// </summary>
+        /// <remarks>
+        /// Represents the action the service controller should take on each failure of a service. A service is considered failed
+        /// when it terminates without reporting a status of SERVICE_STOPPED to the service controller.
+        /// </remarks>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SERVICE_FAILURE_ACTIONS
+        {
+            /// <summary>
+            /// The time after which to reset the failure count to zero if there are no failures, in seconds. Specify INFINITE to indicate that this value should never be reset.
+            /// </summary>
+            [MarshalAs(UnmanagedType.U4)]
+            public int dwResetPeriod;
+            /// <summary>
+            /// The message to be broadcast to server users before rebooting in response to the SC_ACTION_REBOOT service controller action. 
+            /// </summary>
+            /// <remarks>
+            /// If this value is NULL, the reboot message is unchanged. If the value is an empty string (""), the reboot message is deleted and no message is broadcast.
+            /// </remarks>
+            public string lpRebootMsg;
+            /// <summary>
+            /// The command line of the process for the CreateProcess function to execute in response to the SC_ACTION_RUN_COMMAND service controller action. This process runs under the same account as the service. 
+            /// </summary>
+            /// <remarks>
+            /// If this value is NULL, the command is unchanged. If the value is an empty string (""), the command is deleted and no program is run when the service fails.
+            /// </remarks>
+            public string lpCommand;
+            /// <summary>
+            /// The number of elements in the lpsaActions array. 
+            /// </summary>
+            /// <remarks>
+            /// If this value is 0, but lpsaActions is not NULL, the reset period and array of failure actions are deleted. 
+            /// </remarks>
+            [MarshalAs(UnmanagedType.U4)]
+            public int cActions;
+            /// <summary>
+            /// A pointer to an array of SC_ACTION structures. 
+            /// </summary>
+            /// <remarks>
+            /// If this value is NULL, the cActions and dwResetPeriod members are ignored. 
+            /// </remarks>
+            public IntPtr lpsaActions;
+        }
+
+        /// <summary>
+        /// Win32 SERVICE_FAILURE_ACTIONS_FLAG structure.
+        /// </summary>
+        /// <remarks>
+        /// Contains the failure actions flag setting of a service. This setting determines when failure actions are to be executed.
+        /// </remarks>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SERVICE_FAILURE_ACTIONS_FLAG
+        {
+            /// <summary>
+            /// If this member is TRUE and the service has configured failure actions, the failure actions are queued if the service process 
+            /// terminates without reporting a status of SERVICE_STOPPED or if it enters the SERVICE_STOPPED state but the dwWin32ExitCode member
+            /// of the SERVICE_STATUS structure is not ERROR_SUCCESS (0). If this member is FALSE and the service has configured failure actions,
+            /// the failure actions are queued only if the service terminates without reporting a status of SERVICE_STOPPED.
+            /// </summary>
+            public bool bFailureAction;
+        }
+
+        /// <summary>
+        /// Win32 LUID_AND_ATTRIBUTES structure.
+        /// </summary>
+        /// <remarks>
+        /// An LUID_AND_ATTRIBUTES structure can represent an LUID whose attributes change frequently, 
+        /// such as when the LUID is used to represent privileges in the PRIVILEGE_SET structure. 
+        /// Privileges are represented by LUIDs and have attributes indicating whether they are currently enabled or disabled. 
+        /// </remarks>
+        [StructLayout(LayoutKind.Sequential)]
+        public struct LUID_AND_ATTRIBUTES
+        {
+            /// <summary>
+            /// Specifies an LUID value. 
+            /// </summary>
+            public long Luid;
+            /// <summary>
+            /// Specifies attributes of the LUID. This value contains up to 32 one-bit flags. Its meaning is dependent on the definition and use of the LUID.
+            /// </summary>
+            public int Attributes;
+        }
+
+        /// <summary>
+        /// Win32 TOKEN_PRIVILEGES structure.
+        /// </summary>
+        /// <remarks>
+        /// The TOKEN_PRIVILEGES structure contains information about a set of privileges for an access token. 
+        /// </remarks>
+        // The Pack attribute specified here is important. We are in essence cheating here because
+        // the Privileges field is actually a variable size array of structs.  We use the Pack=1
+        // to align the Privileges field exactly after the PrivilegeCount field when marshalling
+        // this struct to Win32.
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct TOKEN_PRIVILEGES
+        {
+            /// <summary>
+            /// This must be set to the number of entries in the Privileges array. 
+            /// </summary>
+            public int PrivilegeCount;
+            /// <summary>
+            /// Specifies an array of LUID_AND_ATTRIBUTES structures. Each structure contains the LUID and attributes of a privilege.
+            /// </summary>
+            public LUID_AND_ATTRIBUTES Privileges;
+        }
+
+        /// <summary>
+        /// Win32 OpenSCManager function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern IntPtr OpenSCManager(string lpMachineName, string lpDatabaseName, int dwDesiredAccess);
+
+        /// <summary>
+        /// Win32 OpenService function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern IntPtr OpenService(IntPtr hSCManager, string lpServiceName, int dwDesiredAccess);
+
+        /// <summary>
+        /// Win32 LockServiceDatabase function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern IntPtr LockServiceDatabase(IntPtr hSCManager);
+
+        /// <summary>
+        /// Win32 ChangeServiceConfig2 function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool ChangeServiceConfig2(IntPtr hService, int dwInfoLevel, IntPtr lpInfo);
+
+        /// <summary>
+        /// Win32 ChangeServiceConfig2 function mapped as ChangeServiceDescription to handle <see cref="SERVICE_DESCRIPTION"/> updates.
+        /// </summary>
+        [DllImport("advapi32.dll", EntryPoint = "ChangeServiceConfig2")]
+        public static extern bool ChangeServiceDescription(IntPtr hService, int dwInfoLevel, [MarshalAs(UnmanagedType.Struct)] ref SERVICE_DESCRIPTION lpInfo);
+
+        /// <summary>
+        /// Win32 ChangeServiceConfig2 function mapped as ChangeServiceFailureActionFlag to handle <see cref="SERVICE_FAILURE_ACTIONS_FLAG"/> updates.
+        /// </summary>
+        [DllImport("advapi32.dll", EntryPoint = "ChangeServiceConfig2")]
+        public static extern bool ChangeServiceFailureActionFlag(IntPtr hService, int dwInfoLevel, [MarshalAs(UnmanagedType.Struct)] ref SERVICE_FAILURE_ACTIONS_FLAG lpInfo);
+
+        /// <summary>
+        /// Win32 CloseServiceHandle function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool CloseServiceHandle(IntPtr hSCObject);
+
+        /// <summary>
+        /// Win32 UnlockServiceDatabase function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool UnlockServiceDatabase(IntPtr hSCManager);
+
+        /// <summary>
+        /// Win32 GetLastError function.
+        /// </summary>
         [DllImport("kernel32.dll")]
-        private static extern int FormatMessage(int dwFlags, ref IntPtr lpSource, int dwMessageId, int dwLanguageId, ref string lpBuffer, int nSize, ref IntPtr Arguments);
+        public static extern int GetLastError();
+
+        /// <summary>
+        /// Win32 AdjustTokenPrivileges function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges, [MarshalAs(UnmanagedType.Struct)] ref TOKEN_PRIVILEGES NewState, int BufferLength, IntPtr PreviousState, ref int ReturnLength);
+
+        /// <summary>
+        /// Win32 LookupPrivilegeValue function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, ref long lpLuid);
+
+        /// <summary>
+        /// Win32 OpenProcessToken function.
+        /// </summary>
+        [DllImport("advapi32.dll")]
+        public static extern bool OpenProcessToken(IntPtr ProcessHandle, int DesiredAccess, ref IntPtr TokenHandle);
+
+        /// <summary>
+        /// Win32 GetCurrentProcess function.
+        /// </summary>
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetCurrentProcess();
+
+        /// <summary>
+        /// Win32 CloseHandle function.
+        /// </summary>
+        [DllImport("kernel32.dll")]
+        public static extern bool CloseHandle(IntPtr hndl);
+
+        /// <summary>
+        /// Win32 FormatMessage function.
+        /// </summary>
+        [DllImport("kernel32.dll")]
+        public static extern int FormatMessage(int dwFlags, ref IntPtr lpSource, int dwMessageId, int dwLanguageId, ref string lpBuffer, int nSize, ref IntPtr Arguments);
 
         /// <summary>
         /// Formats and returns a .NET string containing the Windows API level error message corresponding to the specified error code.

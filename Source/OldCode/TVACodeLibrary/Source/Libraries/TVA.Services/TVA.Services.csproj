@@ -61,6 +61,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -89,12 +90,18 @@
     <Compile Include="ServiceHelper.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="ServiceInstallerEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ServiceProcess.cs" />
     <Compile Include="ServiceResponse.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ClientHelper.bmp" />
     <EmbeddedResource Include="ServiceHelper.bmp" />
+    <EmbeddedResource Include="ServiceInstallerEx.resx">
+      <DependentUpon>ServiceInstallerEx.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Communication\TVA.Communication.csproj">

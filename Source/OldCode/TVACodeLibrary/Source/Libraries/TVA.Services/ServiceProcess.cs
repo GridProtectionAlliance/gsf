@@ -242,6 +242,8 @@ using TVA.Units;
 
 namespace TVA.Services
 {
+    #region [ Enumerations ]
+
     /// <summary>
     /// Indicates the current state of <see cref="ServiceProcess"/>.
     /// </summary>
@@ -268,6 +270,8 @@ namespace TVA.Services
         /// </summary>
         Exception
     }
+
+    #endregion
 
     /// <summary>
     /// Represents a process that executes asynchronously inside a <see cref="ServiceHelper"/>.
