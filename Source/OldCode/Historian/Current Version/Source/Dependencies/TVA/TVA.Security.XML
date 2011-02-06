@@ -700,6 +700,11 @@
             Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
             </summary>
         </member>
+        <member name="T:TVA.Security.Radius.NamespaceDoc">
+            <summary>
+            Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.
+            </summary>
+        </member>
         <member name="T:TVA.Security.RestrictAccessAttribute">
             <summary>
             Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.

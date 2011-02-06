@@ -44,6 +44,11 @@
             Gets or sets the list of clients consuming the <see cref="T:TVA.Web.Services.Messaging.Message"/>s.
             </summary>
         </member>
+        <member name="F:TVA.Web.Services.Messaging.RegistrationInfo.LatestMessage">
+            <summary>
+            Gets or sets the latest <see cref="T:TVA.Web.Services.Messaging.Message"/> distributed to the subscribers.
+            </summary>
+        </member>
         <member name="F:TVA.Web.Services.Messaging.RegistrationInfo.ProducersLock">
             <summary>
             Gets the <see cref="T:System.Threading.ReaderWriterLockSlim"/> to be used for synchronized access to <see cref="F:TVA.Web.Services.Messaging.RegistrationInfo.Producers"/>.
@@ -1455,6 +1460,15 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
+        <member name="F:TVA.Web.Embedded.SecurityPortal.ChangePassword">
+            <summary>
+            ChangePassword control.
+            </summary>
+            <remarks>
+            Auto-generated field.
+            To modify move field declaration from designer file to code-behind file.
+            </remarks>
+        </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.LoginButton">
             <summary>
             LoginButton control.
@@ -2473,13 +2487,20 @@
             <summary>
             Unregisters a previous registration with the <see cref="T:TVA.Web.Services.Messaging.MessageBusService"/> to produce or consume <see cref="T:TVA.Web.Services.Messaging.Message"/>s
             </summary>
-            <param name="request">The original <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
+            <param name="request">The <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
         </member>
         <member name="M:TVA.Web.Services.Messaging.IMessageBusService.Publish(TVA.Web.Services.Messaging.Message)">
             <summary>
             Sends the <paramref name="message"/> to the <see cref="T:TVA.Web.Services.Messaging.MessageBusService"/> for distribution amongst its registered consumers.
             </summary>
             <param name="message">The <see cref="T:TVA.Web.Services.Messaging.Message"/> that is to be distributed.</param>
+        </member>
+        <member name="M:TVA.Web.Services.Messaging.IMessageBusService.GetLatestMessage(TVA.Web.Services.Messaging.RegistrationRequest)">
+            <summary>
+            Gets the latest <see cref="T:TVA.Web.Services.Messaging.Message"/> distributed to the subscribers of the specified <paramref name="topic"/>.
+            </summary>
+            <param name="topic">The topic <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
+            <returns>The latest <see cref="T:TVA.Web.Services.Messaging.Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
         </member>
         <member name="M:TVA.Web.Services.Messaging.IMessageBusService.GetClients">
             <summary>
@@ -2540,13 +2561,20 @@
             <summary>
             Unregisters a previous registration with the <see cref="T:TVA.Web.Services.Messaging.MessageBusService"/> to produce or consume <see cref="T:TVA.Web.Services.Messaging.Message"/>s
             </summary>
-            <param name="request">The original <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
+            <param name="request">The <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
         </member>
         <member name="M:TVA.Web.Services.Messaging.MessageBusService.Publish(TVA.Web.Services.Messaging.Message)">
             <summary>
             Sends the <paramref name="message"/> to the <see cref="T:TVA.Web.Services.Messaging.MessageBusService"/> for distribution amongst its registered consumers.
             </summary>
             <param name="message">The <see cref="T:TVA.Web.Services.Messaging.Message"/> that is to be distributed.</param>
+        </member>
+        <member name="M:TVA.Web.Services.Messaging.MessageBusService.GetLatestMessage(TVA.Web.Services.Messaging.RegistrationRequest)">
+            <summary>
+            Gets the latest <see cref="T:TVA.Web.Services.Messaging.Message"/> distributed to the subscribers of the specified <paramref name="topic"/>.
+            </summary>
+            <param name="topic">The topic <see cref="T:TVA.Web.Services.Messaging.RegistrationRequest"/> used when registering.</param>
+            <returns>The latest <see cref="T:TVA.Web.Services.Messaging.Message"/> distributed to the <paramref name="topic"/> subscribers.</returns>
         </member>
         <member name="M:TVA.Web.Services.Messaging.MessageBusService.GetClients">
             <summary>

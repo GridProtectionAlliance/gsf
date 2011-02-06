@@ -2868,7 +2868,82 @@
         </member>
         <member name="T:TVA.Interop.WindowsApi">
             <summary>
-            Defines common Windows API functions.
+            Defines common Windows API functions and structures.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.OpenSCManager(System.String,System.String,System.Int32)">
+            <summary>
+            Win32 OpenSCManager function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.OpenService(System.IntPtr,System.String,System.Int32)">
+            <summary>
+            Win32 OpenService function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.LockServiceDatabase(System.IntPtr)">
+            <summary>
+            Win32 LockServiceDatabase function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.ChangeServiceConfig2(System.IntPtr,System.Int32,System.IntPtr)">
+            <summary>
+            Win32 ChangeServiceConfig2 function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.ChangeServiceDescription(System.IntPtr,System.Int32,TVA.Interop.WindowsApi.SERVICE_DESCRIPTION@)">
+            <summary>
+            Win32 ChangeServiceConfig2 function mapped as ChangeServiceDescription to handle <see cref="T:TVA.Interop.WindowsApi.SERVICE_DESCRIPTION"/> updates.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.ChangeServiceFailureActionFlag(System.IntPtr,System.Int32,TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG@)">
+            <summary>
+            Win32 ChangeServiceConfig2 function mapped as ChangeServiceFailureActionFlag to handle <see cref="T:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG"/> updates.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.CloseServiceHandle(System.IntPtr)">
+            <summary>
+            Win32 CloseServiceHandle function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.UnlockServiceDatabase(System.IntPtr)">
+            <summary>
+            Win32 UnlockServiceDatabase function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.GetLastError">
+            <summary>
+            Win32 GetLastError function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.AdjustTokenPrivileges(System.IntPtr,System.Boolean,TVA.Interop.WindowsApi.TOKEN_PRIVILEGES@,System.Int32,System.IntPtr,System.Int32@)">
+            <summary>
+            Win32 AdjustTokenPrivileges function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.LookupPrivilegeValue(System.String,System.String,System.Int64@)">
+            <summary>
+            Win32 LookupPrivilegeValue function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.OpenProcessToken(System.IntPtr,System.Int32,System.IntPtr@)">
+            <summary>
+            Win32 OpenProcessToken function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.GetCurrentProcess">
+            <summary>
+            Win32 GetCurrentProcess function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.CloseHandle(System.IntPtr)">
+            <summary>
+            Win32 CloseHandle function.
+            </summary>
+        </member>
+        <member name="M:TVA.Interop.WindowsApi.FormatMessage(System.Int32,System.IntPtr@,System.Int32,System.Int32,System.String@,System.Int32,System.IntPtr@)">
+            <summary>
+            Win32 FormatMessage function.
             </summary>
         </member>
         <member name="M:TVA.Interop.WindowsApi.GetErrorMessage(System.Int32)">
@@ -2883,6 +2958,168 @@
             Formats and returns a .NET string containing the Windows API level error message from the last Win32 call.
             </summary>
             <returns>A formatted error message corresponding to the last Win32 call error code.</returns>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.SERVICE_DESCRIPTION">
+            <summary>
+            Win32 SERVICE_DESCRIPTION structure.
+            </summary>
+            <remarks>
+            <para>
+            A description of NULL indicates no service description exists. The service description is NULL when the service is created.
+            </para>
+            <para>
+            The description is simply a comment that explains the purpose of the service. For example, for the DHCP service,
+            you could use the description "Provides internet addresses for computer on your network."
+            </para>
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_DESCRIPTION.lpDescription">
+            <summary>
+            The description of the service.
+            </summary>
+            <remarks>
+            If this member is NULL, the description remains unchanged. If this value is an empty string (""), the current description is deleted.
+            </remarks>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.SC_ACTION_TYPE">
+            <summary>
+            Win32 SC_ACTION_TYPE enumeration.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION_TYPE.SC_ACTION_NONE">
+            <summary>
+            No action.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION_TYPE.SC_ACTION_RESTART">
+            <summary>
+            Restart the service.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION_TYPE.SC_ACTION_REBOOT">
+            <summary>
+            Reboot the computer.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION_TYPE.SC_ACTION_RUN_COMMAND">
+            <summary>
+            Run a command.
+            </summary>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.SC_ACTION">
+            <summary>
+            Win32 SC_ACTION structure.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION.Type">
+            <summary>
+            The <see cref="T:TVA.Interop.WindowsApi.SC_ACTION_TYPE"/> to be performed. 
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SC_ACTION.Delay">
+            <summary>
+            The time to wait before performing the specified action, in milliseconds.
+            </summary>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS">
+            <summary>
+            Win32 SERVICE_FAILURE_ACTIONS structure.
+            </summary>
+            <remarks>
+            Represents the action the service controller should take on each failure of a service. A service is considered failed
+            when it terminates without reporting a status of SERVICE_STOPPED to the service controller.
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS.dwResetPeriod">
+            <summary>
+            The time after which to reset the failure count to zero if there are no failures, in seconds. Specify INFINITE to indicate that this value should never be reset.
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS.lpRebootMsg">
+            <summary>
+            The message to be broadcast to server users before rebooting in response to the SC_ACTION_REBOOT service controller action. 
+            </summary>
+            <remarks>
+            If this value is NULL, the reboot message is unchanged. If the value is an empty string (""), the reboot message is deleted and no message is broadcast.
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS.lpCommand">
+            <summary>
+            The command line of the process for the CreateProcess function to execute in response to the SC_ACTION_RUN_COMMAND service controller action. This process runs under the same account as the service. 
+            </summary>
+            <remarks>
+            If this value is NULL, the command is unchanged. If the value is an empty string (""), the command is deleted and no program is run when the service fails.
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS.cActions">
+            <summary>
+            The number of elements in the lpsaActions array. 
+            </summary>
+            <remarks>
+            If this value is 0, but lpsaActions is not NULL, the reset period and array of failure actions are deleted. 
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS.lpsaActions">
+            <summary>
+            A pointer to an array of SC_ACTION structures. 
+            </summary>
+            <remarks>
+            If this value is NULL, the cActions and dwResetPeriod members are ignored. 
+            </remarks>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG">
+            <summary>
+            Win32 SERVICE_FAILURE_ACTIONS_FLAG structure.
+            </summary>
+            <remarks>
+            Contains the failure actions flag setting of a service. This setting determines when failure actions are to be executed.
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG.bFailureAction">
+            <summary>
+            If this member is TRUE and the service has configured failure actions, the failure actions are queued if the service process 
+            terminates without reporting a status of SERVICE_STOPPED or if it enters the SERVICE_STOPPED state but the dwWin32ExitCode member
+            of the SERVICE_STATUS structure is not ERROR_SUCCESS (0). If this member is FALSE and the service has configured failure actions,
+            the failure actions are queued only if the service terminates without reporting a status of SERVICE_STOPPED.
+            </summary>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.LUID_AND_ATTRIBUTES">
+            <summary>
+            Win32 LUID_AND_ATTRIBUTES structure.
+            </summary>
+            <remarks>
+            An LUID_AND_ATTRIBUTES structure can represent an LUID whose attributes change frequently, 
+            such as when the LUID is used to represent privileges in the PRIVILEGE_SET structure. 
+            Privileges are represented by LUIDs and have attributes indicating whether they are currently enabled or disabled. 
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.LUID_AND_ATTRIBUTES.Luid">
+            <summary>
+            Specifies an LUID value. 
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.LUID_AND_ATTRIBUTES.Attributes">
+            <summary>
+            Specifies attributes of the LUID. This value contains up to 32 one-bit flags. Its meaning is dependent on the definition and use of the LUID.
+            </summary>
+        </member>
+        <member name="T:TVA.Interop.WindowsApi.TOKEN_PRIVILEGES">
+            <summary>
+            Win32 TOKEN_PRIVILEGES structure.
+            </summary>
+            <remarks>
+            The TOKEN_PRIVILEGES structure contains information about a set of privileges for an access token. 
+            </remarks>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.TOKEN_PRIVILEGES.PrivilegeCount">
+            <summary>
+            This must be set to the number of entries in the Privileges array. 
+            </summary>
+        </member>
+        <member name="F:TVA.Interop.WindowsApi.TOKEN_PRIVILEGES.Privileges">
+            <summary>
+            Specifies an array of LUID_AND_ATTRIBUTES structures. Each structure contains the LUID and attributes of a privilege.
+            </summary>
         </member>
         <member name="T:TVA.Diagnostics.PerformanceMonitor">
              <summary>
