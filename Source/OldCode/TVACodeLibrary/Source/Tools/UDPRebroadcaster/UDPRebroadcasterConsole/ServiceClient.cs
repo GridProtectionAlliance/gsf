@@ -241,7 +241,7 @@ using System.Text;
 using TVA;
 using TVA.Console;
 using TVA.Reflection;
-using TVA.Services;
+using TVA.Services.ServiceProcess;
 
 namespace UDPRebroadcasterConsole
 {

@@ -270,7 +270,7 @@ using System.ServiceModel.Web;
 using TVA.Adapters;
 using TVA.Configuration;
 
-namespace TVA.Web.Services
+namespace TVA.Services.ServiceModel
 {
     /// <summary>
     /// A base class for web service that can send and receive data over REST (Representational State Transfer) interface.
@@ -280,7 +280,7 @@ namespace TVA.Web.Services
     /// <code>
     /// using System.ServiceModel;
     /// using System.ServiceModel.Web;
-    /// using TVA.Web.Services;
+    /// using TVA.Services.ServiceModel;
     /// 
     /// namespace Services
     /// {
@@ -307,7 +307,7 @@ namespace TVA.Web.Services
     /// using System.ServiceModel.Description;
     /// using System.ServiceModel.Web;
     /// using Services;
-    /// using TVA.Web.Services;
+    /// using TVA.Services.ServiceModel;
     /// 
     /// class Program
     /// {

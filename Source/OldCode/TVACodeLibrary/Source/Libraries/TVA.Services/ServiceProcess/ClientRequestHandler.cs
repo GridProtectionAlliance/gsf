@@ -1,14 +1,14 @@
 //*******************************************************************************************************
-//  ServiceResponse.cs - Gbtc
+//  ClientRequestHandler.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/29/2006 - Pinal C. Patel
+//  05/02/2007 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/30/2008 - J. Ritchie Carroll
 //       Converted to C#.
@@ -54,7 +54,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -131,7 +131,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -236,57 +236,43 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     /// <summary>
-    /// Represents a response sent by the <see cref="ServiceHelper"/> to a <see cref="ClientRequest"/> from the <see cref="ClientHelper"/>.
+    /// Represents a handler for <see cref="ClientRequest"/>s sent by <see cref="ClientHelper"/>.
     /// </summary>
-    /// <seealso cref="ServiceHelper"/>
     /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ClientRequest"/>
-	[Serializable()]
-    public class ServiceResponse
-	{
-        #region [ Members ]
-
-        // Fields
-        private string m_type;
-        private string m_message;
-        private List<object> m_attachments;
-
-        #endregion
-
+    /// <seealso cref="ServiceHelper"/>
+    public class ClientRequestHandler
+    {
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
+        /// Initializes a new instance of the <see cref="ClientRequestHandler"/> class.
         /// </summary>
-        public ServiceResponse()
-            : this("UNDETERMINED")
+        /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
+        /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
+        /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod)
+            : this(requestCommand, requestDescription, handlerMethod, true)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
+        /// Initializes a new instance of the <see cref="ClientRequestHandler"/> class.
         /// </summary>
-        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain text.</param>
-        public ServiceResponse(string type)
-            : this(type, "")
+        /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
+        /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
+        /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
+        /// <param name="isAdvertised">true if the <see cref="ClientRequestHandler"/> is to be published by the <see cref="ServiceHelper"/>; otherwise false.</param>
+        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, bool isAdvertised)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
-        /// </summary>
-        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain-text.</param>
-        /// <param name="message">Message associated with the <see cref="ServiceResponse"/>.</param>
-        public ServiceResponse(string type, string message)
-        {
-            m_type = type.ToUpper();
-            m_message = message;
-            m_attachments = new List<object>();
+            Command = requestCommand;
+            CommandDescription = requestDescription;
+            HandlerMethod = handlerMethod;
+            IsAdvertised = isAdvertised;
         }
 
         #endregion
@@ -294,50 +280,25 @@ namespace TVA.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the plain-text type of the <see cref="ServiceResponse"/>.
+        /// Gets the command text that the <see cref="ClientRequestHandler"/> will process.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        public string Type
-        {
-            get
-            {
-                return m_type;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_type = value.ToUpper();
-            }
-        }
+        public string Command { get; private set; }
 
         /// <summary>
-        /// Gets or sets the palin-text message associated with the <see cref="ServiceResponse"/>.
+        /// Gets the description of the <see cref="ClientRequestHandler"/>.
         /// </summary>
-        public string Message
-        {
-            get
-            {
-                return m_message;
-            }
-            set
-            {
-                m_message = value;
-            }
-        }
+        public string CommandDescription { get; private set; }
 
         /// <summary>
-        /// Gets a list of serializable attachments of the <see cref="ServiceResponse"/>.
+        /// Gets the <see cref="Delegate"/> method that gets invoked for processing the <see cref="Command"/>.
         /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
+        public Action<ClientRequestInfo> HandlerMethod { get; private set; }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether the <see cref="ClientRequestHandler"/> will be published by the <see cref="ServiceHelper"/>.
+        /// </summary>
+        public bool IsAdvertised { get; private set; }
 
         #endregion
-	}
+    }
 }

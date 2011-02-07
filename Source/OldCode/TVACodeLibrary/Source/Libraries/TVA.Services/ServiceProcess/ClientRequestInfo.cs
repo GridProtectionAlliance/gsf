@@ -1,8 +1,8 @@
-//*******************************************************************************************************
-//  ClientRequestHandler.cs - Gbtc
+๏ปฟ//*******************************************************************************************************
+//  ClientRequestInfo.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
@@ -10,10 +10,6 @@
 //  -----------------------------------------------------------------------------------------------------
 //  05/02/2007 - Pinal C. Patel
 //       Generated original version of source code.
-//  09/30/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  03/09/2009 - Pinal C. Patel
-//       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
 //
@@ -54,7 +50,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -131,7 +127,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -237,42 +233,27 @@
 
 using System;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     /// <summary>
-    /// Represents a handler for <see cref="ClientRequest"/>s sent by <see cref="ClientHelper"/>.
+    /// Represents information about a <see cref="ClientRequest"/> sent by <see cref="ClientHelper"/>.
     /// </summary>
-    /// <seealso cref="ClientHelper"/>
+    /// <seealso cref="ClientInfo"/>
     /// <seealso cref="ClientRequest"/>
-    /// <seealso cref="ServiceHelper"/>
-	public class ClientRequestHandler
-	{
+    public class ClientRequestInfo
+    {
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequestHandler"/> class.
+        /// Initializes a new instance of the <see cref="ClientRequestInfo"/> class.
         /// </summary>
-        /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
-        /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
-        /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod)
-            : this(requestCommand, requestDescription, handlerMethod, true)
+        /// <param name="sender"><see cref="ClientInfo"/> object of the <paramref name="request"/> sender.</param>
+        /// <param name="request"><see cref="ClientRequest"/> object sent by the <paramref name="sender"/>.</param>
+        public ClientRequestInfo(ClientInfo sender, ClientRequest request)
         {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequestHandler"/> class.
-        /// </summary>
-        /// <param name="requestCommand">Command text that the <see cref="ClientRequestHandler"/> will process.</param>
-        /// <param name="requestDescription">Description of the <see cref="ClientRequestHandler"/>.</param>
-        /// <param name="handlerMethod"><see cref="Delegate"/> method that will be invoked for processing the <paramref name="requestCommand"/>.</param>
-        /// <param name="isAdvertised">true if the <see cref="ClientRequestHandler"/> is to be published by the <see cref="ServiceHelper"/>; otherwise false.</param>
-        public ClientRequestHandler(string requestCommand, string requestDescription, Action<ClientRequestInfo> handlerMethod, bool isAdvertised)
-        {
-            Command = requestCommand;
-            CommandDescription = requestDescription;
-            HandlerMethod = handlerMethod;
-            IsAdvertised = isAdvertised;
+            Request = request;
+            Sender = sender;
+            ReceivedAt = DateTime.Now;
         }
 
         #endregion
@@ -280,24 +261,19 @@ namespace TVA.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the command text that the <see cref="ClientRequestHandler"/> will process.
+        /// Gets or sets the <see cref="ClientInfo"/> object of the <see cref="Request"/> sender.
         /// </summary>
-        public string Command { get; private set; }
+        public ClientInfo Sender { get; set; }
 
         /// <summary>
-        /// Gets the description of the <see cref="ClientRequestHandler"/>.
+        /// Gets or sets the <see cref="ClientRequest"/> object sent by the <see cref="Sender"/>.
         /// </summary>
-        public string CommandDescription { get; private set; }
+        public ClientRequest Request { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="Delegate"/> method that gets invoked for processing the <see cref="Command"/>.
+        /// Gets or sets the <see cref="DateTime"/> when the <see cref="Request"/> was received from the <see cref="Sender"/>.
         /// </summary>
-        public Action<ClientRequestInfo> HandlerMethod { get; private set; }
-
-        /// <summary>
-        /// Gets a boolean value that indicates whether the <see cref="ClientRequestHandler"/> will be published by the <see cref="ServiceHelper"/>.
-        /// </summary>
-        public bool IsAdvertised { get; private set; }
+        public DateTime ReceivedAt { get; set; }
 
         #endregion
     }

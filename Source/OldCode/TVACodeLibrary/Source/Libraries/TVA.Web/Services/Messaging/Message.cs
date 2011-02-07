@@ -231,7 +231,7 @@
 
 using System;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     #region [ Enumerations ]
 

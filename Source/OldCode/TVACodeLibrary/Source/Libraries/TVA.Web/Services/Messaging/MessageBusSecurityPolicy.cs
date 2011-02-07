@@ -233,7 +233,7 @@ using System.IdentityModel.Policy;
 using System.ServiceModel;
 using System.Text.RegularExpressions;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Represents an <see cref="IAuthorizationPolicy">authorization policy</see> that can be used for enabling role-based security on <see cref="MessageBusService"/>.

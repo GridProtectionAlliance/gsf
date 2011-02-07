@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  ClientRequestInfo.cs - Gbtc
+//  NamespaceDoc.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,8 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  05/02/2007 - Pinal C. Patel
+//  09/29/2009 - Pinal C. Patel
 //       Generated original version of source code.
-//  09/14/2009 - Stephen C. Wills
-//       Added new header and license agreement.
 //
 //*******************************************************************************************************
 
@@ -231,50 +229,15 @@
 */
 #endregion
 
-using System;
+using System.Runtime.CompilerServices;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     /// <summary>
-    /// Represents information about a <see cref="ClientRequest"/> sent by <see cref="ClientHelper"/>.
+    /// Contains classes used to simplify and standardize development and operation of Windows services that are remotely manageable.
     /// </summary>
-    /// <seealso cref="ClientInfo"/>
-    /// <seealso cref="ClientRequest"/>
-    public class ClientRequestInfo
+    [CompilerGenerated()]
+    class NamespaceDoc
     {
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequestInfo"/> class.
-        /// </summary>
-        /// <param name="sender"><see cref="ClientInfo"/> object of the <paramref name="request"/> sender.</param>
-        /// <param name="request"><see cref="ClientRequest"/> object sent by the <paramref name="sender"/>.</param>
-        public ClientRequestInfo(ClientInfo sender, ClientRequest request)
-        {
-            Request = request;
-            Sender = sender;
-            ReceivedAt = DateTime.Now;
-        }
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the <see cref="ClientInfo"/> object of the <see cref="Request"/> sender.
-        /// </summary>
-        public ClientInfo Sender { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="ClientRequest"/> object sent by the <see cref="Sender"/>.
-        /// </summary>
-        public ClientRequest Request { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="DateTime"/> when the <see cref="Request"/> was received from the <see cref="Sender"/>.
-        /// </summary>
-        public DateTime ReceivedAt { get; set; }
-
-        #endregion
     }
 }

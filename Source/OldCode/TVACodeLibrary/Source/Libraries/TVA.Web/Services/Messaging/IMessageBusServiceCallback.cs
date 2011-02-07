@@ -234,7 +234,7 @@
 
 using System.ServiceModel;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Defines a callback contract that must be implemented by clients of <see cref="MessageBusService"/> for receiving <see cref="Message"/>s.

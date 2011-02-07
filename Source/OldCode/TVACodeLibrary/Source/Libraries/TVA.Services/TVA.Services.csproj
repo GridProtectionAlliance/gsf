@@ -66,6 +66,10 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IdentityModel" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq">
@@ -78,28 +82,42 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientHelper.cs">
+    <Compile Include="ServiceModel\ISelfHostingService.cs" />
+    <Compile Include="ServiceModel\Messaging\ClientInfo.cs" />
+    <Compile Include="ServiceModel\Messaging\IMessageBusService.cs" />
+    <Compile Include="ServiceModel\Messaging\IMessageBusServiceCallback.cs" />
+    <Compile Include="ServiceModel\Messaging\Message.cs" />
+    <Compile Include="ServiceModel\Messaging\MessageBusSecurityPolicy.cs" />
+    <Compile Include="ServiceModel\Messaging\MessageBusService.cs" />
+    <Compile Include="ServiceModel\Messaging\NamespaceDoc.cs" />
+    <Compile Include="ServiceModel\Messaging\RegistrationInfo.cs" />
+    <Compile Include="ServiceModel\Messaging\RegistrationRequest.cs" />
+    <Compile Include="ServiceModel\NamespaceDoc.cs" />
+    <Compile Include="ServiceModel\SecurityPolicy.cs" />
+    <Compile Include="ServiceModel\SelfHostingService.cs" />
+    <Compile Include="ServiceModel\Serialization.cs" />
+    <Compile Include="ServiceProcess\ClientHelper.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ClientInfo.cs" />
-    <Compile Include="ClientRequest.cs" />
-    <Compile Include="ClientRequestHandler.cs" />
-    <Compile Include="ClientRequestInfo.cs" />
-    <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="ServiceProcess\ClientInfo.cs" />
+    <Compile Include="ServiceProcess\ClientRequest.cs" />
+    <Compile Include="ServiceProcess\ClientRequestHandler.cs" />
+    <Compile Include="ServiceProcess\ClientRequestInfo.cs" />
+    <Compile Include="ServiceProcess\NamespaceDoc.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceHelper.cs">
+    <Compile Include="ServiceProcess\ServiceHelper.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ServiceInstallerEx.cs">
+    <Compile Include="ServiceProcess\ServiceInstallerEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="ServiceProcess.cs" />
-    <Compile Include="ServiceResponse.cs" />
+    <Compile Include="ServiceProcess\ServiceProcess.cs" />
+    <Compile Include="ServiceProcess\ServiceResponse.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="ClientHelper.bmp" />
-    <EmbeddedResource Include="ServiceHelper.bmp" />
-    <EmbeddedResource Include="ServiceInstallerEx.resx">
+    <EmbeddedResource Include="ServiceProcess\ClientHelper.bmp" />
+    <EmbeddedResource Include="ServiceProcess\ServiceHelper.bmp" />
+    <EmbeddedResource Include="ServiceProcess\ServiceInstallerEx.resx">
       <DependentUpon>ServiceInstallerEx.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -134,6 +152,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

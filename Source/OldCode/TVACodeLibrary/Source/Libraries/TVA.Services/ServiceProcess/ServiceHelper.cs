@@ -308,7 +308,6 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Diagnostics;
 using System.Drawing;
-using System.Reflection;
 using System.Security;
 using System.Security.Principal;
 using System.ServiceProcess;
@@ -324,7 +323,7 @@ using TVA.Reflection;
 using TVA.Scheduling;
 using TVA.Security;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     #region [ Enumerations ]
 

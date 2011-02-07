@@ -231,7 +231,7 @@
 
 using System.Runtime.CompilerServices;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Contains WCF web services that facilitate secure inter-process messaging.

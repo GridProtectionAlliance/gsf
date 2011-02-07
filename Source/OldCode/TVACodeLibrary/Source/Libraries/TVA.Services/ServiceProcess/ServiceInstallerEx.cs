@@ -274,7 +274,7 @@ using System.ServiceProcess;
 using System.Threading;
 using TVA.Interop;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     #region [ Enumerations ]
 

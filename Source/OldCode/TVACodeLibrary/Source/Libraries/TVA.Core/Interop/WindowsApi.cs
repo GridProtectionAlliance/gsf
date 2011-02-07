@@ -310,6 +310,7 @@ namespace TVA.Interop
         /// <summary>
         /// Win32 SC_ACTION_TYPE enumeration.
         /// </summary>
+        [CLSCompliant(false)]
         public enum SC_ACTION_TYPE : uint
         {
             /// <summary>
@@ -333,7 +334,8 @@ namespace TVA.Interop
         /// <summary>
         /// Win32 SC_ACTION structure.
         /// </summary>
-        [StructLayout(LayoutKind.Sequential)]
+        [CLSCompliant(false),
+        StructLayout(LayoutKind.Sequential)]
         public struct SC_ACTION
         {
             /// <summary>

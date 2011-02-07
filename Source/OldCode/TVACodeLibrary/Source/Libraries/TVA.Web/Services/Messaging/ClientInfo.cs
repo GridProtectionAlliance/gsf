@@ -235,7 +235,7 @@ using System;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Represents information about a client connected to the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.

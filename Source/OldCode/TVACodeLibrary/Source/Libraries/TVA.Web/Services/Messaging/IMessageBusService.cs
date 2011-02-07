@@ -240,7 +240,7 @@
 using System.Collections.Generic;
 using System.ServiceModel;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Defines a message bus for event-based messaging between disjoint systems.

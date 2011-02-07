@@ -1,21 +1,28 @@
 //*******************************************************************************************************
-//  ServiceProcess.cs - Gbtc
+//  ClientRequest.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
-//  No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+//  No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  09/13/2006 - Pinal C. Patel
-//       Generated original version of source code.
+//  08/29/2006 - Pinal C. Patel
+//       Original version of source code generated.
+//  04/27/2007 - Pinal C. Patel
+//       Added Attachments property for clients to send serializable objects as part of the request.
 //  09/30/2008 - J. Ritchie Carroll
 //       Converted to C#.
-//  03/03/2009 - Pinal C. Patel
+//  03/09/2009 - Pinal C. Patel
 //       Edited code comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  10/14/2010 - Pinal C. Patel
+//       Overrode ToString() method to provide a text representation of ClientRequest.
+//       Recoded static Parse() method to make it more robust.
+//  01/24/201 - Pinal C. Patel
+//       Modified ToString() remove leading and trailing white spaces.
 //
 //*******************************************************************************************************
 
@@ -54,7 +61,7 @@
 
  F. "Modification" means any alteration of, including addition to or deletion from, the substance or
  structure of either the Original Software or Subject Software, and includes derivative works, as that
- term is defined in the Copyright Statute, 17 USC ง 101. However, the act of including Subject Software
+ term is defined in the Copyright Statute, 17 USC ยง 101. However, the act of including Subject Software
  as part of a Larger Work does not in and of itself constitute a Modification.
 
  G. "Original Software" means the computer software first released under this Agreement by Government
@@ -131,7 +138,7 @@
  B. Each Recipient must ensure that the following copyright notice appears prominently in the Subject
  Software:
 
-          No copyright is claimed pursuant to 17 USC ง 105.  All Other Rights Reserved.
+          No copyright is claimed pursuant to 17 USC ยง 105.  All Other Rights Reserved.
 
  C. Each Contributor must characterize its alteration of the Subject Software as a Modification and
  must identify itself as the originator of its Modification in a manner that reasonably allows
@@ -236,96 +243,57 @@
 #endregion
 
 using System;
-using System.Text;
-using System.Threading;
-using TVA.Units;
+using System.Collections.Generic;
+using TVA.Console;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
-    #region [ Enumerations ]
-
     /// <summary>
-    /// Indicates the current state of <see cref="ServiceProcess"/>.
+    /// Represents a request sent by <see cref="ClientHelper"/> to <see cref="ServiceHelper"/>.
     /// </summary>
-    public enum ServiceProcessState
-    {
-        /// <summary>
-        /// <see cref="ServiceProcess"/> has not been started.
-        /// </summary>
-        Unprocessed,
-        /// <summary>
-        /// <see cref="ServiceProcess"/> is currently executing.
-        /// </summary>
-        Processing,
-        /// <summary>
-        /// <see cref="ServiceProcess"/> has completed processing.
-        /// </summary>
-        Processed,
-        /// <summary>
-        /// <see cref="ServiceProcess"/> was aborted.
-        /// </summary>
-        Aborted,
-        /// <summary>
-        /// <see cref="ServiceProcess"/> stopped due to exception.
-        /// </summary>
-        Exception
-    }
-
-    #endregion
-
-    /// <summary>
-    /// Represents a process that executes asynchronously inside a <see cref="ServiceHelper"/>.
-    /// </summary>
+    /// <seealso cref="ClientHelper"/>
     /// <seealso cref="ServiceHelper"/>
-    public class ServiceProcess : IDisposable, IProvideStatus
-	{
+    [Serializable()]
+    public class ClientRequest
+    {
         #region [ Members ]
 
-        //Events
-
-        /// <summary>
-        /// Occurs when the <see cref="CurrentState"/> of the <see cref="ServiceProcess"/> changes.
-        /// </summary>
-        public event EventHandler StateChanged;
-
         // Fields
-#if ThreadTracking
-        private ManagedThread m_processThread;
-#else
-		private Thread m_processThread;
-#endif
-        private string m_name;
-        private object[] m_arguments;
-        private Action<string, object[]> m_executionMethod;
-        private ServiceProcessState m_currentState;
-        private DateTime m_executionStartTime;
-        private DateTime m_executionStopTime;
-        private bool m_disposed;
+        private string m_command;
+        private Arguments m_arguments;
+        private List<object> m_attachments;
 
         #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ServiceProcess"/> class.
+        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
         /// </summary>
-        /// <param name="executionMethod"><see cref="Delegate"/> that gets invoked when <see cref="Start()"/> is called.</param>
-        /// <param name="name">Name of the <see cref="ServiceProcess"/>.</param>
-        /// <param name="arguments">Arguments to be passed in to the <paramref name="executionMethod"/>.</param>
-        public ServiceProcess(Action<string, object[]> executionMethod, string name, params object[] arguments)
+        public ClientRequest()
+            : this("UNDEFINED")
         {
-            m_name = name;
-            m_arguments = arguments;
-            m_executionMethod = executionMethod;
-            m_currentState = ServiceProcessState.Unprocessed;
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="ServiceProcess" /> object is reclaimed by <see cref="GC"/>.
+        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
         /// </summary>
-        ~ServiceProcess()
+        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
+        public ClientRequest(string command)
+            : this(command, new Arguments(""))
         {
-            Dispose(false);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
+        /// </summary>
+        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
+        /// <param name="arguments"><see cref="Arguments"/> for the <paramref name="command"/>.</param>
+        public ClientRequest(string command, Arguments arguments)
+        {
+            m_command = command.ToUpper();
+            m_arguments = arguments;
+            m_attachments = new List<object>();
         }
 
         #endregion
@@ -333,28 +301,28 @@ namespace TVA.Services
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the name of the <see cref="ServiceProcess"/>.
+        /// Gets or sets the command text for the <see cref="ClientRequest"/>.
         /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string Name
+        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
+        public string Command
         {
             get
             {
-                return m_name;
+                return m_command;
             }
             set
             {
                 if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("Name");
+                    throw new ArgumentNullException("value");
 
-                m_name = value;
+                m_command = value.ToUpper();
             }
         }
 
         /// <summary>
-        /// Gets or sets the arguments to be passed in to the <see cref="ExecutionMethod"/>.
+        /// Gets or sets the <see cref="Arguments"/> for the <see cref="Command"/>.
         /// </summary>
-        public object[] Arguments
+        public Arguments Arguments
         {
             get
             {
@@ -367,117 +335,13 @@ namespace TVA.Services
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="Delegate"/> that gets invoked when <see cref="Start()"/> is called.
+        /// Gets a list of attachments for the <see cref="ClientRequest"/>.
         /// </summary>
-        /// <remarks>
-        /// Argument1 gets the <see cref="Name"/> of the <see cref="ServiceProcess"/>.<br/>
-        /// Argument2 gets the <see cref="Arguments"/> of the <see cref="ServiceProcess"/>.
-        /// </remarks>
-        public Action<string, object[]> ExecutionMethod
+        public List<object> Attachments
         {
             get
             {
-                return m_executionMethod;
-            }
-            set
-            {
-                m_executionMethod = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets the current <see cref="ServiceProcessState"/>.
-        /// </summary>
-        public ServiceProcessState CurrentState
-        {
-            get
-            {
-                return m_currentState;
-            }
-            private set
-            {
-                m_currentState = value;
-                OnStateChanged();       // Notify of the change in state.
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last started.
-        /// </summary>
-        public DateTime ExecutionStartTime
-        {
-            get
-            {
-                return m_executionStartTime;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="DateTime"/> when execution of <see cref="ServiceProcess"/> last completed.
-        /// </summary>
-        public DateTime ExecutionStopTime
-        {
-            get
-            {
-                return m_executionStopTime;
-            }
-        }
-
-        /// <summary>
-        /// Gets the <see cref="Time"/> taken by the <see cref="ServiceProcess"/> during the last execution.
-        /// </summary>
-        public Time LastExecutionTime
-        {
-            get
-            {
-                return Ticks.ToSeconds(m_executionStopTime.Ticks - m_executionStartTime.Ticks);
-            }
-        }
-
-        /// <summary>
-        /// Gets the descriptive status of the <see cref="ServiceProcess"/>.
-        /// </summary>
-        public string Status
-        {
-            get
-            {
-                StringBuilder status = new StringBuilder();
-
-                status.Append("              Process Name: ");
-                status.Append(m_name);
-                status.AppendLine();
-                status.Append("             Current State: ");
-                status.Append(m_currentState.ToString());
-                status.AppendLine();
-                status.Append("      Execution Start Time: ");
-
-                if (m_executionStartTime != DateTime.MinValue)
-                {
-                    status.Append(m_executionStartTime.ToString());
-                }
-                else
-                {
-                    status.Append("N/A");
-                }
-
-                status.AppendLine();
-                status.Append("       Execution Stop Time: ");
-
-                if (m_executionStopTime != DateTime.MinValue)
-                {
-                    status.Append(m_executionStopTime.ToString());
-                }
-                else
-                {
-                    status.Append("N/A");
-                }
-
-                status.AppendLine();
-                status.Append("       Last Execution Time: ");
-                status.Append(LastExecutionTime.ToString());
-                status.AppendLine();
-
-                return status.ToString();
+                return m_attachments;
             }
         }
 
@@ -486,119 +350,45 @@ namespace TVA.Services
         #region [ Methods ]
 
         /// <summary>
-        /// Starts the execution of <see cref="ServiceProcess"/>.
+        /// Returns the <see cref="String"/> that represents the <see cref="ClientRequest"/>.
         /// </summary>
-        public void Start()
+        /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
+        public override string ToString()
         {
-            Start(m_arguments);
-        }
-
-        /// <summary>
-        /// Starts the execution of <see cref="ServiceProcess"/>.
-        /// </summary>
-        /// <param name="arguments">Arguments to be passed in to the <see cref="ExecutionMethod"/>.</param>
-        public void Start(object[] arguments)
-        {
-            // Start the execution on a seperate thread.
-#if ThreadTracking
-            m_processThread = new ManagedThread(InvokeExecutionMethod);
-            m_processThread.Name = "TVA.Services.ServiceProcess.InvokeExecutionMethod() [" + m_name + "]";
-#else
-			m_processThread = new Thread(InvokeExecutionMethod);
-#endif
-            m_processThread.Start(arguments);
-        }
-
-        /// <summary>
-        /// Stops the execution of <see cref="ServiceProcess"/> if it executing.
-        /// </summary>
-        public void Abort()
-        {
-            // We'll abort the process only if it is currently executing.
-            if (m_processThread != null)
-            {
-                if (m_processThread.IsAlive)
-                    m_processThread.Abort();
-            }
-            m_processThread = null;
-        }
-
-        /// <summary>
-        /// Releases all the resources used by the <see cref="ServiceProcess"/> object.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="ServiceProcess"/> and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    Abort();
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        m_executionMethod = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                }
-            }
-        }
-
-        /// <summary>
-        /// Raises the <see cref="StateChanged"/> event.
-        /// </summary>
-        protected virtual void OnStateChanged()
-        {
-            if (StateChanged != null)
-                StateChanged(this, EventArgs.Empty);
-        }
-
-        private void InvokeExecutionMethod(object state)
-        {
-            if (m_executionMethod != null)
-            {
-                CurrentState = ServiceProcessState.Processing;
-                m_executionStartTime = DateTime.Now;
-                m_executionStopTime = DateTime.MinValue;
-
-                try
-                {
-                    // We'll keep the invocation of the delegate in Try...Catch to absorb any exceptions that
-                    // were not handled by the consumer.
-                    m_executionMethod(m_name, state as object[]);
-
-                    CurrentState = ServiceProcessState.Processed;
-                }
-                catch (ThreadAbortException)
-                {
-                    CurrentState = ServiceProcessState.Aborted;
-                }
-                catch (Exception)
-                {
-                    // We'll absorb any exceptions if unhandled by the client.
-                    CurrentState = ServiceProcessState.Exception;
-                }
-                finally
-                {
-                    m_executionStopTime = DateTime.Now;
-                }
-            }
-            m_processThread = null;
+            return string.Format("{0} {1}", m_command, m_arguments).Trim();
         }
 
         #endregion
-	}
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Converts <see cref="string"/> to a <see cref="ClientRequest"/>.
+        /// </summary>
+        /// <param name="text">Text to be converted to a <see cref="ClientRequest"/>.</param>
+        /// <returns><see cref="ClientRequest"/> object if parsing is successful; otherwise null.</returns>
+        public static ClientRequest Parse(string text)
+        {
+            // Input text can't be null.
+            if (text == null)
+                return null;
+
+            // Input text can't be empty.
+            text = text.Trim();
+            if (text == "")
+                return null;
+
+            string[] textSegments = text.Split(' ');
+            ClientRequest request = new ClientRequest();
+            request.Command = textSegments[0].ToUpper();
+            if (textSegments.Length == 1)
+                request.Arguments = new Arguments("");
+            else
+                request.Arguments = new Arguments(text.Remove(0, text.IndexOf(' ') + 1).Trim());
+
+            return request;
+        }
+
+        #endregion
+    }
 }

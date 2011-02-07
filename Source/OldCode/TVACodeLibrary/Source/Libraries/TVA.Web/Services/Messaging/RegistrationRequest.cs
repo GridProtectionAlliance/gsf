@@ -229,7 +229,7 @@
 */
 #endregion
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     #region [ Enumerations ]
 
@@ -262,7 +262,7 @@ namespace TVA.Web.Services.Messaging
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the <see cref="TVA.Web.Services.Messaging.RegistrationType">type</see> of this <see cref="RegistrationRequest"/>.
+        /// Gets or sets the <see cref="TVA.Services.ServiceModel.Messaging.RegistrationType">type</see> of this <see cref="RegistrationRequest"/>.
         /// </summary>
         public RegistrationType RegistrationType { get; set; }
 

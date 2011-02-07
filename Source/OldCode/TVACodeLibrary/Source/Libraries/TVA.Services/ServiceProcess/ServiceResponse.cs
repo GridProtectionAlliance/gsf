@@ -1,5 +1,5 @@
-﻿//*******************************************************************************************************
-//  ISelfHostingService.cs - Gbtc
+//*******************************************************************************************************
+//  ServiceResponse.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,19 +8,14 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/21/2009 - Pinal C. Patel
+//  08/29/2006 - Pinal C. Patel
 //       Generated original version of source code.
-//  09/15/2009 - Stephen C. Wills
+//  09/30/2008 - J. Ritchie Carroll
+//       Converted to C#.
+//  03/09/2009 - Pinal C. Patel
+//       Edited code comments.
+//  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  05/28/2010 - Pinal C. Patel
-//       Added an endpoint for web service help.
-//  10/08/2010 - Pinal C. Patel
-//       Removed REST web service help endpoint since a similar feature is now part of WCF 4.0.
-//  10/14/2010 - Pinal C. Patel
-//       Made changes for hosting flexibility and enabling security:
-//         Deleted DataFlow since access restriction can now be imposed by enabling security.
-//         Added SecurityPolicy and PublishMetadata.
-//         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
 //
 //*******************************************************************************************************
 
@@ -241,69 +236,107 @@
 #endregion
 
 using System;
-using System.IdentityModel.Policy;
-using System.ServiceModel;
-using TVA.Configuration;
+using System.Collections.Generic;
 
-namespace TVA.Web.Services
+namespace TVA.Services.ServiceProcess
 {
     /// <summary>
-    /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
+    /// Represents a response sent by the <see cref="ServiceHelper"/> to a <see cref="ClientRequest"/> from the <see cref="ClientHelper"/>.
     /// </summary>
-    [ServiceContract()]
-    public interface ISelfHostingService : ISupportLifecycle, IPersistSettings
+    /// <seealso cref="ServiceHelper"/>
+    /// <seealso cref="ClientHelper"/>
+    /// <seealso cref="ClientRequest"/>
+    [Serializable()]
+    public class ServiceResponse
     {
         #region [ Members ]
 
-        /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> has been created with the specified <see cref="Endpoints"/>.
-        /// </summary>
-        event EventHandler ServiceHostCreated;
+        // Fields
+        private string m_type;
+        private string m_message;
+        private List<object> m_attachments;
+
+        #endregion
+
+        #region [ Constructors ]
 
         /// <summary>
-        /// Occurs when the <see cref="ServiceHost"/> can process requests via all of its endpoints.
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
         /// </summary>
-        event EventHandler ServiceHostStarted;
+        public ServiceResponse()
+            : this("UNDETERMINED")
+        {
+        }
 
         /// <summary>
-        /// Occurs when an <see cref="Exception"/> is encountered when processing a request.
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
         /// </summary>
-        event EventHandler<EventArgs<Exception>> ServiceProcessException;
+        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain text.</param>
+        public ServiceResponse(string type)
+            : this(type, "")
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ServiceResponse"/> class.
+        /// </summary>
+        /// <param name="type">Type of the <see cref="ServiceResponse"/> in plain-text.</param>
+        /// <param name="message">Message associated with the <see cref="ServiceResponse"/>.</param>
+        public ServiceResponse(string type, string message)
+        {
+            m_type = type.ToUpper();
+            m_message = message;
+            m_attachments = new List<object>();
+        }
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
+        /// Gets or sets the plain-text type of the <see cref="ServiceResponse"/>.
         /// </summary>
-        string Endpoints { get; set; }
+        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
+        public string Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_type = value.ToUpper();
+            }
+        }
 
         /// <summary>
-        /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
+        /// Gets or sets the palin-text message associated with the <see cref="ServiceResponse"/>.
         /// </summary>
-        string Contract { get; set; }
+        public string Message
+        {
+            get
+            {
+                return m_message;
+            }
+            set
+            {
+                m_message = value;
+            }
+        }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
-        /// requests or base the web service instance creation on <see cref="InstanceContextMode"/> specified in its <see cref="ServiceBehaviorAttribute"/>.
+        /// Gets a list of serializable attachments of the <see cref="ServiceResponse"/>.
         /// </summary>
-        bool Singleton { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Type.FullName"/> of <see cref="IAuthorizationPolicy"/> to be used for securing all web service <see cref="Endpoints"/>.
-        /// </summary>
-        string SecurityPolicy { get; set; }
-        
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="Endpoints"/>.
-        /// </summary>
-        bool PublishMetadata { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="ServiceHost"/> hosting the web service.
-        /// </summary>
-        ServiceHost ServiceHost { get; }
+        public List<object> Attachments
+        {
+            get
+            {
+                return m_attachments;
+            }
+        }
 
         #endregion
     }

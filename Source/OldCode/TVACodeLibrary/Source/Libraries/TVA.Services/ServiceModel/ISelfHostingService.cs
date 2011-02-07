@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  Serialization.cs - Gbtc
+//  ISelfHostingService.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,10 +8,19 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/20/2009 - Pinal C. Patel
+//  08/21/2009 - Pinal C. Patel
 //       Generated original version of source code.
 //  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  05/28/2010 - Pinal C. Patel
+//       Added an endpoint for web service help.
+//  10/08/2010 - Pinal C. Patel
+//       Removed REST web service help endpoint since a similar feature is now part of WCF 4.0.
+//  10/14/2010 - Pinal C. Patel
+//       Made changes for hosting flexibility and enabling security:
+//         Deleted DataFlow since access restriction can now be imposed by enabling security.
+//         Added SecurityPolicy and PublishMetadata.
+//         Renamed ServiceUri to Endpoints and ServiceContract to Contract.
 //
 //*******************************************************************************************************
 
@@ -232,132 +241,69 @@
 #endregion
 
 using System;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Json;
-using System.Xml.Serialization;
+using System.IdentityModel.Policy;
+using System.ServiceModel;
+using TVA.Configuration;
 
-namespace TVA.Web.Services
+namespace TVA.Services.ServiceModel
 {
-    #region [ Enumerations ]
-
     /// <summary>
-    /// Indicates the format of <see cref="Object"/> serialization or deserialization.
+    /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
-    public enum SerializationFormat
+    [ServiceContract()]
+    public interface ISelfHostingService : ISupportLifecycle, IPersistSettings
     {
-        /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
-        /// </summary>
-        Json,
-        /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="XmlSerializer"/> to ASMX (.NET Web Service) compatible XML (eXtensible Markup Language) format.
-        /// </summary>
-        PoxAsmx,
-        /// <summary>
-        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractSerializer"/> to REST (Representational State Transfer) compatible XML (eXtensible Markup Language) format.
-        /// </summary>
-        PoxRest
-    }
-
-    #endregion
-
-    /// <summary>
-    /// Helper class to serialize and deserialize <see cref="Object"/>s to web service compatible <see cref="SerializationFormat"/>s.
-    /// </summary>
-    /// <seealso cref="SerializationFormat"/>
-    public static class Serialization
-    {
-        #region [ Methods ]
+        #region [ Members ]
 
         /// <summary>
-        /// Serializes an <see cref="Object"/>.
+        /// Occurs when the <see cref="ServiceHost"/> has been created with the specified <see cref="Endpoints"/>.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> of the <paramref name="serializableObject"/>.</typeparam>
-        /// <param name="serializedOutput"><see cref="Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
-        /// <param name="serializableObject"><see cref="Object"/> to be serialized.</param>
-        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
-        /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        public static void Serialize<T>(ref Stream serializedOutput, T serializableObject, SerializationFormat serializationFormat)
-        {
-            if (serializedOutput == null)
-                throw new ArgumentNullException("serializedOutput");
-
-            if (serializableObject == null)
-                throw new ArgumentNullException("serializableObject");
-
-            // Serialize object to the provided stream.
-            if (serializationFormat == SerializationFormat.PoxAsmx)
-            {
-                // Serialize to ASMX XML format.
-                XmlSerializer serializer = new XmlSerializer(typeof(T));
-                serializer.Serialize(serializedOutput, serializableObject);
-            }
-            else if (serializationFormat == SerializationFormat.PoxRest)
-            {
-                // Serialize to REST XML format.
-                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-                serializer.WriteObject(serializedOutput, serializableObject);
-            }
-            else if (serializationFormat == SerializationFormat.Json)
-            {
-                // Serialize to JSON format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-                serializer.WriteObject(serializedOutput, serializableObject);
-            }
-            else
-            {
-                // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
-            }
-
-            // Seek to the beginning of the serialized output stream.
-            serializedOutput.Position = 0;
-        }
+        event EventHandler ServiceHostCreated;
 
         /// <summary>
-        /// Deserializes a serialized <see cref="Object"/>.
+        /// Occurs when the <see cref="ServiceHost"/> can process requests via all of its endpoints.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
-        /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
-        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
-        /// <returns>The deserialized <see cref="Object"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
-        /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        public static T Deserialize<T>(Stream serializedObject, SerializationFormat serializationFormat)
-        {
-            if (serializedObject == null)
-                throw new ArgumentNullException("serializedObject");
+        event EventHandler ServiceHostStarted;
 
-            // Deserialize the serialized object.
-            T deserializedObject;
-            if (serializationFormat == SerializationFormat.PoxAsmx)
-            {
-                // Object was serialized to ASMX XML format.
-                XmlSerializer serializer = new XmlSerializer(typeof(T));
-                deserializedObject = (T)serializer.Deserialize(serializedObject);
-            }
-            else if (serializationFormat == SerializationFormat.PoxRest)
-            {
-                // Object was serialized to REST XML format.
-                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
-                deserializedObject = (T)serializer.ReadObject(serializedObject);
-            }
-            else if (serializationFormat == SerializationFormat.Json)
-            {
-                // Object was serialized to JSON format.
-                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
-                deserializedObject = (T)serializer.ReadObject(serializedObject);
-            }
-            else
-            {
-                // Serialization format is not supported.
-                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
-            }
+        /// <summary>
+        /// Occurs when an <see cref="Exception"/> is encountered when processing a request.
+        /// </summary>
+        event EventHandler<EventArgs<Exception>> ServiceProcessException;
 
-            return deserializedObject;
-        }
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets a semicolon delimited list of URIs where the web service can be accessed.
+        /// </summary>
+        string Endpoints { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Type.FullName"/> of the contract interface implemented by the web service.
+        /// </summary>
+        string Contract { get; set; }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether the <see cref="ServiceHost"/> will use the current instance of the web service for processing 
+        /// requests or base the web service instance creation on <see cref="InstanceContextMode"/> specified in its <see cref="ServiceBehaviorAttribute"/>.
+        /// </summary>
+        bool Singleton { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Type.FullName"/> of <see cref="IAuthorizationPolicy"/> to be used for securing all web service <see cref="Endpoints"/>.
+        /// </summary>
+        string SecurityPolicy { get; set; }
+        
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether web service metadata is to made available at all web service <see cref="Endpoints"/>.
+        /// </summary>
+        bool PublishMetadata { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="ServiceHost"/> hosting the web service.
+        /// </summary>
+        ServiceHost ServiceHost { get; }
 
         #endregion
     }

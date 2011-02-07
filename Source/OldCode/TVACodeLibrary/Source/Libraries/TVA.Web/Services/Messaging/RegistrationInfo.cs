@@ -236,7 +236,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Threading;
 
-namespace TVA.Web.Services.Messaging
+namespace TVA.Services.ServiceModel.Messaging
 {
     /// <summary>
     /// Represents information about a registration with the <see cref="MessageBusService"/> to produce/consume <see cref="Message"/>s.

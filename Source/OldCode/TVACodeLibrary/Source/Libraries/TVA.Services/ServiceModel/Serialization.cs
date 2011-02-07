@@ -1,5 +1,5 @@
-//*******************************************************************************************************
-//  ClientRequest.cs - Gbtc
+﻿//*******************************************************************************************************
+//  Serialization.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2009
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -8,21 +8,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  08/29/2006 - Pinal C. Patel
-//       Original version of source code generated.
-//  04/27/2007 - Pinal C. Patel
-//       Added Attachments property for clients to send serializable objects as part of the request.
-//  09/30/2008 - J. Ritchie Carroll
-//       Converted to C#.
-//  03/09/2009 - Pinal C. Patel
-//       Edited code comments.
-//  09/14/2009 - Stephen C. Wills
+//  08/20/2009 - Pinal C. Patel
+//       Generated original version of source code.
+//  09/15/2009 - Stephen C. Wills
 //       Added new header and license agreement.
-//  10/14/2010 - Pinal C. Patel
-//       Overrode ToString() method to provide a text representation of ClientRequest.
-//       Recoded static Parse() method to make it more robust.
-//  01/24/201 - Pinal C. Patel
-//       Modified ToString() remove leading and trailing white spaces.
 //
 //*******************************************************************************************************
 
@@ -243,150 +232,131 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using TVA.Console;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Xml.Serialization;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceModel
 {
+    #region [ Enumerations ]
+
     /// <summary>
-    /// Represents a request sent by <see cref="ClientHelper"/> to <see cref="ServiceHelper"/>.
+    /// Indicates the format of <see cref="Object"/> serialization or deserialization.
     /// </summary>
-    /// <seealso cref="ClientHelper"/>
-    /// <seealso cref="ServiceHelper"/>
-    [Serializable()]
-    public class ClientRequest
+    public enum SerializationFormat
     {
-        #region [ Members ]
-
-        // Fields
-        private string m_command;
-        private Arguments m_arguments;
-        private List<object> m_attachments;
-
-        #endregion
-
-        #region [ Constructors ]
-
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
+        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
         /// </summary>
-        public ClientRequest()
-            : this("UNDEFINED")
-        {
-        }
-
+        Json,
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
+        /// <see cref="Object"/> is serialized or deserialized using <see cref="XmlSerializer"/> to ASMX (.NET Web Service) compatible XML (eXtensible Markup Language) format.
         /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        public ClientRequest(string command)
-            : this(command, new Arguments(""))
-        {
-        }
-
+        PoxAsmx,
         /// <summary>
-        /// Initializes a new instance of the <see cref="ClientRequest"/> class.
+        /// <see cref="Object"/> is serialized or deserialized using <see cref="DataContractSerializer"/> to REST (Representational State Transfer) compatible XML (eXtensible Markup Language) format.
         /// </summary>
-        /// <param name="command">Command text for the <see cref="ClientRequest"/>.</param>
-        /// <param name="arguments"><see cref="Arguments"/> for the <paramref name="command"/>.</param>
-        public ClientRequest(string command, Arguments arguments)
-        {
-            m_command = command.ToUpper();
-            m_arguments = arguments;
-            m_attachments = new List<object>();
-        }
+        PoxRest
+    }
 
-        #endregion
+    #endregion
 
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the command text for the <see cref="ClientRequest"/>.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is either a null or empty string.</exception>
-        public string Command
-        {
-            get
-            {
-                return m_command;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_command = value.ToUpper();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Arguments"/> for the <see cref="Command"/>.
-        /// </summary>
-        public Arguments Arguments
-        {
-            get
-            {
-                return m_arguments;
-            }
-            set
-            {
-                m_arguments = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets a list of attachments for the <see cref="ClientRequest"/>.
-        /// </summary>
-        public List<object> Attachments
-        {
-            get
-            {
-                return m_attachments;
-            }
-        }
-
-        #endregion
-
+    /// <summary>
+    /// Helper class to serialize and deserialize <see cref="Object"/>s to web service compatible <see cref="SerializationFormat"/>s.
+    /// </summary>
+    /// <seealso cref="SerializationFormat"/>
+    public static class Serialization
+    {
         #region [ Methods ]
 
         /// <summary>
-        /// Returns the <see cref="String"/> that represents the <see cref="ClientRequest"/>.
+        /// Serializes an <see cref="Object"/>.
         /// </summary>
-        /// <returns>A <see cref="String"/> that represents the <see cref="ClientRequest"/>.</returns>
-        public override string ToString()
+        /// <typeparam name="T"><see cref="Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+        /// <param name="serializedOutput"><see cref="Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
+        /// <param name="serializableObject"><see cref="Object"/> to be serialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
+        /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        public static void Serialize<T>(ref Stream serializedOutput, T serializableObject, SerializationFormat serializationFormat)
         {
-            return string.Format("{0} {1}", m_command, m_arguments).Trim();
+            if (serializedOutput == null)
+                throw new ArgumentNullException("serializedOutput");
+
+            if (serializableObject == null)
+                throw new ArgumentNullException("serializableObject");
+
+            // Serialize object to the provided stream.
+            if (serializationFormat == SerializationFormat.PoxAsmx)
+            {
+                // Serialize to ASMX XML format.
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                serializer.Serialize(serializedOutput, serializableObject);
+            }
+            else if (serializationFormat == SerializationFormat.PoxRest)
+            {
+                // Serialize to REST XML format.
+                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+                serializer.WriteObject(serializedOutput, serializableObject);
+            }
+            else if (serializationFormat == SerializationFormat.Json)
+            {
+                // Serialize to JSON format.
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+                serializer.WriteObject(serializedOutput, serializableObject);
+            }
+            else
+            {
+                // Serialization format is not supported.
+                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
+            }
+
+            // Seek to the beginning of the serialized output stream.
+            serializedOutput.Position = 0;
         }
 
-        #endregion
-
-        #region [ Static ]
-
         /// <summary>
-        /// Converts <see cref="string"/> to a <see cref="ClientRequest"/>.
+        /// Deserializes a serialized <see cref="Object"/>.
         /// </summary>
-        /// <param name="text">Text to be converted to a <see cref="ClientRequest"/>.</param>
-        /// <returns><see cref="ClientRequest"/> object if parsing is successful; otherwise null.</returns>
-        public static ClientRequest Parse(string text)
+        /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
+        /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+        /// <returns>The deserialized <see cref="Object"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
+        /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        public static T Deserialize<T>(Stream serializedObject, SerializationFormat serializationFormat)
         {
-            // Input text can't be null.
-            if (text == null)
-                return null;
+            if (serializedObject == null)
+                throw new ArgumentNullException("serializedObject");
 
-            // Input text can't be empty.
-            text = text.Trim();
-            if (text == "")
-                return null;
-
-            string[] textSegments = text.Split(' ');
-            ClientRequest request = new ClientRequest();
-            request.Command = textSegments[0].ToUpper();
-            if (textSegments.Length == 1)
-                request.Arguments = new Arguments("");
+            // Deserialize the serialized object.
+            T deserializedObject;
+            if (serializationFormat == SerializationFormat.PoxAsmx)
+            {
+                // Object was serialized to ASMX XML format.
+                XmlSerializer serializer = new XmlSerializer(typeof(T));
+                deserializedObject = (T)serializer.Deserialize(serializedObject);
+            }
+            else if (serializationFormat == SerializationFormat.PoxRest)
+            {
+                // Object was serialized to REST XML format.
+                DataContractSerializer serializer = new DataContractSerializer(typeof(T));
+                deserializedObject = (T)serializer.ReadObject(serializedObject);
+            }
+            else if (serializationFormat == SerializationFormat.Json)
+            {
+                // Object was serialized to JSON format.
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(T));
+                deserializedObject = (T)serializer.ReadObject(serializedObject);
+            }
             else
-                request.Arguments = new Arguments(text.Remove(0, text.IndexOf(' ') + 1).Trim());
+            {
+                // Serialization format is not supported.
+                throw new NotSupportedException(string.Format("{0} serialization is not supported", serializationFormat));
+            }
 
-            return request;
+            return deserializedObject;
         }
 
         #endregion

@@ -262,7 +262,7 @@ using System.Threading;
 using TVA.Communication;
 using TVA.Configuration;
 
-namespace TVA.Services
+namespace TVA.Services.ServiceProcess
 {
     /// <summary>
     /// Component that provides client-side functionality to <see cref="ServiceHelper"/>.
