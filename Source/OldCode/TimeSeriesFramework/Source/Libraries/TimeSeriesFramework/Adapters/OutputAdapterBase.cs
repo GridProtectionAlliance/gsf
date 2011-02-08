@@ -284,6 +284,14 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Initiates request for metadata refresh for <see cref="OutputAdapterBase"/>, if implemented.
+        /// </summary>
+        [AdapterCommand("Requests metadata refresh of output adapter.")]
+        public virtual void RefreshMetadata()
+        {
+        }
+
+        /// <summary>
         /// Starts this <see cref="OutputAdapterBase"/> and initiates connection cycle to data output stream.
         /// </summary>		
         public override void Start()
