@@ -20,10 +20,14 @@
 //       Generated original version of source code.
 //  11/18/2010 - Mehulbhai P Thakkar
 //       Fixed bug in the Pop() method by checking if m_frameQueue has any element in it.
+//  02/08/2011 - J. Ritchie Carroll
+//       Added ExamineQueueState method to analyze real-time queue state.
+//
 //******************************************************************************************************
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using TVA;
 
 namespace TimeSeriesFramework
@@ -232,6 +236,54 @@ namespace TimeSeriesFramework
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        /// <summary>
+        /// Examines and returns the status of the <see cref="FrameQueue"/>.
+        /// </summary>
+        /// <param name="expectedMeasurements">Number of expected measurements per frame.</param>
+        public string ExamineQueueState(int expectedMeasurements)
+        {
+            StringBuilder status = new StringBuilder();
+
+            lock (m_frameList)
+            {
+                status.AppendLine("Concentrator frame queue detail:");
+                status.AppendLine();
+                status.AppendLine();
+                status.AppendFormat(" Ordered frame queue count: {0}", m_frameList.Count);
+                status.AppendLine();
+                status.AppendFormat("     Frame hashtable count: {0}", m_frameHash.Count);
+                status.AppendLine();
+
+                if (m_frameList.Count > 0)
+                {
+                    LinkedListNode<TrackingFrame> node = m_frameList.First;
+                    IFrame frame;
+                    status.AppendLine();
+
+                    for (int i = 0; i < m_frameList.Count; i++)
+                    {
+                        if (node.Value != null)
+                            frame = node.Value.SourceFrame;
+                        else
+                            frame = null;
+
+                        if (frame == null)
+                            status.AppendFormat("    Frame index {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
+                        else
+                            status.AppendFormat("    Frame index {0} @ {1} - {2} measurements, {3} received",
+                                i.ToString().PadLeft(4, '0'),
+                                (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
+                                frame.Measurements.Count,
+                                (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
+
+                        status.AppendLine();
+                    }
+                }
+            }
+
+            return status.ToString();
         }
 
         /// <summary>

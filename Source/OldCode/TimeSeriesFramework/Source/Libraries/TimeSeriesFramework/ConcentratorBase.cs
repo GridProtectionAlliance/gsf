@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  02/08/2011 - J. Ritchie Carroll
+//       Added QueueState property to expose real-time queue state analysis.
 //
 //******************************************************************************************************
 
@@ -1169,6 +1171,20 @@ namespace TimeSeriesFramework
             get
             {
                 return TotalPublicationTime / m_publishedFrames;
+            }
+        }
+
+        /// <summary>
+        /// Gets detailed state of concentrator frame queue.
+        /// </summary>
+        public string QueueState
+        {
+            get
+            {
+                if (m_frameQueue != null)
+                    return m_frameQueue.ExamineQueueState(m_expectedMeasurements);
+
+                return "";
             }
         }
 

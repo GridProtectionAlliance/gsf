@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  02/08/2011 - J. Ritchie Carroll
+//       Added invokable ExamineQueueState method to analyze real-time concentrator frame queue state.
 //
 //******************************************************************************************************
 
@@ -571,6 +573,15 @@ namespace TimeSeriesFramework.Adapters
         public override void Stop()
         {
             base.Stop();
+        }
+
+        /// <summary>
+        /// Examines the concentrator frame queue state of the <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        [AdapterCommand("Examines concentration frame queue state.")]
+        public void ExamineQueueState()
+        {
+            OnStatusMessage(QueueState);
         }
 
         /// <summary>
