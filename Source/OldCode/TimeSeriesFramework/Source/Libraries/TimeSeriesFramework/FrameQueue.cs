@@ -279,6 +279,7 @@ namespace TimeSeriesFramework
                                 (frame.Measurements.Count / (double)expectedMeasurements).ToString("##0.00%"));
 
                         status.AppendLine();
+                        node = node.Next;
                     }
                 }
             }
