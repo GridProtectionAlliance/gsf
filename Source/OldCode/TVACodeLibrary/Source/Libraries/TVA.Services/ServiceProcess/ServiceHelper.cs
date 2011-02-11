@@ -64,6 +64,8 @@
 //       command to show lifetime performance statistics. Made sampling interval a user config option.
 //  01/17/2011 - J. Ritchie Carroll
 //       Added default "version" and "time" service commands.
+//  02/11/2011 - Pinal C. Patel
+//       Updated VerifySecurity() to work correctly with TCP integrated windows authentication. 
 //
 //*******************************************************************************************************
 
@@ -1294,10 +1296,10 @@ namespace TVA.Services.ServiceProcess
                 settings.Add("SupportTelnetSessions", m_supportTelnetSessions, "True to enable the support for remote telnet-like sessions; otherwise False.");
                 settings.Add("SupportSystemCommands", m_supportSystemCommands, "True to enable system-level access (-system switch) via the build-in commands; otherwise False.");
                 settings.Add("SecureRemoteInteractions", m_secureRemoteInteractions, "True to enable security of remote client interactions; otherwise False.");
-                
+
                 if (settings["TelnetSessionPassword"] != null)
                     m_telnetSessionPassword = settings["TelnetSessionPassword"].ValueAs(m_telnetSessionPassword);
-                
+
                 LogStatusUpdates = settings["LogStatusUpdates"].ValueAs(m_logStatusUpdates);
                 MaxStatusUpdatesLength = settings["MaxStatusUpdatesLength"].ValueAs(m_maxStatusUpdatesLength);
                 MaxStatusUpdatesFrequency = settings["MaxStatusUpdatesFrequency"].ValueAs(m_maxStatusUpdatesFrequency);
@@ -1367,7 +1369,7 @@ namespace TVA.Services.ServiceProcess
                 m_clientRequestHandlers.Add(new ClientRequestHandler("LoadSchedules", "Loads process schedules from the config file", LoadSchedules));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Version", "Displays current service version", ShowVersion));
                 m_clientRequestHandlers.Add(new ClientRequestHandler("Time", "Displays current system time", ShowTime));
-                
+
                 // Enable telnet support if requested.
                 if (m_supportTelnetSessions)
                 {
@@ -1898,7 +1900,8 @@ namespace TVA.Services.ServiceProcess
         private bool VerifySecurity(ClientInfo client)
         {
             // Set current thread principal to remote client's user principal.
-            Thread.CurrentPrincipal = client.ClientUser;
+            if (!(Thread.CurrentPrincipal is WindowsPrincipal))
+                Thread.CurrentPrincipal = client.ClientUser;
 
             // Retrieve previously initialized security provider of the remote client's user.
             if (SecurityProviderCache.CurrentProvider == null)
@@ -2065,9 +2068,6 @@ namespace TVA.Services.ServiceProcess
 
         private void RemotingServer_ReceiveClientDataComplete(object sender, EventArgs<Guid, byte[], int> e)
         {
-            // Set thread principal to current windows principal.
-            Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
             ClientInfo requestSender = FindConnectedClient(e.Argument1);
             if (requestSender == null)
             {

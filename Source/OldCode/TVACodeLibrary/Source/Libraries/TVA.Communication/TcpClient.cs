@@ -31,6 +31,8 @@
 //       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
 //  11/29/2010 - Pinal C. Patel
 //       Corrected the implementation of ConnectAsync() method.
+//  02/11/2011 - Pinal C. Patel
+//       Added IntegratedSecurity property to enable integrated windows authentication.
 //
 //*******************************************************************************************************
 
@@ -253,6 +255,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -345,6 +348,11 @@ namespace TVA.Communication
         public const bool DefaultPayloadAware = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IntegratedSecurity"/> property.
+        /// </summary>
+        public const bool DefaultIntegratedSecurity = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ClientBase.ConnectionString"/> property.
         /// </summary>
         public const string DefaultConnectionString = "Server=localhost:8888";
@@ -352,6 +360,7 @@ namespace TVA.Communication
         // Fields
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
+        private bool m_integratedSecurity;
         private TransportProvider<Socket> m_tcpClient;
         private int m_connectionAttempts;
         private Dictionary<string, string> m_connectData;
@@ -379,6 +388,7 @@ namespace TVA.Communication
         {
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
+            m_integratedSecurity = DefaultIntegratedSecurity;
             m_tcpClient = new TransportProvider<Socket>();
         }
 
@@ -438,6 +448,24 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates whether the current Windows account credentials are used for authentication.
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultIntegratedSecurity),
+        Description("Indicates whether the current Windows account credentials are used for authentication.")]
+        public bool IntegratedSecurity
+        {
+            get
+            {
+                return m_integratedSecurity;
+            }
+            set
+            {
+                m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="TransportProvider{Socket}"/> object for the <see cref="TcpClient"/>.
         /// </summary>
         [Browsable(false)]
@@ -477,6 +505,7 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["PayloadAware", true].Update(m_payloadAware);
+                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 config.Save();
             }
         }
@@ -493,7 +522,9 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the current Windows account credentials are used for authentication, otherwise False.");
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
             }
         }
 
@@ -649,6 +680,27 @@ namespace TVA.Communication
                 tcpClient.Provider.EndConnect(asyncResult);
                 tcpClient.ID = this.ClientID;
                 tcpClient.Secretkey = SharedSecret;
+
+                // Send current Windows credentials for authentication.
+                if (m_integratedSecurity)
+                {
+                    NetworkStream socketStream = null;
+                    NegotiateStream authenticationStream = null;
+                    try
+                    {
+                        socketStream = new NetworkStream(tcpClient.Provider);
+                        authenticationStream = new NegotiateStream(socketStream);
+                        authenticationStream.AuthenticateAsClient();
+                    }
+                    finally
+                    {
+                        if (socketStream != null)
+                            socketStream.Dispose();
+
+                        if (authenticationStream != null)
+                            authenticationStream.Dispose();
+                    }
+                }
 
                 // We can proceed further with receiving data from the client.
                 if (Handshake)

@@ -24,6 +24,8 @@
 //       Added new header and license agreement.
 //  10/14/2009 - Pinal C. Patel
 //       Added null reference check to DisconnectOne() for safety.
+//  02/11/2011 - Pinal C. Patel
+//       Added IntegratedSecurity property to enable integrated windows authentication.
 //
 //*******************************************************************************************************
 
@@ -246,7 +248,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Principal;
 using System.Threading;
 using TVA.Configuration;
 
@@ -342,6 +346,11 @@ namespace TVA.Communication
         public const bool DefaultPayloadAware = false;
 
         /// <summary>
+        /// Specifies the default value for the <see cref="IntegratedSecurity"/> property.
+        /// </summary>
+        public const bool DefaultIntegratedSecurity = false;
+
+        /// <summary>
         /// Specifies the default value for the <see cref="ServerBase.ConfigurationString"/> property.
         /// </summary>
         public const string DefaultConfigurationString = "Port=8888";
@@ -349,6 +358,7 @@ namespace TVA.Communication
         // Fields
         private bool m_payloadAware;
         private byte[] m_payloadMarker;
+        private bool m_integratedSecurity;
         private Socket m_tcpServer;
         private Dictionary<Guid, TransportProvider<Socket>> m_tcpClients;
         private Dictionary<string, string> m_configData;
@@ -374,6 +384,7 @@ namespace TVA.Communication
         {
             m_payloadAware = DefaultPayloadAware;
             m_payloadMarker = Payload.DefaultMarker;
+            m_integratedSecurity = DefaultIntegratedSecurity;
             m_tcpClients = new Dictionary<Guid, TransportProvider<Socket>>();
         }
 
@@ -433,6 +444,24 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Gets or sets a boolean value that indicates whether the client Windows account credentials are used for authentication.
+        /// </summary>
+        [Category("Security"),
+        DefaultValue(DefaultIntegratedSecurity),
+        Description("Indicates whether the client Windows account credentials are used for authentication.")]
+        public bool IntegratedSecurity
+        {
+            get 
+            {
+                return m_integratedSecurity;
+            }
+            set
+            {
+                m_integratedSecurity = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the <see cref="Socket"/> object for the <see cref="TcpServer"/>.
         /// </summary>
         [Browsable(false)]
@@ -460,6 +489,7 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings["PayloadAware", true].Update(m_payloadAware);
+                settings["IntegratedSecurity", true].Update(m_integratedSecurity);
                 config.Save();
             }
         }
@@ -476,7 +506,9 @@ namespace TVA.Communication
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
                 settings.Add("PayloadAware", m_payloadAware, "True if payload boundaries are to be preserved during transmission, otherwise False.");
+                settings.Add("IntegratedSecurity", m_integratedSecurity, "True if the client Windows account credentials are used for authentication, otherwise False.");
                 PayloadAware = settings["PayloadAware"].ValueAs(m_payloadAware);
+                IntegratedSecurity = settings["IntegratedSecurity"].ValueAs(m_integratedSecurity);
             }
         }
 
@@ -510,7 +542,7 @@ namespace TVA.Communication
                 // Notify that the server has been started successfully.
                 OnServerStarted();
             }
-            else 
+            else
             {
                 throw new InvalidOperationException("Server is currently running");
             }
@@ -595,7 +627,7 @@ namespace TVA.Communication
 
             // Send payload to the client asynchronously.
             handle = tcpClient.Provider.BeginSend(data, offset, length, SocketFlags.None, SendPayloadAsyncCallback, tcpClient).AsyncWaitHandle;
-            
+
             // Notify that the send operation has started.
             tcpClient.SendBuffer = data;
             tcpClient.SendBufferOffset = offset;
@@ -619,6 +651,31 @@ namespace TVA.Communication
                 // Process the newly connected client.
                 tcpClient.Secretkey = SharedSecret;
                 tcpClient.Provider = m_tcpServer.EndAccept(asyncResult);
+
+                // Authenticate the connected client Windows credentials.
+                if (m_integratedSecurity)
+                {
+                    NetworkStream socketStream = null;
+                    NegotiateStream authenticationStream = null;
+                    try
+                    {
+                        socketStream = new NetworkStream(tcpClient.Provider);
+                        authenticationStream = new NegotiateStream(socketStream);
+                        authenticationStream.AuthenticateAsServer();
+
+                        if (authenticationStream.RemoteIdentity is WindowsIdentity)
+                            Thread.CurrentPrincipal = new WindowsPrincipal((WindowsIdentity)authenticationStream.RemoteIdentity);
+                    }
+                    finally
+                    {
+                        if (socketStream != null)
+                            socketStream.Dispose();
+
+                        if (authenticationStream != null)
+                            authenticationStream.Dispose();
+                    }
+                }
+
                 if (MaxClientConnections != -1 && ClientIDs.Length >= MaxClientConnections)
                 {
                     // Reject client connection since limit has been reached.
@@ -988,7 +1045,7 @@ namespace TVA.Communication
                     {
                         // For any other exception, notify and resume receive.
                         OnReceiveClientDataException(tcpClient.ID, ex);
-                        ReceivePayloadAsync(tcpClient);                       
+                        ReceivePayloadAsync(tcpClient);
                     }
                     catch
                     {
