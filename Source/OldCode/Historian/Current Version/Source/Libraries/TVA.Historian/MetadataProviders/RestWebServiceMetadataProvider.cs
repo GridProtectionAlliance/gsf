@@ -33,7 +33,7 @@ using System;
 using System.IO;
 using System.Net;
 using TVA.Configuration;
-using TVA.Web.Services;
+using TVA.Services.ServiceModel;
 
 namespace TVA.Historian.MetadataProviders
 {   

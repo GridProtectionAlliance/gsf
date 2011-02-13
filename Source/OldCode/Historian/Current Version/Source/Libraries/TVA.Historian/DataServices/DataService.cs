@@ -33,7 +33,7 @@
 //
 //******************************************************************************************************
 
-using TVA.Web.Services;
+using TVA.Services.ServiceModel;
 
 namespace TVA.Historian.DataServices
 {

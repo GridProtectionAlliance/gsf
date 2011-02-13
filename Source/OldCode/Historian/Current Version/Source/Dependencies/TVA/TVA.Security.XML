@@ -4,179 +4,40 @@
         <name>TVA.Security</name>
     </assembly>
     <members>
-        <member name="T:TVA.Security.UserData">
+        <member name="T:TVA.Security.SecurityProviderCache">
             <summary>
-            A serializable class that contains information about a user defined in the security datastore.
+            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
             </summary>
         </member>
-        <member name="M:TVA.Security.UserData.#ctor">
+        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
+            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
             </summary>
         </member>
-        <member name="M:TVA.Security.UserData.#ctor(System.String)">
+        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
-            </summary>
-            <param name="username">User's logon name.</param>
-        </member>
-        <member name="M:TVA.Security.UserData.Initialize">
-            <summary>
-            Initializes this <see cref="T:TVA.Security.UserData"/> object.
+            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
             </summary>
         </member>
-        <member name="P:TVA.Security.UserData.LoginID">
+        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
             <summary>
-            Gets the user's login ID.
+            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
             </summary>
         </member>
-        <member name="P:TVA.Security.UserData.Username">
+        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
             <summary>
-            Gets the user's login name.
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
             </summary>
         </member>
-        <member name="P:TVA.Security.UserData.Password">
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
             <summary>
-            Gets the user's password.
+            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
             </summary>
         </member>
-        <member name="P:TVA.Security.UserData.FirstName">
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
             <summary>
-            Gets the user's first name.
+            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
             </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.LastName">
-            <summary>
-            Gets the user's last name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.CompanyName">
-            <summary>
-            Gets the user's company name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.PhoneNumber">
-            <summary>
-            Gets the user's phone number.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.EmailAddress">
-            <summary>
-            Gets the user's email address.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.SecurityQuestion">
-            <summary>
-            Gets the user's security question.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.SecurityAnswer">
-            <summary>
-            Gets the user's security answer.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.PasswordChangeDateTime">
-            <summary>
-            Gets the UTC date and time when user must change the password.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
-            <summary>
-            Gets the UTC date and time when user account was created.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsDefined">
-            <summary>
-            Gets a boolean value that indicates whether the user is defined in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsExternal">
-            <summary>
-            Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsDisabled">
-            <summary>
-            Gets a boolean value that indicates whether the user account has been disabled.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsLockedOut">
-            <summary>
-            Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsAuthenticated">
-            <summary>
-            Gets a boolean value indicating whether or not the user has been authenticated.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Groups">
-            <summary>
-            Gets a read-only list of all the groups the user belongs to.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Roles">
-            <summary>
-            Gets a read-only list of all the roles assigned to the user.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.SecurityProviderUtility">
-            <summary>
-            A helper class containing methods used in the implementation of role-based security.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.CreateProvider(System.String)">
-            <summary>
-            Creates a new <see cref="T:TVA.Security.ISecurityProvider"/> based on the settings in the config file.
-            </summary>
-            <param name="username">Username of the user for whom the <see cref="T:TVA.Security.ISecurityProvider"/> is to be created.</param>
-            <returns>An object that implements <see cref="T:TVA.Security.ISecurityProvider"/>.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceSecurable(System.String)">
-            <summary>
-            Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
-            </summary>
-            <param name="resource">Name of the resource to be checked.</param>
-            <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceAccessible(System.String)">
-            <summary>
-            Determines if the current user, as defined by the <see cref="P:System.Threading.Thread.CurrentPrincipal"/>, has permission to access 
-            the specified <paramref name="resource"/> based on settings in the config file.
-            </summary>
-            <param name="resource">Name of the resource to be checked.</param>
-            <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.IsRegexMatch(System.String,System.String)">
-            <summary>
-            Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
-            </summary>
-            <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
-            <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
-            <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.EncryptPassword(System.String)">
-            <summary>
-            Encrypts the password to a one-way hash using the SHA1 hash algorithm.
-            </summary>
-            <param name="password">Password to be encrypted.</param>
-            <returns>Encrypted password.</returns>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.GeneratePassword(System.Int32)">
-            <summary>
-            Generates a random password of the specified <paramref name="length"/> with at least one uppercase letter, one lowercase letter, one special character and one digit.
-            </summary>
-            <param name="length">Length of the password to generate.</param>
-            <returns>Randomly generated password of the specified <paramref name="length"/>.</returns>
-            <exception cref="T:System.ArgumentException">A value of less than 8 is specified for the <paramref name="length"/>.</exception>
-        </member>
-        <member name="M:TVA.Security.SecurityProviderUtility.SendNotification(System.String,System.String,System.String)">
-            <summary>
-            Sends email notification message to the specified <paramref name="recipient"/> using settings specified in the config file.
-            </summary>
-            <param name="recipient">Email address of the notification recipient.</param>
-            <param name="subject">Subject of the notification.</param>
-            <param name="body">Content of the notification.</param>
         </member>
         <member name="T:TVA.Security.SecurityIdentity">
             <summary>
@@ -665,40 +526,760 @@
             Contains fundamental classes that define the security framework for role-based security.
             </summary>
         </member>
-        <member name="T:TVA.Security.SecurityProviderCache">
+        <member name="T:TVA.Security.Radius.PacketType">
             <summary>
-            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
+            Specifies the type of RADIUS packet.
             </summary>
         </member>
-        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
+        <member name="F:TVA.Security.Radius.PacketType.AccessRequest">
             <summary>
-            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
+            Packet sent to a RADIUS server for verification of credentials.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
+        <member name="F:TVA.Security.Radius.PacketType.AccessAccept">
             <summary>
-            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
+            Packet sent by a RADIUS server when credential verification is successful.
             </summary>
         </member>
-        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
+        <member name="F:TVA.Security.Radius.PacketType.AccessReject">
             <summary>
-            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
+            Packet sent by a RADIUS server when credential verification is unsuccessful.
             </summary>
         </member>
-        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingRequest">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
+            Not used. No description available.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingResponse">
             <summary>
-            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
+            Not used. No description available.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingStatus">
             <summary>
-            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
+            Not used. No description available. [RFC 2882]
             </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.PasswordRequest">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.PasswordAccept">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.PasswordReject">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.AccountingMessage">
+            <summary>
+            Not used. No description available. [RFC 2882]
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.AccessChallenge">
+            <summary>
+            Packet sent by a RADIUS server when further information is needed for credential verification.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.StatuServer">
+            <summary>
+            Not used. No description available.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.PacketType.StatusClient">
+            <summary>
+            Not used. No description available.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.Radius.RadiusPacket">
+            <summary>
+            Represents a data packet transferred between RADIUS client and server.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor">
+            <summary>
+            Creates a default instance of RADIUS packet.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(TVA.Security.Radius.PacketType)">
+            <summary>
+            Creates an instance of RADIUS packet.
+            </summary>
+            <param name="type">Type of the packet.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(System.Byte[],System.Int32)">
+            <summary>
+            Creates an instance of RADIUS packet.
+            </summary>
+            <param name="binaryImage">A byte array.</param>
+            <param name="startIndex">Starting point in the byte array.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TVA.Security.Radius.RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetAttributeValue(TVA.Security.Radius.AttributeType)">
+            <summary>
+            Gets the value of the specified attribute if it is present in the packet.
+            </summary>
+            <param name="type">Type of the attribute whose value is to be retrieved.</param>
+            <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusPacket.Encoding">
+            <summary>
+            Encoding format for encoding text.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.String)">
+            <summary>
+            Gets bytes for the specified text.
+            </summary>
+            <param name="value">Text blob.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int16)">
+            <summary>
+            Gets bytes for the specified 16-bit signed integer value.
+            </summary>
+            <param name="value">16-bit signed integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt16)">
+            <summary>
+            Gets bytes for the specified 16-bit unsigned integer value.
+            </summary>
+            <param name="value">16-bit unsigned integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int32)">
+            <summary>
+            Gets bytes for the specified 32-bit signed integer value.
+            </summary>
+            <param name="value">32-bit signed integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt32)">
+            <summary>
+            Gets bytes for the specified 32-bit unsigned integer value.
+            </summary>
+            <param name="value">32-bit unsigned integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToText(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Converts the specified byte array to text.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <param name="length">Number of bytes to be converted.</param>
+            <returns>A text blob.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt16(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to a signed 16-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 16-bit signed integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt16(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to an unsigned 16-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 16-bit unsigned integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt32(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to a signed 32-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 32-bit signed integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt32(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to an unsigned 32-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 32-bit unsigned integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.CreateRequestAuthenticator(System.String)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
+            </summary>
+            <param name="sharedSecret">The shared secret to be used in generating the output.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.CreateResponseAuthenticator(System.String,TVA.Security.Radius.RadiusPacket,TVA.Security.Radius.RadiusPacket)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
+            </summary>
+            <param name="sharedSecret">The shared secret key.</param>
+            <param name="requestPacket">RADIUS packet sent from client to server.</param>
+            <param name="responsePacket">RADIUS packet sent from server to client.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.EncryptPassword(System.String,System.String,System.Byte[])">
+            <summary>
+            Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
+            </summary>
+            <param name="password">User's password.</param>
+            <param name="sharedSecret">Shared secret key.</param>
+            <param name="requestAuthenticator">Request authenticator byte array.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.Type">
+            <summary>
+            Gets or sets the type of the packet.
+            </summary>
+            <value></value>
+            <returns>Type of the packet.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.Identifier">
+            <summary>
+            Gets or sets the packet identifier.
+            </summary>
+            <value></value>
+            <returns>Identifier of the packet.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.Authenticator">
+            <summary>
+            Gets or sets the packet authenticator.
+            </summary>
+            <value></value>
+            <returns>Authenticator of the packet.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.Attributes">
+            <summary>
+            Gets a list of packet attributes.
+            </summary>
+            <value></value>
+            <returns>Attributes of the packet.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryLength">
+            <summary>
+            Gets the binary lenght of the packet.
+            </summary>
+            <value></value>
+            <returns>32-bit signed integer value.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryImage">
+            <summary>
+            Gets the binary image of the packet.
+            </summary>
+            <value></value>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="T:TVA.Security.SecurityProviderUtility">
+            <summary>
+            A helper class containing methods used in the implementation of role-based security.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.CreateProvider(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Security.ISecurityProvider"/> based on the settings in the config file.
+            </summary>
+            <param name="username">Username of the user for whom the <see cref="T:TVA.Security.ISecurityProvider"/> is to be created.</param>
+            <returns>An object that implements <see cref="T:TVA.Security.ISecurityProvider"/>.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceSecurable(System.String)">
+            <summary>
+            Determines if the specified <paramref name="resource"/> is to be secured based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the <paramref name="resource"/> is to be secured; otherwise false/</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsResourceAccessible(System.String)">
+            <summary>
+            Determines if the current user, as defined by the <see cref="P:System.Threading.Thread.CurrentPrincipal"/>, has permission to access 
+            the specified <paramref name="resource"/> based on settings in the config file.
+            </summary>
+            <param name="resource">Name of the resource to be checked.</param>
+            <returns>true if the current user has permission to access the <paramref name="resource"/>; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.IsRegexMatch(System.String,System.String)">
+            <summary>
+            Determines if the specified <paramref name="target"/> matches the specified <paramref name="spec"/>.
+            </summary>
+            <param name="spec">Spec string that can include wildcards ('*'). For example, *.txt</param>
+            <param name="target">Target string to be compared with the <paramref name="spec"/>.</param>
+            <returns>true if the <paramref name="target"/> matches the <paramref name="spec"/>, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.EncryptPassword(System.String)">
+            <summary>
+            Encrypts the password to a one-way hash using the SHA1 hash algorithm.
+            </summary>
+            <param name="password">Password to be encrypted.</param>
+            <returns>Encrypted password.</returns>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.GeneratePassword(System.Int32)">
+            <summary>
+            Generates a random password of the specified <paramref name="length"/> with at least one uppercase letter, one lowercase letter, one special character and one digit.
+            </summary>
+            <param name="length">Length of the password to generate.</param>
+            <returns>Randomly generated password of the specified <paramref name="length"/>.</returns>
+            <exception cref="T:System.ArgumentException">A value of less than 8 is specified for the <paramref name="length"/>.</exception>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderUtility.SendNotification(System.String,System.String,System.String)">
+            <summary>
+            Sends email notification message to the specified <paramref name="recipient"/> using settings specified in the config file.
+            </summary>
+            <param name="recipient">Email address of the notification recipient.</param>
+            <param name="subject">Subject of the notification.</param>
+            <param name="body">Content of the notification.</param>
+        </member>
+        <member name="T:TVA.Security.UserData">
+            <summary>
+            A serializable class that contains information about a user defined in the security datastore.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserData.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserData.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
+            </summary>
+            <param name="username">User's logon name.</param>
+        </member>
+        <member name="M:TVA.Security.UserData.Initialize">
+            <summary>
+            Initializes this <see cref="T:TVA.Security.UserData"/> object.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.LoginID">
+            <summary>
+            Gets the user's login ID.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Username">
+            <summary>
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Password">
+            <summary>
+            Gets the user's password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.FirstName">
+            <summary>
+            Gets the user's first name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.LastName">
+            <summary>
+            Gets the user's last name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.CompanyName">
+            <summary>
+            Gets the user's company name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PhoneNumber">
+            <summary>
+            Gets the user's phone number.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.EmailAddress">
+            <summary>
+            Gets the user's email address.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityQuestion">
+            <summary>
+            Gets the user's security question.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityAnswer">
+            <summary>
+            Gets the user's security answer.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PasswordChangeDateTime">
+            <summary>
+            Gets the UTC date and time when user must change the password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
+            <summary>
+            Gets the UTC date and time when user account was created.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDefined">
+            <summary>
+            Gets a boolean value that indicates whether the user is defined in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsExternal">
+            <summary>
+            Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDisabled">
+            <summary>
+            Gets a boolean value that indicates whether the user account has been disabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsLockedOut">
+            <summary>
+            Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsAuthenticated">
+            <summary>
+            Gets a boolean value indicating whether or not the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Groups">
+            <summary>
+            Gets a read-only list of all the groups the user belongs to.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Roles">
+            <summary>
+            Gets a read-only list of all the roles assigned to the user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecurityPrincipal">
+            <summary>
+            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecurityIdentity"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
+            </summary>
+            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
+            <summary>
+            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
+            </summary>
+            <param name="roles">Comma seperated list of roles to check.</param>
+            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.SecurityPrincipal.Identity">
+            <summary>
+            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.Radius.AttributeType">
+            <summary>
+            Specifies the type of RADIUS packet attribute.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.UserName">
+            <summary>
+            Attribute indicates the name of the user to be authenticated.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.UserPassword">
+            <summary>
+            Attribute indicates the password of the user to be authenticated.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.ChapPassword">
+            <summary>
+            Attribute indicates the response provided by a PPP CHAP user in reponse to the challenge.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.NasIpAddress">
+            <summary>
+            Attribute indicates the identifying IP address of the NAS requesting user authentication.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.NasPort">
+            <summary>
+            Attribute indicates the physical port number of the NAS which is authenticating the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.ServiceType">
+            <summary>
+            Attribute indicates the type of service the user has requested, or the type of service to be provided.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedProtocol">
+            <summary>
+            Attribute indicates the framing to be used for framed access.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedIpAddress">
+            <summary>
+            Attribute indicates the address to be configured for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedIpNetmask">
+            <summary>
+            Attribute indicates the IP netmask to be configured for the user when user is a router to a network.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedRouting">
+            <summary>
+            Attribute indicates the routing method for the user when user is a router to a network.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FilterId">
+            <summary>
+            Attribute indicates the name of the filter list for this user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedMtu">
+            <summary>
+            Attribute indicates the MTU to be configured for the user when it is not negotiated by some other means.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedCompression">
+            <summary>
+            Attribute indicates a compression protocol to be used for the link.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginIpHost">
+            <summary>
+            Attribute indicates the system with which to connect the user when LoginService attribute is included.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginService">
+            <summary>
+            Attribute indicates the service to use to connect the user to the login host.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginTcpPort">
+            <summary>
+            Attribute indicates the TCP port with which the user is to be connected when LoginService attribute
+            is included.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.ReplyMessage">
+            <summary>
+            Attribute indicates the text which may be displayed to the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.CallbackNumber">
+            <summary>
+            Attribute indicates a dialing string to be used for callback.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.CallbackId">
+            <summary>
+            Attribute indicates the name of a place to be called.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedRoute">
+            <summary>
+            Attribute provides routing information to be configured for the user on the NAS.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedIpxNetwork">
+            <summary>
+            Attribute indicates the IPX Network number to be configured for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.State">
+            <summary>
+            Attribute available to be sent by the server to the client in an AccessChallenge and must be sent
+            unmodified from the client to the server in the new AccessRequest reply to the challenge.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.Class">
+            <summary>
+            Attribute available to be sent by the server to the client in an AccessAccept and should be sent
+            unmodified by the client to the accounting server as part of the AccountingRequest.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.VendorSpecific">
+            <summary>
+            Attribute available to allow vendors to support their own extended attributes.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.SessionTimeout">
+            <summary>
+            Attribute sets the maximum number of seconds of service to be provided to the user before termination
+            of the session or prompt.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.IdleTimeout">
+            <summary>
+            Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before
+            termination of the session or prompt.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.TerminationAction">
+            <summary>
+            Attribute indicates the action the NAS should take when the specified service is complete.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.CallerStationId">
+            <summary>
+            Attribute indicates the phone number that the user called using DNIS or similar technology.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.CallingStationId">
+            <summary>
+            Attribute indicates the phone number the call came from using ANI or similar technology.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.NasIdentifier">
+            <summary>
+            Attribute indicates a string identifier for the NAS originating the AccessRequest.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.ProxyState">
+            <summary>
+            Attribute indicates the state a proxy server forwarding requests to the server.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginLatService">
+            <summary>
+            Attribute indicates the system with which the user is to be connected by LAT.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginLatNode">
+            <summary>
+            Attribute indicates the Node with which the user is to be automatically connected by LAT.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginLatGroup">
+            <summary>
+            Attribute indicates the string identifier for the LAT group codes which the user is authorized to use.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkLink">
+            <summary>
+            Attribute indicates the AppleTalk network number which should be used for the serial link to the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkNetwork">
+            <summary>
+            Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk
+            node for the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkZone">
+            <summary>
+            Attribute indicates the AppleTalk Default Zone to be used for this user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.ChapChallenge">
+            <summary>
+            Attribute contains the CHAP Challenge sent by the NAS to a PPP CHAP user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.NasPortType">
+            <summary>
+            Attribute indicates the type of physical port of the NAS which is authenticating the user.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.PortLimit">
+            <summary>
+            Attribute sets the maximum number of ports to be provided to the user by the NAS.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.AttributeType.LoginLatPort">
+            <summary>
+            Attribute indicates the Port with which the user is to be connected by the LAT.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.Radius.RadiusPacketAttribute">
+            <summary>
+            Represents an attribute of <see cref="T:TVA.Security.Radius.RadiusPacket"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor">
+            <summary>
+            Creates a default instance of RADIUS packet attribute.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.String)">
+            <summary>
+            Creates an instance of RADIUS packet attribute.
+            </summary>
+            <param name="type">Type of the attribute.</param>
+            <param name="value">Text value of the attribute.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.UInt32)">
+            <summary>
+            Creates an instance of RADIUS packet attribute.
+            </summary>
+            <param name="type">Type of the attribute.</param>
+            <param name="value">32-bit unsigned integer value of the attribute.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.Net.IPAddress)">
+            <summary>
+            Creates an instance of RADIUS packet attribute.
+            </summary>
+            <param name="type">Type of the attribute.</param>
+            <param name="value">IP address value of the attribute.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.Byte[])">
+            <summary>
+            Creates an instance of RADIUS packet attribute.
+            </summary>
+            <param name="type">Type of the attribute.</param>
+            <param name="value">Byte array value of the attribute.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(System.Byte[],System.Int32)">
+            <summary>
+            Creates an instance of RADIUS packet attribute.
+            </summary>
+            <param name="binaryImage">A byte array.</param>
+            <param name="startIndex">Starting point in the byte array.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/>.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.Type">
+            <summary>
+            Gets or sets the type of the attribute.
+            </summary>
+            <value></value>
+            <returns>Type of the attribute.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.Value">
+            <summary>
+            Gets or sets the value of the attribute.
+            </summary>
+            <value></value>
+            <returns>Value of the attribute.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.BinaryLength">
+            <summary>
+            Gets the binary lenght of the attribute.
+            </summary>
+            <value></value>
+            <returns>32-bit signed integer value.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.BinaryImage">
+            <summary>
+            Gets the binary image of the attribute.
+            </summary>
+            <value></value>
+            <returns>A byte array.</returns>
         </member>
         <member name="T:TVA.Security.Radius.NamespaceDoc">
             <summary>
@@ -730,32 +1311,6 @@
         <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
             <summary>
             Gets or sets the list of either roles the current thread principal must have in order to have access.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.SecurityPrincipal">
-            <summary>
-            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
-            </summary>
-            <seealso cref="T:TVA.Security.SecurityIdentity"/>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
-            </summary>
-            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
-            <summary>
-            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
-            </summary>
-            <param name="roles">Comma seperated list of roles to check.</param>
-            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Security.SecurityPrincipal.Identity">
-            <summary>
-            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
             </summary>
         </member>
         <member name="T:TVA.Security.Radius.RadiusClient">
@@ -1132,561 +1687,6 @@
             <summary>
             Gets the type of data adapter for configured ADO.NET data source.
             </summary>
-        </member>
-        <member name="T:TVA.Security.Radius.AttributeType">
-            <summary>
-            Specifies the type of RADIUS packet attribute.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.UserName">
-            <summary>
-            Attribute indicates the name of the user to be authenticated.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.UserPassword">
-            <summary>
-            Attribute indicates the password of the user to be authenticated.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.ChapPassword">
-            <summary>
-            Attribute indicates the response provided by a PPP CHAP user in reponse to the challenge.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.NasIpAddress">
-            <summary>
-            Attribute indicates the identifying IP address of the NAS requesting user authentication.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.NasPort">
-            <summary>
-            Attribute indicates the physical port number of the NAS which is authenticating the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.ServiceType">
-            <summary>
-            Attribute indicates the type of service the user has requested, or the type of service to be provided.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedProtocol">
-            <summary>
-            Attribute indicates the framing to be used for framed access.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedIpAddress">
-            <summary>
-            Attribute indicates the address to be configured for the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedIpNetmask">
-            <summary>
-            Attribute indicates the IP netmask to be configured for the user when user is a router to a network.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedRouting">
-            <summary>
-            Attribute indicates the routing method for the user when user is a router to a network.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FilterId">
-            <summary>
-            Attribute indicates the name of the filter list for this user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedMtu">
-            <summary>
-            Attribute indicates the MTU to be configured for the user when it is not negotiated by some other means.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedCompression">
-            <summary>
-            Attribute indicates a compression protocol to be used for the link.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginIpHost">
-            <summary>
-            Attribute indicates the system with which to connect the user when LoginService attribute is included.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginService">
-            <summary>
-            Attribute indicates the service to use to connect the user to the login host.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginTcpPort">
-            <summary>
-            Attribute indicates the TCP port with which the user is to be connected when LoginService attribute
-            is included.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.ReplyMessage">
-            <summary>
-            Attribute indicates the text which may be displayed to the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.CallbackNumber">
-            <summary>
-            Attribute indicates a dialing string to be used for callback.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.CallbackId">
-            <summary>
-            Attribute indicates the name of a place to be called.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedRoute">
-            <summary>
-            Attribute provides routing information to be configured for the user on the NAS.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedIpxNetwork">
-            <summary>
-            Attribute indicates the IPX Network number to be configured for the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.State">
-            <summary>
-            Attribute available to be sent by the server to the client in an AccessChallenge and must be sent
-            unmodified from the client to the server in the new AccessRequest reply to the challenge.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.Class">
-            <summary>
-            Attribute available to be sent by the server to the client in an AccessAccept and should be sent
-            unmodified by the client to the accounting server as part of the AccountingRequest.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.VendorSpecific">
-            <summary>
-            Attribute available to allow vendors to support their own extended attributes.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.SessionTimeout">
-            <summary>
-            Attribute sets the maximum number of seconds of service to be provided to the user before termination
-            of the session or prompt.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.IdleTimeout">
-            <summary>
-            Attribute sets the maximum number of consecutive seconds of idle connection allowed to the user before
-            termination of the session or prompt.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.TerminationAction">
-            <summary>
-            Attribute indicates the action the NAS should take when the specified service is complete.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.CallerStationId">
-            <summary>
-            Attribute indicates the phone number that the user called using DNIS or similar technology.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.CallingStationId">
-            <summary>
-            Attribute indicates the phone number the call came from using ANI or similar technology.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.NasIdentifier">
-            <summary>
-            Attribute indicates a string identifier for the NAS originating the AccessRequest.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.ProxyState">
-            <summary>
-            Attribute indicates the state a proxy server forwarding requests to the server.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginLatService">
-            <summary>
-            Attribute indicates the system with which the user is to be connected by LAT.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginLatNode">
-            <summary>
-            Attribute indicates the Node with which the user is to be automatically connected by LAT.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginLatGroup">
-            <summary>
-            Attribute indicates the string identifier for the LAT group codes which the user is authorized to use.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkLink">
-            <summary>
-            Attribute indicates the AppleTalk network number which should be used for the serial link to the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkNetwork">
-            <summary>
-            Attribute indicates the AppleTalk Network number which the NAS should probe to allocate an AppleTalk
-            node for the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.FramedAppleTalkZone">
-            <summary>
-            Attribute indicates the AppleTalk Default Zone to be used for this user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.ChapChallenge">
-            <summary>
-            Attribute contains the CHAP Challenge sent by the NAS to a PPP CHAP user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.NasPortType">
-            <summary>
-            Attribute indicates the type of physical port of the NAS which is authenticating the user.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.PortLimit">
-            <summary>
-            Attribute sets the maximum number of ports to be provided to the user by the NAS.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.AttributeType.LoginLatPort">
-            <summary>
-            Attribute indicates the Port with which the user is to be connected by the LAT.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.Radius.RadiusPacketAttribute">
-            <summary>
-            Represents an attribute of <see cref="T:TVA.Security.Radius.RadiusPacket"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor">
-            <summary>
-            Creates a default instance of RADIUS packet attribute.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.String)">
-            <summary>
-            Creates an instance of RADIUS packet attribute.
-            </summary>
-            <param name="type">Type of the attribute.</param>
-            <param name="value">Text value of the attribute.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.UInt32)">
-            <summary>
-            Creates an instance of RADIUS packet attribute.
-            </summary>
-            <param name="type">Type of the attribute.</param>
-            <param name="value">32-bit unsigned integer value of the attribute.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.Net.IPAddress)">
-            <summary>
-            Creates an instance of RADIUS packet attribute.
-            </summary>
-            <param name="type">Type of the attribute.</param>
-            <param name="value">IP address value of the attribute.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(TVA.Security.Radius.AttributeType,System.Byte[])">
-            <summary>
-            Creates an instance of RADIUS packet attribute.
-            </summary>
-            <param name="type">Type of the attribute.</param>
-            <param name="value">Byte array value of the attribute.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.#ctor(System.Byte[],System.Int32)">
-            <summary>
-            Creates an instance of RADIUS packet attribute.
-            </summary>
-            <param name="binaryImage">A byte array.</param>
-            <param name="startIndex">Starting point in the byte array.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacketAttribute.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/> from the specified <paramref name="binaryImage"/>.
-            </summary>
-            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/>.</param>
-            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacketAttribute"/>.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.Type">
-            <summary>
-            Gets or sets the type of the attribute.
-            </summary>
-            <value></value>
-            <returns>Type of the attribute.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.Value">
-            <summary>
-            Gets or sets the value of the attribute.
-            </summary>
-            <value></value>
-            <returns>Value of the attribute.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.BinaryLength">
-            <summary>
-            Gets the binary lenght of the attribute.
-            </summary>
-            <value></value>
-            <returns>32-bit signed integer value.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacketAttribute.BinaryImage">
-            <summary>
-            Gets the binary image of the attribute.
-            </summary>
-            <value></value>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="T:TVA.Security.Radius.PacketType">
-            <summary>
-            Specifies the type of RADIUS packet.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessRequest">
-            <summary>
-            Packet sent to a RADIUS server for verification of credentials.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessAccept">
-            <summary>
-            Packet sent by a RADIUS server when credential verification is successful.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessReject">
-            <summary>
-            Packet sent by a RADIUS server when credential verification is unsuccessful.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingRequest">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingResponse">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingStatus">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordRequest">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordAccept">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordReject">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingMessage">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessChallenge">
-            <summary>
-            Packet sent by a RADIUS server when further information is needed for credential verification.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.StatuServer">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.StatusClient">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.Radius.RadiusPacket">
-            <summary>
-            Represents a data packet transferred between RADIUS client and server.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor">
-            <summary>
-            Creates a default instance of RADIUS packet.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(TVA.Security.Radius.PacketType)">
-            <summary>
-            Creates an instance of RADIUS packet.
-            </summary>
-            <param name="type">Type of the packet.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(System.Byte[],System.Int32)">
-            <summary>
-            Creates an instance of RADIUS packet.
-            </summary>
-            <param name="binaryImage">A byte array.</param>
-            <param name="startIndex">Starting point in the byte array.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TVA.Security.Radius.RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
-            </summary>
-            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</param>
-            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetAttributeValue(TVA.Security.Radius.AttributeType)">
-            <summary>
-            Gets the value of the specified attribute if it is present in the packet.
-            </summary>
-            <param name="type">Type of the attribute whose value is to be retrieved.</param>
-            <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
-        </member>
-        <member name="F:TVA.Security.Radius.RadiusPacket.Encoding">
-            <summary>
-            Encoding format for encoding text.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.String)">
-            <summary>
-            Gets bytes for the specified text.
-            </summary>
-            <param name="value">Text blob.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int16)">
-            <summary>
-            Gets bytes for the specified 16-bit signed integer value.
-            </summary>
-            <param name="value">16-bit signed integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt16)">
-            <summary>
-            Gets bytes for the specified 16-bit unsigned integer value.
-            </summary>
-            <param name="value">16-bit unsigned integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int32)">
-            <summary>
-            Gets bytes for the specified 32-bit signed integer value.
-            </summary>
-            <param name="value">32-bit signed integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt32)">
-            <summary>
-            Gets bytes for the specified 32-bit unsigned integer value.
-            </summary>
-            <param name="value">32-bit unsigned integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToText(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Converts the specified byte array to text.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <param name="length">Number of bytes to be converted.</param>
-            <returns>A text blob.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt16(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to a signed 16-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 16-bit signed integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt16(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to an unsigned 16-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 16-bit unsigned integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt32(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to a signed 32-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 32-bit signed integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt32(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to an unsigned 32-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 32-bit unsigned integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.CreateRequestAuthenticator(System.String)">
-            <summary>
-            Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
-            </summary>
-            <param name="sharedSecret">The shared secret to be used in generating the output.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.CreateResponseAuthenticator(System.String,TVA.Security.Radius.RadiusPacket,TVA.Security.Radius.RadiusPacket)">
-            <summary>
-            Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
-            </summary>
-            <param name="sharedSecret">The shared secret key.</param>
-            <param name="requestPacket">RADIUS packet sent from client to server.</param>
-            <param name="responsePacket">RADIUS packet sent from server to client.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.EncryptPassword(System.String,System.String,System.Byte[])">
-            <summary>
-            Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
-            </summary>
-            <param name="password">User's password.</param>
-            <param name="sharedSecret">Shared secret key.</param>
-            <param name="requestAuthenticator">Request authenticator byte array.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Type">
-            <summary>
-            Gets or sets the type of the packet.
-            </summary>
-            <value></value>
-            <returns>Type of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Identifier">
-            <summary>
-            Gets or sets the packet identifier.
-            </summary>
-            <value></value>
-            <returns>Identifier of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Authenticator">
-            <summary>
-            Gets or sets the packet authenticator.
-            </summary>
-            <value></value>
-            <returns>Authenticator of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Attributes">
-            <summary>
-            Gets a list of packet attributes.
-            </summary>
-            <value></value>
-            <returns>Attributes of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryLength">
-            <summary>
-            Gets the binary lenght of the packet.
-            </summary>
-            <value></value>
-            <returns>32-bit signed integer value.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryImage">
-            <summary>
-            Gets the binary image of the packet.
-            </summary>
-            <value></value>
-            <returns>A byte array.</returns>
         </member>
     </members>
 </doc>
