@@ -38,6 +38,8 @@
 //       IPv6 IP addresses according to IETF - A Recommendation for IPv6 Address Text Representation.
 //  11/29/2010 - Pinal C. Patel
 //       Corrected the implementation of ConnectAsync() method.
+//  02/13/2011 - Pinal C. Patel
+//       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
 //
 //*******************************************************************************************************
 
@@ -486,16 +488,40 @@ namespace TVA.Communication
             m_udpClient.ID = this.ClientID;
             m_udpClient.Secretkey = SharedSecret;
             m_udpClient.ReceiveBuffer = new byte[ReceiveBufferSize];
-            
+
             // Create a server endpoint.
             if (m_connectData.ContainsKey("server"))
             {
                 // Client has a server endpoint specified.
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
                 if (endpoint != Match.Empty)
-                    m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value));
+                {
+                    try
+                    {
+                        m_udpServer = Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value));
+                    }
+                    catch
+                    {
+                        // On IPv6 enabled OSes like Windows 7 and Windows Server 2008 loopback entries are resolved by DNS resolver 
+                        // instead of the host file and this could result in resolution failure depending on group policy settings.
+                        if (string.Compare(endpoint.Groups["host"].Value, "localhost", true) == 0)
+                        {
+                            IPEndPoint randomEndpoint = Transport.CreateEndPoint(m_connectData["interface"], 0);
+                            if (Transport.IsIPv6IP(randomEndpoint.Address))
+                                // Use IPv6 loopback IP.
+                                m_udpServer = Transport.CreateEndPoint(IPAddress.IPv6Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value));
+                            else
+                                // Use IPv4 loopback IP.
+                                m_udpServer = Transport.CreateEndPoint(IPAddress.Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value));
+                        }
+                        else
+                            throw;
+                    }
+                }
                 else
+                {
                     throw new FormatException(string.Format("Server property in ConnectionString is invalid (Example: {0})", DefaultConnectionString));
+                }
             }
             else
             {
@@ -513,7 +539,7 @@ namespace TVA.Communication
             m_connectionThread = new Thread(OpenPort);
 #endif
             m_connectionThread.Start();
-                
+
             return m_connectionHandle;
         }
 
@@ -784,7 +810,7 @@ namespace TVA.Communication
 
                         // Client is now considered to be connected to the server.
                         m_connectionHandle.Set();
-                        OnConnectionEstablished();                        
+                        OnConnectionEstablished();
                         ReceivePayloadAsync(udpClient);
                     }
                     else

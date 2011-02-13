@@ -33,6 +33,8 @@
 //       Corrected the implementation of ConnectAsync() method.
 //  02/11/2011 - Pinal C. Patel
 //       Added IntegratedSecurity property to enable integrated windows authentication.
+//  02/13/2011 - Pinal C. Patel
+//       Modified ConnectAsync() to handle loopback address resolution failure on IPv6 enabled OSes.
 //
 //*******************************************************************************************************
 
@@ -255,6 +257,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
@@ -483,7 +486,7 @@ namespace TVA.Communication
         [Browsable(false)]
         public override string ServerUri
         {
-            get 
+            get
             {
                 return string.Format("{0}://{1}", TransportProtocol, m_connectData["server"]).ToLower();
             }
@@ -557,9 +560,26 @@ namespace TVA.Communication
                     // Create client socket to establish presence.
                     m_tcpClient.Provider = Transport.CreateSocket(m_connectData["interface"], 0, ProtocolType.Tcp);
 
-                // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
                 Match endpoint = Regex.Match(m_connectData["server"], Transport.EndpointFormatRegex);
-                m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
+                try
+                {
+                    // Begin asynchronous connect operation and return wait handle for the asynchronous operation.
+                    m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(endpoint.Groups["host"].Value, int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
+                }
+                catch
+                {
+                    // On IPv6 enabled OSes like Windows 7 and Windows Server 2008 loopback entries are resolved by DNS resolver 
+                    // instead of the host file and this could result in resolution failure depending on group policy settings.
+                    if (string.Compare(endpoint.Groups["host"].Value, "localhost", true) == 0)
+                        if (Transport.IsIPv6IP(((IPEndPoint)m_tcpClient.Provider.LocalEndPoint).Address))
+                            // Use IPv6 loopback IP.
+                            m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(IPAddress.IPv6Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
+                        else
+                            // Use IPv4 loopback IP.
+                            m_tcpClient.Provider.BeginConnect(Transport.CreateEndPoint(IPAddress.Loopback.ToString(), int.Parse(endpoint.Groups["port"].Value)), ConnectAsyncCallback, m_tcpClient);
+                    else
+                        throw;
+                }
 
                 return m_connectionHandle;
             }
@@ -567,7 +587,7 @@ namespace TVA.Communication
             {
                 throw new InvalidOperationException("Client is currently not disconnected");
             }
-        }        
+        }
 
         /// <summary>
         /// Releases the unmanaged resources used by the <see cref="TcpClient"/> and optionally releases the managed resources.
@@ -839,7 +859,7 @@ namespace TVA.Communication
                         OnConnectionEstablished();
                         ReceivePayloadAsync(tcpClient);
                     }
-                    else 
+                    else
                     {
                         // Received handshake response message could not be parsed.
                         TerminateConnection(tcpClient, false);

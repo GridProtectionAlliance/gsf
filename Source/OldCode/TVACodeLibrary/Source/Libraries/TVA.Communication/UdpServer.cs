@@ -27,6 +27,8 @@
 //       Added support for one-way communication by specifying Port=-1 in ConfigurationString.
 //  04/29/2010 - Pinal C. Patel
 //       Modified Start() to parse client endpoint strings correctly to address IPv6 IP parsing issue.
+//  02/13/2011 - Pinal C. Patel
+//       Modified Start() to use "interface" in the creation of client endpoint.
 //
 //*******************************************************************************************************
 
@@ -448,7 +450,7 @@ namespace TVA.Communication
                 // Initialize if unitialized.
                 Initialize();
                 // Create end-point for receiving data.
-                m_udpClientEndPoint = Transport.CreateEndPoint(string.Empty, 0);
+                m_udpClientEndPoint = Transport.CreateEndPoint(m_configData["interface"], 0);
                 // Bind server socket to local end-point.
                 m_udpServer = new TransportProvider<Socket>();
                 m_udpServer.ID = this.ServerID;
