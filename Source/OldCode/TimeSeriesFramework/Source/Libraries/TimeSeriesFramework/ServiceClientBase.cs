@@ -23,14 +23,14 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
 using System.Text;
 using TVA;
 using TVA.Console;
 using TVA.Reflection;
-using TVA.Services;
-using System.Diagnostics;
+using TVA.Services.ServiceProcess;
 
 namespace TimeSeriesFramework
 {

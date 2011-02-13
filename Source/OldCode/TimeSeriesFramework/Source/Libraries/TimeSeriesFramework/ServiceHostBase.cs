@@ -44,7 +44,7 @@ using TVA.Configuration;
 using TVA.Data;
 using TVA.IO;
 using TVA.Reflection;
-using TVA.Services;
+using TVA.Services.ServiceProcess;
 using TVA.Units;
 
 namespace TimeSeriesFramework
@@ -165,7 +165,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets access to the <see cref="TVA.Services.ServiceHelper"/>.
+        /// Gets access to the <see cref="TVA.Services.ServiceProcess.ServiceHelper"/>.
         /// </summary>
         protected ServiceHelper ServiceHelper
         {

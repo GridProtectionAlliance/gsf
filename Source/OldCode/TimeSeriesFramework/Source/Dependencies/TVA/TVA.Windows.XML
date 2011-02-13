@@ -48,149 +48,6 @@
             </para>
             </remarks>
         </member>
-        <member name="T:TVA.Windows.Forms.SecureForm">
-            <summary>
-            Represents a windows form secured using role-based security.
-            </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            </example>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Windows.Forms.SecureForm"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.GetResourceName">
-            <summary>
-            Gets the name of resource being accessed.
-            </summary>
-            <returns>Name of the resource being accessed.</returns>
-        </member>
-        <member name="F:TVA.Windows.Forms.SecureForm.components">
-            <summary>
-            Required designer variable.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.Dispose(System.Boolean)">
-            <summary>
-            Clean up any resources being used.
-            </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="T:TVA.Windows.SecureWindow">
-            <summary>
-            Represents a WPF window secured using role-based security.
-            </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            XAML to be used for the WPF window that inherits from <see cref="T:TVA.Windows.SecureWindow"/>:
-            <code>
-            <![CDATA[
-            <src:SecureWindow x:Class="SecureWpfApplication.Window1"
-                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-                xmlns:src="clr-namespace:TVA.Windows;assembly=TVA.Windows"
-                Title="Window1" Height="300" Width="300">
-                <Grid>
-            
-                </Grid>
-            </src:SecureWindow>
-            ]]>
-            </code>
-            </example>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Windows.SecureWindow.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Windows.SecureWindow"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.SecureWindow.GetResourceName">
-            <summary>
-            Gets the name of resource being accessed.
-            </summary>
-            <returns>Name of the resource being accessed.</returns>
-        </member>
         <member name="T:TVA.Windows.DisplayType">
             <summary>
             Enumerable list of portlets to be displayed on the screen.
@@ -298,9 +155,99 @@
             InitializeComponent
             </summary>
         </member>
+        <member name="T:TVA.Windows.Forms.SecureForm">
+            <summary>
+            Represents a windows form secured using role-based security.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="F:TVA.Windows.Forms.SecureForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Windows.Forms.SecureForm"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.GetResourceName">
+            <summary>
+            Gets the name of resource being accessed.
+            </summary>
+            <returns>Name of the resource being accessed.</returns>
+        </member>
         <member name="T:TVA.Windows.Forms.AboutDialog">
             <summary>
             Represents a common about dialog box.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.Forms.AboutDialog.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.AboutDialog.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TVA.Windows.Forms.AboutDialog.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
             </summary>
         </member>
         <member name="M:TVA.Windows.Forms.AboutDialog.#ctor">
@@ -361,22 +308,75 @@
             <param name="disclaimerStream">System.IO.Stream of the disclaimer text.</param>
             <remarks></remarks>
         </member>
-        <member name="F:TVA.Windows.Forms.AboutDialog.components">
+        <member name="T:TVA.Windows.SecureWindow">
             <summary>
-            Required designer variable.
+            Represents a WPF window secured using role-based security.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*Window*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            XAML to be used for the WPF window that inherits from <see cref="T:TVA.Windows.SecureWindow"/>:
+            <code>
+            <![CDATA[
+            <src:SecureWindow x:Class="SecureWpfApplication.Window1"
+                xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+                xmlns:src="clr-namespace:TVA.Windows;assembly=TVA.Windows"
+                Title="Window1" Height="300" Width="300">
+                <Grid>
+            
+                </Grid>
+            </src:SecureWindow>
+            ]]>
+            </code>
+            </example>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Windows.SecureWindow.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Windows.SecureWindow"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Windows.Forms.AboutDialog.Dispose(System.Boolean)">
+        <member name="M:TVA.Windows.SecureWindow.GetResourceName">
             <summary>
-            Clean up any resources being used.
+            Gets the name of resource being accessed.
             </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:TVA.Windows.Forms.AboutDialog.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
+            <returns>Name of the resource being accessed.</returns>
         </member>
     </members>
 </doc>
