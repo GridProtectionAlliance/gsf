@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -14,6 +15,8 @@
 //       Override the default behavior of TranslateRole() to translate a SID to its role name.
 //  01/05/2011 - Pinal C. Patel
 //       Added overrides to RefreshData(), UpdateData(), ResetPassword() and ChangePassword() methods.
+//  02/14/2011 - J. Ritchie Carroll
+//       Modified provider to be able to use local accounts when user is not connected to a domain.
 //
 //*******************************************************************************************************
 
@@ -233,6 +236,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
@@ -294,12 +316,6 @@ namespace TVA.Security
     public class LdapSecurityProvider : SecurityProviderBase
     {
         #region [ Members ]
-
-        // Constants
-        private const int ACCOUNTDISABLED = 2;
-        private const int LOCKED = 16;
-        private const int PASSWD_CANT_CHANGE = 64;
-        private const int DONT_EXPIRE_PASSWORD = 65536;
 
         // Fields
         private WindowsPrincipal m_windowsPrincipal;
@@ -417,83 +433,49 @@ namespace TVA.Security
             if (string.IsNullOrEmpty(UserData.Username))
                 return false;
 
-            // Initialize user data.
+            // Initialize user data
             UserData.Initialize();
 
-            // Populate user data.
+            // Populate user data
             UserInfo user = null;
-            DirectorySearcher searcher = null;
             WindowsImpersonationContext context = null;
+
             try
             {
                 string ldapPath = GetLdapPath();
+
+                // Create user info object using specified LDAP path if provided
                 if (string.IsNullOrEmpty(ldapPath))
-                {
-                    // Use default LDAP path.
                     user = new UserInfo(UserData.Username);
-                    searcher = new DirectorySearcher();
-                }
                 else
-                {
-                    // Use specified LDAP path.
                     user = new UserInfo(UserData.Username, ldapPath);
-                    searcher = new DirectorySearcher(new DirectoryEntry(ldapPath));
-                }
 
                 user.PersistSettings = true;
                 user.Initialize();
+
                 if (user.UserEntry != null)
                 {
-                    // User exists in Active Directory.
+                    // Pickup privileged AD credentials to read user account info, if needed
+                    context = user.ImpersonatePrivilegedAccount();
+
+                    // User exists in Active Directory or as local account
                     UserData.IsDefined = true;
+
+                    // Copy relevant user information
                     UserData.LoginID = user.LoginID;
                     UserData.FirstName = user.FirstName;
                     UserData.LastName = user.LastName;
                     UserData.CompanyName = user.Company;
                     UserData.PhoneNumber = user.Telephone;
                     UserData.EmailAddress = user.Email;
+                    UserData.IsLockedOut = user.AccountIsLockedOut;
+                    UserData.IsDisabled = user.AccountIsDisabled;
+                    UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
+                    UserData.AccountCreatedDateTime = user.AccountCreationDate;
 
-                    // Retrieve non-standard user information.
-                    context = user.ImpersonatePrivilegedAccount();
-                    UserData.AccountCreatedDateTime = Convert.ToDateTime(user.UserEntry.Properties["whenCreated"].Value);
-                    int userAccountControl = Convert.ToInt32(user.UserEntry.Properties["userAccountControl"].Value);
-                    if (userAccountControl > 0)
+                    // Assign all groups the user is a member of
+                    foreach (string groupName in user.Groups)
                     {
-                        // Check if account is locked.
-                        if (Convert.ToBoolean(userAccountControl & LOCKED))
-                            UserData.IsLockedOut = true;
-
-                        // Check if account is disabled.
-                        if (Convert.ToBoolean(userAccountControl & ACCOUNTDISABLED))
-                            UserData.IsDisabled = true;
-
-                        // Determine date when user must change the password.
-                        UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                        if (!Convert.ToBoolean(userAccountControl & PASSWD_CANT_CHANGE) &&
-                            !Convert.ToBoolean(userAccountControl & DONT_EXPIRE_PASSWORD))
-                        {
-                            long passwordSetOn = ConvertToLong(user.UserEntry.Properties["pwdLastSet"].Value);
-                            if (passwordSetOn == 0)
-                            {
-                                // User must change password on next logon.
-                                UserData.PasswordChangeDateTime = DateTime.UtcNow;
-                            }
-                            else
-                            {
-                                // User must change password periodically.
-                                SearchResult searchResult = searcher.FindOne();
-                                if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
-                                    UserData.PasswordChangeDateTime = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks((long)searchResult.Properties["maxPwdAge"][0]).Duration().Days);
-                            }
-                        }
-                    }
-
-                    // Retrieve all groups the user is a member of.
-                    string groupName;
-                    user.UserEntry.RefreshCache(new string[] { "TokenGroups" });
-                    foreach (byte[] sid in user.UserEntry.Properties["TokenGroups"])
-                    {
-                        groupName = new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
                         if (!UserData.Roles.Contains(groupName))
                             UserData.Roles.Add(groupName);
                     }
@@ -502,7 +484,7 @@ namespace TVA.Security
                 }
                 else
                 {
-                    // No such user in Active Directory.
+                    // No such user
                     return false;
                 }
             }
@@ -510,9 +492,6 @@ namespace TVA.Security
             {
                 if (user != null)
                     user.Dispose();
-
-                if (searcher != null)
-                    searcher.Dispose();
 
                 if (context != null)
                     context.Undo();
@@ -527,38 +506,42 @@ namespace TVA.Security
         /// <returns>true if the password is changed, otherwise false.</returns>
         public override bool ChangePassword(string oldPassword, string newPassword)
         {
-            // Check prerequisites.
+            // Check prerequisites
             if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut)
                 return false;
 
             UserInfo user = null;
             WindowsImpersonationContext context = null;
+
             try
             {
                 string ldapPath = GetLdapPath();
+                
+                // Create user info object using specified LDAP path if provided
                 if (string.IsNullOrEmpty(ldapPath))
-                    // Use default LDAP path.
                     user = new UserInfo(UserData.Username);
                 else
-                    // Use specified LDAP path.
                     user = new UserInfo(UserData.Username, ldapPath);
 
-                // Initialize user entry.
+                // Initialize user entry
                 user.PersistSettings = true;
                 user.Initialize();
 
-                // Impersonate privileged user.
+                // Impersonate privileged user
                 context = user.ImpersonatePrivilegedAccount();
 
-                // Change user password.
+                // Change user password
                 user.UserEntry.Invoke("ChangePassword", oldPassword, newPassword);
-                user.UserEntry.CommitChanges();
+
+                // Commit changes (required for non-local accounts)
+                if (!user.IsWinNTEntry)
+                    user.UserEntry.CommitChanges();
 
                 return true;
             }
             catch (TargetInvocationException ex)
             {
-                // Propagate Active Directory error.
+                // Propagate Active Directory error
                 if (ex.InnerException == null)
                     throw new SecurityException(ex.Message, ex);
                 else
@@ -583,7 +566,7 @@ namespace TVA.Security
         /// <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
         public override string TranslateRole(string role)
         {
-            // Perform a translation from SID to Role only if the input starts with 'SID:'.
+            // Perform a translation from SID to Role only if the input starts with 'SID:'
             if (role.StartsWith("SID:", StringComparison.CurrentCultureIgnoreCase))
                 return new SecurityIdentifier(role.Remove(0, 4)).Translate(typeof(NTAccount)).ToString().Split('\\')[1];
 
@@ -608,15 +591,6 @@ namespace TVA.Security
             }
 
             return null;
-        }
-
-        private long ConvertToLong(object largeInteger)
-        {
-            Type type = largeInteger.GetType();
-            int highPart = (int)type.InvokeMember("HighPart", BindingFlags.GetProperty, null, largeInteger, null);
-            int lowPart = (int)type.InvokeMember("LowPart", BindingFlags.GetProperty, null, largeInteger, null);
-
-            return (long)highPart << 32 | (uint)lowPart;
         }
 
         #endregion

@@ -33,6 +33,8 @@
 //       Updated GetApplicationDataFolder() to include the company name if available.
 //  01/28/2011 - J. Ritchie Carroll
 //       Added IsValidFileName function.
+//  02/14/2011 - J. Ritchie Carroll
+//       Fixed bug in GetDirectoryName where last directory was being truncated as a file name.
 //
 //*******************************************************************************************************
 
@@ -566,7 +568,7 @@ namespace TVA.IO
         /// <returns>Directory information.</returns>
         public static string GetDirectoryName(string filePath)
         {
-            return AddPathSuffix(Path.GetDirectoryName(RemovePathSuffix(filePath)));
+            return AddPathSuffix(Path.GetDirectoryName(filePath));
         }
 
         /// <summary>
@@ -579,6 +581,10 @@ namespace TVA.IO
         /// </remarks>
         public static string GetLastDirectoryName(string filePath)
         {
+            // Test case should verify the following:
+            //   FilePath.GetLastDirectoryName(@"C:\Test\sub") == "Test" <-- sub assumed to be filename
+            //   FilePath.GetLastDirectoryName(@"C:\Test\sub\") == "sub" <-- sub assumed to be directory
+
             if (!string.IsNullOrEmpty(filePath))
             {
                 int index;

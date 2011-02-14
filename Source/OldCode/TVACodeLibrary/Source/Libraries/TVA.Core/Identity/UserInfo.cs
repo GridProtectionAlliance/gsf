@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -58,6 +59,8 @@
 //       Added a constructor to allow for the AD search root to be specified.
 //  11/04/2010 - Pinal C. Patel
 //       Modified Initialize() to initialize UserEntry only if the machine is joined to a domain.
+//  02/14/2011 - J. Ritchie Carroll
+//       Added WinNT DirectoryEntry lookups for local accounts when user is not connected to a domain.
 //
 //*******************************************************************************************************
 
@@ -277,17 +280,42 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
+using System.Linq;
 using System.Management;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using Microsoft.Win32;
 using TVA.Configuration;
 using TVA.Interop;
+using TVA.IO;
+using System.IO;
 
 namespace TVA.Identity
 {
@@ -359,6 +387,10 @@ namespace TVA.Identity
         /// </summary>
         public const string DefaultSettingsCategory = "ActiveDirectory";
 
+        private const int ACCOUNTDISABLED = 2;
+        private const int LOCKED = 16;
+        private const int PASSWD_CANT_CHANGE = 64;
+        private const int DONT_EXPIRE_PASSWORD = 65536;
         private const int LOGON32_PROVIDER_DEFAULT = 0;
         private const int LOGON32_LOGON_INTERACTIVE = 2;
         private const int LOGON32_LOGON_NETWORK = 3;
@@ -371,6 +403,8 @@ namespace TVA.Identity
         private string m_username;
         private string m_ldapPath;
         private DirectoryEntry m_userEntry;
+        private int m_userAccountControl;
+        private bool m_isWinNT;
         private string m_privilegedDomain;
         private string m_privilegedUserName;
         private string m_privilegedPassword;
@@ -441,6 +475,7 @@ namespace TVA.Identity
         {
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
+            m_userAccountControl = -1;
         }
 
         /// <summary>
@@ -525,6 +560,232 @@ namespace TVA.Identity
         }
 
         /// <summary>
+        /// Gets the last login time of the user.
+        /// </summary>
+        public DateTime LastLogon
+        {
+            get
+            {
+                if (m_isWinNT)
+                    return DateTime.Parse(GetUserProperty("lastLogin"));
+
+                return DateTime.Parse(GetUserProperty("lastLogon"));
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="DateTime"/> when the account was created.
+        /// </summary>
+        public DateTime AccountCreationDate
+        {
+            get
+            {
+                if (m_isWinNT)
+                {
+                    try
+                    {
+                        string profilePath = GetUserProperty("profile");
+
+                        if (string.IsNullOrEmpty(profilePath) || !Directory.Exists(profilePath))
+                        {
+                            // Remove any trailing directory seperator character from the file path.
+                            string rootFolder = FilePath.AddPathSuffix(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+                            string userFolder = FilePath.GetLastDirectoryName(rootFolder);
+                            int folderLocation = rootFolder.LastIndexOf(userFolder);
+
+                            // Remove user profile name for current user (this class may be for user other than ower of current thread)                            
+                            rootFolder = FilePath.AddPathSuffix(rootFolder.Substring(0, folderLocation));
+
+                            // Create profile path for user referenced in this UserInfo class
+                            profilePath = FilePath.AddPathSuffix(rootFolder + m_username);
+                        }
+
+                        return Directory.GetCreationTime(profilePath);
+                    }
+                    catch
+                    {
+                        return DateTime.MinValue;
+                    }
+                }
+                else
+                    return Convert.ToDateTime(GetUserProperty("whenCreated"));
+            }
+        }
+
+        /// <summary>
+        /// Gets the <see cref="DateTime"/>, in UTC, of next password change for the user.
+        /// </summary>
+        public DateTime NextPasswordChangeDate
+        {
+            get
+            {
+                DateTime passwordChangeDate = DateTime.MaxValue;
+                int userAccountControl = UserAccountControl;
+
+                if (!PasswordCannotChange && !PasswordDoesNotExpire)
+                {
+                    if (m_isWinNT)
+                    {
+                        long maxPasswordAge = (long)MaximumPasswordAge.ToSeconds();
+                        long passwordAge = long.Parse(GetUserProperty("passwordAge"));
+
+                        if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                        {
+                            // User must change password on next logon.
+                            passwordChangeDate = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            // User must change password periodically.
+                            passwordChangeDate = DateTime.UtcNow.AddSeconds(maxPasswordAge - passwordAge);
+                        }
+                    }
+                    else
+                    {
+                        long passwordSetOn = ConvertToLong(m_userEntry.Properties["pwdLastSet"].Value);
+
+                        if (passwordSetOn == 0)
+                        {
+                            // User must change password on next logon.
+                            passwordChangeDate = DateTime.UtcNow;
+                        }
+                        else
+                        {
+                            // User must change password periodically.
+                            passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(MaximumPasswordAge).Duration().Days);
+                        }
+                    }
+                }
+
+                return passwordChangeDate;
+            }
+        }
+
+        /// <summary>
+        /// Gets the account control information of the user.
+        /// </summary>
+        public int UserAccountControl
+        {
+            get
+            {
+                if (m_userAccountControl == -1)
+                {
+                    if (m_isWinNT)
+                        m_userAccountControl = int.Parse(GetUserProperty("userFlags"));
+                    else
+                        m_userAccountControl = int.Parse(GetUserProperty("userAccountControl"));
+                }
+
+                return m_userAccountControl;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if account is locked-out for this user.
+        /// </summary>
+        public bool AccountIsLockedOut
+        {
+            get
+            {
+                return Convert.ToBoolean(UserAccountControl & LOCKED);
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if account is disabled for this user.
+        /// </summary>
+        public bool AccountIsDisabled
+        {
+            get
+            {
+                return Convert.ToBoolean(UserAccountControl & ACCOUNTDISABLED);
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if account password cannot change for this user.
+        /// </summary>
+        public bool PasswordCannotChange
+        {
+            get
+            {
+                return Convert.ToBoolean(UserAccountControl & PASSWD_CANT_CHANGE);
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if account password does not expire for this user.
+        /// </summary>
+        public bool PasswordDoesNotExpire
+        {
+            get
+            {
+                return Convert.ToBoolean(UserAccountControl & DONT_EXPIRE_PASSWORD);
+            }
+        }
+
+        /// <summary>
+        /// Gets ths maximum password age for the user.
+        /// </summary>
+        public Ticks MaximumPasswordAge
+        {
+            get
+            {
+                string maxAgePropertyValue;
+
+                if (m_isWinNT)
+                    maxAgePropertyValue = GetUserProperty("maxPasswordAge");
+                else
+                    maxAgePropertyValue = GetUserProperty("maxPwdAge");
+
+                if (string.IsNullOrEmpty(maxAgePropertyValue))
+                    return -1;
+
+                long maxPasswordAge = long.Parse(maxAgePropertyValue);
+
+                if (m_isWinNT)
+                    return Ticks.FromSeconds(maxPasswordAge);
+
+                return maxPasswordAge;
+            }
+        }
+
+        /// <summary>
+        /// Gets the groups asscociated with the user.
+        /// </summary>
+        public string[] Groups
+        {
+            get
+            {
+                List<string> groups = new List<string>();
+
+                if (m_isWinNT)
+                {
+                    // Get local groups
+                    object localGroups = m_userEntry.Invoke("Groups");
+
+                    foreach (object localGroup in (IEnumerable)localGroups)
+                    {
+                        DirectoryEntry groupEntry = new DirectoryEntry(localGroup);
+                        groups.Add(groupEntry.Name);
+                    }
+                }
+                else
+                {
+                    // Get active directory groups
+                    m_userEntry.RefreshCache(new string[] { "TokenGroups" });
+
+                    foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
+                    {
+                        groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString().Split('\\')[1]);
+                    }
+                }
+
+                return groups.ToArray();
+            }
+        }
+
+        /// <summary>
         /// Gets the First Name of the user.
         /// </summary>
         /// <remarks>Returns the value retrieved for the "givenName" active directory property.</remarks>
@@ -532,6 +793,9 @@ namespace TVA.Identity
         {
             get
             {
+                if (m_isWinNT)
+                    return GetNameElements(DisplayName)[0];
+
                 return GetUserProperty("givenName");
             }
         }
@@ -544,6 +808,9 @@ namespace TVA.Identity
         {
             get
             {
+                if (m_isWinNT)
+                    return GetNameElements(DisplayName)[1];
+
                 return GetUserProperty("sn");
             }
         }
@@ -556,6 +823,16 @@ namespace TVA.Identity
         {
             get
             {
+                if (m_isWinNT)
+                {
+                    string name = GetUserProperty("fullName");
+
+                    if (string.IsNullOrEmpty(name))
+                        name = GetUserProperty("Name");
+
+                    return name;
+                }
+
                 return GetUserProperty("displayName");
             }
         }
@@ -580,6 +857,9 @@ namespace TVA.Identity
         {
             get
             {
+                if (m_isWinNT)
+                    return DisplayName;
+
                 string fName = FirstName;
                 string lName = LastName;
                 string mInitial = MiddleInitial;
@@ -730,9 +1010,20 @@ namespace TVA.Identity
         }
 
         /// <summary>
+        /// Gets flag that determines if this <see cref="UserInfo"/> instance is based on a local WinNT account instead of found through LDAP.
+        /// </summary>
+        public bool IsWinNTEntry
+        {
+            get
+            {
+                return m_isWinNT;
+            }
+        }
+
+        /// <summary>
         /// Gets a boolean value that indicates whether the current machine is joined to a domain.
         /// </summary>
-        private bool IsJoinedToDomain
+        public bool IsJoinedToDomain
         {
             get
             {
@@ -803,6 +1094,8 @@ namespace TVA.Identity
                                 m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
                         }
 
+                        m_isWinNT = false;
+                        m_userAccountControl = -1;
                         m_enabled = true;
                     }
                     catch (Exception ex)
@@ -815,7 +1108,22 @@ namespace TVA.Identity
                         EndImpersonation(currentContext);   // Undo impersonation if it was performed.
                     }
                 }
-                
+                else
+                {
+                    try
+                    {
+                        m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
+                        m_isWinNT = true;
+                        m_userAccountControl = -1;
+                        m_enabled = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        m_userEntry = null;
+                        throw new InitializationException(string.Format("Failed to find local user '{0}'", LoginID), ex);
+                    }
+                }
+
                 m_initialized = true;   // Initialize only once.
             }
         }
@@ -1007,6 +1315,33 @@ namespace TVA.Identity
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        private long ConvertToLong(object largeInteger)
+        {
+            Type type = largeInteger.GetType();
+            int highPart = (int)type.InvokeMember("HighPart", BindingFlags.GetProperty, null, largeInteger, null);
+            int lowPart = (int)type.InvokeMember("LowPart", BindingFlags.GetProperty, null, largeInteger, null);
+
+            return (long)highPart << 32 | (uint)lowPart;
+        }
+
+        // Split a string into first name and last name
+        private string[] GetNameElements(string displayName)
+        {
+            displayName = displayName.Trim();
+
+            if (!string.IsNullOrEmpty(displayName))
+            {
+                int lastSplit = displayName.LastIndexOf(' ');
+
+                if (lastSplit >= 0)
+                    return new string[] { displayName.Substring(0, lastSplit), displayName.Substring(lastSplit + 1) };
+                else
+                    return new string[] { displayName, "" };
+            }
+            else
+                return new string[] { "", "" };
         }
 
         #endregion
