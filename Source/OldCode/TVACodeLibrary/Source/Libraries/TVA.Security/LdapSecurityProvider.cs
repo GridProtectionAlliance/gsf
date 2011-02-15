@@ -258,6 +258,7 @@
 using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
+using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Security.Principal;
@@ -430,6 +431,28 @@ namespace TVA.Security
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
         {
+            // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
+            bool result = RefreshData(UserData.Roles);
+
+            // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
+            for (int i = 0; i < UserData.Roles.Count; i++)
+			{
+			    UserData.Roles[i] = UserData.Roles[i].Split('\\')[1];
+			}
+
+            return result;
+        }
+
+        /// <summary>
+        /// Refreshes the <see cref="UserData"/> from the backend datastore loading user groups into desired collection.
+        /// </summary>
+        /// <param name="groupCollection">Target collection for user groups.</param>
+        /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        public virtual bool RefreshData(List<string> groupCollection)
+        {
+            if (groupCollection == null)
+                throw new ArgumentNullException("groupCollection");
+
             if (string.IsNullOrEmpty(UserData.Username))
                 return false;
 
@@ -438,7 +461,6 @@ namespace TVA.Security
 
             // Populate user data
             UserInfo user = null;
-            WindowsImpersonationContext context = null;
 
             try
             {
@@ -455,9 +477,6 @@ namespace TVA.Security
 
                 if (user.UserEntry != null)
                 {
-                    // Pickup privileged AD credentials to read user account info, if needed
-                    context = user.ImpersonatePrivilegedAccount();
-
                     // User exists in Active Directory or as local account
                     UserData.IsDefined = true;
 
@@ -476,8 +495,8 @@ namespace TVA.Security
                     // Assign all groups the user is a member of
                     foreach (string groupName in user.Groups)
                     {
-                        if (!UserData.Roles.Contains(groupName))
-                            UserData.Roles.Add(groupName);
+                        if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                            groupCollection.Add(groupName);
                     }
 
                     return true;
@@ -492,9 +511,6 @@ namespace TVA.Security
             {
                 if (user != null)
                     user.Dispose();
-
-                if (context != null)
-                    context.Undo();
             }
         }
 
@@ -541,7 +557,7 @@ namespace TVA.Security
             }
             catch (TargetInvocationException ex)
             {
-                // Propagate Active Directory error
+                // Propagate password change error
                 if (ex.InnerException == null)
                     throw new SecurityException(ex.Message, ex);
                 else
@@ -553,7 +569,7 @@ namespace TVA.Security
                     user.Dispose();
 
                 if (context != null)
-                    context.Undo();
+                    UserInfo.EndImpersonation(context);
 
                 RefreshData();
             }

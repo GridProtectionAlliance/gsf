@@ -250,10 +250,12 @@
 #endregion
 
 using System;
+using System.Security;
+using System.Security.Principal;
+using System.Threading;
 using System.Windows;
 using TVA.Configuration;
 using TVA.Security;
-using System.Security;
 
 namespace TVA.Windows
 {
@@ -301,7 +303,11 @@ namespace TVA.Windows
         public SecurityPortal(DisplayType messageType)
         {
             InitializeComponent();
+
+            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+
             m_messageType = messageType;
+
             this.Loaded += new RoutedEventHandler(SecurityPortal_Loaded);
             ButtonLogin.Click += new RoutedEventHandler(ButtonLogin_Click);
             ButtonExit.Click += new RoutedEventHandler(ButtonExit_Click);
@@ -322,7 +328,7 @@ namespace TVA.Windows
                 TextBlockAccessDenied.Text = setting.Value + " :: Access Denied";
                 TextBlockChangePassword.Text = setting.Value + " :: Change Password";
             }
-
+                        
             ManageScreenVisualization();
 
             //open this up on top of all other windows.
@@ -338,7 +344,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonLogin_Click(object sender, RoutedEventArgs e)
+        private void ButtonLogin_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -365,13 +371,22 @@ namespace TVA.Windows
         }
 
         /// <summary>
-        /// Shutsdown application.
+        /// Exits window.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonExit_Click(object sender, RoutedEventArgs e)
+        private void ButtonExit_Click(object sender, RoutedEventArgs e)
         {            
-            //Application.Current.Shutdown();
+            this.DialogResult = false;
+        }
+
+        /// <summary>
+        /// Handles window closing.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void Window_Closed(object sender, EventArgs e)
+        {
             this.DialogResult = false;
         }
 
@@ -380,11 +395,13 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonOk_Click(object sender, RoutedEventArgs e)
+        private void ButtonOk_Click(object sender, RoutedEventArgs e)
         {
             //GridLogin.Visibility = Visibility.Visible;
             //StackPanelAccessDenied.Visibility = Visibility.Collapsed;
-            this.DialogResult = false;
+            //this.DialogResult = false;
+            m_messageType = DisplayType.Login;
+            ManageScreenVisualization();
         }
 
         /// <summary>
@@ -392,7 +409,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonForgotPassowrdLink_Click(object sender, RoutedEventArgs e)
+        private void ButtonForgotPassowrdLink_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
         }
@@ -402,7 +419,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonChangePassowrdLink_Click(object sender, RoutedEventArgs e)
+        private void ButtonChangePassowrdLink_Click(object sender, RoutedEventArgs e)
         {
             m_messageType = DisplayType.ChangePassword;
             ManageScreenVisualization();
@@ -413,7 +430,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
+        private void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
         {
             m_messageType = DisplayType.Login;
             ManageScreenVisualization();
@@ -424,7 +441,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void ButtonChange_Click(object sender, RoutedEventArgs e)
+        private void ButtonChange_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -487,7 +504,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        void SecurityPortal_Loaded(object sender, RoutedEventArgs e)
+        private void SecurityPortal_Loaded(object sender, RoutedEventArgs e)
         {
             //ManageScreenVisualization();
         }
@@ -497,7 +514,7 @@ namespace TVA.Windows
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Window_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
                 this.DragMove();
@@ -505,12 +522,12 @@ namespace TVA.Windows
 
         #endregion
 
-        #region " Methods"
+        #region [ Methods ]
 
         /// <summary>
         /// Displays requested screen section based on received request.
         /// </summary>
-        void ManageScreenVisualization()
+        private void ManageScreenVisualization()
         {
             //Initially hide everything on all screens.
             GridLogin.Visibility = Visibility.Collapsed;
@@ -519,8 +536,14 @@ namespace TVA.Windows
 
             if (m_messageType == DisplayType.Login)
             {
+                TextBoxUserName.Text = Thread.CurrentPrincipal.Identity.Name;
+                TextBoxUserName.SelectAll();
                 GridLogin.Visibility = Visibility.Visible;
-                TextBoxUserName.Focus();
+
+                if (!string.IsNullOrEmpty(TextBoxUserName.Text))
+                    TextBoxPassword.Focus();
+                else
+                    TextBoxUserName.Focus();
             }
             else if (m_messageType == DisplayType.AccessDenied)
                 StackPanelAccessDenied.Visibility = Visibility.Visible;
@@ -531,7 +554,7 @@ namespace TVA.Windows
             }
         }
 
-        bool ShowFailureReason(ISecurityProvider provider)
+        private bool ShowFailureReason(ISecurityProvider provider)
         {
             TextBlockGlobalMessage.Text = string.Empty;
 
@@ -551,6 +574,5 @@ namespace TVA.Windows
         }
 
         #endregion
-
     }
 }

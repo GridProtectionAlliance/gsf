@@ -252,10 +252,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Text.RegularExpressions;
 using TVA.Configuration;
+using TVA.Data;
 
 namespace TVA.Security
 {
@@ -546,28 +548,23 @@ namespace TVA.Security
                 UserData.Initialize();
                                 
                 DataRow userDataRow;
+                string groupName, roleName;
+
                 using (IDbConnection dbConnection = (new DataConnection()).Connection)
                 {
                     if (dbConnection == null)
                         return false;
 
-                    //We'll retrieve all the data we need about a user.
-                    // Table1: Information about the user.
-                    // Table2: Groups the user is a member of.
-                    // Table3: Roles that are assigned to the user either directly or through a group.
+                    // We'll retrieve all the data we need about a user.
+                    //   Table1: Information about the user.
+                    //   Table2: Groups the user is a member of.
+                    //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
 
                     DataTable userDataTable = new DataTable();
                     DataTable userGroupDataTable = new DataTable();
                     DataTable userRoleDataTable = new DataTable();
 
-                    IDbCommand command = dbConnection.CreateCommand();                    
-                    command.CommandType = CommandType.Text;
-                    IDbDataParameter param = command.CreateParameter();
-                    param.ParameterName = "@name";
-                    param.Value = UserData.Username;
-                    command.Parameters.Add(param);
-                    command.CommandText = "Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name";                    
-                    userDataTable.Load(command.ExecuteReader());
+                    userDataTable.Load(dbConnection.CreateParameterizedCommand("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username).ExecuteReader());
 
                     if (userDataTable.Rows.Count == 0) 
                         return false;
@@ -578,55 +575,77 @@ namespace TVA.Security
 
                     if (UserData.IsExternal)
                     {
+                        if (string.IsNullOrEmpty(UserData.LoginID))
+                            UserData.LoginID = UserData.Username;
+
                         if (!Convert.IsDBNull(userDataRow["Password"]))
                             UserData.Password = Convert.ToString(userDataRow["Password"]);
                         if (!Convert.IsDBNull(userDataRow["FirstName"]))
                             UserData.FirstName = Convert.ToString(userDataRow["FirstName"]);
                         if (!Convert.IsDBNull(userDataRow["LastName"]))
                             UserData.LastName = Convert.ToString(userDataRow["LastName"]);
-                        //if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
-                        //    UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
                         if (!Convert.IsDBNull(userDataRow["Phone"]))
                             UserData.PhoneNumber = Convert.ToString(userDataRow["Phone"]);
                         if (!Convert.IsDBNull(userDataRow["Email"]))
                             UserData.EmailAddress = Convert.ToString(userDataRow["Email"]);
-                        //if (!Convert.IsDBNull(userDataRow["UserSecurityQuestion"]))
-                        //    UserData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
-                        //if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
-                        //    UserData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
                         if (!Convert.IsDBNull(userDataRow["LockedOut"]))
                             UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
                         if (!Convert.IsDBNull(userDataRow["ChangePasswordOn"]))
                             UserData.PasswordChangeDateTime = Convert.ToDateTime(userDataRow["ChangePasswordOn"]);
                         if (!Convert.IsDBNull(userDataRow["CreatedOn"]))
                             UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["CreatedOn"]);
+                        
+                        // For possible future use:
+                        //if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
+                        //    UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
+                        //if (!Convert.IsDBNull(userDataRow["UserSecurityQuestion"]))
+                        //    UserData.SecurityQuestion = Convert.ToString(userDataRow["UserSecurityQuestion"]);
+                        //if (!Convert.IsDBNull(userDataRow["UserSecurityAnswer"]))
+                        //    UserData.SecurityAnswer = Convert.ToString(userDataRow["UserSecurityAnswer"]);
                     }
                     else
-                        base.RefreshData();
-                    
-                    UserData.Groups.Clear();
-                    
-                    command.CommandText = "Select SecurityGroupID, SecurityGroupName, SecurityGroupDescription From SecurityGroupUserAccountDetail Where UserName = @name";
-                    userGroupDataTable.Load(command.ExecuteReader());
+                    {
+                        // Load implicitly assigned groups - this happens via NT user groups that get loaded into user data group
+                        // collection. When group definitions that are defined with the same name as their NT equivalents, this will
+                        // allow automatic external group management from within active directory or local account group management.
+                        base.RefreshData(UserData.Groups);
+                    }
+
+                    // Load explicitly assigned groups
+                    userGroupDataTable.Load(dbConnection.CreateParameterizedCommand("Select SecurityGroupID, SecurityGroupName, SecurityGroupDescription From SecurityGroupUserAccountDetail Where UserName = @name", UserData.Username).ExecuteReader());
 
                     foreach (DataRow group in userGroupDataTable.Rows)
                     {
                         if (!Convert.IsDBNull(group["SecurityGroupName"]))
-                            UserData.Groups.Add(Convert.ToString(group["SecurityGroupName"]));
+                        {
+                            groupName = Convert.ToString(group["SecurityGroupName"]);
+
+                            if (!UserData.Groups.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                                UserData.Groups.Add(groupName);
+                        }
                     }
 
                     UserData.Roles.Clear();
-                    
-                    command.CommandText = "Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleUserAccountDetail Where UserName = @name";
-                    userRoleDataTable.Load(command.ExecuteReader());
 
-                    command.CommandText = "Select ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail Where ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name";
-                    userRoleDataTable.Load(command.ExecuteReader());
+                    // Load implicitly assigned roles
+                    foreach (string group in UserData.Groups)
+                    {
+                        userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail Where SecurityGroupName = @groupName", group).ExecuteReader());
+                    }
+
+                    // Load explicitly assigned roles
+                    userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleUserAccountDetail Where UserName = @name", UserData.Username).ExecuteReader());
+                    userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail Where ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username).ExecuteReader());
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
-                        if (!Convert.IsDBNull(role["ApplicationRoleName"]) && !UserData.Roles.Contains(Convert.ToString(role["ApplicationRoleName"])))
-                            UserData.Roles.Add(Convert.ToString(role["ApplicationRoleName"]));
+                        if (!Convert.IsDBNull(role["ApplicationRoleName"]))
+                        {
+                            roleName = Convert.ToString(role["ApplicationRoleName"]);
+
+                            if (!UserData.Roles.Contains(roleName, StringComparer.InvariantCultureIgnoreCase))
+                                UserData.Roles.Add(roleName);
+                        }
                     }
 
                     return true;

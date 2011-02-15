@@ -61,6 +61,11 @@
 //       Modified Initialize() to initialize UserEntry only if the machine is joined to a domain.
 //  02/14/2011 - J. Ritchie Carroll
 //       Added WinNT DirectoryEntry lookups for local accounts when user is not connected to a domain.
+//  02/15/2011 - J. Ritchie Carroll
+//       Modified "Groups" property to always return domain prefixed group names for the user.
+//       Modified to allow default lookup of account name from machines not connected to a domain even 
+//       if local machine name is not specified as domain name -and- to allow lookup of local account
+//       information even when connected to a domain if machine name is specified as domain name.
 //
 //*******************************************************************************************************
 
@@ -391,10 +396,6 @@ namespace TVA.Identity
         private const int LOCKED = 16;
         private const int PASSWD_CANT_CHANGE = 64;
         private const int DONT_EXPIRE_PASSWORD = 65536;
-        private const int LOGON32_PROVIDER_DEFAULT = 0;
-        private const int LOGON32_LOGON_INTERACTIVE = 2;
-        private const int LOGON32_LOGON_NETWORK = 3;
-        private const int SECURITY_IMPERSONATION = 2;
         private const string LogonDomainRegistryKey = @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon";
         private const string LogonDomainRegistryValue = "DefaultDomainName";
 
@@ -566,10 +567,15 @@ namespace TVA.Identity
         {
             get
             {
-                if (m_isWinNT)
-                    return DateTime.Parse(GetUserProperty("lastLogin"));
+                if (m_enabled)
+                {
+                    if (m_isWinNT)
+                        return DateTime.Parse(GetUserProperty("lastLogin"));
 
-                return DateTime.Parse(GetUserProperty("lastLogon"));
+                    return DateTime.Parse(GetUserProperty("lastLogon"));
+                }
+                else
+                    return DateTime.MinValue;
             }
         }
 
@@ -580,35 +586,40 @@ namespace TVA.Identity
         {
             get
             {
-                if (m_isWinNT)
+                if (m_enabled)
                 {
-                    try
+                    if (m_isWinNT)
                     {
-                        string profilePath = GetUserProperty("profile");
-
-                        if (string.IsNullOrEmpty(profilePath) || !Directory.Exists(profilePath))
+                        try
                         {
-                            // Remove any trailing directory seperator character from the file path.
-                            string rootFolder = FilePath.AddPathSuffix(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
-                            string userFolder = FilePath.GetLastDirectoryName(rootFolder);
-                            int folderLocation = rootFolder.LastIndexOf(userFolder);
+                            string profilePath = GetUserProperty("profile");
 
-                            // Remove user profile name for current user (this class may be for user other than ower of current thread)                            
-                            rootFolder = FilePath.AddPathSuffix(rootFolder.Substring(0, folderLocation));
+                            if (string.IsNullOrEmpty(profilePath) || !Directory.Exists(profilePath))
+                            {
+                                // Remove any trailing directory seperator character from the file path.
+                                string rootFolder = FilePath.AddPathSuffix(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+                                string userFolder = FilePath.GetLastDirectoryName(rootFolder);
+                                int folderLocation = rootFolder.LastIndexOf(userFolder);
 
-                            // Create profile path for user referenced in this UserInfo class
-                            profilePath = FilePath.AddPathSuffix(rootFolder + m_username);
+                                // Remove user profile name for current user (this class may be for user other than ower of current thread)                            
+                                rootFolder = FilePath.AddPathSuffix(rootFolder.Substring(0, folderLocation));
+
+                                // Create profile path for user referenced in this UserInfo class
+                                profilePath = FilePath.AddPathSuffix(rootFolder + m_username);
+                            }
+
+                            return Directory.GetCreationTime(profilePath);
                         }
-
-                        return Directory.GetCreationTime(profilePath);
+                        catch
+                        {
+                            return DateTime.MinValue;
+                        }
                     }
-                    catch
-                    {
-                        return DateTime.MinValue;
-                    }
+                    else
+                        return Convert.ToDateTime(GetUserProperty("whenCreated"));
                 }
                 else
-                    return Convert.ToDateTime(GetUserProperty("whenCreated"));
+                    return DateTime.MinValue;
             }
         }
 
@@ -622,7 +633,7 @@ namespace TVA.Identity
                 DateTime passwordChangeDate = DateTime.MaxValue;
                 int userAccountControl = UserAccountControl;
 
-                if (!PasswordCannotChange && !PasswordDoesNotExpire)
+                if (m_enabled && !PasswordCannotChange && !PasswordDoesNotExpire)
                 {
                     if (m_isWinNT)
                     {
@@ -668,7 +679,7 @@ namespace TVA.Identity
         {
             get
             {
-                if (m_userAccountControl == -1)
+                if (m_enabled && m_userAccountControl == -1)
                 {
                     if (m_isWinNT)
                         m_userAccountControl = int.Parse(GetUserProperty("userFlags"));
@@ -753,31 +764,37 @@ namespace TVA.Identity
         /// <summary>
         /// Gets the groups asscociated with the user.
         /// </summary>
+        /// <remarks>
+        /// Groups names are prefixed with their associated domain or computer name.
+        /// </remarks>
         public string[] Groups
         {
             get
             {
                 List<string> groups = new List<string>();
 
-                if (m_isWinNT)
+                if (m_enabled)
                 {
-                    // Get local groups
-                    object localGroups = m_userEntry.Invoke("Groups");
-
-                    foreach (object localGroup in (IEnumerable)localGroups)
+                    if (m_isWinNT)
                     {
-                        DirectoryEntry groupEntry = new DirectoryEntry(localGroup);
-                        groups.Add(groupEntry.Name);
+                        // Get local groups
+                        object localGroups = m_userEntry.Invoke("Groups");
+
+                        foreach (object localGroup in (IEnumerable)localGroups)
+                        {
+                            DirectoryEntry groupEntry = new DirectoryEntry(localGroup);
+                            groups.Add(m_domain + "\\" + groupEntry.Name);
+                        }
                     }
-                }
-                else
-                {
-                    // Get active directory groups
-                    m_userEntry.RefreshCache(new string[] { "TokenGroups" });
-
-                    foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
+                    else
                     {
-                        groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString().Split('\\')[1]);
+                        // Get active directory groups
+                        m_userEntry.RefreshCache(new string[] { "TokenGroups" });
+
+                        foreach (byte[] sid in m_userEntry.Properties["TokenGroups"])
+                        {
+                            groups.Add(new SecurityIdentifier(sid, 0).Translate(typeof(NTAccount)).ToString());
+                        }
                     }
                 }
 
@@ -1020,21 +1037,6 @@ namespace TVA.Identity
             }
         }
 
-        /// <summary>
-        /// Gets a boolean value that indicates whether the current machine is joined to a domain.
-        /// </summary>
-        public bool IsJoinedToDomain
-        {
-            get
-            {
-                using (ManagementObject wmi = new ManagementObject(string.Format("Win32_ComputerSystem.Name='{0}'", Environment.MachineName)))
-                {
-                    wmi.Get();
-                    return (bool)wmi["PartOfDomain"];
-                }
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
@@ -1058,40 +1060,62 @@ namespace TVA.Identity
                 // Load settings from config file.
                 LoadSettings();
 
-                if (IsJoinedToDomain)
+                bool lookupDomainAccount = false;
+
+                // See if this computer is part of a domain
+                if (UserInfo.MachineIsJoinedToDomain)
                 {
-                    // Initialize the directory entry object used to retrieve AD info.
+                    // Try do derive the domain if one is not specified
+                    if (string.IsNullOrEmpty(m_domain))
+                    {
+                        if (!string.IsNullOrEmpty(m_privilegedDomain))
+                        {
+                            // Use domain specified for privileged account
+                            m_domain = m_privilegedDomain;
+                        }
+                        else
+                        {
+                            // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
+                            // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
+                            m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
+                        }
+                    }
+
+                    // Use active directory domain account for user information lookup as long as domain is not the current machine
+                    lookupDomainAccount = (string.Compare(Environment.MachineName, m_domain, true) != 0);
+                }
+                else
+                {
+                    // Set the domain as the local machine if one is not specified
+                    if (string.IsNullOrEmpty(m_domain))
+                        m_domain = Environment.MachineName;
+                }
+
+                if (lookupDomainAccount)
+                {
+                    // Initialize the directory entry object used to retrieve active directory information
                     WindowsImpersonationContext currentContext = null;
+
                     try
                     {
-                        // Impersonate to the privileged account if specified.
+                        // Impersonate to the privileged account if specified
                         currentContext = ImpersonatePrivilegedAccount();
 
-                        // Initialize the Active Directory searcher object.
+                        // Initialize the Active Directory searcher object
                         DirectorySearcher searcher;
+
                         if (string.IsNullOrEmpty(m_ldapPath))
                             searcher = new DirectorySearcher();
                         else
                             searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
 
-                        // Get user's directory entry for AD interactions.
+                        // Get user's directory entry for active directory interactions
                         using (searcher)
                         {
                             searcher.Filter = "(SAMAccountName=" + m_username + ")";
                             SearchResult result = searcher.FindOne();
                             if (result != null)
                                 m_userEntry = result.GetDirectoryEntry();
-                        }
-
-                        // Try do derive the domain if one is not specified.
-                        if (string.IsNullOrEmpty(m_domain))
-                        {
-                            if (!string.IsNullOrEmpty(m_privilegedDomain))
-                                // Use domain specified for privileged account.
-                                m_domain = m_privilegedDomain;
-                            else
-                                // Use the default logon domain of the host machine.
-                                m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
                         }
 
                         m_isWinNT = false;
@@ -1105,11 +1129,13 @@ namespace TVA.Identity
                     }
                     finally
                     {
-                        EndImpersonation(currentContext);   // Undo impersonation if it was performed.
+                        // Undo impersonation if it was performed
+                        EndImpersonation(currentContext);
                     }
                 }
                 else
                 {
+                    // Initialize the directory entry object used to retrieve local account information
                     try
                     {
                         m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
@@ -1124,7 +1150,8 @@ namespace TVA.Identity
                     }
                 }
 
-                m_initialized = true;   // Initialize only once.
+                // Initialize user information only once
+                m_initialized = true;
             }
         }
 
@@ -1167,9 +1194,9 @@ namespace TVA.Identity
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account.");
-                settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account.");
-                settings.Add("PrivilegedPassword", m_privilegedPassword, "Password of privileged domain user account.", true);
+                settings.Add("PrivilegedDomain", m_privilegedDomain, "Domain of privileged domain user account used for Active Directory information lookup, if needed.");
+                settings.Add("PrivilegedUserName", m_privilegedUserName, "Username of privileged domain user account used for Active Directory information lookup, if needed.");
+                settings.Add("PrivilegedPassword", m_privilegedPassword, "Encrypted password of privileged domain user account used for Active Directory information lookup, if needed.", true);
                 m_privilegedDomain = settings["PrivilegedDomain"].ValueAs(m_privilegedDomain);
                 m_privilegedUserName = settings["PrivilegedUserName"].ValueAs(m_privilegedUserName);
                 m_privilegedPassword = settings["PrivilegedPassword"].ValueAs(m_privilegedPassword);
@@ -1218,8 +1245,10 @@ namespace TVA.Identity
             // Check input parameters.
             if (string.IsNullOrEmpty(domain))
                 throw new ArgumentNullException("domain");
+
             if (string.IsNullOrEmpty(username))
                 throw new ArgumentNullException("username");
+
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
@@ -1239,12 +1268,12 @@ namespace TVA.Identity
                 !string.IsNullOrEmpty(m_privilegedUserName) &&
                 !string.IsNullOrEmpty(m_privilegedPassword))
             {
-                // Privileged domain account is specified.
-                return ImpersonateUser(m_privilegedDomain, m_privilegedUserName, m_privilegedPassword);
+                // Privileged domain account is specified
+                return UserInfo.ImpersonateUser(m_privilegedDomain, m_privilegedUserName, m_privilegedPassword);
             }
             else
             {
-                // Privileged domain account is not specified.
+                // Privileged domain account is not specified
                 return null;
             }
         }
@@ -1257,21 +1286,22 @@ namespace TVA.Identity
         public string GetUserProperty(string propertyName)
         {
             WindowsImpersonationContext currentContext = null;
+
             try
             {
-                // Initialize if uninitialized.
+                // Initialize if uninitialized
                 Initialize();
 
-                // Quit if disabled.
+                // Quit if disabled
                 if (!m_enabled)
                     return string.Empty;
 
                 if (m_userEntry != null)
                 {
-                    // Impersonate to the privileged account if specified.
+                    // Impersonate to the privileged account if specified
                     currentContext = ImpersonatePrivilegedAccount();
 
-                    // Return requested Active Directory property value.
+                    // Return requested Active Directory property value
                     return m_userEntry.Properties[propertyName][0].ToString().Replace("  ", " ").Trim();
                 }
                 else
@@ -1285,7 +1315,8 @@ namespace TVA.Identity
             }
             finally
             {
-                EndImpersonation(currentContext);   // Undo impersonation if it was performed.
+                // Undo impersonation if it was performed
+                EndImpersonation(currentContext);
             }
         }
 
@@ -1320,6 +1351,7 @@ namespace TVA.Identity
         private long ConvertToLong(object largeInteger)
         {
             Type type = largeInteger.GetType();
+
             int highPart = (int)type.InvokeMember("HighPart", BindingFlags.GetProperty, null, largeInteger, null);
             int lowPart = (int)type.InvokeMember("LowPart", BindingFlags.GetProperty, null, largeInteger, null);
 
@@ -1350,18 +1382,6 @@ namespace TVA.Identity
 
         // Static Fields
         private static UserInfo s_currentUserInfo;
-
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool CloseHandle(IntPtr handle);
-
-        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SecurityImpersonationLevel, ref IntPtr DuplicateTokenHandle);
 
         // Static Properties
 
@@ -1501,12 +1521,13 @@ namespace TVA.Identity
         public static IPrincipal AuthenticateUser(string domain, string username, string password, out string errorMessage)
         {
             IntPtr tokenHandle = IntPtr.Zero;
+
             try
             {
                 errorMessage = null;
 
                 // Call Win32 LogonUser method.
-                if (LogonUser(username, domain, password, LOGON32_LOGON_NETWORK, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
+                if (WindowsApi.LogonUser(username, domain, password, WindowsApi.LOGON32_LOGON_NETWORK, WindowsApi.LOGON32_PROVIDER_DEFAULT, out tokenHandle))
                 {
                     // Create a windows principal of the authenticated user.
                     return new WindowsPrincipal(new WindowsIdentity(tokenHandle));
@@ -1522,7 +1543,7 @@ namespace TVA.Identity
             {
                 // Free the token.
                 if (tokenHandle != IntPtr.Zero)
-                    CloseHandle(tokenHandle);
+                    WindowsApi.CloseHandle(tokenHandle);
             }
         }
 
@@ -1556,29 +1577,29 @@ namespace TVA.Identity
         public static WindowsImpersonationContext ImpersonateUser(string domain, string username, string password)
         {
             WindowsImpersonationContext impersonatedUser;
-            IntPtr tokenHandle = IntPtr.Zero;
-            IntPtr dupeTokenHandle = IntPtr.Zero;
+            IntPtr userTokenHandle = IntPtr.Zero;
+            IntPtr duplicateTokenHandle = IntPtr.Zero;
 
             try
             {
                 // Calls LogonUser to obtain a handle to an access token.
-                if (!LogonUser(username, domain, password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out tokenHandle))
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - {2}", domain, username, WindowsApi.GetLastErrorMessage()));
+                if (!WindowsApi.LogonUser(username, domain, password, WindowsApi.LOGON32_LOGON_INTERACTIVE, WindowsApi.LOGON32_PROVIDER_DEFAULT, out userTokenHandle))
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\": {2}", domain, username, WindowsApi.GetLastErrorMessage()));
 
-                if (!DuplicateToken(tokenHandle, SECURITY_IMPERSONATION, ref dupeTokenHandle))
-                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - Exception thrown while trying to duplicate token", domain, username));
+                if (!WindowsApi.DuplicateToken(userTokenHandle, WindowsApi.SECURITY_IMPERSONATION, ref duplicateTokenHandle))
+                    throw new InvalidOperationException(string.Format("Failed to impersonate user \"{0}\\{1}\" - exception thrown while trying to duplicate token: {2}", domain, username, WindowsApi.GetLastErrorMessage()));
 
-                // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation.
-                impersonatedUser = WindowsIdentity.Impersonate(dupeTokenHandle);
+                // The token that is passed into WindowsIdentity must be a primary token in order to use it for impersonation
+                impersonatedUser = WindowsIdentity.Impersonate(duplicateTokenHandle);
             }
             finally
             {
-                // Frees the tokens.
-                if (tokenHandle != IntPtr.Zero)
-                    CloseHandle(tokenHandle);
+                // Free the tokens
+                if (userTokenHandle != IntPtr.Zero)
+                    WindowsApi.CloseHandle(userTokenHandle);
 
-                if (dupeTokenHandle != IntPtr.Zero)
-                    CloseHandle(dupeTokenHandle);
+                if (duplicateTokenHandle != IntPtr.Zero)
+                    WindowsApi.CloseHandle(duplicateTokenHandle);
             }
 
             return impersonatedUser;
@@ -1621,6 +1642,21 @@ namespace TVA.Identity
             }
 
             impersonatedUser = null;
+        }
+
+        /// <summary>
+        /// Gets a boolean value that indicates whether the current machine is joined to a domain.
+        /// </summary>
+        public static bool MachineIsJoinedToDomain
+        {
+            get
+            {
+                using (ManagementObject wmi = new ManagementObject(string.Format("Win32_ComputerSystem.Name='{0}'", Environment.MachineName)))
+                {
+                    wmi.Get();
+                    return (bool)wmi["PartOfDomain"];
+                }
+            }
         }
 
         #endregion

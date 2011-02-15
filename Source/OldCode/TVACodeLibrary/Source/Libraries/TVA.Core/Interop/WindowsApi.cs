@@ -279,10 +279,33 @@ using System.Runtime.InteropServices;
 namespace TVA.Interop
 {
     /// <summary>
-    /// Defines common Windows API functions and structures.
+    /// Defines common Windows API constants, enumerations, structures and functions.
     /// </summary>
     public static class WindowsApi
     {
+        /// <summary>
+        /// Use the standard logon provider for the system. The default security provider is NTLM. 
+        /// </summary>
+        public const int LOGON32_PROVIDER_DEFAULT = 0;
+
+        /// <summary>
+        /// This logon type is intended for users who will be interactively using the computer, such as a user being logged on by a terminal server, 
+        /// remote shell, or similar process. This logon type has the additional expense of caching logon information for disconnected operations; 
+        /// therefore, it is inappropriate for some client/server applications, such as a mail server. 
+        /// </summary>
+        public const int LOGON32_LOGON_INTERACTIVE = 2;
+        
+        /// <summary>
+        /// This logon type is intended for high performance servers to authenticate plaintext passwords. The LogonUserEx function does not cache
+        /// credentials for this logon type. 
+        /// </summary>
+        public const int LOGON32_LOGON_NETWORK = 3;
+        
+        /// <summary>
+        /// Impersonate a client at the impersonation level.
+        /// </summary>
+        public const int SECURITY_IMPERSONATION = 2;
+
         /// <summary>
         /// Win32 SERVICE_DESCRIPTION structure.
         /// </summary>
@@ -511,6 +534,18 @@ namespace TVA.Interop
         /// </summary>
         [DllImport("kernel32.dll")]
         public static extern int GetLastError();
+
+        /// <summary>
+        /// Win32 LogonUser function.
+        /// </summary>
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern bool LogonUser(string lpszUsername, string lpszDomain, string lpszPassword, int dwLogonType, int dwLogonProvider, out IntPtr phToken);
+
+        /// <summary>
+        /// Win32 DuplicateToken function.
+        /// </summary>
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern bool DuplicateToken(IntPtr existingTokenHandle, int securityImpersonationLevel, ref IntPtr duplicateTokenHandle);
 
         /// <summary>
         /// Win32 AdjustTokenPrivileges function.

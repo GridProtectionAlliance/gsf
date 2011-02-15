@@ -4,7 +4,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="SecurityPortal" ShowInTaskbar="False" Background="Transparent"
         ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
-        WindowStyle="None" MouseDown="Window_MouseDown">
+        WindowStyle="ThreeDBorderWindow" MouseDown="Window_MouseDown" Closed="Window_Closed">
 
     <Window.Resources>
 
@@ -42,7 +42,7 @@
                 <RowDefinition Height="Auto" x:Name="GridRowMyAccountInfo"/>
             </Grid.RowDefinitions>
                 
-            <Button x:Name="ButtonExit" Content="X" Width="{StaticResource XXSmallItemSize}" HorizontalAlignment="Right" FontWeight="Bold" Margin="5" ToolTip="Exit Application"/>
+            <Button x:Name="ButtonExit" Content="X" Width="{StaticResource XXSmallItemSize}" HorizontalAlignment="Right" FontWeight="Bold" Margin="5" ToolTip="Exit Application" IsCancel="True" Visibility="Collapsed" />
 
             <TextBlock x:Name="TextBlockGlobalMessage" Grid.Row="1" Width="470" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="5" Foreground="Red"/>
 
@@ -102,10 +102,10 @@
                 <TextBlock x:Name="TextBlockAccessDenied" Text="Access Denied" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Red" HorizontalAlignment="Center"></TextBlock>
                 <TextBlock FontSize="{StaticResource RegularTextSize}" Margin="5">
                 You do not have permission to access the requested secure resource.<LineBreak />
-                Please contact application administrator to request access to secure resource.
+                Click OK to login as another user or contact application administrator<LineBreak />to request access to secure resource.
                 </TextBlock>
-                
-                <Button x:Name="ButtonOk" Content="OK" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Center" FontWeight="Bold" Margin="5"/>
+
+                <Button x:Name="ButtonOk" Content="OK" Width="{StaticResource SmallItemSize}" HorizontalAlignment="Center" FontWeight="Bold" Margin="5" />
                 
             </StackPanel>
 

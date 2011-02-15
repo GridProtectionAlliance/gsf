@@ -300,7 +300,7 @@ namespace TVA.Windows
     /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
-        #region [ Methods ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SecureWindow"/> class.
@@ -309,6 +309,24 @@ namespace TVA.Windows
         {
             this.Initialized += SecureWindow_Initialized;
         }
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets flags to force login display.
+        /// </summary>
+        [Localizability(LocalizationCategory.None)]
+        public bool ForceLoginDisplay
+        {
+            get;
+            set;
+        }
+
+        #endregion
+
+        #region [ Methods ]
 
         /// <summary>
         /// Gets the name of resource being accessed.
@@ -342,8 +360,8 @@ namespace TVA.Windows
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated)
-            {                
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
+            {
                 //throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
                 SecurityPortal securityPortal = new SecurityPortal(DisplayType.Login);
                 if (!(bool)securityPortal.ShowDialog())
@@ -355,7 +373,7 @@ namespace TVA.Windows
 
             // Perform a top-level permission check on the resource being accessed.
             if (!string.IsNullOrEmpty(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
-            {                
+            {
                 //throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
                 SecurityPortal securityPortal = new SecurityPortal(DisplayType.AccessDenied);
                 if (!(bool)securityPortal.ShowDialog() && securityPortal.Owner == null)
@@ -367,5 +385,17 @@ namespace TVA.Windows
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Fields
+
+        /// <summary>
+        /// Identifies the <see cref="ForceLoginDisplay"/> dependency property.
+        /// </summary>
+        /// <returns>identifier for the <see cref="ForceLoginDisplay"/> dependency property.</returns>
+        public static readonly DependencyProperty ForceLoginDisplayProperty = DependencyProperty.Register("ForceLoginDisplay", typeof(Boolean), typeof(SecureWindow), new PropertyMetadata(false));
+
+        #endregion        
     }
 }
