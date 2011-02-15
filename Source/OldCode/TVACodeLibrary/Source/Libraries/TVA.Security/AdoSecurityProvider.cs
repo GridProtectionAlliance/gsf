@@ -580,18 +580,22 @@ namespace TVA.Security
 
                         if (!Convert.IsDBNull(userDataRow["Password"]))
                             UserData.Password = Convert.ToString(userDataRow["Password"]);
+
                         if (!Convert.IsDBNull(userDataRow["FirstName"]))
                             UserData.FirstName = Convert.ToString(userDataRow["FirstName"]);
+
                         if (!Convert.IsDBNull(userDataRow["LastName"]))
                             UserData.LastName = Convert.ToString(userDataRow["LastName"]);
+
                         if (!Convert.IsDBNull(userDataRow["Phone"]))
                             UserData.PhoneNumber = Convert.ToString(userDataRow["Phone"]);
+
                         if (!Convert.IsDBNull(userDataRow["Email"]))
                             UserData.EmailAddress = Convert.ToString(userDataRow["Email"]);
-                        if (!Convert.IsDBNull(userDataRow["LockedOut"]))
-                            UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
+
                         if (!Convert.IsDBNull(userDataRow["ChangePasswordOn"]))
                             UserData.PasswordChangeDateTime = Convert.ToDateTime(userDataRow["ChangePasswordOn"]);
+
                         if (!Convert.IsDBNull(userDataRow["CreatedOn"]))
                             UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["CreatedOn"]);
                         
@@ -610,6 +614,10 @@ namespace TVA.Security
                         // allow automatic external group management from within active directory or local account group management.
                         base.RefreshData(UserData.Groups);
                     }
+
+                    // User can lock out NT user as well as database-only user
+                    if (!UserData.IsLockedOut && !Convert.IsDBNull(userDataRow["LockedOut"]))
+                        UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
 
                     // Load explicitly assigned groups
                     userGroupDataTable.Load(dbConnection.CreateParameterizedCommand("Select SecurityGroupID, SecurityGroupName, SecurityGroupDescription From SecurityGroupUserAccountDetail Where UserName = @name", UserData.Username).ExecuteReader());
