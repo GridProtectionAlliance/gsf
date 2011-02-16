@@ -68,7 +68,6 @@
                 <!--<TextBlock x:Name="TextBlockMessage" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" FontSize="{StaticResource RegularTextSize}" Foreground="Red"/>-->
                 
                 <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5">
-                Application you are trying to access requires you to login. <LineBreak/>
                 Please login using your account username and password. <LineBreak />
                 If you do not have an account, please request one by contacting application administrator.
                 </TextBlock>
@@ -133,8 +132,8 @@
                 <!--<TextBlock x:Name="TextBlockChangePasswordMessage" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" FontSize="{StaticResource RegularTextSize}" Foreground="Red"/>-->
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" TextWrapping="Wrap" Margin="5">
-                You are required to change your password periodically for security reasons. <LineBreak/>
-                In order to change your password you must enter your username and current password<LineBreak /> for verification.                 
+                You are required to change your password periodically for security. <LineBreak/>
+                In order to change your password you must enter your current username and password<LineBreak /> for verification.
                 </TextBlock>
 
                 <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" HorizontalAlignment="Right">
