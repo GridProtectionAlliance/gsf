@@ -615,7 +615,7 @@ namespace TVA.Security
                         base.RefreshData(UserData.Groups);
                     }
 
-                    // User can lock out NT user as well as database-only user
+                    // Administrator can lock out NT user as well as database-only user via database
                     if (!UserData.IsLockedOut && !Convert.IsDBNull(userDataRow["LockedOut"]))
                         UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
 
@@ -673,12 +673,11 @@ namespace TVA.Security
         /// <returns>true if the user is authenticated, otherwise false.</returns>
         public override bool Authenticate(string password)
         {
-            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut || string.IsNullOrEmpty(password) ||
+            // Note that blank password should be allowed so that LDAP can authenticate current credentials for
+            // pass through authentication, if desired
+            if (!UserData.IsDefined || UserData.IsDisabled || UserData.IsLockedOut ||
                 (UserData.PasswordChangeDateTime != DateTime.MinValue && UserData.PasswordChangeDateTime <= DateTime.UtcNow))
                 return false;
-
-            //if (string.IsNullOrEmpty(password))
-            //    return false;
 
             try
             {

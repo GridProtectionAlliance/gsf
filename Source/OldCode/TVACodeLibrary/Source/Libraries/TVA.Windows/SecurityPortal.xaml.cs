@@ -350,7 +350,7 @@ namespace TVA.Windows
             {
                 // Initialize the security provider.
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
-                provider.Initialize();
+
                 if (provider.Authenticate(TextBoxPassword.Password))
                 {
                     // Setup security provider for subsequent uses.
@@ -454,7 +454,7 @@ namespace TVA.Windows
                     throw new Exception("New password and confirm password should be same.");
                 
                 ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
-                provider.Initialize();
+
                 if (provider.CanChangePassword)
                 {
                     //Attempt to change password.

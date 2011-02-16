@@ -317,7 +317,6 @@ namespace TVA.Windows
         /// <summary>
         /// Gets or sets flags to force login display.
         /// </summary>
-        [Localizability(LocalizationCategory.None)]
         public bool ForceLoginDisplay
         {
             get;
@@ -355,15 +354,15 @@ namespace TVA.Windows
             if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is TVA.Security.SecurityPrincipal))
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
-            // Setup the security provider for role-based security.
+            // Setup the security provider for role-based security, if needed.
             if (SecurityProviderCache.CurrentProvider == null)
                 SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
 
             // Verify that the current thread principal has been authenticated.
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
-                //throw new SecurityException(string.Format("Authentication failed for user '{0}'", Thread.CurrentPrincipal.Identity.Name));
                 SecurityPortal securityPortal = new SecurityPortal(DisplayType.Login);
+
                 if (!(bool)securityPortal.ShowDialog())
                 {
                     resource = string.Empty;
@@ -374,8 +373,8 @@ namespace TVA.Windows
             // Perform a top-level permission check on the resource being accessed.
             if (!string.IsNullOrEmpty(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
             {
-                //throw new SecurityException(string.Format("Access to '{0}' is denied", resource));
                 SecurityPortal securityPortal = new SecurityPortal(DisplayType.AccessDenied);
+
                 if (!(bool)securityPortal.ShowDialog() && securityPortal.Owner == null)
                 {
                     this.Close();
