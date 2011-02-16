@@ -11,6 +11,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  12/14/2010 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  02/16/2011 - J. Ritchie Carroll
+//       Added automatic password expiration handling and modified screen to accomodate default buttons.
 //
 //******************************************************************************************************
 
@@ -234,7 +236,7 @@
 
 //******************************************************************************************************
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
 //
 //  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
@@ -308,15 +310,17 @@ namespace TVA.Windows
 
             m_messageType = messageType;
 
-            this.Loaded += new RoutedEventHandler(SecurityPortal_Loaded);
-            ButtonLogin.Click += new RoutedEventHandler(ButtonLogin_Click);
-            ButtonExit.Click += new RoutedEventHandler(ButtonExit_Click);
-            ButtonOk.Click += new RoutedEventHandler(ButtonOk_Click);
-            ButtonChange.Click += new RoutedEventHandler(ButtonChange_Click);
-            ButtonChangePassowrdLink.Click += new RoutedEventHandler(ButtonChangePassowrdLink_Click);
-            ButtonForgotPassowrdLink.Click += new RoutedEventHandler(ButtonForgotPassowrdLink_Click);
-            ButtonLoginLink.Click += new RoutedEventHandler(ButtonLoginLink_Click);
-            
+            Loaded += Window_Loaded;
+            MouseDown += Window_MouseDown;
+            Closed += Window_Closed;
+            ButtonLogin.Click += ButtonLogin_Click;
+            ButtonExit.Click += ButtonExit_Click;
+            ButtonOK.Click += ButtonOK_Click;
+            ButtonChange.Click += ButtonChange_Click;
+            ButtonChangePasswordLink.Click += ButtonChangePasswordLink_Click;
+            ButtonForgotPasswordLink.Click += ButtonForgotPasswordLink_Click;
+            ButtonLoginLink.Click += ButtonLoginLink_Click;
+
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
             CategorizedSettingsElement setting = null;
@@ -328,185 +332,25 @@ namespace TVA.Windows
                 TextBlockAccessDenied.Text = setting.Value + " :: Access Denied";
                 TextBlockChangePassword.Text = setting.Value + " :: Change Password";
             }
-                        
+
             ManageScreenVisualization();
 
-            //open this up on top of all other windows.
+            // Open this window on top of all other windows
             this.Topmost = true;
         }
 
         #endregion
 
         #region [ Event Handlers ]
-        
-        /// <summary>
-        /// Logins the user.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonLogin_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                // Initialize the security provider.
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
-
-                if (provider.Authenticate(TextBoxPassword.Password))
-                {
-                    // Setup security provider for subsequent uses.
-                    SecurityProviderCache.CurrentProvider = provider;
-                    TextBlockGlobalMessage.Text = string.Empty;
-                    this.DialogResult = true;
-                }
-                else
-                {
-                    // Display login failure message.
-                    TextBlockGlobalMessage.Text = "The username or password is invalid. Please try again.";
-                }
-            }
-            catch (Exception ex)
-            {
-                TextBlockGlobalMessage.Text = string.Format("Login failed due to an error - {0}", ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Exits window.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonExit_Click(object sender, RoutedEventArgs e)
-        {            
-            this.DialogResult = false;
-        }
-
-        /// <summary>
-        /// Handles window closing.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            this.DialogResult = false;
-        }
-
-        /// <summary>
-        /// Closes window.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonOk_Click(object sender, RoutedEventArgs e)
-        {
-            //GridLogin.Visibility = Visibility.Visible;
-            //StackPanelAccessDenied.Visibility = Visibility.Collapsed;
-            //this.DialogResult = false;
-            m_messageType = DisplayType.Login;
-            ManageScreenVisualization();
-        }
-
-        /// <summary>
-        /// Displays help for the user on how to reset password.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonForgotPassowrdLink_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
-        }
-
-        /// <summary>
-        /// Navigates users to Change Password screen.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonChangePassowrdLink_Click(object sender, RoutedEventArgs e)
-        {
-            m_messageType = DisplayType.ChangePassword;
-            ManageScreenVisualization();
-        }
-
-        /// <summary>
-        /// Navigates users back to Login screen.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
-        {
-            m_messageType = DisplayType.Login;
-            ManageScreenVisualization();
-        }
-
-        /// <summary>
-        /// Attempts to change user's password.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void ButtonChange_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                //check if old and new password are different.
-                if (TextBoxOldPassword.Password == TextBoxNewPassword.Password)
-                    throw new Exception("New password cannot be same as old password.");
-
-                //check is new password and confirm password are same.
-                if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
-                    throw new Exception("New password and confirm password should be same.");
-                
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
-
-                if (provider.CanChangePassword)
-                {
-                    //Attempt to change password.
-                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
-                        provider.Authenticate(TextBoxNewPassword.Password))
-                    {
-                        // Password changed and authenticated successfully.
-                        SecurityProviderCache.CurrentProvider = provider;
-                        TextBlockGlobalMessage.Text = "Password changed successfully.";
-                        m_messageType = DisplayType.Login;
-                        ManageScreenVisualization();
-                        TextBoxUserName.Focus();
-                    }
-                    else
-                    {
-                        // Show why password change failed.
-                        if (!ShowFailureReason(provider))
-                        {
-                            if (!provider.UserData.IsAuthenticated)
-                                TextBlockGlobalMessage.Text = "Authentication was not successful.";
-                            else
-                                TextBlockGlobalMessage.Text = "Password change was not successful.";
-                        }
-                    }
-                }
-                else
-                    TextBlockGlobalMessage.Text = "Account does not support password change.";
-                
-            }
-            catch (SecurityException ex)
-            {
-                // Show security related error messages.
-                TextBlockGlobalMessage.Text = "ERROR: " + ex.Message;
-                TextBoxOldPassword.SelectAll();
-                TextBoxOldPassword.Focus();
-            }
-            catch (Exception ex)
-            {
-                TextBlockGlobalMessage.Text = "ERROR: " + ex.Message;
-                TextBoxOldPassword.SelectAll();
-                TextBoxOldPassword.Focus();
-            }
-        }
 
         /// <summary>
         /// Handles page loaded event.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void SecurityPortal_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            //ManageScreenVisualization();
+            ClearErrorMessage();
         }
 
         /// <summary>
@@ -520,6 +364,173 @@ namespace TVA.Windows
                 this.DragMove();
         }
 
+        /// <summary>
+        /// Handles window closing.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            this.DialogResult = false;
+        }
+
+        /// <summary>
+        /// Logins the user.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonLogin_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Initialize the security provider
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxUserName.Text);
+
+                // Attempt to authenticate user
+                if (provider.Authenticate(TextBoxPassword.Password))
+                {
+                    // User was successfully authenticated - verify their password hasn't expired
+                    DateTime nextPasswordChangeDate = provider.UserData.PasswordChangeDateTime;
+
+                    if (nextPasswordChangeDate == DateTime.MinValue || (nextPasswordChangeDate != DateTime.MaxValue && nextPasswordChangeDate > DateTime.UtcNow))
+                    {
+                        // Display password expired message
+                        DisplayErrorMessage("Your password has expired. You must change your password to continue.");
+                        m_messageType = DisplayType.ChangePassword;
+                        ManageScreenVisualization();
+                        TextBoxPassword.Password = "";
+                    }
+                    else
+                    {
+                        // Setup security provider for subsequent uses
+                        SecurityProviderCache.CurrentProvider = provider;
+                        ClearErrorMessage();
+                        this.DialogResult = true;
+                    }
+                }
+                else
+                {
+                    // Display login failure message
+                    DisplayErrorMessage("The username or password is invalid. Please try again.");
+                }
+            }
+            catch (Exception ex)
+            {
+                DisplayErrorMessage("Login failed: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Exits window.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonExit_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
+        }
+
+        /// <summary>
+        /// Closes window.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonOK_Click(object sender, RoutedEventArgs e)
+        {
+            m_messageType = DisplayType.Login;
+            ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Displays help for the user on how to reset password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonForgotPasswordLink_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Please contact application administrator to reset your password.", "Forgot Password");
+        }
+
+        /// <summary>
+        /// Navigates users to Change Password screen.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonChangePasswordLink_Click(object sender, RoutedEventArgs e)
+        {
+            ClearErrorMessage();
+            m_messageType = DisplayType.ChangePassword;
+            ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Navigates users back to Login screen.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
+        {
+            ClearErrorMessage();
+            m_messageType = DisplayType.Login;
+            ManageScreenVisualization();
+        }
+
+        /// <summary>
+        /// Attempts to change user's password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonChange_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Check if old and new password are different
+                if (TextBoxOldPassword.Password == TextBoxNewPassword.Password)
+                    throw new Exception("New password cannot be same as old password.");
+
+                // Check is new password and confirm password are same
+                if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
+                    throw new Exception("New password and confirm password should be same.");
+
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
+
+                if (provider.CanChangePassword)
+                {
+                    // Attempt to change password
+                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
+                        provider.Authenticate(TextBoxNewPassword.Password))
+                    {
+                        // Password changed and authenticated successfully
+                        DisplayErrorMessage("Password changed successfully.");
+
+                        // Setup security provider for subsequent uses
+                        SecurityProviderCache.CurrentProvider = provider;
+                        ClearErrorMessage();
+                        this.DialogResult = true;
+                    }
+                    else
+                    {
+                        // Show why password change failed
+                        if (!ShowFailureReason(provider))
+                        {
+                            if (!provider.UserData.IsAuthenticated)
+                                DisplayErrorMessage("Authentication was not successful.");
+                            else
+                                DisplayErrorMessage("Password change was not successful.");
+                        }
+                    }
+                }
+                else
+                    DisplayErrorMessage("Account does not support password change.");
+            }
+            catch (Exception ex)
+            {
+                DisplayErrorMessage("Change password failed: " + ex.Message);
+                TextBoxOldPassword.SelectAll();
+                TextBoxOldPassword.Focus();
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -529,48 +540,92 @@ namespace TVA.Windows
         /// </summary>
         private void ManageScreenVisualization()
         {
-            //Initially hide everything on all screens.
-            GridLogin.Visibility = Visibility.Collapsed;
-            StackPanelAccessDenied.Visibility = Visibility.Collapsed;
-            GridChangePassword.Visibility = Visibility.Collapsed;
+            // Initially hide everything on all screens
+            LoginSection.Visibility = Visibility.Collapsed;
+            AccessDeniedSection.Visibility = Visibility.Collapsed;
+            ChangePasswordSection.Visibility = Visibility.Collapsed;
+
+            TextBlockApplicationLogin.Visibility = Visibility.Collapsed;
+            TextBlockAccessDenied.Visibility = Visibility.Collapsed;
+            TextBlockChangePassword.Visibility = Visibility.Collapsed;
+
+            // Reset all default buttons
+            ButtonLogin.IsDefault = false;
+            ButtonOK.IsDefault = false;
+            ButtonChange.IsDefault = false;
 
             if (m_messageType == DisplayType.Login)
             {
                 TextBoxUserName.Text = Thread.CurrentPrincipal.Identity.Name;
                 TextBoxUserName.SelectAll();
-                GridLogin.Visibility = Visibility.Visible;
+                
+                ButtonLogin.IsDefault = true;
+                TextBlockApplicationLogin.Visibility = Visibility.Visible;
+                LoginSection.Visibility = Visibility.Visible;
 
-                if (!string.IsNullOrEmpty(TextBoxUserName.Text))
-                    TextBoxPassword.Focus();
-                else
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
                     TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
             }
             else if (m_messageType == DisplayType.AccessDenied)
-                StackPanelAccessDenied.Visibility = Visibility.Visible;
+            {
+                ButtonOK.IsDefault = true;
+                TextBlockAccessDenied.Visibility = Visibility.Visible;
+                AccessDeniedSection.Visibility = Visibility.Visible;
+            }
             else if (m_messageType == DisplayType.ChangePassword)
             {
-                GridChangePassword.Visibility = Visibility.Visible;
-                TextBoxChangePasswordUserName.Focus();
+                TextBoxChangePasswordUserName.Text = Thread.CurrentPrincipal.Identity.Name;
+                TextBoxChangePasswordUserName.SelectAll();
+                
+                ButtonChange.IsDefault = true;
+                TextBlockChangePassword.Visibility = Visibility.Visible;
+                ChangePasswordSection.Visibility = Visibility.Visible;
+
+                if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                    TextBoxChangePasswordUserName.Focus();
+                else
+                    TextBoxOldPassword.Focus();
             }
         }
 
         private bool ShowFailureReason(ISecurityProvider provider)
         {
-            TextBlockGlobalMessage.Text = string.Empty;
+            ClearErrorMessage();
 
             if (!provider.UserData.IsDefined)
                 // No such account.
-                TextBlockGlobalMessage.Text = "Account does not exist.";
+                DisplayErrorMessage("Account does not exist.");
             else if (provider.UserData.IsDisabled)
                 // Account is disabled.
-                TextBlockGlobalMessage.Text = "Account is currently disabled.";
+                DisplayErrorMessage("Account is currently disabled.");
             else if (provider.UserData.IsLockedOut)
                 // Account is locked.
-                TextBlockGlobalMessage.Text = "Account is currently locked.";
+                DisplayErrorMessage("Account is currently locked.");
             else
                 return false;
 
             return true;
+        }
+
+        private void DisplayErrorMessage(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                TextBlockGlobalMessage.Text = "";
+                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TextBlockGlobalMessage.Text = message;
+                TextBlockGlobalMessage.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void ClearErrorMessage()
+        {
+            DisplayErrorMessage(null);
         }
 
         #endregion
