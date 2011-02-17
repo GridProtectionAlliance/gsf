@@ -370,11 +370,13 @@ namespace TVA.Windows
 
         private void SecureWindow_Initialized(object sender, EventArgs e)
         {
-            // Don't proceed if the window is opened in design mode.
+            bool initialLogin = false, passThruAuthentication = true;
+
+            // Don't proceed if the window is opened in design mode
             if (DesignerProperties.GetIsInDesignMode(this))
                 return;
 
-            // Check if the resource is excluded from being secured.
+            // Check if the resource is excluded from being secured
             string resource = GetResourceName();
             if (!SecurityProviderUtility.IsResourceSecurable(resource))
                 return;
@@ -383,32 +385,53 @@ namespace TVA.Windows
             if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is TVA.Security.SecurityPrincipal))
                 Thread.CurrentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
 
-            // Setup the security provider for role-based security, if needed.
+            // Setup the security provider for role-based security, if needed
             if (SecurityProviderCache.CurrentProvider == null)
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-
-            // Verify that the current thread principal has been authenticated.
-            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
-                SecurityPortal securityPortal = new SecurityPortal(DisplayType.Login);
-
-                if (!(bool)securityPortal.ShowDialog())
-                {
-                    resource = string.Empty;
-                    Application.Current.Shutdown();
-                }
+                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+                initialLogin = true;
             }
 
-            // Perform a top-level permission check on the resource being accessed.
-            if (!string.IsNullOrEmpty(resource) && !SecurityProviderUtility.IsResourceAccessible(resource))
+            // Verify that the current thread principal has been authenticated
+            if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
             {
-                SecurityPortal securityPortal = new SecurityPortal(DisplayType.AccessDenied);
+                ShowSecurityDialog(DisplayType.Login);
+                passThruAuthentication = false;
+            }
 
-                if (!(bool)securityPortal.ShowDialog() && securityPortal.Owner == null)
+            // Perform a top-level permission check on the resource being accessed
+            if (!string.IsNullOrEmpty(resource))
+            {
+                // Stay in a dialog display loop until either access to resource is available or user exits application
+                while (!SecurityProviderUtility.IsResourceAccessible(resource))
                 {
-                    this.Close();
-                    Application.Current.Shutdown();
+                    // Access to resource is denied. Check if this is the initial login with pass-through authentication,
+                    // if so, just show the login dialog instead of access denied since it's confusing for the initial
+                    // screen to say access denied without first offering the user a chance to login
+                    if (initialLogin && passThruAuthentication)
+                    {
+                        ShowSecurityDialog(DisplayType.Login);
+                        initialLogin = false;
+                    }
+                    else
+                        ShowSecurityDialog(DisplayType.AccessDenied);
                 }
+            }
+        }
+
+        private void ShowSecurityDialog(DisplayType displayType)
+        {
+            SecurityPortal securityDialog = new SecurityPortal(displayType);
+
+            // Show the WPF security dialog
+            if (!(bool)securityDialog.ShowDialog())
+            {
+                // User chose to cancel security action. If the secure window has no parent,
+                // this is root window so exit application, otherwise just close the window
+                if (this.Owner == null)
+                    Application.Current.Shutdown();
+                else
+                    this.Close();
             }
         }
 

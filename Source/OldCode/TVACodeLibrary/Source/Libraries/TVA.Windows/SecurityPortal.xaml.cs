@@ -292,7 +292,7 @@ namespace TVA.Windows
         #region [ Members ]
 
         private const string SettingsCategory = "systemSettings";
-        DisplayType m_messageType;
+        DisplayType m_displayType;
 
         #endregion
 
@@ -301,14 +301,14 @@ namespace TVA.Windows
         /// <summary>
         /// Initializes a new WPF window.
         /// </summary>
-        /// <param name="messageType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
-        public SecurityPortal(DisplayType messageType)
+        /// <param name="displayType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
+        public SecurityPortal(DisplayType displayType)
         {
             InitializeComponent();
 
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
 
-            m_messageType = messageType;
+            m_displayType = displayType;
 
             Loaded += Window_Loaded;
             MouseDown += Window_MouseDown;
@@ -390,13 +390,11 @@ namespace TVA.Windows
                 if (provider.Authenticate(TextBoxPassword.Password))
                 {
                     // User was successfully authenticated - verify their password hasn't expired
-                    DateTime nextPasswordChangeDate = provider.UserData.PasswordChangeDateTime;
-
-                    if (nextPasswordChangeDate == DateTime.MinValue || (nextPasswordChangeDate != DateTime.MaxValue && nextPasswordChangeDate > DateTime.UtcNow))
+                    if (provider.UserData.PasswordChangeDateTime <= DateTime.UtcNow)
                     {
                         // Display password expired message
                         DisplayErrorMessage("Your password has expired. You must change your password to continue.");
-                        m_messageType = DisplayType.ChangePassword;
+                        m_displayType = DisplayType.ChangePassword;
                         ManageScreenVisualization();
                         TextBoxPassword.Password = "";
                     }
@@ -437,7 +435,7 @@ namespace TVA.Windows
         /// <param name="e">Arguments of this event.</param>
         private void ButtonOK_Click(object sender, RoutedEventArgs e)
         {
-            m_messageType = DisplayType.Login;
+            m_displayType = DisplayType.Login;
             ManageScreenVisualization();
         }
 
@@ -459,7 +457,7 @@ namespace TVA.Windows
         private void ButtonChangePasswordLink_Click(object sender, RoutedEventArgs e)
         {
             ClearErrorMessage();
-            m_messageType = DisplayType.ChangePassword;
+            m_displayType = DisplayType.ChangePassword;
             ManageScreenVisualization();
         }
 
@@ -471,7 +469,7 @@ namespace TVA.Windows
         private void ButtonLoginLink_Click(object sender, RoutedEventArgs e)
         {
             ClearErrorMessage();
-            m_messageType = DisplayType.Login;
+            m_displayType = DisplayType.Login;
             ManageScreenVisualization();
         }
 
@@ -554,7 +552,7 @@ namespace TVA.Windows
             ButtonOK.IsDefault = false;
             ButtonChange.IsDefault = false;
 
-            if (m_messageType == DisplayType.Login)
+            if (m_displayType == DisplayType.Login)
             {
                 TextBoxUserName.Text = Thread.CurrentPrincipal.Identity.Name;
                 TextBoxUserName.SelectAll();
@@ -568,13 +566,13 @@ namespace TVA.Windows
                 else
                     TextBoxPassword.Focus();
             }
-            else if (m_messageType == DisplayType.AccessDenied)
+            else if (m_displayType == DisplayType.AccessDenied)
             {
                 ButtonOK.IsDefault = true;
                 TextBlockAccessDenied.Visibility = Visibility.Visible;
                 AccessDeniedSection.Visibility = Visibility.Visible;
             }
-            else if (m_messageType == DisplayType.ChangePassword)
+            else if (m_displayType == DisplayType.ChangePassword)
             {
                 TextBoxChangePasswordUserName.Text = Thread.CurrentPrincipal.Identity.Name;
                 TextBoxChangePasswordUserName.SelectAll();
