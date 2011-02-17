@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         Title="" ShowInTaskbar="False" Background="Transparent"
-        ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen"
         WindowStyle="ToolWindow">
 
     <Window.Resources>
@@ -46,10 +46,10 @@
                 <TextBlock x:Name="TextBlockApplicationLogin" Text="Login" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Black" Margin="5,10,5,5" HorizontalAlignment="Center"></TextBlock>
                 <TextBlock x:Name="TextBlockAccessDenied" Text="Access Denied" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Red" Margin="5,10,5,5" HorizontalAlignment="Center" FontWeight="Normal"></TextBlock>
                 <TextBlock x:Name="TextBlockChangePassword" Grid.ColumnSpan="2" Text="Change Password" FontSize="{StaticResource LargeTextSize}" Effect="{StaticResource TextBlockDarkShadowEffect}" Foreground="Black" Margin="5,10,5,5" HorizontalAlignment="Center"></TextBlock>
-                <TextBlock x:Name="TextBlockGlobalMessage" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="10" Foreground="Red" FontSize="12" FontWeight="Bold" />
+                <TextBlock x:Name="TextBlockGlobalMessage" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" Margin="10" Width="400" Foreground="Red" FontSize="12" FontWeight="Bold" Text="&lt; error message block &gt;" />
             </StackPanel>
             
-            <Grid x:Name="LoginSection" Grid.Row="2">
+            <Grid x:Name="LoginSection" Grid.Row="2" Visibility="Collapsed">
 
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -106,7 +106,7 @@
                 
             </StackPanel>
 
-            <Grid x:Name="ChangePasswordSection" Grid.Row="4">
+            <Grid x:Name="ChangePasswordSection" Grid.Row="4" Visibility="Collapsed">
 
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />

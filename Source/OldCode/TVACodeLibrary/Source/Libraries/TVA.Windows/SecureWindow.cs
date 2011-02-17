@@ -388,8 +388,15 @@ namespace TVA.Windows
             // Setup the security provider for role-based security, if needed
             if (SecurityProviderCache.CurrentProvider == null)
             {
-                SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-                initialLogin = true;
+                try
+                {
+                    SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
+                    initialLogin = true;
+                }
+                catch (Exception ex)
+                {
+                    ShowSecurityDialog(DisplayType.AccessDenied, "Check connection string. Failed to load security provider due to exception: " + ex.Message);
+                }
             }
 
             // Verify that the current thread principal has been authenticated
@@ -402,7 +409,7 @@ namespace TVA.Windows
             // Perform a top-level permission check on the resource being accessed
             if (!string.IsNullOrEmpty(resource))
             {
-                // Stay in a dialog display loop until either access to resource is available or user exits application
+                // Stay in a dialog display loop until either access to resource is available or user exits
                 while (!SecurityProviderUtility.IsResourceAccessible(resource))
                 {
                     // Access to resource is denied. Check if this is the initial login with pass-through authentication,
@@ -419,9 +426,12 @@ namespace TVA.Windows
             }
         }
 
-        private void ShowSecurityDialog(DisplayType displayType)
+        private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
         {
             SecurityPortal securityDialog = new SecurityPortal(displayType);
+
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+                securityDialog.DisplayErrorMessage(errorMessage);
 
             // Show the WPF security dialog
             if (!(bool)securityDialog.ShowDialog())

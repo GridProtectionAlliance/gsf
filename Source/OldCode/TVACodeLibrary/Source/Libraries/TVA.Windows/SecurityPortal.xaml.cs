@@ -256,6 +256,7 @@ using System.Security;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using TVA.Configuration;
 using TVA.Security;
 
@@ -285,18 +286,21 @@ namespace TVA.Windows
     #endregion
 
     /// <summary>
-    /// Represents a WPF window aking for user's credentials and other security related interfaces.
+    /// Represents a WPF window used to request user credentials and other security related information.
     /// </summary>
     public partial class SecurityPortal : Window
     {
         #region [ Members ]
 
+        // Constants
         private const string SettingsCategory = "systemSettings";
-        DisplayType m_displayType;
+
+        // Fields
+        private DisplayType m_displayType;
 
         #endregion
 
-        #region [ Constructor ]
+        #region [ Constructors ]
 
         /// <summary>
         /// Initializes a new WPF window.
@@ -306,13 +310,10 @@ namespace TVA.Windows
         {
             InitializeComponent();
 
-            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
-
             m_displayType = displayType;
 
-            Loaded += Window_Loaded;
-            MouseDown += Window_MouseDown;
             Closed += Window_Closed;
+            MouseDown += Window_MouseDown;
             ButtonLogin.Click += ButtonLogin_Click;
             ButtonExit.Click += ButtonExit_Click;
             ButtonOK.Click += ButtonOK_Click;
@@ -320,19 +321,32 @@ namespace TVA.Windows
             ButtonChangePasswordLink.Click += ButtonChangePasswordLink_Click;
             ButtonForgotPasswordLink.Click += ButtonForgotPasswordLink_Click;
             ButtonLoginLink.Click += ButtonLoginLink_Click;
+            TextBoxUserName.TextChanged += TextBoxUserName_TextChanged;
+            TextBoxChangePasswordUserName.TextChanged += TextBoxUserName_TextChanged;
 
+            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             ConfigurationFile config = ConfigurationFile.Current;
             CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
-            CategorizedSettingsElement setting = null;
+            string setting = settings["ApplicationName"].Value;
 
-            setting = settings["ApplicationName"];
-            if (setting != null)
+            if (!string.IsNullOrWhiteSpace(setting))
             {
-                TextBlockApplicationLogin.Text = setting.Value + " :: Login";
-                TextBlockAccessDenied.Text = setting.Value + " :: Access Denied";
-                TextBlockChangePassword.Text = setting.Value + " :: Change Password";
+                TextBlockApplicationLogin.Text = setting + " :: Login";
+                TextBlockAccessDenied.Text = setting + " :: Access Denied";
+                TextBlockChangePassword.Text = setting + " :: Change Password";
             }
 
+            // Load last user login ID setting
+            settings.Add("LastLoginID", Thread.CurrentPrincipal.Identity.Name, "Last user login ID", false, SettingScope.User);
+            setting = settings["LastLoginID"].Value;
+
+            if (string.IsNullOrWhiteSpace(setting))
+                setting = Thread.CurrentPrincipal.Identity.Name;
+
+            TextBoxUserName.Text = setting;
+
+            // Inititialize screen
+            ClearErrorMessage();
             ManageScreenVisualization();
 
             // Open this window on top of all other windows
@@ -341,16 +355,133 @@ namespace TVA.Windows
 
         #endregion
 
+        #region [ Properties ]
+
+        // Handles dialog exiting
+        private bool ExitSuccess
+        {
+            set
+            {
+                if (!string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                {
+                    ConfigurationFile.Current.Settings[SettingsCategory]["LastLoginID"].Value = TextBoxUserName.Text;
+                    ConfigurationFile.Current.Save();
+                }
+
+                this.DialogResult = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Displays requested screen section based on received request.
+        /// </summary>
+        private void ManageScreenVisualization()
+        {
+            // Initially hide everything on all screens
+            LoginSection.Visibility = Visibility.Collapsed;
+            AccessDeniedSection.Visibility = Visibility.Collapsed;
+            ChangePasswordSection.Visibility = Visibility.Collapsed;
+
+            TextBlockApplicationLogin.Visibility = Visibility.Collapsed;
+            TextBlockAccessDenied.Visibility = Visibility.Collapsed;
+            TextBlockChangePassword.Visibility = Visibility.Collapsed;
+
+            // Reset all default buttons
+            ButtonLogin.IsDefault = false;
+            ButtonOK.IsDefault = false;
+            ButtonChange.IsDefault = false;
+
+            if (m_displayType == DisplayType.Login)
+            {
+                TextBoxUserName.SelectAll();
+                ButtonLogin.IsDefault = true;
+                TextBlockApplicationLogin.Visibility = Visibility.Visible;
+                LoginSection.Visibility = Visibility.Visible;
+
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
+            }
+            else if (m_displayType == DisplayType.AccessDenied)
+            {
+                ButtonOK.IsDefault = true;
+                TextBlockAccessDenied.Visibility = Visibility.Visible;
+                AccessDeniedSection.Visibility = Visibility.Visible;
+            }
+            else if (m_displayType == DisplayType.ChangePassword)
+            {
+                TextBoxChangePasswordUserName.SelectAll();
+                ButtonChange.IsDefault = true;
+                TextBlockChangePassword.Visibility = Visibility.Visible;
+                ChangePasswordSection.Visibility = Visibility.Visible;
+
+                if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                    TextBoxChangePasswordUserName.Focus();
+                else
+                    TextBoxOldPassword.Focus();
+            }
+        }
+
+        private bool ShowFailureReason(ISecurityProvider provider)
+        {
+            ClearErrorMessage();
+
+            if (!provider.UserData.IsDefined)
+                // No such account.
+                DisplayErrorMessage("Account does not exist.");
+            else if (provider.UserData.IsDisabled)
+                // Account is disabled.
+                DisplayErrorMessage("Account is currently disabled.");
+            else if (provider.UserData.IsLockedOut)
+                // Account is locked.
+                DisplayErrorMessage("Account is currently locked.");
+            else
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Displays error message.
+        /// </summary>
+        /// <param name="message">Error message to display.</param>
+        public void DisplayErrorMessage(string message)
+        {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                TextBlockGlobalMessage.Text = "";
+                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                TextBlockGlobalMessage.Text = message;
+                TextBlockGlobalMessage.Visibility = Visibility.Visible;
+            }
+        }
+
+        /// <summary>
+        /// Clears error message.
+        /// </summary>
+        public void ClearErrorMessage()
+        {
+            DisplayErrorMessage(null);
+        }
+
         #region [ Event Handlers ]
 
         /// <summary>
-        /// Handles page loaded event.
+        /// Handles window closed.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private void Window_Closed(object sender, EventArgs e)
         {
-            ClearErrorMessage();
+            ExitSuccess = false;
         }
 
         /// <summary>
@@ -362,16 +493,6 @@ namespace TVA.Windows
         {
             if (e.ChangedButton == System.Windows.Input.MouseButton.Left)
                 this.DragMove();
-        }
-
-        /// <summary>
-        /// Handles window closing.
-        /// </summary>
-        /// <param name="sender">Source of this event.</param>
-        /// <param name="e">Arguments of this event.</param>
-        private void Window_Closed(object sender, EventArgs e)
-        {
-            this.DialogResult = false;
         }
 
         /// <summary>
@@ -403,7 +524,7 @@ namespace TVA.Windows
                         // Setup security provider for subsequent uses
                         SecurityProviderCache.CurrentProvider = provider;
                         ClearErrorMessage();
-                        this.DialogResult = true;
+                        ExitSuccess = true;
                     }
                 }
                 else
@@ -419,13 +540,69 @@ namespace TVA.Windows
         }
 
         /// <summary>
+        /// Attempts to change user's password.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void ButtonChange_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Check if old and new password are different
+                if (TextBoxOldPassword.Password == TextBoxNewPassword.Password)
+                    throw new Exception("New password cannot be same as old password.");
+
+                // Check is new password and confirm password are same
+                if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
+                    throw new Exception("New password and confirm password should be same.");
+
+                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
+
+                if (provider.CanChangePassword)
+                {
+                    // Attempt to change password
+                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
+                        provider.Authenticate(TextBoxNewPassword.Password))
+                    {
+                        // Password changed and authenticated successfully
+                        DisplayErrorMessage("Password changed successfully.");
+
+                        // Setup security provider for subsequent uses
+                        SecurityProviderCache.CurrentProvider = provider;
+                        ClearErrorMessage();
+                        ExitSuccess = true;
+                    }
+                    else
+                    {
+                        // Show why password change failed
+                        if (!ShowFailureReason(provider))
+                        {
+                            if (!provider.UserData.IsAuthenticated)
+                                DisplayErrorMessage("Authentication was not successful.");
+                            else
+                                DisplayErrorMessage("Password change was not successful.");
+                        }
+                    }
+                }
+                else
+                    DisplayErrorMessage("Account does not support password change.");
+            }
+            catch (Exception ex)
+            {
+                DisplayErrorMessage("Change password failed: " + ex.Message);
+                TextBoxOldPassword.SelectAll();
+                TextBoxOldPassword.Focus();
+            }
+        }
+
+        /// <summary>
         /// Exits window.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
         private void ButtonExit_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = false;
+            ExitSuccess = false;
         }
 
         /// <summary>
@@ -474,157 +651,19 @@ namespace TVA.Windows
         }
 
         /// <summary>
-        /// Attempts to change user's password.
+        /// Keeps the user names on the separate sections synchronized.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void ButtonChange_Click(object sender, RoutedEventArgs e)
+        private void TextBoxUserName_TextChanged(object sender, TextChangedEventArgs e)
         {
-            try
-            {
-                // Check if old and new password are different
-                if (TextBoxOldPassword.Password == TextBoxNewPassword.Password)
-                    throw new Exception("New password cannot be same as old password.");
-
-                // Check is new password and confirm password are same
-                if (TextBoxNewPassword.Password != TextBoxConfirmPassword.Password)
-                    throw new Exception("New password and confirm password should be same.");
-
-                ISecurityProvider provider = SecurityProviderUtility.CreateProvider(TextBoxChangePasswordUserName.Text);
-
-                if (provider.CanChangePassword)
-                {
-                    // Attempt to change password
-                    if (provider.ChangePassword(TextBoxOldPassword.Password, TextBoxNewPassword.Password) &&
-                        provider.Authenticate(TextBoxNewPassword.Password))
-                    {
-                        // Password changed and authenticated successfully
-                        DisplayErrorMessage("Password changed successfully.");
-
-                        // Setup security provider for subsequent uses
-                        SecurityProviderCache.CurrentProvider = provider;
-                        ClearErrorMessage();
-                        this.DialogResult = true;
-                    }
-                    else
-                    {
-                        // Show why password change failed
-                        if (!ShowFailureReason(provider))
-                        {
-                            if (!provider.UserData.IsAuthenticated)
-                                DisplayErrorMessage("Authentication was not successful.");
-                            else
-                                DisplayErrorMessage("Password change was not successful.");
-                        }
-                    }
-                }
-                else
-                    DisplayErrorMessage("Account does not support password change.");
-            }
-            catch (Exception ex)
-            {
-                DisplayErrorMessage("Change password failed: " + ex.Message);
-                TextBoxOldPassword.SelectAll();
-                TextBoxOldPassword.Focus();
-            }
+            if (LoginSection.Visibility == Visibility.Visible && e.Source == TextBoxUserName)
+                TextBoxChangePasswordUserName.Text = TextBoxUserName.Text;
+            else if (ChangePasswordSection.Visibility == Visibility.Visible && e.Source == TextBoxChangePasswordUserName)
+                TextBoxUserName.Text = TextBoxChangePasswordUserName.Text;
         }
 
         #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Displays requested screen section based on received request.
-        /// </summary>
-        private void ManageScreenVisualization()
-        {
-            // Initially hide everything on all screens
-            LoginSection.Visibility = Visibility.Collapsed;
-            AccessDeniedSection.Visibility = Visibility.Collapsed;
-            ChangePasswordSection.Visibility = Visibility.Collapsed;
-
-            TextBlockApplicationLogin.Visibility = Visibility.Collapsed;
-            TextBlockAccessDenied.Visibility = Visibility.Collapsed;
-            TextBlockChangePassword.Visibility = Visibility.Collapsed;
-
-            // Reset all default buttons
-            ButtonLogin.IsDefault = false;
-            ButtonOK.IsDefault = false;
-            ButtonChange.IsDefault = false;
-
-            if (m_displayType == DisplayType.Login)
-            {
-                TextBoxUserName.Text = Thread.CurrentPrincipal.Identity.Name;
-                TextBoxUserName.SelectAll();
-                
-                ButtonLogin.IsDefault = true;
-                TextBlockApplicationLogin.Visibility = Visibility.Visible;
-                LoginSection.Visibility = Visibility.Visible;
-
-                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
-                    TextBoxUserName.Focus();
-                else
-                    TextBoxPassword.Focus();
-            }
-            else if (m_displayType == DisplayType.AccessDenied)
-            {
-                ButtonOK.IsDefault = true;
-                TextBlockAccessDenied.Visibility = Visibility.Visible;
-                AccessDeniedSection.Visibility = Visibility.Visible;
-            }
-            else if (m_displayType == DisplayType.ChangePassword)
-            {
-                TextBoxChangePasswordUserName.Text = Thread.CurrentPrincipal.Identity.Name;
-                TextBoxChangePasswordUserName.SelectAll();
-                
-                ButtonChange.IsDefault = true;
-                TextBlockChangePassword.Visibility = Visibility.Visible;
-                ChangePasswordSection.Visibility = Visibility.Visible;
-
-                if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
-                    TextBoxChangePasswordUserName.Focus();
-                else
-                    TextBoxOldPassword.Focus();
-            }
-        }
-
-        private bool ShowFailureReason(ISecurityProvider provider)
-        {
-            ClearErrorMessage();
-
-            if (!provider.UserData.IsDefined)
-                // No such account.
-                DisplayErrorMessage("Account does not exist.");
-            else if (provider.UserData.IsDisabled)
-                // Account is disabled.
-                DisplayErrorMessage("Account is currently disabled.");
-            else if (provider.UserData.IsLockedOut)
-                // Account is locked.
-                DisplayErrorMessage("Account is currently locked.");
-            else
-                return false;
-
-            return true;
-        }
-
-        private void DisplayErrorMessage(string message)
-        {
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                TextBlockGlobalMessage.Text = "";
-                TextBlockGlobalMessage.Visibility = Visibility.Collapsed;
-            }
-            else
-            {
-                TextBlockGlobalMessage.Text = message;
-                TextBlockGlobalMessage.Visibility = Visibility.Visible;
-            }
-        }
-
-        private void ClearErrorMessage()
-        {
-            DisplayErrorMessage(null);
-        }
 
         #endregion
     }
