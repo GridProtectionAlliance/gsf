@@ -326,41 +326,9 @@ namespace TVA.Security
             #region [ Members ]
             
             //Fields
-            IDbConnection m_connection;
-            bool m_disposed;
+            private IDbConnection m_connection;
+            private bool m_disposed;
             
-            #endregion
-
-            #region [ Static ]
-
-            //Static Fields
-            static Type s_connectionType;
-            static Type s_adapterType;
-            static string s_connectionString;
-            
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
-            /// </summary>
-            public IDbConnection Connection
-            {
-                get
-                {
-                    return m_connection;
-                }
-            }
-
-            /// <summary>
-            /// Gets the type of data adapter for configured ADO.NET data source.
-            /// </summary>
-            public Type AdapterType
-            {
-                get { return s_adapterType; }
-            }
-
             #endregion
 
             #region [ Constructors ]
@@ -437,6 +405,29 @@ namespace TVA.Security
 
             #endregion
 
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
+            /// </summary>
+            public IDbConnection Connection
+            {
+                get
+                {
+                    return m_connection;
+                }
+            }
+
+            /// <summary>
+            /// Gets the type of data adapter for configured ADO.NET data source.
+            /// </summary>
+            public Type AdapterType
+            {
+                get { return s_adapterType; }
+            }
+
+            #endregion
+
             #region [ Methods ]
             
             /// <summary>
@@ -473,6 +464,15 @@ namespace TVA.Security
             }
             
             #endregion
+
+            #region [ Static ]
+
+            //Static Fields
+            static Type s_connectionType;
+            static Type s_adapterType;
+            static string s_connectionString;
+
+            #endregion
         }
 
         #endregion
@@ -503,10 +503,6 @@ namespace TVA.Security
         {
             base.SettingsCategory = "systemSettings";
             base.PersistSettings = false;
-            using (DataConnection connection = new DataConnection())
-            {
-                base.ConnectionString = connection.Connection.ConnectionString;
-            }
         }
 
         #endregion

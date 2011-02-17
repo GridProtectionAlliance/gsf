@@ -395,7 +395,7 @@ namespace TVA.Windows
                 }
                 catch (Exception ex)
                 {
-                    ShowSecurityDialog(DisplayType.AccessDenied, "Check connection string. Failed to load security provider due to exception: " + ex.Message);
+                    ShowSecurityDialog(DisplayType.AccessDenied, "Error loading security provider: " + ex.Message);
                 }
             }
 
