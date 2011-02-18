@@ -286,6 +286,7 @@ namespace TVA.Windows
     }
 
     #endregion
+
     /// <summary>
     /// Represents a WPF window secured using role-based security.
     /// </summary>

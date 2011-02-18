@@ -307,6 +307,11 @@ namespace TVA.Security
             if (string.IsNullOrEmpty(username))
                 username = Thread.CurrentPrincipal.Identity.Name;
 
+            // If an application is being launched from an installer it will have the NT Authority\System identity which
+            // will not have available user information - so we pickup username from Environment instead
+            if (username.IndexOf("NT AUTHORITY", StringComparison.InvariantCultureIgnoreCase) >= 0)
+                username = Environment.UserDomainName + "\\" + Environment.UserName;
+
             // Instantiate the provider.
             ISecurityProvider provider = Activator.CreateInstance(Type.GetType(s_providerType), username) as ISecurityProvider;
 
