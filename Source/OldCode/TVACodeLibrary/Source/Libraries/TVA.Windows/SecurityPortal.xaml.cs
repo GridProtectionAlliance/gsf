@@ -292,9 +292,6 @@ namespace TVA.Windows
     {
         #region [ Members ]
 
-        // Constants
-        private const string SettingsCategory = "systemSettings";
-
         // Fields
         private DisplayType m_displayType;
         private bool m_providerFailure;
@@ -327,7 +324,7 @@ namespace TVA.Windows
 
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
             string setting = settings["ApplicationName"].Value;
 
             if (!string.IsNullOrWhiteSpace(setting))
@@ -381,7 +378,7 @@ namespace TVA.Windows
             {
                 if (!string.IsNullOrWhiteSpace(TextBoxUserName.Text))
                 {
-                    ConfigurationFile.Current.Settings[SettingsCategory]["LastLoginID"].Value = TextBoxUserName.Text;
+                    ConfigurationFile.Current.Settings[SecurityProviderBase.DefaultSettingsCategory]["LastLoginID"].Value = TextBoxUserName.Text;
                     ConfigurationFile.Current.Save();
                 }
 

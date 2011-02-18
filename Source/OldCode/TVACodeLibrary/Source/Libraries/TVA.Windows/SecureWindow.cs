@@ -264,6 +264,28 @@ using TVA.Security;
 
 namespace TVA.Windows
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Defines an enumeration of secure resource accessibility modes.
+    /// </summary>
+    public enum ResourceAccessiblityMode
+    {
+        /// <summary>
+        /// Resource security is controlled via configuration.
+        /// </summary>
+        Configurable,
+        /// <summary>
+        /// Resource is always secured.
+        /// </summary>
+        AlwaysIncluded,
+        /// <summary>
+        /// Resource is never secured.
+        /// </summary>
+        AlwaysExcluded
+    }
+
+    #endregion
     /// <summary>
     /// Represents a WPF window secured using role-based security.
     /// </summary>
@@ -352,6 +374,36 @@ namespace TVA.Windows
             }
         }
 
+        /// <summary>
+        /// Gets or sets window's secure <see cref="ResourceAccessiblityMode"/>.
+        /// </summary>
+        public ResourceAccessiblityMode ResourceAccessiblity
+        {
+            get
+            {
+                return (ResourceAccessiblityMode)GetValue(ResourceAccessiblityProperty);
+            }
+            set
+            {
+                SetValue(ResourceAccessiblityProperty, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets applicable roles when <see cref="ResourceAccessiblity"/> == <see cref="ResourceAccessiblityMode.AlwaysIncluded"/>.
+        /// </summary>
+        public string IncludedRoles
+        {
+            get
+            {
+                return (string)GetValue(IncludedRolesProperty);
+            }
+            set
+            {
+                SetValue(IncludedRolesProperty, value);
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -378,8 +430,11 @@ namespace TVA.Windows
 
             // Check if the resource is excluded from being secured
             string resource = GetResourceName();
-            if (!SecurityProviderUtility.IsResourceSecurable(resource))
-                return;
+
+            if (ResourceAccessiblity != ResourceAccessiblityMode.AlwaysIncluded &&
+                (ResourceAccessiblity == ResourceAccessiblityMode.AlwaysExcluded || 
+                !SecurityProviderUtility.IsResourceSecurable(resource)))
+                    return;
 
             // Setup thread principal to current windows principal.
             if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is TVA.Security.SecurityPrincipal))
@@ -410,7 +465,7 @@ namespace TVA.Windows
             if (!string.IsNullOrEmpty(resource))
             {
                 // Stay in a dialog display loop until either access to resource is available or user exits
-                while (!SecurityProviderUtility.IsResourceAccessible(resource))
+                while (!IsResourceAccessible(resource))
                 {
                     // Access to resource is denied. Check if this is the initial login with pass-through authentication,
                     // if so, just show the login dialog instead of access denied since it's confusing for the initial
@@ -424,6 +479,14 @@ namespace TVA.Windows
                         ShowSecurityDialog(DisplayType.AccessDenied);
                 }
             }
+        }
+
+        private bool IsResourceAccessible(string resource)
+        {
+            if (ResourceAccessiblity == ResourceAccessiblityMode.AlwaysIncluded)
+                return Thread.CurrentPrincipal.IsInRole(IncludedRoles);
+
+            return SecurityProviderUtility.IsResourceAccessible(resource);
         }
 
         private void ShowSecurityDialog(DisplayType displayType, string errorMessage = null)
@@ -458,7 +521,19 @@ namespace TVA.Windows
         /// Identifies the <see cref="ForceLoginDisplay"/> dependency property.
         /// </summary>
         /// <returns>identifier for the <see cref="ForceLoginDisplay"/> dependency property.</returns>
-        public static readonly DependencyProperty ForceLoginDisplayProperty = DependencyProperty.Register("ForceLoginDisplay", typeof(Boolean), typeof(SecureWindow), new PropertyMetadata(false));
+        public static readonly DependencyProperty ForceLoginDisplayProperty = DependencyProperty.Register("ForceLoginDisplay", typeof(bool), typeof(SecureWindow), new PropertyMetadata(false));
+
+        /// <summary>
+        /// Identifies the <see cref="ResourceAccessiblity"/> dependency property.
+        /// </summary>
+        /// <returns>identifier for the <see cref="ResourceAccessiblity"/> dependency property.</returns>
+        public static readonly DependencyProperty ResourceAccessiblityProperty = DependencyProperty.Register("ResourceAccessiblity", typeof(ResourceAccessiblityMode), typeof(SecureWindow), new PropertyMetadata(ResourceAccessiblityMode.Configurable));
+
+        /// <summary>
+        /// Identifies the <see cref="IncludedRoles"/> dependency property.
+        /// </summary>
+        /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
+        public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
         #endregion        
     }

@@ -251,6 +251,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -275,14 +276,12 @@ namespace TVA.Security
     ///     <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
     ///   </configSections>
     ///   <categorizedSettings>
-    ///     <systemSettings>      
-    ///         <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
-    ///             description="Configuration database connection string" encrypted="false"/>
-    ///         <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
-    ///             description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
-    ///         <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
-    ///     </systemSettings>
     ///     <securityProvider>
+    ///       <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
+    ///         description="Configuration database connection string" encrypted="false"/>
+    ///       <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
+    ///         description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
+    ///       <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
     ///       <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
     ///         description="The type to be used for enforcing security." encrypted="false" />
     ///       <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
@@ -324,11 +323,11 @@ namespace TVA.Security
         private class DataConnection : IDisposable
         {
             #region [ Members ]
-            
+
             //Fields
             private IDbConnection m_connection;
             private bool m_disposed;
-            
+
             #endregion
 
             #region [ Constructors ]
@@ -336,7 +335,8 @@ namespace TVA.Security
             /// <summary>
             /// Creates a new <see cref="DataConnection"/>.
             /// </summary>
-            public DataConnection()
+            /// <param name="settingsCategory">Settings category to use for connection settings.</param>
+            public DataConnection(string settingsCategory)
             {
                 // Only need to establish data types and load settings once
                 if (s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
@@ -345,7 +345,7 @@ namespace TVA.Security
                     {
                         // Load connection settings from the system settings category				
                         ConfigurationFile config = ConfigurationFile.Current; //new ConfigurationFile("~/web.config", ApplicationType.Web);
-                        CategorizedSettingsElementCollection configSettings = config.Settings["systemSettings"];
+                        CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
 
                         string dataProviderString = configSettings["DataProviderString"].Value;
                         s_connectionString = configSettings["ConnectionString"].Value;
@@ -423,13 +423,16 @@ namespace TVA.Security
             /// </summary>
             public Type AdapterType
             {
-                get { return s_adapterType; }
+                get
+                {
+                    return s_adapterType;
+                }
             }
 
             #endregion
 
             #region [ Methods ]
-            
+
             /// <summary>
             /// Releases all the resources used by the <see cref="DataConnection"/> object.
             /// </summary>
@@ -462,7 +465,7 @@ namespace TVA.Security
                     }
                 }
             }
-            
+
             #endregion
 
             #region [ Static ]
@@ -476,18 +479,18 @@ namespace TVA.Security
         }
 
         #endregion
-        
+
         #endregion
-        
+
         #region [ Constructor ]
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AdoSecurityProvider"/> class.
         /// </summary>
         /// <param name="username">Name that uniquely identifies the user.</param>
-        public AdoSecurityProvider(string username) 
+        public AdoSecurityProvider(string username)
             : this(username, true, false, false, true)
-        {               
+        {
         }
 
         /// <summary>
@@ -501,8 +504,7 @@ namespace TVA.Security
         protected AdoSecurityProvider(string username, bool canRefreshData, bool canUpdateData, bool canResetPassword, bool canChangePassword)
             : base(username, canRefreshData, canUpdateData, canResetPassword, canChangePassword)
         {
-            base.SettingsCategory = "systemSettings";
-            base.PersistSettings = false;
+            base.ConnectionString = "Eval(systemSettings.ConnectionString)";
         }
 
         #endregion
@@ -524,10 +526,24 @@ namespace TVA.Security
                     return false;
             }
         }
-               
+
         #endregion
 
         #region [ Methods ]
+
+        /// <summary>
+        /// Loads saved security provider settings from the config file if the <see cref="SecurityProviderBase.PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SecurityProviderBase.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+
+            // Make sure default settings exist
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+            settings.Add("DataProviderString", "Eval(systemSettings.DataProviderString)", "Configuration database ADO.NET data provider assembly type creation string to be used for connection to the backend security datastore.");
+        }
 
         /// <summary>
         /// Refreshes the <see cref="UserData"/>.
@@ -542,11 +558,11 @@ namespace TVA.Security
             {
                 // Initialize user data.
                 UserData.Initialize();
-                                
+
                 DataRow userDataRow;
                 string groupName, roleName;
 
-                using (IDbConnection dbConnection = (new DataConnection()).Connection)
+                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
                 {
                     if (dbConnection == null)
                         return false;
@@ -562,7 +578,7 @@ namespace TVA.Security
 
                     userDataTable.Load(dbConnection.CreateParameterizedCommand("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username).ExecuteReader());
 
-                    if (userDataTable.Rows.Count == 0) 
+                    if (userDataTable.Rows.Count == 0)
                         return false;
 
                     userDataRow = userDataTable.Rows[0];
@@ -594,7 +610,7 @@ namespace TVA.Security
 
                         if (!Convert.IsDBNull(userDataRow["CreatedOn"]))
                             UserData.AccountCreatedDateTime = Convert.ToDateTime(userDataRow["CreatedOn"]);
-                        
+
                         // For possible future use:
                         //if (!Convert.IsDBNull(userDataRow["UserCompanyName"]))
                         //    UserData.CompanyName = Convert.ToString(userDataRow["UserCompanyName"]);
@@ -716,7 +732,7 @@ namespace TVA.Security
                 //Check if old and new passwords are different.
                 if (oldPassword == newPassword)
                     throw new Exception("New password cannot be same as old password.");
-                
+
                 // Perform password change for internal users.
                 if (!UserData.IsExternal)
                     return base.ChangePassword(oldPassword, newPassword);
@@ -730,17 +746,19 @@ namespace TVA.Security
                 if (!Regex.IsMatch(newPassword, PasswordRequirementRegex))
                     throw new SecurityException(PasswordRequirementError);
 
-                using (IDbConnection dbConnection = (new DataConnection()).Connection)
+                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
                 {
                     if (dbConnection == null)
                         return false;
 
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
+
                     if (command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
                         command.CommandText = "Update UserAccount Set [Password] = @newPassword Where Name = @name AND [Password] = @oldPassword";
                     else
                         command.CommandText = "Update UserAccount Set Password = @newPassword Where Name = @name AND Password = @oldPassword";
+
                     IDbDataParameter param = command.CreateParameter();
                     param.ParameterName = "@newPassword";
                     param.Value = SecurityProviderUtility.EncryptPassword(newPassword);
@@ -788,7 +806,7 @@ namespace TVA.Security
                 if (!UserData.IsDefined)
                     return false;
 
-                using (IDbConnection dbConnection = (new DataConnection()).Connection)
+                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
                 {
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
@@ -806,7 +824,7 @@ namespace TVA.Security
                     param.ParameterName = "@comment";
                     param.Value = "";
                     command.Parameters.Add(param);
-                    command.ExecuteNonQuery();                    
+                    command.ExecuteNonQuery();
                 }
                 return true;
             }
@@ -826,7 +844,7 @@ namespace TVA.Security
             {
                 try
                 {
-                    using (IDbConnection dbConnection = (new DataConnection()).Connection)
+                    using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
                     {
                         IDbCommand command = dbConnection.CreateCommand();
                         command.CommandType = CommandType.Text;
@@ -839,8 +857,8 @@ namespace TVA.Security
                         param = command.CreateParameter();
                         param.ParameterName = "@message";
                         param.Value = message;
-                        command.Parameters.Add(param);                        
-                        command.ExecuteNonQuery();   
+                        command.Parameters.Add(param);
+                        command.ExecuteNonQuery();
                     }
                     return true;
                 }
@@ -851,7 +869,7 @@ namespace TVA.Security
 
             return false;
         }
-        
+
         #endregion
     }
 }
