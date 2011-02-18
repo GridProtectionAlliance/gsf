@@ -297,6 +297,7 @@ namespace TVA.Windows
 
         // Fields
         private DisplayType m_displayType;
+        private bool m_providerFailure;
 
         #endregion
 
@@ -357,6 +358,22 @@ namespace TVA.Windows
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets flag that indicates if there was a failure during provider initialization.
+        /// </summary>
+        public bool ProviderFailure
+        {
+            get
+            {
+                return m_providerFailure;
+            }
+            set
+            {
+                m_providerFailure = value;
+                TextBlockAccessDeniedMessage.Visibility = m_providerFailure ? Visibility.Collapsed : Visibility.Visible;
+            }
+        }
+
         // Handles dialog exiting
         private bool ExitSuccess
         {
@@ -398,6 +415,7 @@ namespace TVA.Windows
             if (m_displayType == DisplayType.Login)
             {
                 TextBoxUserName.SelectAll();
+                TextBoxPassword.Password = "";
                 ButtonLogin.IsDefault = true;
                 TextBlockApplicationLogin.Visibility = Visibility.Visible;
                 LoginSection.Visibility = Visibility.Visible;
@@ -416,6 +434,9 @@ namespace TVA.Windows
             else if (m_displayType == DisplayType.ChangePassword)
             {
                 TextBoxChangePasswordUserName.SelectAll();
+                TextBoxOldPassword.Password = "";
+                TextBoxNewPassword.Password = "";
+                TextBoxConfirmPassword.Password = "";
                 ButtonChange.IsDefault = true;
                 TextBlockChangePassword.Visibility = Visibility.Visible;
                 ChangePasswordSection.Visibility = Visibility.Visible;
@@ -612,8 +633,17 @@ namespace TVA.Windows
         /// <param name="e">Arguments of this event.</param>
         private void ButtonOK_Click(object sender, RoutedEventArgs e)
         {
-            m_displayType = DisplayType.Login;
-            ManageScreenVisualization();
+            if (m_providerFailure)
+            {
+                // In case of provider failure, all we can do is exit with a failure code
+                ExitSuccess = false;
+            }
+            else
+            {
+                // If user chooses, they can try a new set of credentials
+                m_displayType = DisplayType.Login;
+                ManageScreenVisualization();
+            }
         }
 
         /// <summary>

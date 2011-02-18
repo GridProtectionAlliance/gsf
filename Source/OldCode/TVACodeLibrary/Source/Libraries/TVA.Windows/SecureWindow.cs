@@ -431,7 +431,10 @@ namespace TVA.Windows
             SecurityPortal securityDialog = new SecurityPortal(displayType);
 
             if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                securityDialog.ProviderFailure = true;
                 securityDialog.DisplayErrorMessage(errorMessage);
+            }
 
             // Show the WPF security dialog
             if (!(bool)securityDialog.ShowDialog())
