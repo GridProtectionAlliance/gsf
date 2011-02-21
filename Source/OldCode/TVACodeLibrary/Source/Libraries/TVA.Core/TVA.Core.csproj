@@ -153,6 +153,7 @@
     <Compile Include="FastObjectFactory.cs" />
     <Compile Include="IdentifiableItem.cs" />
     <Compile Include="Identity\NamespaceDoc.cs" />
+    <Compile Include="Identity\UserAccountControl.cs" />
     <Compile Include="Identity\UserInfo.cs" />
     <Compile Include="InitializationException.cs" />
     <Compile Include="Int24.cs" />

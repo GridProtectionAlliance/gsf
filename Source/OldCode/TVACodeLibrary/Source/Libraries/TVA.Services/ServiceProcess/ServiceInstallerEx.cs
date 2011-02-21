@@ -318,11 +318,6 @@ namespace TVA.Services.ServiceProcess
         private const int SERVICE_ALL_ACCESS = 0xF01FF;
         private const int SERVICE_CONFIG_FAILURE_ACTIONS = 0x2;
         private const int SERVICE_CONFIG_FAILURE_ACTIONS_FLAG = 0x4;
-        private const int ERROR_ACCESS_DENIED = 5;
-        private const int TOKEN_ADJUST_PRIVILEGES = 32;
-        private const int TOKEN_QUERY = 8;
-        private const string SE_SHUTDOWN_NAME = "SeShutdownPrivilege";
-        private const int SE_PRIVILEGE_ENABLED = 2;
 
         // Fields
         private List<WindowsApi.SC_ACTION> m_failureActions;    // Service failure actions
@@ -557,7 +552,7 @@ namespace TVA.Services.ServiceProcess
                 {
                     int err = WindowsApi.GetLastError();
 
-                    if (err == ERROR_ACCESS_DENIED)
+                    if (err == WindowsApi.ERROR_ACCESS_DENIED)
                         throw new Exception(m_logMessagePrefix + "Access Denied while setting service failure actions");
                 }
 
@@ -568,7 +563,7 @@ namespace TVA.Services.ServiceProcess
                 {
                     WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG failureActionFlag = new WindowsApi.SERVICE_FAILURE_ACTIONS_FLAG();
                     failureActionFlag.bFailureAction = m_executeActionsOnNonCrashErrors;
-                    result = WindowsApi.ChangeServiceFailureActionFlag(serviceHandle, SERVICE_CONFIG_FAILURE_ACTIONS_FLAG, ref failureActionFlag);
+                    result = WindowsApi.ChangeServiceConfig2(serviceHandle, SERVICE_CONFIG_FAILURE_ACTIONS_FLAG, ref failureActionFlag);
 
                     // Error setting description?
                     if (!result)
@@ -620,16 +615,16 @@ namespace TVA.Services.ServiceProcess
             {
                 processHandle = WindowsApi.GetCurrentProcess();
 
-                bool result = WindowsApi.OpenProcessToken(processHandle, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref processToken);
+                bool result = WindowsApi.OpenProcessToken(processHandle, WindowsApi.TOKEN_ADJUST_PRIVILEGES | WindowsApi.TOKEN_QUERY, ref processToken);
 
                 if (!result)
                     return grantSuccess;
 
-                WindowsApi.LookupPrivilegeValue(null, SE_SHUTDOWN_NAME, ref luid);
+                WindowsApi.LookupPrivilegeValue(null, WindowsApi.SE_SHUTDOWN_NAME, ref luid);
 
                 tokenPrivileges.PrivilegeCount = 1;
                 tokenPrivileges.Privileges.Luid = luid;
-                tokenPrivileges.Privileges.Attributes = SE_PRIVILEGE_ENABLED;
+                tokenPrivileges.Privileges.Attributes = WindowsApi.SE_PRIVILEGE_ENABLED;
 
                 result = WindowsApi.AdjustTokenPrivileges(processToken, false, ref tokenPrivileges, 0, IntPtr.Zero, ref returnLen);
 
