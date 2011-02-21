@@ -259,14 +259,13 @@
 
 #endregion
 
-using System.Diagnostics;
-using TVA.Interop;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Threading;
 using Microsoft.Win32;
+using TVA.Interop;
 
 namespace TVA.Identity
 {
@@ -426,9 +425,7 @@ namespace TVA.Identity
         /// </summary>
         /// <remarks>
         /// This value is obtained by checking the LUA registry key. It is possible that the user has not restarted the machine after
-        /// enabling/disabling UAC. In that case, the value of the registry key does not reflect the true state of affairs.  It is
-        /// possible to devise a custom solution that would provide a mechanism for tracking whether a restart occurred since UAC
-        /// settings were changed (using the RunOnce mechanism, temporary files, or volatile registry keys).
+        /// enabling/disabling UAC. In that case, the value of the registry key does not reflect the true state of affairs.
         /// </remarks>
         public static bool IsUacEnabled
         {
@@ -438,7 +435,16 @@ namespace TVA.Identity
             {
                 // Check the HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA registry value.
                 RegistryKey key = Registry.LocalMachine.OpenSubKey(UacRegistryKey, false);
-                return key.GetValue(UacRegistryValue).Equals(1);
+
+                if (key != null)
+                {
+                    object value = key.GetValue(UacRegistryValue);
+
+                    if (value != null)
+                        return value.Equals(1);
+                }
+
+                return false;
             }
         }
 
