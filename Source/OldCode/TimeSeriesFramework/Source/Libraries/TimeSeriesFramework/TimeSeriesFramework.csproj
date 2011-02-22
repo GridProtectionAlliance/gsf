@@ -67,6 +67,9 @@
     <Compile Include="IFrame.cs" />
     <Compile Include="IMeasurement.cs" />
     <Compile Include="ImmediateMeasurements.cs" />
+    <Compile Include="InstallerBase.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Measurement.cs" />
     <Compile Include="MeasurementKey.cs" />
     <Compile Include="NamespaceDoc.cs" />
