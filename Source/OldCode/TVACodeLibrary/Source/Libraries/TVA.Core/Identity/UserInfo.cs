@@ -66,6 +66,8 @@
 //       Modified to allow default lookup of account name from machines not connected to a domain even 
 //       if local machine name is not specified as domain name -and- to allow lookup of local account
 //       information even when connected to a domain if machine name is specified as domain name.
+//  02/23/2011 - Pinal C. Patel
+//       Fixed a bug in the Active Directory lookup of MaximumPasswordAge property.
 //
 //*******************************************************************************************************
 
@@ -310,17 +312,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.DirectoryServices;
-using System.Linq;
+using System.IO;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Threading;
 using Microsoft.Win32;
 using TVA.Configuration;
 using TVA.Interop;
 using TVA.IO;
-using System.IO;
 
 namespace TVA.Identity
 {
@@ -742,12 +742,30 @@ namespace TVA.Identity
         {
             get
             {
-                string maxAgePropertyValue;
+                string maxAgePropertyValue = string.Empty;
 
                 if (m_isWinNT)
+                {
                     maxAgePropertyValue = GetUserProperty("maxPasswordAge");
+                }
                 else
-                    maxAgePropertyValue = GetUserProperty("maxPwdAge");
+                {
+                    WindowsImpersonationContext currentContext = null;
+                    try
+                    {
+                        currentContext = ImpersonatePrivilegedAccount();
+                        using (DirectorySearcher searcher = CreateDirectorySearcher())
+                        {
+                            SearchResult searchResult = searcher.FindOne();
+                            if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
+                                maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
+                        }
+                    }
+                    finally
+                    {
+                        EndImpersonation(currentContext);
+                    }
+                }
 
                 if (string.IsNullOrEmpty(maxAgePropertyValue))
                     return -1;
@@ -1102,12 +1120,7 @@ namespace TVA.Identity
                         currentContext = ImpersonatePrivilegedAccount();
 
                         // Initialize the Active Directory searcher object
-                        DirectorySearcher searcher;
-
-                        if (string.IsNullOrEmpty(m_ldapPath))
-                            searcher = new DirectorySearcher();
-                        else
-                            searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
+                        DirectorySearcher searcher = CreateDirectorySearcher();
 
                         // Get user's directory entry for active directory interactions
                         using (searcher)
@@ -1346,6 +1359,16 @@ namespace TVA.Identity
                     m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
+        }
+
+        private DirectorySearcher CreateDirectorySearcher()
+        {
+            DirectorySearcher searcher;
+            if (string.IsNullOrEmpty(m_ldapPath))
+                searcher = new DirectorySearcher();
+            else
+                searcher = new DirectorySearcher(new DirectoryEntry(m_ldapPath));
+            return searcher;
         }
 
         private long ConvertToLong(object largeInteger)

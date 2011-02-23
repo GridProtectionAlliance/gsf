@@ -257,7 +257,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.DirectoryServices;
 using System.Linq;
 using System.Reflection;
 using System.Security;
@@ -436,9 +435,9 @@ namespace TVA.Security
 
             // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
             for (int i = 0; i < UserData.Roles.Count; i++)
-			{
-			    UserData.Roles[i] = UserData.Roles[i].Split('\\')[1];
-			}
+            {
+                UserData.Roles[i] = UserData.Roles[i].Split('\\')[1];
+            }
 
             return result;
         }
@@ -532,7 +531,7 @@ namespace TVA.Security
             try
             {
                 string ldapPath = GetLdapPath();
-                
+
                 // Create user info object using specified LDAP path if provided
                 if (string.IsNullOrEmpty(ldapPath))
                     user = new UserInfo(UserData.Username);
@@ -600,7 +599,7 @@ namespace TVA.Security
             {
                 foreach (KeyValuePair<string, string> pair in ConnectionString.ParseKeyValuePairs())
                 {
-                    if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) || 
+                    if (pair.Value.StartsWith("LDAP://", StringComparison.InvariantCultureIgnoreCase) ||
                         pair.Value.StartsWith("LDAPS://", StringComparison.InvariantCultureIgnoreCase))
                         return pair.Value;
                 }
