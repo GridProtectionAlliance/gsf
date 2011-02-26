@@ -36,7 +36,7 @@ ECHO Updating dependencies...
 XCOPY %source% %target% /Y
 
 ECHO.
-ECHO Building solution
+ECHO Building solution...
 %vs% %solution% /Build "Release|Any CPU"
 
 IF /I "%checkin%" == "Y" GOTO Checkin
