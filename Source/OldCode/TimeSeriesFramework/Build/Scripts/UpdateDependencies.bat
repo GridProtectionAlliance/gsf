@@ -17,7 +17,7 @@
 
 SET vs="%VS100COMNTOOLS%\..\IDE\devenv.com"
 SET tfs="%VS100COMNTOOLS%\..\IDE\tf.exe"
-SET source="\\GPAWEB\NightlyBuilds\TVACodeLibrary\Beta\Libraries"
+SET source="\\GPAWEB\NightlyBuilds\TVACodeLibrary\Beta\Libraries\*.*"
 SET target="..\..\Source\Dependencies\TVA"
 SET solution="..\..\Source\TimeSeriesFramework.sln"
 SET checkinComment="Updated dependencies."
