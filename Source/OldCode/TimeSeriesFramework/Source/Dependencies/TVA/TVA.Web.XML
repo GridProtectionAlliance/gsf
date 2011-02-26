@@ -100,93 +100,6 @@
             Returns false since class has a member.
             </summary>
         </member>
-        <member name="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile">
-            <summary>
-            Represents a file object in embedded resource space.
-            </summary>
-            <remarks>
-            <para>
-            This type is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-            to serve embedded resources as virtual files.  The properties on the
-            file can be used to retrieve an embedded resource stream from the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
-            at the appropriate
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
-            using reflection.  As part of the <see cref="T:System.Web.Hosting.VirtualFile"/>
-            interface, you can do this easily via <see cref="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open"/>.
-            </para>
-            <para>
-            For more information on embedded resource virtual filesystem
-            usage, see <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-            </para>
-            </remarks>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
-        </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._containingAssembly">
-            <summary>
-            Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
-            property.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._resourcePath">
-            <summary>
-            Internal storage for the
-            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
-            property.
-            </summary>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/> class.
-            </summary>
-            <param name="virtualPath">The virtual path to the resource represented by this instance.</param>
-            <param name="containingAssembly">The <see cref="T:System.Reflection.Assembly"/> containing the resource represented by this instance.</param>
-            <param name="resourcePath">The path to the embedded resource in the <paramref name="containingAssembly"/>.</param>
-            <exception cref="T:System.ArgumentNullException">
-            Thrown if <paramref name="containingAssembly"/> or <paramref name="resourcePath"/> is <see langword="null"/>.
-            </exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">
-            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>.
-            </exception>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open">
-            <summary>
-            Returns a read-only stream to the virtual resource.
-            </summary>
-            <returns>A read-only stream to the virtual file.</returns>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-            <seealso cref="M:System.Web.Hosting.VirtualFile.Open"/>
-        </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly">
-            <summary>
-            Gets a reference to the assembly containing the virtual file.
-            </summary>
-            <value>
-            A <see cref="T:System.Reflection.Assembly"/> that contains the embedded
-            resource with the file contents.
-            </value>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath">
-            <summary>
-            Gets the path to the embedded resource in the containing assembly.
-            </summary>
-            <value>
-            A <see cref="T:System.String"/> that indicates an embedded resource
-            in the <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
-            that represents the file for this instance.
-            </value>
-            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
-        </member>
-        <member name="T:TVA.Web.Hosting.NamespaceDoc">
-            <summary>
-            Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
-            </summary>
-        </member>
         <member name="T:TVA.Web.Hosting.EmbeddedResourcePathProvider">
             <summary>
             A <see cref="T:System.Web.Hosting.VirtualPathProvider"/> that allows serving
@@ -625,48 +538,6 @@
             ]]>
             </code>
             </example>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.Page_Load(System.Object,System.EventArgs)">
-            <summary>
-            Initializes the web page.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.LoginButton_Click(System.Object,System.EventArgs)">
-            <summary>
-            Logins the user.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.UpdateButton_Click(System.Object,System.EventArgs)">
-            <summary>
-            Updates user data.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.ChangeButton_Click(System.Object,System.EventArgs)">
-            <summary>
-            Changes user password.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetCheckButton_Click(System.Object,System.EventArgs)">
-            <summary>
-            Checks if user password can be reset.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetFinalButton_Click(System.Object,System.EventArgs)">
-            <summary>
-            Resets user password.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
         </member>
         <member name="F:TVA.Web.Embedded.SecurityPortal.StyleSheet">
             <summary>
@@ -1163,131 +1034,129 @@
             To modify move field declaration from designer file to code-behind file.
             </remarks>
         </member>
-        <member name="T:TVA.Web.UI.ClientSideExtensions">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.Page_Load(System.Object,System.EventArgs)">
             <summary>
-            Defines javascript client-side extensions for web controls.
+            Initializes the web page.
             </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
         </member>
-        <member name="M:TVA.Web.UI.ClientSideExtensions.SetDefaultButton(System.Web.UI.WebControls.TextBox,System.Web.UI.Control)">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.LoginButton_Click(System.Object,System.EventArgs)">
             <summary>
-            Registers a default button to be activated when the ENTER key is pressed inside this <paramref name="textbox"/>.
+            Logins the user.
             </summary>
-            <param name="textbox"><see cref="T:System.Web.UI.WebControls.TextBox"/> for which the default button is to be registered.</param>
-            <param name="control">Button <see cref="T:System.Web.UI.Control"/> to be assigned as the default action handler.</param>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
         </member>
-        <member name="M:TVA.Web.UI.ClientSideExtensions.SetSubmitOnce(System.Web.UI.WebControls.Button)">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.UpdateButton_Click(System.Object,System.EventArgs)">
             <summary>
-            Registers this <paramref name="button"/> to be disabled after one click to prevent multiple postbacks.
+            Updates user data.
             </summary>
-            <param name="button"><see cref="T:System.Web.UI.WebControls.Button"/> for which submit once script is to be registered.</param>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
         </member>
-        <member name="M:TVA.Web.Embedded.SecurityServiceHostFactory.GetAuthenticationSchemes(System.Uri)">
-            <summary>
-            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
-            </summary>
-        </member>
-        <member name="T:TVA.Web.Embedded.ISecurityService">
-            <summary>
-            Embedded WCF service contract used for securing external facing WCF services.
-            </summary>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates a user and caches the security context upon successful authentication for subsequent use.
-            </summary>
-            <param name="username">Username of the user.</param>
-            <param name="password">Password of the user.</param>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.GetUserData">
-            <summary>
-            Returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.RefreshUserData">
-            <summary>
-            Refreshes and returns information about the current user. 
-            </summary>
-            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
-            <summary>
-            Resets user password.
-            </summary>
-            <param name="securityAnswer">Answer to user's security question.</param>
-            <returns>true if password is reset, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Web.Embedded.ISecurityService.ChangePassword(System.String,System.String)">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ChangeButton_Click(System.Object,System.EventArgs)">
             <summary>
             Changes user password.
             </summary>
-            <param name="oldPassword">User's current password.</param>
-            <param name="newPassword">User's new password.</param>
-            <returns>true if the password is changed, otherwise false.</returns>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
         </member>
-        <member name="T:TVA.Web.NamespaceDoc">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetCheckButton_Click(System.Object,System.EventArgs)">
             <summary>
-            Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
+            Checks if user password can be reset.
             </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
         </member>
-        <member name="T:TVA.Web.Hosting.VirtualFileBaseCollection">
+        <member name="M:TVA.Web.Embedded.SecurityPortal.ResetFinalButton_Click(System.Object,System.EventArgs)">
             <summary>
-            A strongly typed <see cref="T:System.Collections.ObjectModel.KeyedCollection`2"/>
-            where each element is a <see cref="T:System.Web.Hosting.VirtualFileBase"/> and is keyed
-            off of the <see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>
-            property.
+            Resets user password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile">
+            <summary>
+            Represents a file object in embedded resource space.
             </summary>
             <remarks>
             <para>
-            The default constructor for this collection does a culture-invariant case-insensitive
-            comparison on the keys.  This allows for proper case-insensitive web-oriented
-            behavior that is generally expected.
+            This type is used by the <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
+            to serve embedded resources as virtual files.  The properties on the
+            file can be used to retrieve an embedded resource stream from the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            at the appropriate
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+            using reflection.  As part of the <see cref="T:System.Web.Hosting.VirtualFile"/>
+            interface, you can do this easily via <see cref="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open"/>.
+            </para>
+            <para>
+            For more information on embedded resource virtual filesystem
+            usage, see <see cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
             </para>
             </remarks>
-            <seealso cref="T:System.Web.Hosting.VirtualFileBase"/>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourcePathProvider"/>
         </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor">
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._containingAssembly">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses a case-insensitive comparer.
+            Internal storage for the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            property.
             </summary>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
         </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String})">
+        <member name="F:TVA.Web.Hosting.EmbeddedResourceVirtualFile._resourcePath">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            Internal storage for the
+            <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath"/>
+            property.
             </summary>
-            <param name="comparer">
-            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
-            generic interface to use when comparing keys, or <see langword="null"/> to use the default
-            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
         </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String},System.Int32)">
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.#ctor(System.String,System.Reflection.Assembly,System.String)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/> class.
             </summary>
-            <param name="comparer">
-            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
-            generic interface to use when comparing keys, or <see langword="null"/> to use the default
-            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
-            </param>
-            <param name="dictionaryCreationThreshold">
-            The number of elements the collection can hold without creating a lookup dictionary
-            (0 creates the lookup dictionary when the first item is added), or ?1 to specify that
-            a lookup dictionary is never created.
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+            <param name="virtualPath">The virtual path to the resource represented by this instance.</param>
+            <param name="containingAssembly">The <see cref="T:System.Reflection.Assembly"/> containing the resource represented by this instance.</param>
+            <param name="resourcePath">The path to the embedded resource in the <paramref name="containingAssembly"/>.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown if <paramref name="containingAssembly"/> or <paramref name="resourcePath"/> is <see langword="null"/>.
+            </exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">
+            Thrown if <paramref name="resourcePath"/> is <see cref="F:System.String.Empty"/>.
+            </exception>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
         </member>
-        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.GetKeyForItem(System.Web.Hosting.VirtualFileBase)">
+        <member name="M:TVA.Web.Hosting.EmbeddedResourceVirtualFile.Open">
             <summary>
-            Extracts the key from the specified element.
+            Returns a read-only stream to the virtual resource.
             </summary>
-            <param name="item">
-            The <see cref="T:System.Web.Hosting.VirtualFileBase"/> element from which to extract the key (<see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>).
-            </param>
-            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+            <returns>A read-only stream to the virtual file.</returns>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+            <seealso cref="M:System.Web.Hosting.VirtualFile.Open"/>
+        </member>
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly">
+            <summary>
+            Gets a reference to the assembly containing the virtual file.
+            </summary>
+            <value>
+            A <see cref="T:System.Reflection.Assembly"/> that contains the embedded
+            resource with the file contents.
+            </value>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
+        </member>
+        <member name="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ResourcePath">
+            <summary>
+            Gets the path to the embedded resource in the containing assembly.
+            </summary>
+            <value>
+            A <see cref="T:System.String"/> that indicates an embedded resource
+            in the <see cref="P:TVA.Web.Hosting.EmbeddedResourceVirtualFile.ContainingAssembly"/>
+            that represents the file for this instance.
+            </value>
+            <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceVirtualFile"/>
         </member>
         <member name="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute">
             <summary>
@@ -1408,6 +1277,34 @@
             </remarks>
             <seealso cref="T:TVA.Web.Hosting.EmbeddedResourceFileAttribute"/>
         </member>
+        <member name="T:TVA.Web.UI.ClientSideExtensions">
+            <summary>
+            Defines javascript client-side extensions for web controls.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.SetDefaultButton(System.Web.UI.WebControls.TextBox,System.Web.UI.Control)">
+            <summary>
+            Registers a default button to be activated when the ENTER key is pressed inside this <paramref name="textbox"/>.
+            </summary>
+            <param name="textbox"><see cref="T:System.Web.UI.WebControls.TextBox"/> for which the default button is to be registered.</param>
+            <param name="control">Button <see cref="T:System.Web.UI.Control"/> to be assigned as the default action handler.</param>
+        </member>
+        <member name="M:TVA.Web.UI.ClientSideExtensions.SetSubmitOnce(System.Web.UI.WebControls.Button)">
+            <summary>
+            Registers this <paramref name="button"/> to be disabled after one click to prevent multiple postbacks.
+            </summary>
+            <param name="button"><see cref="T:System.Web.UI.WebControls.Button"/> for which submit once script is to be registered.</param>
+        </member>
+        <member name="M:TVA.Web.Embedded.SecurityServiceHostFactory.GetAuthenticationSchemes(System.Uri)">
+            <summary>
+            Gets the security setting of the hosting environment (For example: IIS web site or virtual directory).
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Embedded.NamespaceDoc">
+            <summary>
+            Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
+            </summary>
+        </member>
         <member name="T:TVA.Web.Embedded.SecurityService">
             <summary>
             Embedded WCF service that can be used for securing applications using role-based security.
@@ -1480,6 +1377,46 @@
             </code>
             </example>
         </member>
+        <member name="T:TVA.Web.Embedded.ISecurityService">
+            <summary>
+            Embedded WCF service contract used for securing external facing WCF services.
+            </summary>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates a user and caches the security context upon successful authentication for subsequent use.
+            </summary>
+            <param name="username">Username of the user.</param>
+            <param name="password">Password of the user.</param>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.GetUserData">
+            <summary>
+            Returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.RefreshUserData">
+            <summary>
+            Refreshes and returns information about the current user. 
+            </summary>
+            <returns>An <see cref="T:TVA.Security.UserData"/> object of the user if user's security context has been initialized, otherwise null.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ResetPassword(System.String)">
+            <summary>
+            Resets user password.
+            </summary>
+            <param name="securityAnswer">Answer to user's security question.</param>
+            <returns>true if password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Web.Embedded.ISecurityService.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
         <member name="M:TVA.Web.Embedded.SecurityService.Authenticate(System.String,System.String)">
             <summary>
             Authenticates a user and caches the security context upon successful authentication for subsequent use.
@@ -1515,10 +1452,73 @@
             <param name="newPassword">User's new password.</param>
             <returns>true if the password is changed, otherwise false.</returns>
         </member>
-        <member name="T:TVA.Web.Embedded.NamespaceDoc">
+        <member name="T:TVA.Web.NamespaceDoc">
             <summary>
-            Contains embedded ASP.NET web pages and WCF web services that support the implementation of role-based security in .NET and non-.NET based development platforms.
+            Contains classes and extension functions related to .NET web enabled platforms such as ASP.NET and WCF.
             </summary>
+        </member>
+        <member name="T:TVA.Web.Hosting.NamespaceDoc">
+            <summary>
+            Contains classes that make-up the framework for serving content embedded in .NET assemblies over the web.
+            </summary>
+        </member>
+        <member name="T:TVA.Web.Hosting.VirtualFileBaseCollection">
+            <summary>
+            A strongly typed <see cref="T:System.Collections.ObjectModel.KeyedCollection`2"/>
+            where each element is a <see cref="T:System.Web.Hosting.VirtualFileBase"/> and is keyed
+            off of the <see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>
+            property.
+            </summary>
+            <remarks>
+            <para>
+            The default constructor for this collection does a culture-invariant case-insensitive
+            comparison on the keys.  This allows for proper case-insensitive web-oriented
+            behavior that is generally expected.
+            </para>
+            </remarks>
+            <seealso cref="T:System.Web.Hosting.VirtualFileBase"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses a case-insensitive comparer.
+            </summary>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String})">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            </summary>
+            <param name="comparer">
+            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
+            generic interface to use when comparing keys, or <see langword="null"/> to use the default
+            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.#ctor(System.Collections.Generic.IEqualityComparer{System.String},System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/> class that uses the specified equality comparer.
+            </summary>
+            <param name="comparer">
+            The implementation of the <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>
+            generic interface to use when comparing keys, or <see langword="null"/> to use the default
+            equality comparer for the type of the key, obtained from <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>.
+            </param>
+            <param name="dictionaryCreationThreshold">
+            The number of elements the collection can hold without creating a lookup dictionary
+            (0 creates the lookup dictionary when the first item is added), or ?1 to specify that
+            a lookup dictionary is never created.
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
+        </member>
+        <member name="M:TVA.Web.Hosting.VirtualFileBaseCollection.GetKeyForItem(System.Web.Hosting.VirtualFileBase)">
+            <summary>
+            Extracts the key from the specified element.
+            </summary>
+            <param name="item">
+            The <see cref="T:System.Web.Hosting.VirtualFileBase"/> element from which to extract the key (<see cref="P:System.Web.Hosting.VirtualFileBase.VirtualPath"/>).
+            </param>
+            <seealso cref="T:TVA.Web.Hosting.VirtualFileBaseCollection"/>
         </member>
     </members>
 </doc>
