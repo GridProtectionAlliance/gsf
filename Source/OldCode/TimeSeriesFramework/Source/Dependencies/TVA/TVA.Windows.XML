@@ -4,253 +4,6 @@
         <name>TVA.Windows</name>
     </assembly>
     <members>
-        <member name="T:TVA.Windows.Forms.PropertyGridExtensions">
-            <summary>
-            Defines extension functions for the <see cref="T:System.Windows.Forms.PropertyGrid"/> control.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.PropertyGridExtensions.AdjustLabelRatio(System.Windows.Forms.PropertyGrid,System.Double)">
-            <summary>
-            Adjusts a property grid's label ratio
-            </summary>
-            <param name="grid">Property grid to adjust</param>
-            <param name="ratio">Ratio to use use for label column</param>
-            <remarks>
-            <para>Smaller ratios (e.g., 1.75) produce a wider label column.</para>
-            <para>
-            This function only has an effect on property grids when their Visible property is set to True.  To use
-            this on an initially hidden property grid - set the property grid's Visible property to True at design
-            time, call this function during form load, then set the Visible property to False.
-            </para>
-            <para>
-            This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
-            to set private properties of the property grid and as a result this function may not work with future
-            versions of the .NET property grid.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Windows.Forms.PropertyGridExtensions.AdjustCommentAreaHeight(System.Windows.Forms.PropertyGrid,System.Int32)">
-            <summary>
-            Adjusts a property grid's comment area height
-            </summary>
-            <param name="grid">Property grid to adjust</param>
-            <param name="lines">Number of lines to display in comment area</param>
-            <remarks>
-            <para>
-            This function only has an effect on property grids when their Visible property is set to True.  To use
-            this on an initially hidden property grid - set the property grid's Visible property to True at design
-            time, call this function during form load, then set the Visible property to False.
-            </para>
-            <para>
-            This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
-            to set private properties of the property grid and as a result this function may not work with future
-            versions of the .NET property grid.
-            </para>
-            </remarks>
-        </member>
-        <member name="T:TVA.Windows.DisplayType">
-            <summary>
-            Enumerable list of portlets to be displayed on the screen.
-            </summary>
-        </member>
-        <member name="F:TVA.Windows.DisplayType.Login">
-            <summary>
-            Login screen.
-            </summary>
-        </member>
-        <member name="F:TVA.Windows.DisplayType.AccessDenied">
-            <summary>
-            Access Denied screen.
-            </summary>
-        </member>
-        <member name="F:TVA.Windows.DisplayType.ChangePassword">
-            <summary>
-            Change Password screen.
-            </summary>
-        </member>
-        <member name="T:TVA.Windows.SecurityPortal">
-            <summary>
-            Represents a WPF window used to request user credentials and other security related information.
-            </summary>
-            <summary>
-            SecurityPortal
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.#ctor(TVA.Windows.DisplayType)">
-            <summary>
-            Initializes a new WPF window.
-            </summary>
-            <param name="displayType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ManageScreenVisualization">
-            <summary>
-            Displays requested screen section based on received request.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.DisplayErrorMessage(System.String)">
-            <summary>
-            Displays error message.
-            </summary>
-            <param name="message">Error message to display.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ClearErrorMessage">
-            <summary>
-            Clears error message.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.Window_Closed(System.Object,System.EventArgs)">
-            <summary>
-            Handles window closed.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.Window_MouseDown(System.Object,System.Windows.Input.MouseButtonEventArgs)">
-            <summary>
-            Handles mouse down event anywhere on the screen so user can click and drag this window around.
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonLogin_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Logins the user.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonChange_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Attempts to change user's password.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonExit_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Exits window.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonOK_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Closes window.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonForgotPasswordLink_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Displays help for the user on how to reset password.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonChangePasswordLink_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Navigates users to Change Password screen.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.ButtonLoginLink_Click(System.Object,System.Windows.RoutedEventArgs)">
-            <summary>
-            Navigates users back to Login screen.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.TextBoxUserName_TextChanged(System.Object,System.Windows.Controls.TextChangedEventArgs)">
-            <summary>
-            Keeps the user names on the separate sections synchronized.
-            </summary>
-            <param name="sender">Source of this event.</param>
-            <param name="e">Arguments of this event.</param>
-        </member>
-        <member name="M:TVA.Windows.SecurityPortal.InitializeComponent">
-            <summary>
-            InitializeComponent
-            </summary>
-        </member>
-        <member name="P:TVA.Windows.SecurityPortal.ProviderFailure">
-            <summary>
-            Gets or sets flag that indicates if there was a failure during provider initialization.
-            </summary>
-        </member>
-        <member name="T:TVA.Windows.Forms.SecureForm">
-            <summary>
-            Represents a windows form secured using role-based security.
-            </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
-                    encrypted="false" />
-                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
-                    encrypted="false" />
-                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            </example>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="F:TVA.Windows.Forms.SecureForm.components">
-            <summary>
-            Required designer variable.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.Dispose(System.Boolean)">
-            <summary>
-            Clean up any resources being used.
-            </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Windows.Forms.SecureForm"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Windows.Forms.SecureForm.GetResourceName">
-            <summary>
-            Gets the name of resource being accessed.
-            </summary>
-            <returns>Name of the resource being accessed.</returns>
-        </member>
         <member name="T:TVA.Windows.Forms.AboutDialog">
             <summary>
             Represents a common about dialog box.
@@ -330,6 +83,50 @@
             </summary>
             <param name="disclaimerStream">System.IO.Stream of the disclaimer text.</param>
             <remarks></remarks>
+        </member>
+        <member name="T:TVA.Windows.Forms.PropertyGridExtensions">
+            <summary>
+            Defines extension functions for the <see cref="T:System.Windows.Forms.PropertyGrid"/> control.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.PropertyGridExtensions.AdjustLabelRatio(System.Windows.Forms.PropertyGrid,System.Double)">
+            <summary>
+            Adjusts a property grid's label ratio
+            </summary>
+            <param name="grid">Property grid to adjust</param>
+            <param name="ratio">Ratio to use use for label column</param>
+            <remarks>
+            <para>Smaller ratios (e.g., 1.75) produce a wider label column.</para>
+            <para>
+            This function only has an effect on property grids when their Visible property is set to True.  To use
+            this on an initially hidden property grid - set the property grid's Visible property to True at design
+            time, call this function during form load, then set the Visible property to False.
+            </para>
+            <para>
+            This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
+            to set private properties of the property grid and as a result this function may not work with future
+            versions of the .NET property grid.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Windows.Forms.PropertyGridExtensions.AdjustCommentAreaHeight(System.Windows.Forms.PropertyGrid,System.Int32)">
+            <summary>
+            Adjusts a property grid's comment area height
+            </summary>
+            <param name="grid">Property grid to adjust</param>
+            <param name="lines">Number of lines to display in comment area</param>
+            <remarks>
+            <para>
+            This function only has an effect on property grids when their Visible property is set to True.  To use
+            this on an initially hidden property grid - set the property grid's Visible property to True at design
+            time, call this function during form load, then set the Visible property to False.
+            </para>
+            <para>
+            This function was written to work with the .NET 2.0 PropertyGrid control.  Note that reflection is used
+            to set private properties of the property grid and as a result this function may not work with future
+            versions of the .NET property grid.
+            </para>
+            </remarks>
         </member>
         <member name="T:TVA.Windows.ResourceAccessiblityMode">
             <summary>
@@ -452,6 +249,223 @@
         <member name="P:TVA.Windows.SecureWindow.IncludedRoles">
             <summary>
             Gets or sets applicable roles when <see cref="P:TVA.Windows.SecureWindow.ResourceAccessiblity"/> == <see cref="F:TVA.Windows.ResourceAccessiblityMode.AlwaysIncluded"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Windows.Forms.SecureForm">
+            <summary>
+            Represents a windows form secured using role-based security.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ApplicationName" value="" description="Name of the application being secured as defined in the backend security datastore."
+                    encrypted="false" />
+                  <add name="ConnectionString" value="" description="Connection string to be used for connection to the backend security datastore."
+                    encrypted="false" />
+                  <add name="ProviderType" value="TVA.Security.LdapSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*Form*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Windows.Forms.SecureForm"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.GetResourceName">
+            <summary>
+            Gets the name of resource being accessed.
+            </summary>
+            <returns>Name of the resource being accessed.</returns>
+        </member>
+        <member name="F:TVA.Windows.Forms.SecureForm.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:TVA.Windows.Forms.SecureForm.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:TVA.Windows.DisplayType">
+            <summary>
+            Enumerable list of portlets to be displayed on the screen.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.DisplayType.Login">
+            <summary>
+            Login screen.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.DisplayType.AccessDenied">
+            <summary>
+            Access Denied screen.
+            </summary>
+        </member>
+        <member name="F:TVA.Windows.DisplayType.ChangePassword">
+            <summary>
+            Change Password screen.
+            </summary>
+        </member>
+        <member name="T:TVA.Windows.SecurityPortal">
+            <summary>
+            Represents a WPF window used to request user credentials and other security related information.
+            </summary>
+            <summary>
+            SecurityPortal
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.#ctor(TVA.Windows.DisplayType)">
+            <summary>
+            Initializes a new WPF window.
+            </summary>
+            <param name="displayType">Type of the message received from security API which is used to decide controls to be displayed on the screen.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ManageScreenVisualization">
+            <summary>
+            Displays requested screen section based on received request.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.DisplayErrorMessage(System.String)">
+            <summary>
+            Displays error message.
+            </summary>
+            <param name="message">Error message to display.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ClearErrorMessage">
+            <summary>
+            Clears error message.
+            </summary>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.Window_Closed(System.Object,System.EventArgs)">
+            <summary>
+            Handles window closed.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.Window_MouseDown(System.Object,System.Windows.Input.MouseButtonEventArgs)">
+            <summary>
+            Handles mouse down event anywhere on the screen so user can click and drag this window around.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonLogin_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Logins the user.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonChange_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Attempts to change user's password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonExit_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Exits window.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonOK_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Closes window.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonForgotPasswordLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Displays help for the user on how to reset password.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonChangePasswordLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Navigates users to Change Password screen.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.ButtonLoginLink_Click(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Navigates users back to Login screen.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.TextBox_TextChanged(System.Object,System.Windows.Controls.TextChangedEventArgs)">
+            <summary>
+            Keeps the user names on the separate sections synchronized and clears error messages when text changes.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.PasswordBox_PasswordChanged(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            Clears error messages when text changes.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.TextBox_GotFocus(System.Object,System.Windows.RoutedEventArgs)">
+            <summary>
+            We make sure all text boxes "select-all" when they receive focus.
+            </summary>
+            <param name="sender">Source of this event.</param>
+            <param name="e">Arguments of this event.</param>
+        </member>
+        <member name="M:TVA.Windows.SecurityPortal.InitializeComponent">
+            <summary>
+            InitializeComponent
+            </summary>
+        </member>
+        <member name="P:TVA.Windows.SecurityPortal.ProviderFailure">
+            <summary>
+            Gets or sets flag that indicates if there was a failure during provider initialization.
             </summary>
         </member>
     </members>

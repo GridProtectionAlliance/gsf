@@ -4,40 +4,377 @@
         <name>TVA.Security</name>
     </assembly>
     <members>
-        <member name="T:TVA.Security.SecurityProviderCache">
+        <member name="T:TVA.Security.SecurityPrincipal">
             <summary>
-            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
+            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
+            </summary>
+            <seealso cref="T:TVA.Security.SecurityIdentity"/>
+            <seealso cref="T:TVA.Security.ISecurityProvider"/>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
+            </summary>
+            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
+            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
+        </member>
+        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
+            <summary>
+            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
+            </summary>
+            <param name="roles">Comma seperated list of roles to check.</param>
+            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.SecurityPrincipal.Identity">
+            <summary>
+            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
             </summary>
         </member>
-        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
+        <member name="T:TVA.Security.RestrictAccessAttribute">
             <summary>
-            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
+            Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor">
             <summary>
-            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
             </summary>
         </member>
-        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
+        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor(System.String[])">
             <summary>
-            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
+            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            </summary>
+            <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
+        </member>
+        <member name="M:TVA.Security.RestrictAccessAttribute.CheckAccess">
+            <summary>
+            Checks if the current thread principal has at least one of the <see cref="P:TVA.Security.RestrictAccessAttribute.Roles"/> in order to have access.
+            </summary>
+            <returns>true if the current thread principal has access, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
+            <summary>
+            Gets or sets the list of either roles the current thread principal must have in order to have access.
             </summary>
         </member>
-        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
+        <member name="T:TVA.Security.ISecurityProvider">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
+            Defines a provider of role-based security in applications.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
+        <member name="M:TVA.Security.ISecurityProvider.Authenticate(System.String)">
             <summary>
-            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
+            Authenticates the user.
+            </summary>
+            <param name="password">Password to be used for authentication.</param>
+            <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> from the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.UpdateData">
+            <summary>
+            Updates the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> in the backend datastore.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is updated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)">
+            <summary>
+            Resets user password in the backend datastore.
+            </summary>
+            <param name="securityAnswer">Answer to the user's security question.</param>
+            <returns>true if the password is reset, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.ISecurityProvider.TranslateRole(System.String)">
+            <summary>
+            Performs a translation of the specified user <paramref name="role"/>.
+            </summary>
+            <param name="role">The user role to be translated.</param>
+            <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.ApplicationName">
+            <summary>
+            Gets or sets the name of the application being secured as defined in the backend security datastore.
             </summary>
         </member>
-        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
+        <member name="P:TVA.Security.ISecurityProvider.ConnectionString">
             <summary>
-            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
+            Gets or sets the connection string to be used for connection to the backend security datastore.
             </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.UserData">
+            <summary>
+            Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanRefreshData">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.RefreshData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.UpdateData"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanResetPassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)"/> operation is supported.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.ISecurityProvider.CanChangePassword">
+            <summary>
+            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)"/> operation is supported.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.Radius.NamespaceDoc">
+            <summary>
+            Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.Radius.RadiusClient">
+            <summary>
+            Represents a RADIUS communication client.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusClient.DefaultServerPort">
+            <summary>
+            Default port of the RADIUS server.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage1">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 1 (ensuring that the user account is in
+            the "New Pin" mode) of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage2">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 2 (new pin is accepted in attempt #1)
+             of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage3">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 3 (new pin is accepted in attempts #2)
+            of creating a new pin was successful.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNextTokenModeMessage">
+            <summary>
+            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not a user account is in the "Next Token" mode.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.#ctor(System.String,System.String)">
+            <summary>
+            Creates an instance of RADIUS client for sending request to a RADIUS server.
+            </summary>
+            <param name="serverName">Name or address of the RADIUS server.</param>
+            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.#ctor(System.String,System.Int32,System.String)">
+            <summary>
+            Creates an instance of RADIUS client for sending request to a RADIUS server.
+            </summary>
+            <param name="serverName">Name or address of the RADIUS server.</param>
+            <param name="serverPort">Port number of the RADIUS server.</param>
+            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
+            <remarks></remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.ProcessRequest(TVA.Security.Radius.RadiusPacket)">
+            <summary>
+            Send a request to the server and waits for a response back.
+            </summary>
+            <param name="request">Request to be sent to the server.</param>
+            <returns>Response packet if a valid reponse is received from the server; otherwise Nothing.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.CreateNewPin(System.String,System.String,System.String)">
+            <summary>
+            Create a new pin for the user.
+            </summary>
+            <param name="username">Name of the user.</param>
+            <param name="token">Current token of the user.</param>
+            <param name="pin">New pin of the user.</param>
+            <returns>True if a new pin is created for the user successfully; otherwise False.</returns>
+            <remarks>NOTE: This method is specific to RSA RADIUS implementation.</remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.Authenticate(System.String,System.String)">
+            <summary>
+            Authenticates the username and password against the RADIUS server.
+            </summary>
+            <param name="username">Username to be authenticated.</param>
+            <param name="password">Password to be authenticated.</param>
+            <returns>Response packet received from the server for the authentication request.</returns>
+            <remarks>
+            <para>
+            The type of response packet (if any) will be one of the following:
+            <list>
+            <item>AccessAccept: If the authentication is successful.</item>
+            <item>AccessReject: If the authentication is not successful.</item>
+            <item>AccessChallenge: If the server need more information from the user.</item>
+            </list>
+            </para>
+            <para>
+            When an AccessChallenge response packet is received from the server, it contains a State attribute
+            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
+            response. So if this method returns an AccessChallenge packet, then this method is to be called again
+            with the requested information (from ReplyMessage attribute) in the password field and the value State
+            attribute.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.Authenticate(System.String,System.String,System.Byte[])">
+            <summary>
+            Authenticates the username and password against the RADIUS server.
+            </summary>
+            <param name="username">Username to be authenticated.</param>
+            <param name="password">Password to be authenticated.</param>
+            <param name="state">State value from a previous challenge response.</param>
+            <returns>Response packet received from the server for the authentication request.</returns>
+            <remarks>
+            <para>
+            The type of response packet (if any) will be one of the following:
+            <list>
+            <item>AccessAccept: If the authentication is successful.</item>
+            <item>AccessReject: If the authentication is not successful.</item>
+            <item>AccessChallenge: If the server need more information from the user.</item>
+            </list>
+            </para>
+            <para>
+            When an AccessChallenge response packet is received from the server, it contains a State attribute
+            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
+            response. So if this method returns an AccessChallenge packet, then this method is to be called again
+            with the requested information (from ReplyMessage attribute) in the password field and the value State
+            attribute.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.IsUserInNewPinMode(TVA.Security.Radius.RadiusPacket)">
+            <summary>
+            Determines whether or not the response indicates that the user account is in "New Pin" mode.
+            </summary>
+            <param name="response">Response packet sent by the server.</param>
+            <returns>True if the user account is in "New Pin" mode; otherwise False.</returns>
+            <remarks>
+            <para>A user's account can be in the "New Pin" mode when set on the server.</para>
+            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.IsUserInNextTokenMode(TVA.Security.Radius.RadiusPacket)">
+            <summary>
+            Determines whether or not the response indicates that the user account is in "Next Token" mode.
+            </summary>
+            <param name="response">Response packet sent by the server.</param>
+            <returns>True if the user account is in "Next Token" mode; otherwise False.</returns>
+            <remarks>
+            <para>
+            A user's account can enter the "Next Token" mode after the user enters incorrect passwords for a few
+            times (3 times by default) and then enters the correct password. Note that repeatedly entering
+            incorrect passwords will disable the user account.
+            </para>
+            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.Dispose">
+            <summary>
+            Releases the used resources.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.CheckDisposed">
+            <summary>
+            Helper method to check whether or not the object instance has been disposed.
+            </summary>
+            <remarks>This method is to be called before performing any operation.</remarks>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusClient.Dispose(System.Boolean)">
+            <summary>
+            Releases the used resources.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.ServerName">
+            <summary>
+            Gets or sets the name or address of the RADIUS server.
+            </summary>
+            <value></value>
+            <returns>Name or address of RADIUS server.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.ServerPort">
+            <summary>
+            Gets or sets the port number of the RADIUS server.
+            </summary>
+            <value></value>
+            <returns>Port number of the RADIUS server.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.RequestAttempts">
+            <summary>
+            Gets or sets the number of time a request is to sent to the server until a valid response is received.
+            </summary>
+            <value></value>
+            <returns>Number of time a request is to sent to the server until a valid response is received.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.ReponseTimeout">
+            <summary>
+            Gets or sets the time (in milliseconds) to wait for a response from server after sending a request.
+            </summary>
+            <value></value>
+            <returns>Time (in milliseconds) to wait for a response from server after sending a request.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.SharedSecret">
+            <summary>
+            Gets or sets the shared secret used between the client and server for encryption and authentication.
+            </summary>
+            <value></value>
+            <returns>Shared secret used between the client and server for encryption and authentication.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage1">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 1 (ensuring that the user account is in  the
+            "New Pin" mode) of creating a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's first message.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage2">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 2 (new pin is accepted in attempt #1) of creating
+            a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's second message.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage3">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not Step 3 (new pin is accepted in attempts #2) of creating
+            a new pin was successful.
+            </summary>
+            <value></value>
+            <returns>Text for "New Pin" mode's third message.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusClient.NextTokenModeMessage">
+            <summary>
+            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
+            server response to determine whether or not a user account is in the "Next Token" mode.
+            </summary>
+            <value></value>
+            <returns>Text for "Next Token" mode.</returns>
         </member>
         <member name="T:TVA.Security.SecurityIdentity">
             <summary>
@@ -72,6 +409,52 @@
             <summary>
             Gets the <see cref="T:TVA.Security.ISecurityProvider"/> of the user.
             </summary>
+        </member>
+        <member name="T:TVA.Security.AdoSecurityProvider">
+            <summary>
+            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
+            backend datastore and authenticates internal users against Active Directory and external users against the database.
+            </summary>
+            <example>
+            Required config file entries:
+            <code>
+            <![CDATA[
+            <?xml version="1.0"?>
+            <configuration>
+              <configSections>
+                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
+              </configSections>
+              <categorizedSettings>
+                <securityProvider>
+                  <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
+                    description="Configuration database connection string" encrypted="false"/>
+                  <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
+                    description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
+                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
+                  <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
+                    description="The type to be used for enforcing security." encrypted="false" />
+                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
+                    encrypted="false" />
+                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
+                    encrypted="false" />    
+                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
+                    encrypted="false" />
+                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
+                    encrypted="false" />
+                </securityProvider>
+                <activeDirectory>
+                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
+                    encrypted="false" />
+                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
+                    encrypted="true" />
+                </activeDirectory>
+              </categorizedSettings>
+            </configuration>
+            ]]>
+            </code>
+            </example>
         </member>
         <member name="T:TVA.Security.LdapSecurityProvider">
             <summary>
@@ -220,87 +603,6 @@
             </example>
             <seealso cref="T:TVA.Security.SecurityIdentity"/>
             <seealso cref="T:TVA.Security.SecurityPrincipal"/>
-        </member>
-        <member name="T:TVA.Security.ISecurityProvider">
-            <summary>
-            Defines a provider of role-based security in applications.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.Authenticate(System.String)">
-            <summary>
-            Authenticates the user.
-            </summary>
-            <param name="password">Password to be used for authentication.</param>
-            <returns>true if the user is authenticated, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.RefreshData">
-            <summary>
-            Refreshes the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> from the backend datastore.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is refreshed, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.UpdateData">
-            <summary>
-            Updates the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> in the backend datastore.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.ISecurityProvider.UserData"/> is updated, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)">
-            <summary>
-            Resets user password in the backend datastore.
-            </summary>
-            <param name="securityAnswer">Answer to the user's security question.</param>
-            <returns>true if the password is reset, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)">
-            <summary>
-            Changes user password in the backend datastore.
-            </summary>
-            <param name="oldPassword">User's current password.</param>
-            <param name="newPassword">User's new password.</param>
-            <returns>true if the password is changed, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.ISecurityProvider.TranslateRole(System.String)">
-            <summary>
-            Performs a translation of the specified user <paramref name="role"/>.
-            </summary>
-            <param name="role">The user role to be translated.</param>
-            <returns>The user role that the specified user <paramref name="role"/> translates to.</returns>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.ApplicationName">
-            <summary>
-            Gets or sets the name of the application being secured as defined in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.ConnectionString">
-            <summary>
-            Gets or sets the connection string to be used for connection to the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.UserData">
-            <summary>
-            Gets the <see cref="P:TVA.Security.ISecurityProvider.UserData"/> object containing information about the user.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.CanRefreshData">
-            <summary>
-            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.RefreshData"/> operation is supported.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.CanUpdateData">
-            <summary>
-            Geta a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.UpdateData"/> operation is supported.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.CanResetPassword">
-            <summary>
-            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ResetPassword(System.String)"/> operation is supported.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.ISecurityProvider.CanChangePassword">
-            <summary>
-            Gets a boolean value that indicates whether <see cref="M:TVA.Security.ISecurityProvider.ChangePassword(System.String,System.String)"/> operation is supported.
-            </summary>
         </member>
         <member name="F:TVA.Security.SecurityProviderBase.DefaultApplicationName">
             <summary>
@@ -528,267 +830,106 @@
             Gets the original <see cref="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
             </summary>
         </member>
-        <member name="T:TVA.Security.NamespaceDoc">
+        <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String)">
             <summary>
-            Contains fundamental classes that define the security framework for role-based security.
+            Initializes a new instance of the <see cref="T:TVA.Security.AdoSecurityProvider"/> class.
+            </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.AdoSecurityProvider"/> class.
+            </summary>
+            <param name="username">Name that uniquely identifies the user.</param>
+            <param name="canRefreshData">true if the security provider can refresh <see cref="T:TVA.Security.UserData"/> from the backend datastore, otherwise false.</param>
+            <param name="canUpdateData">true if the security provider can update <see cref="T:TVA.Security.UserData"/> in the backend datastore, otherwise false.</param>
+            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
+            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.LoadSettings">
+            <summary>
+            Loads saved security provider settings from the config file if the <see cref="P:TVA.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
+            </summary>
+            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Security.SecurityProviderBase.SettingsCategory"/> has a value of null or empty string.</exception>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.RefreshData">
+            <summary>
+            Refreshes the <see cref="T:TVA.Security.UserData"/>.
+            </summary>
+            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.Authenticate(System.String)">
+            <summary>
+            Authenticates the user.
+            </summary>
+            <param name="password">Password to be used for authentication.</param>
+            <returns>true if the user is authenticated, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.ChangePassword(System.String,System.String)">
+            <summary>
+            Changes user password in the backend datastore.
+            </summary>
+            <param name="oldPassword">User's current password.</param>
+            <param name="newPassword">User's new password.</param>
+            <returns>true if the password is changed, otherwise false.</returns>
+            <exception cref="T:System.Security.SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.LogLogin(System.Boolean)">
+            <summary>
+            Logs user authentication attempt.
+            </summary>
+            <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
+            <returns>true if logging was successful, otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.LogError(System.String,System.String)">
+            <summary>
+            Logs information about an encountered exception to the backend datastore.
+            </summary>
+            <param name="source">Source of the exception.</param>
+            <param name="message">Detailed description of the exception.</param>
+            <returns>true if logging was successful, otherwise false.</returns>
+        </member>
+        <member name="P:TVA.Security.AdoSecurityProvider.CanUpdateData">
+            <summary>
+            Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
             </summary>
         </member>
-        <member name="T:TVA.Security.Radius.PacketType">
+        <member name="T:TVA.Security.AdoSecurityProvider.DataConnection">
             <summary>
-            Specifies the type of RADIUS packet.
+            Creates a new <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessRequest">
+        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.#ctor(System.String)">
             <summary>
-            Packet sent to a RADIUS server for verification of credentials.
+            Creates a new <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/>.
+            </summary>
+            <param name="settingsCategory">Settings category to use for connection settings.</param>
+        </member>
+        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessAccept">
+        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose">
             <summary>
-            Packet sent by a RADIUS server when credential verification is successful.
+            Releases all the resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessReject">
+        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose(System.Boolean)">
             <summary>
-            Packet sent by a RADIUS server when credential verification is unsuccessful.
+            Releases the unmanaged resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.Connection">
+            <summary>
+            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingRequest">
+        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.AdapterType">
             <summary>
-            Not used. No description available.
+            Gets the type of data adapter for configured ADO.NET data source.
             </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingResponse">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingStatus">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordRequest">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordAccept">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.PasswordReject">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccountingMessage">
-            <summary>
-            Not used. No description available. [RFC 2882]
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.AccessChallenge">
-            <summary>
-            Packet sent by a RADIUS server when further information is needed for credential verification.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.StatuServer">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="F:TVA.Security.Radius.PacketType.StatusClient">
-            <summary>
-            Not used. No description available.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.Radius.RadiusPacket">
-            <summary>
-            Represents a data packet transferred between RADIUS client and server.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor">
-            <summary>
-            Creates a default instance of RADIUS packet.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(TVA.Security.Radius.PacketType)">
-            <summary>
-            Creates an instance of RADIUS packet.
-            </summary>
-            <param name="type">Type of the packet.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(System.Byte[],System.Int32)">
-            <summary>
-            Creates an instance of RADIUS packet.
-            </summary>
-            <param name="binaryImage">A byte array.</param>
-            <param name="startIndex">Starting point in the byte array.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes <see cref="T:TVA.Security.Radius.RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
-            </summary>
-            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</param>
-            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
-            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
-            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetAttributeValue(TVA.Security.Radius.AttributeType)">
-            <summary>
-            Gets the value of the specified attribute if it is present in the packet.
-            </summary>
-            <param name="type">Type of the attribute whose value is to be retrieved.</param>
-            <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
-        </member>
-        <member name="F:TVA.Security.Radius.RadiusPacket.Encoding">
-            <summary>
-            Encoding format for encoding text.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.String)">
-            <summary>
-            Gets bytes for the specified text.
-            </summary>
-            <param name="value">Text blob.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int16)">
-            <summary>
-            Gets bytes for the specified 16-bit signed integer value.
-            </summary>
-            <param name="value">16-bit signed integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt16)">
-            <summary>
-            Gets bytes for the specified 16-bit unsigned integer value.
-            </summary>
-            <param name="value">16-bit unsigned integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int32)">
-            <summary>
-            Gets bytes for the specified 32-bit signed integer value.
-            </summary>
-            <param name="value">32-bit signed integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt32)">
-            <summary>
-            Gets bytes for the specified 32-bit unsigned integer value.
-            </summary>
-            <param name="value">32-bit unsigned integer value.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToText(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Converts the specified byte array to text.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <param name="length">Number of bytes to be converted.</param>
-            <returns>A text blob.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt16(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to a signed 16-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 16-bit signed integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt16(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to an unsigned 16-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 16-bit unsigned integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt32(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to a signed 32-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 32-bit signed integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt32(System.Byte[],System.Int32)">
-            <summary>
-            Converts the specified byte array to an unsigned 32-bit integer value.
-            </summary>
-            <param name="buffer">A byte array.</param>
-            <param name="index">Starting point in the byte array.</param>
-            <returns>A 32-bit unsigned integer value.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.CreateRequestAuthenticator(System.String)">
-            <summary>
-            Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
-            </summary>
-            <param name="sharedSecret">The shared secret to be used in generating the output.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.CreateResponseAuthenticator(System.String,TVA.Security.Radius.RadiusPacket,TVA.Security.Radius.RadiusPacket)">
-            <summary>
-            Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
-            </summary>
-            <param name="sharedSecret">The shared secret key.</param>
-            <param name="requestPacket">RADIUS packet sent from client to server.</param>
-            <param name="responsePacket">RADIUS packet sent from server to client.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusPacket.EncryptPassword(System.String,System.String,System.Byte[])">
-            <summary>
-            Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
-            </summary>
-            <param name="password">User's password.</param>
-            <param name="sharedSecret">Shared secret key.</param>
-            <param name="requestAuthenticator">Request authenticator byte array.</param>
-            <returns>A byte array.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Type">
-            <summary>
-            Gets or sets the type of the packet.
-            </summary>
-            <value></value>
-            <returns>Type of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Identifier">
-            <summary>
-            Gets or sets the packet identifier.
-            </summary>
-            <value></value>
-            <returns>Identifier of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Authenticator">
-            <summary>
-            Gets or sets the packet authenticator.
-            </summary>
-            <value></value>
-            <returns>Authenticator of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.Attributes">
-            <summary>
-            Gets a list of packet attributes.
-            </summary>
-            <value></value>
-            <returns>Attributes of the packet.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryLength">
-            <summary>
-            Gets the binary lenght of the packet.
-            </summary>
-            <value></value>
-            <returns>32-bit signed integer value.</returns>
-        </member>
-        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryImage">
-            <summary>
-            Gets the binary image of the packet.
-            </summary>
-            <value></value>
-            <returns>A byte array.</returns>
         </member>
         <member name="T:TVA.Security.SecurityProviderUtility">
             <summary>
@@ -848,146 +989,9 @@
             <param name="subject">Subject of the notification.</param>
             <param name="body">Content of the notification.</param>
         </member>
-        <member name="T:TVA.Security.UserData">
+        <member name="T:TVA.Security.NamespaceDoc">
             <summary>
-            A serializable class that contains information about a user defined in the security datastore.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.UserData.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.UserData.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
-            </summary>
-            <param name="username">User's logon name.</param>
-        </member>
-        <member name="M:TVA.Security.UserData.Initialize">
-            <summary>
-            Initializes this <see cref="T:TVA.Security.UserData"/> object.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.LoginID">
-            <summary>
-            Gets the user's login ID.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Username">
-            <summary>
-            Gets the user's login name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Password">
-            <summary>
-            Gets the user's password.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.FirstName">
-            <summary>
-            Gets the user's first name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.LastName">
-            <summary>
-            Gets the user's last name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.CompanyName">
-            <summary>
-            Gets the user's company name.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.PhoneNumber">
-            <summary>
-            Gets the user's phone number.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.EmailAddress">
-            <summary>
-            Gets the user's email address.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.SecurityQuestion">
-            <summary>
-            Gets the user's security question.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.SecurityAnswer">
-            <summary>
-            Gets the user's security answer.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.PasswordChangeDateTime">
-            <summary>
-            Gets the UTC date and time when user must change the password.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
-            <summary>
-            Gets the UTC date and time when user account was created.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsDefined">
-            <summary>
-            Gets a boolean value that indicates whether the user is defined in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsExternal">
-            <summary>
-            Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsDisabled">
-            <summary>
-            Gets a boolean value that indicates whether the user account has been disabled.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsLockedOut">
-            <summary>
-            Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.IsAuthenticated">
-            <summary>
-            Gets a boolean value indicating whether or not the user has been authenticated.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Groups">
-            <summary>
-            Gets a read-only list of all the groups the user belongs to.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.UserData.Roles">
-            <summary>
-            Gets a read-only list of all the roles assigned to the user.
-            </summary>
-        </member>
-        <member name="T:TVA.Security.SecurityPrincipal">
-            <summary>
-            A class that implements <see cref="T:System.Security.Principal.IPrincipal"/> interface to facilitate custom role-based security.
-            </summary>
-            <seealso cref="T:TVA.Security.SecurityIdentity"/>
-            <seealso cref="T:TVA.Security.ISecurityProvider"/>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.#ctor(TVA.Security.SecurityIdentity)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.SecurityPrincipal"/> class.
-            </summary>
-            <param name="identity">An <see cref="T:TVA.Security.SecurityIdentity"/> object.</param>
-            <exception cref="T:System.ArgumentNullException">Value specified for <paramref name="identity"/> is null.</exception>
-        </member>
-        <member name="M:TVA.Security.SecurityPrincipal.IsInRole(System.String)">
-            <summary>
-            Determines whether the user is a member of either of the specified <paramref name="roles"/>.
-            </summary>
-            <param name="roles">Comma seperated list of roles to check.</param>
-            <returns>true if the user is a member of either of the specified <paramref name="roles"/>, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Security.SecurityPrincipal.Identity">
-            <summary>
-            Gets the <see cref="T:TVA.Security.SecurityIdentity"/> object of the user.
+            Contains fundamental classes that define the security framework for role-based security.
             </summary>
         </member>
         <member name="T:TVA.Security.Radius.AttributeType">
@@ -1288,416 +1292,412 @@
             <value></value>
             <returns>A byte array.</returns>
         </member>
-        <member name="T:TVA.Security.Radius.NamespaceDoc">
+        <member name="T:TVA.Security.Radius.PacketType">
             <summary>
-            Contains classes for RADIUS (Remote Authentication Dial In User Service) based server and client communication.
+            Specifies the type of RADIUS packet.
             </summary>
         </member>
-        <member name="T:TVA.Security.RestrictAccessAttribute">
+        <member name="F:TVA.Security.Radius.PacketType.AccessRequest">
             <summary>
-            Represents an <see cref="T:System.Attribute"/> that can be used restrict access to a class when using role-based security.
+            Packet sent to a RADIUS server for verification of credentials.
             </summary>
         </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor">
+        <member name="F:TVA.Security.Radius.PacketType.AccessAccept">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
+            Packet sent by a RADIUS server when credential verification is successful.
             </summary>
         </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.#ctor(System.String[])">
+        <member name="F:TVA.Security.Radius.PacketType.AccessReject">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.RestrictAccessAttribute"/> class.
-            </summary>
-            <param name="roles">List of either roles the current thread principal must have in order to have access.</param>
-        </member>
-        <member name="M:TVA.Security.RestrictAccessAttribute.CheckAccess">
-            <summary>
-            Checks if the current thread principal has at least one of the <see cref="P:TVA.Security.RestrictAccessAttribute.Roles"/> in order to have access.
-            </summary>
-            <returns>true if the current thread principal has access, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Security.RestrictAccessAttribute.Roles">
-            <summary>
-            Gets or sets the list of either roles the current thread principal must have in order to have access.
+            Packet sent by a RADIUS server when credential verification is unsuccessful.
             </summary>
         </member>
-        <member name="T:TVA.Security.Radius.RadiusClient">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingRequest">
             <summary>
-            Represents a RADIUS communication client.
+            Not used. No description available.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.RadiusClient.DefaultServerPort">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingResponse">
             <summary>
-            Default port of the RADIUS server.
+            Not used. No description available.
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage1">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingStatus">
             <summary>
-            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 1 (ensuring that the user account is in
-            the "New Pin" mode) of creating a new pin was successful.
+            Not used. No description available. [RFC 2882]
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage2">
+        <member name="F:TVA.Security.Radius.PacketType.PasswordRequest">
             <summary>
-            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 2 (new pin is accepted in attempt #1)
-             of creating a new pin was successful.
+            Not used. No description available. [RFC 2882]
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNewPinModeMessage3">
+        <member name="F:TVA.Security.Radius.PacketType.PasswordAccept">
             <summary>
-            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 3 (new pin is accepted in attempts #2)
-            of creating a new pin was successful.
+            Not used. No description available. [RFC 2882]
             </summary>
         </member>
-        <member name="F:TVA.Security.Radius.RadiusClient.DefaultNextTokenModeMessage">
+        <member name="F:TVA.Security.Radius.PacketType.PasswordReject">
             <summary>
-            Default text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not a user account is in the "Next Token" mode.
+            Not used. No description available. [RFC 2882]
             </summary>
         </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.#ctor(System.String,System.String)">
+        <member name="F:TVA.Security.Radius.PacketType.AccountingMessage">
             <summary>
-            Creates an instance of RADIUS client for sending request to a RADIUS server.
-            </summary>
-            <param name="serverName">Name or address of the RADIUS server.</param>
-            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.#ctor(System.String,System.Int32,System.String)">
-            <summary>
-            Creates an instance of RADIUS client for sending request to a RADIUS server.
-            </summary>
-            <param name="serverName">Name or address of the RADIUS server.</param>
-            <param name="serverPort">Port number of the RADIUS server.</param>
-            <param name="sharedSecret">Shared secret used for encryption and authentication.</param>
-            <remarks></remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.ProcessRequest(TVA.Security.Radius.RadiusPacket)">
-            <summary>
-            Send a request to the server and waits for a response back.
-            </summary>
-            <param name="request">Request to be sent to the server.</param>
-            <returns>Response packet if a valid reponse is received from the server; otherwise Nothing.</returns>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.CreateNewPin(System.String,System.String,System.String)">
-            <summary>
-            Create a new pin for the user.
-            </summary>
-            <param name="username">Name of the user.</param>
-            <param name="token">Current token of the user.</param>
-            <param name="pin">New pin of the user.</param>
-            <returns>True if a new pin is created for the user successfully; otherwise False.</returns>
-            <remarks>NOTE: This method is specific to RSA RADIUS implementation.</remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.Authenticate(System.String,System.String)">
-            <summary>
-            Authenticates the username and password against the RADIUS server.
-            </summary>
-            <param name="username">Username to be authenticated.</param>
-            <param name="password">Password to be authenticated.</param>
-            <returns>Response packet received from the server for the authentication request.</returns>
-            <remarks>
-            <para>
-            The type of response packet (if any) will be one of the following:
-            <list>
-            <item>AccessAccept: If the authentication is successful.</item>
-            <item>AccessReject: If the authentication is not successful.</item>
-            <item>AccessChallenge: If the server need more information from the user.</item>
-            </list>
-            </para>
-            <para>
-            When an AccessChallenge response packet is received from the server, it contains a State attribute
-            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
-            response. So if this method returns an AccessChallenge packet, then this method is to be called again
-            with the requested information (from ReplyMessage attribute) in the password field and the value State
-            attribute.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.Authenticate(System.String,System.String,System.Byte[])">
-            <summary>
-            Authenticates the username and password against the RADIUS server.
-            </summary>
-            <param name="username">Username to be authenticated.</param>
-            <param name="password">Password to be authenticated.</param>
-            <param name="state">State value from a previous challenge response.</param>
-            <returns>Response packet received from the server for the authentication request.</returns>
-            <remarks>
-            <para>
-            The type of response packet (if any) will be one of the following:
-            <list>
-            <item>AccessAccept: If the authentication is successful.</item>
-            <item>AccessReject: If the authentication is not successful.</item>
-            <item>AccessChallenge: If the server need more information from the user.</item>
-            </list>
-            </para>
-            <para>
-            When an AccessChallenge response packet is received from the server, it contains a State attribute
-            that must be included in the AccessRequest packet that is being sent in response to the AccessChallenge
-            response. So if this method returns an AccessChallenge packet, then this method is to be called again
-            with the requested information (from ReplyMessage attribute) in the password field and the value State
-            attribute.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.IsUserInNewPinMode(TVA.Security.Radius.RadiusPacket)">
-            <summary>
-            Determines whether or not the response indicates that the user account is in "New Pin" mode.
-            </summary>
-            <param name="response">Response packet sent by the server.</param>
-            <returns>True if the user account is in "New Pin" mode; otherwise False.</returns>
-            <remarks>
-            <para>A user's account can be in the "New Pin" mode when set on the server.</para>
-            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.IsUserInNextTokenMode(TVA.Security.Radius.RadiusPacket)">
-            <summary>
-            Determines whether or not the response indicates that the user account is in "Next Token" mode.
-            </summary>
-            <param name="response">Response packet sent by the server.</param>
-            <returns>True if the user account is in "Next Token" mode; otherwise False.</returns>
-            <remarks>
-            <para>
-            A user's account can enter the "Next Token" mode after the user enters incorrect passwords for a few
-            times (3 times by default) and then enters the correct password. Note that repeatedly entering
-            incorrect passwords will disable the user account.
-            </para>
-            <para>NOTE: This method is specific to RSA RADIUS implementation.</para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.Dispose">
-            <summary>
-            Releases the used resources.
+            Not used. No description available. [RFC 2882]
             </summary>
         </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.CheckDisposed">
+        <member name="F:TVA.Security.Radius.PacketType.AccessChallenge">
             <summary>
-            Helper method to check whether or not the object instance has been disposed.
-            </summary>
-            <remarks>This method is to be called before performing any operation.</remarks>
-        </member>
-        <member name="M:TVA.Security.Radius.RadiusClient.Dispose(System.Boolean)">
-            <summary>
-            Releases the used resources.
+            Packet sent by a RADIUS server when further information is needed for credential verification.
             </summary>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.ServerName">
+        <member name="F:TVA.Security.Radius.PacketType.StatuServer">
             <summary>
-            Gets or sets the name or address of the RADIUS server.
+            Not used. No description available.
             </summary>
-            <value></value>
-            <returns>Name or address of RADIUS server.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.ServerPort">
+        <member name="F:TVA.Security.Radius.PacketType.StatusClient">
             <summary>
-            Gets or sets the port number of the RADIUS server.
+            Not used. No description available.
             </summary>
-            <value></value>
-            <returns>Port number of the RADIUS server.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.RequestAttempts">
+        <member name="T:TVA.Security.Radius.RadiusPacket">
             <summary>
-            Gets or sets the number of time a request is to sent to the server until a valid response is received.
+            Represents a data packet transferred between RADIUS client and server.
             </summary>
-            <value></value>
-            <returns>Number of time a request is to sent to the server until a valid response is received.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.ReponseTimeout">
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor">
             <summary>
-            Gets or sets the time (in milliseconds) to wait for a response from server after sending a request.
+            Creates a default instance of RADIUS packet.
             </summary>
-            <value></value>
-            <returns>Time (in milliseconds) to wait for a response from server after sending a request.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.SharedSecret">
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(TVA.Security.Radius.PacketType)">
             <summary>
-            Gets or sets the shared secret used between the client and server for encryption and authentication.
+            Creates an instance of RADIUS packet.
+            </summary>
+            <param name="type">Type of the packet.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.#ctor(System.Byte[],System.Int32)">
+            <summary>
+            Creates an instance of RADIUS packet.
+            </summary>
+            <param name="binaryImage">A byte array.</param>
+            <param name="startIndex">Starting point in the byte array.</param>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes <see cref="T:TVA.Security.Radius.RadiusPacket"/> from the specified <paramref name="binaryImage"/>.
+            </summary>
+            <param name="binaryImage">Binary image to be used for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</param>
+            <param name="startIndex">0-based starting index of initialization data in the <paramref name="binaryImage"/>.</param>
+            <param name="length">Valid number of bytes in <paramref name="binaryImage"/> from <paramref name="startIndex"/>.</param>
+            <returns>Number of bytes used from the <paramref name="binaryImage"/> for initializing <see cref="T:TVA.Security.Radius.RadiusPacket"/>.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetAttributeValue(TVA.Security.Radius.AttributeType)">
+            <summary>
+            Gets the value of the specified attribute if it is present in the packet.
+            </summary>
+            <param name="type">Type of the attribute whose value is to be retrieved.</param>
+            <returns>Attribute value as a byte array if attribute is present; otherwise Nothing.</returns>
+        </member>
+        <member name="F:TVA.Security.Radius.RadiusPacket.Encoding">
+            <summary>
+            Encoding format for encoding text.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.String)">
+            <summary>
+            Gets bytes for the specified text.
+            </summary>
+            <param name="value">Text blob.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int16)">
+            <summary>
+            Gets bytes for the specified 16-bit signed integer value.
+            </summary>
+            <param name="value">16-bit signed integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt16)">
+            <summary>
+            Gets bytes for the specified 16-bit unsigned integer value.
+            </summary>
+            <param name="value">16-bit unsigned integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.Int32)">
+            <summary>
+            Gets bytes for the specified 32-bit signed integer value.
+            </summary>
+            <param name="value">32-bit signed integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.GetBytes(System.UInt32)">
+            <summary>
+            Gets bytes for the specified 32-bit unsigned integer value.
+            </summary>
+            <param name="value">32-bit unsigned integer value.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToText(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Converts the specified byte array to text.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <param name="length">Number of bytes to be converted.</param>
+            <returns>A text blob.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt16(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to a signed 16-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 16-bit signed integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt16(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to an unsigned 16-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 16-bit unsigned integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToInt32(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to a signed 32-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 32-bit signed integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.ToUInt32(System.Byte[],System.Int32)">
+            <summary>
+            Converts the specified byte array to an unsigned 32-bit integer value.
+            </summary>
+            <param name="buffer">A byte array.</param>
+            <param name="index">Starting point in the byte array.</param>
+            <returns>A 32-bit unsigned integer value.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.CreateRequestAuthenticator(System.String)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS request packet sent by the client to server.
+            </summary>
+            <param name="sharedSecret">The shared secret to be used in generating the output.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.CreateResponseAuthenticator(System.String,TVA.Security.Radius.RadiusPacket,TVA.Security.Radius.RadiusPacket)">
+            <summary>
+            Generates an "Authenticator" value used in a RADIUS response packet sent by the server to client.
+            </summary>
+            <param name="sharedSecret">The shared secret key.</param>
+            <param name="requestPacket">RADIUS packet sent from client to server.</param>
+            <param name="responsePacket">RADIUS packet sent from server to client.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="M:TVA.Security.Radius.RadiusPacket.EncryptPassword(System.String,System.String,System.Byte[])">
+            <summary>
+            Generates an encrypted password using the RADIUS protocol specification (RFC 2285).
+            </summary>
+            <param name="password">User's password.</param>
+            <param name="sharedSecret">Shared secret key.</param>
+            <param name="requestAuthenticator">Request authenticator byte array.</param>
+            <returns>A byte array.</returns>
+        </member>
+        <member name="P:TVA.Security.Radius.RadiusPacket.Type">
+            <summary>
+            Gets or sets the type of the packet.
             </summary>
             <value></value>
-            <returns>Shared secret used between the client and server for encryption and authentication.</returns>
+            <returns>Type of the packet.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage1">
+        <member name="P:TVA.Security.Radius.RadiusPacket.Identifier">
             <summary>
-            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 1 (ensuring that the user account is in  the
-            "New Pin" mode) of creating a new pin was successful.
+            Gets or sets the packet identifier.
             </summary>
             <value></value>
-            <returns>Text for "New Pin" mode's first message.</returns>
+            <returns>Identifier of the packet.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage2">
+        <member name="P:TVA.Security.Radius.RadiusPacket.Authenticator">
             <summary>
-            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 2 (new pin is accepted in attempt #1) of creating
-            a new pin was successful.
+            Gets or sets the packet authenticator.
             </summary>
             <value></value>
-            <returns>Text for "New Pin" mode's second message.</returns>
+            <returns>Authenticator of the packet.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.NewPinModeMessage3">
+        <member name="P:TVA.Security.Radius.RadiusPacket.Attributes">
             <summary>
-            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not Step 3 (new pin is accepted in attempts #2) of creating
-            a new pin was successful.
+            Gets a list of packet attributes.
             </summary>
             <value></value>
-            <returns>Text for "New Pin" mode's third message.</returns>
+            <returns>Attributes of the packet.</returns>
         </member>
-        <member name="P:TVA.Security.Radius.RadiusClient.NextTokenModeMessage">
+        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryLength">
             <summary>
-            Gets or sets the text for comparing with the text of ReplyMessage attribute in an AccessChallenge
-            server response to determine whether or not a user account is in the "Next Token" mode.
+            Gets the binary lenght of the packet.
             </summary>
             <value></value>
-            <returns>Text for "Next Token" mode.</returns>
+            <returns>32-bit signed integer value.</returns>
         </member>
-        <member name="T:TVA.Security.AdoSecurityProvider">
+        <member name="P:TVA.Security.Radius.RadiusPacket.BinaryImage">
             <summary>
-            Represents an <see cref="T:TVA.Security.ISecurityProvider"/> that uses ADO.NET data source (SQL Server, MySQL, Microsoft Access etc) for its
-            backend datastore and authenticates internal users against Active Directory and external users against the database.
+            Gets the binary image of the packet.
             </summary>
-            <example>
-            Required config file entries:
-            <code>
-            <![CDATA[
-            <?xml version="1.0"?>
-            <configuration>
-              <configSections>
-                <section name="categorizedSettings" type="TVA.Configuration.CategorizedSettingsSection, TVA.Core" />
-              </configSections>
-              <categorizedSettings>
-                <securityProvider>
-                  <add name="ConnectionString" value="Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\ProgramData\openPDC\openPDC1.mdb" 
-                    description="Configuration database connection string" encrypted="false"/>
-                  <add name="DataProviderString" value="AssemblyName={System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter" 
-                    description="Configuration database ADO.NET data provider assembly type creation string" encrypted="false"/>    
-                  <add name="ApplicationName" value="SEC_APP" description="Name of the application being secured." encrypted="false" />    
-                  <add name="ProviderType" value="TVA.Security.AdoSecurityProvider, TVA.Security"
-                    description="The type to be used for enforcing security." encrypted="false" />
-                  <add name="IncludedResources" value="*=*" description="Semicolon delimited list of resources to be secured along with role names."
-                    encrypted="false" />
-                  <add name="ExcludedResources" value="" description="Semicolon delimited list of resources to be excluded from being secured."
-                    encrypted="false" />    
-                  <add name="NotificationSmtpServer" value="localhost" description="SMTP server to be used for sending out email notification messages."
-                    encrypted="false" />
-                  <add name="NotificationSenderEmail" value="sender@company.com" description="Email address of the sender of email notification messages." 
-                    encrypted="false" />
-                </securityProvider>
-                <activeDirectory>
-                  <add name="PrivilegedDomain" value="" description="Domain of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedUserName" value="" description="Username of privileged domain user account."
-                    encrypted="false" />
-                  <add name="PrivilegedPassword" value="" description="Password of privileged domain user account."
-                    encrypted="true" />
-                </activeDirectory>
-              </categorizedSettings>
-            </configuration>
-            ]]>
-            </code>
-            </example>
+            <value></value>
+            <returns>A byte array.</returns>
         </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String)">
+        <member name="T:TVA.Security.UserData">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.AdoSecurityProvider"/> class.
-            </summary>
-            <param name="username">Name that uniquely identifies the user.</param>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Security.AdoSecurityProvider"/> class.
-            </summary>
-            <param name="username">Name that uniquely identifies the user.</param>
-            <param name="canRefreshData">true if the security provider can refresh <see cref="T:TVA.Security.UserData"/> from the backend datastore, otherwise false.</param>
-            <param name="canUpdateData">true if the security provider can update <see cref="T:TVA.Security.UserData"/> in the backend datastore, otherwise false.</param>
-            <param name="canResetPassword">true if the security provider can reset user password, otherwise false.</param>
-            <param name="canChangePassword">true if the security provider can change user password, otherwise false.</param>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.LoadSettings">
-            <summary>
-            Loads saved security provider settings from the config file if the <see cref="P:TVA.Security.SecurityProviderBase.PersistSettings"/> property is set to true.
-            </summary>
-            <exception cref="T:System.Configuration.ConfigurationErrorsException"><see cref="P:TVA.Security.SecurityProviderBase.SettingsCategory"/> has a value of null or empty string.</exception>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.RefreshData">
-            <summary>
-            Refreshes the <see cref="T:TVA.Security.UserData"/>.
-            </summary>
-            <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.Authenticate(System.String)">
-            <summary>
-            Authenticates the user.
-            </summary>
-            <param name="password">Password to be used for authentication.</param>
-            <returns>true if the user is authenticated, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.ChangePassword(System.String,System.String)">
-            <summary>
-            Changes user password in the backend datastore.
-            </summary>
-            <param name="oldPassword">User's current password.</param>
-            <param name="newPassword">User's new password.</param>
-            <returns>true if the password is changed, otherwise false.</returns>
-            <exception cref="T:System.Security.SecurityException"><paramref name="newPassword"/> does not meet password requirements.</exception>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.LogLogin(System.Boolean)">
-            <summary>
-            Logs user authentication attempt.
-            </summary>
-            <param name="loginSuccess">true if user authentication was successful, otherwise false.</param>
-            <returns>true if logging was successful, otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.LogError(System.String,System.String)">
-            <summary>
-            Logs information about an encountered exception to the backend datastore.
-            </summary>
-            <param name="source">Source of the exception.</param>
-            <param name="message">Detailed description of the exception.</param>
-            <returns>true if logging was successful, otherwise false.</returns>
-        </member>
-        <member name="P:TVA.Security.AdoSecurityProvider.CanUpdateData">
-            <summary>
-            Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
+            A serializable class that contains information about a user defined in the security datastore.
             </summary>
         </member>
-        <member name="T:TVA.Security.AdoSecurityProvider.DataConnection">
+        <member name="M:TVA.Security.UserData.#ctor">
             <summary>
-            Creates a new <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.#ctor(System.String)">
+        <member name="M:TVA.Security.UserData.#ctor(System.String)">
             <summary>
-            Creates a new <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/>.
+            Initializes a new instance of the <see cref="T:TVA.Security.UserData"/> class.
             </summary>
-            <param name="settingsCategory">Settings category to use for connection settings.</param>
+            <param name="username">User's logon name.</param>
         </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Finalize">
+        <member name="M:TVA.Security.UserData.Initialize">
             <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object.
+            Initializes this <see cref="T:TVA.Security.UserData"/> object.
             </summary>
         </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose(System.Boolean)">
+        <member name="P:TVA.Security.UserData.LoginID">
             <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.Connection">
-            <summary>
-            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            Gets the user's login ID.
             </summary>
         </member>
-        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.AdapterType">
+        <member name="P:TVA.Security.UserData.Username">
             <summary>
-            Gets the type of data adapter for configured ADO.NET data source.
+            Gets the user's login name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Password">
+            <summary>
+            Gets the user's password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.FirstName">
+            <summary>
+            Gets the user's first name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.LastName">
+            <summary>
+            Gets the user's last name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.CompanyName">
+            <summary>
+            Gets the user's company name.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PhoneNumber">
+            <summary>
+            Gets the user's phone number.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.EmailAddress">
+            <summary>
+            Gets the user's email address.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityQuestion">
+            <summary>
+            Gets the user's security question.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.SecurityAnswer">
+            <summary>
+            Gets the user's security answer.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.PasswordChangeDateTime">
+            <summary>
+            Gets the UTC date and time when user must change the password.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.AccountCreatedDateTime">
+            <summary>
+            Gets the UTC date and time when user account was created.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDefined">
+            <summary>
+            Gets a boolean value that indicates whether the user is defined in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsExternal">
+            <summary>
+            Gets a boolean value that indicates whether the user is defined as an external user in the backend security datastore.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsDisabled">
+            <summary>
+            Gets a boolean value that indicates whether the user account has been disabled.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsLockedOut">
+            <summary>
+            Gets a boolean value that indicates whether the user account has been locked due to numerous unsuccessful login attempts.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.IsAuthenticated">
+            <summary>
+            Gets a boolean value indicating whether or not the user has been authenticated.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Groups">
+            <summary>
+            Gets a read-only list of all the groups the user belongs to.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.UserData.Roles">
+            <summary>
+            Gets a read-only list of all the roles assigned to the user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecurityProviderCache">
+            <summary>
+            A helper class that manages the caching of <see cref="T:TVA.Security.ISecurityProvider"/>s.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.SecurityProviderCache.CachingTimeout">
+            <summary>
+            Number of minutes upto which <see cref="T:TVA.Security.ISecurityProvider"/>s are to be cached.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CurrentProvider">
+            <summary>
+            Gets or sets the <see cref="T:TVA.Security.ISecurityProvider"/> of the current user.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.SecurityProviderCache.CacheContext">
+            <summary>
+            A class that facilitates the caching of <see cref="T:TVA.Security.ISecurityProvider"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.SecurityProviderCache.CacheContext.#ctor(TVA.Security.ISecurityProvider)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/> class.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.Provider">
+            <summary>
+            Gets the <see cref="T:TVA.Security.ISecurityProvider"/> managed by this <see cref="T:TVA.Security.SecurityProviderCache.CacheContext"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Security.SecurityProviderCache.CacheContext.LastAccessed">
+            <summary>
+            Gets the <see cref="T:System.DateTime"/> of when the <see cref="P:TVA.Security.SecurityProviderCache.CacheContext.Provider"/> was last accessed.
             </summary>
         </member>
     </members>

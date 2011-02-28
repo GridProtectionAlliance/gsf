@@ -4,86 +4,6 @@
         <name>TVA.Communication</name>
     </assembly>
     <members>
-        <member name="T:TVA.Communication.TcpServer">
-            <summary>
-            Represents a TCP-based communication server.
-            </summary>
-            <remarks>
-            The <see cref="P:TVA.Communication.TcpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
-            specifying the interface in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=8888; Interface=127.0.0.1")
-            </remarks>
-            <example>
-            This example shows how to use the <see cref="T:TVA.Communication.TcpServer"/> component:
-            <code>
-            using System;
-            using TVA;
-            using TVA.Communication;
-            using TVA.Security.Cryptography;
-            using TVA.IO.Compression;
-            
-            class Program
-            {
-                static TcpServer m_server;
-            
-                static void Main(string[] args)
-                {
-                    // Initialize the server.
-                    m_server = new TcpServer("Port=8888");
-                    m_server.Handshake = false;
-                    m_server.PayloadAware = false;
-                    m_server.ReceiveTimeout = -1;
-                    m_server.Encryption = CipherStrength.None;
-                    m_server.Compression = CompressionStrength.NoCompression;
-                    m_server.SecureSession = false;
-                    m_server.Initialize();
-                    // Register event handlers.
-                    m_server.ServerStarted += m_server_ServerStarted;
-                    m_server.ServerStopped += m_server_ServerStopped;
-                    m_server.ClientConnected += m_server_ClientConnected;
-                    m_server.ClientDisconnected += m_server_ClientDisconnected;
-                    m_server.ReceiveClientDataComplete += m_server_ReceiveClientDataComplete;
-                    // Start the server.
-                    m_server.Start();
-            
-                    // Multicast user input to all connected clients.
-                    string input;
-                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
-                    {
-                        m_server.Multicast(input);
-                    }
-            
-                    // Stop the server on shutdown.
-                    m_server.Stop();
-                }
-            
-                static void m_server_ServerStarted(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Server has been started!");
-                }
-            
-                static void m_server_ServerStopped(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Server has been stopped!");
-                }
-            
-                static void m_server_ClientConnected(object sender, EventArgs&lt;Guid&gt; e)
-                {
-                    Console.WriteLine(string.Format("Client connected - {0}.", e.Argument));
-                }
-            
-                static void m_server_ClientDisconnected(object sender, EventArgs&lt;Guid&gt; e)
-                {
-                    Console.WriteLine(string.Format("Client disconnected - {0}.", e.Argument));
-                }
-            
-                static void m_server_ReceiveClientDataComplete(object sender, EventArgs&lt;Guid, byte[], int&gt; e)
-                {
-                    Console.WriteLine(string.Format("Received data from {0} - {1}.", e.Argument1, m_server.TextEncoding.GetString(e.Argument2, 0, e.Argument3)));
-                }
-            }
-            </code>
-            </example>
-        </member>
         <member name="T:TVA.Communication.ServerBase">
             <summary>
             Base class for a server involved in server-client communication.
@@ -934,6 +854,429 @@
             Gets the descriptive status of the server.
             </summary>
         </member>
+        <member name="T:TVA.Communication.TransportProvider`1">
+            <summary>
+            A class for managing the communication between server and client.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the object used for server-client communication.</typeparam>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.ID">
+            <summary>
+            ID of the <see cref="T:TVA.Communication.TransportProvider`1"/> object.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.Provider">
+            <summary>
+            Provider for the transportation of data.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.Secretkey">
+            <summary>
+            Key used for the ciphering of data.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.SendBuffer">
+            <summary>
+            Buffer used for sending data.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.SendBufferOffset">
+            <summary>
+            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> from which data is to be sent.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.SendBufferLength">
+            <summary>
+            Number of bytes to be sent from <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.SendBufferOffset"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBuffer">
+            <summary>
+            Buffer used for receiving data.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset">
+            <summary>
+            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> at which data is to be received.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferLength">
+            <summary>
+            Number of bytes received in <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.TransportProvider`1.Statistics">
+            <summary>
+            <see cref="T:TVA.Communication.TransportStatistics"/> for the <see cref="T:TVA.Communication.TransportProvider`1"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.TransportProvider`1"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.Reset">
+            <summary>
+            Resets <see cref="T:TVA.Communication.TransportProvider`1"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.TransportProvider`1.WaitAsync(System.Int32,System.AsyncCallback,System.IAsyncResult)">
+            <summary>
+            Asynchronously waits for an asynchronous operation to complete within the <paramref name="timeout"/> period and 
+            invokes the <paramref name="asyncCallback"/> with the <paramref name="asyncResult"/> if the operation times out.
+            </summary>
+            <param name="timeout">The number of milliseconds to wait for the asynchronous operation to complete.</param>
+            <param name="asyncCallback">The <see cref="T:System.AsyncCallback"/> of the asynchronous operation being monitored.</param>
+            <param name="asyncResult">The <see cref="T:System.IAsyncResult"/> of the asynchronous operation being monitored.</param>
+        </member>
+        <member name="F:TVA.Communication.HandshakeMessage.MessageIdentifier">
+            <summary>
+            2-Byte identifier for <see cref="T:TVA.Communication.HandshakeMessage"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.HandshakeMessage.ID">
+            <summary>
+            Gets or sets the unique identifier.
+            </summary>
+            <remarks>Max size is 16.</remarks>
+        </member>
+        <member name="F:TVA.Communication.HandshakeMessage.Secretkey">
+            <summary>
+            Gets or sets the key for ciphering.
+            </summary>
+            <remarks>Max size is 260.</remarks>
+        </member>
+        <member name="M:TVA.Communication.HandshakeMessage.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.HandshakeMessage.#ctor(System.Guid,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.HandshakeMessage.Initialize(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Initializes the <see cref="T:TVA.Communication.HandshakeMessage"/> object from the binary image.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.HandshakeMessage.BinaryLength">
+            <summary>
+            Gets the length of the <see cref="P:TVA.Communication.HandshakeMessage.BinaryImage"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.HandshakeMessage.BinaryImage">
+            <summary>
+            Gets the binary representation of the <see cref="T:TVA.Communication.HandshakeMessage"/> object.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.UdpServer">
+            <summary>
+            Represents a UDP-based communication server.
+            </summary>
+            <remarks>
+            <para>
+            Use <see cref="T:TVA.Communication.UdpServer"/> when the primary purpose is to transmit data.
+            </para>
+            <para>
+            The <see cref="P:TVA.Communication.UdpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+            specifying the interface in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=8888; Clients=localhost:8989; Interface=127.0.0.1")
+            </para>
+            <para>
+            The <see cref="P:TVA.Communication.UdpServer.Server"/> socket can be used just for transmitting data without being bound to a local interface 
+            by specifying -1 for the port number in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=-1; Clients=localhost:8989")
+            </para>
+            </remarks>
+            <example>
+            This example shows how to use the <see cref="T:TVA.Communication.UdpServer"/> component:
+            <code>
+            using System;
+            using TVA;
+            using TVA.Communication;
+            using TVA.Security.Cryptography;
+            using TVA.IO.Compression;
+            
+            class Program
+            {
+                static UdpServer m_server;
+            
+                static void Main(string[] args)
+                {
+                    // Initialize the server.
+                    m_server = new UdpServer("Port=8888; Clients=localhost:8989");
+                    m_server.Handshake = false;
+                    m_server.ReceiveTimeout = -1;
+                    m_server.Encryption = CipherStrength.None;
+                    m_server.Compression = CompressionStrength.NoCompression;
+                    m_server.SecureSession = false;
+                    m_server.Initialize();
+                    // Register event handlers.
+                    m_server.ServerStarted += m_server_ServerStarted;
+                    m_server.ServerStopped += m_server_ServerStopped;
+                    m_server.ClientConnected += m_server_ClientConnected;
+                    m_server.ClientDisconnected += m_server_ClientDisconnected;
+                    m_server.ReceiveClientDataComplete += m_server_ReceiveClientDataComplete;
+                    // Start the server.
+                    m_server.Start();
+            
+                    // Multicast user input to all connected clients.
+                    string input;
+                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+                    {
+                        m_server.Multicast(input);
+                    }
+            
+                    // Stop the server on shutdown.
+                    m_server.Stop();
+                }
+            
+                static void m_server_ServerStarted(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Server has been started!");
+                }
+            
+                static void m_server_ServerStopped(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Server has been stopped!");
+                }
+            
+                static void m_server_ClientConnected(object sender, EventArgs&lt;Guid&gt; e)
+                {
+                    Console.WriteLine(string.Format("Client connected - {0}.", e.Argument));
+                }
+            
+                static void m_server_ClientDisconnected(object sender, EventArgs&lt;Guid&gt; e)
+                {
+                    Console.WriteLine(string.Format("Client disconnected - {0}.", e.Argument));
+                }
+            
+                static void m_server_ReceiveClientDataComplete(object sender, EventArgs&lt;Guid, byte[], int&gt; e)
+                {
+                    Console.WriteLine(string.Format("Received data from {0} - {1}.", e.Argument1, m_server.TextEncoding.GetString(e.Argument2, 0, e.Argument3)));
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:TVA.Communication.UdpServer.DefaultReceiveBufferSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ReceiveBufferSize"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpServer.DefaultConfigurationString">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpServer.SIO_UDP_CONNRESET">
+            <summary>
+            Specifies the constant to be used for disabling <see cref="F:System.Net.Sockets.SocketError.ConnectionReset"/> when endpoint is not listening.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
+            </summary>
+            <param name="configString">Config string of the <see cref="T:TVA.Communication.UdpServer"/>. See <see cref="F:TVA.Communication.UdpServer.DefaultConfigurationString"/> for format.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.#ctor(System.ComponentModel.IContainer)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
+            </summary>
+            <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpServer"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.Stop">
+            <summary>
+            Stops the <see cref="T:TVA.Communication.UdpServer"/> synchronously and disconnects all connected clients.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.Start">
+            <summary>
+            Starts the <see cref="T:TVA.Communication.UdpServer"/> synchronously and begins accepting client connections asynchronously.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Attempt is made to <see cref="M:TVA.Communication.UdpServer.Start"/> the <see cref="T:TVA.Communication.UdpServer"/> when it is running.</exception>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.DisconnectOne(System.Guid)">
+            <summary>
+            Disconnects the specified connected client.
+            </summary>
+            <param name="clientID">ID of the client to be disconnected.</param>
+            <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.Client(System.Guid)">
+            <summary>
+            Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object associated with the specified client ID.
+            </summary>
+            <param name="clientID">ID of the client.</param>
+            <returns>An <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
+            <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ValidateConfigurationString(System.String)">
+            <summary>
+            Validates the specified <paramref name="configurationString"/>.
+            </summary>
+            <param name="configurationString">Configuration string to be validated.</param>
+            <exception cref="T:System.ArgumentException">Port property is missing.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Port property value is not between <see cref="F:TVA.Communication.Transport.PortRangeLow"/> and <see cref="F:TVA.Communication.Transport.PortRangeHigh"/>.</exception>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.GetSessionSecret(System.Guid)">
+            <summary>
+            Gets the secret key to be used for ciphering client data.
+            </summary>
+            <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
+            <returns>Cipher secret key of the client with the specified <paramref name="clientID"/>.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.SendDataToAsync(System.Guid,System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Sends data to the specified client asynchronously.
+            </summary>
+            <param name="clientID">ID of the client to which the data is to be sent.</param>
+            <param name="data">The buffer that contains the binary data to be sent.</param>
+            <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.SendPayloadAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous send operation.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceiveHandshakeAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Initiate method for asynchronous receive operation of handshake data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceiveHandshakeAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous receive operation of handshake data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceivePayloadAnyAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Initiate method for asynchronous receive operation of payload data from any endpoint.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceivePayloadAnyAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous receive operation of payload data from any endpoint.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceivePayloadOneAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Initiate method for asynchronous receive operation of payload data from a single endpoint.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.ReceivePayloadOneAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous receive operation of payload data from a single endpoint.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.NoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ServerBase.Handshake"/> is turned off.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.DoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ServerBase.Handshake"/> is turned on.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpServer.TerminateConnection(TVA.Communication.TransportProvider{System.Net.Sockets.Socket},System.Boolean)">
+            <summary>
+            Processes the termination of client.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpServer.Server">
+            <summary>
+            Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.UdpServer"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.TcpServer">
+            <summary>
+            Represents a TCP-based communication server.
+            </summary>
+            <remarks>
+            The <see cref="P:TVA.Communication.TcpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+            specifying the interface in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=8888; Interface=127.0.0.1")
+            </remarks>
+            <example>
+            This example shows how to use the <see cref="T:TVA.Communication.TcpServer"/> component:
+            <code>
+            using System;
+            using TVA;
+            using TVA.Communication;
+            using TVA.Security.Cryptography;
+            using TVA.IO.Compression;
+            
+            class Program
+            {
+                static TcpServer m_server;
+            
+                static void Main(string[] args)
+                {
+                    // Initialize the server.
+                    m_server = new TcpServer("Port=8888");
+                    m_server.Handshake = false;
+                    m_server.PayloadAware = false;
+                    m_server.ReceiveTimeout = -1;
+                    m_server.Encryption = CipherStrength.None;
+                    m_server.Compression = CompressionStrength.NoCompression;
+                    m_server.SecureSession = false;
+                    m_server.Initialize();
+                    // Register event handlers.
+                    m_server.ServerStarted += m_server_ServerStarted;
+                    m_server.ServerStopped += m_server_ServerStopped;
+                    m_server.ClientConnected += m_server_ClientConnected;
+                    m_server.ClientDisconnected += m_server_ClientDisconnected;
+                    m_server.ReceiveClientDataComplete += m_server_ReceiveClientDataComplete;
+                    // Start the server.
+                    m_server.Start();
+            
+                    // Multicast user input to all connected clients.
+                    string input;
+                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+                    {
+                        m_server.Multicast(input);
+                    }
+            
+                    // Stop the server on shutdown.
+                    m_server.Stop();
+                }
+            
+                static void m_server_ServerStarted(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Server has been started!");
+                }
+            
+                static void m_server_ServerStopped(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Server has been stopped!");
+                }
+            
+                static void m_server_ClientConnected(object sender, EventArgs&lt;Guid&gt; e)
+                {
+                    Console.WriteLine(string.Format("Client connected - {0}.", e.Argument));
+                }
+            
+                static void m_server_ClientDisconnected(object sender, EventArgs&lt;Guid&gt; e)
+                {
+                    Console.WriteLine(string.Format("Client disconnected - {0}.", e.Argument));
+                }
+            
+                static void m_server_ReceiveClientDataComplete(object sender, EventArgs&lt;Guid, byte[], int&gt; e)
+                {
+                    Console.WriteLine(string.Format("Received data from {0} - {1}.", e.Argument1, m_server.TextEncoding.GetString(e.Argument2, 0, e.Argument3)));
+                }
+            }
+            </code>
+            </example>
+        </member>
         <member name="F:TVA.Communication.TcpServer.DefaultPayloadAware">
             <summary>
             Specifies the default value for the <see cref="P:TVA.Communication.TcpServer.PayloadAware"/> property.
@@ -1099,119 +1442,122 @@
             Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.TcpServer"/>.
             </summary>
         </member>
-        <member name="F:TVA.Communication.HandshakeMessage.MessageIdentifier">
+        <member name="T:TVA.Communication.Payload">
             <summary>
-            2-Byte identifier for <see cref="T:TVA.Communication.HandshakeMessage"/>.
+            A helper class containing methods for manipulation of payload.
             </summary>
         </member>
-        <member name="F:TVA.Communication.HandshakeMessage.ID">
+        <member name="F:TVA.Communication.Payload.LengthSegment">
             <summary>
-            Gets or sets the unique identifier.
+            Specifies the length of the segment in a "Payload-Aware" transmission that contains the payload length.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Payload.DefaultMarker">
+            <summary>
+            Default byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.Payload.AddHeader(System.Byte[]@,System.Int32@,System.Int32@,System.Byte[])">
+            <summary>
+            Adds header containing the <paramref name="marker"/> to the payload in the <paramref name="buffer"/> for "Payload-Aware" transmission.
+            </summary>
+            <param name="buffer">The buffer containing the payload.</param>
+            <param name="offset">The offset in the <paramref name="buffer"/> at which the payload starts.</param>
+            <param name="length">The lenght of the payload in the <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
+            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
+        </member>
+        <member name="M:TVA.Communication.Payload.HasHeader(System.Byte[],System.Byte[])">
+            <summary>
+            Determines whether or not the <paramref name="buffer"/> contains the header information of a "Payload-Aware" transmission.
+            </summary>
+            <param name="buffer">The buffer to be checked at index zero.</param>
+            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
+            <returns>true if the buffer contains "Payload-Aware" transmission header; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Communication.Payload.ExtractLength(System.Byte[],System.Byte[])">
+            <summary>
+            Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
+            </summary>
+            <param name="buffer">The buffer containg payload header information starting at index zero.</param>
+            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
+            <returns>Length of the payload.</returns>
+        </member>
+        <member name="M:TVA.Communication.Payload.ProcessReceived(System.Byte[]@,System.Int32@,System.Int32@,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary uncompression and decryption on the data contained in the <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer containing the data to be processed.</param>
+            <param name="offset">The offset in the <paramref name="buffer"/> from where data is to be processed.</param>
+            <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="buffer"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
+        <member name="M:TVA.Communication.Payload.ProcessTransmit(System.Byte[]@,System.Int32@,System.Int32@,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
+            <summary>
+            Performs the necessary compression and encryption on the data contained in the <paramref name="buffer"/>.
+            </summary>
+            <param name="buffer">The buffer containing the data to be processed.</param>
+            <param name="offset">The offset in the <paramref name="buffer"/> from where data is to be processed.</param>
+            <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
+            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
+            <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="buffer"/>.</param>
+            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
+        </member>
+        <member name="F:TVA.Communication.GoodbyeMessage.MessageIdentifier">
+            <summary>
+            2-Byte identifier for <see cref="T:TVA.Communication.GoodbyeMessage"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.GoodbyeMessage.ID">
+            <summary>
+            Gets or sets the disconnecting client's ID.
             </summary>
             <remarks>Max size is 16.</remarks>
         </member>
-        <member name="F:TVA.Communication.HandshakeMessage.Secretkey">
+        <member name="M:TVA.Communication.GoodbyeMessage.#ctor">
             <summary>
-            Gets or sets the key for ciphering.
-            </summary>
-            <remarks>Max size is 260.</remarks>
-        </member>
-        <member name="M:TVA.Communication.HandshakeMessage.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
+            Initializes a new instance of the <see cref="T:TVA.Communication.GoodbyeMessage"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Communication.HandshakeMessage.#ctor(System.Guid,System.String)">
+        <member name="M:TVA.Communication.GoodbyeMessage.#ctor(System.Guid)">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.HandshakeMessage"/> class.
+            Initializes a new instance of the <see cref="T:TVA.Communication.GoodbyeMessage"/> class.
             </summary>
         </member>
-        <member name="M:TVA.Communication.HandshakeMessage.Initialize(System.Byte[],System.Int32,System.Int32)">
+        <member name="M:TVA.Communication.GoodbyeMessage.Initialize(System.Byte[],System.Int32,System.Int32)">
             <summary>
-            Initializes the <see cref="T:TVA.Communication.HandshakeMessage"/> object from the binary image.
+            Initializes the <see cref="T:TVA.Communication.GoodbyeMessage"/> object from the binary image.
             </summary>
         </member>
-        <member name="P:TVA.Communication.HandshakeMessage.BinaryLength">
+        <member name="P:TVA.Communication.GoodbyeMessage.BinaryLength">
             <summary>
-            Gets the length of the <see cref="P:TVA.Communication.HandshakeMessage.BinaryImage"/>.
+            Gets the length of the <see cref="P:TVA.Communication.GoodbyeMessage.BinaryImage"/>.
             </summary>
         </member>
-        <member name="P:TVA.Communication.HandshakeMessage.BinaryImage">
+        <member name="P:TVA.Communication.GoodbyeMessage.BinaryImage">
             <summary>
-            Gets the binary representation of the <see cref="T:TVA.Communication.HandshakeMessage"/> object.
+            Gets the binary representation of the <see cref="T:TVA.Communication.GoodbyeMessage"/> object.
             </summary>
         </member>
-        <member name="T:TVA.Communication.SerialClient">
+        <member name="T:TVA.Communication.ClientState">
             <summary>
-            Represents a communication client based on <see cref="T:System.IO.Ports.SerialPort"/>.
+            Indicates the current state of the client.
             </summary>
-            <example>
-            This example shows how to use <see cref="T:TVA.Communication.SerialClient"/> for communicating with <see cref="T:System.IO.Ports.SerialPort"/>:
-            <code>
-            using System;
-            using TVA;
-            using TVA.Communication;
-            
-            class Program
-            {
-                static SerialClient s_client;
-            
-                static void Main(string[] args)
-                {
-                    // Initialize the client.
-                    s_client = new SerialClient("Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False");
-                    s_client.Initialize();
-                    // Register event handlers.
-                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
-                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
-                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
-                    s_client.SendDataComplete += s_client_SendDataComplete;
-                    s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
-                    // Connect the client.
-                    s_client.Connect();
-            
-                    // Write user input to the serial port.
-                    string input;
-                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
-                    {
-                        s_client.Send(input);
-                    }
-            
-                    // Disconnect the client on shutdown.
-                    s_client.Dispose();
-                }
-            
-                static void s_client_ConnectionAttempt(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client is connecting to serial port.");
-                }
-            
-                static void s_client_ConnectionEstablished(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client connected to serial port.");
-                }
-            
-                static void s_client_ConnectionTerminated(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client disconnected from serial port.");
-                }
-            
-                static void s_client_SendDataComplete(object sender, EventArgs e)
-                {
-                    Console.WriteLine(string.Format("Sent data - {0}", s_client.TextEncoding.GetString(s_client.Client.SendBuffer)));
-                }
-            
-                static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
-                {
-                    Console.WriteLine(string.Format("Received data - {0}", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
-                }
-            }
-            </code>
-            </example>
         </member>
-        <member name="T:TVA.Communication.ClientBase">
+        <member name="F:TVA.Communication.ClientState.Connecting">
             <summary>
-            Base class for a client involved in server-client communication.
+            Client is establishing connection.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientState.Connected">
+            <summary>
+            Client has established connection.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.ClientState.Disconnected">
+            <summary>
+            Client connection is terminated.
             </summary>
         </member>
         <member name="T:TVA.Communication.IClient">
@@ -1415,6 +1761,79 @@
         <member name="P:TVA.Communication.IClient.ConnectionTime">
             <summary>
             Gets the <see cref="T:TVA.Units.Time"/> for which the client has been connected to the server.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.SerialClient">
+            <summary>
+            Represents a communication client based on <see cref="T:System.IO.Ports.SerialPort"/>.
+            </summary>
+            <example>
+            This example shows how to use <see cref="T:TVA.Communication.SerialClient"/> for communicating with <see cref="T:System.IO.Ports.SerialPort"/>:
+            <code>
+            using System;
+            using TVA;
+            using TVA.Communication;
+            
+            class Program
+            {
+                static SerialClient s_client;
+            
+                static void Main(string[] args)
+                {
+                    // Initialize the client.
+                    s_client = new SerialClient("Port=COM1; BaudRate=9600; Parity=None; StopBits=One; DataBits=8; DtrEnable=False; RtsEnable=False");
+                    s_client.Initialize();
+                    // Register event handlers.
+                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+                    s_client.SendDataComplete += s_client_SendDataComplete;
+                    s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
+                    // Connect the client.
+                    s_client.Connect();
+            
+                    // Write user input to the serial port.
+                    string input;
+                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+                    {
+                        s_client.Send(input);
+                    }
+            
+                    // Disconnect the client on shutdown.
+                    s_client.Dispose();
+                }
+            
+                static void s_client_ConnectionAttempt(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client is connecting to serial port.");
+                }
+            
+                static void s_client_ConnectionEstablished(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client connected to serial port.");
+                }
+            
+                static void s_client_ConnectionTerminated(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client disconnected from serial port.");
+                }
+            
+                static void s_client_SendDataComplete(object sender, EventArgs e)
+                {
+                    Console.WriteLine(string.Format("Sent data - {0}", s_client.TextEncoding.GetString(s_client.Client.SendBuffer)));
+                }
+            
+                static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+                {
+                    Console.WriteLine(string.Format("Received data - {0}", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="T:TVA.Communication.ClientBase">
+            <summary>
+            Base class for a client involved in server-client communication.
             </summary>
         </member>
         <member name="F:TVA.Communication.ClientBase.DefaultMaxConnectionAttempts">
@@ -2063,80 +2482,367 @@
             Server is not running.
             </summary>
         </member>
-        <member name="T:TVA.Communication.TransportProvider`1">
+        <member name="T:TVA.Communication.TransportProtocol">
             <summary>
-            A class for managing the communication between server and client.
-            </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of the object used for server-client communication.</typeparam>
-        </member>
-        <member name="F:TVA.Communication.TransportProvider`1.ID">
-            <summary>
-            ID of the <see cref="T:TVA.Communication.TransportProvider`1"/> object.
+            Indicates the protocol used in server-client communication.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.Provider">
+        <member name="F:TVA.Communication.TransportProtocol.Tcp">
             <summary>
-            Provider for the transportation of data.
+            <see cref="T:TVA.Communication.TransportProtocol"/> is Transmission Control Protocol.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.Secretkey">
+        <member name="F:TVA.Communication.TransportProtocol.Udp">
             <summary>
-            Key used for the ciphering of data.
+            <see cref="T:TVA.Communication.TransportProtocol"/> is User Datagram Protocol.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.SendBuffer">
+        <member name="F:TVA.Communication.TransportProtocol.Serial">
             <summary>
-            Buffer used for sending data.
+            <see cref="T:TVA.Communication.TransportProtocol"/> is serial interface.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.SendBufferOffset">
+        <member name="F:TVA.Communication.TransportProtocol.File">
             <summary>
-            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> from which data is to be sent.
+            <see cref="T:TVA.Communication.TransportProtocol"/> is file-system based.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.SendBufferLength">
+        <member name="T:TVA.Communication.TransportStatistics">
             <summary>
-            Number of bytes to be sent from <see cref="F:TVA.Communication.TransportProvider`1.SendBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.SendBufferOffset"/>.
+            A class for statistics related to server-client communication.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBuffer">
+        <member name="F:TVA.Communication.TransportStatistics.LastSend">
             <summary>
-            Buffer used for receiving data.
+            <see cref="T:System.DateTime"/> of the last send operation.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset">
+        <member name="F:TVA.Communication.TransportStatistics.LastReceive">
             <summary>
-            Zero-based index of <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> at which data is to be received.
+            <see cref="T:System.DateTime"/> of the last receive operation.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.ReceiveBufferLength">
+        <member name="F:TVA.Communication.TransportStatistics.LastBytesSent">
             <summary>
-            Number of bytes received in <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBuffer"/> starting at <see cref="F:TVA.Communication.TransportProvider`1.ReceiveBufferOffset"/>.
+            Number of bytes sent in the last send operation.
             </summary>
         </member>
-        <member name="F:TVA.Communication.TransportProvider`1.Statistics">
+        <member name="F:TVA.Communication.TransportStatistics.LastBytesReceived">
             <summary>
-            <see cref="T:TVA.Communication.TransportStatistics"/> for the <see cref="T:TVA.Communication.TransportProvider`1"/> object.
+            Number of bytes received in the last receive operation.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TransportProvider`1.#ctor">
+        <member name="F:TVA.Communication.TransportStatistics.TotalBytesSent">
             <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.TransportProvider`1"/> class.
+            Total number of bytes sent.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TransportProvider`1.Reset">
+        <member name="F:TVA.Communication.TransportStatistics.TotalBytesReceived">
             <summary>
-            Resets <see cref="T:TVA.Communication.TransportProvider`1"/>.
+            Total number of bytes received.
             </summary>
         </member>
-        <member name="M:TVA.Communication.TransportProvider`1.WaitAsync(System.Int32,System.AsyncCallback,System.IAsyncResult)">
+        <member name="M:TVA.Communication.TransportStatistics.Reset">
             <summary>
-            Asynchronously waits for an asynchronous operation to complete within the <paramref name="timeout"/> period and 
-            invokes the <paramref name="asyncCallback"/> with the <paramref name="asyncResult"/> if the operation times out.
+            Resets the <see cref="T:TVA.Communication.TransportStatistics"/>.
             </summary>
-            <param name="timeout">The number of milliseconds to wait for the asynchronous operation to complete.</param>
-            <param name="asyncCallback">The <see cref="T:System.AsyncCallback"/> of the asynchronous operation being monitored.</param>
-            <param name="asyncResult">The <see cref="T:System.IAsyncResult"/> of the asynchronous operation being monitored.</param>
+        </member>
+        <member name="M:TVA.Communication.TransportStatistics.UpdateBytesSent(System.Int32)">
+            <summary>
+            Updates statistics related to sending of data.
+            </summary>
+            <param name="bytesSent">Number of bytes sent in the send operation.</param>
+        </member>
+        <member name="M:TVA.Communication.TransportStatistics.UpdateBytesReceived(System.Int32)">
+            <summary>
+            Updates statistics related to receiving of data.
+            </summary>
+            <param name="bytesReceived">Number of bytes received in the receive operation.</param>
+        </member>
+        <member name="T:TVA.Communication.UdpClient">
+            <summary>
+            Represents a UDP-based communication server.
+            </summary>
+            <remarks>
+            <para>
+            Use <see cref="T:TVA.Communication.UdpClient"/> when the primary purpose is to receive data.
+            </para>
+            <para>
+            The <see cref="P:TVA.Communication.UdpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
+            specifying the interface in the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=8989; Interface=127.0.0.1")
+            </para>
+            <para>
+            The <see cref="P:TVA.Communication.UdpClient.Client"/> socket can be used just for transmitting data without being bound to a local interface 
+            by specifying -1 for the port number in the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=-1")
+            </para>
+            </remarks>
+            <example>
+            This example shows how to use the <see cref="T:TVA.Communication.UdpClient"/> component:
+            <code>
+            using System;
+            using TVA;
+            using TVA.Communication;
+            using TVA.Security.Cryptography;
+            using TVA.IO.Compression;
+            
+            class Program
+            {
+                static UdpClient s_client;
+            
+                static void Main(string[] args)
+                {
+                    // Initialize the client.
+                    s_client = new UdpClient("Server=localhost:8888; Port=8989");
+                    s_client.Handshake = false;
+                    s_client.ReceiveTimeout = -1;
+                    s_client.Encryption = CipherStrength.None;
+                    s_client.Compression = CompressionStrength.NoCompression;
+                    s_client.SecureSession = false;
+                    s_client.Initialize();
+                    // Register event handlers.
+                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
+                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
+                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
+                    s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
+                    // Connect the client.
+                    s_client.Connect();
+            
+                    // Transmit user input to the server.
+                    string input;
+                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
+                    {
+                        s_client.Send(input);
+                    }
+            
+                    // Disconnect the client on shutdown.
+                    s_client.Dispose();
+                }
+            
+                static void s_client_ConnectionAttempt(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client is connecting to server.");
+                }
+            
+                static void s_client_ConnectionEstablished(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client connected to server.");
+                }
+            
+                static void s_client_ConnectionTerminated(object sender, EventArgs e)
+                {
+                    Console.WriteLine("Client disconnected from server.");
+                }
+            
+                static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
+                {
+                    Console.WriteLine(string.Format("Received data - {0}.", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
+                }
+            }
+            </code>
+            </example>
+        </member>
+        <member name="F:TVA.Communication.UdpClient.DefaultReceiveBufferSize">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ReceiveBufferSize"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpClient.DefaultConnectionString">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.UdpClient.SIO_UDP_CONNRESET">
+            <summary>
+            Specifies the constant to be used for disabling <see cref="F:System.Net.Sockets.SocketError.ConnectionReset"/> when endpoint is not listening.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
+            </summary>
+            <param name="connectString">Connect string of the <see cref="T:TVA.Communication.UdpClient"/>. See <see cref="F:TVA.Communication.UdpClient.DefaultConnectionString"/> for format.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.#ctor(System.ComponentModel.IContainer)">
+            <summary>
+            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
+            </summary>
+            <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpClient"/>.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.Disconnect">
+            <summary>
+            Disconnects the <see cref="T:TVA.Communication.UdpClient"/> from the connected server synchronously.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ConnectAsync">
+            <summary>
+            Connects the <see cref="T:TVA.Communication.UdpClient"/> to the server asynchronously.
+            </summary>
+            <exception cref="T:System.FormatException">Server property in <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> is invalid.</exception>
+            <exception cref="T:System.InvalidOperationException">Attempt is made to connect the <see cref="T:TVA.Communication.UdpClient"/> when it is not disconnected.</exception>
+            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Communication.UdpClient"/> and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ValidateConnectionString(System.String)">
+            <summary>
+            Validates the specified <paramref name="connectionString"/>.
+            </summary>
+            <param name="connectionString">Connection string to be validated.</param>
+            <exception cref="T:System.ArgumentException">Port property is missing.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Port property value is not between <see cref="F:TVA.Communication.Transport.PortRangeLow"/> and <see cref="F:TVA.Communication.Transport.PortRangeHigh"/>.</exception>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.GetSessionSecret">
+            <summary>
+            Gets the secret key to be used for ciphering client data.
+            </summary>
+            <returns>Cipher secret key.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.OpenPort">
+            <summary>
+            Connects to the <see cref="T:TVA.Communication.UdpClient"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.SendDataAsync(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+            Sends data to the server asynchronously.
+            </summary>
+            <param name="data">The buffer that contains the binary data to be sent.</param>
+            <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
+            <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
+            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.SendPayloadAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous send operation.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ReceiveHandshakeAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Initiate method for asynchronous receive operation of handshake data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ReceiveHandshakeAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous receive operation of handshake data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Initiate method for asynchronous receive operation of payload data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsyncCallback(System.IAsyncResult)">
+            <summary>
+            Callback method for asynchronous receive operation of payload data.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.NoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ClientBase.Handshake"/> is turned off.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.DoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
+            <summary>
+            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ClientBase.Handshake"/> is turned on.
+            </summary>
+        </member>
+        <member name="M:TVA.Communication.UdpClient.TerminateConnection(TVA.Communication.TransportProvider{System.Net.Sockets.Socket},System.Boolean)">
+            <summary>
+            Processes the termination of client.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpClient.Client">
+            <summary>
+            Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object for the <see cref="T:TVA.Communication.UdpClient"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Communication.UdpClient.ServerUri">
+            <summary>
+            Gets the server URI of the <see cref="T:TVA.Communication.UdpClient"/>.
+            </summary>
+        </member>
+        <member name="T:TVA.Communication.Transport">
+            <summary>
+            A helper class containing methods related to server-client communication.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Transport.PortRangeLow">
+            <summary>
+            Specifies the lowest valid port number for a <see cref="T:System.Net.Sockets.Socket"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Transport.PortRangeHigh">
+            <summary>
+            Specifies the highest valid port number for a <see cref="T:System.Net.Sockets.Socket"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Communication.Transport.EndpointFormatRegex">
+            <summary>
+            Regular expression used to validate the format for an endpoint.
+            </summary>
+            <remarks>
+            <para>
+            Matches the following valid input:<br/>
+            - localhost:80<br/>
+            - 127.0.0.1:80<br/>
+            - [::1]:80<br/>
+            - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Communication.Transport.CreateEndPoint(System.String,System.Int32)">
+            <summary>
+            Creates an <see cref="T:System.Net.IPEndPoint"/> for the specified host name and port number.
+            </summary>
+            <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
+            <param name="port">The port number to be associated with the address.</param>
+            <returns>An <see cref="T:System.Net.IPEndPoint"/> object.</returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.CreateSocket(System.String,System.Int32,System.Net.Sockets.ProtocolType)">
+            <summary>
+            Creates a <see cref="T:System.Net.Sockets.Socket"/> for the specified <paramref name="port"/> and <paramref name="protocol"/>.
+            </summary>
+            <param name="address">The local address where the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
+            <param name="port">The port number at which the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
+            <param name="protocol">One of the <see cref="T:System.Net.Sockets.ProtocolType"/> values.</param>
+            <returns>An <see cref="T:System.Net.Sockets.Socket"/> object.</returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.IsIPv6IP(System.Net.IPAddress)">
+            <summary>
+            Determines if the specified <paramref name="ipAddress"/> is an IPv6 IP.
+            </summary>
+            <param name="ipAddress">IP address to check.</param>
+            <returns>true if the <paramref name="ipAddress"/> is IPv6 IP; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.IsMulticastIP(System.Net.IPAddress)">
+            <summary>
+            Determines if the specified <paramref name="ipAddress"/> is a multicast IP.
+            </summary>
+            <param name="ipAddress">IP address to check.</param>
+            <returns>true if the <paramref name="ipAddress"/> is multicast IP; otherwise false.</returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.IsPortNumberValid(System.String)">
+            <summary>
+            Determines whether the specified port is valid.
+            </summary>
+            <param name="port">The port number to be validated.</param>
+            <returns>True if the port number is valid.</returns>
+        </member>
+        <member name="M:TVA.Communication.Transport.IsDestinationReachable(System.Net.IPEndPoint)">
+            <summary>
+            Determines if the specified UDP destination is listening for data.
+            </summary>
+            <param name="targetIPEndPoint">The <see cref="T:System.Net.IPEndPoint"/> for the UDP destination to be checked.</param>
+            <returns>true if the UDP destination is listening for data; otherwise false.</returns>
         </member>
         <member name="T:TVA.Communication.FileClient">
             <summary>
@@ -2433,466 +3139,6 @@
             Gets the server URI of the <see cref="T:TVA.Communication.FileClient"/>.
             </summary>
         </member>
-        <member name="T:TVA.Communication.Transport">
-            <summary>
-            A helper class containing methods related to server-client communication.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.Transport.PortRangeLow">
-            <summary>
-            Specifies the lowest valid port number for a <see cref="T:System.Net.Sockets.Socket"/>.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.Transport.PortRangeHigh">
-            <summary>
-            Specifies the highest valid port number for a <see cref="T:System.Net.Sockets.Socket"/>.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.Transport.EndpointFormatRegex">
-            <summary>
-            Regular expression used to validate the format for an endpoint.
-            </summary>
-            <remarks>
-            <para>
-            Matches the following valid input:<br/>
-            - localhost:80<br/>
-            - 127.0.0.1:80<br/>
-            - [::1]:80<br/>
-            - [FEDC:BA98:7654:3210:FEDC:BA98:7654:3210]:80
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Communication.Transport.CreateEndPoint(System.String,System.Int32)">
-            <summary>
-            Creates an <see cref="T:System.Net.IPEndPoint"/> for the specified host name and port number.
-            </summary>
-            <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
-            <param name="port">The port number to be associated with the address.</param>
-            <returns>An <see cref="T:System.Net.IPEndPoint"/> object.</returns>
-        </member>
-        <member name="M:TVA.Communication.Transport.CreateSocket(System.String,System.Int32,System.Net.Sockets.ProtocolType)">
-            <summary>
-            Creates a <see cref="T:System.Net.Sockets.Socket"/> for the specified <paramref name="port"/> and <paramref name="protocol"/>.
-            </summary>
-            <param name="address">The local address where the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
-            <param name="port">The port number at which the <see cref="T:System.Net.Sockets.Socket"/> will be bound.</param>
-            <param name="protocol">One of the <see cref="T:System.Net.Sockets.ProtocolType"/> values.</param>
-            <returns>An <see cref="T:System.Net.Sockets.Socket"/> object.</returns>
-        </member>
-        <member name="M:TVA.Communication.Transport.IsIPv6IP(System.Net.IPAddress)">
-            <summary>
-            Determines if the specified <paramref name="ipAddress"/> is an IPv6 IP.
-            </summary>
-            <param name="ipAddress">IP address to check.</param>
-            <returns>true if the <paramref name="ipAddress"/> is IPv6 IP; otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Communication.Transport.IsMulticastIP(System.Net.IPAddress)">
-            <summary>
-            Determines if the specified <paramref name="ipAddress"/> is a multicast IP.
-            </summary>
-            <param name="ipAddress">IP address to check.</param>
-            <returns>true if the <paramref name="ipAddress"/> is multicast IP; otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Communication.Transport.IsPortNumberValid(System.String)">
-            <summary>
-            Determines whether the specified port is valid.
-            </summary>
-            <param name="port">The port number to be validated.</param>
-            <returns>True if the port number is valid.</returns>
-        </member>
-        <member name="M:TVA.Communication.Transport.IsDestinationReachable(System.Net.IPEndPoint)">
-            <summary>
-            Determines if the specified UDP destination is listening for data.
-            </summary>
-            <param name="targetIPEndPoint">The <see cref="T:System.Net.IPEndPoint"/> for the UDP destination to be checked.</param>
-            <returns>true if the UDP destination is listening for data; otherwise false.</returns>
-        </member>
-        <member name="T:TVA.Communication.Payload">
-            <summary>
-            A helper class containing methods for manipulation of payload.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.Payload.LengthSegment">
-            <summary>
-            Specifies the length of the segment in a "Payload-Aware" transmission that contains the payload length.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.Payload.DefaultMarker">
-            <summary>
-            Default byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.Payload.AddHeader(System.Byte[]@,System.Int32@,System.Int32@,System.Byte[])">
-            <summary>
-            Adds header containing the <paramref name="marker"/> to the payload in the <paramref name="buffer"/> for "Payload-Aware" transmission.
-            </summary>
-            <param name="buffer">The buffer containing the payload.</param>
-            <param name="offset">The offset in the <paramref name="buffer"/> at which the payload starts.</param>
-            <param name="length">The lenght of the payload in the <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
-            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
-        </member>
-        <member name="M:TVA.Communication.Payload.HasHeader(System.Byte[],System.Byte[])">
-            <summary>
-            Determines whether or not the <paramref name="buffer"/> contains the header information of a "Payload-Aware" transmission.
-            </summary>
-            <param name="buffer">The buffer to be checked at index zero.</param>
-            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
-            <returns>true if the buffer contains "Payload-Aware" transmission header; otherwise false.</returns>
-        </member>
-        <member name="M:TVA.Communication.Payload.ExtractLength(System.Byte[],System.Byte[])">
-            <summary>
-            Determines the length of a payload in a "Payload-Aware" transmission from the payload header information.
-            </summary>
-            <param name="buffer">The buffer containg payload header information starting at index zero.</param>
-            <param name="marker">The byte sequence used to mark the beginning of the payload in a "Payload-Aware" transmissions.</param>
-            <returns>Length of the payload.</returns>
-        </member>
-        <member name="M:TVA.Communication.Payload.ProcessReceived(System.Byte[]@,System.Int32@,System.Int32@,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
-            <summary>
-            Performs the necessary uncompression and decryption on the data contained in the <paramref name="buffer"/>.
-            </summary>
-            <param name="buffer">The buffer containing the data to be processed.</param>
-            <param name="offset">The offset in the <paramref name="buffer"/> from where data is to be processed.</param>
-            <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
-            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
-            <param name="cryptoKey">The key to be used for decrypting the data in the <paramref name="buffer"/>.</param>
-            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
-        </member>
-        <member name="M:TVA.Communication.Payload.ProcessTransmit(System.Byte[]@,System.Int32@,System.Int32@,TVA.Security.Cryptography.CipherStrength,System.String,TVA.IO.Compression.CompressionStrength)">
-            <summary>
-            Performs the necessary compression and encryption on the data contained in the <paramref name="buffer"/>.
-            </summary>
-            <param name="buffer">The buffer containing the data to be processed.</param>
-            <param name="offset">The offset in the <paramref name="buffer"/> from where data is to be processed.</param>
-            <param name="length">The length of data in <paramref name="buffer"/> starting at the <paramref name="offset"/>.</param>
-            <param name="cryptoLevel">One of the <see cref="T:TVA.Security.Cryptography.CipherStrength"/> values.</param>
-            <param name="cryptoKey">The key to be used for encrypting the data in the <paramref name="buffer"/>.</param>
-            <param name="compressLevel">One of the <see cref="T:TVA.IO.Compression.CompressionStrength"/> values.</param>
-        </member>
-        <member name="T:TVA.Communication.UdpClient">
-            <summary>
-            Represents a UDP-based communication server.
-            </summary>
-            <remarks>
-            <para>
-            Use <see cref="T:TVA.Communication.UdpClient"/> when the primary purpose is to receive data.
-            </para>
-            <para>
-            The <see cref="P:TVA.Communication.UdpClient.Client"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
-            specifying the interface in the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=8989; Interface=127.0.0.1")
-            </para>
-            <para>
-            The <see cref="P:TVA.Communication.UdpClient.Client"/> socket can be used just for transmitting data without being bound to a local interface 
-            by specifying -1 for the port number in the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> (Example: "Server=localhost:8888; Port=-1")
-            </para>
-            </remarks>
-            <example>
-            This example shows how to use the <see cref="T:TVA.Communication.UdpClient"/> component:
-            <code>
-            using System;
-            using TVA;
-            using TVA.Communication;
-            using TVA.Security.Cryptography;
-            using TVA.IO.Compression;
-            
-            class Program
-            {
-                static UdpClient s_client;
-            
-                static void Main(string[] args)
-                {
-                    // Initialize the client.
-                    s_client = new UdpClient("Server=localhost:8888; Port=8989");
-                    s_client.Handshake = false;
-                    s_client.ReceiveTimeout = -1;
-                    s_client.Encryption = CipherStrength.None;
-                    s_client.Compression = CompressionStrength.NoCompression;
-                    s_client.SecureSession = false;
-                    s_client.Initialize();
-                    // Register event handlers.
-                    s_client.ConnectionAttempt += s_client_ConnectionAttempt;
-                    s_client.ConnectionEstablished += s_client_ConnectionEstablished;
-                    s_client.ConnectionTerminated += s_client_ConnectionTerminated;
-                    s_client.ReceiveDataComplete += s_client_ReceiveDataComplete;
-                    // Connect the client.
-                    s_client.Connect();
-            
-                    // Transmit user input to the server.
-                    string input;
-                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
-                    {
-                        s_client.Send(input);
-                    }
-            
-                    // Disconnect the client on shutdown.
-                    s_client.Dispose();
-                }
-            
-                static void s_client_ConnectionAttempt(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client is connecting to server.");
-                }
-            
-                static void s_client_ConnectionEstablished(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client connected to server.");
-                }
-            
-                static void s_client_ConnectionTerminated(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Client disconnected from server.");
-                }
-            
-                static void s_client_ReceiveDataComplete(object sender, EventArgs&lt;byte[], int&gt; e)
-                {
-                    Console.WriteLine(string.Format("Received data - {0}.", s_client.TextEncoding.GetString(e.Argument1, 0, e.Argument2)));
-                }
-            }
-            </code>
-            </example>
-        </member>
-        <member name="F:TVA.Communication.UdpClient.DefaultReceiveBufferSize">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ReceiveBufferSize"/> property.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.UdpClient.DefaultConnectionString">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> property.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.UdpClient.SIO_UDP_CONNRESET">
-            <summary>
-            Specifies the constant to be used for disabling <see cref="F:System.Net.Sockets.SocketError.ConnectionReset"/> when endpoint is not listening.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
-            </summary>
-            <param name="connectString">Connect string of the <see cref="T:TVA.Communication.UdpClient"/>. See <see cref="F:TVA.Communication.UdpClient.DefaultConnectionString"/> for format.</param>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.#ctor(System.ComponentModel.IContainer)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpClient"/> class.
-            </summary>
-            <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpClient"/>.</param>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.Disconnect">
-            <summary>
-            Disconnects the <see cref="T:TVA.Communication.UdpClient"/> from the connected server synchronously.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ConnectAsync">
-            <summary>
-            Connects the <see cref="T:TVA.Communication.UdpClient"/> to the server asynchronously.
-            </summary>
-            <exception cref="T:System.FormatException">Server property in <see cref="P:TVA.Communication.ClientBase.ConnectionString"/> is invalid.</exception>
-            <exception cref="T:System.InvalidOperationException">Attempt is made to connect the <see cref="T:TVA.Communication.UdpClient"/> when it is not disconnected.</exception>
-            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Communication.UdpClient"/> and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ValidateConnectionString(System.String)">
-            <summary>
-            Validates the specified <paramref name="connectionString"/>.
-            </summary>
-            <param name="connectionString">Connection string to be validated.</param>
-            <exception cref="T:System.ArgumentException">Port property is missing.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Port property value is not between <see cref="F:TVA.Communication.Transport.PortRangeLow"/> and <see cref="F:TVA.Communication.Transport.PortRangeHigh"/>.</exception>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.GetSessionSecret">
-            <summary>
-            Gets the secret key to be used for ciphering client data.
-            </summary>
-            <returns>Cipher secret key.</returns>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.OpenPort">
-            <summary>
-            Connects to the <see cref="T:TVA.Communication.UdpClient"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.SendDataAsync(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Sends data to the server asynchronously.
-            </summary>
-            <param name="data">The buffer that contains the binary data to be sent.</param>
-            <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
-            <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.SendPayloadAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous send operation.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ReceiveHandshakeAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Initiate method for asynchronous receive operation of handshake data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ReceiveHandshakeAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous receive operation of handshake data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Initiate method for asynchronous receive operation of payload data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.ReceivePayloadAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous receive operation of payload data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.NoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ClientBase.Handshake"/> is turned off.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.DoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ClientBase.Handshake"/> is turned on.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpClient.TerminateConnection(TVA.Communication.TransportProvider{System.Net.Sockets.Socket},System.Boolean)">
-            <summary>
-            Processes the termination of client.
-            </summary>
-        </member>
-        <member name="P:TVA.Communication.UdpClient.Client">
-            <summary>
-            Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object for the <see cref="T:TVA.Communication.UdpClient"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Communication.UdpClient.ServerUri">
-            <summary>
-            Gets the server URI of the <see cref="T:TVA.Communication.UdpClient"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Communication.TransportStatistics">
-            <summary>
-            A class for statistics related to server-client communication.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.LastSend">
-            <summary>
-            <see cref="T:System.DateTime"/> of the last send operation.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.LastReceive">
-            <summary>
-            <see cref="T:System.DateTime"/> of the last receive operation.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.LastBytesSent">
-            <summary>
-            Number of bytes sent in the last send operation.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.LastBytesReceived">
-            <summary>
-            Number of bytes received in the last receive operation.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.TotalBytesSent">
-            <summary>
-            Total number of bytes sent.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportStatistics.TotalBytesReceived">
-            <summary>
-            Total number of bytes received.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.TransportStatistics.Reset">
-            <summary>
-            Resets the <see cref="T:TVA.Communication.TransportStatistics"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.TransportStatistics.UpdateBytesSent(System.Int32)">
-            <summary>
-            Updates statistics related to sending of data.
-            </summary>
-            <param name="bytesSent">Number of bytes sent in the send operation.</param>
-        </member>
-        <member name="M:TVA.Communication.TransportStatistics.UpdateBytesReceived(System.Int32)">
-            <summary>
-            Updates statistics related to receiving of data.
-            </summary>
-            <param name="bytesReceived">Number of bytes received in the receive operation.</param>
-        </member>
-        <member name="T:TVA.Communication.TransportProtocol">
-            <summary>
-            Indicates the protocol used in server-client communication.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportProtocol.Tcp">
-            <summary>
-            <see cref="T:TVA.Communication.TransportProtocol"/> is Transmission Control Protocol.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportProtocol.Udp">
-            <summary>
-            <see cref="T:TVA.Communication.TransportProtocol"/> is User Datagram Protocol.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportProtocol.Serial">
-            <summary>
-            <see cref="T:TVA.Communication.TransportProtocol"/> is serial interface.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.TransportProtocol.File">
-            <summary>
-            <see cref="T:TVA.Communication.TransportProtocol"/> is file-system based.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.GoodbyeMessage.MessageIdentifier">
-            <summary>
-            2-Byte identifier for <see cref="T:TVA.Communication.GoodbyeMessage"/>.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.GoodbyeMessage.ID">
-            <summary>
-            Gets or sets the disconnecting client's ID.
-            </summary>
-            <remarks>Max size is 16.</remarks>
-        </member>
-        <member name="M:TVA.Communication.GoodbyeMessage.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.GoodbyeMessage"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.GoodbyeMessage.#ctor(System.Guid)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.GoodbyeMessage"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.GoodbyeMessage.Initialize(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Initializes the <see cref="T:TVA.Communication.GoodbyeMessage"/> object from the binary image.
-            </summary>
-        </member>
-        <member name="P:TVA.Communication.GoodbyeMessage.BinaryLength">
-            <summary>
-            Gets the length of the <see cref="P:TVA.Communication.GoodbyeMessage.BinaryImage"/>.
-            </summary>
-        </member>
-        <member name="P:TVA.Communication.GoodbyeMessage.BinaryImage">
-            <summary>
-            Gets the binary representation of the <see cref="T:TVA.Communication.GoodbyeMessage"/> object.
-            </summary>
-        </member>
         <member name="T:TVA.Communication.TcpClient">
             <summary>
             Represents a TCP-based communication client.
@@ -3127,252 +3373,6 @@
         <member name="P:TVA.Communication.TcpClient.ServerUri">
             <summary>
             Gets the server URI of the <see cref="T:TVA.Communication.TcpClient"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Communication.UdpServer">
-            <summary>
-            Represents a UDP-based communication server.
-            </summary>
-            <remarks>
-            <para>
-            Use <see cref="T:TVA.Communication.UdpServer"/> when the primary purpose is to transmit data.
-            </para>
-            <para>
-            The <see cref="P:TVA.Communication.UdpServer.Server"/> socket can be bound to a specified interface on a machine with multiple interfaces by 
-            specifying the interface in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=8888; Clients=localhost:8989; Interface=127.0.0.1")
-            </para>
-            <para>
-            The <see cref="P:TVA.Communication.UdpServer.Server"/> socket can be used just for transmitting data without being bound to a local interface 
-            by specifying -1 for the port number in the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> (Example: "Port=-1; Clients=localhost:8989")
-            </para>
-            </remarks>
-            <example>
-            This example shows how to use the <see cref="T:TVA.Communication.UdpServer"/> component:
-            <code>
-            using System;
-            using TVA;
-            using TVA.Communication;
-            using TVA.Security.Cryptography;
-            using TVA.IO.Compression;
-            
-            class Program
-            {
-                static UdpServer m_server;
-            
-                static void Main(string[] args)
-                {
-                    // Initialize the server.
-                    m_server = new UdpServer("Port=8888; Clients=localhost:8989");
-                    m_server.Handshake = false;
-                    m_server.ReceiveTimeout = -1;
-                    m_server.Encryption = CipherStrength.None;
-                    m_server.Compression = CompressionStrength.NoCompression;
-                    m_server.SecureSession = false;
-                    m_server.Initialize();
-                    // Register event handlers.
-                    m_server.ServerStarted += m_server_ServerStarted;
-                    m_server.ServerStopped += m_server_ServerStopped;
-                    m_server.ClientConnected += m_server_ClientConnected;
-                    m_server.ClientDisconnected += m_server_ClientDisconnected;
-                    m_server.ReceiveClientDataComplete += m_server_ReceiveClientDataComplete;
-                    // Start the server.
-                    m_server.Start();
-            
-                    // Multicast user input to all connected clients.
-                    string input;
-                    while (string.Compare(input = Console.ReadLine(), "Exit", true) != 0)
-                    {
-                        m_server.Multicast(input);
-                    }
-            
-                    // Stop the server on shutdown.
-                    m_server.Stop();
-                }
-            
-                static void m_server_ServerStarted(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Server has been started!");
-                }
-            
-                static void m_server_ServerStopped(object sender, EventArgs e)
-                {
-                    Console.WriteLine("Server has been stopped!");
-                }
-            
-                static void m_server_ClientConnected(object sender, EventArgs&lt;Guid&gt; e)
-                {
-                    Console.WriteLine(string.Format("Client connected - {0}.", e.Argument));
-                }
-            
-                static void m_server_ClientDisconnected(object sender, EventArgs&lt;Guid&gt; e)
-                {
-                    Console.WriteLine(string.Format("Client disconnected - {0}.", e.Argument));
-                }
-            
-                static void m_server_ReceiveClientDataComplete(object sender, EventArgs&lt;Guid, byte[], int&gt; e)
-                {
-                    Console.WriteLine(string.Format("Received data from {0} - {1}.", e.Argument1, m_server.TextEncoding.GetString(e.Argument2, 0, e.Argument3)));
-                }
-            }
-            </code>
-            </example>
-        </member>
-        <member name="F:TVA.Communication.UdpServer.DefaultReceiveBufferSize">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ReceiveBufferSize"/> property.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.UdpServer.DefaultConfigurationString">
-            <summary>
-            Specifies the default value for the <see cref="P:TVA.Communication.ServerBase.ConfigurationString"/> property.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.UdpServer.SIO_UDP_CONNRESET">
-            <summary>
-            Specifies the constant to be used for disabling <see cref="F:System.Net.Sockets.SocketError.ConnectionReset"/> when endpoint is not listening.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
-            </summary>
-            <param name="configString">Config string of the <see cref="T:TVA.Communication.UdpServer"/>. See <see cref="F:TVA.Communication.UdpServer.DefaultConfigurationString"/> for format.</param>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.#ctor(System.ComponentModel.IContainer)">
-            <summary>
-            Initializes a new instance of the <see cref="T:TVA.Communication.UdpServer"/> class.
-            </summary>
-            <param name="container"><see cref="T:System.ComponentModel.IContainer"/> object that contains the <see cref="T:TVA.Communication.UdpServer"/>.</param>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.Stop">
-            <summary>
-            Stops the <see cref="T:TVA.Communication.UdpServer"/> synchronously and disconnects all connected clients.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.Start">
-            <summary>
-            Starts the <see cref="T:TVA.Communication.UdpServer"/> synchronously and begins accepting client connections asynchronously.
-            </summary>
-            <exception cref="T:System.InvalidOperationException">Attempt is made to <see cref="M:TVA.Communication.UdpServer.Start"/> the <see cref="T:TVA.Communication.UdpServer"/> when it is running.</exception>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.DisconnectOne(System.Guid)">
-            <summary>
-            Disconnects the specified connected client.
-            </summary>
-            <param name="clientID">ID of the client to be disconnected.</param>
-            <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.Client(System.Guid)">
-            <summary>
-            Gets the <see cref="T:TVA.Communication.TransportProvider`1"/> object associated with the specified client ID.
-            </summary>
-            <param name="clientID">ID of the client.</param>
-            <returns>An <see cref="T:TVA.Communication.TransportProvider`1"/> object.</returns>
-            <exception cref="T:System.InvalidOperationException">Client does not exist for the specified <paramref name="clientID"/>.</exception>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ValidateConfigurationString(System.String)">
-            <summary>
-            Validates the specified <paramref name="configurationString"/>.
-            </summary>
-            <param name="configurationString">Configuration string to be validated.</param>
-            <exception cref="T:System.ArgumentException">Port property is missing.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Port property value is not between <see cref="F:TVA.Communication.Transport.PortRangeLow"/> and <see cref="F:TVA.Communication.Transport.PortRangeHigh"/>.</exception>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.GetSessionSecret(System.Guid)">
-            <summary>
-            Gets the secret key to be used for ciphering client data.
-            </summary>
-            <param name="clientID">ID of the client whose secret key is to be retrieved.</param>
-            <returns>Cipher secret key of the client with the specified <paramref name="clientID"/>.</returns>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.SendDataToAsync(System.Guid,System.Byte[],System.Int32,System.Int32)">
-            <summary>
-            Sends data to the specified client asynchronously.
-            </summary>
-            <param name="clientID">ID of the client to which the data is to be sent.</param>
-            <param name="data">The buffer that contains the binary data to be sent.</param>
-            <param name="offset">The zero-based position in the <paramref name="data"/> at which to begin sending data.</param>
-            <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
-            <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.SendPayloadAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous send operation.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceiveHandshakeAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Initiate method for asynchronous receive operation of handshake data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceiveHandshakeAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous receive operation of handshake data.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceivePayloadAnyAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Initiate method for asynchronous receive operation of payload data from any endpoint.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceivePayloadAnyAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous receive operation of payload data from any endpoint.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceivePayloadOneAsync(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Initiate method for asynchronous receive operation of payload data from a single endpoint.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.ReceivePayloadOneAsyncCallback(System.IAsyncResult)">
-            <summary>
-            Callback method for asynchronous receive operation of payload data from a single endpoint.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.NoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ServerBase.Handshake"/> is turned off.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.DoGoodbyeCheck(TVA.Communication.TransportProvider{System.Net.Sockets.Socket})">
-            <summary>
-            Delegate that gets called to verify client disconnect when <see cref="P:TVA.Communication.ServerBase.Handshake"/> is turned on.
-            </summary>
-        </member>
-        <member name="M:TVA.Communication.UdpServer.TerminateConnection(TVA.Communication.TransportProvider{System.Net.Sockets.Socket},System.Boolean)">
-            <summary>
-            Processes the termination of client.
-            </summary>
-        </member>
-        <member name="P:TVA.Communication.UdpServer.Server">
-            <summary>
-            Gets the <see cref="T:System.Net.Sockets.Socket"/> object for the <see cref="T:TVA.Communication.UdpServer"/>.
-            </summary>
-        </member>
-        <member name="T:TVA.Communication.ClientState">
-            <summary>
-            Indicates the current state of the client.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.ClientState.Connecting">
-            <summary>
-            Client is establishing connection.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.ClientState.Connected">
-            <summary>
-            Client has established connection.
-            </summary>
-        </member>
-        <member name="F:TVA.Communication.ClientState.Disconnected">
-            <summary>
-            Client connection is terminated.
             </summary>
         </member>
     </members>
