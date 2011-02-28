@@ -18,5 +18,5 @@
 ::*******************************************************************************************************
 
 @ECHO OFF
-C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe Historian.buildproj /p:ForceBuild=true;SkipPublicArchive=true /l:FileLogger,Microsoft.Build.Engine;logfile=Historian.output
+C:\WINDOWS\Microsoft.NET\Framework\v4.0.30319\msbuild.exe Historian.buildproj /p:ForceBuild=true;SkipPublicArchive=true;SkipHelpFiles=true;SkipSigning=true /l:FileLogger,Microsoft.Build.Engine;logfile=Historian.output
 PAUSE
