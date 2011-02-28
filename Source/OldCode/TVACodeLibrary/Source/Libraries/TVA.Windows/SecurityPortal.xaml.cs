@@ -557,11 +557,21 @@ namespace TVA.Windows
                 {
                     // Display login failure message
                     DisplayErrorMessage("The username or password is invalid. Please try again.");
+                
+                    if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                        TextBoxUserName.Focus();
+                    else
+                        TextBoxPassword.Focus();
                 }
             }
             catch (Exception ex)
             {
                 DisplayErrorMessage("Login failed: " + ex.Message);
+            
+                if (string.IsNullOrWhiteSpace(TextBoxUserName.Text))
+                    TextBoxUserName.Focus();
+                else
+                    TextBoxPassword.Focus();
             }
         }
 
@@ -607,6 +617,11 @@ namespace TVA.Windows
                                 DisplayErrorMessage("Authentication was not successful.");
                             else
                                 DisplayErrorMessage("Password change was not successful.");
+
+                            if (string.IsNullOrWhiteSpace(TextBoxChangePasswordUserName.Text))
+                                TextBoxChangePasswordUserName.Focus();
+                            else
+                                TextBoxOldPassword.Focus();
                         }
                     }
                 }
