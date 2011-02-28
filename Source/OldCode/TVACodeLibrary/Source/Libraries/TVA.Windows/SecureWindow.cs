@@ -423,8 +423,6 @@ namespace TVA.Windows
 
         private void SecureWindow_Initialized(object sender, EventArgs e)
         {
-            bool initialLogin = false, passThruAuthentication = true;
-
             // Don't proceed if the window is opened in design mode
             if (DesignerProperties.GetIsInDesignMode(this))
                 return;
@@ -447,7 +445,6 @@ namespace TVA.Windows
                 try
                 {
                     SecurityProviderCache.CurrentProvider = SecurityProviderUtility.CreateProvider(string.Empty);
-                    initialLogin = true;
                 }
                 catch (Exception ex)
                 {
@@ -457,10 +454,7 @@ namespace TVA.Windows
 
             // Verify that the current thread principal has been authenticated
             if (!Thread.CurrentPrincipal.Identity.IsAuthenticated || ForceLoginDisplay)
-            {
                 ShowSecurityDialog(DisplayType.Login);
-                passThruAuthentication = false;
-            }
 
             // Perform a top-level permission check on the resource being accessed
             if (!string.IsNullOrEmpty(resource))
@@ -468,16 +462,8 @@ namespace TVA.Windows
                 // Stay in a dialog display loop until either access to resource is available or user exits
                 while (!IsResourceAccessible(resource))
                 {
-                    // Access to resource is denied. Check if this is the initial login with pass-through authentication,
-                    // if so, just show the login dialog instead of access denied since it's confusing for the initial
-                    // screen to say access denied without first offering the user a chance to login
-                    if (initialLogin && passThruAuthentication)
-                    {
-                        ShowSecurityDialog(DisplayType.Login);
-                        initialLogin = false;
-                    }
-                    else
-                        ShowSecurityDialog(DisplayType.AccessDenied);
+                    // Access to resource is denied
+                    ShowSecurityDialog(DisplayType.AccessDenied);
                 }
             }
         }
