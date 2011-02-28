@@ -18282,6 +18282,95 @@
             Returns the Xor 8-bit checksum computed so far.
             </summary>
         </member>
+        <member name="T:TVA.Identity.UserAccountControl">
+            <summary>
+            Provides facilities for enabling and disabling User Account Control (UAC), determining elevation and virtualization status, and launching a process under elevated credentials.
+            </summary>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.CreateProcessAsAdmin(System.String,System.String)">
+            <summary>
+            Creates a process under the elevated token, regardless of UAC settings or the manifest associated with that process.
+            </summary>
+            <param name="fileName">The path to the executable file.</param>
+            <param name="arguments">The command-line arguments to pass to the process.</param>
+            <returns>A <see cref="T:System.Diagnostics.Process"/> object representing the newly created process.</returns>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.CreateProcessAsStandardUser(System.String,System.String)">
+            <summary>
+            Creates a process under the standard user if the current process is elevated.  The identity of the standard user is
+            determined by retrieving the user token of the currently running Explorer (shell) process.
+            </summary>
+            <param name="fileName">The path to the executable file.</param>
+            <param name="arguments">The command-line arguments to pass to the process.</param>
+            <returns>A <see cref="T:System.Diagnostics.Process"/> object representing the newly created process.</returns>
+            <remarks>
+            <para>
+            This method requires administrative privileges. An exception will be thrown if the current user is not elevated.
+            </para>
+            <para>
+            This is an especially useful function if you are trying to shell an application from an installation program. With UAC
+            enabled, an application spawned from a setup program will be the "NT AUTHORITY\SYSTEM" user - not the local user that
+            executed the installer; this can wreak havoc if the spawned application needs to authenticate the local user.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.DisableUac">
+            <summary>
+            Disables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
+            </summary>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.DisableUacAndRestartWindows">
+            <summary>
+            Disables User Account Control and restarts the system.
+            </summary>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.EnableUac">
+            <summary>
+            Enables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
+            </summary>
+        </member>
+        <member name="M:TVA.Identity.UserAccountControl.EnableUacAndRestartWindows">
+            <summary>
+            Enables User Account Control and restarts the system.
+            </summary>
+        </member>
+        <member name="P:TVA.Identity.UserAccountControl.IsUserAdmin">
+            <summary>
+            Returns <c>true</c> if the current user has administrator privileges.
+            </summary>
+            <remarks>
+            If UAC is on, then this property will return <c>true</c> even if the current process is not running elevated.
+            If UAC is off, then this property will return <c>true</c> if the user is part of the built-in <i>Administrators</i> group.
+            </remarks>
+        </member>
+        <member name="P:TVA.Identity.UserAccountControl.IsUacEnabled">
+            <summary>
+            Returns <c>true</c> if User Account Control (UAC) is enabled on this machine.
+            </summary>
+            <remarks>
+            This value is obtained by checking the LUA registry key. It is possible that the user has not restarted the machine after
+            enabling/disabling UAC. In that case, the value of the registry key does not reflect the true state of affairs.
+            </remarks>
+        </member>
+        <member name="P:TVA.Identity.UserAccountControl.IsCurrentProcessVirtualized">
+            <summary>
+            Returns <c>true</c> if the current process is using UAC virtualization.
+            </summary>
+            <remarks>
+            Under UAC virtualization, file system and registry accesses to specific locations performed by an application are redirected to
+            provide backwards compatibility. 64-bit applications or applications that have an associated manifest do not enjoy UAC virtualization
+            because they are assumed to be compatible with Vista and UAC.
+            </remarks>
+        </member>
+        <member name="P:TVA.Identity.UserAccountControl.IsCurrentProcessElevated">
+            <summary>
+             Returns <c>true</c> if the current process is elevated, i.e. if the process went through an elevation consent phase.
+             </summary>
+             <remarks>
+             This property will return <c>false</c> if UAC is disabled and the process is running as admin.  It only determines whether the process
+             went through the elevation procedure.
+             </remarks>
+        </member>
         <member name="T:TVA.ErrorManagement.SmtpTraceListener">
             <summary>
             Represents an e-mail based <see cref="T:System.Diagnostics.TraceListener"/>.
@@ -33212,95 +33301,6 @@
             <param name="comparer">An interface <see cref="T:System.Collections.IComparer"/> that exposes a method to compare the two arrays.</param>
             <returns>An <see cref="T:System.Int32"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
             <remarks>This is a default comparer to make arrays comparable.</remarks>
-        </member>
-        <member name="T:TVA.Identity.UserAccountControl">
-            <summary>
-            Provides facilities for enabling and disabling User Account Control (UAC), determining elevation and virtualization status, and launching a process under elevated credentials.
-            </summary>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.CreateProcessAsAdmin(System.String,System.String)">
-            <summary>
-            Creates a process under the elevated token, regardless of UAC settings or the manifest associated with that process.
-            </summary>
-            <param name="fileName">The path to the executable file.</param>
-            <param name="arguments">The command-line arguments to pass to the process.</param>
-            <returns>A <see cref="T:System.Diagnostics.Process"/> object representing the newly created process.</returns>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.CreateProcessAsStandardUser(System.String,System.String)">
-            <summary>
-            Creates a process under the standard user if the current process is elevated.  The identity of the standard user is
-            determined by retrieving the user token of the currently running Explorer (shell) process.
-            </summary>
-            <param name="fileName">The path to the executable file.</param>
-            <param name="arguments">The command-line arguments to pass to the process.</param>
-            <returns>A <see cref="T:System.Diagnostics.Process"/> object representing the newly created process.</returns>
-            <remarks>
-            <para>
-            This method requires administrative privileges. An exception will be thrown if the current user is not elevated.
-            </para>
-            <para>
-            This is an especially useful function if you are trying to shell an application from an installation program. With UAC
-            enabled, an application spawned from a setup program will be the "NT AUTHORITY\SYSTEM" user - not the local user that
-            executed the installer; this can wreak havoc if the spawned application needs to authenticate the local user.
-            </para>
-            </remarks>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.DisableUac">
-            <summary>
-            Disables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
-            </summary>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.DisableUacAndRestartWindows">
-            <summary>
-            Disables User Account Control and restarts the system.
-            </summary>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.EnableUac">
-            <summary>
-            Enables User Account Control by changing the LUA registry key. The changes do not have effect until the system is restarted.
-            </summary>
-        </member>
-        <member name="M:TVA.Identity.UserAccountControl.EnableUacAndRestartWindows">
-            <summary>
-            Enables User Account Control and restarts the system.
-            </summary>
-        </member>
-        <member name="P:TVA.Identity.UserAccountControl.IsUserAdmin">
-            <summary>
-            Returns <c>true</c> if the current user has administrator privileges.
-            </summary>
-            <remarks>
-            If UAC is on, then this property will return <c>true</c> even if the current process is not running elevated.
-            If UAC is off, then this property will return <c>true</c> if the user is part of the built-in <i>Administrators</i> group.
-            </remarks>
-        </member>
-        <member name="P:TVA.Identity.UserAccountControl.IsUacEnabled">
-            <summary>
-            Returns <c>true</c> if User Account Control (UAC) is enabled on this machine.
-            </summary>
-            <remarks>
-            This value is obtained by checking the LUA registry key. It is possible that the user has not restarted the machine after
-            enabling/disabling UAC. In that case, the value of the registry key does not reflect the true state of affairs.
-            </remarks>
-        </member>
-        <member name="P:TVA.Identity.UserAccountControl.IsCurrentProcessVirtualized">
-            <summary>
-            Returns <c>true</c> if the current process is using UAC virtualization.
-            </summary>
-            <remarks>
-            Under UAC virtualization, file system and registry accesses to specific locations performed by an application are redirected to
-            provide backwards compatibility. 64-bit applications or applications that have an associated manifest do not enjoy UAC virtualization
-            because they are assumed to be compatible with Vista and UAC.
-            </remarks>
-        </member>
-        <member name="P:TVA.Identity.UserAccountControl.IsCurrentProcessElevated">
-            <summary>
-             Returns <c>true</c> if the current process is elevated, i.e. if the process went through an elevation consent phase.
-             </summary>
-             <remarks>
-             This property will return <c>false</c> if UAC is disabled and the process is running as admin.  It only determines whether the process
-             went through the elevation procedure.
-             </remarks>
         </member>
     </members>
 </doc>
