@@ -319,8 +319,18 @@ namespace TVA.Windows
             ButtonChangePasswordLink.Click += ButtonChangePasswordLink_Click;
             ButtonForgotPasswordLink.Click += ButtonForgotPasswordLink_Click;
             ButtonLoginLink.Click += ButtonLoginLink_Click;
-            TextBoxUserName.TextChanged += TextBoxUserName_TextChanged;
-            TextBoxChangePasswordUserName.TextChanged += TextBoxUserName_TextChanged;
+            TextBoxUserName.TextChanged += TextBox_TextChanged;
+            TextBoxPassword.PasswordChanged += PasswordBox_PasswordChanged;
+            TextBoxChangePasswordUserName.TextChanged += TextBox_TextChanged;
+            TextBoxOldPassword.PasswordChanged += PasswordBox_PasswordChanged;
+            TextBoxNewPassword.PasswordChanged += PasswordBox_PasswordChanged;
+            TextBoxConfirmPassword.PasswordChanged += PasswordBox_PasswordChanged;
+            TextBoxUserName.GotFocus += TextBox_GotFocus;
+            TextBoxPassword.GotFocus += TextBox_GotFocus;
+            TextBoxChangePasswordUserName.GotFocus += TextBox_GotFocus;
+            TextBoxOldPassword.GotFocus += TextBox_GotFocus;
+            TextBoxNewPassword.GotFocus += TextBox_GotFocus;
+            TextBoxConfirmPassword.GotFocus += TextBox_GotFocus;
 
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             ConfigurationFile config = ConfigurationFile.Current;
@@ -410,8 +420,7 @@ namespace TVA.Windows
             ButtonChange.IsDefault = false;
 
             if (m_displayType == DisplayType.Login)
-            {
-                TextBoxUserName.SelectAll();
+            {                
                 TextBoxPassword.Password = "";
                 ButtonLogin.IsDefault = true;
                 TextBlockApplicationLogin.Visibility = Visibility.Visible;
@@ -430,7 +439,6 @@ namespace TVA.Windows
             }
             else if (m_displayType == DisplayType.ChangePassword)
             {
-                TextBoxChangePasswordUserName.SelectAll();
                 TextBoxOldPassword.Password = "";
                 TextBoxNewPassword.Password = "";
                 TextBoxConfirmPassword.Password = "";
@@ -608,7 +616,6 @@ namespace TVA.Windows
             catch (Exception ex)
             {
                 DisplayErrorMessage("Change password failed: " + ex.Message);
-                TextBoxOldPassword.SelectAll();
                 TextBoxOldPassword.Focus();
             }
         }
@@ -678,16 +685,44 @@ namespace TVA.Windows
         }
 
         /// <summary>
-        /// Keeps the user names on the separate sections synchronized.
+        /// Keeps the user names on the separate sections synchronized and clears error messages when text changes.
         /// </summary>
         /// <param name="sender">Source of this event.</param>
         /// <param name="e">Arguments of this event.</param>
-        private void TextBoxUserName_TextChanged(object sender, TextChangedEventArgs e)
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (LoginSection.Visibility == Visibility.Visible && e.Source == TextBoxUserName)
                 TextBoxChangePasswordUserName.Text = TextBoxUserName.Text;
             else if (ChangePasswordSection.Visibility == Visibility.Visible && e.Source == TextBoxChangePasswordUserName)
                 TextBoxUserName.Text = TextBoxChangePasswordUserName.Text;
+
+            ClearErrorMessage();
+        }
+
+        /// <summary>
+        /// Clears error messages when text changes.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            ClearErrorMessage();
+        }
+
+        /// <summary>
+        /// We make sure all text boxes "select-all" when they receive focus.
+        /// </summary>
+        /// <param name="sender">Source of this event.</param>
+        /// <param name="e">Arguments of this event.</param>
+        private void TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            if (sender != null)
+            {
+                if (sender is TextBox)
+                    ((TextBox)sender).SelectAll();
+                else if (sender is PasswordBox)
+                    ((PasswordBox)sender).SelectAll();
+            }
         }
 
         #endregion

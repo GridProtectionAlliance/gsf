@@ -559,7 +559,14 @@ namespace TVA.Security
                 // Initialize user data.
                 UserData.Initialize();
 
-                DataRow userDataRow;
+                // We'll retrieve all the data we need about a user.
+                //   Table1: Information about the user.
+                //   Table2: Groups the user is a member of.
+                //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
+                DataTable userDataTable = new DataTable();
+                DataTable userGroupDataTable = new DataTable();
+                DataTable userRoleDataTable = new DataTable();
+                DataRow userDataRow = null;
                 string groupName, roleName;
 
                 using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
@@ -567,25 +574,23 @@ namespace TVA.Security
                     if (dbConnection == null)
                         return false;
 
-                    // We'll retrieve all the data we need about a user.
-                    //   Table1: Information about the user.
-                    //   Table2: Groups the user is a member of.
-                    //   Table3: Roles that are assigned to the user either implicitly (NT groups) or explicitly (database) or through a group.
-
-                    DataTable userDataTable = new DataTable();
-                    DataTable userGroupDataTable = new DataTable();
-                    DataTable userRoleDataTable = new DataTable();
-
                     userDataTable.Load(dbConnection.CreateParameterizedCommand("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username).ExecuteReader());
 
-                    if (userDataTable.Rows.Count == 0)
-                        return false;
+                    if (userDataTable.Rows.Count <= 0)
+                    {
+                        // User doesn't exist in the database, however, user may exist in an NT authentication group which may have an explict role assignment. To test for this case
+                        // we make the assumption that this is a Windows authenticated user and test for rights within groups
+                        UserData.IsDefined = true;
+                        UserData.IsExternal = false;
+                    }
+                    else
+                    {
+                        userDataRow = userDataTable.Rows[0];
+                        UserData.IsDefined = true;
+                        UserData.IsExternal = !Convert.ToBoolean(userDataRow["UseADAuthentication"]);
+                    }
 
-                    userDataRow = userDataTable.Rows[0];
-                    UserData.IsDefined = true;
-                    UserData.IsExternal = !Convert.ToBoolean(userDataRow["UseADAuthentication"]);
-
-                    if (UserData.IsExternal)
+                    if (UserData.IsExternal && userDataRow != null)
                     {
                         if (string.IsNullOrEmpty(UserData.LoginID))
                             UserData.LoginID = UserData.Username;
@@ -628,7 +633,7 @@ namespace TVA.Security
                     }
 
                     // Administrator can lock out NT user as well as database-only user via database
-                    if (!UserData.IsLockedOut && !Convert.IsDBNull(userDataRow["LockedOut"]))
+                    if (!UserData.IsLockedOut && userDataRow != null && !Convert.IsDBNull(userDataRow["LockedOut"]))
                         UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
 
                     // Load explicitly assigned groups
