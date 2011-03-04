@@ -392,7 +392,8 @@ namespace TVA.Windows
                     ConfigurationFile.Current.Save();
                 }
 
-                this.DialogResult = value;
+                if (this.DialogResult == null)
+                    this.DialogResult = value;
             }
         }
 
