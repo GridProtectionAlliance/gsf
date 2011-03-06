@@ -512,9 +512,13 @@ namespace TVA
             if (value == null)
                 return string.Empty;
 
+            // If value is already a string, no need to attempt conversion
+            if (value is string)
+                return value as string;
+
             // Initialize culture info if not specified.
             if (culture == null)
-                culture = CultureInfo.CurrentCulture;
+                culture = CultureInfo.InvariantCulture;
 
             try
             {

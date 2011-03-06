@@ -367,7 +367,7 @@ namespace TVA.Windows.Forms
         /// <param name="settingsCategory">Settings category used to persist form size information</param>
         public static void SaveSize(this Form windowsForm, string settingsCategory)
         {
-            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Size, "Size of the windows form.", false, SettingScope.User);
+            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Size.ToString(), "Size of the windows form.", false, SettingScope.User);
             ConfigurationFile.Current.Save();
         }
 
@@ -388,7 +388,7 @@ namespace TVA.Windows.Forms
         /// <param name="settingsCategory">Settings category used to persist form location information</param>
         public static void SaveLocation(this Form windowsForm, string settingsCategory)
         {
-            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Location, "Location of the windows form.", false, SettingScope.User);
+            ConfigurationFile.Current.Settings[settingsCategory][windowsForm.Name, true].Update(windowsForm.Location.ToString(), "Location of the windows form.", false, SettingScope.User);
             ConfigurationFile.Current.Save();
         }
 

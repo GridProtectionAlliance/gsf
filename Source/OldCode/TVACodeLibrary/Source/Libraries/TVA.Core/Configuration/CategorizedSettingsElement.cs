@@ -901,8 +901,9 @@ namespace TVA.Configuration
         private string GetRawValue()
         {
             string value = (string)base["value"];
+
+            // If setting is user specific, retrive value from user settings store.
             if (Scope == SettingScope.User)
-                // Setting is user specific so retrive value from user settings store.
                 value = Category.Section.File.UserSettings.Read(Category.Name, Name, value);
 
             return value;
