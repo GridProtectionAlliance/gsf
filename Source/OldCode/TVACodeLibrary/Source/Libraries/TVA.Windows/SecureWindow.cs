@@ -487,7 +487,7 @@ namespace TVA.Windows
             }
 
             // Show the WPF security dialog
-            if (!(bool)securityDialog.ShowDialog())
+            if (!securityDialog.ShowDialog().GetValueOrDefault())
             {
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
