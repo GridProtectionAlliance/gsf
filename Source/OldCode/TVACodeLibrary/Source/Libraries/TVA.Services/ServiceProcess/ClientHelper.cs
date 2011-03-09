@@ -672,7 +672,9 @@ namespace TVA.Services.ServiceProcess
         public void Disconnect()
         {
             m_attemptReconnection = false;
-            m_remotingClient.Disconnect();
+
+            if (m_remotingClient != null)
+                m_remotingClient.Disconnect();
         }
 
         /// <summary>
