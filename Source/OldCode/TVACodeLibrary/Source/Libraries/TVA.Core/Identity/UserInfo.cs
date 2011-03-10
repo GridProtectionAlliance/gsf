@@ -663,7 +663,11 @@ namespace TVA.Identity
                         else
                         {
                             // User must change password periodically.
-                            passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(MaximumPasswordAge).Duration().Days);
+                            long maxPasswordAge = MaximumPasswordAge;
+
+                            // Ignore extremes
+                            if (maxPasswordAge >= 0 && maxPasswordAge != long.MaxValue)
+                                passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
                         }
                     }
                 }
