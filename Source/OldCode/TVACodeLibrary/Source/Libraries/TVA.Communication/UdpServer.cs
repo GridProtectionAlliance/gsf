@@ -29,6 +29,9 @@
 //       Modified Start() to parse client endpoint strings correctly to address IPv6 IP parsing issue.
 //  02/13/2011 - Pinal C. Patel
 //       Modified Start() to use "interface" in the creation of client endpoint.
+//  03/10/2011 - Pinal C. Patel
+//       Fixed a bug reported by Jeffrey Martin at Areva-TD (jeffrey.martin-econ@areva-td.com) that
+//       prevented the ServerStopped event from being raised under certain configuration.
 //
 //*******************************************************************************************************
 
@@ -433,9 +436,18 @@ namespace TVA.Communication
         {
             if (CurrentState == ServerState.Running)
             {
-                DisconnectAll();                    // Disconnection all clients.
+                // Disconnection all clients.
+                DisconnectAll();
+
                 if (m_udpServer.Provider != null)
-                    m_udpServer.Provider.Close();   // Stop accepting new connections.
+                {
+                    if (m_udpServer.Provider.LocalEndPoint == null)
+                        // Notify that server has stopped.
+                        OnServerStopped();
+                    else
+                        // Stop accepting new connections.
+                        m_udpServer.Provider.Close();
+                }
             }
         }
 
@@ -610,6 +622,15 @@ namespace TVA.Communication
         }
 
         /// <summary>
+        /// Raises the <see cref="ServerBase.ServerStopped"/> event.
+        /// </summary>
+        protected override void OnServerStopped()
+        {
+            m_udpServer.Reset();
+            base.OnServerStopped();
+        }
+
+        /// <summary>
         /// Callback method for asynchronous send operation.
         /// </summary>
         private void SendPayloadAsyncCallback(IAsyncResult asyncResult)
@@ -728,7 +749,6 @@ namespace TVA.Communication
             catch
             {
                 // Server socket has been terminated.
-                udpServer.Reset();
                 OnServerStopped();
             }
         }
@@ -784,7 +804,6 @@ namespace TVA.Communication
             catch
             {
                 // Server socket has been terminated.
-                udpServer.Reset();
                 OnServerStopped();
             }
         }
