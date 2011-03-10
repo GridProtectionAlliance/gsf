@@ -569,10 +569,17 @@ namespace TVA.Identity
             {
                 if (m_enabled)
                 {
-                    if (m_isWinNT)
-                        return DateTime.Parse(GetUserProperty("lastLogin"));
+                    try
+                    {
+                        if (m_isWinNT)
+                            return DateTime.Parse(GetUserProperty("lastLogin"));
 
-                    return DateTime.Parse(GetUserProperty("lastLogon"));
+                        return Convert.ToDateTime(GetUserProperty("lastLogon"));
+                    }
+                    catch
+                    {
+                        return DateTime.MinValue;
+                    }
                 }
                 else
                     return DateTime.MinValue;
@@ -588,9 +595,9 @@ namespace TVA.Identity
             {
                 if (m_enabled)
                 {
-                    if (m_isWinNT)
+                    try
                     {
-                        try
+                        if (m_isWinNT)
                         {
                             string profilePath = GetUserProperty("profile");
 
@@ -610,13 +617,13 @@ namespace TVA.Identity
 
                             return Directory.GetCreationTime(profilePath);
                         }
-                        catch
-                        {
-                            return DateTime.MinValue;
-                        }
+                        else
+                            return Convert.ToDateTime(GetUserProperty("whenCreated"));
                     }
-                    else
-                        return Convert.ToDateTime(GetUserProperty("whenCreated"));
+                    catch
+                    {
+                        return DateTime.MinValue;
+                    }
                 }
                 else
                     return DateTime.MinValue;
@@ -635,40 +642,47 @@ namespace TVA.Identity
 
                 if (m_enabled && !PasswordCannotChange && !PasswordDoesNotExpire)
                 {
-                    if (m_isWinNT)
+                    try
                     {
-                        long maxPasswordAge = (long)MaximumPasswordAge.ToSeconds();
-                        long passwordAge = long.Parse(GetUserProperty("passwordAge"));
-
-                        if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                        if (m_isWinNT)
                         {
-                            // User must change password on next logon.
-                            passwordChangeDate = DateTime.UtcNow;
+                            long maxPasswordAge = (long)MaximumPasswordAge.ToSeconds();
+                            long passwordAge = long.Parse(GetUserProperty("passwordAge"));
+
+                            if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                            {
+                                // User must change password on next logon.
+                                passwordChangeDate = DateTime.UtcNow;
+                            }
+                            else
+                            {
+                                // User must change password periodically.
+                                passwordChangeDate = DateTime.UtcNow.AddSeconds(maxPasswordAge - passwordAge);
+                            }
                         }
                         else
                         {
-                            // User must change password periodically.
-                            passwordChangeDate = DateTime.UtcNow.AddSeconds(maxPasswordAge - passwordAge);
+                            long passwordSetOn = ConvertToLong(m_userEntry.Properties["pwdLastSet"].Value);
+
+                            if (passwordSetOn == 0)
+                            {
+                                // User must change password on next logon.
+                                passwordChangeDate = DateTime.UtcNow;
+                            }
+                            else
+                            {
+                                // User must change password periodically.
+                                long maxPasswordAge = MaximumPasswordAge;
+
+                                // Ignore extremes
+                                if (maxPasswordAge >= 0 && maxPasswordAge != long.MaxValue)
+                                    passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
+                            }
                         }
                     }
-                    else
+                    catch
                     {
-                        long passwordSetOn = ConvertToLong(m_userEntry.Properties["pwdLastSet"].Value);
-
-                        if (passwordSetOn == 0)
-                        {
-                            // User must change password on next logon.
-                            passwordChangeDate = DateTime.UtcNow;
-                        }
-                        else
-                        {
-                            // User must change password periodically.
-                            long maxPasswordAge = MaximumPasswordAge;
-
-                            // Ignore extremes
-                            if (maxPasswordAge >= 0 && maxPasswordAge != long.MaxValue)
-                                passwordChangeDate = DateTime.FromFileTime(passwordSetOn).AddDays(TimeSpan.FromTicks(maxPasswordAge).Duration().Days);
-                        }
+                        return DateTime.MaxValue;
                     }
                 }
 
