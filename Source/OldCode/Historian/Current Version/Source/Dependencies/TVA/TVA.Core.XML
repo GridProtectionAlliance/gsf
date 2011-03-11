@@ -26952,14 +26952,9 @@
             Serializes key and initialization vector table to local cache file that can only be decrypted from local machine.
             </summary>
         </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.DeserializeKeyIVTable(System.Object)">
+        <member name="M:TVA.Security.Cryptography.Cipher.DeserializeKeyIVTable">
             <summary>
             Deserializes key and initialization vector table from local cache that was encrypted on local machine.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.s_retryTimer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
-            <summary>
-            Restries specified serialize or deserialize event in case of file failure.
             </summary>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.GetSystemLevelMutex(System.String)">
