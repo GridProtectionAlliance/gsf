@@ -1142,6 +1142,11 @@
             <param name="length">The number of bytes to be sent from <paramref name="data"/> starting at the <paramref name="offset"/>.</param>
             <returns><see cref="T:System.Threading.WaitHandle"/> for the asynchronous operation.</returns>
         </member>
+        <member name="M:TVA.Communication.UdpServer.OnServerStopped">
+            <summary>
+            Raises the <see cref="E:TVA.Communication.ServerBase.ServerStopped"/> event.
+            </summary>
+        </member>
         <member name="M:TVA.Communication.UdpServer.SendPayloadAsyncCallback(System.IAsyncResult)">
             <summary>
             Callback method for asynchronous send operation.
