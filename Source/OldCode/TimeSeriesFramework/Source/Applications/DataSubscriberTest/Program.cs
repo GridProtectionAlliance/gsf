@@ -55,19 +55,19 @@ namespace DataSubscriberTest
                 if (TVA.Security.Cryptography.Random.Boolean)
                 {
                     Console.WriteLine("Initiating synchronized subscription...");
-                    subscriber.SynchronizedSubscribe(true, 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
+                    subscriber.SynchronizedSubscribe(true, "TimeSeriesLibraryTest", 30, 0.5D, 1.0D, "DEVARCHIVE:1;DEVARCHIVE:2");
                 }
                 else
                 {
                     if (TVA.Security.Cryptography.Random.Boolean)
                     {
                         Console.WriteLine("Initiating on-change unsynchronized subscription...");
-                        subscriber.UnsynchronizedSubscribe(true, false, "DEVARCHIVE:1;DEVARCHIVE:2");
+                        subscriber.UnsynchronizedSubscribe(true, "TimeSeriesLibraryTest", false, "DEVARCHIVE:1;DEVARCHIVE:2");
                     }
                     else
                     {
                         Console.WriteLine("Initiating throttled unsynchronized subscription...");
-                        subscriber.UnsynchronizedSubscribe(true, true, "DEVARCHIVE:1;DEVARCHIVE:2", 5.0D, 1.0D, false);
+                        subscriber.UnsynchronizedSubscribe(true, "TimeSeriesLibraryTest", true, "DEVARCHIVE:1;DEVARCHIVE:2", 5.0D, 1.0D, false);
                     }
                 }
             }

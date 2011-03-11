@@ -36,6 +36,7 @@ using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
+using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -567,6 +568,11 @@ namespace TimeSeriesFramework.Transport
         private TcpServer m_dataServer;
         private bool m_disposed;
 
+        /// <summary>
+        /// Lookup string for cipher key used for encryption of transport password.
+        /// </summary>
+        public const string CipherLookupKey = "tfsTransport";
+
         #endregion
 
         #region [ Constructors ]
@@ -652,6 +658,27 @@ namespace TimeSeriesFramework.Transport
 
                 if (m_dataServer != null)
                     m_dataServer.SettingsCategory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets shared secret required to access transport data.
+        /// </summary>
+        public string SharedSecret
+        {
+            get
+            {
+                if (m_dataServer == null)
+                    throw new NullReferenceException("Internal TCP channel is undefined, cannot get shared secret");
+
+                return m_dataServer.SharedSecret;
+            }
+            set
+            {
+                if (m_dataServer == null)
+                    throw new NullReferenceException("Internal TCP channel is undefined, cannot set shared secret");
+
+                m_dataServer.SharedSecret = value;
             }
         }
 
@@ -952,6 +979,22 @@ namespace TimeSeriesFramework.Transport
                                 if (byteLength > 0 && length >= 6 + byteLength)
                                 {
                                     string connectionString = Encoding.Unicode.GetString(buffer, 6, byteLength);
+                                    string password;
+                                    Dictionary<string, string> settings = connectionString.ParseKeyValuePairs();
+
+                                    // Validate password required for transport data access
+                                    if (settings.TryGetValue("password", out password))
+                                    {
+                                        // Attempt to decrypt password
+                                        password = password.Decrypt(CipherLookupKey, CipherStrength.Aes256);
+
+                                        // See if password matches data publisher's defined shared secret (read from config file)
+                                        if (password != m_dataServer.SharedSecret)
+                                            throw new InvalidOperationException("Authentication Failure: Password for transport data access is incorrect.");
+                                    }
+                                    else
+                                        throw new InvalidOperationException("Authentication Failure: No password key was provided in subscriber connection string.");
+                                   
                                     IClientSubscription subscription;
 
                                     // Attempt to lookup adapter by its client ID

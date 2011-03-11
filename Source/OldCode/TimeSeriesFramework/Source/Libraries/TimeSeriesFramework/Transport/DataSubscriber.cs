@@ -28,6 +28,7 @@ using System.Text;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
+using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -188,6 +189,7 @@ namespace TimeSeriesFramework.Transport
         /// Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+        /// <param name="password">Pass-phrase required to connect to subscriber.</param>
         /// <param name="framesPerSecond">The desired number of data frames per second.</param>
         /// <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
         /// <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
@@ -199,10 +201,11 @@ namespace TimeSeriesFramework.Transport
         /// <param name="allowPreemptivePublishing">Gets or sets flag that allows system to preemptively publish frames assuming all expected measurements have arrived.</param>
         /// <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
         /// <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
-        public virtual bool SynchronizedSubscribe(bool compactFormat, int framesPerSecond, double lagTime, double leadTime, string filterExpression, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived)
+        public virtual bool SynchronizedSubscribe(bool compactFormat, string password, int framesPerSecond, double lagTime, double leadTime, string filterExpression, bool useLocalClockAsRealTime = false, bool ignoreBadTimestamps = false, bool allowSortsByArrival = true, long timeResolution = Ticks.PerMillisecond, bool allowPreemptivePublishing = true, DownsamplingMethod downsamplingMethod = DownsamplingMethod.LastReceived)
         {
             StringBuilder connectionString = new StringBuilder();
 
+            connectionString.AppendFormat("password={0}; ", password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
@@ -221,16 +224,18 @@ namespace TimeSeriesFramework.Transport
         /// Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
         /// </summary>
         /// <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+        /// <param name="password">Pass-phrase required to connect to subscriber.</param>
         /// <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
         /// <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
         /// <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
         /// <param name="leadTime">When <paramref name="throttled"/> is <c>true</c>, defines the allowed time deviation tolerance to real-time in seconds (can be subsecond).</param>
         /// <param name="useLocalClockAsRealTime">When <paramref name="throttled"/> is <c>true</c>, defines boolean value that determines whether or not to use the local clock time as real-time. Set to <c>false</c> to use latest received measurement timestamp as real-time.</param>
         /// <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
-        public virtual bool UnsynchronizedSubscribe(bool compactFormat, bool throttled, string filterExpression, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
+        public virtual bool UnsynchronizedSubscribe(bool compactFormat, string password, bool throttled, string filterExpression, double lagTime = 10.0D, double leadTime = 5.0D, bool useLocalClockAsRealTime = false)
         {
             StringBuilder connectionString = new StringBuilder();
 
+            connectionString.AppendFormat("password={0}; ", password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
