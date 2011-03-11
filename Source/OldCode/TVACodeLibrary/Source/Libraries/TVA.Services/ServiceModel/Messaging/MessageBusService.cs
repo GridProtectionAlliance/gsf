@@ -1401,6 +1401,16 @@ namespace TVA.Services.ServiceModel.Messaging
             }
         }
 
+        private void SaveMessages()
+        {
+            // For use later when enabling message persistance.
+        }
+
+        private void LoadMessages()
+        {
+            // For use later when enabling message persistance.
+        }
+
         private void OnChannelClosing(object sender, EventArgs e)
         {
             DisconnectClient(((IContextChannel)sender).SessionId);

@@ -10,6 +10,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  10/06/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  03/11/2011 - Pinal C. Patel
+//       Marked the class with Serializable attribute and changed properties to field for serialization.
 //
 //*******************************************************************************************************
 
@@ -255,38 +257,37 @@ namespace TVA.Services.ServiceModel.Messaging
     /// <summary>
     /// Represents a message that can be used to exchange information between processes using <see cref="MessageBusService"/>.
     /// </summary>
+    [Serializable()]
     public class Message
     {
-        #region [ Constructors ]
+        #region [ Members ]
 
-        #endregion
-
-        #region [ Properties ]
+        // Fields
 
         /// <summary>
         /// Gets or sets the <see cref="DateTime"/> when this <see cref="Message"/> was created.
         /// </summary>
-        public DateTime Time { get; set; }
+        public DateTime Time;
 
         /// <summary>
         /// Gets or sets the <see cref="MessageType">Type</see> of this <see cref="Message"/>.
         /// </summary>
-        public MessageType Type { get; set; }
+        public MessageType Type;
 
         /// <summary>
         /// Gets or sets the identifier of this <see cref="Message"/>.
         /// </summary>
-        public string Name { get; set; }
+        public string Name;
 
         /// <summary>
         /// Gets or sets the format of the <see cref="Content"/> in this <see cref="Message"/>.
         /// </summary>
-        public string Format { get; set; }
+        public string Format;
 
         /// <summary>
         /// Gets or sets the actual payload of this <see cref="Message"/>.
         /// </summary>
-        public byte[] Content { get; set; }
+        public byte[] Content;
 
         #endregion
     }
