@@ -986,7 +986,7 @@ namespace TimeSeriesFramework.Transport
                                     if (settings.TryGetValue("password", out password))
                                     {
                                         // Attempt to decrypt password
-                                        password = password.Decrypt(CipherLookupKey, CipherStrength.Aes256);
+                                        //password = password.Decrypt(CipherLookupKey, CipherStrength.Aes256);
 
                                         // See if password matches data publisher's defined shared secret (read from config file)
                                         if (password != m_dataServer.SharedSecret)

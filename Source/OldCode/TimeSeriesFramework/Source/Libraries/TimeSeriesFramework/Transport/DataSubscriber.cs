@@ -205,7 +205,7 @@ namespace TimeSeriesFramework.Transport
         {
             StringBuilder connectionString = new StringBuilder();
 
-            connectionString.AppendFormat("password={0}; ", password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
+            connectionString.AppendFormat("password={0}; ", password); //password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
             connectionString.AppendFormat("framesPerSecond={0}; ", framesPerSecond);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
@@ -235,7 +235,7 @@ namespace TimeSeriesFramework.Transport
         {
             StringBuilder connectionString = new StringBuilder();
 
-            connectionString.AppendFormat("password={0}; ", password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
+            connectionString.AppendFormat("password={0}; ", password); //password.Encrypt(DataPublisher.CipherLookupKey, CipherStrength.Aes256));
             connectionString.AppendFormat("trackLatestMeasurements={0}; ", throttled);
             connectionString.AppendFormat("lagTime={0}; ", lagTime);
             connectionString.AppendFormat("leadTime={0}; ", leadTime);
