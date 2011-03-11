@@ -117,9 +117,6 @@
   <ItemGroup>
     <EmbeddedResource Include="ServiceProcess\ClientHelper.bmp" />
     <EmbeddedResource Include="ServiceProcess\ServiceHelper.bmp" />
-    <EmbeddedResource Include="ServiceProcess\ServiceInstallerEx.resx">
-      <DependentUpon>ServiceInstallerEx.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TVA.Communication\TVA.Communication.csproj">

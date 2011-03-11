@@ -66,6 +66,8 @@
 //       Added default "version" and "time" service commands.
 //  02/11/2011 - Pinal C. Patel
 //       Updated VerifySecurity() to work correctly with TCP integrated windows authentication. 
+//  03/09/2011 - Pinal C. Patel
+//       Moved UpdateType enumeration to TVA namespace in TVA.Core.dll for broader usage.
 //
 //*******************************************************************************************************
 
@@ -354,25 +356,6 @@ namespace TVA.Services.ServiceProcess
         /// Service has shutdown.
         /// </summary>
         Shutdown
-    }
-
-    /// <summary>
-    /// Indicates the type of service update.
-    /// </summary>
-    public enum UpdateType
-    {
-        /// <summary>
-        /// Update is informational.
-        /// </summary>
-        Information,
-        /// <summary>
-        /// Update is a warning message.
-        /// </summary>
-        Warning,
-        /// <summary>
-        /// Update is an alarm message.
-        /// </summary>
-        Alarm
     }
 
     #endregion

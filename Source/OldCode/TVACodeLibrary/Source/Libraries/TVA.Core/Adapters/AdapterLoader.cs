@@ -25,6 +25,13 @@
 //       application domain for isolated execution.
 //  10/01/2010 - Pinal C. Patel
 //       Added adapter monitoring capability to monitor the resource utilization of adapters.
+//  03/08/2011 - Pinal C. Patel
+//       Made IAdapter a requirement for using AdapterLoader for effectively managing serialized 
+//       adapter instances.
+//       Added AdapterFileExtension and AdapterFileFormat properties to allow loading of binary and XML 
+//       serialized adapter instances.
+//       Updated AdapterLoadException event to not provide the adapter's type since it might not be 
+//       available when processing serialized adapter instances.
 //
 //*******************************************************************************************************
 
@@ -250,15 +257,39 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
+using System.Xml.Serialization;
 using TVA.Collections;
 using TVA.IO;
 using TVA.Units;
 
 namespace TVA.Adapters
 {
+    #region [ Enumerations ]
+
+    /// <summary>
+    /// Specifies the file format of the adapters to be loaded by the <see cref="AdapterLoader{T}"/>.
+    /// </summary>
+    public enum AdapterFileFormat
+    {
+        /// <summary>
+        /// Adapters are <see cref="Type"/>s inside <see cref="Assembly"/> files (DLLs).
+        /// </summary>
+        Assembly,
+        /// <summary>
+        /// Adapters are binary serialized instances persisted to files.
+        /// </summary>
+        SerializedBin,
+        /// <summary>
+        /// Adapters are XML serialized instances persisted to files.
+        /// </summary>
+        SerializedXml
+    }
+
+    #endregion
+
     /// <summary>
     /// Represents a generic loader of adapters.
     /// </summary>
@@ -288,6 +319,7 @@ namespace TVA.Adapters
     ///         s_adapterLoader = new AdapterLoader&lt;PublishAdapterBase&gt;();
     ///         s_adapterLoader.IsolateAdapters = true;
     ///         s_adapterLoader.MonitorAdapters = true;
+    ///         s_adapterLoader.AdapterFileExtension = "*.exe";
     ///         s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
     ///         s_adapterLoader.AllowableProcessProcessorUsage = 50;
     ///         s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
@@ -297,38 +329,8 @@ namespace TVA.Adapters
     ///         s_adapterLoader.AdapterResourceUsageExceeded += OnAdapterResourceUsageExceeded;
     ///         s_adapterLoader.Initialize();
     /// 
-    ///         // Take user input to alter adapter working state.
-    ///         string userInput;
-    ///         Console.WriteLine("Possible commands:");
-    ///         Console.WriteLine("  Connect - Connects all disconnected adapters");
-    ///         Console.WriteLine("  Disconnect - Disconnects all connected adapters");
-    ///         Console.WriteLine("  Exit - Exits this application\r\n");
-    ///         while (string.Compare(userInput = Console.ReadLine(), "Exit", true) != 0)
-    ///         {
-    ///             switch (userInput.ToLower())
-    ///             {
-    ///                 case "connect":
-    ///                     // Connect all adapters.
-    ///                     Console.Write("Connecting adapters...");
-    ///                     foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
-    ///                     {
-    ///                         adapter.Enabled = true;
-    ///                     }
-    ///                     Console.WriteLine("done.\r\n");
-    ///                     break;
-    ///                 case "disconnect":
-    ///                     // Disconnect all adapters.
-    ///                     Console.Write("Disconnecting adapters...");
-    ///                     foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
-    ///                     {
-    ///                         adapter.Enabled = false;
-    ///                     }
-    ///                     Console.WriteLine("done.\r\n");
-    ///                     break;
-    ///             }
-    ///         }
-    /// 
     ///         // Shutdown.
+    ///         Console.ReadLine();
     ///         s_adapterLoader.Dispose();
     ///     }
     /// 
@@ -371,7 +373,6 @@ namespace TVA.Adapters
     ///     {
     ///         base.Initialize();
     ///         new Thread(Publish).Start();
-    ///         Enabled = true;
     ///     }
     /// 
     ///     protected abstract void Publish();
@@ -380,7 +381,7 @@ namespace TVA.Adapters
     /// /// &lt;summary&gt;
     /// /// Adapter that does not manage memory well.
     /// /// &lt;/summary&gt;
-    /// public class PublisAdapterA : PublishAdapterBase
+    /// public class PublishAdapterA : PublishAdapterBase
     /// {
     ///     protected override void Publish()
     ///     {
@@ -391,9 +392,6 @@ namespace TVA.Adapters
     ///                 Data.Add(new byte[10]);
     ///             }
     ///             Thread.Sleep(100);
-    /// 
-    ///             if (Enabled)
-    ///                 Data.RemoveRange(0, Data.Count / 2);
     ///         }
     ///     }
     /// }
@@ -418,9 +416,6 @@ namespace TVA.Adapters
     ///                 Data.Add(Encoding.ASCII.GetBytes(text.Encrypt("C1pH3r", CipherStrength.Aes256)).BlockCopy(0, 1));
     ///             }
     ///             Thread.Sleep(10);
-    /// 
-    ///             if (Enabled)
-    ///                 Data.RemoveRange(0, Data.Count / 2);
     ///         }
     ///     }
     /// }
@@ -428,16 +423,60 @@ namespace TVA.Adapters
     /// </example>
     /// <seealso cref="Adapter"/>
     /// <seealso cref="IAdapter"/>
-    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus
+    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus where T : IAdapter
     {
         #region [ Members ]
+
+        // Nested Types
+
+        private class Deserializer : MarshalByRefObject
+        {
+            public T Deserialize(string adapterFile, AdapterFileFormat adapterFormat)
+            {
+                if (adapterFormat == AdapterFileFormat.SerializedBin)
+                {
+                    // Attempt binary desrialization.
+                    return Serialization.GetObject<T>(File.ReadAllBytes(adapterFile));
+                }
+                else if (adapterFormat == AdapterFileFormat.SerializedXml)
+                {
+                    // Attempt XML deserialization.
+                    XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
+                    XElement type = xml.Root.Element("Type");
+                    if (type != null)
+                    {
+                        // Type element required for looking up the adapter's type.
+                        XmlSerializer serializer = new XmlSerializer(Type.GetType(type.Value));
+                        return (T)serializer.Deserialize(new StringReader(xml.ToString()));
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Type element is missing in the XML");
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException();
+                }
+            }
+        }
 
         // Constants
 
         /// <summary>
-        /// Specified the default value for the <see cref="AdapterDirectory"/> property.
+        /// Specifies the default value for the <see cref="AdapterDirectory"/> property.
         /// </summary>
         public const string DefaultAdapterDirectory = "";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AdapterFileExtension"/> property.
+        /// </summary>
+        public const string DefaultAdapterFileExtension = "*.dll";
+
+        /// <summary>
+        /// Specifies the default value for the <see cref="AdapterFileFormat"/> property.
+        /// </summary>
+        public const AdapterFileFormat DefaultAdapterFileFormat = AdapterFileFormat.Assembly;
 
         /// <summary>
         /// Specifies the default value for the <see cref="WatchForAdapters"/> property.
@@ -510,10 +549,9 @@ namespace TVA.Adapters
         /// Occurs when an <see cref="Exception"/> is encountered when loading an adapter.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="Type"/> of adapter that was being loaded.<br/>
-        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the <see cref="Exception"/> encountered when loading the adapter.
+        /// <see cref="EventArgs{T}.Argument"/> is the <see cref="Exception"/> encountered when loading the adapter.
         /// </remarks>
-        public event EventHandler<EventArgs<Type, Exception>> AdapterLoadException;
+        public event EventHandler<EventArgs<Exception>> AdapterLoadException;
 
         /// <summary>
         /// Occurs when an <see cref="Exception"/> is encountered while executing a queued operation on one the <see cref="Adapters"/>.
@@ -526,6 +564,8 @@ namespace TVA.Adapters
 
         // Fields
         private string m_adapterDirectory;
+        private string m_adapterFileExtension;
+        private AdapterFileFormat m_adapterFileFormat;
         private bool m_watchForAdapters;
         private bool m_isolateAdapters;
         private bool m_monitorAdapters;
@@ -552,6 +592,8 @@ namespace TVA.Adapters
         public AdapterLoader()
         {
             m_adapterDirectory = DefaultAdapterDirectory;
+            m_adapterFileExtension = DefaultAdapterFileExtension;
+            m_adapterFileFormat = DefaultAdapterFileFormat;
             m_watchForAdapters = DefaultWatchForAdapters;
             m_isolateAdapters = DefaultIsolateAdapters;
             m_monitorAdapters = DefaultMonitorAdapters;
@@ -562,7 +604,9 @@ namespace TVA.Adapters
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
             m_adapterWatcher = new FileSystemWatcher();
-            m_adapterWatcher.Created += AdapterWatcher_Created;
+            m_adapterWatcher.Created += AdapterWatcher_Events;
+            m_adapterWatcher.Changed += AdapterWatcher_Events;
+            m_adapterWatcher.Deleted += AdapterWatcher_Events;
             m_operationQueue = ProcessQueue<object>.CreateRealTimeQueue(ExecuteOperation);
             m_enabledStates = new Dictionary<Type, bool>();
         }
@@ -598,6 +642,40 @@ namespace TVA.Adapters
                     throw new ArgumentNullException("value");
 
                 m_adapterDirectory = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file extension of the <see cref="Adapters"/>.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being set is a null or empty string.</exception>
+        public string AdapterFileExtension
+        {
+            get
+            {
+                return m_adapterFileExtension;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_adapterFileExtension = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the file format of the <see cref="Adapters"/>.
+        /// </summary>
+        public AdapterFileFormat AdapterFileFormat
+        {
+            get
+            {
+                return m_adapterFileFormat;
+            }
+            set
+            {
+                m_adapterFileFormat = value;
             }
         }
 
@@ -638,7 +716,6 @@ namespace TVA.Adapters
         /// Use <see cref="AllowableProcessMemoryUsage"/>, <see cref="AllowableProcessProcessorUsage"/>, <see cref="AllowableAdapterMemoryUsage"/> and 
         /// <see cref="AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
         /// </remarks>
-        /// <exception cref="InvalidOperationException"><see cref="Adapters"/> do not implement the <see cref="IAdapter"/> interface.</exception>
         public bool MonitorAdapters
         {
             get
@@ -647,10 +724,6 @@ namespace TVA.Adapters
             }
             set
             {
-                if (!(typeof(T) == typeof(IAdapter) ||
-                      typeof(T).GetInterface(typeof(IAdapter).FullName) != null))
-                    throw new InvalidOperationException(string.Format("{0} does not implement {1} interface", typeof(T).Name, typeof(IAdapter).Name));
-
                 m_monitorAdapters = value;
             }
         }
@@ -757,15 +830,12 @@ namespace TVA.Adapters
                         m_operationQueue.Enabled = m_enabledStates[m_operationQueue.GetType()];
 
                         bool savedState;
-                        ISupportLifecycle implementingAdapter;
                         lock (m_adapters)
                         {
                             foreach (T adapter in m_adapters)
                             {
-                                implementingAdapter = adapter as ISupportLifecycle;
-                                if (implementingAdapter != null &&
-                                    m_enabledStates.TryGetValue(implementingAdapter.GetType(), out savedState))
-                                    implementingAdapter.Enabled = savedState;
+                                if (m_enabledStates.TryGetValue(adapter.GetType(), out savedState))
+                                    adapter.Enabled = savedState;
                             }
                         }
                     }
@@ -776,14 +846,11 @@ namespace TVA.Adapters
                         m_adapterWatcher.EnableRaisingEvents = false;
                         m_operationQueue.Enabled = false;
 
-                        ISupportLifecycle implementingAdapter;
                         lock (m_adapters)
                         {
                             foreach (T adapter in m_adapters)
                             {
-                                implementingAdapter = adapter as ISupportLifecycle;
-                                if (implementingAdapter != null)
-                                    implementingAdapter.Enabled = false;
+                                adapter.Enabled = false;
                             }
                         }
                     }
@@ -840,7 +907,6 @@ namespace TVA.Adapters
                 status.Append("          Operations queue: ");
                 status.Append(m_operationQueue.Enabled ? "Enabled" : "Disabled");
                 status.AppendLine();
-                IProvideStatus implementingAdapter;
                 lock (m_adapters)
                 {
                     status.Append("     Total loaded adapters: ");
@@ -848,15 +914,11 @@ namespace TVA.Adapters
                     status.AppendLine();
                     foreach (T adapter in m_adapters)
                     {
-                        implementingAdapter = adapter as IProvideStatus;
-                        if (implementingAdapter != null)
-                        {
-                            status.AppendLine();
-                            status.Append("              Adapter name: ");
-                            status.Append(implementingAdapter.Name);
-                            status.AppendLine();
-                            status.Append(implementingAdapter.Status);
-                        }
+                        status.AppendLine();
+                        status.Append("              Adapter name: ");
+                        status.Append(adapter.Name);
+                        status.AppendLine();
+                        status.Append(adapter.Status);
                     }
                 }
 
@@ -904,10 +966,7 @@ namespace TVA.Adapters
         /// </summary>
         public virtual void Initialize()
         {
-            if (!m_initialized)
-            {
-                Initialize(typeof(T).LoadImplementations(Path.Combine(AdapterDirectory, "*.*")));
-            }
+            Initialize(null);
         }
 
         /// <summary>
@@ -919,16 +978,28 @@ namespace TVA.Adapters
             if (!m_initialized)
             {
                 // Process adapters.
-                foreach (Type type in adapterTypes)
+                if (m_adapterFileFormat == AdapterFileFormat.Assembly)
                 {
-                    ProcessAdapter(type);
+                    if (adapterTypes == null)
+                        adapterTypes = typeof(T).LoadImplementations(Path.Combine(AdapterDirectory, m_adapterFileExtension));
+
+                    foreach (Type type in adapterTypes)
+                    {
+                        ProcessAdapter(type);
+                    }
+                }
+                else
+                {
+                    foreach (string adapterFile in Directory.GetFiles(AdapterDirectory, m_adapterFileExtension))
+                    {
+                        ProcessAdapter(adapterFile);
+                    }
                 }
 
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
                     m_adapterWatcher.Path = AdapterDirectory;
-                    m_adapterWatcher.Filter = "*.dll";
                     m_adapterWatcher.EnableRaisingEvents = true;
                 }
 
@@ -941,7 +1012,6 @@ namespace TVA.Adapters
                     // Following must be true in order for us to monitor adapter resources:
                     // - Adapter monitoring is enabled.
                     // - Adapter isolation is enabled.
-                    // - Adapters must have implemented the IAdapter interface.
                     m_adapterMonitoringThread = new Thread(MonitorAdapterResources);
                     m_adapterMonitoringThread.Start();
                 }
@@ -952,24 +1022,66 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Processes the <paramref name="adapterType"/> by creating its instance and initializing it.
+        /// Processes the <paramref name="adapterFile"/> by deserializing it.
         /// </summary>
-        /// <param name="adapterType"><see cref="Type"/> of the adapter to be instantiated and initialized.</param>
+        /// <param name="adapterFile">Path to the adapter file to be deserialized.</param>
+        protected virtual void ProcessAdapter(string adapterFile)
+        {
+            T adapter = default(T);
+            try
+            {
+                Deserializer deserializer;
+                if (m_isolateAdapters)
+                {
+                    // Adapter isolation is enabled.
+                    AppDomain domain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
+                    deserializer = (Deserializer)domain.CreateInstanceAndUnwrap(this.GetType().Assembly.FullName, typeof(Deserializer).FullName);
+
+                }
+                else
+                {
+                    // Adapter isolation is not enabled.
+                    deserializer = new Deserializer();
+                }
+
+                // Deserialize adapter instance.
+                adapter = deserializer.Deserialize(adapterFile, m_adapterFileFormat);
+                SetAdapterFilePath(adapter, adapterFile);
+
+                OnAdapterCreated(adapter);
+
+                // Add adapter and notify via event.
+                lock (m_adapters)
+                {
+                    int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.File == adapterFile);
+                    if (adapterIndex < 0)
+                        m_adapters.Add(adapter);    // Add adapter.
+                    else
+                        m_adapters[0] = adapter;    // Update adapter.
+                }
+            }
+            catch (Exception ex)
+            {
+                OnAdapterLoadException(adapter, ex);
+            }
+        }
+
+        /// <summary>
+        /// Processes the <paramref name="adapterType"/> by instantiating it.
+        /// </summary>
+        /// <param name="adapterType"><see cref="Type"/> of the adapter to be instantiated.</param>
         protected virtual void ProcessAdapter(Type adapterType)
         {
+            T adapter = default(T);
             try
             {
                 if (adapterType.GetConstructor(Type.EmptyTypes) != null)
                 {
                     // Instantiate adapter instance.
-                    T adapter;
-                    if (m_isolateAdapters &&
-                        (adapterType.GetRootType() == typeof(MarshalByRefObject) ||
-                         adapterType.GetInterface(typeof(ISerializable).FullName) != null ||
-                         adapterType.GetCustomAttributes(typeof(SerializableAttribute), false).Length > 0))
+                    if (m_isolateAdapters && (adapterType.IsMarshalByRef || adapterType.IsSerializable))
                     {
                         // Adapter isolation is enabled and possible.
-                        AppDomain domain = AppDomain.CreateDomain(adapterType.Name);
+                        AppDomain domain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
                         adapter = (T)domain.CreateInstanceAndUnwrap(adapterType.Assembly.FullName, adapterType.FullName);
                     }
                     else
@@ -978,11 +1090,6 @@ namespace TVA.Adapters
                         adapter = (T)(Activator.CreateInstance(adapterType));
                     }
                     OnAdapterCreated(adapter);
-
-                    // Initialize adapter if supported.
-                    ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
-                    if (initializableAdapter != null)
-                        initializableAdapter.Initialize();
 
                     // Add adapter and notify via event.
                     lock (m_adapters)
@@ -993,7 +1100,7 @@ namespace TVA.Adapters
             }
             catch (Exception ex)
             {
-                OnAdapterLoadException(adapterType, ex);
+                OnAdapterLoadException(adapter, ex);
             }
         }
 
@@ -1009,7 +1116,7 @@ namespace TVA.Adapters
             Process currentProcess;
             double processMemoryUsage;
             double processProcessorUsage;
-            List<IAdapter> offendingAdapters = new List<IAdapter>();
+            List<T> offendingAdapters = new List<T>();
             while (!m_disposed)
             {
                 Thread.Sleep(5000);
@@ -1029,7 +1136,7 @@ namespace TVA.Adapters
                         // Force a full blocking GC so the memory usage of adapters is updated.
                         GC.Collect();
 
-                        foreach (IAdapter adapter in m_adapters)
+                        foreach (T adapter in m_adapters)
                         {
                             if (adapter.MemoryUsage > m_allowableAdapterMemoryUsage ||
                                 adapter.ProcessorUsage > m_allowableAdapterProcessorUsage)
@@ -1104,7 +1211,9 @@ namespace TVA.Adapters
 
                         if (m_adapterWatcher != null)
                         {
-                            m_adapterWatcher.Created -= AdapterWatcher_Created;
+                            m_adapterWatcher.Created -= AdapterWatcher_Events;
+                            m_adapterWatcher.Changed -= AdapterWatcher_Events;
+                            m_adapterWatcher.Deleted -= AdapterWatcher_Events;
                             m_adapterWatcher.Dispose();
                         }
 
@@ -1145,6 +1254,11 @@ namespace TVA.Adapters
         /// <param name="adapter">Adapter instance to send to <see cref="AdapterLoaded"/> event.</param>
         protected virtual void OnAdapterLoaded(T adapter)
         {
+            // Initialize the adapter.
+            ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
+            if (initializableAdapter != null)
+                initializableAdapter.Initialize();
+
             if (AdapterLoaded != null)
                 AdapterLoaded(this, new EventArgs<T>(adapter));
         }
@@ -1158,18 +1272,16 @@ namespace TVA.Adapters
             try
             {
                 // Dispose the adapter.
-                IDisposable disposableAdapter = adapter as IDisposable;
-                if (disposableAdapter != null)
-                    disposableAdapter.Dispose();
+                if (adapter != null)
+                    adapter.Dispose();
             }
             catch { }
 
             try
             {
-                // Unload adapter domain.
-                IAdapter isolatedAdapter = adapter as IAdapter;
-                if (isolatedAdapter != null && !isolatedAdapter.Domain.IsDefaultAppDomain())
-                    AppDomain.Unload(isolatedAdapter.Domain);
+                // Unload the adapter domain.
+                if (adapter != null && !adapter.Domain.IsDefaultAppDomain())
+                    AppDomain.Unload(adapter.Domain);
             }
             catch { }
 
@@ -1187,15 +1299,26 @@ namespace TVA.Adapters
                 AdapterResourceUsageExceeded(this, new EventArgs<T>(adapter));
         }
 
+
         /// <summary>
         /// Raises the <see cref="AdapterLoadException"/> event.
         /// </summary>
-        /// <param name="adapter"><see cref="Type"/> to send to <see cref="AdapterLoadException"/> event.</param>
+        /// <param name="adapter">Adapter instance that caused the <paramref name="exception"/>.</param>
         /// <param name="exception"><see cref="Exception"/> to send to <see cref="AdapterLoadException"/> event.</param>
-        protected virtual void OnAdapterLoadException(Type adapter, Exception exception)
+        protected virtual void OnAdapterLoadException(T adapter, Exception exception)
         {
+            // Remove the adapter if it exists.
+            if (adapter != null)
+            {
+                lock (m_adapters)
+                {
+                    if (m_adapters.Contains(adapter))
+                        m_adapters.Remove(adapter);
+                }
+            }
+
             if (AdapterLoadException != null)
-                AdapterLoadException(this, new EventArgs<Type, Exception>(adapter, exception));
+                AdapterLoadException(this, new EventArgs<Exception>(exception));
         }
 
         /// <summary>
@@ -1209,19 +1332,37 @@ namespace TVA.Adapters
                 OperationExecutionException(this, new EventArgs<T, Exception>(adapter, exception));
         }
 
+        private static string GetAdapterFilePath(T adapter)
+        {
+            if (adapter != null)
+                return adapter.File;
+            else
+                return null;
+        }
+
+        private static bool SetAdapterFilePath(T adapter, string adapterFile)
+        {
+            if (adapter != null)
+            {
+                adapter.File = adapterFile;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         private void SaveCurrentState()
         {
             m_enabledStates[m_adapterWatcher.GetType()] = m_adapterWatcher.EnableRaisingEvents;
             m_enabledStates[m_operationQueue.GetType()] = m_operationQueue.Enabled;
 
-            ISupportLifecycle implementingAdapter;
             lock (m_adapters)
             {
                 foreach (T adapter in m_adapters)
                 {
-                    implementingAdapter = adapter as ISupportLifecycle;
-                    if (implementingAdapter != null)
-                        m_enabledStates[implementingAdapter.GetType()] = implementingAdapter.Enabled;
+                    m_enabledStates[adapter.GetType()] = adapter.Enabled;
                 }
             }
         }
@@ -1247,12 +1388,36 @@ namespace TVA.Adapters
             }
         }
 
-        private void AdapterWatcher_Created(object sender, FileSystemEventArgs e)
+        private void AdapterWatcher_Events(object sender, FileSystemEventArgs e)
         {
-            // Process newly added assemblies at runtime for adapters.
-            foreach (Type type in typeof(T).LoadImplementations(e.FullPath))
+            if (FilePath.IsFilePatternMatch(m_adapterFileExtension, FilePath.GetFileName(e.FullPath), true))
             {
-                ProcessAdapter(type);
+                // Updated file has a matching extension.
+                if (e.ChangeType == WatcherChangeTypes.Deleted)
+                {
+                    // Remove loaded adapter.
+                    lock (m_adapters)
+                    {
+                        int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.File == e.FullPath);
+                        if (adapterIndex >= 0)
+                            m_adapters.RemoveAt(adapterIndex);
+                    }
+                }
+                else
+                {
+                    // Process new adapter.
+                    if (m_adapterFileFormat == AdapterFileFormat.Assembly)
+                    {
+                        foreach (Type type in typeof(T).LoadImplementations(e.FullPath))
+                        {
+                            ProcessAdapter(type);
+                        }
+                    }
+                    else
+                    {
+                        ProcessAdapter(e.FullPath);
+                    }
+                }
             }
         }
 

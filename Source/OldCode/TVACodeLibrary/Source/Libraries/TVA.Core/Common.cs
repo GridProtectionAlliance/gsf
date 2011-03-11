@@ -26,6 +26,8 @@
 //       Added an overload for TypeConvertToString() that takes CultureInfo as a parameter.
 //  12/07/2010 - Pinal C. Patel
 //       Updated TypeConvertToString() to return an empty string if the passed in value is null.
+//  03/09/2011 - Pinal C. Patel
+//       Moved UpdateType enumeration from TVA.Services.ServiceProcess namespace for broader usage.
 //
 //*******************************************************************************************************
 
@@ -296,6 +298,25 @@ namespace TVA
         /// The application is a web site or web application.
         /// </summary>
         Web = 100
+    }
+
+    /// <summary>
+    /// Indicates the type of update.
+    /// </summary>
+    public enum UpdateType
+    {
+        /// <summary>
+        /// Update is informational.
+        /// </summary>
+        Information,
+        /// <summary>
+        /// Update is a warning.
+        /// </summary>
+        Warning,
+        /// <summary>
+        /// Update is an alarm.
+        /// </summary>
+        Alarm
     }
 
     #endregion

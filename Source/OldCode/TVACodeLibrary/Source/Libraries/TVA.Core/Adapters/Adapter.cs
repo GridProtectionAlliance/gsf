@@ -16,6 +16,10 @@
 //       Modified Name property to use SettingsCategory instead of Type name.
 //  12/07/2010 - Pinal C. Patel
 //       Updated PersistSettings property to default to false instead of true.
+//  03/08/2011 - Pinal C. Patel
+//       Added StatusUpdate and Disposed events.
+//       Added Type and File properties to support serialized adapter instances.
+//       Added attributes to fields and properties to enable serialization of derived type instances.
 //
 //*******************************************************************************************************
 
@@ -236,26 +240,54 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.Configuration;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace TVA.Adapters
 {
     /// <summary>
     /// Represents an adapter that could execute in isolation in a seperate <see cref="AppDomain"/>.
     /// </summary>
+    /// <seealso cref="IAdapter"/>
     /// <seealso cref="AdapterLoader{T}"/>
+    [Serializable()]
     public class Adapter : MarshalByRefObject, IAdapter
     {
         #region [ Members ]
 
         // Fields
+        [NonSerialized()]
         private DateTime m_created;
+        [NonSerialized()]
+        private string m_file;
+        [NonSerialized()]
         private bool m_persistSettings;
+        [NonSerialized()]
         private string m_settingsCategory;
+        [NonSerialized()]
         private bool m_enabled;
+        [NonSerialized()]
         private bool m_disposed;
+        [NonSerialized()]
         private bool m_initialized;
+
+        // Events
+
+        /// <summary>
+        /// Occurs when the <see cref="Adapter"/> wants to provide a status update.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
+        /// </remarks>
+        public event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
+
+        /// <summary>
+        /// Occurs when <see cref="Adapter"/> is disposed.
+        /// </summary>
+        public event EventHandler Disposed;
 
         #endregion
 
@@ -283,8 +315,48 @@ namespace TVA.Adapters
         #region [ Properties ]
 
         /// <summary>
+        /// Gets or sets the text representation of the <see cref="Adapter"/>'s <see cref="Type"/>.
+        /// </summary>
+        /// <remarks>
+        /// This can be used for looking up the <see cref="Type"/> of the <see cref="Adapter"/> when deserializing it using <see cref="XmlSerializer"/>.
+        /// </remarks>
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public virtual string Type
+        { 
+            get
+            {
+                Type type = this.GetType();
+                return string.Format("{0}, {1}", type.FullName, type.Assembly.GetName().Name);
+            }
+            set
+            {
+                // Ignore
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the path to the file where the <see cref="Adapter"/> is housed.
+        /// </summary>
+        /// <remarks>
+        /// This can be used to update the <see cref="Adapter"/> when changes are made to the file where it is housed.
+        /// </remarks>
+        [XmlIgnore(), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public virtual string File 
+        { 
+            get
+            {
+                return m_file;
+            }
+            set
+            {
+                m_file = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that indicates whether the <see cref="Adapter"/> is currently enabled.
         /// </summary>
+        [XmlIgnore()]
         public virtual bool Enabled
         {
             get
@@ -300,6 +372,7 @@ namespace TVA.Adapters
         /// <summary>
         /// Gets or sets a boolean value that indicates whether <see cref="Adapter"/> settings are to be saved to the config file.
         /// </summary>
+        [XmlIgnore()]
         public virtual bool PersistSettings
         {
             get
@@ -316,6 +389,7 @@ namespace TVA.Adapters
         /// Gets or sets the category under which <see cref="Adapter"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        [XmlIgnore()]
         public virtual string SettingsCategory
         {
             get
@@ -483,8 +557,29 @@ namespace TVA.Adapters
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+                    OnDisposed();       // Raise dispose event.
                 }
             }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="StatusUpdate"/> event.
+        /// </summary>
+        /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
+        /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
+        protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage)
+        {
+            if (StatusUpdate != null)
+                StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, updateMessage));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="Disposed"/> event.
+        /// </summary>
+        protected virtual void OnDisposed()
+        {
+            if (Disposed != null)
+                Disposed(this, EventArgs.Empty);
         }
 
         #endregion

@@ -680,7 +680,7 @@ namespace TVA.Services.ServiceModel
                     }
                     serviceBehavior.PrincipalPermissionMode = PrincipalPermissionMode.Custom;
                     List<IAuthorizationPolicy> policies = new List<IAuthorizationPolicy>();
-                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(Type.GetType(m_securityPolicy)));
+                    policies.Add((IAuthorizationPolicy)Activator.CreateInstance(System.Type.GetType(m_securityPolicy)));
                     serviceBehavior.ExternalAuthorizationPolicies = policies.AsReadOnly();
                 }
 
@@ -696,7 +696,7 @@ namespace TVA.Services.ServiceModel
                     serviceBinding = CreateServiceBinding(ref serviceAddress, !string.IsNullOrEmpty(m_securityPolicy));
                     if (serviceBinding != null)
                     {
-                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(Type.GetType(m_contract), serviceBinding, serviceAddress);
+                        serviceEndpoint = m_serviceHost.AddServiceEndpoint(System.Type.GetType(m_contract), serviceBinding, serviceAddress);
                         if (serviceBinding.GetType() == typeof(WebHttpBinding))
                         {
                             // Special handling for REST endpoint.

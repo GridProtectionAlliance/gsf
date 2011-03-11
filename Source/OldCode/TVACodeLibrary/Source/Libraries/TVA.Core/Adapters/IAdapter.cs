@@ -10,6 +10,9 @@
 //  -----------------------------------------------------------------------------------------------------
 //  09/23/2010 - Pinal C. Patel
 //       Generated original version of source code.
+//  03/08/2011 - Pinal C. Patel
+//       Added StatusUpdate and Disposed events.
+//       Added Type and File properties to support serialized adapter instances.
 //
 //*******************************************************************************************************
 
@@ -239,20 +242,50 @@ namespace TVA.Adapters
     /// </summary>
     public interface IAdapter : ISupportLifecycle, IProvideStatus, IPersistSettings
     {
+        #region [ Members ]
+
+        // Events
+
+        /// <summary>
+        /// Occurs when the <see cref="IAdapter"/> wants to provide a status update.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
+        /// </remarks>
+        event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
+
+        /// <summary>
+        /// Occurs when <see cref="IAdapter"/> is disposed.
+        /// </summary>
+        event EventHandler Disposed;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
-        /// Gets the <see cref="AppDomain"/> in which the adapter is executing.
+        /// Gets or sets the text representation of the <see cref="IAdapter"/>'s <see cref="Type"/>.
+        /// </summary>
+        string Type { get; set; }
+
+        /// <summary>
+        /// Gets or sets the path to the file where the <see cref="IAdapter"/> is housed.
+        /// </summary>
+        string File { get; set; }
+
+        /// <summary>
+        /// Gets the <see cref="AppDomain"/> in which the <see cref="IAdapter"/> is executing.
         /// </summary>
         AppDomain Domain { get; }
 
         /// <summary>
-        /// Gets the memory utilzation of the adapter in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
+        /// Gets the memory utilzation of the <see cref="IAdapter"/> in bytes if executing in a seperate <see cref="AppDomain"/>, otherwise <see cref="Double.NaN"/>.
         /// </summary>
         double MemoryUsage { get; }
 
         /// <summary>
-        /// Gets the % processor utilization of the adapter if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
+        /// Gets the % processor utilization of the <see cref="IAdapter"/> if executing in a seperate <see cref="AppDomain"/> otherwise <see cref="Double.NaN"/>.
         /// </summary>
         double ProcessorUsage { get; }
 
