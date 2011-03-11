@@ -3699,6 +3699,11 @@
             Represents a data publishing server that allows multiple connections for data subscriptions.
             </summary>
         </member>
+        <member name="F:TimeSeriesFramework.Transport.DataPublisher.CipherLookupKey">
+            <summary>
+            Lookup string for cipher key used for encryption of transport password.
+            </summary>
+        </member>
         <member name="M:TimeSeriesFramework.Transport.DataPublisher.#ctor">
             <summary>
             Creates a new <see cref="T:TimeSeriesFramework.Transport.DataPublisher"/>.
@@ -3798,6 +3803,11 @@
             <remarks>
             The assigned name is used as the settings category when persisting the TCP server settings.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Transport.DataPublisher.SharedSecret">
+            <summary>
+            Gets or sets shared secret required to access transport data.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Transport.DataPublisher.IClientSubscription.ClientID">
             <summary>
@@ -3949,11 +3959,12 @@
             Initializes <see cref="T:TimeSeriesFramework.Transport.DataSubscriber"/>.
             </summary>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.Int32,System.Double,System.Double,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.SynchronizedSubscribe(System.Boolean,System.String,System.Int32,System.Double,System.Double,System.String,System.Boolean,System.Boolean,System.Boolean,System.Int64,System.Boolean,TimeSeriesFramework.DownsamplingMethod)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for a synchronized set of data points.
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+            <param name="password">Pass-phrase required to connect to subscriber.</param>
             <param name="framesPerSecond">The desired number of data frames per second.</param>
             <param name="lagTime">Allowed past time deviation tolerance, in seconds (can be subsecond).</param>
             <param name="leadTime">Allowed future time deviation tolerance, in seconds (can be subsecond).</param>
@@ -3966,11 +3977,12 @@
             <param name="downsamplingMethod">Gets the total number of downsampled measurements processed by the concentrator.</param>
             <returns><c>true</c> if subscribe was successful; otherwise <c>false</c>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.Boolean,System.String,System.Double,System.Double,System.Boolean)">
+        <member name="M:TimeSeriesFramework.Transport.DataSubscriber.UnsynchronizedSubscribe(System.Boolean,System.String,System.Boolean,System.String,System.Double,System.Double,System.Boolean)">
             <summary>
             Subscribes (or re-subscribes) to a data publisher for an unsynchronized set of data points.
             </summary>
             <param name="compactFormat">Boolean value that determines if the compact measurement format should be used. Set to <c>false</c> for full fidelity measurement serialization; otherwise set to <c>true</c> for bandwidth conservation.</param>
+            <param name="password">Pass-phrase required to connect to subscriber.</param>
             <param name="throttled">Boolean value that determines if data should be throttled at a set transmission interval or sent on change.</param>
             <param name="filterExpression">Filtering expression that defines the measurements that are being subscribed.</param>
             <param name="lagTime">When <paramref name="throttled"/> is <c>true</c>, defines the data transmission speed in seconds (can be subsecond).</param>
