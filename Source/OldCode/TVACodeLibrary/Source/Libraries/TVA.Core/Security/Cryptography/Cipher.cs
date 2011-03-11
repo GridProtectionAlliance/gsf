@@ -487,7 +487,7 @@ namespace TVA.Security.Cryptography
 
                 try
                 {
-                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     byte[] serializedKeyIVTable = ProtectedData.Unprotect(keyIVCacheFile.ReadStream(), null, DataProtectionScope.LocalMachine);
                     keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
                 }
