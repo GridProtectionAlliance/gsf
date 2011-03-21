@@ -268,7 +268,7 @@ namespace TVA.Threading
         /// needing concurrency locking.
         /// </summary>
         /// <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
-        /// <returns>A uniquely named interprocess <see cref="Mutex"/> specific to <see cref="name"/>; <see cref="Mutex"/> is created if it does not exist.</returns>
+        /// <returns>A uniquely named interprocess <see cref="Mutex"/> specific to <paramref name="name"/>; <see cref="Mutex"/> is created if it does not exist.</returns>
         /// <remarks>
         /// <para>
         /// This function uses a hash of the <paramref name="name"/> when creating the <see cref="Mutex"/>, not the actual <paramref name="name"/> - this way
@@ -325,7 +325,7 @@ namespace TVA.Threading
         /// <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
         /// <param name="maximumCount">The maximum number of requests for the semaphore that can be granted concurrently.</param>
         /// <param name="initialCount">The initial number of requests for the semaphore that can be granted concurrently, or -1 to default to <paramref name="maximumCount"/>.</param>
-        /// <returns>A uniquely named interprocess <see cref="Semaphore"/> specific to <see cref="name"/>; <see cref="Semaphore"/> is created if it does not exist.</returns>
+        /// <returns>A uniquely named interprocess <see cref="Semaphore"/> specific to <paramref name="name"/>; <see cref="Semaphore"/> is created if it does not exist.</returns>
         /// <remarks>
         /// <para>
         /// This function uses a hash of the <paramref name="name"/> when creating the <see cref="Semaphore"/>, not the actual <paramref name="name"/> - this way

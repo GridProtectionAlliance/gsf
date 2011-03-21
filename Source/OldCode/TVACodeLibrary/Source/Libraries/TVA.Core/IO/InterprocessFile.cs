@@ -339,6 +339,8 @@ namespace TVA.IO
         /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
         public InterprocessFile(int maximumConcurrentLocks)
         {
+            m_maximumConcurrentLocks = maximumConcurrentLocks;
+
             // Setup retry timer
             m_retryTimer = new System.Timers.Timer();
             m_retryTimer.Elapsed += m_retryTimer_Elapsed;
@@ -387,7 +389,7 @@ namespace TVA.IO
             get
             {
                 if (!m_dataIsReady.IsSet && !m_dataIsReady.Wait((int)(RetryDelayInterval * MaxRetryAttempts)))
-                    throw new UnauthorizedAccessException("Failed to read data from " + m_fileName + " due to timeout.");
+                    throw new TimeoutException("Failed to read data from " + m_fileName + " due to timeout.");
 
                 m_dataLock.EnterReadLock();
 
@@ -615,7 +617,7 @@ namespace TVA.IO
                     {
                         fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                        m_dataLock.EnterReadLock();
+                        m_dataLock.EnterWriteLock();
 
                         try
                         {
@@ -623,7 +625,7 @@ namespace TVA.IO
                         }
                         finally
                         {
-                            m_dataLock.ExitReadLock();
+                            m_dataLock.ExitWriteLock();
                         }
 
                         // Release any threads waiting for file data
