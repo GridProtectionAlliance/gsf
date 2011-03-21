@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -34,6 +35,8 @@
 //       Added generic UpdateRange() extension method for IList<T>.
 //  03/31/2009 - J. Ritchie Carroll
 //       Added Majority() and Minority() extension methods to IEnumerable<T>.
+//  03/18/2011 - J. Ritchie Carroll
+//       Added dictionary Merge() extensions method for IDictionary and Any/All extensions for BitArray.
 //
 //*******************************************************************************************************
 
@@ -253,6 +256,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -266,6 +288,82 @@ namespace TVA.Collections
     /// </summary>
     public static class CollectionExtensions
     {
+        /// <summary>
+        /// Merges elements of multiple dictionaries into a single dictionary with no duplicate key values overwritten.
+        /// </summary>
+        /// <typeparam name="T">Type of <see cref="IDictionary{TKey, TValue}"/> to merge.</typeparam>
+        /// <typeparam name="TKey">Type of <see cref="IDictionary{TKey, TValue}"/> keys.</typeparam>
+        /// <typeparam name="TValue">Type of <see cref="IDictionary{TKey, TValue}"/> values.</typeparam>
+        /// <param name="source">Source dictionary to merge with another dictionary.</param>
+        /// <param name="others">Other dictionaries to merge with source dictionary.</param>
+        /// <returns>
+        /// A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source with no duplicate
+        /// key values overwritten (i.e., first encounted key value pair is the one that remains in the returned merged dictionary).
+        /// </returns>
+        public static T Merge<T, TKey, TValue>(this T source, params IDictionary<TKey, TValue>[] others) where T : IDictionary<TKey, TValue>, new()
+        {
+            return source.Merge(false, others);
+        }
+
+        /// <summary>
+        /// Merges elements of multiple dictionaries into a single dictionary.
+        /// </summary>
+        /// <typeparam name="T">Type of <see cref="IDictionary{TKey, TValue}"/> to merge.</typeparam>
+        /// <typeparam name="TKey">Type of <see cref="IDictionary{TKey, TValue}"/> keys.</typeparam>
+        /// <typeparam name="TValue">Type of <see cref="IDictionary{TKey, TValue}"/> values.</typeparam>
+        /// <param name="source">Source dictionary to merge with another dictionary.</param>
+        /// <param name="overwriteExisting">Set to <c>true</c> to overwrite duplicate key values as they are encountered.</param>
+        /// <param name="others">Other dictionaries to merge with source dictionary.</param>
+        /// <returns>A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source.</returns>
+        public static T Merge<T, TKey, TValue>(this T source, bool overwriteExisting, params IDictionary<TKey, TValue>[] others) where T : IDictionary<TKey, TValue>, new()
+        {
+            T mergedDictionary = new T();
+            List<IDictionary<TKey, TValue>> allDictionaries = new List<IDictionary<TKey, TValue>>();
+            
+            allDictionaries.Add(source);
+            allDictionaries.AddRange(others);
+
+            foreach (IDictionary<TKey, TValue> dictionary in allDictionaries)
+            {
+                foreach (KeyValuePair<TKey, TValue> kvPair in dictionary)
+                {
+                    if (overwriteExisting)
+                    {
+                        mergedDictionary[kvPair.Key] = kvPair.Value;
+                    }
+                    else
+                    {
+                        if (!mergedDictionary.ContainsKey(kvPair.Key))
+                            mergedDictionary.Add(kvPair);
+                    }
+                }
+            }
+
+            return mergedDictionary;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if any item in <see cref="BitArray"/> is equal to <paramref name="value"/>.
+        /// </summary>
+        /// <param name="source">Source <see cref="BitArray"/>.</param>
+        /// <param name="value"><see cref="Boolean"/> value to test for.</param>
+        /// <returns><c>true</c> if any item in <see cref="BitArray"/> is equal to <paramref name="value"/>.</returns>
+        public static bool Any(this BitArray source, bool value)
+        {
+            return source.Cast<bool>().Any(item => item == value);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if all items in <see cref="BitArray"/> are equal to <paramref name="value"/>.
+        /// </summary>
+        /// <param name="source">Source <see cref="BitArray"/>.</param>
+        /// <param name="value"><see cref="Boolean"/> value to test for.</param>
+        /// <returns><c>true</c> if all items in <see cref="BitArray"/> are equal to <paramref name="value"/>.</returns>
+        public static bool All(this BitArray source, bool value)
+        {
+            return source.Cast<bool>().All(item => item == value);
+        }
+
         /// <summary>
         /// Returns the majority value in the collection, or default value if no item represents the majority.
         /// </summary>
@@ -554,13 +652,15 @@ namespace TVA.Collections
         /// <returns>Returns a <see cref="String"/> that is result of combining all elements in the list delimited by <paramref name="delimiter"/>.</returns>
         private static string ToDelimitedString<TSource, TDelimiter>(IEnumerable<TSource> source, TDelimiter delimiter)
         {
-            if (Common.IsReference(delimiter) && delimiter == null) throw new ArgumentNullException("delimiter", "delimiter cannot be null");
+            if (Common.IsReference(delimiter) && delimiter == null)
+                throw new ArgumentNullException("delimiter", "delimiter cannot be null");
 
             StringBuilder delimetedString = new StringBuilder();
 
             foreach (TSource item in source)
             {
-                if (delimetedString.Length > 0) delimetedString.Append(delimiter);
+                if (delimetedString.Length > 0)
+                    delimetedString.Append(delimiter);
                 delimetedString.Append(item.ToString());
             }
 
@@ -588,8 +688,10 @@ namespace TVA.Collections
         /// <param name="convertFromString">Delegate that takes one parameter and converts from string to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, char delimeter, Func<string, TSource> convertFromString)
         {
-            if (delimitedString == null) throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
-            if (destination.IsReadOnly) throw new ArgumentException("Cannot add items to a read only list");
+            if (delimitedString == null)
+                throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+            if (destination.IsReadOnly)
+                throw new ArgumentException("Cannot add items to a read only list");
 
             foreach (string item in delimitedString.Split(delimeter))
             {
@@ -606,9 +708,12 @@ namespace TVA.Collections
         /// <param name="convertFromString">Delegate that takes a <see cref="String"/> and converts to type TSource.</param>
         public static void LoadDelimitedString<TSource>(this IList<TSource> destination, string delimitedString, string[] delimiters, Func<string, TSource> convertFromString)
         {
-            if (delimiters == null) throw new ArgumentNullException("delimiters", "delimiters cannot be null");
-            if (delimitedString == null) throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
-            if (destination.IsReadOnly) throw new ArgumentException("Cannot add items to a read only list");
+            if (delimiters == null)
+                throw new ArgumentNullException("delimiters", "delimiters cannot be null");
+            if (delimitedString == null)
+                throw new ArgumentNullException("delimitedString", "delimitedString cannot be null");
+            if (destination.IsReadOnly)
+                throw new ArgumentException("Cannot add items to a read only list");
 
             foreach (string item in delimitedString.Split(delimiters, StringSplitOptions.None))
             {
