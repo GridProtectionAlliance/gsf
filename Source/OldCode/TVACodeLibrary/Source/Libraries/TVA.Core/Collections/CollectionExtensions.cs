@@ -37,6 +37,8 @@
 //       Added Majority() and Minority() extension methods to IEnumerable<T>.
 //  03/18/2011 - J. Ritchie Carroll
 //       Added dictionary Merge() extensions method for IDictionary and Any/All extensions for BitArray.
+//  03/22/2011 - J. Ritchie Carroll
+//       Modified array copy extension to handle zero length (i.e., empty) source arrays.
 //
 //*******************************************************************************************************
 
@@ -527,14 +529,14 @@ namespace TVA.Collections
         /// </exception>
         public static T[] Copy<T>(this T[] source, int startIndex, int length)
         {
-            if (startIndex < 0)
-                throw new ArgumentOutOfRangeException("startIndex", "cannot be negative");
+            if (startIndex < 0 || length < 0)
+                throw new ArgumentOutOfRangeException(startIndex < 0 ? "startIndex" : "length", "Cannot be negative");
 
-            if (length < 0)
-                throw new ArgumentOutOfRangeException("length", "cannot be negative");
+            if (source.Length == 0)
+                return new T[length];
 
             if (startIndex >= source.Length)
-                throw new ArgumentOutOfRangeException("startIndex", "not a valid index into source buffer");
+                throw new ArgumentOutOfRangeException("startIndex", "Not a valid index into source buffer");
 
             // Create a new array that will be returned with the specified array elements.
             T[] copyOfSource = new T[source.Length - startIndex < length ? source.Length - startIndex : length];

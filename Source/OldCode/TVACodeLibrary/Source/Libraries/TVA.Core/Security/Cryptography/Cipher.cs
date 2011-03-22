@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -31,6 +32,8 @@
 //  07/13/2010 - Stephen C. Wills
 //       Added a file watcher to reload the KeyIV table when an external
 //       process modifies the cache file.
+//  03/17/2011 - J. Ritchie Carroll
+//       Modified key and initialization vector cache to be able to operate in a non-elevated mode.
 //
 //*******************************************************************************************************
 
@@ -250,12 +253,35 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using TVA.Collections;
+using TVA.Configuration;
 using TVA.IO;
 
 namespace TVA.Security.Cryptography
@@ -285,44 +311,385 @@ namespace TVA.Security.Cryptography
     /// </remarks>
     public static class Cipher
     {
-        // Local key and initialization vector cache file name
-        private const string KeyIVCacheFileName = "KeyIVCache.bin";
+        // Constants
+        private const int KeyIndex = 0;
+        private const int IVIndex = 1;
 
-        // Key and initialization vector cache mutex lock name
-        private const string KeyIVCacheMutexName = "CryptoKeyIVCache";
+        // Default key and initialization vector cache file name
+        private const string DefaultCacheFileName = "KeyIVCache.bin";
 
-        // Internal key and initialization vector table
-        private static Dictionary<string, byte[][]> s_keyIVTable;
+        // Default maximum retry attempts allowed for loading cryptographic key and initialization vector cache
+        private const int DefaultMaximumRetryAttempts = 10;
+
+        // Default wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache
+        private const double DefaultRetryDelayInterval = 200.0D;
+
+        // The standard settings category for cryptography information
+        private const string CryptoServicesSettingsCategory = "CryptographyServices";
+
+        /// <summary>
+        /// Represents an interprocess serializable cryptographic key and initialization vector cache.
+        /// </summary>
+        private class KeyIVCache : InterprocessFile
+        {
+            #region [ Members ]
+
+            // Internal key and initialization vector table
+            private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
+
+            // Wait handle used so that system will wait for valid key/IV cache load before any pending ciphers
+            private ManualResetEventSlim m_keyIVTableIsReady = new ManualResetEventSlim(false);
+
+            // Class disposed flag
+            private bool m_disposed;
+
+            #endregion
+
+            #region [ Properties ]
+
+            /// <summary>
+            /// Gets a copy of the internal key and initialization vector table.
+            /// </summary>
+            public Dictionary<string, byte[][]> KeyIVTable
+            {
+                get
+                {
+                    Dictionary<string, byte[][]> keyIVTable;
+
+                    // We wait until the key and IV cache is loaded before attempting to access it
+                    if (!m_keyIVTableIsReady.IsSet && !m_keyIVTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
+                        throw new UnauthorizedAccessException("Cryptographic key access failure: timeout while attempting to load cryptographic key cache.");
+
+                    // Wait for thread level lock on key table
+                    lock (m_keyIVTable)
+                    {
+                        // Make a copy of the keyIV table for external use
+                        keyIVTable = new Dictionary<string, byte[][]>(m_keyIVTable);
+                    }
+
+                    return keyIVTable;
+                }
+            }
+
+            #endregion
+
+            #region [ Methods ]
+
+            /// <summary>
+            /// Releases the unmanaged resources used by the <see cref="KeyIVCache"/> object and optionally releases the managed resources.
+            /// </summary>
+            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+            protected override void Dispose(bool disposing)
+            {
+                if (!m_disposed)
+                {
+                    try
+                    {
+                        if (disposing)
+                        {
+                            if (m_keyIVTableIsReady != null)
+                                m_keyIVTableIsReady.Dispose();
+
+                            m_keyIVTableIsReady = null;
+                        }
+                    }
+                    finally
+                    {
+                        m_disposed = true;          // Prevent duplicate dispose.
+                        base.Dispose(disposing);    // Call base class Dispose().
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Gets the crypto key and initialization vector for the given user password.
+            /// </summary>
+            /// <param name="password">User password used for key lookup.</param>
+            /// <param name="keySize">Specifies the desired key size.</param>
+            /// <returns>Crypto key, index 0, and initialization vector, index 1, for the given user password.</returns>
+            public byte[][] GetCryptoKeyIV(string password, int keySize)
+            {
+                string hash = GetPasswordHash(password, keySize);
+                byte[][] keyIV;
+                byte[] key, iv;
+                bool addedKey = false;
+
+                // We wait until the key and IV cache is loaded before attempting to access it
+                if (!m_keyIVTableIsReady.IsSet && !m_keyIVTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
+                    throw new UnauthorizedAccessException("Cryptographic cipher failure: timeout while attempting to load cryptographic key cache.");
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    // Lookup crypto key based on password hash in persisted key table
+                    if (!m_keyIVTable.TryGetValue(hash, out keyIV))
+                    {
+                        // Key for password hash doesn't exist, create a new one
+                        AesManaged symmetricAlgorithm = new AesManaged();
+
+                        symmetricAlgorithm.KeySize = keySize;
+                        symmetricAlgorithm.GenerateKey();
+                        symmetricAlgorithm.GenerateIV();
+
+                        key = symmetricAlgorithm.Key;
+                        iv = symmetricAlgorithm.IV;
+                        keyIV = new byte[][] { key, iv };
+
+                        // Add new crypto key to key table
+                        m_keyIVTable.Add(hash, keyIV);
+                        addedKey = true;
+                    }
+                }
+
+                // Queue up a serialization for any newly added key
+                if (addedKey)
+                    Save();
+
+                return keyIV;
+            }
+
+            /// <summary>
+            /// Imports a key and initialization vector into the local system key cache.
+            /// </summary>
+            /// <param name="password">User password used for key lookups.</param>
+            /// <param name="keySize">Specifies the desired key size.</param>
+            /// <param name="keyIVText">Text based key and initialization vector to import into local key cache.</param>
+            /// <remarks>
+            /// This method is used to manually import a key created on another computer.
+            /// </remarks>
+            public void ImportKeyIV(string password, int keySize, string keyIVText)
+            {
+                string hash = GetPasswordHash(password, keySize);
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    string[] keyIV = keyIVText.Split('|');
+                    byte[] key = Convert.FromBase64String(keyIV[KeyIndex]);
+                    byte[] iv = Convert.FromBase64String(keyIV[IVIndex]);
+
+                    // Assign new crypto key to key table
+                    m_keyIVTable[hash] = new byte[][] { key, iv };
+                }
+
+                // Queue up a serialization for this new key
+                Save();
+            }
+
+            /// <summary>
+            /// Exports a key and initialization vector from the local system key cache.
+            /// </summary>
+            /// <param name="password">User password used for key lookup.</param>
+            /// <param name="keySize">Specifies the desired key size.</param>
+            /// <returns>Text based key and initialization vector exported from local key cache.</returns>
+            /// <remarks>
+            /// This method is used to manually export a key to be installed on another computer. 
+            /// </remarks>
+            public string ExportKeyIV(string password, int keySize)
+            {
+                byte[][] keyIV = GetCryptoKeyIV(password, keySize);
+                return string.Concat(Convert.ToBase64String(keyIV[KeyIndex]), "|", Convert.ToBase64String(keyIV[IVIndex]));
+            }
+
+            /// <summary>
+            /// Merge keys and initialization vectors from another <see cref="KeyIVCache"/>, local cache taking precedence.
+            /// </summary>
+            /// <param name="other">Other <see cref="KeyIVCache"/> to merge with.</param>
+            public void MergeLeft(KeyIVCache other)
+            {
+                // Merge other keys into local ones
+                Dictionary<string, byte[][]> mergedKeyIVTable = KeyIVTable.Merge(other.KeyIVTable);
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    // Replace local key IV table with merged items
+                    m_keyIVTable = mergedKeyIVTable;
+                }
+
+                // Queue up a serialization for any newly added keys
+                Save();
+            }
+
+            /// <summary>
+            /// Merge keys and initialization vectors from another <see cref="KeyIVCache"/>, other cache taking precedence.
+            /// </summary>
+            /// <param name="other">Other <see cref="KeyIVCache"/> to merge with.</param>
+            public void MergeRight(KeyIVCache other)
+            {
+                // Merge other keys into local ones
+                Dictionary<string, byte[][]> mergedKeyIVTable = other.KeyIVTable.Merge(KeyIVTable);
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    // Replace local key IV table with merged items
+                    m_keyIVTable = mergedKeyIVTable;
+                }
+
+                // Queue up a serialization for any newly added keys
+                Save();
+            }
+
+            /// <summary>
+            /// Initiates interprocess synchronized save of key and initialization vector table.
+            /// </summary>
+            public override void Save()
+            {
+                byte[] serializedKeyIVTable;
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    serializedKeyIVTable = Serialization.GetBytes(m_keyIVTable);
+                }
+
+                // File data is the serialized Key/IV cache, assigmnent will initiate auto-save if needed
+                FileData = serializedKeyIVTable;
+            }
+
+            /// <summary>
+            /// Initiates interprocess synchronized load of key and initialization vector table.
+            /// </summary>
+            public override void Load()
+            {
+                // Hold any threads needing crypto keys
+                m_keyIVTableIsReady.Reset();
+
+                base.Load();
+            }
+
+            /// <summary>
+            /// Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
+            /// </summary>
+            /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
+            /// <param name="fileData">File data to be serialized.</param>
+            /// <remarks>
+            /// Consumers overriding this method should not directly call <see cref="FileData"/> property to avoid potential dead-locks.
+            /// </remarks>
+            protected override void SaveFileData(FileStream fileStream, byte[] fileData)
+            {
+                // Encrypt data local to this machine (this way user cannot copy key cache to another machine)
+                base.SaveFileData(fileStream, ProtectedData.Protect(fileData, null, DataProtectionScope.LocalMachine));
+            }
+
+            /// <summary>
+            /// Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
+            /// </summary>
+            /// <param name="fileStream"><see cref="FileStream"/> used to deserialize data.</param>
+            /// <returns>Deserialized file data.</returns>
+            /// <remarks>
+            /// Consumers overriding this method should not directly call <see cref="FileData"/> property to avoid potential dead-locks.
+            /// </remarks>
+            protected override byte[] LoadFileData(FileStream fileStream)
+            {
+                // Decrypt data that was encrypted local to this machine
+                byte[] serializedKeyIVTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
+                Dictionary<string, byte[][]> keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
+
+                // Wait for thread level lock on key table
+                lock (m_keyIVTable)
+                {
+                    // Merge new and existing key tables since new keys may have been queued for serialization, but not saved yet
+                    m_keyIVTable = keyIVTable.Merge(m_keyIVTable);
+                }
+
+                // Release any threads waiting for crypto keys
+                m_keyIVTableIsReady.Set();
+
+                return serializedKeyIVTable;
+            }
+
+            #endregion
+        }
+
+        // Primary cryptographic key and initialization vector cache.
+        private static KeyIVCache s_keyIVCache;
 
         // Password hash table (run-time optimization)
         private static Dictionary<string, string> s_passwordHash = new Dictionary<string, string>();
 
-        // Key and initialization vector cache file watcher
-        private static FileSystemWatcher s_keyIVCacheFileWatcher = new FileSystemWatcher();
-
-        // Key and initialization vector cache serialization retry timer
-        private static System.Timers.Timer s_retryTimer = new System.Timers.Timer();
-
-        // Wait callback queue for retry timer
-        private static List<WaitCallback> s_callBackQueue = new List<WaitCallback>();
-
         /// <summary>
         /// Static constructor for the <see cref="Cipher"/> class.
-        /// Prepares the file watcher for receiving events.
         /// </summary>
         static Cipher()
         {
-            s_keyIVCacheFileWatcher.Changed += s_keyIVCacheFileWatcher_Changed;
-            s_keyIVCacheFileWatcher.Path = FilePath.GetAbsolutePath(".");
-            s_keyIVCacheFileWatcher.Filter = KeyIVCacheFileName;
-            s_keyIVCacheFileWatcher.EnableRaisingEvents = true;
+            KeyIVCache localKeyIVCache;
+            string localCacheFileName = DefaultCacheFileName;
+            double retryDelayInterval = DefaultRetryDelayInterval;
+            int maximumRetryAttempts = DefaultMaximumRetryAttempts;
 
-            s_retryTimer.Elapsed += s_retryTimer_Elapsed;
-            s_retryTimer.AutoReset = false;
-            s_retryTimer.Interval = 1000.0D;
+            // Load cryptographic settings
+            ConfigurationFile config = ConfigurationFile.Current;
+            CategorizedSettingsElementCollection settings = config.Settings[CryptoServicesSettingsCategory];
 
-            // Deserialize initial keys
-            DeserializeKeyIVTable(null);
+            settings.Add("CryptoCache", localCacheFileName, "Path and file name of cryptographic key and initialization vector cache.");
+            settings.Add("RetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.");
+            settings.Add("MaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.");
+
+            localCacheFileName = FilePath.GetAbsolutePath(settings["CryptoCache"].ValueAs(localCacheFileName));
+            retryDelayInterval = settings["RetryDelayInterval"].ValueAs(retryDelayInterval);
+            maximumRetryAttempts = settings["MaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
+
+            // Initialize local cryptographic key and initialization vector cache (application may only have read-only access to this cache)
+            localKeyIVCache = new KeyIVCache()
+            {
+                FileName = localCacheFileName,
+                RetryDelayInterval = retryDelayInterval,
+                MaximumRetryAttempts = maximumRetryAttempts,
+                ReloadOnChange = true,
+                AutoSave = false
+            };
+
+            // Load initial keys
+            localKeyIVCache.Load();
+
+            try
+            {
+                // Validate that user has write access to the local cryptographic cache folder
+                string tempFile = FilePath.GetDirectoryName(localCacheFileName) + Guid.NewGuid().ToString() + ".tmp";
+
+                using (File.Create(tempFile))
+                {
+                }
+
+                if (File.Exists(tempFile))
+                    File.Delete(tempFile);
+
+                // No access issues exist, use local cache as the primary cryptographic key and initialization vector cache
+                s_keyIVCache = localKeyIVCache;
+                s_keyIVCache.AutoSave = true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // User does not have needed serialization access to common cryptographic cache folder, use a path where user will have rights
+                string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
+                string userCacheFileName = userCacheFolder + FilePath.GetFileName(localCacheFileName);
+
+                // Make sure user directory exists
+                if (!Directory.Exists(userCacheFolder))
+                    Directory.CreateDirectory(userCacheFolder);
+
+                // Copy existing common cryptographic cache if none exists
+                if (File.Exists(localCacheFileName) && !File.Exists(userCacheFileName))
+                    File.Copy(localCacheFileName, userCacheFileName);
+
+                // Initialize primary cryptographic key and initialization vector cache within user folder
+                s_keyIVCache = new KeyIVCache()
+                {
+                    FileName = userCacheFileName,
+                    RetryDelayInterval = retryDelayInterval,
+                    MaximumRetryAttempts = maximumRetryAttempts,
+                    ReloadOnChange = true,
+                    AutoSave = true
+                };
+
+                // Initiate a key reload
+                s_keyIVCache.Load();
+
+                // Merge new or updated keys, protected folder keys taking precendence over user keys
+                s_keyIVCache.MergeRight(localKeyIVCache);
+            }
         }
 
         /// <summary>
@@ -336,20 +703,7 @@ namespace TVA.Security.Cryptography
         /// </remarks>
         public static void ImportKeyIV(string password, int keySize, string keyIVText)
         {
-            string hash = GetPasswordHash(password, keySize);
-
-            lock (s_keyIVTable)
-            {
-                string[] keyIV = keyIVText.Split('|');
-                byte[] key = Convert.FromBase64String(keyIV[0]);
-                byte[] iv = Convert.FromBase64String(keyIV[1]);
-
-                // Assign new crypto key to key table
-                s_keyIVTable[hash] = new byte[][] { key, iv };
-
-                // Queue up a serialization for this new key
-                ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
-            }
+            s_keyIVCache.ImportKeyIV(password, keySize, keyIVText);
         }
 
         /// <summary>
@@ -363,8 +717,7 @@ namespace TVA.Security.Cryptography
         /// </remarks>
         public static string ExportKeyIV(string password, int keySize)
         {
-            byte[][] keyIV = GetCryptoKeyIV(password, keySize);
-            return string.Concat(Convert.ToBase64String(keyIV[0]), "|", Convert.ToBase64String(keyIV[1]));
+            return s_keyIVCache.ExportKeyIV(password, keySize);
         }
 
         /// <summary>
@@ -392,220 +745,6 @@ namespace TVA.Security.Cryptography
             }
 
             return hash;
-        }
-
-        /// <summary>
-        /// Gets the crypto key and initialization vector for the given user password.
-        /// </summary>
-        /// <param name="password">User password used for key lookup.</param>
-        /// <param name="keySize">Specifies the desired key size.</param>
-        /// <returns>Crypto key, index 0, and initialization vector, index 1, for the given user password.</returns>
-        public static byte[][] GetCryptoKeyIV(string password, int keySize)
-        {
-            string hash = GetPasswordHash(password, keySize);
-            byte[][] keyIV;
-            byte[] key, iv;
-
-            lock (s_keyIVTable)
-            {
-                // Lookup crypto key based on password hash in persisted key table
-                if (!s_keyIVTable.TryGetValue(hash, out keyIV))
-                {
-                    // Key for password hash doesn't exist, create a new one
-                    AesManaged symmetricAlgorithm = new AesManaged();
-
-                    symmetricAlgorithm.KeySize = keySize;
-                    symmetricAlgorithm.GenerateKey();
-                    symmetricAlgorithm.GenerateIV();
-
-                    key = symmetricAlgorithm.Key;
-                    iv = symmetricAlgorithm.IV;
-                    keyIV = new byte[][] { key, iv };
-
-                    // Add new crypto key to key table
-                    s_keyIVTable.Add(hash, keyIV);
-
-                    // Queue up a serialization for this new key
-                    ThreadPool.QueueUserWorkItem(SerializeKeyIVTable);
-                }
-            }
-
-            return keyIV;
-        }
-
-        /// <summary>
-        /// Serializes key and initialization vector table to local cache file that can only be decrypted from local machine.
-        /// </summary>
-        private static void SerializeKeyIVTable(object state)
-        {
-            // We need interprocess synchronization on the key & IV cache file so we create a system level mutex
-            Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
-            byte[] serializedKeyIVTable;
-
-            // Wait for thread level lock on key table (keep this outside mutex lock to avoid possible dead locks)
-            lock (s_keyIVTable)
-            {
-                serializedKeyIVTable = ProtectedData.Protect(Serialization.GetBytes(s_keyIVTable), null, DataProtectionScope.LocalMachine);
-            }
-
-            try
-            {
-                // Wait for system level mutex lock before we work with key & IV cache file
-                fileLockMutex.WaitOne();
-            }
-            catch (AbandonedMutexException)
-            {
-                // Abnormal system terminations can leave mutexs abandoned, in this
-                // case we now own the mutex and can safely ignore this exception
-            }
-
-            try
-            {
-                s_keyIVCacheFileWatcher.EnableRaisingEvents = false;
-                FileStream keyIVCacheFile = new FileStream(FilePath.GetAbsolutePath(KeyIVCacheFileName), FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-                keyIVCacheFile.Write(serializedKeyIVTable, 0, serializedKeyIVTable.Length);
-                keyIVCacheFile.Close();
-            }
-            catch
-            {
-                // Queue up a retry for this event
-                lock (s_callBackQueue)
-                {
-                    if (!s_callBackQueue.Contains(SerializeKeyIVTable))
-                        s_callBackQueue.Add(SerializeKeyIVTable);
-                }
-                s_retryTimer.Start();
-            }
-            finally
-            {
-                fileLockMutex.ReleaseMutex();
-                s_keyIVCacheFileWatcher.EnableRaisingEvents = true;
-            }
-        }
-
-        /// <summary>
-        /// Deserializes key and initialization vector table from local cache that was encrypted on local machine.
-        /// </summary>
-        private static void DeserializeKeyIVTable(object state)
-        {
-            Dictionary<string, byte[][]> keyIVTable;
-
-            string keyIVCacheFilePath = FilePath.GetAbsolutePath(KeyIVCacheFileName);
-
-            if (File.Exists(keyIVCacheFilePath))
-            {
-                // We need interprocess synchronization on the key & IV cache file so we create a system level mutex
-                Mutex fileLockMutex = GetSystemLevelMutex(KeyIVCacheMutexName);
-
-                try
-                {
-                    // Wait for system level mutex lock before we work with key & IV cache file
-                    fileLockMutex.WaitOne();
-                }
-                catch (AbandonedMutexException)
-                {
-                    // Abnormal system terminations can leave mutexs abandoned, in this
-                    // case we now own the mutex and can safely ignore this exception
-                }
-
-                try
-                {
-                    FileStream keyIVCacheFile = new FileStream(keyIVCacheFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    byte[] serializedKeyIVTable = ProtectedData.Unprotect(keyIVCacheFile.ReadStream(), null, DataProtectionScope.LocalMachine);
-                    keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
-
-                    lock (s_keyIVTable)
-                    {
-                        s_keyIVTable = keyIVTable;
-                    }
-                }
-                catch
-                {
-                    // Queue up a retry for this event
-                    lock (s_callBackQueue)
-                    {
-                        if (!s_callBackQueue.Contains(DeserializeKeyIVTable))
-                            s_callBackQueue.Add(DeserializeKeyIVTable);
-                    }
-                    s_retryTimer.Start();
-                }
-                finally
-                {
-                    fileLockMutex.ReleaseMutex();
-                }
-            }
-            else
-            {
-                lock (s_keyIVTable)
-                {
-                    // No crypto key cache file exists, create a blank crypto key table
-                    keyIVTable = new Dictionary<string, byte[][]>();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Restries specified serialize or deserialize event in case of file failure.
-        /// </summary>
-        private static void s_retryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            WaitCallback callBackEvent = null;
-
-            lock (s_callBackQueue)
-            {
-                if (s_callBackQueue.Count > 0)
-                {
-                    callBackEvent = s_callBackQueue[0];
-                    s_callBackQueue.RemoveAt(0);
-
-                    if (s_callBackQueue.Count > 0)
-                        s_retryTimer.Start();
-                }
-            }
-
-            if (callBackEvent != null)
-                ThreadPool.QueueUserWorkItem(callBackEvent);
-        }
-
-        /// <summary>
-        /// Gets the specified named system level mutex.
-        /// </summary>
-        /// <param name="mutexName">Mutext name to retrieve.</param>
-        /// <returns>Specified system level mutex; it is created if it does not exist.</returns>
-        private static Mutex GetSystemLevelMutex(string mutexName)
-        {
-            Mutex systemMutex = null;
-            bool doesNotExist = false;
-
-            // Make sure mutext is "global"
-            mutexName = string.Format("Global\\{0}", mutexName);
-
-            // Attempt to open the named mutex
-            try
-            {
-                systemMutex = Mutex.OpenExisting(mutexName);
-            }
-            catch (WaitHandleCannotBeOpenedException)
-            {
-                doesNotExist = true;
-            }
-
-            // If mutex does not exist we create it
-            if (doesNotExist)
-                systemMutex = new Mutex(false, mutexName);
-
-            return systemMutex;
-        }
-
-        /// <summary>
-        /// Reloads the key and initialization vector table when the cache file is modified externally.
-        /// </summary>
-        /// <param name="sender">The object that triggered the event.</param>
-        /// <param name="e">An object which provides data for directory events.</param>
-        private static void s_keyIVCacheFileWatcher_Changed(object sender, FileSystemEventArgs e)
-        {
-            if (e.ChangeType == WatcherChangeTypes.Changed)
-                ThreadPool.QueueUserWorkItem(DeserializeKeyIVTable);
         }
 
         /// <summary>
@@ -656,9 +795,9 @@ namespace TVA.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
-            byte[][] keyIV = GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            return source.Encrypt(startIndex, length, keyIV[0], keyIV[1], strength);
+            return source.Encrypt(startIndex, length, keyIV[KeyIndex], keyIV[IVIndex], strength);
         }
 
         /// <summary>
@@ -798,9 +937,9 @@ namespace TVA.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
-            byte[][] keyIV = GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            sourceFileStream.Encrypt(destFileStream, keyIV[0], keyIV[1], strength, progressHandler);
+            sourceFileStream.Encrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();
@@ -855,9 +994,9 @@ namespace TVA.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
-            byte[][] keyIV = GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            return source.Decrypt(startIndex, length, keyIV[0], keyIV[1], strength);
+            return source.Decrypt(startIndex, length, keyIV[KeyIndex], keyIV[IVIndex], strength);
         }
 
         /// <summary>
@@ -1009,9 +1148,9 @@ namespace TVA.Security.Cryptography
             if (string.IsNullOrEmpty(password))
                 throw new ArgumentNullException("password");
 
-            byte[][] keyIV = GetCryptoKeyIV(password, (int)strength);
+            byte[][] keyIV = s_keyIVCache.GetCryptoKeyIV(password, (int)strength);
 
-            sourceFileStream.Decrypt(destFileStream, keyIV[0], keyIV[1], strength, progressHandler);
+            sourceFileStream.Decrypt(destFileStream, keyIV[KeyIndex], keyIV[IVIndex], strength, progressHandler);
 
             destFileStream.Flush();
             destFileStream.Close();

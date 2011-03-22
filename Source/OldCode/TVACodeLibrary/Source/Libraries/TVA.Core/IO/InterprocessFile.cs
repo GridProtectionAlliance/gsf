@@ -250,13 +250,9 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.IO;
-using System.Security.Cryptography;
 using System.Collections;
+using System.IO;
+using System.Threading;
 using TVA.Collections;
 using TVA.Threading;
 
@@ -267,7 +263,7 @@ namespace TVA.IO
     /// </summary>
     /// <remarks>
     /// Note that all file data in this class gets serialized to and from memory, as such, the design intention for this class is for
-    /// use with smaller data sets such as serialized lists or dictionaries that need synchronized loading and saving.
+    /// use with smaller data sets such as serialized lists or dictionaries that need interprocess synchronized loading and saving.
     /// </remarks>
     public class InterprocessFile : IDisposable
     {
@@ -290,6 +286,7 @@ namespace TVA.IO
         // Fields
         private string m_fileName;                          // Path and file name of file needing interprocess synchronization
         private byte[] m_fileData;                          // Data loaded or to be saved
+        private bool m_autoSave;                            // Flag to auto save when file data has changed
         private InterprocessReaderWriterLock m_fileLock;    // Interprocess reader/writer lock used to synchronize file access
         private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
         private ManualResetEventSlim m_dataIsReady;         // Wait handle used so that system will wait for file data load
@@ -326,6 +323,7 @@ namespace TVA.IO
             m_maximumConcurrentLocks = maximumConcurrentLocks;
             m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
             m_retryQueue = new BitArray(2);
+            m_fileData = new byte[0];
 
             // Setup retry timer
             m_retryTimer = new System.Timers.Timer();
@@ -357,6 +355,9 @@ namespace TVA.IO
             }
             set
             {
+                if (value == null)
+                    throw new ArgumentNullException("FileName", "FileName cannot be null");
+
                 m_fileName = FilePath.GetAbsolutePath(value);
 
                 // Initialize reader/writer lock for given file name
@@ -368,8 +369,11 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// File data to be saved or that has been loaded.
+        /// Gets or sets file data to be saved or that has been loaded.
         /// </summary>
+        /// <remarks>
+        /// Setting value to <c>null</c> will create a zero-length file.
+        /// </remarks>
         public virtual byte[] FileData
         {
             get
@@ -382,25 +386,60 @@ namespace TVA.IO
 
                 try
                 {
-                    return m_fileData;
+                    // Make a copy of the file data for external use
+                    if (m_fileData != null)
+                        return m_fileData.Copy(0, m_fileData.Length);
                 }
                 finally
                 {
                     m_dataLock.ExitReadLock();
                 }
+
+                return null;
             }
             set
             {
+                if (m_fileName == null)
+                    throw new ArgumentNullException("FileName", "FileName property must be defined before setting FileData");
+
+                bool dataChanged = false;
+
+                // If value is null, assume user means zero-length file
+                if (value == null)
+                    value = new byte[0];
+
                 m_dataLock.EnterWriteLock();
 
                 try
                 {
+                    if (m_autoSave)
+                        dataChanged = (m_fileData.CompareTo(value) != 0);
+
                     m_fileData = value;
                 }
                 finally
                 {
                     m_dataLock.ExitWriteLock();
                 }
+
+                // Initiate save if data has changed
+                if (dataChanged)
+                    ThreadPool.QueueUserWorkItem(SynchronizedWrite);
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if <see cref="InterprocessFile"/> should automatically initiate a save when <see cref="FileData"/> has been updated.
+        /// </summary>
+        public virtual bool AutoSave
+        {
+            get
+            {
+                return m_autoSave;
+            }
+            set
+            {
+                m_autoSave = value;
             }
         }
 
@@ -543,7 +582,7 @@ namespace TVA.IO
         /// <summary>
         /// Initiates interprocess synchronized file save.
         /// </summary>
-        public void Save()
+        public virtual void Save()
         {
             if (m_fileName == null)
                 throw new ArgumentNullException("FileName", "FileName is null, cannot initiate save");
@@ -557,7 +596,7 @@ namespace TVA.IO
         /// <summary>
         /// Initiates interprocess synchronized file load.
         /// </summary>
-        public void Load()
+        public virtual void Load()
         {
             if (m_fileName == null)
                 throw new ArgumentNullException("FileName", "FileName is null, cannot initiate load");
@@ -572,7 +611,7 @@ namespace TVA.IO
         /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
         /// <param name="fileData">File data to be serialized.</param>
         /// <remarks>
-        /// Consumers overriding this method should not directly call <see cref="FileData"/> to avoid potential dead-locks.
+        /// Consumers overriding this method should not directly call <see cref="FileData"/> property to avoid potential dead-locks.
         /// </remarks>
         protected virtual void SaveFileData(FileStream fileStream, byte[] fileData)
         {
@@ -585,7 +624,7 @@ namespace TVA.IO
         /// <param name="fileStream"><see cref="FileStream"/> used to deserialize data.</param>
         /// <returns>Deserialized file data.</returns>
         /// <remarks>
-        /// Consumers overriding this method should not directly call <see cref="FileData"/> to avoid potential dead-locks.
+        /// Consumers overriding this method should not directly call <see cref="FileData"/> property to avoid potential dead-locks.
         /// </remarks>
         protected virtual byte[] LoadFileData(FileStream fileStream)
         {
@@ -708,7 +747,7 @@ namespace TVA.IO
         private void RetrySynchronizedEvent(Exception ex, int eventType)
         {
             // We monitor basic I/O and lock failures occurring in quick succession, we can't allow retry activity to go on forever
-            if (DateTime.UtcNow.Ticks - m_lastRetryTime > Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
+            if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
             {
                 // Significant time has passed since last retry, so we reset counter
                 m_retryCount = 0;
