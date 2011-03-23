@@ -64,8 +64,11 @@
 //  01/04/2011 - J. Ritchie Carroll
 //       Modified ConvertToType culture default to InvariantCulture for English style parsing defaults.
 //  01/14/2011 - J. Ritchie Carroll
-//       Modified JoinKeyValuePairs to delineate values that contain nested key value pair expressions
+//       Modified JoinKeyValuePairs to delineate values that contain nested key/value pair expressions
 //       such that the generated expression can correctly parsed.
+//  03/23/2011 - J. Ritchie Carroll
+//       Modified ParseKeyValuePairs to optionally ignore duplicate keys (default behavior now).
+//       Removed overloads for ParseKeyValuePairs and JoinKeyValuePairs using optional parameters.
 //
 //*******************************************************************************************************
 
@@ -486,39 +489,6 @@ namespace TVA
         /// Combines a dictionary of key-value pairs in to a string.
         /// </summary>
         /// <param name="pairs">Dictionary of key-value pairs.</param>
-        /// <returns>A string of key-value pairs.</returns>
-        /// <remarks>
-        /// Values will be escaped within braces to contain nested key value pair expressions like
-        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
-        /// ";" or "=" are detected in the value of the key/value pair.
-        /// </remarks>
-        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs)
-        {
-            return pairs.JoinKeyValuePairs(';', '=');
-        }
-
-        /// <summary>
-        /// Combines a dictionary of key-value pairs in to a string.
-        /// </summary>
-        /// <param name="pairs">Dictionary of key-value pairs.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
-        /// <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
-        /// <returns>A string of key-value pairs.</returns>
-        /// <remarks>
-        /// Values will be escaped within braces to contain nested key value pair expressions like
-        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are
-        /// detected in the value of the key/value pair.
-        /// </remarks>
-        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter, char keyValueDelimeter)
-        {
-            return pairs.JoinKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
-        }
-
-        /// <summary>
-        /// Combines a dictionary of key-value pairs in to a string.
-        /// </summary>
-        /// <param name="pairs">Dictionary of key-value pairs.</param>
         /// <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
         /// <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
         /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
@@ -528,16 +498,17 @@ namespace TVA
         /// <returns>A string of key-value pairs.</returns>
         /// <remarks>
         /// Values will be escaped within <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/>
-        /// to contain nested key value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
+        /// to contain nested key/value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
         /// when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
         /// value of the key/value pair.
         /// </remarks>
-        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter, char keyValueDelimeter, char startValueDelimeter, char endValueDelimeter)
+        public static string JoinKeyValuePairs(this Dictionary<string, string> pairs, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}')
         {
             // <pex>
-            if (pairs == (Dictionary<string, string>)null)
+            if (pairs == null)
                 throw new ArgumentNullException("pairs");
             // </pex>
+
             char[] delimiters = { parameterDelimeter, keyValueDelimeter };
             StringBuilder result = new StringBuilder();
             string value;
@@ -556,90 +527,38 @@ namespace TVA
         }
 
         /// <summary>
-        /// Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple
-        /// pairs separated by a semi-colon.
+        /// Parses key/value pair expressions from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>
+        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>. Supports encapsulated nested expressions.
         /// </summary>
-        /// <param name="value">Key pair string to parse.</param>
-        /// <returns>Dictionary of key/value pairs.</returns>
-        /// <remarks>
-        /// <para>
-        /// Parses a string formatted like a typical connection string, e.g.:
-        /// <c>IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True</c>.
-        /// Note that "keys" are case-insensitive.
-        /// </para>
-        /// <para>
-        /// Values can be escaped within braces to contain nested key value pair expressions like
-        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>.
-        /// Multiple levels of nesting is supported.
-        /// </para>
-        /// </remarks>
-        /// <exception cref="ArgumentNullException">value is null.</exception>
-        /// <exception cref="FormatException">Total nested key value value pair expressions are mismatched -or-
-        /// encountered end value delimeter '}' before start value delimeter '{'.</exception>
-        public static Dictionary<string, string> ParseKeyValuePairs(this string value)
-        {
-            return value.ParseKeyValuePairs(';', '=');
-        }
-
-        /// <summary>
-        /// Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.
-        /// </summary>
-        /// <param name="value">Key pair string to parse.</param>
-        /// <param name="parameterDelimeter">
-        /// Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection string).
-        /// </param>
-        /// <param name="keyValueDelimeter">
-        /// Character that delimits key from value (e.g., would be an "=" in a typical connection string).
-        /// </param>
-        /// <returns>Dictionary of key/value pairs.</returns>
-        /// <remarks>
-        /// <para>
-        /// Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
-        /// </para>
-        /// <para>
-        /// Values can be escaped within braces to contain nested key value pair expressions like
-        /// the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>.
-        /// Multiple levels of nesting is supported.
-        /// </para>
-        /// </remarks>
-        /// <exception cref="ArgumentNullException">value is null.</exception>
-        /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
-        /// <exception cref="FormatException">Total nested key value value pair expressions are mismatched -or-
-        /// encountered end value delimeter '}' before start value delimeter '{'.</exception>
-        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter)
-        {
-            return value.ParseKeyValuePairs(parameterDelimeter, keyValueDelimeter, '{', '}');
-        }
-
-        /// <summary>
-        /// Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-        /// and multiple pairs separated by <paramref name="parameterDelimeter"/>.
-        /// </summary>
-        /// <param name="value">Key pair string to parse.</param>
-        /// <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
-        /// string).</param>
-        /// <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string).</param>
+        /// <param name="value">String containing key/value pair expressions to parse.</param>
+        /// <param name="parameterDelimeter">Character that delimits one key/value pair from another.</param>
+        /// <param name="keyValueDelimeter">Character that delimits key from value.</param>
         /// <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
+        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
         /// <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
-        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
+        /// <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
+        /// <param name="ignoreDuplicateKeys">Flag determines whether duplicates are ignored. If flag is set to <c>false</c> an
+        /// <see cref="ArgumentException"/> will be thrown when all key parameters are not unique.</param>
         /// <returns>Dictionary of key/value pairs.</returns>
         /// <remarks>
         /// <para>
-        /// Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
-        /// </para>
-        /// <para>
-        /// If value includes <paramref name="startValueDelimeter"/>, it must include <paramref name="endValueDelimeter"/>
-        /// otherwise results will be unexpected.
-        /// Multiple levels of nesting is supported.
+        /// Parses a string containing key/value pair expressions (e.g., "localPort=5001; transportProtocol=UDP; interface=0.0.0.0").
+        /// This method treats all "keys" as case-insensitive. Nesting of key/value pair expressions is allowed by encapsulating the
+        /// value using the <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/> values (e.g., 
+        /// "dataChannel={Port=-1;Clients=localhost:8800}; commandChannel={Port=8900}; dataFormat=FloatingPoint;"). There must be one
+        /// <paramref name="endValueDelimeter"/> for each encountered <paramref name="startValueDelimeter"/> in the value or a
+        /// <see cref="FormatException"/> will be thrown. Multiple levels of nesting is supported. If the <paramref name="ignoreDuplicateKeys"/>
+        /// flag is set to <c>false</c> an <see cref="ArgumentException"/> will be thrown when all key parameters are not unique. Note
+        /// that keys within nested expressions are considered separate key/value pair strings and are not considered when checking
+        /// for duplicate keys.
         /// </para>
         /// </remarks>
         /// <exception cref="ArgumentNullException">value is null.</exception>
-        /// <exception cref="ArgumentException">All delimeters must be unique.</exception>
-        /// <exception cref="FormatException">Total nested key value value pair expressions are mismatched -or-
-        /// encountered <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
-        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter, char keyValueDelimeter, char startValueDelimeter, char endValueDelimeter)
+        /// <exception cref="ArgumentException">All delimeters must be unique -or- all keys must be unique when
+        /// <paramref name="ignoreDuplicateKeys"/> is set to <c>false</c>.</exception>
+        /// <exception cref="FormatException">Total nested key/value value pair expressions are mismatched -or- encountered
+        /// <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
+        public static Dictionary<string, string> ParseKeyValuePairs(this string value, char parameterDelimeter = ';', char keyValueDelimeter = '=', char startValueDelimeter = '{', char endValueDelimeter = '}', bool ignoreDuplicateKeys = true)
         {
             if (value == (string)null)
                 throw new ArgumentNullException("value");
@@ -653,17 +572,18 @@ namespace TVA
                 throw new ArgumentException("All delimeters must be unique");
 
             Dictionary<string, string> keyValuePairs = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
-            string[] elements;
+            StringBuilder escapedValue = new StringBuilder();
             string escapedParameterDelimeter = parameterDelimeter.RegexEncode();
             string escapedKeyValueDelimeter = keyValueDelimeter.RegexEncode();
             string escapedStartValueDelimeter = startValueDelimeter.RegexEncode();
             string escapedEndValueDelimeter = endValueDelimeter.RegexEncode();
-            StringBuilder escapedValue = new StringBuilder();
+            string[] elements;
+            string key, unescapedValue;
             bool valueEscaped = false;
             int delimeterDepth = 0;
             char character;
 
-            // Escape any parameter or key value delimeters within tagged value sequences
+            // Escape any parameter or key/value delimeters within tagged value sequences
             //      For example, the following string:
             //          "normalKVP=-1; nestedKVP={p1=true; p2=false}")
             //      would be encoded as:
@@ -703,7 +623,7 @@ namespace TVA
                     }
                     else
                     {
-                        throw new FormatException(string.Format("Invalid delimeter mismatch: encountered end value delimeter \'{0}\' before start value delimeter \'{1}\' - could not parse key value pairs", endValueDelimeter, startValueDelimeter));
+                        throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimeter mismatch. Encountered end value delimeter \'{0}\' before start value delimeter \'{1}\'.", endValueDelimeter, startValueDelimeter));
                     }
                 }
 
@@ -733,24 +653,41 @@ namespace TVA
                 if (valueEscaped)
                     delimeterDepth = 1;
 
-                throw new FormatException(string.Format("Invalid delimeter mismatch: encountered more {0} than {1} - could not parse key value pairs.", delimeterDepth > 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'", delimeterDepth < 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'"));
+                throw new FormatException(string.Format("Failed to parse key/value pairs: invalid delimeter mismatch. Encountered more {0} than {1}.", delimeterDepth > 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'", delimeterDepth < 0 ? "start value delimeters \'" + startValueDelimeter + "\'" : "end value delimeters \'" + endValueDelimeter + "\'"));
             }
 
-            // Parse out key/value pairs
+            // Parse key/value pairs from escaped value
             foreach (string parameter in escapedValue.ToString().Split(parameterDelimeter))
             {
                 // Parse out parameter's key/value elements
                 elements = parameter.Split(keyValueDelimeter);
+                
                 if (elements.Length == 2)
                 {
-                    // Add key/value pair, unescaping value expression as needed
-                    keyValuePairs.Add(
-                        elements[0].ToString().Trim(),
-                        elements[1].ToString().Trim().
-                            Replace(escapedParameterDelimeter, parameterDelimeter.ToString()).
-                            Replace(escapedKeyValueDelimeter, keyValueDelimeter.ToString()).
-                            Replace(escapedStartValueDelimeter, startValueDelimeter.ToString()).
-                            Replace(escapedEndValueDelimeter, endValueDelimeter.ToString()));
+                    // Get key expression
+                    key = elements[0].ToString().Trim();
+
+                    // Get unescaped value expression
+                    unescapedValue = elements[1].ToString().Trim().
+                        Replace(escapedParameterDelimeter, parameterDelimeter.ToString()).
+                        Replace(escapedKeyValueDelimeter, keyValueDelimeter.ToString()).
+                        Replace(escapedStartValueDelimeter, startValueDelimeter.ToString()).
+                        Replace(escapedEndValueDelimeter, endValueDelimeter.ToString());
+
+                    // Add key/value pair to dictionary
+                    if (ignoreDuplicateKeys)
+                    {
+                        // Add or replace key elements with unescaped value
+                        keyValuePairs[key] = unescapedValue;
+                    }
+                    else
+                    {
+                        // Add key elements with unescaped value throwing an exception for encountered duplicate keys
+                        if (keyValuePairs.ContainsKey(key))
+                            throw new ArgumentException(string.Format("Failed to parse key/value pairs: duplicate key encountered. Key \"{0}\" is not unique within the string: \"{1}\"", key, value));
+
+                        keyValuePairs.Add(key, unescapedValue);
+                    }
                 }
             }
 
