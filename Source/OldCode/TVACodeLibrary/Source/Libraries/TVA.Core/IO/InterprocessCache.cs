@@ -732,7 +732,8 @@ namespace TVA.IO
             }
             else
             {
-                m_fileData = null;
+                // File doesn't exist, create ane empty array representing a zero-length file
+                m_fileData = new byte[0];
 
                 // Release any threads waiting for file data
                 m_dataIsReady.Set();
