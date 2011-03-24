@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  InterprocessFile.cs - Gbtc
+//  InterprocessCache.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -259,13 +259,13 @@ using TVA.Threading;
 namespace TVA.IO
 {
     /// <summary>
-    /// Represents a serialized data file that can be saved or read from multiple applications using interprocess synchronization.
+    /// Represents a serialized data cache that can be saved or read from multiple applications using interprocess synchronization.
     /// </summary>
     /// <remarks>
     /// Note that all file data in this class gets serialized to and from memory, as such, the design intention for this class is for
     /// use with smaller data sets such as serialized lists or dictionaries that need interprocess synchronized loading and saving.
     /// </remarks>
-    public class InterprocessFile : IDisposable
+    public class InterprocessCache : IDisposable
     {
         #region [ Members ]
 
@@ -274,12 +274,12 @@ namespace TVA.IO
         private const int ReadEvent = 1;
 
         /// <summary>
-        /// Default maximum retry attempts allowed for loading <see cref="InterprocessFile"/>.
+        /// Default maximum retry attempts allowed for loading <see cref="InterprocessCache"/>.
         /// </summary>
         public const int DefaultMaximumRetryAttempts = 10;
 
         /// <summary>
-        /// Default wait interval, in milliseconds, before retrying load of <see cref="InterprocessFile"/>.
+        /// Default wait interval, in milliseconds, before retrying load of <see cref="InterprocessCache"/>.
         /// </summary>
         public const double DefaultRetryDelayInterval = 200.0D;
 
@@ -304,18 +304,18 @@ namespace TVA.IO
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="InterprocessFile"/>.
+        /// Creates a new instance of the <see cref="InterprocessCache"/>.
         /// </summary>
-        public InterprocessFile()
+        public InterprocessCache()
             : this(InterprocessReaderWriterLock.DefaultMaximumConcurrentLocks)
         {
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="InterprocessFile"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+        /// Creates a new instance of the <see cref="InterprocessCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
         /// </summary>
         /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
-        public InterprocessFile(int maximumConcurrentLocks)
+        public InterprocessCache(int maximumConcurrentLocks)
         {
             // Initialize field values
             m_dataLock = new ReaderWriterLockSlim();
@@ -333,9 +333,9 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="InterprocessFile"/> object is reclaimed by <see cref="GC"/>.
+        /// Releases the unmanaged resources before the <see cref="InterprocessCache"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~InterprocessFile()
+        ~InterprocessCache()
         {
             Dispose(false);
         }
@@ -345,7 +345,7 @@ namespace TVA.IO
         #region [ Properties ]
 
         /// <summary>
-        /// Path and file name need interprocess synchronization.
+        /// Path and file name for the cache needing interprocess synchronization.
         /// </summary>
         public virtual string FileName
         {
@@ -369,7 +369,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets or sets file data to be saved or that has been loaded.
+        /// Gets or sets file data for the cache to be saved or that has been loaded.
         /// </summary>
         /// <remarks>
         /// Setting value to <c>null</c> will create a zero-length file.
@@ -429,7 +429,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if <see cref="InterprocessFile"/> should automatically initiate a save when <see cref="FileData"/> has been updated.
+        /// Gets or sets flag that determines if <see cref="InterprocessCache"/> should automatically initiate a save when <see cref="FileData"/> has been updated.
         /// </summary>
         public virtual bool AutoSave
         {
@@ -522,7 +522,7 @@ namespace TVA.IO
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="InterprocessFile"/> object.
+        /// Releases all the resources used by the <see cref="InterprocessCache"/> object.
         /// </summary>
         public void Dispose()
         {
@@ -531,7 +531,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="InterprocessFile"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="InterprocessCache"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
@@ -683,7 +683,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Synchronously reads file data when so writes are active.
+        /// Synchronously reads file data when no writes are active.
         /// </summary>
         private void SynchronizedRead(object state)
         {

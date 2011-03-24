@@ -175,7 +175,7 @@
     <Compile Include="IO\Compression\NamespaceDoc.cs" />
     <Compile Include="IO\ExportDestination.cs" />
     <Compile Include="IO\FilePath.cs" />
-    <Compile Include="IO\InterprocessFile.cs" />
+    <Compile Include="IO\InterprocessCache.cs" />
     <Compile Include="IO\IsamDataFileBase.cs">
       <SubType>Component</SubType>
     </Compile>

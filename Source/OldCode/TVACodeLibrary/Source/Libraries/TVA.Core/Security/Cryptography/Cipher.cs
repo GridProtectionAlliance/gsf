@@ -330,7 +330,7 @@ namespace TVA.Security.Cryptography
         /// <summary>
         /// Represents an interprocess serializable cryptographic key and initialization vector cache.
         /// </summary>
-        private class KeyIVCache : InterprocessFile
+        private class KeyIVCache : InterprocessCache
         {
             #region [ Members ]
 
@@ -565,7 +565,7 @@ namespace TVA.Security.Cryptography
             /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
             /// <param name="fileData">File data to be serialized.</param>
             /// <remarks>
-            /// Consumers overriding this method should not directly call <see cref="InterprocessFile.FileData"/> property to avoid potential dead-locks.
+            /// Consumers overriding this method should not directly call <see cref="InterprocessCache.FileData"/> property to avoid potential dead-locks.
             /// </remarks>
             protected override void SaveFileData(FileStream fileStream, byte[] fileData)
             {
@@ -579,7 +579,7 @@ namespace TVA.Security.Cryptography
             /// <param name="fileStream"><see cref="FileStream"/> used to deserialize data.</param>
             /// <returns>Deserialized file data.</returns>
             /// <remarks>
-            /// Consumers overriding this method should not directly call <see cref="InterprocessFile.FileData"/> property to avoid potential dead-locks.
+            /// Consumers overriding this method should not directly call <see cref="InterprocessCache.FileData"/> property to avoid potential dead-locks.
             /// </remarks>
             protected override byte[] LoadFileData(FileStream fileStream)
             {
