@@ -488,7 +488,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Maximum retry attempts allowed for loading cryptographic key and initialization vector cache.
+        /// Maximum retry attempts allowed for loading or saving cache file data.
         /// </summary>
         public virtual int MaximumRetryAttempts
         {
@@ -503,7 +503,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Wait interval, in milliseconds, before retrying load of cryptographic key and initialization vector cache.
+        /// Wait interval, in milliseconds, before retrying load or save of cache file data.
         /// </summary>
         public virtual double RetryDelayInterval
         {
@@ -580,7 +580,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized file save.
+        /// Initiates interprocess synchronized cache file save.
         /// </summary>
         public virtual void Save()
         {
@@ -594,7 +594,7 @@ namespace TVA.IO
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized file load.
+        /// Initiates interprocess synchronized cache file load.
         /// </summary>
         public virtual void Load()
         {
