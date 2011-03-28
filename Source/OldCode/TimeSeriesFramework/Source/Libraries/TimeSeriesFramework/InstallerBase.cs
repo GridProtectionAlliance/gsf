@@ -58,26 +58,6 @@ namespace TimeSeriesFramework
             }
         }
 
-        ///// <summary>
-        ///// Gets the configuration setup utility file name.
-        ///// </summary>
-        //protected virtual string SetupUtilityName
-        //{
-        //    get
-        //    {
-        //        return null;
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Gets or sets flag to run ConfigurationSetupUtility after installation.
-        ///// </summary>
-        //protected bool RunSetupUtility
-        //{
-        //    get;
-        //    set;
-        //}
-
         #endregion
 
         #region [ Methods ]
@@ -104,7 +84,6 @@ namespace TimeSeriesFramework
             try
             {
                 string targetDir = FilePath.AddPathSuffix(Context.Parameters["DP_TargetDir"]).Replace("\\\\", "\\");
-                string installedBitSize = "32bit";
 
                 if (!string.IsNullOrEmpty(ConfigurationName))
                 {
@@ -117,64 +96,15 @@ namespace TimeSeriesFramework
                         configurationFile.Load(configFilePath);
                         XmlNode systemSettingsNode = configurationFile.SelectSingleNode("configuration/categorizedSettings/systemSettings");
 
+                        // Allow user to add or update custom configuration settings if desired
                         if (systemSettingsNode != null)
-                        {
-                            // Allow user to add or update custom configuration settings if desired
                             OnSystemSettingsLoaded(configurationFile, systemSettingsNode);
-
-                            // Lookup installed bit size in configuration file, if defined
-                            XmlNode installedBitSizeNode = systemSettingsNode.SelectSingleNode("add[@name = 'InstalledBitSize']");
-
-                            if (installedBitSizeNode != null)
-                            {
-                                installedBitSize = installedBitSizeNode.Attributes["value"].Value;
-
-                                // Default to 32 if no target installation bit size was found
-                                if (string.IsNullOrWhiteSpace(installedBitSize))
-                                    installedBitSize = "32";
-
-                                installedBitSize += "bit";
-                            }
-                        }
 
                         // Save any updates to configuration file
                         configurationFile.Save(configFilePath);
                     }
                 }
 
-                //if (RunSetupUtility && !string.IsNullOrEmpty(SetupUtilityName))
-                //{
-                //    // Run configuration setup utility
-                //    Process configurationSetup = null;
-                //    string fileName = targetDir + SetupUtilityName;
-                //    string arguments = "-install -" + installedBitSize;
-
-                //    try
-                //    {
-                //        configurationSetup = UserAccountControl.CreateProcessAsAdmin(fileName, arguments);
-                //        //if (UserAccountControl.IsUacEnabled)
-                //        //{
-                //        //    configurationSetup = UserAccountControl.CreateProcessAsStandardUser(fileName, arguments);
-                //        //}
-                //        //else
-                //        //{
-                //            //configurationSetup = new Process();
-                //            //configurationSetup.StartInfo.FileName = fileName;
-                //            //configurationSetup.StartInfo.Arguments = arguments;
-                //            //configurationSetup.StartInfo.WorkingDirectory = targetDir;
-                //            //configurationSetup.StartInfo.UseShellExecute = false;
-                //            //configurationSetup.StartInfo.CreateNoWindow = true;
-                //            //configurationSetup.Start();
-                //        //}
-
-                //        configurationSetup.WaitForExit();
-                //    }
-                //    finally
-                //    {
-                //        if (configurationSetup != null)
-                //            configurationSetup.Close();
-                //    }
-                //}
             }
             catch (Exception ex)
             {
@@ -182,6 +112,80 @@ namespace TimeSeriesFramework
                 MessageBox.Show("There was an exception detected during the install process: " + ex.Message);
             }
         }
+
+        #endregion
+
+        #region [ Old Code ]
+
+        ///// <summary>
+        ///// Gets the configuration setup utility file name.
+        ///// </summary>
+        //protected virtual string SetupUtilityName
+        //{
+        //    get
+        //    {
+        //        return null;
+        //    }
+        //}
+
+        ///// <summary>
+        ///// Gets or sets flag to run ConfigurationSetupUtility after installation.
+        ///// </summary>
+        //protected bool RunSetupUtility
+        //{
+        //    get;
+        //    set;
+        //}
+
+        //string installedBitSize = "32bit";
+
+        //// Lookup installed bit size in configuration file, if defined
+        //XmlNode installedBitSizeNode = systemSettingsNode.SelectSingleNode("add[@name = 'InstalledBitSize']");
+
+        //if (installedBitSizeNode != null)
+        //{
+        //    installedBitSize = installedBitSizeNode.Attributes["value"].Value;
+
+        //    // Default to 32 if no target installation bit size was found
+        //    if (string.IsNullOrWhiteSpace(installedBitSize))
+        //        installedBitSize = "32";
+
+        //    installedBitSize += "bit";
+        //}
+
+        //if (RunSetupUtility && !string.IsNullOrEmpty(SetupUtilityName))
+        //{
+        //    // Run configuration setup utility
+        //    Process configurationSetup = null;
+        //    string fileName = targetDir + SetupUtilityName;
+        //    string arguments = "-install -" + installedBitSize;
+
+        //    try
+        //    {
+        //        configurationSetup = UserAccountControl.CreateProcessAsAdmin(fileName, arguments);
+        //        //if (UserAccountControl.IsUacEnabled)
+        //        //{
+        //        //    configurationSetup = UserAccountControl.CreateProcessAsStandardUser(fileName, arguments);
+        //        //}
+        //        //else
+        //        //{
+        //            //configurationSetup = new Process();
+        //            //configurationSetup.StartInfo.FileName = fileName;
+        //            //configurationSetup.StartInfo.Arguments = arguments;
+        //            //configurationSetup.StartInfo.WorkingDirectory = targetDir;
+        //            //configurationSetup.StartInfo.UseShellExecute = false;
+        //            //configurationSetup.StartInfo.CreateNoWindow = true;
+        //            //configurationSetup.Start();
+        //        //}
+
+        //        configurationSetup.WaitForExit();
+        //    }
+        //    finally
+        //    {
+        //        if (configurationSetup != null)
+        //            configurationSetup.Close();
+        //    }
+        //}
 
         #endregion
     }
