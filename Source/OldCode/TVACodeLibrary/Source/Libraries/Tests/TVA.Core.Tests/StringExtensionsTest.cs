@@ -267,9 +267,7 @@ namespace TVA.Core.Tests
         bool boolvalue = true;
         //Func<char, bool> characterTestFunction;
 
-        /// <summary>
-        /// This test method validated given String represent a boolean value.
-        /// </summary>
+        // This test method validated given String represent a boolean value.
         [TestMethod()]
         public void ParseBoolean_Valid()
         {
@@ -284,9 +282,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This method will validate given string parameter is not an empty or null string
-        /// </summary>
+        // This method will validate given string parameter is not an empty or null string
         [TestMethod()]
         public void NotEmptyWithParameter_Valid()
         {
@@ -301,9 +297,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method Ensures parameter is not an empty or null string
-        /// </summary>
+        // This test method Ensures parameter is not an empty or null string
         [TestMethod()]
         public void NotEmpty_Valid()
         {
@@ -318,9 +312,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method Removes all white space from a string
-        /// </summary>
+        // This test method Removes all white space from a string
         [TestMethod()]
         public void RemoveWhiteSpace_Valid()
         {
@@ -335,9 +327,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method Removes all white space from a string with input character
-        /// </summary>
+        // This test method Removes all white space from a string with input character
         [TestMethod()]
         public void ReplaceWhiteSpacewithparameter_Valid()
         {
@@ -352,9 +342,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Removes all control characters from a string.
-        /// </summary>
+        // This test method will Removes all control characters from a string.
         [TestMethod()]
         public void RemoveControlCharacters_Valid()
         {
@@ -369,9 +357,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Replace all control characters from a string.
-        /// </summary>
+        // This test method will Replace all control characters from a string.
         [TestMethod()]
         public void ReplaceControlCharacters_Valid()
         {
@@ -386,9 +372,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Replace all control characters from a string with input parameter as char.
-        /// </summary>
+        // This test method will Replace all control characters from a string with input parameter as char.
         [TestMethod()]
         public void ReplaceControlCharacterswithparameter_Valid()
         {
@@ -403,9 +387,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Removes all carriage returns and line feeds from a string
-        /// </summary>
+        // This test method will Removes all carriage returns and line feeds from a string
         [TestMethod()]
         public void RemoveCrLfs_Valid()
         {
@@ -420,9 +402,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Removes all carriage returns and line feeds from a string.
-        /// </summary>
+        // This test method will Removes all carriage returns and line feeds from a string.
         [TestMethod()]
         public void RemoveCrLfswithparameter_Valid()
         {
@@ -437,9 +417,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Removes duplicate character strings (adjoining replication) in a string.
-        /// </summary>
+        // This test method will Removes duplicate character strings (adjoining replication) in a string.
         [TestMethod()]
         public void RemoveDuplicates_Valid()
         {
@@ -454,9 +432,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Removes the terminator ('\0') from a null terminated string.
-        /// </summary>
+        // This test method will Removes the terminator ('\0') from a null terminated string.
         [TestMethod()]
         public void RemoveNull_Valid()
         {
@@ -471,9 +447,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Replaces all repeating white space with specified spacing character.
-        /// </summary>
+        // This test method will Replaces all repeating white space with specified spacing character.
         [TestMethod()]
         public void RemoveDuplicateWhiteSpace_Valid()
         {
@@ -488,9 +462,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Replaces all repeating white space with specified spacing character.
-        /// </summary>
+        // This test method will Replaces all repeating white space with specified spacing character.
         [TestMethod()]
         public void RemoveDuplicateWhiteSpacewithparameter_Valid()
         {
@@ -505,9 +477,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Counts the total number of the occurances of a character in the given string.
-        /// </summary>
+        // This test method will Counts the total number of the occurances of a character in the given string.
         [TestMethod()]
         public void CharCount_Valid()
         {
@@ -522,9 +492,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string is contains only digits based on Char.IsDigit function.
-        /// </summary>
+        // This test method will Tests to see if a string is contains only digits based on Char.IsDigit function.
         [TestMethod()]
         public void IsAllDigits_Valid()
         {
@@ -539,9 +507,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string contains only numbers based on Char.IsNumber function.
-        /// </summary>
+        // This test method will Tests to see if a string contains only numbers based on Char.IsNumber function.
         [TestMethod()]
         public void IsAllNumbers_Valid()
         {
@@ -556,9 +522,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string's letters are all upper case.
-        /// </summary>
+        // This test method will Tests to see if a string's letters are all upper case.
         [TestMethod()]
         public void IsAllUpper_Valid()
         {
@@ -573,9 +537,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string's letters are all lower case.
-        /// </summary>
+        // This test method will Tests to see if a string's letters are all lower case.
         [TestMethod()]
         public void IsAllLower_Valid()
         {
@@ -590,9 +552,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string contains only letters.
-        /// </summary>
+        // This test method will Tests to see if a string contains only letters.
         [TestMethod()]
         public void IsAllLetters_Valid()
         {
@@ -607,9 +567,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string contains only letters.
-        /// </summary>
+        // This test method will Tests to see if a string contains only letters.
         [TestMethod()]
         public void IsAllLetterswithparameter_Valid()
         {
@@ -624,9 +582,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string contains only letters or digits.
-        /// </summary>
+        // This test method will Tests to see if a string contains only letters or digits.
         [TestMethod()]
         public void IsAllLettersOrDigits_Valid()
         {
@@ -641,9 +597,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Tests to see if a string contains only letters or digits.
-        /// </summary>
+        // This test method will Tests to see if a string contains only letters or digits.
         [TestMethod()]
         public void IsAllLettersOrDigitswithparameter_Valid()
         {
@@ -658,9 +612,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Encodes a string into a base-64 string.
-        /// </summary>
+        // This test method will Encodes a string into a base-64 string.
         [TestMethod()]
         public void Base64Encode_Valid()
         {
@@ -675,9 +627,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Decodes a given base-64 encoded string encoded with
-        /// </summary>
+        // This test method will Decodes a given base-64 encoded string encoded with
         [TestMethod()]
         public void Base64Decode_Valid()
         {
@@ -692,9 +642,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
         /// This test method will Converts the provided string into title case (upper case first letter of each word).
-        /// </summary>
         [TestMethod()]
         public void ToTitleCase_Valid()
         {
@@ -709,9 +657,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Truncates the provided string from the left if it is longer that specified length.
-        /// </summary>
+        // This test method will Truncates the provided string from the left if it is longer that specified length.
         [TestMethod()]
         public void TruncateLeft_Valid()
         {
@@ -726,9 +672,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Truncates the provided string from the right if it is longer that specified length.
-        /// </summary>
+        // This test method will Truncates the provided string from the right if it is longer that specified length.
         [TestMethod()]
         public void TruncateRight_Valid()
         {
@@ -743,9 +687,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Centers text within the specified maximum length, biased to the left.
-        /// </summary>
+        // This test method will Centers text within the specified maximum length, biased to the left.
         [TestMethod()]
         public void CenterText_Valid()
         {
@@ -760,9 +702,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Centers text within the specified maximum length, biased to the left.
-        /// </summary>
+        // This test method will Centers text within the specified maximum length, biased to the left.
         [TestMethod()]
         public void CenterTextWithParameter_Valid()
         {
@@ -777,9 +717,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Performs a case insensitive string replacement.
-        /// </summary>
+        // This test method will Performs a case insensitive string replacement.
         [TestMethod()]
         public void ReplaceCaseInsensitive_Valid()
         {
@@ -794,9 +732,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Ensures a string starts with a specific string.
-        /// </summary>
+        // This test method will Ensures a string starts with a specific string.
         [TestMethod()]
         public void EnsureStart_Valid()
         {
@@ -811,9 +747,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Ensures a string starts with a specific string.
-        /// </summary>
+        // This test method will Ensures a string starts with a specific string.
         [TestMethod()]
         public void EnsureStart1_Valid()
         {
@@ -828,9 +762,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
         /// This test method will Ensures a string starts with a specific string.
-        /// </summary>
         [TestMethod()]
         public void EnsureStart2_Valid()
         {
@@ -845,9 +777,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Ensures a string ends with a specific character.
-        /// </summary>
+        // This test method will Ensures a string ends with a specific character.
         [TestMethod()]
         public void EnsureEnd_Valid()
         {
@@ -862,9 +792,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Ensures a string ends with a specific character.
-        /// </summary>
+        // This test method will Ensures a string ends with a specific character.
         [TestMethod()]
         public void EnsureEnd1_Valid()
         {
@@ -879,9 +807,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Ensures a string ends with a specific string with Input parameter.
-        /// </summary>
+        // This test method will Ensures a string ends with a specific string with Input parameter.
         [TestMethod()]
         public void EnsureEnd2_Valid()
         {
@@ -896,9 +822,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Reverses the order of the characters in a string.
-        /// </summary>
+        // This test method will Reverses the order of the characters in a string.
         [TestMethod()]
         public void Reverse_Valid()
         {
@@ -913,9 +837,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Searches a string for a repeated instance of the specified.
-        /// </summary>
+        // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar_Valid()
         {
@@ -930,9 +852,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Searches a string for a repeated instance of the specified.
-        /// </summary>
+        // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar2_Valid()
         {
@@ -947,9 +867,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Searches a string for a repeated instance of the specified.
-        /// </summary>
+        // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar3_Valid()
         {
@@ -964,9 +882,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Returns the index of the last repeated index of the first group of repeated characters that begin with the.
-        /// </summary>
+        // This test method will Returns the index of the last repeated index of the first group of repeated characters that begin with the.
         [TestMethod()]
         public void IndexOfRepeatedChar4_Valid()
         {
@@ -981,9 +897,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Places an ellipsis in the middle of a string as it is trimmed to length specified.
-        /// </summary>
+        // This test method will Places an ellipsis in the middle of a string as it is trimmed to length specified.
         [TestMethod()]
         public void TrimWithEllipsisMiddle_Valid()
         {
@@ -998,9 +912,7 @@ namespace TVA.Core.Tests
             }
         }
 
-        /// <summary>
-        /// This test method will Places an ellipsis at the end of a string as it is trimmed to length specified.
-        /// </summary>
+        // This test method will Places an ellipsis at the end of a string as it is trimmed to length specified.
         [TestMethod()]
         public void TrimWithEllipsisEnd_Valid()
         {
