@@ -258,27 +258,11 @@ namespace TVA.Core.Tests
     [TestClass()]
     public class DateTimeExtensionTest
     {
-        
-        #region Private Member Variable
-
         private double lagTime = 2, leadTime = 2;
         private BaselineTimeInterval testtime = BaselineTimeInterval.Day;
         private static DateTime testTime1 = DateTime.UtcNow, testTime2 = DateTime.Now;
         private string TestStr;
-        private bool result;
-        #endregion
-
-        #region Constructor"
-        public DateTimeExtensionTest()
-        {
-            //
-            // TODO: Add constructor logic here
-            //
-        }
-        #endregion
-
-        #region Public TestMethods
-        
+        private bool result;        
 
         // This method will Determines if the specified UTC time is valid or not, by comparing it to the system clock time
         // and returns boolean variable as false for valid case and test will pass.
@@ -771,8 +755,5 @@ namespace TVA.Core.Tests
             Assert.AreEqual(testTime2.AddHours(3), result);
 
         }
-
-        #endregion
-
     }
 }
