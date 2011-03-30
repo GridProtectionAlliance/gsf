@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Adapters\ConnectionStringParameterAttribute.cs" />
     <Compile Include="ConcentratorBase.cs" />
+    <Compile Include="Data\DataConnection.cs" />
     <Compile Include="Frame.cs" />
     <Compile Include="FrameQueue.cs" />
     <Compile Include="IFrame.cs" />
