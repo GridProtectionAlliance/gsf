@@ -646,18 +646,24 @@ namespace TVA.Identity
                     {
                         if (m_isWinNT)
                         {
-                            long maxPasswordAge = (long)MaximumPasswordAge.ToSeconds();
-                            long passwordAge = long.Parse(GetUserProperty("passwordAge"));
+                            Ticks maxPasswordTicksAge = MaximumPasswordAge;
 
-                            if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                            if (maxPasswordTicksAge >= 0)
                             {
-                                // User must change password on next logon.
-                                passwordChangeDate = DateTime.UtcNow;
-                            }
-                            else
-                            {
-                                // User must change password periodically.
-                                passwordChangeDate = DateTime.UtcNow.AddSeconds(maxPasswordAge - passwordAge);
+                                // WinNT properties are in seconds, not ticks
+                                long passwordAge = long.Parse(GetUserProperty("passwordAge"));
+                                long maxPasswordAge = (long)maxPasswordTicksAge.ToSeconds();
+
+                                if (passwordAge > maxPasswordAge || GetUserProperty("passwordExpired").ParseBoolean())
+                                {
+                                    // User must change password on next logon.
+                                    passwordChangeDate = DateTime.UtcNow;
+                                }
+                                else
+                                {
+                                    // User must change password periodically.
+                                    passwordChangeDate = DateTime.UtcNow.AddSeconds(maxPasswordAge - passwordAge);
+                                }
                             }
                         }
                         else
@@ -1089,6 +1095,7 @@ namespace TVA.Identity
         /// <summary>
         /// Initializes the <see cref="UserInfo"/> object.
         /// </summary>
+        /// <exception cref="InitializationException">Failed to initialize directory entry for <see cref="LoginID"/>.</exception>
         public void Initialize()
         {
             if (!m_initialized)
@@ -1156,7 +1163,7 @@ namespace TVA.Identity
                     catch (Exception ex)
                     {
                         m_userEntry = null;
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for '{0}'", LoginID), ex);
+                        throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", LoginID), ex);
                     }
                     finally
                     {
@@ -1177,7 +1184,7 @@ namespace TVA.Identity
                     catch (Exception ex)
                     {
                         m_userEntry = null;
-                        throw new InitializationException(string.Format("Failed to find local user '{0}'", LoginID), ex);
+                        throw new InitializationException(string.Format("Failed to initialize directory entry for local user '{0}'", LoginID), ex);
                     }
                 }
 
