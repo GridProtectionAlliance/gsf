@@ -271,660 +271,440 @@ namespace TVA.Core.Tests
         [TestMethod()]
         public void ParseBoolean_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.ParseBoolean();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This method will validate given string parameter is not an empty or null string
         [TestMethod()]
         public void NotEmptyWithParameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.NotEmpty(testvalue);
+                ////Assert
                 Assert.AreEqual(testvalue, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method Ensures parameter is not an empty or null string
         [TestMethod()]
         public void NotEmpty_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.NotEmpty();
+                ////Assert
                 Assert.AreEqual(testResult, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method Removes all white space from a string
         [TestMethod()]
         public void RemoveWhiteSpace_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveWhiteSpace();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method Removes all white space from a string with input character
         [TestMethod()]
         public void ReplaceWhiteSpacewithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ReplaceWhiteSpace(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Removes all control characters from a string.
         [TestMethod()]
         public void RemoveControlCharacters_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveControlCharacters();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Replace all control characters from a string.
         [TestMethod()]
         public void ReplaceControlCharacters_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ReplaceControlCharacters();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Replace all control characters from a string with input parameter as char.
         [TestMethod()]
         public void ReplaceControlCharacterswithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ReplaceControlCharacters(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Removes all carriage returns and line feeds from a string
         [TestMethod()]
         public void RemoveCrLfs_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveCrLfs();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Removes all carriage returns and line feeds from a string.
         [TestMethod()]
         public void RemoveCrLfswithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ReplaceCrLfs(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Removes duplicate character strings (adjoining replication) in a string.
         [TestMethod()]
         public void RemoveDuplicates_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveDuplicates(testvalue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Removes the terminator ('\0') from a null terminated string.
         [TestMethod()]
         public void RemoveNull_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveNull();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Replaces all repeating white space with specified spacing character.
         [TestMethod()]
         public void RemoveDuplicateWhiteSpace_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveDuplicateWhiteSpace();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Replaces all repeating white space with specified spacing character.
         [TestMethod()]
         public void RemoveDuplicateWhiteSpacewithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.RemoveDuplicateWhiteSpace(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Counts the total number of the occurances of a character in the given string.
         [TestMethod()]
         public void CharCount_Valid()
         {
-            try
-            {
+                ////Act
                 int result = strTestMethod.CharCount(c);
+                ////Assert
                 Assert.AreEqual(intValue, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string is contains only digits based on Char.IsDigit function.
         [TestMethod()]
         public void IsAllDigits_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllDigits();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string contains only numbers based on Char.IsNumber function.
         [TestMethod()]
         public void IsAllNumbers_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllNumbers();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string's letters are all upper case.
         [TestMethod()]
         public void IsAllUpper_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllUpper();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string's letters are all lower case.
         [TestMethod()]
         public void IsAllLower_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllLower();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string contains only letters.
         [TestMethod()]
         public void IsAllLetters_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllLetters();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string contains only letters.
         [TestMethod()]
         public void IsAllLetterswithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllLetters(boolvalue);
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string contains only letters or digits.
         [TestMethod()]
         public void IsAllLettersOrDigits_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllLettersOrDigits();
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Tests to see if a string contains only letters or digits.
         [TestMethod()]
         public void IsAllLettersOrDigitswithparameter_Valid()
         {
-            try
-            {
+                ////Act
                 bool result = strTestMethod.IsAllLettersOrDigits(boolvalue);
+                ////Assert
                 Assert.AreEqual(false, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Encodes a string into a base-64 string.
         [TestMethod()]
         public void Base64Encode_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.Base64Encode();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Decodes a given base-64 encoded string encoded with
         [TestMethod()]
         public void Base64Decode_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.Base64Decode();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
-        /// This test method will Converts the provided string into title case (upper case first letter of each word).
+        // This test method will Converts the provided string into title case (upper case first letter of each word).
         [TestMethod()]
         public void ToTitleCase_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ToTitleCase();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Truncates the provided string from the left if it is longer that specified length.
         [TestMethod()]
         public void TruncateLeft_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.TruncateLeft(intValue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Truncates the provided string from the right if it is longer that specified length.
         [TestMethod()]
         public void TruncateRight_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.TruncateRight(intValue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Centers text within the specified maximum length, biased to the left.
         [TestMethod()]
         public void CenterText_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.CenterText(intValue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Centers text within the specified maximum length, biased to the left.
         [TestMethod()]
         public void CenterTextWithParameter_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.CenterText(intValue, c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Performs a case insensitive string replacement.
         [TestMethod()]
         public void ReplaceCaseInsensitive_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.ReplaceCaseInsensitive(testvalue, testResult);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Ensures a string starts with a specific string.
         [TestMethod()]
         public void EnsureStart_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureStart(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Ensures a string starts with a specific string.
         [TestMethod()]
         public void EnsureStart1_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureStart(testvalue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         /// This test method will Ensures a string starts with a specific string.
         [TestMethod()]
         public void EnsureStart2_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureStart(c, boolvalue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Ensures a string ends with a specific character.
         [TestMethod()]
         public void EnsureEnd_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureEnd(c);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Ensures a string ends with a specific character.
         [TestMethod()]
         public void EnsureEnd1_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureEnd(testvalue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Ensures a string ends with a specific string with Input parameter.
         [TestMethod()]
         public void EnsureEnd2_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.EnsureEnd(c, boolvalue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Reverses the order of the characters in a string.
         [TestMethod()]
         public void Reverse_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.Reverse();
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar_Valid()
         {
-            try
-            {
+                ////Act
                 int result = strTestMethod.IndexOfRepeatedChar();
+                ////Assert
                 Assert.AreEqual(intData, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar2_Valid()
         {
-            try
-            {
+                ////Act
                 int result = strTestMethod.IndexOfRepeatedChar(c);
+                ////Assert
                 Assert.AreEqual(intData, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Searches a string for a repeated instance of the specified.
         [TestMethod()]
         public void IndexOfRepeatedChar3_Valid()
         {
-            try
-            {
+                ////Act
                 int result = strTestMethod.IndexOfRepeatedChar(intValue);
+                ////Assert
                 Assert.AreEqual(intData, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Returns the index of the last repeated index of the first group of repeated characters that begin with the.
         [TestMethod()]
         public void IndexOfRepeatedChar4_Valid()
         {
-            try
-            {
+                ////Act
                 int result = strTestMethod.IndexOfRepeatedChar(c, intValue);
+                ////Assert
                 Assert.AreEqual(intData, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Places an ellipsis in the middle of a string as it is trimmed to length specified.
         [TestMethod()]
         public void TrimWithEllipsisMiddle_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.TrimWithEllipsisMiddle(intValue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
 
         // This test method will Places an ellipsis at the end of a string as it is trimmed to length specified.
         [TestMethod()]
         public void TrimWithEllipsisEnd_Valid()
         {
-            try
-            {
+                ////Act
                 string result = strTestMethod.TrimWithEllipsisEnd(intValue);
+                ////Assert
                 Assert.AreEqual(string.Empty, result);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
         }
     }
 }
