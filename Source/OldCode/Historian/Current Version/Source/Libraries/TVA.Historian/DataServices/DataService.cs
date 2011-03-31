@@ -30,9 +30,15 @@
 //       Updated header and license agreement.
 //  11/07/2010 - Pinal C. Patel
 //       Modified to fix breaking changes made to SelfHostingService.
+//  03/31/2011 - J. Ritchie Carroll
+//       Updated to allow customizable close timeout and maximum possible number of items to be
+//       returned from data service.
 //
 //******************************************************************************************************
 
+using System;
+using System.ServiceModel.Description;
+using TVA.Configuration;
 using TVA.Services.ServiceModel;
 
 namespace TVA.Historian.DataServices
@@ -46,6 +52,7 @@ namespace TVA.Historian.DataServices
 
         // Fields
         private IArchive m_archive;
+        private TimeSpan m_closeTimeout;
 
         #endregion
 
@@ -60,6 +67,9 @@ namespace TVA.Historian.DataServices
             Singleton = true;
             PublishMetadata = true;
             PersistSettings = true;
+
+            // We set the default close timeout to 2 minutes
+            m_closeTimeout = TimeSpan.Parse("00:02:00");
         }
 
         #endregion
@@ -78,6 +88,87 @@ namespace TVA.Historian.DataServices
             set
             {
                 m_archive = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the desired <see cref="System.ServiceModel.Channels.Binding.CloseTimeout"/> used as
+        /// the interval of time provided for a connection to close before the transport raises an exception.
+        /// </summary>
+        public TimeSpan CloseTimeout
+        {
+            get
+            {
+                return m_closeTimeout;
+            }
+            set
+            {
+                m_closeTimeout = value;
+            }
+        }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Loads saved web service settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void LoadSettings()
+        {
+            base.LoadSettings();
+
+            if (PersistSettings)
+            {
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("CloseTimeout", m_closeTimeout, "Maximum time allowed for a connection to close before raising a timeout exception.");
+                CloseTimeout = settings["CloseTimeout"].ValueAs(m_closeTimeout);
+            }
+        }
+
+        /// <summary>
+        /// Saves web service settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
+        /// </summary>
+        public override void SaveSettings()
+        {
+            base.SaveSettings();
+
+            if (PersistSettings)
+            {
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["CloseTimeout", true].Update(m_closeTimeout);
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Raises the <see cref="SelfHostingService.ServiceHostCreated"/> event.
+        /// </summary>
+        /// <remarks>
+        /// We override default behavior to update the default close timeout and to make sure the
+        /// maximum number of items are allowed in the returned graph.
+        /// </remarks>
+        protected override void OnServiceHostCreated()
+        {
+            base.OnServiceHostCreated();
+
+            foreach (ServiceEndpoint endpoint in ServiceHost.Description.Endpoints)
+            {
+                // Update the close timeout based on customizable setting
+                endpoint.Binding.CloseTimeout = m_closeTimeout;
+
+                // Verify that max items allowed in object graphs are set to maximum possible
+                foreach (OperationDescription description in endpoint.Contract.Operations)
+                {
+                    DataContractSerializerOperationBehavior behavior = description.Behaviors.Find<DataContractSerializerOperationBehavior>();
+                    
+                    if (behavior != null)
+                        behavior.MaxItemsInObjectGraph = int.MaxValue;
+                }
             }
         }
 
