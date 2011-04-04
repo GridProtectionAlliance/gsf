@@ -430,13 +430,21 @@ namespace TVA.Security
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         public override bool RefreshData()
         {
-            // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            bool result = RefreshData(UserData.Roles);
+            bool result;
 
-            // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
-            for (int i = 0; i < UserData.Roles.Count; i++)
+            // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
+            if (result = RefreshData(UserData.Roles))
             {
-                UserData.Roles[i] = UserData.Roles[i].Split('\\')[1];
+                string[] parts;
+
+                // Remove domain name prefixes from user group names (again to match WindowIdentity principal implementation)
+                for (int i = 0; i < UserData.Roles.Count; i++)
+                {
+                    parts = UserData.Roles[i].Split('\\');
+
+                    if (parts.Length == 2)
+                        UserData.Roles[i] = parts[1];
+                }
             }
 
             return result;
@@ -472,15 +480,15 @@ namespace TVA.Security
                     user = new UserInfo(UserData.Username, ldapPath);
 
                 user.PersistSettings = true;
-                user.Initialize();
 
+                // Attempt to determine if user exists (this will initialize user object if not initialized already)
+                UserData.IsDefined = user.Exists;
+                UserData.LoginID = user.LoginID;
+
+                // User may exist and domain be unavailable, so only fill in user information if it is available
                 if (user.UserEntry != null)
                 {
-                    // User exists in Active Directory or as local account
-                    UserData.IsDefined = true;
-
                     // Copy relevant user information
-                    UserData.LoginID = user.LoginID;
                     UserData.FirstName = user.FirstName;
                     UserData.LastName = user.LastName;
                     UserData.CompanyName = user.Company;
@@ -497,14 +505,22 @@ namespace TVA.Security
                         if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
                             groupCollection.Add(groupName);
                     }
-
-                    return true;
+                    
+                    // TODO: Cache critical user information, such as group listing, so that information can be loaded from cache if domain is unavailable
+                    // Suggest using an InteropCache such as what is used for KeyIVCache in Cipher code
                 }
                 else
                 {
-                    // No such user
-                    return false;
+                    // TODO: Load cached information, such as group listing, when domain is offline
+                    
+                    // We have no way of knowing if user is locked out or disabled since domain is unavailable
+                    UserData.IsLockedOut = false;
+                    UserData.IsDisabled = false;
+                    UserData.PasswordChangeDateTime = DateTime.MaxValue;
+                    UserData.AccountCreatedDateTime = DateTime.MinValue;
                 }
+
+                return UserData.IsDefined;
             }
             finally
             {

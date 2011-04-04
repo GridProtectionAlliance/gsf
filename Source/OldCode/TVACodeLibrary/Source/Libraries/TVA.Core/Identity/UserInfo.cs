@@ -68,6 +68,9 @@
 //       information even when connected to a domain if machine name is specified as domain name.
 //  02/23/2011 - Pinal C. Patel
 //       Fixed a bug in the Active Directory lookup of MaximumPasswordAge property.
+//  04/04/2011 - J. Ritchie Carroll
+//       Added Exists and DomainAvailable properties to accomodate testing when domain server is
+//       not available (such as when laptop is used when not connected to the domain).
 //
 //*******************************************************************************************************
 
@@ -404,6 +407,7 @@ namespace TVA.Identity
         private string m_username;
         private string m_ldapPath;
         private DirectoryEntry m_userEntry;
+        private bool m_domainAvailable;
         private int m_userAccountControl;
         private bool m_isWinNT;
         private string m_privilegedDomain;
@@ -557,6 +561,80 @@ namespace TVA.Identity
             get
             {
                 return m_domain + "\\" + m_username;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if user domain is available.
+        /// </summary>
+        /// <returns><c>true</c> if domain responds to <see cref="Initialize"/>; otherwise <c>false</c>.</returns>
+        public bool DomainAvailable
+        {
+            get
+            {
+                if (!m_initialized)
+                {
+                    // Attempt to initialize
+                    try
+                    {
+                        Initialize();
+                    }
+                    catch (InitializationException)
+                    {
+                        // Initialization failures are due to domain not responding,
+                        // member flag is set in Initialize() method.
+                    }
+                }
+
+                return m_domainAvailable;
+            }
+        }
+
+        /// <summary>
+        /// Gets flag that determines if user exists.
+        /// </summary>
+        /// <returns><c>true</c> if user is found to exist; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// Unlike other properties in this class, <see cref="Exists"/> will still work even if the domain server is unavailable.
+        /// Calling this property without access to a domain server will return <c>true</c> if the user is authenticated.
+        /// <para>
+        /// For example, if a laptop user that's normally connected to the domain takes their computer on the road without VPN
+        /// or other connectivity to the domain, the user can still login to the latop using cached credentials. Without access
+        /// to the domain, no user information will be available (such as <see cref="Groups"/> listing) - if this data is needed
+        /// offline it will need to be cached by the application in anticipation of offline access.
+        /// </para>
+        /// </remarks>
+        public bool Exists
+        {
+            get
+            {
+                bool exists = false;
+
+                if (!m_initialized)
+                {
+                    // Attempt to initialize
+                    try
+                    {
+                        Initialize();
+                    }
+                    catch (InitializationException)
+                    {
+                        // User could not be found - this could simply mean that ActiveDirectory is unavailable (e.g., laptop disconnected from the domain).
+                        // In this case, if user logged in with cached credentials they are at least authenticated so we can assume that the user exists...
+                        WindowsPrincipal windowsPrincipal = Thread.CurrentPrincipal as WindowsPrincipal;
+                        exists = windowsPrincipal != null && !string.IsNullOrEmpty(LoginID) && string.Compare(windowsPrincipal.Identity.Name, LoginID, true) == 0 && windowsPrincipal.Identity.IsAuthenticated;
+                    }
+                }
+
+                if (!exists)
+                {
+                    if (m_isWinNT)
+                        exists = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
+                    else
+                        exists = (m_userEntry != null);
+                }
+
+                return exists;
             }
         }
 
@@ -1159,10 +1237,12 @@ namespace TVA.Identity
                         m_isWinNT = false;
                         m_userAccountControl = -1;
                         m_enabled = true;
+                        m_domainAvailable = true;
                     }
                     catch (Exception ex)
                     {
                         m_userEntry = null;
+                        m_domainAvailable = false;
                         throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", LoginID), ex);
                     }
                     finally
@@ -1174,18 +1254,11 @@ namespace TVA.Identity
                 else
                 {
                     // Initialize the directory entry object used to retrieve local account information
-                    try
-                    {
-                        m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
-                        m_isWinNT = true;
-                        m_userAccountControl = -1;
-                        m_enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        m_userEntry = null;
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for local user '{0}'", LoginID), ex);
-                    }
+                    m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
+                    m_isWinNT = true;
+                    m_userAccountControl = -1;
+                    m_enabled = true;
+                    m_domainAvailable = true;
                 }
 
                 // Initialize user information only once
