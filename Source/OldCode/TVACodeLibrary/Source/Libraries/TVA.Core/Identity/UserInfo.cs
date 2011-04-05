@@ -1332,6 +1332,10 @@ namespace TVA.Identity
                     m_enabled = true;
                     m_domainAvailable = true;
                 }
+                catch (ThreadAbortException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     m_userEntry = null;
@@ -1354,6 +1358,10 @@ namespace TVA.Identity
                     m_userAccountControl = -1;
                     m_enabled = true;
                     m_domainAvailable = true;
+                }
+                catch (ThreadAbortException)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {
