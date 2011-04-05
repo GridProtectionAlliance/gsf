@@ -71,6 +71,9 @@
 //  04/04/2011 - J. Ritchie Carroll
 //       Added Exists and DomainAvailable properties to accomodate testing when domain server is
 //       not available (such as when laptop is used when not connected to the domain).
+//  04/05/2011 - J. Ritchie Carroll
+//       Updated class to attempt reintialization after system resume in case user no longer has
+//       access to domain.
 //
 //*******************************************************************************************************
 
@@ -478,9 +481,21 @@ namespace TVA.Identity
         /// </summary>
         private UserInfo()
         {
+            // Initialize default settings
             m_persistSettings = DefaultPersistSettings;
             m_settingsCategory = DefaultSettingsCategory;
             m_userAccountControl = -1;
+
+            // Attempt to attach to power mode changed system event
+            try
+            {
+                SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
+            }
+            catch
+            {
+                // This event will not be raised when running from a Windows service since
+                // a service does not establish a message loop.
+            }
         }
 
         /// <summary>
@@ -499,7 +514,7 @@ namespace TVA.Identity
         /// Gets or sets a boolean value that indicates whether the <see cref="UserInfo"/> object is currently enabled.
         /// </summary>
         /// <remarks>
-        /// <see cref="Enabled"/> property is not be set by user-code directly.
+        /// <see cref="Enabled"/> property is not to be set by user-code directly.
         /// </remarks>
         [Browsable(false),
         EditorBrowsable(EditorBrowsableState.Never),
@@ -567,7 +582,7 @@ namespace TVA.Identity
         /// <summary>
         /// Gets flag that determines if user domain is available.
         /// </summary>
-        /// <returns><c>true</c> if domain responds to <see cref="Initialize"/>; otherwise <c>false</c>.</returns>
+        /// <returns><c>true</c> if domain responds to <see cref="Initialize()"/>; otherwise <c>false</c>.</returns>
         public bool DomainAvailable
         {
             get
@@ -595,13 +610,25 @@ namespace TVA.Identity
         /// </summary>
         /// <returns><c>true</c> if user is found to exist; otherwise <c>false</c>.</returns>
         /// <remarks>
-        /// Unlike other properties in this class, <see cref="Exists"/> will still work even if the domain server is unavailable.
-        /// Calling this property without access to a domain server will return <c>true</c> if the user is authenticated.
         /// <para>
-        /// For example, if a laptop user that's normally connected to the domain takes their computer on the road without VPN
-        /// or other connectivity to the domain, the user can still login to the latop using cached credentials. Without access
-        /// to the domain, no user information will be available (such as <see cref="Groups"/> listing) - if this data is needed
-        /// offline it will need to be cached by the application in anticipation of offline access.
+        /// Unlike other properties in this class, <see cref="Exists"/> will still work even if the domain server is
+        /// unavailable. Calling this property without access to a domain server will return <c>true</c> if the user
+        /// is authenticated. This only succeeds if the current user is the same as the <see cref="LoginID"/>, there
+        /// is no way to determine if a user other than the currently authenticated user exists without access to
+        /// the domain server. Local accounts are not subject to these constraints since the domain server will
+        /// effectively be your local computer which is always accessible.
+        /// </para>
+        /// <para>
+        /// Since this property can check the <see cref="WindowsPrincipal"/> to determine if the current thread identity
+        /// is authenticated, it is important that consumers add the following code at application startup:
+        /// <code>AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);</code>
+        /// </para>
+        /// <para>
+        /// If a laptop user that's normally connected to the domain takes their computer on the road without VPN or other
+        /// connectivity to the domain, the user can still login to the latop using cached credentials therefore they are
+        /// still considered to exist. Without access to the domain, no user information will be available (such as the
+        /// <see cref="Groups"/> listing) - if this data is needed offline it will need to be cached by the application in
+        /// anticipation of offline access.
         /// </para>
         /// </remarks>
         public bool Exists
@@ -629,9 +656,20 @@ namespace TVA.Identity
                 if (!exists)
                 {
                     if (m_isWinNT)
-                        exists = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
+                    {
+                        try
+                        {
+                            exists = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
+                        }
+                        catch
+                        {
+                            exists = false;
+                        }
+                    }
                     else
+                    {
                         exists = (m_userEntry != null);
+                    }
                 }
 
                 return exists;
@@ -844,40 +882,45 @@ namespace TVA.Identity
         {
             get
             {
-                string maxAgePropertyValue = string.Empty;
+                if (m_enabled)
+                {
+                    string maxAgePropertyValue = string.Empty;
 
-                if (m_isWinNT)
-                {
-                    maxAgePropertyValue = GetUserProperty("maxPasswordAge");
-                }
-                else
-                {
-                    WindowsImpersonationContext currentContext = null;
-                    try
+                    if (m_isWinNT)
                     {
-                        currentContext = ImpersonatePrivilegedAccount();
-                        using (DirectorySearcher searcher = CreateDirectorySearcher())
+                        maxAgePropertyValue = GetUserProperty("maxPasswordAge");
+                    }
+                    else
+                    {
+                        WindowsImpersonationContext currentContext = null;
+                        try
                         {
-                            SearchResult searchResult = searcher.FindOne();
-                            if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
-                                maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
+                            currentContext = ImpersonatePrivilegedAccount();
+                            using (DirectorySearcher searcher = CreateDirectorySearcher())
+                            {
+                                SearchResult searchResult = searcher.FindOne();
+                                if (searchResult != null && searchResult.Properties.Contains("maxPwdAge"))
+                                    maxAgePropertyValue = searchResult.Properties["maxPwdAge"][0].ToString();
+                            }
+                        }
+                        finally
+                        {
+                            EndImpersonation(currentContext);
                         }
                     }
-                    finally
-                    {
-                        EndImpersonation(currentContext);
-                    }
+
+                    if (string.IsNullOrEmpty(maxAgePropertyValue))
+                        return -1;
+
+                    long maxPasswordAge = long.Parse(maxAgePropertyValue);
+
+                    if (m_isWinNT)
+                        return Ticks.FromSeconds(maxPasswordAge);
+
+                    return maxPasswordAge;
                 }
 
-                if (string.IsNullOrEmpty(maxAgePropertyValue))
-                    return -1;
-
-                long maxPasswordAge = long.Parse(maxAgePropertyValue);
-
-                if (m_isWinNT)
-                    return Ticks.FromSeconds(maxPasswordAge);
-
-                return maxPasswordAge;
+                return -1;
             }
         }
 
@@ -1171,6 +1214,45 @@ namespace TVA.Identity
         }
 
         /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
+        /// </summary>
+        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!m_disposed)
+            {
+                try
+                {
+                    // This will be done regardless of whether the object is finalized or disposed.
+                    if (disposing)
+                    {
+                        // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
+                        if (m_userEntry != null)
+                            m_userEntry.Dispose();
+
+                        // Attempt to detach from power mode changed system event
+                        try
+                        {
+                            SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
+                        }
+                        catch
+                        {
+                            // This event is not raised when running from a Windows service since
+                            // a service does not establish a message loop.
+                        }
+                    }
+                }
+                finally
+                {
+                    m_enabled = false;  // Mark as disabled.
+                    m_disposed = true;  // Prevent duplicate dispose.
+                }
+            }
+        }
+
+        /// <summary>
         /// Initializes the <see cref="UserInfo"/> object.
         /// </summary>
         /// <exception cref="InitializationException">Failed to initialize directory entry for <see cref="LoginID"/>.</exception>
@@ -1181,77 +1263,90 @@ namespace TVA.Identity
                 // Load settings from config file.
                 LoadSettings();
 
-                bool lookupDomainAccount = false;
+                // Handle initialization
+                Initialize(null);
 
-                // See if this computer is part of a domain
-                if (UserInfo.MachineIsJoinedToDomain)
+                // Initialize user information only once
+                m_initialized = true;
+            }
+        }
+
+        private void Initialize(object state)
+        {
+            bool lookupDomainAccount = false;
+            m_enabled = false;
+
+            // See if this computer is part of a domain
+            if (UserInfo.MachineIsJoinedToDomain)
+            {
+                // Try do derive the domain if one is not specified
+                if (string.IsNullOrEmpty(m_domain))
                 {
-                    // Try do derive the domain if one is not specified
-                    if (string.IsNullOrEmpty(m_domain))
+                    if (!string.IsNullOrEmpty(m_privilegedDomain))
                     {
-                        if (!string.IsNullOrEmpty(m_privilegedDomain))
-                        {
-                            // Use domain specified for privileged account
-                            m_domain = m_privilegedDomain;
-                        }
-                        else
-                        {
-                            // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
-                            // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
-                            m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
-                        }
+                        // Use domain specified for privileged account
+                        m_domain = m_privilegedDomain;
                     }
-
-                    // Use active directory domain account for user information lookup as long as domain is not the current machine
-                    lookupDomainAccount = (string.Compare(Environment.MachineName, m_domain, true) != 0);
-                }
-                else
-                {
-                    // Set the domain as the local machine if one is not specified
-                    if (string.IsNullOrEmpty(m_domain))
-                        m_domain = Environment.MachineName;
-                }
-
-                if (lookupDomainAccount)
-                {
-                    // Initialize the directory entry object used to retrieve active directory information
-                    WindowsImpersonationContext currentContext = null;
-
-                    try
+                    else
                     {
-                        // Impersonate to the privileged account if specified
-                        currentContext = ImpersonatePrivilegedAccount();
-
-                        // Initialize the Active Directory searcher object
-                        DirectorySearcher searcher = CreateDirectorySearcher();
-
-                        // Get user's directory entry for active directory interactions
-                        using (searcher)
-                        {
-                            searcher.Filter = "(SAMAccountName=" + m_username + ")";
-                            SearchResult result = searcher.FindOne();
-                            if (result != null)
-                                m_userEntry = result.GetDirectoryEntry();
-                        }
-
-                        m_isWinNT = false;
-                        m_userAccountControl = -1;
-                        m_enabled = true;
-                        m_domainAvailable = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        m_userEntry = null;
-                        m_domainAvailable = false;
-                        throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", LoginID), ex);
-                    }
-                    finally
-                    {
-                        // Undo impersonation if it was performed
-                        EndImpersonation(currentContext);
+                        // Attempt to use the default logon domain of the host machine. Note that this key will not exist on machines
+                        // that do not connect to a domain and the Environment.UserDomainName property will return the machine name.
+                        m_domain = Registry.GetValue(LogonDomainRegistryKey, LogonDomainRegistryValue, Environment.UserDomainName).ToString();
                     }
                 }
-                else
+
+                // Use active directory domain account for user information lookup as long as domain is not the current machine
+                lookupDomainAccount = (string.Compare(Environment.MachineName, m_domain, true) != 0);
+            }
+            else
+            {
+                // Set the domain as the local machine if one is not specified
+                if (string.IsNullOrEmpty(m_domain))
+                    m_domain = Environment.MachineName;
+            }
+
+            if (lookupDomainAccount)
+            {
+                // Initialize the directory entry object used to retrieve active directory information
+                WindowsImpersonationContext currentContext = null;
+
+                try
+                {
+                    // Impersonate to the privileged account if specified
+                    currentContext = ImpersonatePrivilegedAccount();
+
+                    // Initialize the Active Directory searcher object
+                    DirectorySearcher searcher = CreateDirectorySearcher();
+
+                    // Get user's directory entry for active directory interactions
+                    using (searcher)
+                    {
+                        searcher.Filter = "(SAMAccountName=" + m_username + ")";
+                        SearchResult result = searcher.FindOne();
+                        if (result != null)
+                            m_userEntry = result.GetDirectoryEntry();
+                    }
+
+                    m_isWinNT = false;
+                    m_userAccountControl = -1;
+                    m_enabled = true;
+                    m_domainAvailable = true;
+                }
+                catch (Exception ex)
+                {
+                    m_userEntry = null;
+                    m_domainAvailable = false;
+                    throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", LoginID), ex);
+                }
+                finally
+                {
+                    // Undo impersonation if it was performed
+                    EndImpersonation(currentContext);
+                }
+            }
+            else
+            {
+                try
                 {
                     // Initialize the directory entry object used to retrieve local account information
                     m_userEntry = new DirectoryEntry("WinNT://" + m_domain + "/" + m_username);
@@ -1260,10 +1355,21 @@ namespace TVA.Identity
                     m_enabled = true;
                     m_domainAvailable = true;
                 }
-
-                // Initialize user information only once
-                m_initialized = true;
+                catch (Exception ex)
+                {
+                    m_userEntry = null;
+                    m_domainAvailable = false;
+                    throw new InitializationException(string.Format("Failed to initialize directory entry for user '{0}'", LoginID), ex);
+                }
             }
+        }
+
+        // If the system is waking back up from a sleep state, this class should reinitialize in case
+        // user is no longer connected to a domain
+        private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+        {
+            if (e.Mode == PowerModes.Resume)
+                ThreadPool.QueueUserWorkItem(Initialize);
         }
 
         /// <summary>
@@ -1428,34 +1534,6 @@ namespace TVA.Identity
             {
                 // Undo impersonation if it was performed
                 EndImpersonation(currentContext);
-            }
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="UserInfo"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    // This will be done regardless of whether the object is finalized or disposed.
-                    if (disposing)
-                    {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
-                        if (m_userEntry != null)
-                            m_userEntry.Dispose();
-                    }
-                }
-                finally
-                {
-                    m_enabled = false;  // Mark as disabled.
-                    m_disposed = true;  // Prevent duplicate dispose.
-                }
             }
         }
 
