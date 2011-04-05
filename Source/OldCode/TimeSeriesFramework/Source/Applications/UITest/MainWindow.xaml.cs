@@ -28,7 +28,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
-using TimeSeriesFramework.UI.Utility;
+using TimeSeriesFramework.UI.Utilities;
 
 namespace UITest
 {
@@ -84,6 +84,7 @@ namespace UITest
                     {
                         var userControl = Activator.CreateInstance(type) as UserControl;                        
                         FrameContent.Navigate(userControl);
+                        TextBlockTitle.Text = menuDataItem.Description;
                     }
                 }
             }

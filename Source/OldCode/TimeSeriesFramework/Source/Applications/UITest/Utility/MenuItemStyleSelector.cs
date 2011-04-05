@@ -23,7 +23,7 @@
 
 using System.Windows;
 using System.Windows.Controls;
-using TimeSeriesFramework.UI.Utility;
+using TimeSeriesFramework.UI.Utilities;
 
 namespace UITest.Utility
 {

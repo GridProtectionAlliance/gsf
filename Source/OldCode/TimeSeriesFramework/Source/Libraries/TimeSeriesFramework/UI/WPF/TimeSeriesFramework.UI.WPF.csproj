@@ -58,9 +58,12 @@
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="CommonFunctions.cs" />
+    <Compile Include="CustomControls\DataPager.xaml.cs">
+      <DependentUpon>DataPager.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DataModelBase.cs" />
-    <Compile Include="DataModel\Company.cs" />
-    <Compile Include="IDataModel.cs" />
+    <Compile Include="DataModels\Company.cs" />
+    <Compile Include="IViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -77,9 +80,12 @@
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utility\MenuDataItem.cs" />
+    <Compile Include="UserControls\VendorUserControl.xaml.cs">
+      <DependentUpon>VendorUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utilities\MenuDataItem.cs" />
     <Compile Include="ViewModelBase.cs" />
-    <Compile Include="ViewModel\Companies.cs" />
+    <Compile Include="ViewModels\Companies.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -102,6 +108,14 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="CustomControls\DataPager.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\VendorUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Resource Include="Resources\CommonResource.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -27,7 +27,7 @@ using System.Xml.Serialization;
 using System;
 using TimeSeriesFramework.UI.Commands;
 
-namespace TimeSeriesFramework.UI.Utility
+namespace TimeSeriesFramework.UI.Utilities
 {
     /// <summary>
     /// Represents a menu item in a WPF Menu control.
@@ -47,6 +47,12 @@ namespace TimeSeriesFramework.UI.Utility
         /// </summary>
         [XmlAttribute]
         public string MenuText { get; set; }
+
+        /// <summary>
+        /// Gets or sets description of the menu item.
+        /// </summary>
+        [XmlAttribute]
+        public string Description { get; set; }
 
         /// <summary>
         /// Gets or sets comma seperated list of roles with access to this <see cref="MenuDataItem"/>.

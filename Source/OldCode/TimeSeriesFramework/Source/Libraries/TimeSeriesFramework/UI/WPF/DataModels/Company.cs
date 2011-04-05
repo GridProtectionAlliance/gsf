@@ -27,18 +27,16 @@ using System.ComponentModel.DataAnnotations;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 
-namespace TimeSeriesFramework.UI.DataModel
+namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
     /// Represents Company information as defined in the database.
     /// </summary>
-    public class Company : DataModelBase, IDataModel
+    public class Company : DataModelBase
     {
-
         #region [ Members ]
 
-        // Fields
-        private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
+        // Fields        
         private string m_error;
 
         #endregion
@@ -62,68 +60,6 @@ namespace TimeSeriesFramework.UI.DataModel
         #endregion
 
         #region [ Properties ]
-
-        #region [ IDataModel Properties ]
-
-        public ICommand SaveCommand
-        {
-            get
-            {
-                if (m_saveCommand == null)
-                    m_saveCommand = new RelayCommand(param => this.Save(), param => this.CanSave);
-
-                return m_saveCommand;
-            }
-        }
-
-        public ICommand DeleteCommand
-        {
-            get
-            {
-                if (m_deleteCommand == null)
-                    m_deleteCommand = new RelayCommand(param => this.Delete(), param => this.CanDelete);
-
-                return m_deleteCommand;
-            }
-        }
-
-        public ICommand ClearCommand
-        {
-            get
-            {
-                if (m_clearCommand == null)
-                    m_clearCommand = new RelayCommand(param => this.Clear(), param => this.CanClear);
-
-                return m_clearCommand;
-            }
-        }
-
-        public bool CanSave
-        {
-            get { return base.IsValid; }
-        }
-
-        public bool CanDelete
-        {
-            get { return true; }
-        }
-
-        public bool CanClear
-        {
-            get { return true; }
-        }
-
-        //public string Error
-        //{
-        //    get { return m_error; }
-        //    set
-        //    {
-        //        m_error = value;
-        //        base.NotifyPropertyChanged("Error");
-        //    }
-        //}
-
-        #endregion
 
         public int ID
         {
@@ -190,29 +126,6 @@ namespace TimeSeriesFramework.UI.DataModel
             get { return GetValue(() => UpdatedBy); }
             set { SetValue(() => UpdatedBy, value); }
         }
-
-        #endregion
-
-        #region [ Methods ]
-
-        #region [ IDataModel Implementation ]
-
-        public void Save()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Delete()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Clear()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
 
         #endregion
     }

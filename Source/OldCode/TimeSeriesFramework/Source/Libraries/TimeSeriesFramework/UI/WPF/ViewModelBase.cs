@@ -22,6 +22,11 @@
 //******************************************************************************************************
 
 using System.ComponentModel;
+using System;
+using System.Windows;
+using System.Collections.ObjectModel;
+using TimeSeriesFramework.UI.Commands;
+using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI
 {
@@ -37,13 +42,33 @@ namespace TimeSeriesFramework.UI
         /// Raised when a property on this object has a new value.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+        
+        #endregion
+
+        #region [ Properties ]
+
+        public Action<string, string, MessageBoxImage> Popup
+        {
+            get 
+            { 
+                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) => MessageBox.Show( Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage)); 
+            }
+        }
+
+        public Func<string, string, bool> Confirm
+        {
+            get 
+            {
+                return (Func<string, string, bool>)((message, caption) => MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.YesNo) == MessageBoxResult.Yes);
+            }
+        }
 
         #endregion
 
         #region [ Methods ]
 
         #region [ INotifyPropertyChanged Implementation ]
-        
+
         /// <summary>
         /// Raises this object's PropertyChanged event.
         /// </summary>

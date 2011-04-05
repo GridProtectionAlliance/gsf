@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  IDataModel.cs - Gbtc
+//  IViewModel.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,15 +16,11 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/25/2011 - Mehulbhai P Thakkar
+//  03/31/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI
@@ -32,7 +28,7 @@ namespace TimeSeriesFramework.UI
     /// <summary>
     /// Represents an interface and common methods and properties each data model definition should use.
     /// </summary>
-    public interface IDataModel
+    public interface IViewModel
     {
         #region [ Properties ]
 
@@ -92,6 +88,11 @@ namespace TimeSeriesFramework.UI
         /// Method to restore default values for data model object.
         /// </summary>
         void Clear();
+
+        /// <summary>
+        /// Method to retrieve collection of related objects.
+        /// </summary>
+        void Get();
 
         #endregion
     }
