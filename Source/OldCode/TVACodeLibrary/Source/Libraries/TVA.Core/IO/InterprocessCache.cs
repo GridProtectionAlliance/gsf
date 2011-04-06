@@ -660,50 +660,53 @@ namespace TVA.IO
         /// </summary>
         private void SynchronizedWrite(object state)
         {
-            if (m_fileLock.TryEnterWriteLock((int)m_retryTimer.Interval))
+            if (!m_disposed)
             {
-                FileStream fileStream = null;
-
-                try
+                if (m_fileLock.TryEnterWriteLock((int)m_retryTimer.Interval))
                 {
-                    fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.Write, FileShare.None);
+                    FileStream fileStream = null;
 
-                    if (m_dataLock.TryEnterReadLock((int)m_retryTimer.Interval))
+                    try
                     {
-                        try
-                        {
-                            // Disable file watch notification before update
-                            if (m_fileWatcher != null)
-                                m_fileWatcher.EnableRaisingEvents = false;
+                        fileStream = new FileStream(m_fileName, FileMode.Create, FileAccess.Write, FileShare.None);
 
-                            SaveFileData(fileStream, m_fileData);
-                            m_saveIsQueued.Set();
-                        }
-                        finally
+                        if (m_dataLock.TryEnterReadLock((int)m_retryTimer.Interval))
                         {
-                            m_dataLock.ExitReadLock();
+                            try
+                            {
+                                // Disable file watch notification before update
+                                if (m_fileWatcher != null)
+                                    m_fileWatcher.EnableRaisingEvents = false;
 
-                            // Reenable file watch notification
-                            if (m_fileWatcher != null)
-                                m_fileWatcher.EnableRaisingEvents = true;
+                                SaveFileData(fileStream, m_fileData);
+                                m_saveIsQueued.Set();
+                            }
+                            finally
+                            {
+                                m_dataLock.ExitReadLock();
+
+                                // Reenable file watch notification
+                                if (m_fileWatcher != null)
+                                    m_fileWatcher.EnableRaisingEvents = true;
+                            }
                         }
                     }
-                }
-                catch (IOException ex)
-                {
-                    RetrySynchronizedEvent(ex, WriteEvent);
-                }
-                finally
-                {
-                    m_fileLock.ExitWriteLock();
+                    catch (IOException ex)
+                    {
+                        RetrySynchronizedEvent(ex, WriteEvent);
+                    }
+                    finally
+                    {
+                        m_fileLock.ExitWriteLock();
 
-                    if (fileStream != null)
-                        fileStream.Close();
+                        if (fileStream != null)
+                            fileStream.Close();
+                    }
                 }
-            }
-            else
-            {
-                RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for " + m_fileName), WriteEvent);
+                else
+                {
+                    RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire write lock for " + m_fileName), WriteEvent);
+                }
             }
         }
 
@@ -712,56 +715,58 @@ namespace TVA.IO
         /// </summary>
         private void SynchronizedRead(object state)
         {
-            if (File.Exists(m_fileName))
+            if (!m_disposed)
             {
-                if (m_fileLock.TryEnterReadLock((int)m_retryTimer.Interval))
+                if (File.Exists(m_fileName))
                 {
-                    FileStream fileStream = null;
-
-                    try
+                    if (m_fileLock.TryEnterReadLock((int)m_retryTimer.Interval))
                     {
-                        fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        FileStream fileStream = null;
 
-                        if (m_dataLock.TryEnterWriteLock((int)m_retryTimer.Interval))
+                        try
                         {
-                            try
-                            {
-                                m_fileData = LoadFileData(fileStream);
-                            }
-                            finally
-                            {
-                                m_dataLock.ExitWriteLock();
-                            }
+                            fileStream = new FileStream(m_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                            // Release any threads waiting for file data
-                            m_dataIsReady.Set();
+                            if (m_dataLock.TryEnterWriteLock((int)m_retryTimer.Interval))
+                            {
+                                try
+                                {
+                                    m_fileData = LoadFileData(fileStream);
+                                }
+                                finally
+                                {
+                                    m_dataLock.ExitWriteLock();
+                                }
+
+                                // Release any threads waiting for file data
+                                m_dataIsReady.Set();
+                            }
+                        }
+                        catch (IOException ex)
+                        {
+                            RetrySynchronizedEvent(ex, ReadEvent);
+                        }
+                        finally
+                        {
+                            m_fileLock.ExitReadLock();
+
+                            if (fileStream != null)
+                                fileStream.Close();
                         }
                     }
-                    catch (IOException ex)
+                    else
                     {
-                        RetrySynchronizedEvent(ex, ReadEvent);
-                    }
-                    finally
-                    {
-                        m_fileLock.ExitReadLock();
-
-                        if (fileStream != null)
-                            fileStream.Close();
+                        RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for " + m_fileName), ReadEvent);
                     }
                 }
                 else
                 {
-                    RetrySynchronizedEvent(new TimeoutException("Timeout waiting to acquire read lock for " + m_fileName), ReadEvent);
+                    // File doesn't exist, create ane empty array representing a zero-length file
+                    m_fileData = new byte[0];
+
+                    // Release any threads waiting for file data
+                    m_dataIsReady.Set();
                 }
-
-            }
-            else
-            {
-                // File doesn't exist, create ane empty array representing a zero-length file
-                m_fileData = new byte[0];
-
-                // Release any threads waiting for file data
-                m_dataIsReady.Set();
             }
         }
 
@@ -772,32 +777,34 @@ namespace TVA.IO
         /// <param name="eventType">Event type to retry.</param>
         private void RetrySynchronizedEvent(Exception ex, int eventType)
         {
-            // We monitor basic I/O and lock failures occurring in quick succession, we can't allow retry activity to go on forever
-            if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
-            {
-                // Significant time has passed since last retry, so we reset counter
-                m_retryCount = 0;
-                m_lastRetryTime = DateTime.UtcNow.Ticks;
-            }
-            else
-            {
-                m_retryCount++;
-
-                if (m_retryCount >= m_maximumRetryAttempts)
-                    throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write" : "read") + " data to " + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
-            }
-
-            // Technically the interprocess mutex will handle serialized access to the file, but if the OS or other process
-            // not participating with the mutex has the file locked, all we can do is queue up a retry for this event.
-            lock (m_retryQueue)
-            {
-                m_retryQueue[eventType] = true;
-            }
-            m_retryTimer.Start();
-
             // A retry is only being initiating for basic file I/O or locking errors, all other errors will initiate an unhandled
             // exception causing system exit. It would be an error, IMO, for the system to create values then not be able to load
             // them at next run or not be able to use values from last run because file could not be loaded.
+            if (!m_disposed)
+            {
+                // We monitor basic I/O and lock failures occurring in quick succession, we can't allow retry activity to go on forever
+                if (DateTime.UtcNow.Ticks - m_lastRetryTime > (long)Ticks.FromMilliseconds(m_retryTimer.Interval * m_maximumRetryAttempts))
+                {
+                    // Significant time has passed since last retry, so we reset counter
+                    m_retryCount = 0;
+                    m_lastRetryTime = DateTime.UtcNow.Ticks;
+                }
+                else
+                {
+                    m_retryCount++;
+
+                    if (m_retryCount >= m_maximumRetryAttempts)
+                        throw new UnauthorizedAccessException("Failed to " + (eventType == WriteEvent ? "write" : "read") + " data to " + m_fileName + " after " + m_maximumRetryAttempts + " attempts: " + ex.Message, ex);
+                }
+
+                // Technically the interprocess mutex will handle serialized access to the file, but if the OS or other process
+                // not participating with the mutex has the file locked, all we can do is queue up a retry for this event.
+                lock (m_retryQueue)
+                {
+                    m_retryQueue[eventType] = true;
+                }
+                m_retryTimer.Start();
+            }
         }
 
         /// <summary>
@@ -805,31 +812,34 @@ namespace TVA.IO
         /// </summary>
         private void m_retryTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            WaitCallback callBackEvent = null;
-
-            lock (m_retryQueue)
+            if (!m_disposed)
             {
-                // Reads should always occur first since you may need to load any
-                // newly written data before saving new data: users can override
-                // load and save behavior to "merge" data sets if needed.
-                if (m_retryQueue[ReadEvent])
+                WaitCallback callBackEvent = null;
+
+                lock (m_retryQueue)
                 {
-                    callBackEvent = SynchronizedRead;
-                    m_retryQueue[ReadEvent] = false;
-                }
-                else if (m_retryQueue[WriteEvent])
-                {
-                    callBackEvent = SynchronizedWrite;
-                    m_retryQueue[WriteEvent] = false;
+                    // Reads should always occur first since you may need to load any
+                    // newly written data before saving new data: users can override
+                    // load and save behavior to "merge" data sets if needed.
+                    if (m_retryQueue[ReadEvent])
+                    {
+                        callBackEvent = SynchronizedRead;
+                        m_retryQueue[ReadEvent] = false;
+                    }
+                    else if (m_retryQueue[WriteEvent])
+                    {
+                        callBackEvent = SynchronizedWrite;
+                        m_retryQueue[WriteEvent] = false;
+                    }
+
+                    // If any events remain queued for retry, start timer for next event
+                    if (m_retryQueue.Any(true))
+                        m_retryTimer.Start();
                 }
 
-                // If any events remain queued for retry, start timer for next event
-                if (m_retryQueue.Any(true))
-                    m_retryTimer.Start();
+                if (callBackEvent != null)
+                    ThreadPool.QueueUserWorkItem(callBackEvent);
             }
-
-            if (callBackEvent != null)
-                ThreadPool.QueueUserWorkItem(callBackEvent);
         }
 
         /// <summary>
