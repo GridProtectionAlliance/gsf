@@ -245,7 +245,7 @@ namespace TVA.Security
     /// <summary>
     /// A serializable class that contains information about a user defined in the security datastore.
     /// </summary>
-    [XmlType(Namespace = ""), DataContract(Namespace = "")]
+    [XmlType(Namespace = ""), DataContract(Namespace = ""), Serializable()]
     public class UserData
     {
         #region [ Constructors ]
