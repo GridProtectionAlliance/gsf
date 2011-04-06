@@ -9,8 +9,10 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  03/21/2011 - Ritchie
+//  03/21/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/06/2011 - J. Ritchie Carroll
+//       Added Flush() method to block current thread and wait for any pending save to complete.
 //
 //*******************************************************************************************************
 
@@ -290,6 +292,7 @@ namespace TVA.IO
         private InterprocessReaderWriterLock m_fileLock;    // Interprocess reader/writer lock used to synchronize file access
         private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
         private ManualResetEventSlim m_dataIsReady;         // Wait handle used so that system will wait for file data load
+        private ManualResetEventSlim m_saveIsQueued;        // Wait handle used so that system will wait for file data save
         private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
         private int m_maximumConcurrentLocks;               // Maximum concurrent reader locks allowed
         private int m_maximumRetryAttempts;                 // Maximum retry attempts allowed for loading file
@@ -320,6 +323,7 @@ namespace TVA.IO
             // Initialize field values
             m_dataLock = new ReaderWriterLockSlim();
             m_dataIsReady = new ManualResetEventSlim(false);
+            m_saveIsQueued = new ManualResetEventSlim(true);
             m_maximumConcurrentLocks = maximumConcurrentLocks;
             m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
             m_retryQueue = new BitArray(2);
@@ -424,7 +428,10 @@ namespace TVA.IO
 
                 // Initiate save if data has changed
                 if (dataChanged)
+                {
+                    m_saveIsQueued.Reset();
                     ThreadPool.QueueUserWorkItem(SynchronizedWrite);
+                }
             }
         }
 
@@ -561,6 +568,11 @@ namespace TVA.IO
 
                         m_dataIsReady = null;
 
+                        if (m_saveIsQueued != null)
+                            m_saveIsQueued.Dispose();
+
+                        m_saveIsQueued = null;
+
                         if (m_dataLock != null)
                             m_dataLock.Dispose();
 
@@ -590,6 +602,7 @@ namespace TVA.IO
             if (m_fileData == null)
                 throw new ArgumentNullException("FileData", "FileData is null, cannot initiate save");
 
+            m_saveIsQueued.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedWrite);
         }
 
@@ -603,6 +616,17 @@ namespace TVA.IO
 
             m_dataIsReady.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedRead);
+        }
+
+        /// <summary>
+        /// Blocks current thread and waits for any pending save to complete.
+        /// </summary>
+        /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        public virtual void Flush(int millisecondsTimeout = Timeout.Infinite)
+        {
+            // Flush simply blocks until data is saved
+            if (!m_saveIsQueued.IsSet && !m_saveIsQueued.Wait(millisecondsTimeout))
+                throw new TimeoutException("Timeout waiting for save to complete for " + m_fileName);
         }
 
         /// <summary>
@@ -653,6 +677,7 @@ namespace TVA.IO
                                 m_fileWatcher.EnableRaisingEvents = false;
 
                             SaveFileData(fileStream, m_fileData);
+                            m_saveIsQueued.Set();
                         }
                         finally
                         {

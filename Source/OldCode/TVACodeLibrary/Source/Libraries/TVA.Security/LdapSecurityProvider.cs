@@ -263,6 +263,8 @@ using System.Security;
 using System.Security.Principal;
 using System.Threading;
 using TVA.Identity;
+using TVA.IO;
+using System.IO;
 
 namespace TVA.Security
 {
@@ -455,7 +457,7 @@ namespace TVA.Security
         /// </summary>
         /// <param name="groupCollection">Target collection for user groups.</param>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        public virtual bool RefreshData(List<string> groupCollection)
+        protected virtual bool RefreshData(List<string> groupCollection)
         {
             if (groupCollection == null)
                 throw new ArgumentNullException("groupCollection");
@@ -471,53 +473,84 @@ namespace TVA.Security
 
             try
             {
-                string ldapPath = GetLdapPath();
-
-                // Create user info object using specified LDAP path if provided
-                if (string.IsNullOrEmpty(ldapPath))
-                    user = new UserInfo(UserData.Username);
-                else
-                    user = new UserInfo(UserData.Username, ldapPath);
-
-                user.PersistSettings = true;
-
-                // Attempt to determine if user exists (this will initialize user object if not initialized already)
-                UserData.IsDefined = user.Exists;
-                UserData.LoginID = user.LoginID;
-
-                // User may exist and domain be unavailable, so only fill in user information if it is available
-                if (user.UserEntry != null)
+                // Get current local user data cache
+                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache())
                 {
-                    // Copy relevant user information
-                    UserData.FirstName = user.FirstName;
-                    UserData.LastName = user.LastName;
-                    UserData.CompanyName = user.Company;
-                    UserData.PhoneNumber = user.Telephone;
-                    UserData.EmailAddress = user.Email;
-                    UserData.IsLockedOut = user.AccountIsLockedOut;
-                    UserData.IsDisabled = user.AccountIsDisabled;
-                    UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
-                    UserData.AccountCreatedDateTime = user.AccountCreationDate;
+                    string ldapPath = GetLdapPath();
 
-                    // Assign all groups the user is a member of
-                    foreach (string groupName in user.Groups)
+                    // Create user info object using specified LDAP path if provided
+                    if (string.IsNullOrEmpty(ldapPath))
+                        user = new UserInfo(UserData.Username);
+                    else
+                        user = new UserInfo(UserData.Username, ldapPath);
+
+                    user.PersistSettings = true;
+
+                    // Attempt to determine if user exists (this will initialize user object if not initialized already)
+                    UserData.IsDefined = user.Exists;
+                    UserData.LoginID = user.LoginID;
+
+                    if (UserData.IsDefined)
                     {
-                        if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
-                            groupCollection.Add(groupName);
+                        // Fill in user information from domain data if it is available
+                        if (user.UserEntry != null)
+                        {
+                            // Copy relevant user information
+                            UserData.FirstName = user.FirstName;
+                            UserData.LastName = user.LastName;
+                            UserData.CompanyName = user.Company;
+                            UserData.PhoneNumber = user.Telephone;
+                            UserData.EmailAddress = user.Email;
+                            UserData.IsLockedOut = user.AccountIsLockedOut;
+                            UserData.IsDisabled = user.AccountIsDisabled;
+                            UserData.PasswordChangeDateTime = user.NextPasswordChangeDate;
+                            UserData.AccountCreatedDateTime = user.AccountCreationDate;
+
+                            // Assign all groups the user is a member of
+                            foreach (string groupName in user.Groups)
+                            {
+                                if (!groupCollection.Contains(groupName, StringComparer.InvariantCultureIgnoreCase))
+                                    groupCollection.Add(groupName);
+                            }
+
+                            // Cache user data so that information can be loaded later if domain is unavailable
+                            userDataCache[UserData.LoginID] = UserData;
+
+                            // Wait for pending serialization since cache is a scoped locally to this method and will be disposed before exit
+                            userDataCache.Flush();
+                        }
+                        else
+                        {
+                            // Attempt to load previously cached user information when domain is offline
+                            UserData cachedUserData = userDataCache[UserData.LoginID];
+
+                            if (userDataCache != null)
+                            {
+                                // Copy relevant cached user information
+                                UserData.FirstName = cachedUserData.FirstName;
+                                UserData.LastName = cachedUserData.LastName;
+                                UserData.CompanyName = cachedUserData.CompanyName;
+                                UserData.PhoneNumber = cachedUserData.PhoneNumber;
+                                UserData.EmailAddress = cachedUserData.EmailAddress;
+                                UserData.IsLockedOut = cachedUserData.IsLockedOut;
+                                UserData.IsDisabled = cachedUserData.IsDisabled;
+                                UserData.Roles.AddRange(cachedUserData.Roles);
+                                UserData.Groups.AddRange(cachedUserData.Groups);
+
+                                // If domain is offline, a password change cannot be initiated
+                                UserData.PasswordChangeDateTime = DateTime.MaxValue;
+                                UserData.AccountCreatedDateTime = cachedUserData.AccountCreatedDateTime;
+                            }
+                            else
+                            {
+                                // No previous user data was cached but Windows allowed authentication, so all we know is that user exists
+                                UserData.IsLockedOut = false;
+                                UserData.IsDisabled = false;
+                                UserData.PasswordChangeDateTime = DateTime.MaxValue;
+                                UserData.AccountCreatedDateTime = DateTime.MinValue;
+                            }
+                        }
                     }
-                    
-                    // TODO: Cache critical user information, such as group listing, so that information can be loaded from cache if domain is unavailable
-                    // Suggest using an InteropCache such as what is used for KeyIVCache in Cipher code
-                }
-                else
-                {
-                    // TODO: Load cached information, such as group listing, when domain is offline
-                    
-                    // We have no way of knowing if user is locked out or disabled since domain is unavailable
-                    UserData.IsLockedOut = false;
-                    UserData.IsDisabled = false;
-                    UserData.PasswordChangeDateTime = DateTime.MaxValue;
-                    UserData.AccountCreatedDateTime = DateTime.MinValue;
                 }
 
                 return UserData.IsDefined;

@@ -34,6 +34,9 @@
 //       process modifies the cache file.
 //  03/17/2011 - J. Ritchie Carroll
 //       Modified key and initialization vector cache to be able to operate in a non-elevated mode.
+//  04/06/2011 - J. Ritchie Carroll
+//       Added FlushCache() method to wait for pending key/IV cache serializations for applications
+//       with a short lifecycle.
 //
 //*******************************************************************************************************
 
@@ -690,6 +693,36 @@ namespace TVA.Security.Cryptography
                 // Merge new or updated keys, protected folder keys taking precendence over user keys
                 s_keyIVCache.MergeRight(localKeyIVCache);
             }
+        }
+
+        /// <summary>
+        /// Blocks current thread and waits for any pending save of local system key cache to complete.
+        /// </summary>
+        /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        /// <remarks>
+        /// <para>
+        /// This method only needs to be used if crypto cache changes could be pending during application shutdown (i.e., executing ciphers with
+        /// new keys that have not been saved, using existing keys does not queue crypto cache updates) to ensure keys are flushed before exit.
+        /// </para>
+        /// <para>
+        /// For most applications it is expected that this method would be rarely needed. However, possible usage scenarios would include:<br/>
+        /// <list type="bullet">
+        ///   <item>
+        ///     <description>
+        ///     Writing an application that establishes crypto keys where application lifetime would be very short (i.e., run, create keys, exit).
+        ///     </description>
+        ///   </item>
+        ///   <item>
+        ///     <description>
+        ///     Creating new crypto keys during application shutdown (i.e., performing ciphers with non-existing keys at shutdown).
+        ///     </description>
+        ///   </item>
+        /// </list>
+        /// </para>
+        /// </remarks>
+        public static void FlushCache(int millisecondsTimeout = Timeout.Infinite)
+        {
+            s_keyIVCache.Flush(millisecondsTimeout);
         }
 
         /// <summary>
