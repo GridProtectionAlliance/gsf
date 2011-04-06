@@ -157,6 +157,7 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 string result = CommonFunctions.SaveCompany(null, m_currentCompany, m_currentCompany.ID > 0 ? false : true);
                 Popup(result, "Save Company", MessageBoxImage.Information);
+                Get();
             }
             catch (Exception ex)
             {

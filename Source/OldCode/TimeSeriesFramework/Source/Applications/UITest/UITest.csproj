@@ -51,12 +51,6 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="TimeSeriesFramework.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\TimeSeriesFramework\UI\WPF\bin\Debug\TimeSeriesFramework.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="TimeSeriesFramework.UI.WPF, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\Libraries\TimeSeriesFramework\UI\WPF\bin\Debug\TimeSeriesFramework.UI.WPF.dll</HintPath>
-    </Reference>
     <Reference Include="TVA.Core, Version=4.0.2.17, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
     </Reference>
@@ -109,9 +103,20 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Menu.xml">
+    <None Include="Menu.xml">
       <SubType>Designer</SubType>
-    </Resource>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj">
+      <Project>{7ED01B57-DD71-4A38-BB29-65D629224A12}</Project>
+      <Name>TimeSeriesFramework.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\WPF\TimeSeriesFramework.UI.WPF.csproj">
+      <Project>{5AF0D55A-30BF-46A5-8A47-FA885F56BFEF}</Project>
+      <Name>TimeSeriesFramework.UI.WPF</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

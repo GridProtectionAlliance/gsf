@@ -74,7 +74,7 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 
-        <dp:DataPager x:Name="DataPager" ItemsPerPage="15" />
+        <dp:DataPager x:Name="DataPager" ItemsPerPage="20" />
          
     </StackPanel>
 </UserControl>

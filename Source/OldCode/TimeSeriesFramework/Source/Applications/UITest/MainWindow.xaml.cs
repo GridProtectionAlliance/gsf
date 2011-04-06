@@ -55,22 +55,6 @@ namespace UITest
             MenuMain.DataContext = m_menuDataItems;
         }
 
-        //void SerializeToXML(ObservableCollection<MenuDataItem> menus)
-        //{            
-        //    try
-        //    {                
-        //        XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");                
-        //        XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<MenuDataItem>), xmlRootAttribute);
-        //        using(TextWriter textWriter = new StreamWriter("Menu.xml"))
-        //            serializer.Serialize(textWriter, menus);
-                
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine(ex.ToString());
-        //    }
-        //}
-
         private void MenuMain_Click(object sender, RoutedEventArgs e)
         {
             MenuDataItem menuDataItem;

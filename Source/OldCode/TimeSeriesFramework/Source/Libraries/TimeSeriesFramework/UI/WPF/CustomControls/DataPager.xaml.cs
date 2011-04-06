@@ -319,7 +319,7 @@ namespace TimeSeriesFramework.UI.CustomControls
                 else
                 {
                     //This will help retain current page when user deletes any record from the collection.
-                    CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber + 1;
+                    CurrentPageNumber = (CurrentPageNumber + 1) > m_pageCount ? m_pageCount : CurrentPageNumber;
                     CurrentPage = m_pages[CurrentPageNumber - 1];
                 }
             }

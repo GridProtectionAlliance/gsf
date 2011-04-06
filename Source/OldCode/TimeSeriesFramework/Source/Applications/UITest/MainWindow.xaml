@@ -1,10 +1,9 @@
 ﻿<Window x:Class="UITest.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="350" Width="525"    
+        Title="MainWindow" Height="700" Width="900"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
-        xmlns:tsfutil="clr-namespace:TimeSeriesFramework.UI.Utilities;assembly=TimeSeriesFramework.UI.WPF" 
-        Background="#FFDDDDDD"
+        xmlns:tsfutil="clr-namespace:TimeSeriesFramework.UI.Utilities;assembly=TimeSeriesFramework.UI.WPF"         
         >
     <Window.Resources>        
         <tsfconv:RoleBasedVisibilityConverter x:Key="roleBasedVisibilityConverter" />
@@ -14,7 +13,9 @@
     </Window.Resources>
 
     <StackPanel Orientation="Vertical">
-        <Menu x:Name="MenuMain" ItemsSource="{Binding}" ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" MenuItem.Click="MenuMain_Click" /> 
+        <Menu x:Name="MenuMain" ItemsSource="{Binding}" 
+              ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" MenuItem.Click="MenuMain_Click" 
+               /> 
         <TextBlock x:Name="TextBlockTitle" HorizontalAlignment="Center" FontWeight="Bold" Width="300" />
         <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" />
     </StackPanel>

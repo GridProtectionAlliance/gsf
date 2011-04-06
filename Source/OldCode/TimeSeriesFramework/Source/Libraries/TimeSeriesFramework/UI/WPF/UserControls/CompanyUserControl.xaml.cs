@@ -46,14 +46,15 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         void m_companies_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
+        {        
             if (e.PropertyName == "CompanyList")
-                DataPager.ItemsSource = new ObservableCollection<object>(m_companies.CompanyList);
+                DataPager.ItemsSource = new ObservableCollection<object>(m_companies.CompanyList);            
         }
 
         private void GridCompanyDetail_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             m_companies.CurrentCompany = (Company)GridCompanyDetail.DataContext;
         }
+
     }
 }

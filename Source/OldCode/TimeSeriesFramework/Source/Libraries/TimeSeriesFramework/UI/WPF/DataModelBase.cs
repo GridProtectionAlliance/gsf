@@ -139,6 +139,16 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="propertyName"></param>
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         #endregion
 
         #region [ Protected Methods ]
