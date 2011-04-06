@@ -1357,7 +1357,7 @@ namespace TVA.Identity
                     m_isWinNT = true;
                     m_userAccountControl = -1;
                     m_enabled = true;
-                    m_domainAvailable = true;
+                    m_domainAvailable = DirectoryEntry.Exists("WinNT://" + m_domain + "/" + m_username);
                 }
                 catch (ThreadAbortException)
                 {

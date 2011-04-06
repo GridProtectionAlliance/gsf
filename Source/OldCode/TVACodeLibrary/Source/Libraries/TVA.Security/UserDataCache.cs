@@ -30,6 +30,7 @@ using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
 using TVA.Security.Cryptography;
+using TVA.Threading;
 
 namespace TVA.Security
 {
@@ -46,17 +47,34 @@ namespace TVA.Security
         private const string DefaultCacheFileName = "UserDataCache.bin";
 
         // Fields
-
-        // Internal dictionary of serialized user data
-        private Dictionary<string, UserData> m_userDataTable = new Dictionary<string, UserData>();
-
-        // Wait handle used so that system will wait for user data cache load before any pending dictionary access
-        private ManualResetEventSlim m_userDataTableIsReady = new ManualResetEventSlim(false);
-
-        // Class disposed flag
-        private bool m_disposed;
+        private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
+        private ManualResetEventSlim m_userDataTableIsReady;    // Wait handle used so that system will wait for user data cache load before any pending dictionary access
+        private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
+        private bool m_disposed;                                // Class disposed flag
 
         #endregion
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="UserDataCache"/>.
+        /// </summary>
+        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        public UserDataCache(int providerID = LdapSecurityProvider.ProviderID)
+            : this(providerID, InterprocessReaderWriterLock.DefaultMaximumConcurrentLocks)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="UserDataCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+        /// </summary>
+        /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
+        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        public UserDataCache(int providerID, int maximumConcurrentLocks)
+            : base(maximumConcurrentLocks)
+        {
+            m_providerID = providerID;
+            m_userDataTable = new Dictionary<string, UserData>();
+            m_userDataTableIsReady = new ManualResetEventSlim(false);
+        }
 
         #region [ Properties ]
 
@@ -76,6 +94,21 @@ namespace TVA.Security
             set
             {
                 SaveUserData(loginID, value);
+            }
+        }
+
+        /// <summary>
+        /// Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
+        /// </summary>
+        public int ProviderID
+        {
+            get
+            {
+                return m_providerID;
+            }
+            set
+            {
+                m_providerID = value;
             }
         }
 
@@ -244,7 +277,7 @@ namespace TVA.Security
         /// </remarks>
         protected string HashLoginID(string loginID)
         {
-            return Cipher.GetPasswordHash(loginID, 0);
+            return Cipher.GetPasswordHash(loginID, m_providerID);
         }
 
         #endregion
@@ -256,8 +289,9 @@ namespace TVA.Security
         /// <summary>
         /// Loads the <see cref="UserDataCache"/> for the current local user.
         /// </summary>
+        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
         /// <returns>Loaded instance of the <see cref="UserDataCache"/>.</returns>
-        public static UserDataCache GetCurrentCache()
+        public static UserDataCache GetCurrentCache(int providerID = LdapSecurityProvider.ProviderID)
         {
             // By default user data cache is stored in a path where user will have rights
             UserDataCache userDataCache;
@@ -283,7 +317,7 @@ namespace TVA.Security
                 Directory.CreateDirectory(userCacheFolder);
 
             // Initialize user data cache for current local user
-            userDataCache = new UserDataCache()
+            userDataCache = new UserDataCache(providerID)
             {
                 FileName = userCacheFileName,
                 RetryDelayInterval = retryDelayInterval,

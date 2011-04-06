@@ -315,7 +315,12 @@ namespace TVA.Security
         private const string PasswordRequirementRegex = "^.*(?=.{8,})(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).*$";
         private const string PasswordRequirementError = "Invalid Password: Password must be at least 8 characters; must contain at least 1 number, 1 upper case letter, and 1 lower case letter";
 
-        #region [ Nested Types ]
+        /// <summary>
+        /// Defines the provider ID for the <see cref="AdoSecurityProvider"/>.
+        /// </summary>
+        public new const int ProviderID = 1;
+
+        // Nested Types
 
         /// <summary>
         /// Creates a new <see cref="IDbConnection"/> to configured ADO.NET data source.
@@ -480,8 +485,6 @@ namespace TVA.Security
 
         #endregion
 
-        #endregion
-
         #region [ Constructor ]
 
         /// <summary>
@@ -629,7 +632,7 @@ namespace TVA.Security
                         // Load implicitly assigned groups - this happens via NT user groups that get loaded into user data group
                         // collection. When group definitions that are defined with the same name as their NT equivalents, this will
                         // allow automatic external group management from within active directory or local account group management.
-                        base.RefreshData(UserData.Groups);
+                        base.RefreshData(UserData.Groups, AdoSecurityProvider.ProviderID);
                     }
 
                     // Administrator can lock out NT user as well as database-only user via database

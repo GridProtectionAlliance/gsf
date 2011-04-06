@@ -319,6 +319,11 @@ namespace TVA.Security
     {
         #region [ Members ]
 
+        /// <summary>
+        /// Defines the provider ID for the <see cref="LdapSecurityProvider"/>.
+        /// </summary>
+        public const int ProviderID = 0;
+
         // Fields
         private WindowsPrincipal m_windowsPrincipal;
 
@@ -435,7 +440,7 @@ namespace TVA.Security
             bool result;
 
             // For consistency with WindowIdentity principal, user groups are loaded into Roles collection
-            if (result = RefreshData(UserData.Roles))
+            if (result = RefreshData(UserData.Roles, LdapSecurityProvider.ProviderID))
             {
                 string[] parts;
 
@@ -456,8 +461,9 @@ namespace TVA.Security
         /// Refreshes the <see cref="UserData"/> from the backend datastore loading user groups into desired collection.
         /// </summary>
         /// <param name="groupCollection">Target collection for user groups.</param>
+        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
         /// <returns>true if <see cref="SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
-        protected virtual bool RefreshData(List<string> groupCollection)
+        protected virtual bool RefreshData(List<string> groupCollection, int providerID)
         {
             if (groupCollection == null)
                 throw new ArgumentNullException("groupCollection");
@@ -474,7 +480,7 @@ namespace TVA.Security
             try
             {
                 // Get current local user data cache
-                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache())
+                using (UserDataCache userDataCache = UserDataCache.GetCurrentCache(providerID))
                 {
                     string ldapPath = GetLdapPath();
 
