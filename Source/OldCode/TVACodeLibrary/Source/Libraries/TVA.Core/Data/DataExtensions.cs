@@ -33,7 +33,13 @@
 //  12/02/2009 - Stephen C. Wills
 //       Added disposal of database command objects.
 //  09/28/2010 - J. Ritchie Carroll
-//       Added Stephen's CreateParameterizedCommand as an extension function.
+//       Added Stephen's CreateParameterizedCommand connection extension.
+//  04/07/2011 - J. Ritchie Carroll
+//       Added Mehul's AddParameterWithValue command extension. Added overloads for all
+//       PopulateParameters() command extensions so that they could take a "params" style
+//       array of values after initial value for ease-of-use. Added "params" style array
+//       to all templated IDbConnection that will use the CreateParameterizedCommand
+//       connection extension with optional parameters.
 //
 //*******************************************************************************************************
 
@@ -257,7 +263,7 @@
 
 //******************************************************************************************************
 //
-//  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
 //
 //  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
 //  not use this file except in compliance with the License. You may obtain a copy of the License at:
@@ -278,6 +284,7 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -314,11 +321,12 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>The number of rows affected.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
+        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql, params object[] parameters) where TConnection : IDbConnection
         {
-            return connection.ExecuteNonQuery(sql, DefaultTimeoutDuration);
+            return connection.ExecuteNonQuery(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -327,13 +335,13 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>The number of rows affected.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
+        public static int ExecuteNonQuery<TConnection>(this TConnection connection, string sql, int timeout, params object[] parameters) where TConnection : IDbConnection
         {
-            using (IDbCommand command = connection.CreateCommand())
+            using (IDbCommand command = connection.CreateParameterizedCommand(sql, parameters))
             {
-                command.CommandText = sql;
                 command.CommandTimeout = timeout;
                 return command.ExecuteNonQuery();
             }
@@ -344,7 +352,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -357,7 +365,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -374,7 +382,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -387,7 +395,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -404,7 +412,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -417,7 +425,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The number of rows affected.</returns>
         public static int ExecuteNonQuery(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -429,7 +437,6 @@ namespace TVA.Data
             }
         }
 
-
         #endregion
 
         #region [ ExecuteReader Overloaded Extensions ]
@@ -439,11 +446,12 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, params object[] parameters) where TConnection : IDbConnection
         {
-            return connection.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration);
+            return connection.ExecuteReader(sql, CommandBehavior.Default, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -452,11 +460,12 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, int timeout, params object[] parameters) where TConnection : IDbConnection
         {
-            return connection.ExecuteReader(sql, CommandBehavior.Default, timeout);
+            return connection.ExecuteReader(sql, CommandBehavior.Default, timeout, parameters);
         }
 
         /// <summary>
@@ -466,13 +475,13 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="IDataReader"/> object.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, CommandBehavior behavior, int timeout) where TConnection : IDbConnection
+        public static IDataReader ExecuteReader<TConnection>(this TConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters) where TConnection : IDbConnection
         {
-            using (IDbCommand command = connection.CreateCommand())
+            using (IDbCommand command = connection.CreateParameterizedCommand(sql, parameters))
             {
-                command.CommandText = sql;
                 command.CommandTimeout = timeout;
                 return command.ExecuteReader(behavior);
             }
@@ -483,7 +492,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
         public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -497,7 +506,7 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OleDbDataReader"/> object.</returns>
         public static OleDbDataReader ExecuteReader(this OleDbConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
@@ -514,7 +523,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
         public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -528,7 +537,7 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="OdbcDataReader"/> object.</returns>
         public static OdbcDataReader ExecuteReader(this OdbcConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
@@ -545,7 +554,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="SqlDataReader"/> object.</returns>
         public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -559,7 +568,7 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="SqlDataReader"/> object.</returns>
         public static SqlDataReader ExecuteReader(this SqlConnection connection, string sql, CommandBehavior behavior, int timeout, params object[] parameters)
         {
@@ -581,11 +590,12 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql) where TConnection : IDbConnection
+        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, params object[] parameters) where TConnection : IDbConnection
         {
-            return connection.ExecuteScalar(sql, DefaultTimeoutDuration);
+            return connection.ExecuteScalar(sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -595,13 +605,13 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         /// <typeparam name="TConnection">Type of <see cref="IDbConnection"/> to use.</typeparam>
-        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, int timeout) where TConnection : IDbConnection
+        public static object ExecuteScalar<TConnection>(this TConnection connection, string sql, int timeout, params object[] parameters) where TConnection : IDbConnection
         {
-            using (IDbCommand command = connection.CreateCommand())
+            using (IDbCommand command = connection.CreateParameterizedCommand(sql, parameters))
             {
-                command.CommandText = sql;
                 command.CommandTimeout = timeout;
                 return command.ExecuteScalar();
             }
@@ -613,7 +623,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -627,7 +637,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -645,7 +655,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -659,7 +669,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -677,7 +687,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -691,7 +701,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>Value in the first column of the first row in the resultset.</returns>
         public static object ExecuteScalar(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -735,7 +745,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -748,7 +758,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this OleDbConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -788,7 +798,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -801,7 +811,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this OdbcConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -841,7 +851,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -854,7 +864,7 @@ namespace TVA.Data
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         public static DataRow RetrieveRow(this SqlConnection connection, string sql, int timeout, params object[] parameters)
         {
@@ -872,10 +882,11 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
-        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql)
+        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, params object[] parameters)
         {
-            return connection.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration);
+            return connection.RetrieveRow(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -885,10 +896,11 @@ namespace TVA.Data
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
-        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
+        public static DataRow RetrieveRow(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
-            DataTable dataTable = connection.RetrieveData(dataAdapterType, sql, timeout);
+            DataTable dataTable = connection.RetrieveData(dataAdapterType, sql, timeout, parameters);
 
             if (dataTable.Rows.Count == 0)
                 dataTable.Rows.Add(dataTable.NewRow());
@@ -933,7 +945,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -949,7 +961,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -989,7 +1001,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -1005,7 +1017,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -1045,7 +1057,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -1061,7 +1073,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
         public static DataTable RetrieveData(this SqlConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -1075,10 +1087,11 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql)
+        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql, params object[] parameters)
         {
-            return connection.RetrieveData(dataAdapterType, sql, DefaultTimeoutDuration);
+            return connection.RetrieveData(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -1089,10 +1102,11 @@ namespace TVA.Data
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="DataTable"/> object.</returns>
-        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
+        public static DataTable RetrieveData(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
-            return connection.RetrieveDataSet(dataAdapterType, sql, timeout).Tables[0];
+            return connection.RetrieveDataSet(dataAdapterType, sql, timeout, parameters).Tables[0];
         }
 
         #endregion
@@ -1132,7 +1146,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OleDbConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OleDbConnection connection, string sql, params object[] parameters)
         {
@@ -1148,7 +1162,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OleDbConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -1196,7 +1210,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="OdbcConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, params object[] parameters)
         {
@@ -1212,7 +1226,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this OdbcConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -1260,7 +1274,7 @@ namespace TVA.Data
         /// </summary>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="connection">The <see cref="SqlConnection"/> to use for executing the SQL statement.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this SqlConnection connection, string sql, params object[] parameters)
         {
@@ -1276,7 +1290,7 @@ namespace TVA.Data
         /// <param name="startRow">The zero-based record number to start with.</param>
         /// <param name="maxRows">The maximum number of records to retrieve.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-        /// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
         public static DataSet RetrieveDataSet(this SqlConnection connection, string sql, int startRow, int maxRows, int timeout, params object[] parameters)
         {
@@ -1299,10 +1313,11 @@ namespace TVA.Data
         /// <param name="connection">The <see cref="IDbConnection"/> to use for executing the SQL statement.</param>
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql)
+        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql, params object[] parameters)
         {
-            return connection.RetrieveDataSet(dataAdapterType, sql, DefaultTimeoutDuration);
+            return connection.RetrieveDataSet(dataAdapterType, sql, DefaultTimeoutDuration, parameters);
         }
 
         /// <summary>
@@ -1313,12 +1328,12 @@ namespace TVA.Data
         /// <param name="dataAdapterType">The <see cref="Type"/> of data adapter to use to retreieve data.</param>
         /// <param name="sql">The SQL statement to be executed.</param>
         /// <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+        /// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
         /// <returns>A <see cref="DataSet"/> object.</returns>
-        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql, int timeout)
+        public static DataSet RetrieveDataSet(this IDbConnection connection, Type dataAdapterType, string sql, int timeout, params object[] parameters)
         {
-            using (IDbCommand command = connection.CreateCommand())
+            using (IDbCommand command = connection.CreateParameterizedCommand(sql, parameters))
             {
-                command.CommandText = sql;
                 command.CommandTimeout = timeout;
                 IDataAdapter dataAdapter = (IDataAdapter)Activator.CreateInstance(dataAdapterType, command);
                 DataSet data = new DataSet("Temp");
@@ -1385,7 +1400,18 @@ namespace TVA.Data
         /// Takes the <see cref="OleDbCommand"/> object and populates it with the given parameters.
         /// </summary>
         /// <param name="command">The <see cref="OleDbCommand"/> whose parameters are to be populated.</param>
-        /// <param name="parameters">The parameters to populate the <see cref="OleDbCommand"/> parameters with.</param>
+        /// <param name="parameter1">The first parameter value to populate the <see cref="OleDbCommand"/> parameters with.</param>
+        /// <param name="parameters">The remaining parameter values to populate the <see cref="OleDbCommand"/> parameters with.</param>
+        public static void PopulateParameters(this OleDbCommand command, object parameter1, params object[] parameters)
+        {
+            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+        }
+
+        /// <summary>
+        /// Takes the <see cref="OleDbCommand"/> object and populates it with the given parameters.
+        /// </summary>
+        /// <param name="command">The <see cref="OleDbCommand"/> whose parameters are to be populated.</param>
+        /// <param name="parameters">The parameter values to populate the <see cref="OleDbCommand"/> parameters with.</param>
         public static void PopulateParameters(this OleDbCommand command, object[] parameters)
         {
             command.PopulateParameters(OleDbCommandBuilder.DeriveParameters, parameters);
@@ -1395,17 +1421,39 @@ namespace TVA.Data
         /// Takes the <see cref="OdbcCommand"/> object and populates it with the given parameters.
         /// </summary>
         /// <param name="command">The <see cref="OdbcCommand"/> whose parameters are to be populated.</param>
-        /// <param name="parameters">The parameters to populate the <see cref="OdbcCommand"/> parameters with.</param>
+        /// <param name="parameter1">The first parameter value to populate the <see cref="OdbcCommand"/> parameters with.</param>
+        /// <param name="parameters">The remaining parameter values to populate the <see cref="OdbcCommand"/> parameters with.</param>
+        public static void PopulateParameters(this OdbcCommand command, object parameter1, params object[] parameters)
+        {
+            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+        }
+
+        /// <summary>
+        /// Takes the <see cref="OdbcCommand"/> object and populates it with the given parameters.
+        /// </summary>
+        /// <param name="command">The <see cref="OdbcCommand"/> whose parameters are to be populated.</param>
+        /// <param name="parameters">The parameter values to populate the <see cref="OdbcCommand"/> parameters with.</param>
         public static void PopulateParameters(this OdbcCommand command, object[] parameters)
         {
             command.PopulateParameters(OdbcCommandBuilder.DeriveParameters, parameters);
         }
 
         /// <summary>
+        /// Takes the <see cref="SqlCommand"/> object and populates it with the given parameters.
+        /// </summary>
+        /// <param name="command">The <see cref="SqlCommand"/> whose parameters are to be populated.</param>
+        /// <param name="parameter1">The first parameter value to populate the <see cref="SqlCommand"/> parameters with.</param>
+        /// <param name="parameters">The remaining parameter values to populate the <see cref="SqlCommand"/> parameters with.</param>
+        public static void PopulateParameters(this SqlCommand command, object parameter1, params object[] parameters)
+        {
+            command.PopulateParameters((new object[] { parameter1 }).Concat(parameters).ToArray());
+        }
+
+        /// <summary>
         ///  Takes the <see cref="SqlCommand"/> object and populates it with the given parameters.
         /// </summary>
         /// <param name="command">The <see cref="SqlCommand"/> whose parameters are to be populated.</param>
-        /// <param name="parameters">The parameters to populate the <see cref="SqlCommand"/> parameters with.</param>
+        /// <param name="parameters">The parameter values to populate the <see cref="SqlCommand"/> parameters with.</param>
         public static void PopulateParameters(this SqlCommand command, object[] parameters)
         {
             command.PopulateParameters(SqlCommandBuilder.DeriveParameters, parameters);
@@ -1415,63 +1463,135 @@ namespace TVA.Data
         /// Takes the <see cref="IDbCommand"/> object and populates it with the given parameters.
         /// </summary>
         /// <param name="command">The <see cref="IDbCommand"/> whose parameters are to be populated.</param>
-        /// <param name="deriveParameters">The DeriveParameters implementation of the <paramref name="command"/> to use to populate parameters.</param>
-        /// <param name="parameters">The parameters to populate the <see cref="IDbCommand"/> parameters with.</param>
+        /// <param name="deriveParameters">The DeriveParameters() implementation of the <paramref name="command"/> to use to populate parameters.</param>
+        /// <param name="values">The parameter values to populate the <see cref="IDbCommand"/> parameters with.</param>
         /// <typeparam name="TDbCommand">Then <see cref="IDbCommand"/> type to be used.</typeparam>
-        public static void PopulateParameters<TDbCommand>(this TDbCommand command, Action<TDbCommand> deriveParameters, object[] parameters) where TDbCommand : IDbCommand
+        /// <exception cref="ArgumentException">
+        /// Number of <see cref="IDbDataParameter"/> arguments in <see cref="IDbCommand.CommandText"/> of this <paramref name="command"/>, identified by '@', do not match number of supplied parameter <paramref name="values"/> -or-
+        /// You have supplied more <paramref name="values"/> than parameters listed for the stored procedure.
+        /// </exception>
+        public static void PopulateParameters<TDbCommand>(this TDbCommand command, Action<TDbCommand> deriveParameters, object[] values) where TDbCommand : IDbCommand
         {
             // tmshults 12/10/2004
-            if (parameters != null)
+            if (values != null)
             {
                 string commandText = command.CommandText;
 
                 if (string.IsNullOrEmpty(commandText))
                     throw new ArgumentNullException("command", "command.CommandText is null");
 
-                if (commandText.StartsWith("SELECT ", StringComparison.CurrentCultureIgnoreCase) ||
-                    commandText.StartsWith("INSERT ", StringComparison.CurrentCultureIgnoreCase) ||
-                    commandText.StartsWith("UPDATE ", StringComparison.CurrentCultureIgnoreCase) ||
-                    commandText.StartsWith("DELETE ", StringComparison.CurrentCultureIgnoreCase))
+                // Add parameters for standard SQL expressions (i.e., non stored procedure expressions)
+                if (commandText.StartsWith("SELECT ", StringComparison.InvariantCultureIgnoreCase) ||
+                    commandText.StartsWith("INSERT ", StringComparison.InvariantCultureIgnoreCase) ||
+                    commandText.StartsWith("UPDATE ", StringComparison.InvariantCultureIgnoreCase) ||
+                    commandText.StartsWith("DELETE ", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    // We assume the command to be of type Text if it begins with one of the common SQL keywords.
-                    command.CommandType = CommandType.Text;
-
-                    for (int i = 0; i < parameters.Length; i++)
-                    {
-                        command.Parameters.Add(parameters[i]);
-                    }
+                    command.AddParametersWithValues(commandText, values);
+                    return;
                 }
-                else
+
+                command.CommandType = CommandType.StoredProcedure;
+
+                // Makes quick query to db to find the parameters for the StoredProc, and then creates them for
+                // the command. The DeriveParameters() is only for commands with CommandType of StoredProcedure.
+                deriveParameters(command);
+
+                // Removes the ReturnValue Parameter.
+                command.Parameters.RemoveAt(0);
+
+                // Checks to see if the Parameters found match the Values provided.
+                if (command.Parameters.Count != values.Length)
                 {
-                    // If not we make the command a StoredProcedure type - most common use of parameterized execution.
-                    command.CommandType = CommandType.StoredProcedure;
+                    // If there are more values than parameters, throws an error.
+                    if (values.Length > command.Parameters.Count)
+                        throw new ArgumentException("You have supplied more values than parameters listed for the stored procedure");
 
-                    // Makes quick query to db to find the parameters for the StoredProc, and then creates them for
-                    // the command. The DeriveParameters() only for commands with CommandType of StoredProcedure.
-                    deriveParameters(command);
+                    // Otherwise, assume that the missing values are for Parameters that have default values,
+                    // and the code uses the default. To do this fill the extended ParamValue as Nothing/Null.
+                    Array.Resize(ref values, command.Parameters.Count); // Makes the Values array match the Parameters of the Stored Proc.
+                }
 
-                    // Removes the ReturnValue Parameter.
-                    command.Parameters.RemoveAt(0);
-
-                    // Checks to see if the Parameters found match the Values provided.
-                    if (command.Parameters.Count != parameters.Length)
-                    {
-                        // If there are more values than parameters, throws an error.
-                        if (parameters.Length > command.Parameters.Count)
-                            throw new ArgumentException("You have supplied more Values than Parameters listed for the Stored Procedure");
-
-                        // Otherwise, assume that the missing values are for Parameters that have default values,
-                        // and the code uses the default. To do this fill the extended ParamValue as Nothing/Null.
-                        Array.Resize(ref parameters, command.Parameters.Count); // Makes the Values array match the Parameters of the Stored Proc.
-                    }
-
-                    // Assigns the values to the the Parameters.
-                    for (int i = 0; i < command.Parameters.Count; i++)
-                    {
-                        ((DbParameter)command.Parameters[i]).Value = parameters[i];
-                    }
+                // Assigns the values to the the Parameters.
+                for (int i = 0; i < command.Parameters.Count; i++)
+                {
+                    ((DbParameter)command.Parameters[i]).Value = values[i];
                 }
             }
+
+            #region [ Old Code ]
+
+            // The following rarely used functionality is now subsumed by the AddParametersWithValues extension. The
+            // original code had expected an array of IDbDataParameter objects instead of values making usage differ
+            // based on parameter types which was not very useful. JRC
+
+            //{
+            //    // We assume the command to be of type Text if it begins with one of the common SQL keywords.
+            //    command.CommandType = CommandType.Text;
+
+            //    for (int i = 0; i < parameters.Length; i++)
+            //    {
+            //        command.Parameters.Add(parameters[i]);
+            //    }
+            //}
+            //else
+            //{
+            // If not we make the command a StoredProcedure type - most common use of parameterized execution.
+            //}
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Creates and adds an <see cref="IDbDataParameter"/> to the <see cref="IDbCommand"/> object with the specified <paramref name="value"/>.
+        /// </summary>
+        /// <param name="command"><see cref="IDbCommand"/> to which parameter needs to be added.</param>
+        /// <param name="name">Name of the <see cref="IDbDataParameter"/> to be added.</param>
+        /// <param name="value">Value of the <see cref="IDbDataParameter"/> to be added.</param>
+        /// <param name="direction"><see cref="ParameterDirection"/> for <see cref="IDbDataParameter"/>.</param>
+        public static void AddParameterWithValue(this IDbCommand command, string name, object value, ParameterDirection direction = ParameterDirection.Input)
+        {
+            IDbDataParameter parameter = command.CreateParameter();
+
+            parameter.ParameterName = name;
+            parameter.Value = value;
+            parameter.Direction = direction;
+
+            command.Parameters.Add(parameter);
+        }
+
+        /// <summary>
+        /// Creates and adds a new <see cref="IDbDataParameter"/> for each of the specified <paramref name="values"/> to the <see cref="IDbCommand"/> object.
+        /// </summary>
+        /// <param name="command"><see cref="IDbCommand"/> to which parameters need to be added.</param>
+        /// <param name="sql">The SQL statement.</param>
+        /// <param name="values">The values for the parameters of the <see cref="IDbCommand"/> in the order that they appear in the SQL statement.</param>
+        /// <remarks>
+        /// <para>
+        /// This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
+        /// character and should be surrounded by either spaces, parentheses, or commas.
+        /// </para>
+        /// <para>
+        /// Do not use the same parameter name twice in the expression so that each parameter, identified by '@', will
+        /// have a corresponding value.
+        /// </para>
+        /// </remarks>
+        /// <returns>The fully populated parameterized command.</returns>
+        /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
+        public static void AddParametersWithValues(this IDbCommand command, string sql, params object[] values)
+        {
+            string[] tokens = sql.Split(' ', '(', ')', ',');
+            int i = 0;
+
+            if (tokens.Length != values.Length)
+                throw new ArgumentException("Number of parameter arguments in sql expression do not match number of supplied values", "values");
+
+            foreach (string token in tokens)
+            {
+                if (token.StartsWith("@") && !command.Parameters.Contains(token))
+                    command.AddParameterWithValue(token, values[i++]);
+            }
+
+            command.CommandText = sql;
         }
 
         /// <summary>
@@ -1480,33 +1600,25 @@ namespace TVA.Data
         /// </summary>
         /// <param name="connection">The database connection.</param>
         /// <param name="sql">The SQL statement.</param>
-        /// <param name="args">The parameters for the command in the order that they appear in the SQL statement.</param>
+        /// <param name="values">The values for the parameters of the <see cref="IDbCommand"/> in the order that they appear in the SQL statement.</param>
         /// <remarks>
+        /// <para>
         /// This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
         /// character and should be surrounded by either spaces, parentheses, or commas.
+        /// </para>
+        /// <para>
+        /// Do not use the same parameter name twice in the expression so that each parameter, identified by '@', will
+        /// have a corresponding value.
+        /// </para>
         /// </remarks>
-        /// <returns>The parameterized command.</returns>
-        public static IDbCommand CreateParameterizedCommand(this IDbConnection connection, string sql, params object[] args)
+        /// <returns>The fully populated parameterized command.</returns>
+        /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
+        public static IDbCommand CreateParameterizedCommand(this IDbConnection connection, string sql, params object[] values)
         {
-            string[] tokens = sql.Split(' ', '(', ')', ',');
             IDbCommand command = connection.CreateCommand();
-            int i = 0;
 
-            foreach (string token in tokens)
-            {
-                if (token.StartsWith("@") && !command.Parameters.Contains(token))
-                {
-                    IDbDataParameter parameter = command.CreateParameter();
+            command.AddParametersWithValues(sql, values);
 
-                    parameter.ParameterName = token;
-                    parameter.Value = args[i++];
-                    parameter.Direction = ParameterDirection.Input;
-
-                    command.Parameters.Add(parameter);
-                }
-            }
-
-            command.CommandText = sql;
             return command;
         }
 
@@ -1629,13 +1741,13 @@ namespace TVA.Data
         #region [ Oracle Extensions ]
 
         // Because of reference dependency, these should be added to a TVA.Data assembly along with MySql versions if useful
-        
+
         ///// <summary>
         ///// Executes the SQL statement using <see cref="OracleConnection"/>, and returns the number of rows affected.
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>The number of rows affected.</returns>
         //public static int ExecuteNonQuery(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1649,7 +1761,7 @@ namespace TVA.Data
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="OracleDataReader"/> object.</returns>
         //public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1662,7 +1774,7 @@ namespace TVA.Data
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         ///// <param name="behavior">One of the <see cref="CommandBehavior"/> values.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="OracleDataReader"/> object.</returns>
         //public static OracleDataReader ExecuteReader(this OracleConnection connection, string sql, CommandBehavior behavior, params object[] parameters)
         //{
@@ -1677,7 +1789,7 @@ namespace TVA.Data
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>Value in the first column of the first row in the resultset.</returns>
         //public static object ExecuteScalar(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1702,7 +1814,7 @@ namespace TVA.Data
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>The first <see cref="DataRow"/> in the resultset.</returns>
         //public static DataRow RetrieveRow(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1746,7 +1858,7 @@ namespace TVA.Data
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="DataTable"/> object.</returns>
         //public static DataTable RetrieveData(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1761,7 +1873,7 @@ namespace TVA.Data
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         ///// <param name="startRow">The zero-based record number to start with.</param>
         ///// <param name="maxRows">The maximum number of records to retrieve.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="DataTable"/> object.</returns>
         //public static DataTable RetrieveData(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
         //{
@@ -1800,7 +1912,7 @@ namespace TVA.Data
         ///// </summary>
         ///// <param name="sql">The SQL statement to be executed.</param>
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="DataSet"/> object.</returns>
         //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, params object[] parameters)
         //{
@@ -1815,7 +1927,7 @@ namespace TVA.Data
         ///// <param name="connection">The <see cref="OracleConnection"/> to use for executing the SQL statement.</param>
         ///// <param name="startRow">The zero-based record number to start with.</param>
         ///// <param name="maxRows">The maximum number of records to retrieve.</param>
-        ///// <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+        ///// <param name="parameters">The parameter values to be used to fill in <see cref="IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
         ///// <returns>A <see cref="DataSet"/> object.</returns>
         //public static DataSet RetrieveDataSet(this OracleConnection connection, string sql, int startRow, int maxRows, params object[] parameters)
         //{
@@ -1847,7 +1959,7 @@ namespace TVA.Data
         /////  Takes the <see cref="OracleCommand"/> object and populates it with the given parameters.
         ///// </summary>
         ///// <param name="command">The <see cref="OracleCommand"/> whose parameters are to be populated.</param>
-        ///// <param name="parameters">The parameters to populate the <see cref="OracleCommand"/> parameters with.</param>
+        ///// <param name="parameters">The parameter values to populate the <see cref="OracleCommand"/> parameters with.</param>
         //public static void PopulateParameters(this OracleCommand command, object[] parameters)
         //{
         //    command.PopulateParameters(OracleCommandBuilder.DeriveParameters, parameters);

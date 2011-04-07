@@ -1,7 +1,7 @@
 ﻿//*******************************************************************************************************
-//  UserDataCache.cs - Gbtc
+//  DataConnection.cs - Gbtc
 //
-//  Tennessee Valley Authority, 2009
+//  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
@@ -9,7 +9,7 @@
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
-//  04/06/2011 - J. Ritchie Carroll
+//  04/07/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
 //
 //*******************************************************************************************************
@@ -251,92 +251,121 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Threading;
-using TVA.Collections;
+using System.Data;
+using System.Reflection;
 using TVA.Configuration;
-using TVA.IO;
-using TVA.Security.Cryptography;
-using TVA.Threading;
 
-namespace TVA.Security
+namespace TVA.Data
 {
     /// <summary>
-    /// Represents a secured interprocess cache for a <see cref="Dictionary{T1,T2}"/> of serialized <see cref="UserData"/>.
+    /// Creates a new <see cref="IDbConnection"/> to a configured ADO.NET data source.
     /// </summary>
-    public class UserDataCache : InterprocessCache
+    public class DataConnection : IDisposable
     {
         #region [ Members ]
 
-        // Constants
-
-        // Default key and initialization vector cache file name
-        private const string DefaultCacheFileName = "UserDataCache.bin";
-
-        // Fields
-        private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
-        private ManualResetEventSlim m_userDataTableIsReady;    // Wait handle used so that system will wait for user data cache load before any pending dictionary access
-        private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
-        private bool m_disposed;                                // Class disposed flag
+        //Fields
+        private IDbConnection m_connection;
+        private bool m_disposed;
 
         #endregion
 
+        #region [ Constructors ]
+
         /// <summary>
-        /// Creates a new instance of the <see cref="UserDataCache"/>.
+        /// Creates a new <see cref="DataConnection"/>.
         /// </summary>
-        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
-        public UserDataCache(int providerID = LdapSecurityProvider.ProviderID)
-            : this(providerID, InterprocessReaderWriterLock.DefaultMaximumConcurrentLocks)
+        /// <param name="settingsCategory">Settings category to use for connection settings.</param>
+        public DataConnection(string settingsCategory)
         {
+            // Only need to establish data types and load settings once since they are being loaded from config file
+            if (s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
+            {
+                try
+                {
+                    // Load connection settings from the system settings category				
+                    ConfigurationFile config = ConfigurationFile.Current;
+                    CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
+
+                    string dataProviderString = configSettings["DataProviderString"].Value;
+                    s_connectionString = configSettings["ConnectionString"].Value;
+
+                    if (string.IsNullOrEmpty(s_connectionString))
+                        throw new NullReferenceException("ConnectionString setting was undefined.");
+
+                    if (string.IsNullOrEmpty(dataProviderString))
+                        throw new NullReferenceException("DataProviderString setting was undefined.");
+
+                    // Attempt to load configuration from an ADO.NET database connection
+                    Dictionary<string, string> settings;
+                    string assemblyName, connectionTypeName, adapterTypeName;
+                    Assembly assembly;
+
+                    settings = dataProviderString.ParseKeyValuePairs();
+                    assemblyName = settings["AssemblyName"].ToNonNullString();
+                    connectionTypeName = settings["ConnectionType"].ToNonNullString();
+                    adapterTypeName = settings["AdapterType"].ToNonNullString();
+
+                    if (string.IsNullOrEmpty(connectionTypeName))
+                        throw new NullReferenceException("Database connection type was undefined.");
+
+                    if (string.IsNullOrEmpty(adapterTypeName))
+                        throw new NullReferenceException("Database adapter type was undefined.");
+
+                    assembly = Assembly.Load(new AssemblyName(assemblyName));
+                    s_connectionType = assembly.GetType(connectionTypeName);
+                    s_adapterType = assembly.GetType(adapterTypeName);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("Failed to load defined data provider - check \"DataProviderString\" in configuration file: " + ex.Message, ex);
+                }
+            }
+
+            try
+            {
+                // Open ADO.NET provider connection
+                m_connection = (IDbConnection)Activator.CreateInstance(s_connectionType);
+                m_connection.ConnectionString = s_connectionString;
+                m_connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to open data connection - check \"ConnectionString\" in configuration file: " + ex.Message, ex);
+            }
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="UserDataCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+        /// Releases the unmanaged resources before the <see cref="DataConnection"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        /// <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
-        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
-        public UserDataCache(int providerID, int maximumConcurrentLocks)
-            : base(maximumConcurrentLocks)
+        ~DataConnection()
         {
-            m_providerID = providerID;
-            m_userDataTable = new Dictionary<string, UserData>();
-            m_userDataTableIsReady = new ManualResetEventSlim(false);
+            Dispose(false);
         }
+
+        #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="UserData"/> for given <paramref name="loginID"/>.
+        /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
         /// </summary>
-        /// <param name="loginID">Login ID of associated <see cref="UserData"/> to load or save.</param>
-        /// <returns>Reference to <see cref="UserData"/> for given <paramref name="loginID"/> if found; otherwise <c>null</c>.</returns>
-        public UserData this[string loginID]
+        public IDbConnection Connection
         {
             get
             {
-                UserData userData;
-                TryGetUserData(loginID, out userData);
-                return userData;
-            }
-            set
-            {
-                SaveUserData(loginID, value);
+                return m_connection;
             }
         }
 
         /// <summary>
-        /// Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
+        /// Gets the type of data adapter for configured ADO.NET data source.
         /// </summary>
-        public int ProviderID
+        public Type AdapterType
         {
             get
             {
-                return m_providerID;
-            }
-            set
-            {
-                m_providerID = value;
+                return s_adapterType;
             }
         }
 
@@ -345,10 +374,19 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="UserDataCache"/> object and optionally releases the managed resources.
+        /// Releases all the resources used by the <see cref="DataConnection"/> object.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases the unmanaged resources used by the <see cref="DataConnection"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -356,209 +394,37 @@ namespace TVA.Security
                 {
                     if (disposing)
                     {
-                        if (m_userDataTableIsReady != null)
-                            m_userDataTableIsReady.Dispose();
-
-                        m_userDataTableIsReady = null;
+                        if (m_connection != null)
+                            m_connection.Dispose();
+                        m_connection = null;
                     }
                 }
                 finally
                 {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
+                    m_disposed = true;  // Prevent duplicate dispose.
                 }
             }
-        }
-
-        /// <summary>
-        /// Attempts to retrieve <see cref="UserData"/> for given <paramref name="loginID"/>.
-        /// </summary>
-        /// <param name="loginID">Login ID of associated <see cref="UserData"/> to retrieve.</param>
-        /// <param name="userData">Reference to <see cref="UserData"/> object to populate if found.</param>
-        /// <returns><c>true</c> if <see cref="UserData"/> for given <paramref name="loginID"/> was retrieved; otherwise <c>false</c>.</returns>
-        public bool TryGetUserData(string loginID, out UserData userData)
-        {
-            string hash = HashLoginID(loginID);
-            bool result;
-
-            // We wait until the cache is loaded before attempting to access it
-            if (!m_userDataTableIsReady.IsSet && !m_userDataTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
-                throw new UnauthorizedAccessException("User data access failure: timeout while attempting to load user data cache.");
-
-            // Wait for thread level lock on user data table
-            lock (m_userDataTable)
-            {
-                // Attempt to lookup persisted user data based on hash of login ID
-                result = m_userDataTable.TryGetValue(hash, out userData);
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Serializes the <paramref name="userData"/> for the given <paramref name="loginID"/> into the <see cref="UserDataCache"/>.
-        /// </summary>
-        /// <param name="loginID">Login ID of associated <see cref="UserData"/> to retrieve.</param>
-        /// <param name="userData">Reference to <see cref="UserData"/> object to serialize into <see cref="UserDataCache"/>.</param>
-        /// <remarks>
-        /// <para>
-        /// This will add an entry into the user data cache for <paramref name="loginID"/> if it doesn't exist;
-        /// otherwise existing entry will be updated.
-        /// </para>
-        /// <para>
-        /// Updates are automatically queued up for serialization so user does not need to call <see cref="Save"/>.
-        /// </para>
-        /// </remarks>
-        public void SaveUserData(string loginID, UserData userData)
-        {
-            string hash = HashLoginID(loginID);
-
-            // Wait for thread level lock on user data table
-            lock (m_userDataTable)
-            {
-                // Assign new user information to user data table
-                m_userDataTable[hash] = userData;
-            }
-
-            // Queue up a serialization for this new user information
-            Save();
-        }
-
-        /// <summary>
-        /// Initiates interprocess synchronized save of user data cache.
-        /// </summary>
-        public override void Save()
-        {
-            byte[] serializedUserDataTable;
-
-            // Wait for thread level lock on key table
-            lock (m_userDataTable)
-            {
-                serializedUserDataTable = Serialization.GetBytes(m_userDataTable);
-            }
-
-            // File data is the serialized user data table, assigmnent will initiate auto-save if needed
-            FileData = serializedUserDataTable;
-        }
-
-        /// <summary>
-        /// Initiates interprocess synchronized load of user data cache.
-        /// </summary>
-        public override void Load()
-        {
-            // Hold any threads needing user information
-            m_userDataTableIsReady.Reset();
-
-            base.Load();
-        }
-
-        /// <summary>
-        /// Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
-        /// </summary>
-        /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
-        /// <param name="fileData">File data to be serialized.</param>
-        /// <remarks>
-        /// Consumers overriding this method should not directly call <see cref="InterprocessCache.FileData"/> property to avoid potential dead-locks.
-        /// </remarks>
-        protected override void SaveFileData(FileStream fileStream, byte[] fileData)
-        {
-            // Encrypt data local to this machine (this way user cannot copy user data cache to another machine)
-            base.SaveFileData(fileStream, ProtectedData.Protect(fileData, null, DataProtectionScope.LocalMachine));
-        }
-
-        /// <summary>
-        /// Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
-        /// </summary>
-        /// <param name="fileStream"><see cref="FileStream"/> used to deserialize data.</param>
-        /// <returns>Deserialized file data.</returns>
-        /// <remarks>
-        /// Consumers overriding this method should not directly call <see cref="InterprocessCache.FileData"/> property to avoid potential dead-locks.
-        /// </remarks>
-        protected override byte[] LoadFileData(FileStream fileStream)
-        {
-            // Decrypt data that was encrypted local to this machine
-            byte[] serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-            Dictionary<string, UserData> userDataTable = Serialization.GetObject<Dictionary<string, UserData>>(serializedUserDataTable);
-
-            // Wait for thread level lock on user data table
-            lock (m_userDataTable)
-            {
-                // Merge new and existing key tables since new user information may have been queued for serialization, but not saved yet
-                m_userDataTable = userDataTable.Merge(m_userDataTable);
-            }
-
-            // Release any threads waiting for user information
-            m_userDataTableIsReady.Set();
-
-            return serializedUserDataTable;
-        }
-
-        /// <summary>
-        /// Calculates the hash of the <paramref name="loginID"/> used as the key for the user data cache.
-        /// </summary>
-        /// <param name="loginID">Login ID to hash.</param>
-        /// <returns>The Base64 encoded calculated SHA-2 hash of the <paramref name="loginID"/> used as the key for the user data cache.</returns>
-        /// <remarks>
-        /// For added security, a hash of the <paramref name="loginID"/> is used as the key for <see cref="UserData"/> in the
-        /// user data cache instead of the actual <paramref name="loginID"/>. This method allows the
-        /// consumer to properly calculate this hash when directly using the user data cache.
-        /// </remarks>
-        protected string HashLoginID(string loginID)
-        {
-            return Cipher.GetPasswordHash(loginID.ToLower(), m_providerID);
         }
 
         #endregion
 
         #region [ Static ]
 
+        // Static Fields
+        private static Type s_connectionType;
+        private static Type s_adapterType;
+        private static string s_connectionString;
+
         // Static Methods
 
         /// <summary>
-        /// Loads the <see cref="UserDataCache"/> for the current local user.
+        /// Forces a reload of cached configuration connection settings.
         /// </summary>
-        /// <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
-        /// <returns>Loaded instance of the <see cref="UserDataCache"/>.</returns>
-        public static UserDataCache GetCurrentCache(int providerID = LdapSecurityProvider.ProviderID)
+        public static void ReloadConfigurationSettings()
         {
-            // By default user data cache is stored in a path where user will have rights
-            UserDataCache userDataCache;
-            string userCacheFolder = FilePath.AddPathSuffix(FilePath.GetApplicationDataFolder());
-            string userCacheFileName = userCacheFolder + FilePath.GetFileName(DefaultCacheFileName);
-            double retryDelayInterval = DefaultRetryDelayInterval;
-            int maximumRetryAttempts = DefaultMaximumRetryAttempts;
-
-            // Load user data cache settings
-            ConfigurationFile config = ConfigurationFile.Current;
-            CategorizedSettingsElementCollection settings = config.Settings[SecurityProviderBase.DefaultSettingsCategory];
-
-            settings.Add("RetryDelayInterval", retryDelayInterval, "Wait interval, in milliseconds, before retrying load of user data cache.");
-            settings.Add("MaximumRetryAttempts", maximumRetryAttempts, "Maximum retry attempts allowed for loading user data cache.");
-
-            retryDelayInterval = settings["RetryDelayInterval"].ValueAs(retryDelayInterval);
-            maximumRetryAttempts = settings["MaximumRetryAttempts"].ValueAs(maximumRetryAttempts);
-
-            // Make sure user directory exists
-            if (!Directory.Exists(userCacheFolder))
-                Directory.CreateDirectory(userCacheFolder);
-
-            // Initialize user data cache for current local user
-            userDataCache = new UserDataCache(providerID)
-            {
-                FileName = userCacheFileName,
-                RetryDelayInterval = retryDelayInterval,
-                MaximumRetryAttempts = maximumRetryAttempts,
-                ReloadOnChange = true,
-                AutoSave = true
-            };
-
-            // Load initial user data
-            userDataCache.Load();
-
-            return userDataCache;
+            s_connectionType = null;
         }
 
         #endregion
-        
     }
 }

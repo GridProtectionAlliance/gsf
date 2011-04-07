@@ -250,11 +250,9 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Security;
 using System.Text.RegularExpressions;
 using TVA.Configuration;
@@ -320,169 +318,6 @@ namespace TVA.Security
         /// </summary>
         public new const int ProviderID = 1;
 
-        // Nested Types
-
-        /// <summary>
-        /// Creates a new <see cref="IDbConnection"/> to configured ADO.NET data source.
-        /// </summary>
-        private class DataConnection : IDisposable
-        {
-            #region [ Members ]
-
-            //Fields
-            private IDbConnection m_connection;
-            private bool m_disposed;
-
-            #endregion
-
-            #region [ Constructors ]
-
-            /// <summary>
-            /// Creates a new <see cref="DataConnection"/>.
-            /// </summary>
-            /// <param name="settingsCategory">Settings category to use for connection settings.</param>
-            public DataConnection(string settingsCategory)
-            {
-                // Only need to establish data types and load settings once
-                if (s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
-                {
-                    try
-                    {
-                        // Load connection settings from the system settings category				
-                        ConfigurationFile config = ConfigurationFile.Current; //new ConfigurationFile("~/web.config", ApplicationType.Web);
-                        CategorizedSettingsElementCollection configSettings = config.Settings[settingsCategory];
-
-                        string dataProviderString = configSettings["DataProviderString"].Value;
-                        s_connectionString = configSettings["ConnectionString"].Value;
-
-                        if (string.IsNullOrEmpty(s_connectionString))
-                            throw new NullReferenceException("ConnectionString setting was undefined.");
-
-                        if (string.IsNullOrEmpty(dataProviderString))
-                            throw new NullReferenceException("DataProviderString setting was undefined.");
-
-                        // Attempt to load configuration from an ADO.NET database connection
-                        Dictionary<string, string> settings;
-                        string assemblyName, connectionTypeName, adapterTypeName;
-                        Assembly assembly;
-
-                        settings = dataProviderString.ParseKeyValuePairs();
-                        assemblyName = settings["AssemblyName"].ToNonNullString();
-                        connectionTypeName = settings["ConnectionType"].ToNonNullString();
-                        adapterTypeName = settings["AdapterType"].ToNonNullString();
-
-                        if (string.IsNullOrEmpty(connectionTypeName))
-                            throw new NullReferenceException("Database connection type was undefined.");
-
-                        if (string.IsNullOrEmpty(adapterTypeName))
-                            throw new NullReferenceException("Database adapter type was undefined.");
-
-                        assembly = Assembly.Load(new AssemblyName(assemblyName));
-                        s_connectionType = assembly.GetType(connectionTypeName);
-                        s_adapterType = assembly.GetType(adapterTypeName);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Failed to load defined data provider - check \"DataProviderString\" in configuration file: " + ex.Message, ex);
-                    }
-                }
-
-                try
-                {
-                    // Open ADO.NET provider connection
-                    m_connection = (IDbConnection)Activator.CreateInstance(s_connectionType);
-                    m_connection.ConnectionString = s_connectionString;
-                    m_connection.Open();
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException("Failed to open data connection - check \"ConnectionString\" in configuration file: " + ex.Message, ex);
-                }
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources before the <see cref="DataConnection"/> object is reclaimed by <see cref="GC"/>.
-            /// </summary>
-            ~DataConnection()
-            {
-                Dispose(false);
-            }
-
-            #endregion
-
-            #region [ Properties ]
-
-            /// <summary>
-            /// Gets an open <see cref="IDbConnection"/> to configured ADO.NET data source.
-            /// </summary>
-            public IDbConnection Connection
-            {
-                get
-                {
-                    return m_connection;
-                }
-            }
-
-            /// <summary>
-            /// Gets the type of data adapter for configured ADO.NET data source.
-            /// </summary>
-            public Type AdapterType
-            {
-                get
-                {
-                    return s_adapterType;
-                }
-            }
-
-            #endregion
-
-            #region [ Methods ]
-
-            /// <summary>
-            /// Releases all the resources used by the <see cref="DataConnection"/> object.
-            /// </summary>
-            public void Dispose()
-            {
-                Dispose(true);
-                GC.SuppressFinalize(this);
-            }
-
-            /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="DataConnection"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected virtual void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            if (m_connection != null)
-                                m_connection.Dispose();
-                            m_connection = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;  // Prevent duplicate dispose.
-                    }
-                }
-            }
-
-            #endregion
-
-            #region [ Static ]
-
-            //Static Fields
-            static Type s_connectionType;
-            static Type s_adapterType;
-            static string s_connectionString;
-
-            #endregion
-        }
-
         #endregion
 
         #region [ Constructor ]
@@ -522,11 +357,15 @@ namespace TVA.Security
             get
             {
                 if (UserData.IsDefined && UserData.IsExternal)
+                {
                     // Data update supported on external user accounts.
                     return true;
+                }
                 else
+                {
                     // Data update not supported on internal user accounts.
                     return false;
+                }
             }
         }
 
@@ -577,7 +416,7 @@ namespace TVA.Security
                     if (dbConnection == null)
                         return false;
 
-                    userDataTable.Load(dbConnection.CreateParameterizedCommand("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username).ExecuteReader());
+                    userDataTable.Load(dbConnection.ExecuteReader("Select ID, Name, Password, FirstName, LastName, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, CreatedOn From UserAccount Where Name = @name", UserData.Username));
 
                     if (userDataTable.Rows.Count <= 0)
                     {
@@ -640,7 +479,7 @@ namespace TVA.Security
                         UserData.IsLockedOut = Convert.ToBoolean(userDataRow["LockedOut"]);
 
                     // Load explicitly assigned groups
-                    userGroupDataTable.Load(dbConnection.CreateParameterizedCommand("Select SecurityGroupID, SecurityGroupName, SecurityGroupDescription From SecurityGroupUserAccountDetail Where UserName = @name", UserData.Username).ExecuteReader());
+                    userGroupDataTable.Load(dbConnection.ExecuteReader("SELECT SecurityGroupID, SecurityGroupName, SecurityGroupDescription FROM SecurityGroupUserAccountDetail WHERE UserName = @name", UserData.Username));
 
                     foreach (DataRow group in userGroupDataTable.Rows)
                     {
@@ -658,12 +497,12 @@ namespace TVA.Security
                     // Load implicitly assigned roles
                     foreach (string group in UserData.Groups)
                     {
-                        userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail Where SecurityGroupName = @groupName", group).ExecuteReader());
+                        userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail WHERE SecurityGroupName = @groupName", group));
                     }
 
                     // Load explicitly assigned roles
-                    userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription From ApplicationRoleUserAccountDetail Where UserName = @name", UserData.Username).ExecuteReader());
-                    userRoleDataTable.Load(dbConnection.CreateParameterizedCommand("Select ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription From ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail Where ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username).ExecuteReader());
+                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleID, ApplicationRoleName, ApplicationRoleDescription FROM ApplicationRoleUserAccountDetail WHERE UserName = @name", UserData.Username));
+                    userRoleDataTable.Load(dbConnection.ExecuteReader("SELECT ApplicationRoleSecurityGroupDetail.ApplicationRoleID, ApplicationRoleSecurityGroupDetail.ApplicationRoleName, ApplicationRoleSecurityGroupDetail.ApplicationRoleDescription FROM ApplicationRoleSecurityGroupDetail, SecurityGroupUserAccountDetail WHERE ApplicationRoleSecurityGroupDetail.SecurityGroupID = SecurityGroupUserAccountDetail.SecurityGroupID AND SecurityGroupUserAccountDetail.UserName = @name", UserData.Username));
 
                     foreach (DataRow role in userRoleDataTable.Rows)
                     {
