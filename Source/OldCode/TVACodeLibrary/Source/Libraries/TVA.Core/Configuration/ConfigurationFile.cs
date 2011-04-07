@@ -40,6 +40,9 @@
 //       Added Culture property that can be used for specifying a culture to use for value conversion.
 //  01/04/2011 - J. Ritchie Carroll
 //       Modified culture to default to InvariantCulture for English style parsing defaults.
+//  04/07/2011 - J. Ritchie Carroll
+//       Added a Reload() method to reload the configuration file settings and a
+//       RestoreDefaultUserSettings() method to restore the default user settings.
 //
 //*******************************************************************************************************
 
@@ -420,6 +423,14 @@ namespace TVA.Configuration
                 }
             }
 
+            public string FileName
+            {
+                get
+                {
+                    return m_fileName;
+                }
+            }
+
             public void Save(bool force)
             {
                 if (force || m_settingsModified)
@@ -587,6 +598,31 @@ namespace TVA.Configuration
         public void SaveAs(string fileName)
         {
             m_configuration.SaveAs(fileName);
+        }
+
+        /// <summary>
+        /// Reloads the current configuration settings from the configuration file that the <see cref="ConfigurationFile"/> represents.
+        /// </summary>
+        public void Reload()
+        {
+            m_configuration = GetConfiguration(m_configuration.FilePath);
+            m_userConfiguration = new UserConfigurationFile();
+        }
+
+        /// <summary>
+        /// Restores all the default settings for <see cref="SettingScope.User"/> scoped settings.
+        /// </summary>
+        public void RestoreDefaultUserSettings()
+        {
+            if (m_userConfiguration != null)
+            {
+                string fileName = m_userConfiguration.FileName;
+
+                if (File.Exists(fileName))
+                    File.Delete(fileName);
+
+                m_userConfiguration = new UserConfigurationFile();
+            }
         }
 
         /// <summary>

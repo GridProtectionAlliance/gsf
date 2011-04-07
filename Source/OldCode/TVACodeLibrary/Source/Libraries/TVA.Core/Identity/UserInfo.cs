@@ -1232,6 +1232,8 @@ namespace TVA.Identity
                         if (m_userEntry != null)
                             m_userEntry.Dispose();
 
+                        m_userEntry = null;
+
                         // Attempt to detach from power mode changed system event
                         try
                         {
@@ -1338,8 +1340,12 @@ namespace TVA.Identity
                 }
                 catch (Exception ex)
                 {
+                    if (m_userEntry != null)
+                        m_userEntry.Dispose();
+                    
                     m_userEntry = null;
                     m_domainAvailable = false;
+
                     throw new InitializationException(string.Format("Failed to initialize directory entry for domain user '{0}'", LoginID), ex);
                 }
                 finally
@@ -1365,8 +1371,12 @@ namespace TVA.Identity
                 }
                 catch (Exception ex)
                 {
+                    if (m_userEntry != null)
+                        m_userEntry.Dispose();
+
                     m_userEntry = null;
                     m_domainAvailable = false;
+
                     throw new InitializationException(string.Format("Failed to initialize directory entry for user '{0}'", LoginID), ex);
                 }
             }

@@ -522,7 +522,7 @@ namespace TVA.Security
                             // Cache user data so that information can be loaded later if domain is unavailable
                             userDataCache[UserData.LoginID] = UserData;
 
-                            // Wait for pending serialization since cache is a scoped locally to this method and will be disposed before exit
+                            // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
                             userDataCache.Flush();
                         }
                         else

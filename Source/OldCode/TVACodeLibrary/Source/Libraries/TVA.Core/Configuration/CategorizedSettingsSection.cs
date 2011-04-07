@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -243,6 +244,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.Configuration;
 using System.IO;
@@ -323,26 +343,6 @@ namespace TVA.Configuration
         }
 
         /// <summary>
-        /// Removes the specified category name including its associated settings.
-        /// </summary>
-        /// <param name="name">Name of the category to be removed.</param>
-        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
-        public void Remove(string name)
-        {
-            // Get the category to be removed.
-            CategorizedSettingsElementCollection settingsCategory = this[name];
-            
-            // Remove existing category settings.
-            while (settingsCategory.GetEnumerator().MoveNext())
-            {
-                settingsCategory.RemoveAt(0);
-            }
-
-            // Remove category from property bag.
-            base.Properties.Remove(settingsCategory.Name);
-        }
-
-        /// <summary>
         /// Gets the <see cref="CategorizedSettingsElementCollection"/> object representing settings under "general" category.
         /// </summary>
         /// <returns><see cref="CategorizedSettingsElementCollection"/> object with settings under the "general" category.</returns>
@@ -365,6 +365,26 @@ namespace TVA.Configuration
         public void SetCryptoKey(string cryptoKey)
         {
             m_cryptoKey = cryptoKey;
+        }
+
+        /// <summary>
+        /// Removes the specified category name including its associated settings.
+        /// </summary>
+        /// <param name="name">Name of the category to be removed.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
+        public void Remove(string name)
+        {
+            // Get the category to be removed.
+            CategorizedSettingsElementCollection settingsCategory = this[name];
+
+            // Remove existing category settings.
+            while (settingsCategory.GetEnumerator().MoveNext())
+            {
+                settingsCategory.RemoveAt(0);
+            }
+
+            // Remove category from property bag.
+            base.Properties.Remove(settingsCategory.Name);
         }
 
         /// <summary>

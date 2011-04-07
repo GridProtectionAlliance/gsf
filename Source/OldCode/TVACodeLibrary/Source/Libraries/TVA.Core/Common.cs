@@ -5,6 +5,7 @@
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
 //
 //  This software is made freely available under the TVA Open Source Agreement (see below).
+//  Code in this file licensed to TVA under one or more contributor license agreements listed below.
 //
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
@@ -28,6 +29,8 @@
 //       Updated TypeConvertToString() to return an empty string if the passed in value is null.
 //  03/09/2011 - Pinal C. Patel
 //       Moved UpdateType enumeration from TVA.Services.ServiceProcess namespace for broader usage.
+//  04/07/2011 - J. Ritchie Carroll
+//       Added ToNonNullNorEmptyString() and ToNonNullNorWhiteSpace() extensions.
 //
 //*******************************************************************************************************
 
@@ -247,6 +250,25 @@
 */
 #endregion
 
+#region [ Contributor License Agreements ]
+
+//******************************************************************************************************
+//
+//  Copyright © 2011, Grid Protection Alliance.  All Rights Reserved.
+//
+//  The GPA licenses this file to you under the Eclipse Public License -v 1.0 (the "License"); you may
+//  not use this file except in compliance with the License. You may obtain a copy of the License at:
+//
+//      http://www.opensource.org/licenses/eclipse-1.0.php
+//
+//  Unless agreed to in writing, the subject software distributed under the License is distributed on an
+//  "AS-IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+//  License for the specific language governing permissions and limitations.
+//
+//******************************************************************************************************
+
+#endregion
+
 using System;
 using System.ComponentModel;
 using System.Globalization;
@@ -453,7 +475,7 @@ namespace TVA
         // limited to classes and won't show up on native types and custom structs.
 
         /// <summary>
-        /// Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
+        /// Converts value to string; null objects (or DBNull objects) will return an empty string (""). 
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
@@ -464,7 +486,7 @@ namespace TVA
         }
 
         /// <summary>
-        /// Converts value to string, null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
+        /// Converts value to string; null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
         /// </summary>
         /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
         /// <param name="value">Value to convert to string.</param>
@@ -485,10 +507,52 @@ namespace TVA
         /// Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
         /// </summary>
         /// <param name="value"><see cref="String"/> to verify is not null.</param>
-        /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+        /// <returns><see cref="String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned.</returns>
         public static string ToNonNullString(this string value)
         {
             return (value == null ? "" : value);
+        }
+
+        /// <summary>
+        /// Converts value to string; null objects, DBNull objects or empty strings will return specified <paramref name="nonNullNorEmptyValue"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
+        /// <param name="value">Value to convert to string.</param>
+        /// <param name="nonNullNorEmptyValue"><see cref="String"/> to return if <paramref name="value"/> is null.</param>
+        /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, DBNull or an empty string <paramref name="nonNullNorEmptyValue"/> will be returned.</returns>
+        /// <exception cref="ArgumentException"><paramref name="nonNullNorEmptyValue"/> must not be null or an empty string.</exception>
+        public static string ToNonNullNorEmptyString<T>(this T value, string nonNullNorEmptyValue = " ") where T : class
+        {
+            if (string.IsNullOrEmpty(nonNullNorEmptyValue))
+                throw new ArgumentException("Must not be null or an empty string", "nonNullNorEmptyValue");
+
+            if (value == null || value == DBNull.Value)
+                return nonNullNorEmptyValue;
+
+            string valueAsString = value.ToString();
+
+            return (string.IsNullOrEmpty(valueAsString) ? nonNullNorEmptyValue : valueAsString);
+        }
+
+        /// <summary>
+        /// Converts value to string; null objects, DBNull objects, empty strings or all white space strings will return specified <paramref name="nonNullNorWhiteSpaceValue"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of <see cref="Object"/> to convert to string.</typeparam>
+        /// <param name="value">Value to convert to string.</param>
+        /// <param name="nonNullNorWhiteSpaceValue"><see cref="String"/> to return if <paramref name="value"/> is null.</param>
+        /// <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, DBNull, empty or all white space, <paramref name="nonNullNorWhiteSpaceValue"/> will be returned.</returns>
+        /// <exception cref="ArgumentException"><paramref name="nonNullNorWhiteSpaceValue"/> must not be null, an empty string or white space.</exception>
+        public static string ToNonNullNorWhiteSpace<T>(this T value, string nonNullNorWhiteSpaceValue = "_") where T : class
+        {
+            if (string.IsNullOrWhiteSpace(nonNullNorWhiteSpaceValue))
+                throw new ArgumentException("Must not be null, an empty string or white space", "nonNullNorWhiteSpaceValue");
+
+            if (value == null || value == DBNull.Value)
+                return nonNullNorWhiteSpaceValue;
+
+            string valueAsString = value.ToString();
+
+            return (string.IsNullOrWhiteSpace(valueAsString) ? nonNullNorWhiteSpaceValue : valueAsString);
         }
 
         /// <summary>

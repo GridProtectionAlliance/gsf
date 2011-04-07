@@ -629,9 +629,9 @@ namespace TVA.Security
                     }
                     else
                     {
-                        // Load implicitly assigned groups - this happens via NT user groups that get loaded into user data group
-                        // collection. When group definitions that are defined with the same name as their NT equivalents, this will
-                        // allow automatic external group management from within active directory or local account group management.
+                        // Load implicitly assigned groups - this happens via NT user groups that get loaded into user data
+                        // group collection. When group definitions are defined with the same name as their NT equivalents,
+                        // this will allow automatic external group management from within NT group management (AD or local).
                         base.RefreshData(UserData.Groups, AdoSecurityProvider.ProviderID);
                     }
 
