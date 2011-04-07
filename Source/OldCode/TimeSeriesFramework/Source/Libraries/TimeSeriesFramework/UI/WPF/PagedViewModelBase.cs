@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  DataPager.xaml.cs - Gbtc
+//  PagedViewModelBase.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,7 +16,7 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  04/04/2011 - Mehulbhai P Thakkar
+//  04/07/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
@@ -25,16 +25,15 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 
-namespace TimeSeriesFramework.UI.CustomControls
+namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Interaction logic for DataPager.xaml
+    /// Represents an abstract class with paging support which all ViewModel objects derive from.
     /// </summary>
-    public partial class DataPager : UserControl, INotifyPropertyChanged
+    public abstract class PagedViewModelBase : INotifyPropertyChanged
     {
         #region [ Members ]
 
@@ -45,7 +44,7 @@ namespace TimeSeriesFramework.UI.CustomControls
         public event PropertyChangedEventHandler PropertyChanged;
 
         //Fields
-        private int m_pageCount, m_currentPageNumber;
+        private int m_pageCount, m_currentPageNumber, m_itemsPerPage;
         private ObservableCollection<object> m_currentPage, m_itemsSource;
         private ObservableCollection<ObservableCollection<object>> m_pages;
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
@@ -53,37 +52,46 @@ namespace TimeSeriesFramework.UI.CustomControls
 
         #endregion
 
-        #region [ Constructor ]
+        #region [ Properties ]
         
         /// <summary>
-        /// Creates an instance of DataPager user control.
+        /// Gets a message box to display message to users.
         /// </summary>
-        public DataPager()
+        public Action<string, string, MessageBoxImage> Popup
         {
-            InitializeComponent();
-            //Attach commands to navigation buttons.
-            ButtonFirst.Command = FirstCommand;
-            ButtonPrevious.Command = PreviousCommand;
-            ButtonNext.Command = NextCommand;
-            ButtonLast.Command = LastCommand;
+            get
+            {
+                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) => MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage));
+            }
         }
 
-        #endregion
-
-        #region [ Properties ]
-
         /// <summary>
-        /// Dependency property to attach number of items per page from XAML.
+        /// Gets message box to request confirmation from users.
         /// </summary>
-        public static readonly DependencyProperty ItemsPerPageProperty = DependencyProperty.Register("ItemsPerPage", typeof(int), typeof(DataPager), new UIPropertyMetadata(10));
+        public Func<string, string, bool> Confirm
+        {
+            get
+            {
+                return (Func<string, string, bool>)((message, caption) => MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.YesNo) == MessageBoxResult.Yes);
+            }
+        }
 
         /// <summary>
         /// Gets or sets number of items to be displayed per page.
         /// </summary>
         public int ItemsPerPage
         {
-            get { return (int)GetValue(ItemsPerPageProperty); }
-            set { SetValue(ItemsPerPageProperty, value); }
+            get 
+            {
+                if (m_itemsPerPage != null && m_itemsPerPage > 0)
+                    return m_itemsPerPage;
+                else
+                    return 20;
+            }
+            set 
+            {
+                m_itemsPerPage = value;
+            }
         }
 
         /// <summary>
@@ -122,7 +130,8 @@ namespace TimeSeriesFramework.UI.CustomControls
             {
                 m_currentPage = value;
                 NotifyPropertyChanged("CurrentPage");
-                CurrentItem = m_currentPage[0];
+                if (m_currentPage.Count > 0)
+                    CurrentItem = m_currentPage[0];
             }
         }
 
@@ -151,7 +160,7 @@ namespace TimeSeriesFramework.UI.CustomControls
                 NotifyPropertyChanged("PageCount");
             }
         }
-               
+
         /// <summary>
         /// Gets the command for moving to the first page.
         /// </summary>
@@ -332,5 +341,6 @@ namespace TimeSeriesFramework.UI.CustomControls
         }
 
         #endregion
+
     }
 }

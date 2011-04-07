@@ -60,12 +60,10 @@
     <Compile Include="Commands\MenuCommand.cs" />
     <Compile Include="Commands\RelayCommand.cs" />
     <Compile Include="CommonFunctions.cs" />
-    <Compile Include="CustomControls\DataPager.xaml.cs">
-      <DependentUpon>DataPager.xaml</DependentUpon>
-    </Compile>
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Company.cs" />
     <Compile Include="IViewModel.cs" />
+    <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -110,10 +108,6 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Page Include="CustomControls\DataPager.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserControls\VendorUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

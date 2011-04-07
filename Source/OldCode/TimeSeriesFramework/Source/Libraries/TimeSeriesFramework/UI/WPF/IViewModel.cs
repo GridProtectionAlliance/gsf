@@ -92,7 +92,7 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Method to retrieve collection of related objects.
         /// </summary>
-        void Get();
+        void Load();
 
         #endregion
     }

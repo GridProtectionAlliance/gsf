@@ -33,12 +33,10 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// <summary>
     /// Class to hold bindable <see cref="Company"/> collection and selected company for UI.
     /// </summary>
-    internal class Companies : ViewModelBase, IViewModel
+    internal class Companies : PagedViewModelBase, IViewModel
     {
-        #region [ Members ]
-
-        private Company m_currentCompany;
-        private ObservableCollection<Company> m_companyList;
+         #region [ Members ]
+                
         private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
 
         #endregion
@@ -50,38 +48,12 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// </summary>
         public Companies()
         {
-            Get();
+            Load();
         }
 
         #endregion
 
         #region [ Properties ]
-
-        /// <summary>
-        /// Represents current company selected in the detail view for modification.
-        /// </summary>
-        public Company CurrentCompany
-        {
-            get { return m_currentCompany; }
-            set
-            {
-                m_currentCompany = value;
-                NotifyPropertyChanged("CurrentCompany");
-            }
-        }
-        
-        /// <summary>
-        /// Reperesents list of companies defined in the database.
-        /// </summary>
-        public ObservableCollection<Company> CompanyList
-        {
-            get { return m_companyList; }
-            set
-            {
-                m_companyList = value;
-                NotifyPropertyChanged("CompanyList");
-            }
-        }
 
         #region [ IViewModel Properties ]
 
@@ -120,7 +92,7 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         public bool CanSave
         {
-            get { return m_currentCompany.IsValid; }
+            get { return ((Company)CurrentItem).IsValid; }
         }
 
         public bool CanDelete
@@ -141,23 +113,18 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         #region [ IViewModel Implementation ]
 
-        public void Get()
+        public void Load()
         {
-            CompanyList = CommonFunctions.GetCompanyList(null);
-
-            if (CompanyList.Count > 0)
-                CurrentCompany = CompanyList[0];
-            else
-                CurrentCompany = new Company();
+            ItemsSource = new ObservableCollection<object>(CommonFunctions.GetCompanyList(null));
         }
 
         public void Save()
         {
             try
             {
-                string result = CommonFunctions.SaveCompany(null, m_currentCompany, m_currentCompany.ID > 0 ? false : true);
+                string result = CommonFunctions.SaveCompany(null, (Company)CurrentItem, ((Company)CurrentItem).ID > 0 ? false : true);
                 Popup(result, "Save Company", MessageBoxImage.Information);
-                Get();
+                Load();
             }
             catch (Exception ex)
             {
@@ -167,12 +134,12 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         public void Delete()
         {
-            if (m_currentCompany.ID > 0 && Confirm("Are you sure you want to delete " + m_currentCompany.Acronym + "?", "Delete Company"))
+            if (((Company)CurrentItem).ID > 0 && Confirm("Are you sure you want to delete " + ((Company)CurrentItem).Acronym + "?", "Delete Company"))
             {
                 try
                 {
-                    string result = CommonFunctions.DeleteCompany(null, m_currentCompany.ID);                    
-                    Get();
+                    string result = CommonFunctions.DeleteCompany(null, ((Company)CurrentItem).ID);
+                    Load();
                     Popup(result, "Delete Company", MessageBoxImage.Information);
                 }
                 catch (Exception ex)
@@ -184,7 +151,7 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         public void Clear()
         {
-            CurrentCompany = new Company();            
+            CurrentItem = new Company();
         }
 
         #endregion

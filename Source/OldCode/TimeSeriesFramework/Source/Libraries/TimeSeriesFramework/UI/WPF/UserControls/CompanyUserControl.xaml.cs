@@ -21,10 +21,7 @@
 //
 //******************************************************************************************************
 
-using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Controls;
-using TimeSeriesFramework.UI.DataModels;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -34,27 +31,10 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class CompanyUserControl : UserControl
     {
-        Companies m_companies;
-
         public CompanyUserControl()
         {
-            InitializeComponent();            
-            m_companies = new Companies();
-            this.DataContext = m_companies;
-            m_companies.PropertyChanged += new System.ComponentModel.PropertyChangedEventHandler(m_companies_PropertyChanged);        
-            DataPager.ItemsSource = new ObservableCollection<object>(m_companies.CompanyList);
+            InitializeComponent();                        
+            this.DataContext = new Companies();
         }
-
-        void m_companies_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {        
-            if (e.PropertyName == "CompanyList")
-                DataPager.ItemsSource = new ObservableCollection<object>(m_companies.CompanyList);            
-        }
-
-        private void GridCompanyDetail_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            m_companies.CurrentCompany = (Company)GridCompanyDetail.DataContext;
-        }
-
     }
 }
