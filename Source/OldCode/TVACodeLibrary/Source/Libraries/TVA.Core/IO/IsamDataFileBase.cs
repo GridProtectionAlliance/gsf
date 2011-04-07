@@ -37,6 +37,8 @@
 //       Added exception handling to event handlers.
 //  12/04/2009 - Pinal C. Patel
 //       Fixed thread synchronization bug in ReadFromDisk().
+//  04/07/2011 - Pinal C. Patel
+//       Removed inheritance from Component class to allow for serialization.
 //
 //*******************************************************************************************************
 
@@ -258,11 +260,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Threading;
+using System.Xml.Serialization;
 using TVA.Configuration;
 using TVA.Parsing;
 
@@ -451,7 +453,7 @@ namespace TVA.IO
     /// }
     /// </code>
     /// </example>
-    public abstract class IsamDataFileBase<T> : Component, ISupportLifecycle, ISupportInitialize, IProvideStatus, IPersistSettings where T : ISupportBinaryImage
+    public abstract class IsamDataFileBase<T> : ISupportLifecycle, IProvideStatus, IPersistSettings where T : ISupportBinaryImage
     {
         #region [ Members ]
 
@@ -502,31 +504,26 @@ namespace TVA.IO
         /// <summary>
         /// Occurs when data is being read from disk into memory.
         /// </summary>
-        [Description("Occurs when data is being read from disk into memory.")]
         public event EventHandler DataLoading;
 
         /// <summary>
         /// Occurs when data has been read from disk into memory.
         /// </summary>
-        [Description("Occurs when data has been read from disk into memory.")]
         public event EventHandler DataLoaded;
 
         /// <summary>
         /// Occurs when data is being saved from memory onto disk.
         /// </summary>
-        [Description("Occurs when data is being saved from memory onto disk.")]
         public event EventHandler DataSaving;
 
         /// <summary>
         /// Occurs when data has been saved from memory onto disk.
         /// </summary>
-        [Description("Occurs when data has been saved from memory onto disk.")]
         public event EventHandler DataSaved;
 
         /// <summary>
         /// Occurs when file data on the disk is modified.
         /// </summary>
-        [Description("Occurs when file data on the disk is modified.")]
         public event EventHandler FileModified;
 
         // Fields
@@ -574,6 +571,14 @@ namespace TVA.IO
             m_fileWatcher.Changed += m_fileWatcher_Changed;
         }
 
+        /// <summary>
+        /// Releases the unmanaged resources before the file is reclaimed by <see cref="GC"/>.
+        /// </summary>
+        ~IsamDataFileBase()
+        {
+            Dispose(false);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -584,9 +589,6 @@ namespace TVA.IO
         /// <remarks>
         /// Changing the <see cref="FileName"/> when the file is open will cause the file to be re-opend.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultFileName),
-        Description("Name of the file.")]
         public string FileName
         {
             get
@@ -606,9 +608,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets or sets the <see cref="FileAccess"/> value to use when opening the file.
         /// </summary>
-        [Category("Settings"),
-        DefaultValue(DefaultFileAccessMode),
-        Description("The System.IO.FileAccess value to use when opening the file.")]
         public FileAccess FileAccessMode
         {
             get
@@ -629,9 +628,6 @@ namespace TVA.IO
         /// <see cref="AutoSaveInterval"/> will be effective only if records have been loaded in memory either manually 
         /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
         /// </remarks>
-        [Category("Settings"),
-        DefaultValue(DefaultAutoSaveInterval),
-        Description("Interval in milliseconds at which the records loaded in memory are to be persisted to disk.")]
         public int AutoSaveInterval
         {
             get
@@ -649,9 +645,6 @@ namespace TVA.IO
         /// Gets or sets a boolean value that indicates whether records are to be loaded automatically in memory when 
         /// the file is opened.
         /// </summary>
-        [Category("Behavior"),
-        DefaultValue(DefaultLoadOnOpen),
-        Description("Indicates whether records are to be loaded automatically in memory when the file is opened.")]
         public bool LoadOnOpen
         {
             get
@@ -673,9 +666,6 @@ namespace TVA.IO
         /// <see cref="SaveOnClose"/> will be effective only if records have been loaded in memory either manually 
         /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
         /// </remarks>
-        [Category("Behavior"),
-        DefaultValue(DefaultSaveOnClose),
-        Description("Indicates whether records loaded in memory are to be persisted to disk when the file is closed.")]
         public bool SaveOnClose
         {
             get
@@ -696,9 +686,6 @@ namespace TVA.IO
         /// <see cref="ReloadOnModify"/> will be effective only if records have been loaded in memory either manually 
         /// by calling the <see cref="Load()"/> method or automatically by settings <see cref="LoadOnOpen"/> to true.
         /// </remarks>
-        [Category("Behavior"),
-        DefaultValue(DefaultReloadOnModify),
-        Description("Indicates whether records loaded in memory are to be re-loaded when the file is modified on disk.")]
         public bool ReloadOnModify
         {
             get
@@ -715,9 +702,7 @@ namespace TVA.IO
         /// <summary>
         /// Gets or sets a boolean value that indicates whether the file settings are to be saved to the config file.
         /// </summary>
-        [Category("Persistance"),
-        DefaultValue(DefaultPersistSettings),
-        Description("Indicates whether the file settings are to be saved to the config file.")]
+        [XmlIgnore()]
         public bool PersistSettings
         {
             get
@@ -735,9 +720,7 @@ namespace TVA.IO
         /// <see cref="PersistSettings"/> property is set to true.
         /// </summary>
         /// <exception cref="ArgumentNullException">The value being assigned is null or empty string.</exception>
-        [Category("Persistance"),
-        DefaultValue(DefaultSettingsCategory),
-        Description("Category under which the file settings are to be saved to the config file if the PersistSettings property is set to true.")]
+        [XmlIgnore()]
         public string SettingsCategory
         {
             get
@@ -760,8 +743,7 @@ namespace TVA.IO
         /// Setting <see cref="Enabled"/> to true will open the file if it is closed, setting
         /// to false will close the file if it is open.
         /// </remarks>
-        [Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [XmlIgnore()]
         public bool Enabled
         {
             get
@@ -780,7 +762,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets a boolean value that indicates whether the file is open.
         /// </summary>
-        [Browsable(false)]
         public bool IsOpen
         {
             get
@@ -792,7 +773,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets a boolean value that indicates whether the file data on disk is corrupt.
         /// </summary>
-        [Browsable(false)]
         public bool IsCorrupt
         {
             get
@@ -821,7 +801,6 @@ namespace TVA.IO
         /// <remarks>
         /// <see cref="MemoryUsage"/> will be zero (0) unless records are loaded in memory.
         /// </remarks>
-        [Browsable(false)]
         public long MemoryUsage
         {
             get
@@ -833,7 +812,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets the number of file records on the disk.
         /// </summary>
-        [Browsable(false)]
         public int RecordsOnDisk
         {
             get
@@ -859,7 +837,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets the number of file records loaded in memory.
         /// </summary>
-        [Browsable(false)]
         public int RecordsInMemory
         {
             get
@@ -881,7 +858,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets the unique identifier of the file.
         /// </summary>
-        [Browsable(false)]
         public string Name
         {
             get
@@ -893,7 +869,6 @@ namespace TVA.IO
         /// <summary>
         /// Gets the descriptive status of the file.
         /// </summary>
-        [Browsable(false)]
         public string Status
         {
             get
@@ -969,6 +944,15 @@ namespace TVA.IO
         #endregion
 
         /// <summary>
+        /// Releases all the resources used by the file.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
         /// Initializes the file.
         /// </summary>
         /// <remarks>
@@ -981,52 +965,6 @@ namespace TVA.IO
                 LoadSettings();                             // Load settings from the config file.
                 m_recordBuffer = new byte[GetRecordSize()]; // Create buffer for reading records.
                 m_initialized = true;                       // Initialize only once.
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations before the file properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="BeginInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the file is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void BeginInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    // Nothing needs to be done before component is initialized.
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
-            }
-        }
-
-        /// <summary>
-        /// Performs necessary operations after the file properties are initialized.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="EndInit()"/> should never be called by user-code directly. This method exists solely for use 
-        /// by the designer if the file is consumed through the designer surface of the IDE.
-        /// </remarks>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public void EndInit()
-        {
-            if (!DesignMode)
-            {
-                try
-                {
-                    Initialize();
-                }
-                catch (Exception)
-                {
-                    // Prevent the IDE from crashing when component is in design mode.
-                }
             }
         }
 
@@ -1106,7 +1044,8 @@ namespace TVA.IO
                 m_fileData = new FileStream(m_fileName, FileMode.OpenOrCreate, m_fileAccessMode, FileShare.ReadWrite);
 
                 // Load records into memory if specified to do so.
-                if (m_loadOnOpen) Load();
+                if (m_loadOnOpen) 
+                    Load();
 
                 // Watch the file for any modifications made to the file on disk.
                 m_fileWatcher.Path = FilePath.GetDirectoryName(m_fileName);
@@ -1303,7 +1242,7 @@ namespace TVA.IO
                         WriteToDisk(recordIndex, record);
                     }
                     else
-                    { 
+                    {
                         // Update in-memory record list.
                         lastRecordIndex = RecordsInMemory;
                         if (recordIndex == lastRecordIndex + 1)
@@ -1449,7 +1388,7 @@ namespace TVA.IO
         /// Releases the unmanaged resources used by the file and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -1484,7 +1423,6 @@ namespace TVA.IO
                 finally
                 {
                     m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
                 }
             }
         }
