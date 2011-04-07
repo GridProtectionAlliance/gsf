@@ -32,6 +32,9 @@
 //       serialized adapter instances.
 //       Updated AdapterLoadException event to not provide the adapter's type since it might not be 
 //       available when processing serialized adapter instances.
+//  04/05/2011 - Pinal C. Patel
+//       Modified Deserializer class to use TypeName property instead of Type property to get the type 
+//       of the object being deserialized when deserializing from an XML file.
 //
 //*******************************************************************************************************
 
@@ -442,7 +445,7 @@ namespace TVA.Adapters
                 {
                     // Attempt XML deserialization.
                     XDocument xml = XDocument.Parse(File.ReadAllText(adapterFile));
-                    XElement type = xml.Root.Element("Type");
+                    XElement type = xml.Root.Element("TypeName");
                     if (type != null)
                     {
                         // Type element required for looking up the adapter's type.
@@ -451,7 +454,7 @@ namespace TVA.Adapters
                     }
                     else
                     {
-                        throw new InvalidOperationException("Type element is missing in the XML");
+                        throw new InvalidOperationException("TypeName element is missing in the XML");
                     }
                 }
                 else
@@ -1053,7 +1056,7 @@ namespace TVA.Adapters
                 // Add adapter and notify via event.
                 lock (m_adapters)
                 {
-                    int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.File == adapterFile);
+                    int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.HostFile == adapterFile);
                     if (adapterIndex < 0)
                         m_adapters.Add(adapter);    // Add adapter.
                     else
@@ -1335,7 +1338,7 @@ namespace TVA.Adapters
         private static string GetAdapterFilePath(T adapter)
         {
             if (adapter != null)
-                return adapter.File;
+                return adapter.HostFile;
             else
                 return null;
         }
@@ -1344,7 +1347,7 @@ namespace TVA.Adapters
         {
             if (adapter != null)
             {
-                adapter.File = adapterFile;
+                adapter.HostFile = adapterFile;
                 return true;
             }
             else
@@ -1398,7 +1401,7 @@ namespace TVA.Adapters
                     // Remove loaded adapter.
                     lock (m_adapters)
                     {
-                        int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.File == e.FullPath);
+                        int adapterIndex = m_adapters.IndexOf(currentAdapter => currentAdapter.HostFile == e.FullPath);
                         if (adapterIndex >= 0)
                             m_adapters.RemoveAt(adapterIndex);
                     }

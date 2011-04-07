@@ -243,6 +243,7 @@
 using System;
 using System.IdentityModel.Policy;
 using System.ServiceModel;
+using TVA.Adapters;
 using TVA.Configuration;
 
 namespace TVA.Services.ServiceModel
@@ -251,7 +252,7 @@ namespace TVA.Services.ServiceModel
     /// Defines a web service that can send and receive data over REST (Representational State Transfer) interface.
     /// </summary>
     [ServiceContract()]
-    public interface ISelfHostingService : ISupportLifecycle, IPersistSettings
+    public interface ISelfHostingService : IAdapter, ISupportLifecycle, IPersistSettings
     {
         #region [ Members ]
 

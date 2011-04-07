@@ -20,6 +20,9 @@
 //       Added StatusUpdate and Disposed events.
 //       Added Type and File properties to support serialized adapter instances.
 //       Added attributes to fields and properties to enable serialization of derived type instances.
+//  04/05/2011 - Pinal C. Patel
+//       Changed properties Type to TypeName and File to HostFile to avoid naming conflict.
+//       Modified Name property to use the file name (no extension) from HostFile property if available.
 //
 //*******************************************************************************************************
 
@@ -244,6 +247,7 @@ using System.ComponentModel;
 using System.Configuration;
 using System.Text;
 using System.Xml.Serialization;
+using TVA.IO;
 
 namespace TVA.Adapters
 {
@@ -261,7 +265,7 @@ namespace TVA.Adapters
         [NonSerialized()]
         private DateTime m_created;
         [NonSerialized()]
-        private string m_file;
+        private string m_hostFile;
         [NonSerialized()]
         private bool m_persistSettings;
         [NonSerialized()]
@@ -315,13 +319,13 @@ namespace TVA.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the text representation of the <see cref="Adapter"/>'s <see cref="Type"/>.
+        /// Gets or sets the text representation of the <see cref="Adapter"/>'s <see cref="TypeName"/>.
         /// </summary>
         /// <remarks>
-        /// This can be used for looking up the <see cref="Type"/> of the <see cref="Adapter"/> when deserializing it using <see cref="XmlSerializer"/>.
+        /// This can be used for looking up the <see cref="TypeName"/> of the <see cref="Adapter"/> when deserializing it using <see cref="XmlSerializer"/>.
         /// </remarks>
         [Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual string Type
+        public virtual string TypeName
         { 
             get
             {
@@ -341,15 +345,15 @@ namespace TVA.Adapters
         /// This can be used to update the <see cref="Adapter"/> when changes are made to the file where it is housed.
         /// </remarks>
         [XmlIgnore(), Browsable(false), EditorBrowsable(EditorBrowsableState.Never), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual string File 
+        public virtual string HostFile 
         { 
             get
             {
-                return m_file;
+                return m_hostFile;
             }
             set
             {
-                m_file = value;
+                m_hostFile = value;
             }
         }
 
@@ -444,7 +448,10 @@ namespace TVA.Adapters
         {
             get
             {
-                return m_settingsCategory;
+                if (string.IsNullOrEmpty(m_hostFile))
+                    return m_settingsCategory;
+                else
+                    return FilePath.GetFileNameWithoutExtension(m_hostFile);
             }
         }
 

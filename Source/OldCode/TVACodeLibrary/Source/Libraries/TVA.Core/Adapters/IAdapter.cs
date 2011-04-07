@@ -13,6 +13,8 @@
 //  03/08/2011 - Pinal C. Patel
 //       Added StatusUpdate and Disposed events.
 //       Added Type and File properties to support serialized adapter instances.
+//  04/05/2011 - Pinal C. Patel
+//       Changed properties Type to TypeName and File to HostFile to avoid naming conflict.
 //
 //*******************************************************************************************************
 
@@ -265,14 +267,14 @@ namespace TVA.Adapters
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the text representation of the <see cref="IAdapter"/>'s <see cref="Type"/>.
+        /// Gets or sets the text representation of the <see cref="IAdapter"/>'s <see cref="TypeName"/>.
         /// </summary>
-        string Type { get; set; }
+        string TypeName { get; set; }
 
         /// <summary>
         /// Gets or sets the path to the file where the <see cref="IAdapter"/> is housed.
         /// </summary>
-        string File { get; set; }
+        string HostFile { get; set; }
 
         /// <summary>
         /// Gets the <see cref="AppDomain"/> in which the <see cref="IAdapter"/> is executing.

@@ -20,6 +20,9 @@
 //       Edited Code Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/06/2011 - Pinal C. Patel
+//       Modified GetString() method to not check for the presence of Serializable attribute on the 
+//       object being serialized since this is not required by the XmlSerializer.
 //
 //*******************************************************************************************************
 
@@ -386,12 +389,8 @@ namespace TVA
         public static string GetString(object serializableObject)
         {
             StringWriter serializedObject = new StringWriter();
-
-            if (serializableObject.GetType().IsSerializable)
-            {
-                XmlSerializer serializer = new XmlSerializer(serializableObject.GetType());
-                serializer.Serialize(serializedObject, serializableObject);
-            }
+            XmlSerializer serializer = new XmlSerializer(serializableObject.GetType());
+            serializer.Serialize(serializedObject, serializableObject);
 
             return serializedObject.ToString();
         }
