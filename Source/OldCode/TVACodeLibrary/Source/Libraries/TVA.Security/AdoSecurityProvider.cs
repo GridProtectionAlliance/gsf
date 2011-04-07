@@ -411,7 +411,7 @@ namespace TVA.Security
                 DataRow userDataRow = null;
                 string groupName, roleName;
 
-                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
+                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
                 {
                     if (dbConnection == null)
                         return false;
@@ -593,7 +593,7 @@ namespace TVA.Security
                 if (!Regex.IsMatch(newPassword, PasswordRequirementRegex))
                     throw new SecurityException(PasswordRequirementError);
 
-                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
+                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
                 {
                     if (dbConnection == null)
                         return false;
@@ -653,7 +653,7 @@ namespace TVA.Security
                 if (!UserData.IsDefined)
                     return false;
 
-                using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
+                using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
                 {
                     IDbCommand command = dbConnection.CreateCommand();
                     command.CommandType = CommandType.Text;
@@ -691,7 +691,7 @@ namespace TVA.Security
             {
                 try
                 {
-                    using (IDbConnection dbConnection = (new DataConnection(SettingsCategory)).Connection)
+                    using (IDbConnection dbConnection = (new AdoDataConnection(SettingsCategory)).Connection)
                     {
                         IDbCommand command = dbConnection.CreateCommand();
                         command.CommandType = CommandType.Text;

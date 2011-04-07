@@ -127,7 +127,7 @@
     <Compile Include="Console\Arguments.cs" />
     <Compile Include="Console\Events.cs" />
     <Compile Include="Console\NamespaceDoc.cs" />
-    <Compile Include="Data\DataConnection.cs" />
+    <Compile Include="Data\AdoDataConnection.cs" />
     <Compile Include="Data\DataExtensions.cs" />
     <Compile Include="Data\NamespaceDoc.cs" />
     <Compile Include="DateTimeExtensions.cs" />

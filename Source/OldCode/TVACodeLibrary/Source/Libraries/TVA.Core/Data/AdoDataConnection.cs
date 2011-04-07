@@ -1,5 +1,5 @@
 ﻿//*******************************************************************************************************
-//  DataConnection.cs - Gbtc
+//  AdoDataConnection.cs - Gbtc
 //
 //  Tennessee Valley Authority, 2011
 //  No copyright is claimed pursuant to 17 USC § 105.  All Other Rights Reserved.
@@ -260,7 +260,7 @@ namespace TVA.Data
     /// <summary>
     /// Creates a new <see cref="IDbConnection"/> to a configured ADO.NET data source.
     /// </summary>
-    public class DataConnection : IDisposable
+    public class AdoDataConnection : IDisposable
     {
         #region [ Members ]
 
@@ -273,10 +273,10 @@ namespace TVA.Data
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new <see cref="DataConnection"/>.
+        /// Creates a new <see cref="AdoDataConnection"/>.
         /// </summary>
         /// <param name="settingsCategory">Settings category to use for connection settings.</param>
-        public DataConnection(string settingsCategory)
+        public AdoDataConnection(string settingsCategory)
         {
             // Only need to establish data types and load settings once since they are being loaded from config file
             if (s_connectionType == null || string.IsNullOrEmpty(s_connectionString))
@@ -336,9 +336,9 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Releases the unmanaged resources before the <see cref="DataConnection"/> object is reclaimed by <see cref="GC"/>.
+        /// Releases the unmanaged resources before the <see cref="AdoDataConnection"/> object is reclaimed by <see cref="GC"/>.
         /// </summary>
-        ~DataConnection()
+        ~AdoDataConnection()
         {
             Dispose(false);
         }
@@ -374,7 +374,7 @@ namespace TVA.Data
         #region [ Methods ]
 
         /// <summary>
-        /// Releases all the resources used by the <see cref="DataConnection"/> object.
+        /// Releases all the resources used by the <see cref="AdoDataConnection"/> object.
         /// </summary>
         public void Dispose()
         {
@@ -383,7 +383,7 @@ namespace TVA.Data
         }
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="DataConnection"/> object and optionally releases the managed resources.
+        /// Releases the unmanaged resources used by the <see cref="AdoDataConnection"/> object and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         protected virtual void Dispose(bool disposing)
