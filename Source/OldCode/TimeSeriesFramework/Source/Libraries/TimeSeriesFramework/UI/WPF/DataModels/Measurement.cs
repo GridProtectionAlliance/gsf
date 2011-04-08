@@ -34,374 +34,400 @@ namespace TimeSeriesFramework.UI.DataModels
     /// </summary>
     public class Measurement
     {
-
         #region [ Members ]
-        private string m_SignalID;
-        private int? m_HistorianID;
-        private int m_PointID;
-        private int? m_DeviceID;
-        private string m_PointTag;
-        private string m_AlternateTag;
-        private int m_SignalTypeID;
-        private int? m_PhasorSourceIndex;
-        private string m_SignalReference;
-        private double m_Adder;
-        private double m_Multiplier;
-        private string m_Description;
-        private bool m_Enabled;
-        private string m_HistorianAcronym;
-        private string m_DeviceAcronym;
-        private int? m_FramesPerSecond;
-        private string m_SignalName;
-        private string m_SignalAcronym;
-        private string m_SignalSuffix;
-        private string m_PhasorLabel;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
-        private string m_ID;        
+
+        private string m_signalID;
+        private int? m_historianID;
+        private int m_pointID;
+        private int? m_deviceID;
+        private string m_pointTag;
+        private string m_alternateTag;
+        private int m_signalTypeID;
+        private int? m_phasorSourceIndex;
+        private string m_signalReference;
+        private double m_adder;
+        private double m_multiplier;
+        private string m_description;
+        private bool m_enabled;
+        private string m_historianAcronym;
+        private string m_deviceAcronym;
+        private int? m_framesPerSecond;
+        private string m_signalName;
+        private string m_signalAcronym;
+        private string m_signalSuffix;
+        private string m_phasorLabel;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
+        private string m_ID; 
+       
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal ID
+        /// Gets and sets the current Measurement's Signal ID.
         /// </summary>
         public string SignalID
         {
             get 
             { 
-                return m_SignalID; 
+                return m_signalID; 
             }
             set 
             { 
-                m_SignalID = value; 
+                m_signalID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Historian ID
+        /// Gets and sets the current Measurement's Historian ID.
         /// </summary>
         public int? HistorianID
         {
             get 
             { 
-                return m_HistorianID; 
+                return m_historianID; 
             }
             set 
             { 
-                m_HistorianID = value; 
+                m_historianID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Point ID
+        /// Gets and sets the current Measurement's Point ID.
         /// </summary>
         public int PointID
         {
             get 
             { 
-                return m_PointID; 
+                return m_pointID; 
             }
             set 
             { 
-                m_PointID = value; 
+                m_pointID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Device ID
+        /// Gets and sets the current Measurement's Device ID.
         /// </summary>
         public int? DeviceID
         {
             get 
             { 
-                return m_DeviceID; 
+                return m_deviceID; 
             }
             set 
             { 
-                m_DeviceID = value; 
+                m_deviceID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Point Tag
+        /// Gets and sets the current Measurement's Point Tag.
         /// </summary>
         public string PointTag
         {
             get 
             { 
-                return m_PointTag; 
+                return m_pointTag; 
             }
             set 
             { 
-                m_PointTag = value; 
+                m_pointTag = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Alternate Tag
+        /// Gets and sets the current Measurement's Alternate Tag.
         /// </summary>
         public string AlternateTag
         {
             get 
             { 
-                return m_AlternateTag; 
+                return m_alternateTag; 
             }
             set 
             { 
-                m_AlternateTag = value; 
+                m_alternateTag = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Type ID
+        /// Gets and sets the current Measurement's Signal Type ID.
         /// </summary>
         public int SignalTypeID
         {
             get 
             { 
-                return m_SignalTypeID; 
+                return m_signalTypeID; 
             }
             set 
             { 
-                m_SignalTypeID = value; 
+                m_signalTypeID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Phasor Source Index
+        /// Gets and sets the current Measurement's Phasor Source Index.
         /// </summary>
         public int? PhasorSourceIndex
         {
             get 
             { 
-                return m_PhasorSourceIndex; 
+                return m_phasorSourceIndex; 
             }
             set 
             { 
-                m_PhasorSourceIndex = value; 
+                m_phasorSourceIndex = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Reference
+        /// Gets and sets the current Measurement's Signal Reference.
         /// </summary>
         public string SignalReference
         {
             get 
             { 
-                return m_SignalReference; 
+                return m_signalReference; 
             }
             set 
             { 
-                m_SignalReference = value; 
+                m_signalReference = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Adder
+        /// Gets and sets the current Measurement's Adder.
         /// </summary>
         public double Adder
         {
             get 
             { 
-                return m_Adder; 
+                return m_adder; 
             }
             set 
             { 
-                m_Adder = value; 
+                m_adder = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Multiplier
+        /// Gets and sets the current Measurement's Multiplier.
         /// </summary>
         public double Multiplier
         {
             get 
             { 
-                return m_Multiplier; 
+                return m_multiplier; 
             }
             set 
             { 
-                m_Multiplier = value; 
+                m_multiplier = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Description
+        /// Gets and sets the current Measurement's Description.
         /// </summary>
         public string Description
         {
             get 
             { 
-                return m_Description; 
+                return m_description; 
             }
             set 
             { 
-                m_Description = value; 
+                m_description = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets whether the current Measurement is enabled
+        /// Gets and sets whether the current Measurement is enabled.
         /// </summary>
         public bool Enabled
         {
             get 
             { 
-                return m_Enabled; 
+                return m_enabled; 
             }
             set 
             { 
-                m_Enabled = value; 
+                m_enabled = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Historian Acronym
+        /// Gets and sets the current Measurement's Historian Acronym.
         /// </summary>
         public string HistorianAcronym
         {
             get 
             { 
-                return m_HistorianAcronym; 
+                return m_historianAcronym; 
             }
             set 
             { 
-                m_HistorianAcronym = value; 
+                m_historianAcronym = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Device Acronym
+        /// Gets and sets the current Measurement's Device Acronym.
         /// </summary>
         public string DeviceAcronym
         {
             get 
             { 
-                return m_DeviceAcronym; 
+                return m_deviceAcronym; 
             }
             set 
             { 
-                m_DeviceAcronym = value; 
+                m_deviceAcronym = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Frames Per Second
+        /// Gets and sets the current Measurement's Frames Per Second.
         /// </summary>
         public int? FramesPerSecond
         {
             get 
             { 
-                return m_FramesPerSecond; 
+                return m_framesPerSecond; 
             }
             set 
             { 
-                m_FramesPerSecond = value; 
+                m_framesPerSecond = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Name
+        /// Gets and sets the current Measurement's Signal Name.
         /// </summary>
         public string SignalName
         {
             get 
             { 
-                return m_SignalName; 
+                return m_signalName; 
             }
             set 
             { 
-                m_SignalName = value; 
+                m_signalName = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Acronym
+        /// Gets and sets the current Measurement's Signal Acronym.
         /// </summary>
         public string SignalAcronym
         {
             get 
             { 
-                return m_SignalAcronym; 
+                return m_signalAcronym; 
             }
             set 
             { 
-                m_SignalAcronym = value; 
+                m_signalAcronym = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Suffix
+        /// Gets and sets the current Measurement's Signal Suffix.
         /// </summary>
         public string SignalSuffix
         {
             get 
             { 
-                return m_SignalSuffix; 
+                return m_signalSuffix; 
             }
             set 
             { 
-                m_SignalSuffix = value; 
+                m_signalSuffix = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's Phasor Label
+        /// Gets and sets the current Measurement's Phasor Label.
         /// </summary>
         public string PhasorLabel
         {
             get 
             { 
-                return m_PhasorLabel; 
+                return m_phasorLabel; 
             }
             set 
             { 
-                m_PhasorLabel = value; 
+                m_phasorLabel = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets when the current Measurement was Created
+        /// Gets and sets when the current Measurement was Created.
         /// </summary>
         public DateTime CreatedOn
         {
             get 
             { 
-                return m_CreatedOn; 
+                return m_createdOn; 
             }
             set 
             { 
-                m_CreatedOn = value; 
+                m_createdOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Measurement was created by
+        /// Gets and sets who the current Measurement was created by.
         /// </summary>
         public string CreatedBy
         {
             get 
             { 
-                return m_CreatedBy; 
+                return m_createdBy; 
             }
             set 
             { 
-                m_CreatedBy = value; 
+                m_createdBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets when the current Measurement updated
+        /// Gets and sets when the current Measurement updated.
         /// </summary>
         public DateTime UpdatedOn
         {
             get 
             { 
-                return m_UpdatedOn; 
+                return m_updatedOn; 
             }
             set 
             { 
-                m_UpdatedOn = value; 
+                m_updatedOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Measurement was updated by
+        /// Gets and sets who the current Measurement was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get 
             { 
-                return m_UpdatedBy; 
+                return m_updatedBy; 
             }
             set 
             { 
-                m_UpdatedBy = value; 
+                m_updatedBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Measurement's ID
+        /// Gets and sets the current Measurement's ID.
         /// </summary>
         public string ID
         {
@@ -414,6 +440,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         } 
+
         #endregion
         
     }

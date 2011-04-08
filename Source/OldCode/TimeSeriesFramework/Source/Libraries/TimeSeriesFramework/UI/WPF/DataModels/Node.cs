@@ -32,37 +32,34 @@ namespace TimeSeriesFramework.UI.DataModels
     /// Creates a new object that represents a Node
     /// </summary>
     public class Node
-    {
-
-        
+    {        
         #region [ Members ]
+
         private string m_ID;
-        private string m_Name;
-        private int? m_CompanyID;
-        private decimal? m_Longitude;
-        private decimal? m_Latitude;
-        private string m_Description;
-        private string m_Image;
-        private bool m_Master;
-        private int m_LoadOrder;
-        private bool m_Enabled;
-        private string m_TimeSeriesDataServiceUrl;
-        private string m_RemoteStatusServiceUrl;
-        private string m_RealTimeStatisticServiceUrl;
-        private string m_CompanyName;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-
-
-        private string m_UpdatedBy;
-
+        private string m_name;
+        private int? m_companyID;
+        private decimal? m_longitude;
+        private decimal? m_latitude;
+        private string m_description;
+        private string m_image;
+        private bool m_master;
+        private int m_loadOrder;
+        private bool m_enabled;
+        private string m_timeSeriesDataServiceUrl;
+        private string m_remoteStatusServiceUrl;
+        private string m_realTimeStatisticServiceUrl;
+        private string m_companyName;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
         
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets and sets the current Node's ID
+        /// Gets and sets the current Node's ID.
         /// </summary>
         public string ID
         {
@@ -75,245 +72,262 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Name
+        /// Gets and sets the current Node's Name.
         /// </summary>
         public string Name
         {
             get 
             { 
-                return m_Name; 
+                return m_name; 
             }
             set 
             { 
-                m_Name = value; 
+                m_name = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Comapny ID
+        /// Gets and sets the current Node's Comapny ID.
         /// </summary>
         public int? CompanyID
         {
             get 
             { 
-                return m_CompanyID; 
+                return m_companyID; 
             }
             set 
             {
-                m_CompanyID = value; 
+                m_companyID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Longitude
+        /// Gets and sets the current Node's Longitude.
         /// </summary>
         public decimal? Longitude
         {
             get 
             { 
-                return m_Longitude; 
+                return m_longitude; 
             }
             set 
             { 
-                m_Longitude = value; 
+                m_longitude = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Latitude
+        /// Gets and sets the current Node's Latitude.
         /// </summary>
         public decimal? Latitude
         {
             get 
             { 
-                return m_Latitude; 
+                return m_latitude; 
             }
             set 
             { 
-                m_Latitude = value; 
+                m_latitude = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Description
+        /// Gets and sets the current Node's Description.
         /// </summary>
         public string Description
         {
             get 
             { 
-                return m_Description; 
+                return m_description; 
             }
             set 
             { 
-                m_Description = value; 
+                m_description = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Image
+        /// Gets and sets the current Node's Image.
         /// </summary>
         public string Image
         {
             get 
             { 
-                return m_Image; 
+                return m_image; 
             }
             set 
             {
-                m_Image = value; 
+                m_image = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets whether the current node is the master Node
+        /// Gets and sets whether the current node is the master Node.
         /// </summary>
         public bool Master
         {
             get 
             { 
-                return m_Master; 
+                return m_master; 
             }
             set 
             {
-                m_Master = value; 
+                m_master = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Load Order
+        /// Gets and sets the current Node's Load Order.
         /// </summary>
         public int LoadOrder
         {
             get 
             { 
-                return m_LoadOrder; 
+                return m_loadOrder; 
             }
             set 
             { 
-                m_LoadOrder = value; 
+                m_loadOrder = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets whether the current Node is enabled
+        /// Gets and sets whether the current Node is enabled.
         /// </summary>
         public bool Enabled
         {
             get 
             { 
-                return m_Enabled; 
+                return m_enabled; 
             }
             set 
             { 
-                m_Enabled = value; 
+                m_enabled = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Time Series Data Service URL
+        /// Gets and sets the current Node's Time Series Data Service URL.
         /// </summary>
         public string TimeSeriesDataServiceUrl
         {
             get 
             { 
-                return m_TimeSeriesDataServiceUrl; 
+                return m_timeSeriesDataServiceUrl; 
             }
             set 
             { 
-                m_TimeSeriesDataServiceUrl = value; 
+                m_timeSeriesDataServiceUrl = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Remote Status Service URL
+        /// Gets and sets the current Node's Remote Status Service URL.
         /// </summary>
         public string RemoteStatusServiceUrl
         {
             get 
             { 
-                return m_RemoteStatusServiceUrl; 
+                return m_remoteStatusServiceUrl; 
             }
             set 
             { 
-                m_RemoteStatusServiceUrl = value; 
+                m_remoteStatusServiceUrl = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Real Time Statistic Service URL
+        /// Gets and sets the current Node's Real Time Statistic Service URL.
         /// </summary>
         public string RealTimeStatisticServiceUrl
         {
             get 
             { 
-                return m_RealTimeStatisticServiceUrl; 
+                return m_realTimeStatisticServiceUrl; 
             }
             set 
             { 
-                m_RealTimeStatisticServiceUrl = value; 
+                m_realTimeStatisticServiceUrl = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Node's Company Name
+        /// Gets and sets the current Node's Company Name.
         /// </summary>
         public string CompanyName
         {
             get 
             { 
-                return m_CompanyName; 
+                return m_companyName; 
             }
             set 
             {
-                m_CompanyName = value; 
+                m_companyName = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time the current Node was created on
+        /// Gets and sets the Date and Time the current Node was created on.
         /// </summary>
         public DateTime CreatedOn
         {
             get 
             { 
-                return m_CreatedOn; 
+                return m_createdOn; 
             }
             set 
             { 
-                m_CreatedOn = value; 
+                m_createdOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Node was created by
+        /// Gets and sets who the current Node was created by.
         /// </summary>
         public string CreatedBy
         {
             get 
             { 
-                return m_CreatedBy; 
+                return m_createdBy; 
             }
             set 
             { 
-                m_CreatedBy = value; 
+                m_createdBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time when the current Node was updated on
+        /// Gets and sets the Date and Time when the current Node was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
             get 
             { 
-                return m_UpdatedOn; 
+                return m_updatedOn; 
             }
             set 
             { 
-                m_UpdatedOn = value; 
+                m_updatedOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Node was updated by
+        /// Gets and sets who the current Node was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get 
             { 
-                return m_UpdatedBy; 
+                return m_updatedBy; 
             }
             set 
             { 
-                m_UpdatedBy = value; 
+                m_updatedBy = value; 
             }
         }
-        #endregion
-        
+
+        #endregion        
     }
 }

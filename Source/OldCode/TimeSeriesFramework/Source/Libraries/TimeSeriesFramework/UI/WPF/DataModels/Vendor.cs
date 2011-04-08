@@ -33,26 +33,26 @@ namespace TimeSeriesFramework.UI.DataModels
     /// </summary>
     public class Vendor
     {
-
         
         #region [ Members ]
-        private int m_ID;
-        private string m_Acronym;
-        private string m_Name;
-        private string m_PhoneNumber;
-        private string m_ContactEmail;
-        private string m_URL;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
 
+        private int m_ID;
+        private string m_acronym;
+        private string m_name;
+        private string m_phoneNumber;
+        private string m_contactEmail;
+        private string m_URL;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
         
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets and sets the Vendor ID
+        /// Gets and sets the Vendor ID.
         /// </summary>
         public int ID
         {
@@ -65,64 +65,69 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Vendor Acronym
+        /// Gets and sets the Vendor Acronym.
         /// </summary>
         public string Acronym
         {
             get 
             { 
-                return m_Acronym; 
+                return m_acronym; 
             }
             set 
             { 
-                m_Acronym = value; 
+                m_acronym = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Vendor Name
+        /// Gets and sets the Vendor Name.
         /// </summary>
         public string Name
         {
             get 
             { 
-                return m_Name; 
+                return m_name; 
             }
             set 
             { 
-                m_Name = value; 
+                m_name = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets Vendor Phone Number
+        /// Gets and sets Vendor Phone Number.
         /// </summary>
         public string PhoneNumber
         {
             get 
             { 
-                return m_PhoneNumber; 
+                return m_phoneNumber; 
             }
             set 
             { 
-                m_PhoneNumber = value; 
+                m_phoneNumber = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Vendor Contact Email
+        /// Gets and sets the Vendor Contact Email.
         /// </summary>
         public string ContactEmail
         {
             get 
             { 
-                return m_ContactEmail; 
+                return m_contactEmail; 
             }
             set 
             { 
-                m_ContactEmail = value; 
+                m_contactEmail = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Vendor URL
+        /// Gets and sets the Vendor URL.
         /// </summary>
         public string URL
         {
@@ -135,60 +140,64 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_URL = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time this Vendor was created on
+        /// Gets and sets the Date and Time this Vendor was created on.
         /// </summary>
         public DateTime CreatedOn
         {
             get 
             { 
-                return m_CreatedOn; 
+                return m_createdOn; 
             }
             set 
             { 
-                m_CreatedOn = value; 
+                m_createdOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who this Vendor was created by
+        /// Gets and sets who this Vendor was created by.
         /// </summary>
         public string CreatedBy
         {
             get 
             { 
-                return m_CreatedBy; 
+                return m_createdBy; 
             }
             set 
             { 
-                m_CreatedBy = value; 
+                m_createdBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date Time this Vendor was updated on
+        /// Gets and sets the Date Time this Vendor was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
             get 
             { 
-                return m_UpdatedOn; 
+                return m_updatedOn; 
             }
             set 
             { 
-                m_UpdatedOn = value; 
+                m_updatedOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who this Vendor was updated by
+        /// Gets and sets who this Vendor was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get 
             { 
-                return m_UpdatedBy; 
+                return m_updatedBy; 
             }
             set 
             {
-                m_UpdatedBy = value; 
+                m_updatedBy = value; 
             }
         }
 

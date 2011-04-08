@@ -36,27 +36,29 @@ namespace TimeSeriesFramework.UI.DataModels
     {
 
         #region [ Members ]
+
         private int m_ID;
-        private int m_DeviceID;
-        private string m_Label;
-        private string m_Type;
-        private string m_Phase;
-        private int? m_DestinationPhasorID;
-        private int m_SourceIndex;
-        private string m_DestinationPhasorLabel;
-        private string m_DeviceAcronym;
-        private string m_PhasorType;
-        private string m_PhaseType;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
+        private int m_deviceID;
+        private string m_label;
+        private string m_type;
+        private string m_phase;
+        private int? m_destinationPhasorID;
+        private int m_sourceIndex;
+        private string m_destinationPhasorLabel;
+        private string m_deviceAcronym;
+        private string m_phasorType;
+        private string m_phaseType;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
         
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets and sets the Phasor ID
+        /// Gets and sets the Phasor ID.
         /// </summary>
         public int ID
         {
@@ -69,186 +71,214 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Phasor DeviceID
+        /// Gets and sets the Phasor DeviceID.
         /// </summary>
         public int DeviceID
         {
             get 
             { 
-                return m_DeviceID; 
+                return m_deviceID; 
             }
             set 
             { 
-                m_DeviceID = value; 
+                m_deviceID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Phasor Label
+        /// Gets and sets the Phasor Label.
         /// </summary>
         public string Label
         {
             get 
             { 
-                return m_Label; 
+                return m_label; 
             }
             set 
             { 
-                m_Label = value; 
+                m_label = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Phasor Type
+        /// Gets and sets the Phasor Type.
         /// </summary>
         public string Type
         {
             get 
             { 
-                return m_Type; 
+                return m_type; 
             }
             set 
             { 
-                m_Type = value; 
+                m_type = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Phase of the current Phasor
+        /// Gets and sets the Phase of the current Phasor.
         /// </summary>
         public string Phase
         {
             get 
             { 
-                return m_Phase; 
+                return m_phase; 
             }
             set 
             { 
-                m_Phase = value; 
+                m_phase = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets Destination Phasor ID for the current Phasor
+        /// Gets and sets Destination Phasor ID for the current Phasor.
         /// </summary>
         public int? DestinationPhasorID
         {
             get 
             { 
-                return m_DestinationPhasorID; 
+                return m_destinationPhasorID; 
             }
             set 
             {
-                m_DestinationPhasorID = value; 
+                m_destinationPhasorID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets Source Index for the current Phasor
+        /// Gets and sets Source Index for the current Phasor.
         /// </summary>
         public int SourceIndex
         {
             get 
             { 
-                return m_SourceIndex; 
+                return m_sourceIndex; 
             }
             set 
             {
-                m_SourceIndex = value; 
+                m_sourceIndex = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets Destination Phasor Label for the current Phasor
+        /// Gets and sets Destination Phasor Label for the current Phasor.
         /// </summary>
         public string DestinationPhasorLabel
         {
             get 
             { 
-                return m_DestinationPhasorLabel; 
+                return m_destinationPhasorLabel; 
             }
             set 
             { 
-                m_DestinationPhasorLabel = value; 
+                m_destinationPhasorLabel = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Device Acronym for the current Phasor
+        /// Gets and sets the Device Acronym for the current Phasor.
         /// </summary>
         public string DeviceAcronym
         {
             get 
             { 
-                return m_DeviceAcronym; 
+                return m_deviceAcronym; 
             }
             set 
             { 
-                m_DeviceAcronym = value; 
+                m_deviceAcronym = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets Phasor Type for the current Phasor
+        /// Gets and sets Phasor Type for the current Phasor.
         /// </summary>
         public string PhasorType
         {
             get 
             { 
-                return m_PhasorType; 
+                return m_phasorType; 
             }
             set 
             { 
-                m_PhasorType = value; 
+                m_phasorType = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time the current Phasor was created on
+        /// Gets and sets Phase Type for the current Phasor.
+        /// </summary>
+        public string PhaseType
+        {
+            get
+            {
+                return m_phaseType;
+            }
+            set
+            {
+                m_phaseType = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets and sets the Date and Time the current Phasor was created on.
         /// </summary>
         public DateTime CreatedOn
         {
             get 
             { 
-                return m_CreatedOn; 
+                return m_createdOn; 
             }
             set 
             { 
-                m_CreatedOn = value; 
+                m_createdOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Phasor was created by
+        /// Gets and sets who the current Phasor was created by.
         /// </summary>
         public string CreatedBy
         {
             get 
             { 
-                return m_CreatedBy; 
+                return m_createdBy; 
             }
             set 
             { 
-                m_CreatedBy = value; 
+                m_createdBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time the current Phasor was updated on
+        /// Gets and sets the Date and Time the current Phasor was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
             get 
             { 
-                return m_UpdatedOn; 
+                return m_updatedOn; 
             }
             set 
             { 
-                m_UpdatedOn = value; 
+                m_updatedOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Phasor was updated by
+        /// Gets and sets who the current Phasor was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get 
             { 
-                return m_UpdatedBy; 
+                return m_updatedBy; 
             }
             set 
             { 
-                m_UpdatedBy = value; 
+                m_updatedBy = value; 
             }
         }
 

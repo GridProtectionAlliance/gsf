@@ -36,42 +36,46 @@ namespace TimeSeriesFramework.UI.DataModels
     {
 
         #region [ Members ]
-        private string m_NodeId;
+
+        private string m_nodeId;
         private int m_ID;
-        private string m_Acronym;
-        private string m_Name;
-        private string m_AssemblyName;
-        private string m_TypeName;
-        private string m_ConnectionString;
-        private bool m_IsLocal;
-        private string m_Description;
-        private int m_LoadOrder;
-        private bool m_Enabled;
-        private int m_MeasurementReportingInterval;
-        private string m_NodeName;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
+        private string m_acronym;
+        private string m_name;
+        private string m_assemblyName;
+        private string m_typeName;
+        private string m_connectionString;
+        private bool m_isLocal;
+        private string m_description;
+        private int m_loadOrder;
+        private bool m_enabled;
+        private int m_measurementReportingInterval;
+        private string m_nodeName;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
+
         #endregion
 
         #region [ Properties ]
+
         /// <summary>
-        /// Gets and sets the current Historian's Node ID
+        /// Gets and sets the current Historian's Node ID.
         /// </summary>
         public string NodeId
         {
             get
             {
-                return m_NodeId;
+                return m_nodeId;
             }
             set
             {
-                m_NodeId = value;
+                m_nodeId = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's ID
+        /// Gets and sets the current Historian's ID.
         /// </summary>
         public int ID
         {
@@ -84,214 +88,229 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Acronym
+        /// Gets and sets the current Historian's Acronym.
         /// </summary>
         public string Acronym
         {
             get
             {
-                return m_Acronym;
+                return m_acronym;
             }
             set
             {
-                m_Acronym = value;
+                m_acronym = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Name
+        /// Gets and sets the current Historian's Name.
         /// </summary>
         public string Name
         {
             get
             {
-                return m_Name;
+                return m_name;
             }
             set
             {
-                m_Name = value;
+                m_name = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Assembly Name
+        /// Gets and sets the current Historian's Assembly Name.
         /// </summary>
         public string AssemblyName
         {
             get
             {
-                return m_AssemblyName;
+                return m_assemblyName;
             }
             set
             {
-                m_AssemblyName = value;
+                m_assemblyName = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Type Name
+        /// Gets and sets the current Historian's Type Name.
         /// </summary>
         public string TypeName
         {
             get
             {
-                return m_TypeName;
+                return m_typeName;
             }
             set
             {
-                m_TypeName = value;
+                m_typeName = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Connection String
+        /// Gets and sets the current Historian's Connection String.
         /// </summary>
         public string ConnectionString
         {
             get
             {
-                return m_ConnectionString;
+                return m_connectionString;
             }
             set
             {
-                m_ConnectionString = value;
+                m_connectionString = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets whether the current Historian is local
+        /// Gets and sets whether the current Historian is local.
         /// </summary>
         public bool IsLocal
         {
             get
             {
-                return m_IsLocal;
+                return m_isLocal;
             }
             set
             {
-                m_IsLocal = value;
+                m_isLocal = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Description
+        /// Gets and sets the current Historian's Description.
         /// </summary>
         public string Description
         {
             get
             {
-                return m_Description;
+                return m_description;
             }
             set
             {
-                m_Description = value;
+                m_description = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Load Order
+        /// Gets and sets the current Historian's Load Order.
         /// </summary>
         public int LoadOrder
         {
             get
             {
-                return m_LoadOrder;
+                return m_loadOrder;
             }
             set
             {
-                m_LoadOrder = value;
+                m_loadOrder = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets whether the current Historian is enabled
+        /// Gets and sets whether the current Historian is enabled.
         /// </summary>
         public bool Enabled
         {
             get
             {
-                return m_Enabled;
+                return m_enabled;
             }
             set
             {
-                m_Enabled = value;
+                m_enabled = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Measurement Reporting Interval
+        /// Gets and sets the current Historian's Measurement Reporting Interval.
         /// </summary>
         public int MeasurementReportingInterval
         {
             get
             {
-                return m_MeasurementReportingInterval;
+                return m_measurementReportingInterval;
             }
             set
             {
-                m_MeasurementReportingInterval = value;
+                m_measurementReportingInterval = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets the current Historian's Node Name
+        /// Gets and sets the current Historian's Node Name.
         /// </summary>
         public string NodeName
         {
             get
             {
-                return m_NodeName;
+                return m_nodeName;
             }
             set
             {
-                m_NodeName = value;
+                m_nodeName = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets when the current Historian was created
+        /// Gets and sets when the current Historian was created.
         /// </summary>
         public DateTime CreatedOn
         {
             get
             {
-                return m_CreatedOn;
+                return m_createdOn;
             }
             set
             {
-                m_CreatedOn = value;
+                m_createdOn = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Historian was created by
+        /// Gets and sets who the current Historian was created by.
         /// </summary>
         public string CreatedBy
         {
             get
             {
-                return m_CreatedBy;
+                return m_createdBy;
             }
             set
             {
-                m_CreatedBy = value;
+                m_createdBy = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets when the current Historian was updated
+        /// Gets and sets when the current Historian was updated.
         /// </summary>
         public DateTime UpdatedOn
         {
             get
             {
-                return m_UpdatedOn;
+                return m_updatedOn;
             }
             set
             {
-                m_UpdatedOn = value;
+                m_updatedOn = value;
             }
         }
+
         /// <summary>
-        /// Gets and sets who the current Historian was updated by
+        /// Gets and sets who the current Historian was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get
             {
-                return m_UpdatedBy;
+                return m_updatedBy;
             }
             set
             {
-                m_UpdatedBy = value;
+                m_updatedBy = value;
             }
         }
 

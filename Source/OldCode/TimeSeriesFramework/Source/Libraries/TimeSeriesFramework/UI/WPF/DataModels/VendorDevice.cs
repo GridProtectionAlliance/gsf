@@ -35,22 +35,24 @@ namespace TimeSeriesFramework.UI.DataModels
     {
 
         #region [ Members ]
+
         private int m_ID;
-        private int m_VendorID;
-        private string m_Name;
-        private string m_Description;
+        private int m_vendorID;
+        private string m_name;
+        private string m_description;
         private string m_URL;
-        private string m_VendorName;
-        private DateTime m_CreatedOn;
-        private string m_CreatedBy;
+        private string m_vendorName;
+        private DateTime m_createdOn;
+        private string m_createdBy;
         private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;        
+        private string m_updatedBy;
+        
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the VendorDevice's ID
+        /// Gets and sets the VendorDevice's ID.
         /// </summary>
         public int ID
         {
@@ -63,50 +65,54 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the VendorID
+        /// Gets and sets the VendorID.
         /// </summary>
         public int VendorID
         {
             get 
             { 
-                return m_VendorID; 
+                return m_vendorID; 
             }
             set 
             { 
-                m_VendorID = value; 
+                m_vendorID = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Name
+        /// Gets and sets the Name.
         /// </summary>
         public string Name
         {
             get 
             { 
-                return m_Name; 
+                return m_name; 
             }
             set 
             { 
-                m_Name = value; 
+                m_name = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Description
+        /// Gets and sets the Description.
         /// </summary>
         public string Description
         {
             get 
             { 
-                return m_Description; 
+                return m_description; 
             }
             set 
             { 
-                m_Description = value; 
+                m_description = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the URL
+        /// Gets and sets the URL.
         /// </summary>
         public string URL
         {
@@ -119,50 +125,54 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_URL = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the VendorName
+        /// Gets and sets the VendorName.
         /// </summary>
         public string VendorName
         {
             get 
             { 
-                return m_VendorName; 
+                return m_vendorName; 
             }
             set 
             { 
-                m_VendorName = value; 
+                m_vendorName = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time this VendorDevice was created
+        /// Gets and sets the Date and Time this VendorDevice was created.
         /// </summary>
         public DateTime CreatedOn
         {
             get 
             { 
-                return m_CreatedOn; 
+                return m_createdOn; 
             }
             set 
             { 
-                m_CreatedOn = value; 
+                m_createdOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who this VendorDevice was created by
+        /// Gets and sets who this VendorDevice was created by.
         /// </summary>
         public string CreatedBy
         {
             get 
             { 
-                return m_CreatedBy; 
+                return m_createdBy; 
             }
             set 
             { 
-                m_CreatedBy = value; 
+                m_createdBy = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets the Date and Time this VendorDevice was updated
+        /// Gets and sets the Date and Time this VendorDevice was updated.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -175,18 +185,19 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value; 
             }
         }
+
         /// <summary>
-        /// Gets and sets who this VenderDevice was updated by
+        /// Gets and sets who this VenderDevice was updated by.
         /// </summary>
         public string UpdatedBy
         {
             get 
             { 
-                return m_UpdatedBy; 
+                return m_updatedBy; 
             }
             set 
             { 
-                m_UpdatedBy = value; 
+                m_updatedBy = value; 
             }
         }
 
