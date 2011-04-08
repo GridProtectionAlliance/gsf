@@ -62,6 +62,12 @@
     <Compile Include="CommonFunctions.cs" />
     <Compile Include="DataModelBase.cs" />
     <Compile Include="DataModels\Company.cs" />
+    <Compile Include="DataModels\Historian.cs" />
+    <Compile Include="DataModels\Measurement.cs" />
+    <Compile Include="DataModels\Node.cs" />
+    <Compile Include="DataModels\Phasor.cs" />
+    <Compile Include="DataModels\Vendor.cs" />
+    <Compile Include="DataModels\VendorDevice.cs" />
     <Compile Include="IViewModel.cs" />
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
