@@ -28,7 +28,11 @@ using System.Text;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-    class Measurement
+
+    /// <summary>
+    /// Creates a new object that represents a Measurement
+    /// </summary>
+    public class Measurement
     {
 
         #region [ Members ]
@@ -69,11 +73,10 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_ID;        
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal ID
+        /// </summary>
         public string SignalID
         {
             get 
@@ -85,7 +88,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Historian ID
+        /// </summary>
         public int? HistorianID
         {
             get 
@@ -97,7 +102,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_HistorianID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Point ID
+        /// </summary>
         public int PointID
         {
             get 
@@ -109,7 +116,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_PointID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Device ID
+        /// </summary>
         public int? DeviceID
         {
             get 
@@ -121,7 +130,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DeviceID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Point Tag
+        /// </summary>
         public string PointTag
         {
             get 
@@ -133,7 +144,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_PointTag = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Alternate Tag
+        /// </summary>
         public string AlternateTag
         {
             get 
@@ -145,7 +158,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_AlternateTag = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal Type ID
+        /// </summary>
         public int SignalTypeID
         {
             get 
@@ -157,7 +172,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalTypeID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Phasor Source Index
+        /// </summary>
         public int? PhasorSourceIndex
         {
             get 
@@ -169,7 +186,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_PhasorSourceIndex = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal Reference
+        /// </summary>
         public string SignalReference
         {
             get 
@@ -181,7 +200,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalReference = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Adder
+        /// </summary>
         public double Adder
         {
             get 
@@ -193,7 +214,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Adder = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Multiplier
+        /// </summary>
         public double Multiplier
         {
             get 
@@ -205,7 +228,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Multiplier = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Description
+        /// </summary>
         public string Description
         {
             get 
@@ -217,7 +242,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Description = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets whether the current Measurement is enabled
+        /// </summary>
         public bool Enabled
         {
             get 
@@ -229,7 +256,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Enabled = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Historian Acronym
+        /// </summary>
         public string HistorianAcronym
         {
             get 
@@ -241,7 +270,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_HistorianAcronym = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Device Acronym
+        /// </summary>
         public string DeviceAcronym
         {
             get 
@@ -253,7 +284,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DeviceAcronym = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Frames Per Second
+        /// </summary>
         public int? FramesPerSecond
         {
             get 
@@ -265,7 +298,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_FramesPerSecond = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal Name
+        /// </summary>
         public string SignalName
         {
             get 
@@ -277,7 +312,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalName = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal Acronym
+        /// </summary>
         public string SignalAcronym
         {
             get 
@@ -289,7 +326,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalAcronym = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Signal Suffix
+        /// </summary>
         public string SignalSuffix
         {
             get 
@@ -301,7 +340,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SignalSuffix = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's Phasor Label
+        /// </summary>
         public string PhasorLabel
         {
             get 
@@ -313,7 +354,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_PhasorLabel = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets when the current Measurement was Created
+        /// </summary>
         public DateTime CreatedOn
         {
             get 
@@ -325,7 +368,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Measurement was created by
+        /// </summary>
         public string CreatedBy
         {
             get 
@@ -337,7 +382,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedBy = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets when the current Measurement updated
+        /// </summary>
         public DateTime UpdatedOn
         {
             get 
@@ -349,7 +396,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Measurement was updated by
+        /// </summary>
         public string UpdatedBy
         {
             get 
@@ -361,7 +410,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedBy = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Measurement's ID
+        /// </summary>
         public string ID
         {
             get 
@@ -373,26 +424,6 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         } 
-        #endregion
-
-        #region [ Methods ]
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
-
         #endregion
         
     }

@@ -28,7 +28,11 @@ using System.Text;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-    class Historian
+
+    /// <summary>
+    /// Creates a new object that represents a Historian
+    /// </summary>
+    public class Historian
     {
 
         #region [ Members ]
@@ -61,12 +65,10 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_UpdatedBy;
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
-
+        /// <summary>
+        /// Gets and sets the current Historian's Node ID
+        /// </summary>
         public string NodeId
         {
             get
@@ -78,7 +80,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_NodeId = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's ID
+        /// </summary>
         public int ID
         {
             get
@@ -90,7 +94,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Acronym
+        /// </summary>
         public string Acronym
         {
             get
@@ -102,7 +108,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Acronym = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Name
+        /// </summary>
         public string Name
         {
             get
@@ -114,7 +122,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Name = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Assembly Name
+        /// </summary>
         public string AssemblyName
         {
             get
@@ -126,7 +136,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_AssemblyName = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Type Name
+        /// </summary>
         public string TypeName
         {
             get
@@ -138,7 +150,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_TypeName = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Connection String
+        /// </summary>
         public string ConnectionString
         {
             get
@@ -150,7 +164,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ConnectionString = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets whether the current Historian is local
+        /// </summary>
         public bool IsLocal
         {
             get
@@ -162,7 +178,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_IsLocal = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Description
+        /// </summary>
         public string Description
         {
             get
@@ -174,7 +192,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Description = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Load Order
+        /// </summary>
         public int LoadOrder
         {
             get
@@ -186,7 +206,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_LoadOrder = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets whether the current Historian is enabled
+        /// </summary>
         public bool Enabled
         {
             get
@@ -198,7 +220,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Enabled = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Measurement Reporting Interval
+        /// </summary>
         public int MeasurementReportingInterval
         {
             get
@@ -210,7 +234,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_MeasurementReportingInterval = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Historian's Node Name
+        /// </summary>
         public string NodeName
         {
             get
@@ -222,7 +248,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_NodeName = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets when the current Historian was created
+        /// </summary>
         public DateTime CreatedOn
         {
             get
@@ -234,7 +262,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedOn = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Historian was created by
+        /// </summary>
         public string CreatedBy
         {
             get
@@ -246,7 +276,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedBy = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets when the current Historian was updated
+        /// </summary>
         public DateTime UpdatedOn
         {
             get
@@ -258,6 +290,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value;
             }
         }
+        /// <summary>
+        /// Gets and sets who the current Historian was updated by
+        /// </summary>
         public string UpdatedBy
         {
             get
@@ -269,26 +304,6 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedBy = value;
             }
         }
-
-        #endregion
-
-        #region [ Methods ]
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
 
         #endregion
         

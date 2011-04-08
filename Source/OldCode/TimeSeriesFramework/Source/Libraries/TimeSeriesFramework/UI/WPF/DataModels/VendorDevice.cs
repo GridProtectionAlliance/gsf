@@ -28,20 +28,13 @@ using System.Text;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-    class VendorDevice
+    /// <summary>
+    /// Creates a new object that represents a VendorDevice
+    /// </summary>
+    public class VendorDevice
     {
 
         #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
         private int m_ID;
         private int m_VendorID;
         private string m_Name;
@@ -51,16 +44,14 @@ namespace TimeSeriesFramework.UI.DataModels
         private DateTime m_CreatedOn;
         private string m_CreatedBy;
         private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
-        
-        #endregion
-
-        #region [ Constructors ]
-
+        private string m_UpdatedBy;        
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets and sets the VendorDevice's ID
+        /// </summary>
         public int ID
         {
             get 
@@ -72,7 +63,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the VendorID
+        /// </summary>
         public int VendorID
         {
             get 
@@ -84,7 +77,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_VendorID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Name
+        /// </summary>
         public string Name
         {
             get 
@@ -96,7 +91,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Name = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Description
+        /// </summary>
         public string Description
         {
             get 
@@ -108,7 +105,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Description = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the URL
+        /// </summary>
         public string URL
         {
             get 
@@ -120,7 +119,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_URL = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the VendorName
+        /// </summary>
         public string VendorName
         {
             get 
@@ -132,7 +133,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_VendorName = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Date and Time this VendorDevice was created
+        /// </summary>
         public DateTime CreatedOn
         {
             get 
@@ -144,7 +147,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who this VendorDevice was created by
+        /// </summary>
         public string CreatedBy
         {
             get 
@@ -156,7 +161,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedBy = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Date and Time this VendorDevice was updated
+        /// </summary>
         public DateTime UpdatedOn
         {
             get 
@@ -168,7 +175,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who this VenderDevice was updated by
+        /// </summary>
         public string UpdatedBy
         {
             get 
@@ -180,26 +189,6 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedBy = value; 
             }
         }
-
-        #endregion
-
-        #region [ Methods ]
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
 
         #endregion
         

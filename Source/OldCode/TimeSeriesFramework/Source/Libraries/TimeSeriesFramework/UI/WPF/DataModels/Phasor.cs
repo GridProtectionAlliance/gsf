@@ -28,20 +28,14 @@ using System.Text;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-    class Phasor
+
+    /// <summary>
+    /// Creates a new object that represents a Phasor
+    /// </summary>
+    public class Phasor
     {
 
         #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
         private int m_ID;
         private int m_DeviceID;
         private string m_Label;
@@ -60,12 +54,10 @@ namespace TimeSeriesFramework.UI.DataModels
         
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
-
+        /// <summary>
+        /// Gets and sets the Phasor ID
+        /// </summary>
         public int ID
         {
             get 
@@ -77,7 +69,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Phasor DeviceID
+        /// </summary>
         public int DeviceID
         {
             get 
@@ -89,7 +83,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DeviceID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Phasor Label
+        /// </summary>
         public string Label
         {
             get 
@@ -101,7 +97,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Label = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Phasor Type
+        /// </summary>
         public string Type
         {
             get 
@@ -113,7 +111,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Type = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Phase of the current Phasor
+        /// </summary>
         public string Phase
         {
             get 
@@ -125,7 +125,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Phase = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets Destination Phasor ID for the current Phasor
+        /// </summary>
         public int? DestinationPhasorID
         {
             get 
@@ -137,7 +139,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DestinationPhasorID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets Source Index for the current Phasor
+        /// </summary>
         public int SourceIndex
         {
             get 
@@ -149,7 +153,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_SourceIndex = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets Destination Phasor Label for the current Phasor
+        /// </summary>
         public string DestinationPhasorLabel
         {
             get 
@@ -161,7 +167,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DestinationPhasorLabel = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Device Acronym for the current Phasor
+        /// </summary>
         public string DeviceAcronym
         {
             get 
@@ -173,7 +181,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_DeviceAcronym = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets Phasor Type for the current Phasor
+        /// </summary>
         public string PhasorType
         {
             get 
@@ -185,19 +195,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_PhasorType = value; 
             }
         }
-
-        public string PhaseType
-        {
-            get 
-            { 
-                return m_PhaseType; 
-            }
-            set 
-            { 
-                m_PhaseType = value; 
-            }
-        }
-
+        /// <summary>
+        /// Gets and sets the Date and Time the current Phasor was created on
+        /// </summary>
         public DateTime CreatedOn
         {
             get 
@@ -209,7 +209,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Phasor was created by
+        /// </summary>
         public string CreatedBy
         {
             get 
@@ -221,7 +223,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedBy = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Date and Time the current Phasor was updated on
+        /// </summary>
         public DateTime UpdatedOn
         {
             get 
@@ -233,7 +237,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Phasor was updated by
+        /// </summary>
         public string UpdatedBy
         {
             get 

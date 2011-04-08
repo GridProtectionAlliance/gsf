@@ -28,20 +28,14 @@ using System.Text;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-    class Node
+    /// <summary>
+    /// Creates a new object that represents a Node
+    /// </summary>
+    public class Node
     {
 
+        
         #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
         private string m_ID;
         private string m_Name;
         private int? m_CompanyID;
@@ -71,6 +65,9 @@ namespace TimeSeriesFramework.UI.DataModels
         #endregion
 
         #region [ Properties ]
+        /// <summary>
+        /// Gets and sets the current Node's ID
+        /// </summary>
         public string ID
         {
             get
@@ -82,7 +79,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_ID = value;
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Name
+        /// </summary>
         public string Name
         {
             get 
@@ -94,7 +93,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Name = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Comapny ID
+        /// </summary>
         public int? CompanyID
         {
             get 
@@ -106,7 +107,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CompanyID = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Longitude
+        /// </summary>
         public decimal? Longitude
         {
             get 
@@ -118,7 +121,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Longitude = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Latitude
+        /// </summary>
         public decimal? Latitude
         {
             get 
@@ -130,7 +135,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Latitude = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Description
+        /// </summary>
         public string Description
         {
             get 
@@ -142,7 +149,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Description = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Image
+        /// </summary>
         public string Image
         {
             get 
@@ -154,7 +163,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Image = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets whether the current node is the master Node
+        /// </summary>
         public bool Master
         {
             get 
@@ -166,7 +177,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Master = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Load Order
+        /// </summary>
         public int LoadOrder
         {
             get 
@@ -178,7 +191,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_LoadOrder = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets whether the current Node is enabled
+        /// </summary>
         public bool Enabled
         {
             get 
@@ -190,7 +205,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_Enabled = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Time Series Data Service URL
+        /// </summary>
         public string TimeSeriesDataServiceUrl
         {
             get 
@@ -202,7 +219,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_TimeSeriesDataServiceUrl = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Remote Status Service URL
+        /// </summary>
         public string RemoteStatusServiceUrl
         {
             get 
@@ -214,7 +233,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_RemoteStatusServiceUrl = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Real Time Statistic Service URL
+        /// </summary>
         public string RealTimeStatisticServiceUrl
         {
             get 
@@ -226,7 +247,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_RealTimeStatisticServiceUrl = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the current Node's Company Name
+        /// </summary>
         public string CompanyName
         {
             get 
@@ -238,7 +261,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CompanyName = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Date and Time the current Node was created on
+        /// </summary>
         public DateTime CreatedOn
         {
             get 
@@ -250,7 +275,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Node was created by
+        /// </summary>
         public string CreatedBy
         {
             get 
@@ -262,7 +289,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_CreatedBy = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets the Date and Time when the current Node was updated on
+        /// </summary>
         public DateTime UpdatedOn
         {
             get 
@@ -274,7 +303,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedOn = value; 
             }
         }
-
+        /// <summary>
+        /// Gets and sets who the current Node was updated by
+        /// </summary>
         public string UpdatedBy
         {
             get 
@@ -286,26 +317,6 @@ namespace TimeSeriesFramework.UI.DataModels
                 m_UpdatedBy = value; 
             }
         }
-        #endregion
-
-        #region [ Methods ]
-
-        #endregion
-
-        #region [ Operators ]
-
-        #endregion
-
-        #region [ Static ]
-
-        // Static Fields
-
-        // Static Constructor
-
-        // Static Properties
-
-        // Static Methods
-
         #endregion
         
     }
