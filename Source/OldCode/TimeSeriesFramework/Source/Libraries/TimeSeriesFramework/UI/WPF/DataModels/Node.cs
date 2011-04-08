@@ -60,10 +60,6 @@ namespace TimeSeriesFramework.UI.DataModels
         
         #endregion
 
-        #region [ Constructors ]
-
-        #endregion
-
         #region [ Properties ]
         /// <summary>
         /// Gets and sets the current Node's ID

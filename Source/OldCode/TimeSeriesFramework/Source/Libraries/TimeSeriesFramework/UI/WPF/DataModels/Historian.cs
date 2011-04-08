@@ -36,16 +36,6 @@ namespace TimeSeriesFramework.UI.DataModels
     {
 
         #region [ Members ]
-
-        // Nested Types
-
-        // Constants
-
-        // Delegates
-
-        // Events
-
-        // Fields
         private string m_NodeId;
         private int m_ID;
         private string m_Acronym;
