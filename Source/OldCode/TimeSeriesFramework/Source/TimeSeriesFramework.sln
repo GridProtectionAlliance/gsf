@@ -32,7 +32,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TVA", "TVA", "{03779694-D6C
 		Dependencies\TVA\TVA.Security.dll = Dependencies\TVA\TVA.Security.dll
 		Dependencies\TVA\TVA.Security.XML = Dependencies\TVA\TVA.Security.XML
 		Dependencies\TVA\TVA.Services.dll = Dependencies\TVA\TVA.Services.dll
-		Dependencies\TVA\TVA.Services.XML = Dependencies\TVA\TVA.Services.XML
 		Dependencies\TVA\TVA.Web.dll = Dependencies\TVA\TVA.Web.dll
 		Dependencies\TVA\TVA.Web.XML = Dependencies\TVA\TVA.Web.XML
 		Dependencies\TVA\TVA.Windows.dll = Dependencies\TVA\TVA.Windows.dll

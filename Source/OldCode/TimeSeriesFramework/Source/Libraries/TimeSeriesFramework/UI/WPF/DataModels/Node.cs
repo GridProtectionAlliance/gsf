@@ -35,6 +35,7 @@ namespace TimeSeriesFramework.UI.DataModels
     {        
         #region [ Members ]
 
+        // Fields
         private string m_ID;
         private string m_name;
         private int? m_companyID;
@@ -59,7 +60,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the current Node's ID.
+        /// Gets or sets the current <see cref="Node"/>'s ID.
         /// </summary>
         public string ID
         {
@@ -74,7 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Name.
+        /// Gets or sets the current <see cref="Node"/>'s Name.
         /// </summary>
         public string Name
         {
@@ -89,7 +90,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Comapny ID.
+        /// Gets or sets the current <see cref="Node"/>'s Comapny ID.
         /// </summary>
         public int? CompanyID
         {
@@ -104,7 +105,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Longitude.
+        /// Gets or sets the current <see cref="Node"/>'s Longitude.
         /// </summary>
         public decimal? Longitude
         {
@@ -119,7 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Latitude.
+        /// Gets or sets the current <see cref="Node"/>'s Latitude.
         /// </summary>
         public decimal? Latitude
         {
@@ -134,7 +135,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Description.
+        /// Gets or sets the current <see cref="Node"/>'s Description.
         /// </summary>
         public string Description
         {
@@ -149,7 +150,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Image.
+        /// Gets or sets the current <see cref="Node"/>'s Image.
         /// </summary>
         public string Image
         {
@@ -164,7 +165,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets whether the current node is the master Node.
+        /// Gets or sets whether the current <see cref="Node"/> is the master <see cref="Node"/>.
         /// </summary>
         public bool Master
         {
@@ -179,7 +180,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Load Order.
+        /// Gets or sets the current <see cref="Node"/>'s Load Order.
         /// </summary>
         public int LoadOrder
         {
@@ -194,7 +195,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets whether the current Node is enabled.
+        /// Gets or sets whether the current <see cref="Node"/> is enabled.
         /// </summary>
         public bool Enabled
         {
@@ -209,7 +210,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Time Series Data Service URL.
+        /// Gets or sets the current <see cref="Node"/>'s Time Series Data Service URL.
         /// </summary>
         public string TimeSeriesDataServiceUrl
         {
@@ -224,7 +225,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Remote Status Service URL.
+        /// Gets or sets the current <see cref="Node"/>'s Remote Status Service URL.
         /// </summary>
         public string RemoteStatusServiceUrl
         {
@@ -239,7 +240,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Real Time Statistic Service URL.
+        /// Gets or sets the current <see cref="Node"/>'s Real Time Statistic Service URL.
         /// </summary>
         public string RealTimeStatisticServiceUrl
         {
@@ -254,7 +255,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Node's Company Name.
+        /// Gets or sets the current <see cref="Node"/>'s Company Name.
         /// </summary>
         public string CompanyName
         {
@@ -269,7 +270,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date and Time the current Node was created on.
+        /// Gets or sets the Date or Time the current <see cref="Node"/> was created on.
         /// </summary>
         public DateTime CreatedOn
         {
@@ -284,7 +285,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Node was created by.
+        /// Gets or sets who the current <see cref="Node"/> was created by.
         /// </summary>
         public string CreatedBy
         {
@@ -299,7 +300,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date and Time when the current Node was updated on.
+        /// Gets or sets the Date or Time when the current <see cref="Node"/> was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -314,7 +315,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Node was updated by.
+        /// Gets or sets who the current <see cref="Node"/> was updated by.
         /// </summary>
         public string UpdatedBy
         {

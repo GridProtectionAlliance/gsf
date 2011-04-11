@@ -34,9 +34,9 @@ namespace TimeSeriesFramework.UI.DataModels
     /// </summary>
     public class Phasor
     {
-
         #region [ Members ]
 
+        // Fields
         private int m_ID;
         private int m_deviceID;
         private string m_label;
@@ -58,7 +58,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the Phasor ID.
+        /// Gets or sets the<see cref="Phasor"/>ID.
         /// </summary>
         public int ID
         {
@@ -73,7 +73,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Phasor DeviceID.
+        /// Gets or sets the<see cref="Phasor"/>DeviceID.
         /// </summary>
         public int DeviceID
         {
@@ -88,7 +88,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Phasor Label.
+        /// Gets or sets the<see cref="Phasor"/>Label.
         /// </summary>
         public string Label
         {
@@ -103,7 +103,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Phasor Type.
+        /// Gets or sets the<see cref="Phasor"/>Type.
         /// </summary>
         public string Type
         {
@@ -118,7 +118,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Phase of the current Phasor.
+        /// Gets or sets the Phase of the current Phasor.
         /// </summary>
         public string Phase
         {
@@ -133,7 +133,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Destination Phasor ID for the current Phasor.
+        /// Gets or sets Destination<see cref="Phasor"/>ID for the current Phasor.
         /// </summary>
         public int? DestinationPhasorID
         {
@@ -148,7 +148,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Source Index for the current Phasor.
+        /// Gets or sets Source Index for the current Phasor.
         /// </summary>
         public int SourceIndex
         {
@@ -163,7 +163,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Destination Phasor Label for the current Phasor.
+        /// Gets or sets Destination<see cref="Phasor"/>Label for the current Phasor.
         /// </summary>
         public string DestinationPhasorLabel
         {
@@ -178,7 +178,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Device Acronym for the current Phasor.
+        /// Gets or sets the Device Acronym for the current Phasor.
         /// </summary>
         public string DeviceAcronym
         {
@@ -193,7 +193,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Phasor Type for the current Phasor.
+        /// Gets or sets<see cref="Phasor"/>Type for the current Phasor.
         /// </summary>
         public string PhasorType
         {
@@ -208,7 +208,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Phase Type for the current Phasor.
+        /// Gets or sets Phase Type for the current Phasor.
         /// </summary>
         public string PhaseType
         {
@@ -223,7 +223,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date and Time the current Phasor was created on.
+        /// Gets or sets the Date or Time the current<see cref="Phasor"/>was created on.
         /// </summary>
         public DateTime CreatedOn
         {
@@ -238,7 +238,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Phasor was created by.
+        /// Gets or sets who the current<see cref="Phasor"/>was created by.
         /// </summary>
         public string CreatedBy
         {
@@ -253,7 +253,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date and Time the current Phasor was updated on.
+        /// Gets or sets the Date or Time the current<see cref="Phasor"/>was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -268,7 +268,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Phasor was updated by.
+        /// Gets or sets who the current<see cref="Phasor"/>was updated by.
         /// </summary>
         public string UpdatedBy
         {

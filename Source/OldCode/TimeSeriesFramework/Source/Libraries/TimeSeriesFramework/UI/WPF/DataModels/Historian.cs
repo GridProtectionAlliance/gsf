@@ -32,11 +32,11 @@ namespace TimeSeriesFramework.UI.DataModels
     /// <summary>
     /// Creates a new object that represents a Historian
     /// </summary>
-    public class Historian
+    public class Historian : DataModelBase
     {
-
         #region [ Members ]
 
+        // Fields
         private string m_nodeId;
         private int m_ID;
         private string m_acronym;
@@ -60,7 +60,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the current Historian's Node ID.
+        /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
         public string NodeId
         {
@@ -75,7 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's ID.
+        /// Gets or sets the current <see cref="Historian" />'s ID.
         /// </summary>
         public int ID
         {
@@ -90,7 +90,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Acronym.
+        /// Gets or sets the current <see cref="Historian" />'s Acronym.
         /// </summary>
         public string Acronym
         {
@@ -105,7 +105,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Name.
+        /// Gets or sets the current <see cref="Historian" />'s Name.
         /// </summary>
         public string Name
         {
@@ -120,7 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Assembly Name.
+        /// Gets or sets the current <see cref="Historian" />'s Assembly Name.
         /// </summary>
         public string AssemblyName
         {
@@ -135,7 +135,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Type Name.
+        /// Gets or sets the current <see cref="Historian" />'s Type Name.
         /// </summary>
         public string TypeName
         {
@@ -150,7 +150,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Connection String.
+        /// Gets or sets the current <see cref="Historian" />'s Connection String.
         /// </summary>
         public string ConnectionString
         {
@@ -165,7 +165,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets whether the current Historian is local.
+        /// Gets or sets whether the current <see cref="Historian" /> is local.
         /// </summary>
         public bool IsLocal
         {
@@ -180,7 +180,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Description.
+        /// Gets or sets the current <see cref="Historian" />'s Description.
         /// </summary>
         public string Description
         {
@@ -195,7 +195,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Load Order.
+        /// Gets or sets the current <see cref="Historian" />'s Load Order.
         /// </summary>
         public int LoadOrder
         {
@@ -210,7 +210,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets whether the current Historian is enabled.
+        /// Gets or sets whether the current <see cref="Historian" /> is enabled.
         /// </summary>
         public bool Enabled
         {
@@ -225,7 +225,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Measurement Reporting Interval.
+        /// Gets or sets the current <see cref="Historian" />'s Measurement Reporting Interval.
         /// </summary>
         public int MeasurementReportingInterval
         {
@@ -240,7 +240,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Historian's Node Name.
+        /// Gets or sets the current <see cref="Historian" />'s Node Name.
         /// </summary>
         public string NodeName
         {
@@ -255,7 +255,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets when the current Historian was created.
+        /// Gets or sets when the current <see cref="Historian" /> was created.
         /// </summary>
         public DateTime CreatedOn
         {
@@ -270,7 +270,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Historian was created by.
+        /// Gets or sets who the current <see cref="Historian" /> was created by.
         /// </summary>
         public string CreatedBy
         {
@@ -285,7 +285,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets when the current Historian was updated.
+        /// Gets or sets when the current <see cref="Historian" /> was updated.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -300,7 +300,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Historian was updated by.
+        /// Gets or sets who the current <see cref="Historian" /> was updated by.
         /// </summary>
         public string UpdatedBy
         {

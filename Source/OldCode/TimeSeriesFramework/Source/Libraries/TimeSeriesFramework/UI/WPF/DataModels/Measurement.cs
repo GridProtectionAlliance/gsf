@@ -36,6 +36,7 @@ namespace TimeSeriesFramework.UI.DataModels
     {
         #region [ Members ]
 
+        //Fields
         private string m_signalID;
         private int? m_historianID;
         private int m_pointID;
@@ -67,7 +68,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal ID.
         /// </summary>
         public string SignalID
         {
@@ -82,7 +83,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Historian ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s Historian ID.
         /// </summary>
         public int? HistorianID
         {
@@ -97,7 +98,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Point ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s Point ID.
         /// </summary>
         public int PointID
         {
@@ -112,7 +113,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Device ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s Device ID.
         /// </summary>
         public int? DeviceID
         {
@@ -127,7 +128,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Point Tag.
+        /// Gets or sets the current <see cref="Measurement"/>'s Point Tag.
         /// </summary>
         public string PointTag
         {
@@ -142,7 +143,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Alternate Tag.
+        /// Gets or sets the current <see cref="Measurement"/>'s Alternate Tag.
         /// </summary>
         public string AlternateTag
         {
@@ -157,7 +158,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Type ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal Type ID.
         /// </summary>
         public int SignalTypeID
         {
@@ -172,7 +173,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Phasor Source Index.
+        /// Gets or sets the current <see cref="Measurement"/>'s Phasor Source Index.
         /// </summary>
         public int? PhasorSourceIndex
         {
@@ -187,7 +188,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Reference.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal Reference.
         /// </summary>
         public string SignalReference
         {
@@ -202,7 +203,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Adder.
+        /// Gets or sets the current <see cref="Measurement"/>'s Adder.
         /// </summary>
         public double Adder
         {
@@ -217,7 +218,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Multiplier.
+        /// Gets or sets the current <see cref="Measurement"/>'s Multiplier.
         /// </summary>
         public double Multiplier
         {
@@ -232,7 +233,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Description.
+        /// Gets or sets the current <see cref="Measurement"/>'s Description.
         /// </summary>
         public string Description
         {
@@ -247,7 +248,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets whether the current Measurement is enabled.
+        /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
         /// </summary>
         public bool Enabled
         {
@@ -262,7 +263,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Historian Acronym.
+        /// Gets or sets the current <see cref="Measurement"/>'s Historian Acronym.
         /// </summary>
         public string HistorianAcronym
         {
@@ -277,7 +278,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Device Acronym.
+        /// Gets or sets the current <see cref="Measurement"/>'s Device Acronym.
         /// </summary>
         public string DeviceAcronym
         {
@@ -292,7 +293,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Frames Per Second.
+        /// Gets or sets the current <see cref="Measurement"/>'s Frames Per Second.
         /// </summary>
         public int? FramesPerSecond
         {
@@ -307,7 +308,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Name.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal Name.
         /// </summary>
         public string SignalName
         {
@@ -322,7 +323,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Acronym.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal Acronym.
         /// </summary>
         public string SignalAcronym
         {
@@ -337,7 +338,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Signal Suffix.
+        /// Gets or sets the current <see cref="Measurement"/>'s Signal Suffix.
         /// </summary>
         public string SignalSuffix
         {
@@ -352,7 +353,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's Phasor Label.
+        /// Gets or sets the current <see cref="Measurement"/>'s Phasor Label.
         /// </summary>
         public string PhasorLabel
         {
@@ -367,7 +368,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets when the current Measurement was Created.
+        /// Gets or sets when the current <see cref="Measurement"/> was Created.
         /// </summary>
         public DateTime CreatedOn
         {
@@ -382,7 +383,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Measurement was created by.
+        /// Gets or sets who the current <see cref="Measurement"/> was created by.
         /// </summary>
         public string CreatedBy
         {
@@ -397,7 +398,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets when the current Measurement updated.
+        /// Gets or sets when the current <see cref="Measurement"/> updated.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -412,7 +413,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who the current Measurement was updated by.
+        /// Gets or sets who the current <see cref="Measurement"/> was updated by.
         /// </summary>
         public string UpdatedBy
         {
@@ -427,7 +428,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current Measurement's ID.
+        /// Gets or sets the current <see cref="Measurement"/>'s ID.
         /// </summary>
         public string ID
         {

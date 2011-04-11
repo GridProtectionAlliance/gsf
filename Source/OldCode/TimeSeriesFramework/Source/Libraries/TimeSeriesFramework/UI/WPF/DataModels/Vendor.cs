@@ -32,10 +32,10 @@ namespace TimeSeriesFramework.UI.DataModels
     /// Creates a new object that represents a Vendor
     /// </summary>
     public class Vendor
-    {
-        
+    {        
         #region [ Members ]
 
+        // Fields
         private int m_ID;
         private string m_acronym;
         private string m_name;
@@ -52,7 +52,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets and sets the Vendor ID.
+        /// Gets or sets the <see cref="Vendor"/> ID.
         /// </summary>
         public int ID
         {
@@ -67,7 +67,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Vendor Acronym.
+        /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
         public string Acronym
         {
@@ -82,7 +82,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Vendor Name.
+        /// Gets or sets the <see cref="Vendor"/> Name.
         /// </summary>
         public string Name
         {
@@ -97,7 +97,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets Vendor Phone Number.
+        /// Gets or sets <see cref="Vendor"/> Phone Number.
         /// </summary>
         public string PhoneNumber
         {
@@ -112,7 +112,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Vendor Contact Email.
+        /// Gets or sets the <see cref="Vendor"/> Contact Email.
         /// </summary>
         public string ContactEmail
         {
@@ -127,7 +127,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Vendor URL.
+        /// Gets or sets the <see cref="Vendor"/> URL.
         /// </summary>
         public string URL
         {
@@ -142,7 +142,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date and Time this Vendor was created on.
+        /// Gets or sets the Date or Time this <see cref="Vendor"/> was created on.
         /// </summary>
         public DateTime CreatedOn
         {
@@ -157,7 +157,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who this Vendor was created by.
+        /// Gets or sets who this <see cref="Vendor"/> was created by.
         /// </summary>
         public string CreatedBy
         {
@@ -172,7 +172,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the Date Time this Vendor was updated on.
+        /// Gets or sets the Date Time this <see cref="Vendor"/> was updated on.
         /// </summary>
         public DateTime UpdatedOn
         {
@@ -187,7 +187,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets who this Vendor was updated by.
+        /// Gets or sets who this <see cref="Vendor"/> was updated by.
         /// </summary>
         public string UpdatedBy
         {
