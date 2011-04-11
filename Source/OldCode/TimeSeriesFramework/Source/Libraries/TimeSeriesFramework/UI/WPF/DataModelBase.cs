@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/25/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  04/08/2011 - J. Ritchie Carroll
+//       Modified class to use reflection to load default values and use entity property attributes.
 //
 //******************************************************************************************************
 
@@ -25,32 +27,62 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
+using System.Reflection;
+using TVA;
+using TVA.Collections;
+using TVA.Reflection;
 
 namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Represents an abstract base class for all Model objects.
+    /// Represents an abstract base class for all entity model objects.
     /// </summary>
     public abstract class DataModelBase : INotifyPropertyChanged, IDataErrorInfo
     {
         #region [ Members ]
 
-        private readonly Dictionary<string, object> m_values = new Dictionary<string, object>();
-        private bool m_isValid = true;
-
-        #region [ INotifyPropertyChanged Members ]
-        
         // Events
+
         /// <summary>
         /// Raised when a property on this object has a new value.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
+        // Fields
+        private Dictionary<string, string> m_propertyErrors;
+        private BindingFlags m_memberAccessBindingFlags;
+        private bool m_requireEntityPropertyAttribute;
+
         #endregion
-        
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DataModelBase"/> class.
+        /// </summary>
+        protected DataModelBase()
+            : this(false)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="DataModelBase"/> class.
+        /// </summary>
+        /// <param name="requireEntityPropertyAttribute">
+        /// Assigns flag that determines if <see cref="EntityPropertyAttribute"/> is required
+        /// to exist before a property is included as a field in the data model.
+        /// </param>
+        protected DataModelBase(bool requireEntityPropertyAttribute)
+        {
+            m_propertyErrors = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            m_memberAccessBindingFlags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
+
+            // Load all default values for properties
+            ExecuteActionForProperties(property => property.SetValue(this, DeriveDefaultValue(property.Name, property.GetValue(this, null)), null), BindingFlags.SetProperty);
+        }
+
         #endregion
 
         #region [ Properties ]
@@ -58,270 +90,242 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Indicates if the values associated with this object are valid.
         /// </summary>
+        [EntityProperty(false)]
         public bool IsValid
         {
-            get { return m_isValid; }
-            set
+            get
             {
-                m_isValid = value;
-                NotifyPropertyChanged("IsValid");
+                // If any of the properties have errors, values are not valid
+                return m_propertyErrors.Any(kvPair => !string.IsNullOrWhiteSpace(kvPair.Value));
             }
         }
 
-        #region [ IDataErrorInfo Properties ]
-        
         /// <summary>
-        /// Represents any errors associated with this object.
+        /// Gets an error message indicating what is wrong with this object.
         /// </summary>
+        /// <remarks>
+        /// An error message indicating what is wrong with this object. The default is an empty string ("").
+        /// </remarks>
+        [EntityProperty(false)]
         public string Error
         {
             get
             {
-                string error = string.Empty;                
-                foreach (KeyValuePair<string, object> item in m_values)
-                {
-                    if (item.Key != "IsValid")
-                    {
-                        string result = OnValidate(item.Key);
-                        if (!string.IsNullOrEmpty(result))
-                            error += result + Environment.NewLine;
-                    }
-                }
+                // Cumulate any properties with errors using line feed as delimeter
+                return m_propertyErrors.Where(kvPair => !string.IsNullOrWhiteSpace(kvPair.Value)).ToDelimitedString(Environment.NewLine);
+            }
+        }
+
+        /// <summary>
+        /// Gets the error message for the property with the given name.
+        /// </summary>
+        /// <param name="propertyName">The name of the property whose error message to get.</param>
+        /// <returns>The error message for the property. The default is an empty string ("").</returns>
+        public string this[string propertyName]
+        {
+            get
+            {
+                string error;
+
+                if (!m_propertyErrors.TryGetValue(propertyName, out error))
+                    error = "";
+
                 return error;
             }
         }
 
         /// <summary>
-        /// Validates value assigned to the property.
+        /// Gets or sets flag that determines if <see cref="EntityPropertyAttribute"/> is
+        /// required to exist before a property is included as a field in the data model;
+        /// defaults to <c>false</c>.
         /// </summary>
-        /// <param name="propertyName">Name of the property of this object whose value needs to be validated.</param>
-        /// <returns></returns>
-        public string this[string propertyName]
+        [Browsable(false), EntityProperty(false)]
+        public bool RequireEntityPropertyAttribute
         {
             get
             {
-                return OnValidate(propertyName);
+                return m_requireEntityPropertyAttribute;
+            }
+            set
+            {
+                m_requireEntityPropertyAttribute = value;
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Gets or sets <see cref="BindingFlags"/> used to access properties of dervied class.
+        /// </summary>
+        /// <remarks>
+        /// Value defaults to <c><see cref="BindingFlags.Public"/> | <see cref="BindingFlags.Instance"/> | <see cref="BindingFlags.DeclaredOnly"/></c>.
+        /// </remarks>
+        [EditorBrowsable(EditorBrowsableState.Advanced), EntityProperty(false)]
+        protected virtual BindingFlags MemberAccessBindingFlags
+        {
+            get
+            {
+                return m_memberAccessBindingFlags;
+            }
+            set
+            {
+                m_memberAccessBindingFlags = value;
+            }
+        }
 
         #endregion
 
         #region [ Methods ]
 
-        #region [ INotifyPropertyChanged Implementation ]
-
         /// <summary>
-        /// Raises this object's PropertyChanged event.
+        /// Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
-        /// <param name="propertyName">The property that has a new value.</param>
-        protected void NotifyPropertyChanged(string propertyName)
-        {
-            this.VerifyPropertyName(propertyName);
-
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                var e = new PropertyChangedEventArgs(propertyName);
-                handler(this, e);
-
-            }
-        }
-
-        protected void NotifyPropertyChanged<T>(Expression<Func<T>> propertySelector)
-        {
-            var propertyChanged = PropertyChanged;
-            if (propertyChanged != null)
-            {
-                string propertyName = GetPropertyName(propertySelector);
-                propertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="propertyName"></param>
+        /// <param name="propertyName">Property name that has changed.</param>
         protected virtual void OnPropertyChanged(string propertyName)
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-        }
 
-        #endregion
-
-        #region [ Protected Methods ]
-
-        /// <summary>
-        /// Sets the value of a property.
-        /// </summary>
-        /// <typeparam name="T">The type of the property value.</typeparam>
-        /// <param name="propertySelector">Expression tree contains the property definition.</param>
-        /// <param name="value">The property value.</param>
-        protected void SetValue<T>(Expression<Func<T>> propertySelector, T value)
-        {
-            string propertyName = GetPropertyName(propertySelector);
-
-            SetValue<T>(propertyName, value);
-        }
-
-        /// <summary>
-        /// Sets the value of a property.
-        /// </summary>
-        /// <typeparam name="T">The type of the property value.</typeparam>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <param name="value">The property value.</param>
-        protected void SetValue<T>(string propertyName, T value)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-            {
-                throw new ArgumentException("Invalid property name", propertyName);
-            }
-
-            m_values[propertyName] = value;
-            NotifyPropertyChanged(propertyName);
-            IsValid = string.IsNullOrEmpty((this as IDataErrorInfo).Error);
-        }
-
-        /// <summary>
-        /// Gets the value of a property.
-        /// </summary>
-        /// <typeparam name="T">The type of the property value.</typeparam>
-        /// <param name="propertySelector">Expression tree contains the property definition.</param>
-        /// <returns>The value of the property or default value if not exist.</returns>
-        protected T GetValue<T>(Expression<Func<T>> propertySelector)
-        {
-            string propertyName = GetPropertyName(propertySelector);
-
-            return GetValue<T>(propertyName);
-        }
-
-        /// <summary>
-        /// Gets the value of a property.
-        /// </summary>
-        /// <typeparam name="T">The type of the property value.</typeparam>
-        /// <param name="propertyName">The name of the property.</param>
-        /// <returns>The value of the property or default value if not exist.</returns>
-        protected T GetValue<T>(string propertyName)
-        {
-            if (string.IsNullOrEmpty(propertyName))
-            {
-                throw new ArgumentException("Invalid property name", propertyName);
-            }
-
-            object value;
-            if (!m_values.TryGetValue(propertyName, out value))
-            {
-                value = default(T);
-                m_values.Add(propertyName, value);
-            }
-
-            return (T)value;
+            ValidateProperty(propertyName);
         }
 
         /// <summary>
         /// Validates current instance properties using Data Annotations.
         /// </summary>
         /// <param name="propertyName">This instance property to validate.</param>
-        /// <returns>Relevant error string on validation failure or <see cref="System.String.Empty"/> on validation success.</returns>
-        protected virtual string OnValidate(string propertyName)
+        /// <returns>Relevant error string on validation failure or <see cref="String.Empty"/> on validation success.</returns>
+        protected virtual void ValidateProperty(string propertyName)
         {
             if (string.IsNullOrEmpty(propertyName))
-            {
                 throw new ArgumentException("Invalid property name", propertyName);
-            }
 
-            string error = string.Empty;
-            var value = GetValue(propertyName);
-            var results = new List<ValidationResult>(1);
-            var result = Validator.TryValidateProperty(
-                value,
-                new ValidationContext(this, null, null)
-                {
-                    MemberName = propertyName
-                },
-                results);
+            string error = "";
+            object value = GetType().GetProperty(propertyName).GetValue(this, null);
+            List<ValidationResult> results = new List<ValidationResult>(1);
 
-            if (!result)
+            ValidationContext validationContext = new ValidationContext(this, null, null)
             {
-                var validationResult = results.First();
+                MemberName = propertyName
+            };
+
+            if (!Validator.TryValidateProperty(value, validationContext, results))
+            {
+                ValidationResult validationResult = results.First();
                 error = validationResult.ErrorMessage;
             }
 
-            return error;
+            m_propertyErrors[propertyName] = error;
         }
 
-        #endregion
-
-        #region [ Private Methods ]
-
-        private string GetPropertyName(LambdaExpression expression)
+        /// <summary>
+        /// Gets the default value specified by <see cref="DefaultValueAttribute"/>, if any, applied to the specified property. 
+        /// </summary>
+        /// <param name="propertyName">Property name.</param>
+        /// <returns>Default value applied to specified property; or null if one does not exist.</returns>
+        /// <exception cref="ArgumentException"><paramref name="propertyName"/> cannot be null or empty.</exception>
+        public object GetDefaultValue(string propertyName)
         {
-            var memberExpression = expression.Body as MemberExpression;
-            if (memberExpression == null)
-            {
-                throw new InvalidOperationException();
-            }
+            if (string.IsNullOrEmpty(propertyName))
+                throw new ArgumentException("name cannot be null or empty");
 
-            return memberExpression.Member.Name;
+            return GetAttributeValue<DefaultValueAttribute, object>(propertyName, null, attribute => attribute.Value);
         }
 
-        private object GetValue(string propertyName)
+        /// <summary>
+        /// Attempts to get best default value for given member.
+        /// </summary>
+        /// <param name="propertyName">Property name.</param>
+        /// <param name="value">Current property value.</param>
+        /// <remarks>
+        /// If <paramref name="value"/> is equal to its default(type) value, then any value derived from <see cref="DefaultValueAttribute"/> will be used instead.
+        /// </remarks>
+        /// <returns>The object that is the best default value.</returns>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected object DeriveDefaultValue(string propertyName, object value)
         {
-            object value;
-            if (!m_values.TryGetValue(propertyName, out value))
+            // See if value is equal to its default value (i.e., uninitialized)
+            if (Common.IsDefaultValue(value))
             {
-                var propertyDescriptor = TypeDescriptor.GetProperties(GetType()).Find(propertyName, false);
-                if (propertyDescriptor == null)
-                {
-                    throw new ArgumentException("Invalid property name", propertyName);
-                }
-
-                value = propertyDescriptor.GetValue(this);
-                m_values.Add(propertyName, value);
+                // See if any value exists in a DefaultValueAttribute
+                object defaultValue = GetDefaultValue(propertyName);
+                if (defaultValue != null)
+                    return defaultValue;
             }
 
             return value;
         }
 
-        #endregion
-
-        #region Debugging
-
         /// <summary>
-        /// Warns the developer if this object does not have
-        /// a public property with the specified name. This 
-        /// method does not exist in a Release build.
+        /// Executes specified action over all public dervied class properties.
         /// </summary>
-        [Conditional("DEBUG")]
-        [DebuggerStepThrough]
-        public void VerifyPropertyName(string propertyName)
+        /// <param name="propertyAction">Action to execute for all properties.</param>
+        /// <param name="isGetOrSet"><see cref="BindingFlags.GetProperty"/> or <see cref="BindingFlags.SetProperty"/>.</param>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected void ExecuteActionForProperties(Action<PropertyInfo> propertyAction, BindingFlags isGetOrSet)
         {
-            // Verify that the property name matches a real,  
-            // public, instance property on this object.
-            if (TypeDescriptor.GetProperties(this)[propertyName] == null)
+            ExecuteActionForMembers(property =>
             {
-                string msg = "Invalid property name: " + propertyName;
+                // Make sure only non-indexer properties are used for settings
+                if (property.GetIndexParameters().Length == 0)
+                    propertyAction(property);
+            }, GetType().GetProperties(m_memberAccessBindingFlags | isGetOrSet));
+        }
 
-                if (this.ThrowOnInvalidPropertyName)
-                    throw new Exception(msg);
-                else
-                    Debug.Fail(msg);
+        // Execute specified action over specified members
+        private void ExecuteActionForMembers<T>(Action<T> memberAction, T[] members) where T : MemberInfo
+        {
+            EntityPropertyAttribute attribute;
+
+            // Execute action for each member
+            foreach (T member in members)
+            {
+                // See if serialize setting attribute exists
+                if (member.TryGetAttribute(out attribute))
+                {
+                    // Found entity property attribute, perform action if include is true
+                    if (attribute.Include)
+                        memberAction(member);
+                }
+                else if (!m_requireEntityPropertyAttribute)
+                {
+                    // Didn't find entity property attribute and it's not required, so we perform action (i.e., assume include)
+                    memberAction(member);
+                }
             }
         }
 
         /// <summary>
-        /// Returns whether an exception is thrown, or if a Debug.Fail() is used
-        /// when an invalid property name is passed to the VerifyPropertyName method.
-        /// The default value is false, but subclasses used by unit tests might 
-        /// override this property's getter to return true.
+        /// Attempts to find specified attribute and return specified value.
         /// </summary>
-        protected virtual bool ThrowOnInvalidPropertyName { get; private set; }
+        /// <typeparam name="TAttribute">Type of <see cref="Attribute"/> to find.</typeparam>
+        /// <typeparam name="TValue">Type of value attribute delegate returns.</typeparam>
+        /// <param name="propertyName">Name of property to search for attribute.</param>
+        /// <param name="defaultValue">Default value to return if attribute doesn't exist.</param>
+        /// <param name="attributeValue">Function delegate used to return desired attribute property.</param>
+        /// <returns>Specified attribute value if it exists; otherwise default value.</returns>
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        protected TValue GetAttributeValue<TAttribute, TValue>(string propertyName, TValue defaultValue, Func<TAttribute, TValue> attributeValue) where TAttribute : Attribute
+        {
+            TAttribute attribute;
 
-        #endregion // Debugging Aides        
+            // See if property exists with specified name
+            PropertyInfo property = this.GetType().GetProperty(propertyName, m_memberAccessBindingFlags);
+
+            if (property != null)
+            {
+                // See if attribute exists on property
+                if (property.TryGetAttribute(out attribute))
+                {
+                    // Return value as specified by delegate
+                    return attributeValue(attribute);
+                }
+
+                // Attribute wasn't found, return default value
+                return defaultValue;
+            }
+
+            // Return default value
+            return defaultValue;
+        }
 
         #endregion
-              
     }
 }

@@ -52,6 +52,17 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="TVA.Core, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Windows">
+      <HintPath>..\..\..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -68,6 +79,7 @@
     <Compile Include="DataModels\Phasor.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />
+    <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IViewModel.cs" />
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">

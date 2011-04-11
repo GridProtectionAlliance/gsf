@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MenuCommand.cs - Gbtc
+//  EntityPropertyAttribute.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,69 +16,67 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/25/2011 - Mehulbhai P Thakkar
+//  04/08/2011 - Ritchie
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
 using System;
-using System.Threading;
-using System.Windows;
-using System.Windows.Input;
 
-namespace TimeSeriesFramework.UI.Commands
+namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Exposes <see cref="ICommand"/> object to be used to handle menu item click event.
+    /// Represents an attribute that determines if a property in a class derived from
+    /// <see cref="DataModelBase"/> should be included as a field in the data model.
     /// </summary>
-    public class MenuCommand : ICommand
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class EntityPropertyAttribute : Attribute
     {
         #region [ Members ]
 
-        
-        public event EventHandler CanExecuteChanged;
+        // Fields
+        private bool m_include;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates a new <see cref="EntityPropertyAttribute"/>; defaults to <c><see cref="Include"/> = true</c>.
+        /// </summary>
+        public EntityPropertyAttribute()
+        {
+            m_include = true;
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="EntityPropertyAttribute"/> with the specified <paramref name="include"/> value.
+        /// </summary>
+        /// <param name="include">
+        /// Assigns flag that determines if the property this <see cref="EntityPropertyAttribute"/>
+        /// modifies should be included as a field in the data model.
+        /// </param>
+        public EntityPropertyAttribute(bool include)
+        {
+            m_include = include;
+        }
 
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets path the user control to be displayed on a menu item click.
+        /// Gets or sets flag that determines if the property this <see cref="EntityPropertyAttribute"/>
+        /// modifies should be included as a field in the data model.
         /// </summary>
-        public string UserControlPath { get; set; }
-
-        /// <summary>
-        /// Gets or sets comma seperated values of roles for which menuitem is visible.
-        /// </summary>
-        public string Roles { get; set; }
+        public bool Include
+        {
+            get
+            {
+                return m_include;
+            }
+        }
 
         #endregion
-
-        #region [ Methods ]
-
-        /// <summary>
-        /// Evaluates if menu item should be visible to current user with access to <see cref="Roles"/>.
-        /// </summary>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
-        public bool CanExecute (object parameter)
-        {
-            if (string.IsNullOrEmpty(Roles) || Roles == "*")
-                return true;
-            else
-                return Thread.CurrentPrincipal.IsInRole(Roles);
-        }
-
-        /// <summary>
-        /// Loads user control from the path defined in the <see cref="UserControlPath"/> property.
-        /// </summary>
-        /// <param name="parameter"></param>
-        public void Execute(object parameter)
-        {
-
-            //MessageBox.Show(UserControlPath);
-        }
-
-        #endregion        
     }
 }

@@ -24,107 +24,204 @@
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Windows.Input;
-using TimeSeriesFramework.UI.Commands;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents Company information as defined in the database.
+    /// Represents a record of company information as defined in the database.
     /// </summary>
     public class Company : DataModelBase
     {
         #region [ Members ]
 
-        // Fields        
-        private string m_error;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Creates an instance of <see cref="Company"/> with default values defined in the <see cref="DefaultValueAttribute"/>.
-        /// </summary>
-        public Company()
-        {
-            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(this))
-            {
-                // Set default value if DefaultValueAttribute is present
-                DefaultValueAttribute attr = property.Attributes[typeof(DefaultValueAttribute)] as DefaultValueAttribute;
-                if (attr != null)
-                    property.ResetValue(this);
-            }
-        }
+        // Fields
+        private int m_id;
+        private string m_acronym;
+        private string m_mapAcronym;
+        private string m_name;
+        private string m_url;
+        private int m_loadOrder;
+        private DateTime m_createdOn;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
 
         #endregion
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets <see cref="Company"/> ID.
+        /// </summary>
+        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
-            get { return GetValue(() => ID); }
-            set { SetValue(() => ID, value); }
+            get
+            {
+                return m_id;
+            }
+            set
+            {
+                m_id = value;
+                OnPropertyChanged("ID");
+            }
         }
 
-        [Required(ErrorMessage = "Please provide Acronym value.")]
+        /// <summary>
+        /// Gets or sets <see cref="Company"/> acronym.
+        /// </summary>
+        [Required(ErrorMessage = "Company acronym is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Company acronym cannot exceed 50 characters.")]
         public string Acronym
         {
-            get { return GetValue(() => Acronym); }
-            set { SetValue(() => Acronym, value); }
+            get
+            {
+                return m_acronym;
+            }
+            set
+            {
+                m_acronym = value;
+                OnPropertyChanged("Acronym");
+            }
         }
 
-        [Required(ErrorMessage = "Please provide Map Acronym.")]
-        [StringLength(3, ErrorMessage = "Map Acronym cannot exceed 3 characters.")]
+        /// <summary>
+        /// Gets or sets map acronym used by <see cref="Company"/>.
+        /// </summary>
+        [Required(ErrorMessage = "Company map acronym is a required field, please provide value.")]
+        [StringLength(3, ErrorMessage = "Company map acronym cannot exceed 3 characters.")]
         public string MapAcronym
         {
-            get { return GetValue(() => MapAcronym); }
-            set { SetValue(() => MapAcronym, value); }
+            get
+            {
+                return m_mapAcronym;
+            }
+            set
+            {
+                m_mapAcronym = value;
+                OnPropertyChanged("MapAcronym");
+            }
         }
 
+        /// <summary>
+        /// Gets or sets <see cref="Company"/> name.
+        /// </summary>
+        [Required(ErrorMessage = "Company name is a required field, please provide value.")]
+        [StringLength(100, ErrorMessage = "Company name cannot exceed 100 characters.")]
         public string Name
         {
-            get { return GetValue(() => Name); }
-            set { SetValue(() => Name, value); }
+            get
+            {
+                return m_name;
+            }
+            set
+            {
+                m_name = value;
+                OnPropertyChanged("Name");
+            }
         }
 
-        [DataType(DataType.Url, ErrorMessage = "Invalid URL value.")]
+        /// <summary>
+        /// Gets or sets <see cref="Company"/> URL.
+        /// </summary>
+        [DataType(DataType.Url, ErrorMessage = "Company web site address URL is not formatted properly.")]
         public string URL
         {
-            get { return GetValue(() => URL); }
-            set { SetValue(() => URL, value); }
+            get
+            {
+                return m_url;
+            }
+            set
+            {
+                m_url = value;
+                OnPropertyChanged("URL");
+            }
         }
 
-        [Required(ErrorMessage = "Load Order is required field.")]
+        /// <summary>
+        /// Gets or sets desired load order of <see cref="Company"/> record.
+        /// </summary>
+        [Required(ErrorMessage = "Company load order value is required field, please provide value.")]
         [DefaultValue(typeof(int), "0")]
         public int LoadOrder
         {
-            get { return GetValue(() => LoadOrder); }
-            set { SetValue(() => LoadOrder, value); }
+            get
+            {
+                return m_loadOrder;
+            }
+            set
+            {
+                m_loadOrder = value;
+                OnPropertyChanged("LoadOrder");
+            }
         }
 
+        /// <summary>
+        /// Gets or sets when the current <see cref="Company"/> was created.
+        /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get { return GetValue(() => CreatedOn); }
-            set { SetValue(() => CreatedOn, value); }
+            get
+            {
+                return m_createdOn;
+            }
+            set
+            {
+                m_createdOn = value;
+                OnPropertyChanged("CreatedOn");
+            }
         }
 
+        /// <summary>
+        /// Gets or sets who the current <see cref="Company"/> was created by.
+        /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get { return GetValue(() => CreatedBy); }
-            set { SetValue(() => CreatedBy, value); }
+            get
+            {
+                return m_createdBy;
+            }
+            set
+            {
+                m_createdBy = value;
+                OnPropertyChanged("CreatedBy");
+            }
         }
 
+        /// <summary>
+        /// Gets or sets when the current <see cref="Company"/> was updated.
+        /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get { return GetValue(() => UpdatedOn); }
-            set { SetValue(() => UpdatedOn, value); }
+            get
+            {
+                return m_updatedOn;
+            }
+            set
+            {
+                m_updatedOn = value;
+                OnPropertyChanged("UpdatedOn");
+            }
         }
 
+        /// <summary>
+        /// Gets or sets who the current <see cref="Company"/> was updated by.
+        /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get { return GetValue(() => UpdatedBy); }
-            set { SetValue(() => UpdatedBy, value); }
+            get
+            {
+                return m_updatedBy;
+            }
+            set
+            {
+                m_updatedBy = value;
+                OnPropertyChanged("UpdatedBy");
+            }
         }
 
         #endregion
