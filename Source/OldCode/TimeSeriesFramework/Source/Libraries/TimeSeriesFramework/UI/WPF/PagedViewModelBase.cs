@@ -35,7 +35,7 @@ namespace TimeSeriesFramework.UI
     /// <summary>
     /// Represents an abstract class with paging support which all ViewModel objects derive from.
     /// </summary>
-    public abstract class PagedViewModelBase<TDataModel, TPrimaryKey> : INotifyPropertyChanged where TDataModel : IDataModel, new()
+    public abstract class PagedViewModelBase<TDataModel, TPrimaryKey> : IViewModel where TDataModel : IDataModel, new()
     {
         #region [ Members ]
 
@@ -53,6 +53,18 @@ namespace TimeSeriesFramework.UI
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
         private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
         private TDataModel m_currentItem;
+
+        #endregion
+
+        #region [ Constructors ]        
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PagedViewModelBase"/> class.
+        /// </summary>
+        protected PagedViewModelBase()
+        {
+            Load();
+        }
 
         #endregion
 
@@ -534,7 +546,7 @@ namespace TimeSeriesFramework.UI
         private static MethodInfo s_deleteRecord = s_dataModelType.GetMethod("Delete");
 
         #endregion
-        
+
 
     }
 }

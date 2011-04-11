@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.ComponentModel;
 using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI
@@ -28,46 +29,63 @@ namespace TimeSeriesFramework.UI
     /// <summary>
     /// Represents an interface and common methods and properties each data model definition should use.
     /// </summary>
-    public interface IViewModel
+    public interface IViewModel : INotifyPropertyChanged
     {
-        #region [ Properties ]
-
         /// <summary>
         /// Gets <see cref="ICommand"/> object to perform Save operation.
         /// </summary>
-        ICommand SaveCommand { get; }
+        ICommand SaveCommand
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object to perform Delete operation.
         /// </summary>
-        ICommand DeleteCommand { get; }
+        ICommand DeleteCommand
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets <see cref="ICommand"/> object to perform Clear operation.
         /// </summary>
-        ICommand ClearCommand { get; }
+        ICommand ClearCommand
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets boolean value to indicate if Save operation can be executed.
         /// </summary>
         /// <returns></returns>
-        bool CanSave { get; }
+        bool CanSave
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets boolean value to indicate if Delete operation can be executed.
         /// </summary>
         /// <returns></returns>
-        bool CanDelete { get; }
+        bool CanDelete
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets boolean value to indicate if Clear operation can be executed.
         /// </summary>
         /// <returns></returns>
-        bool CanClear { get; }             
+        bool CanClear
+        {
+            get;
+        }
 
-        #endregion
-
-        #region [ Methods ]
+        ///// <summary>
+        ///// Gets or sets error messages related to validation of property values.
+        ///// </summary>
+        ////string Error { get; set; }
 
         /// <summary>
         /// Method to save data into backend data store.
@@ -88,7 +106,5 @@ namespace TimeSeriesFramework.UI
         /// Method to retrieve collection of related objects.
         /// </summary>
         void Load();
-
-        #endregion
     }
 }

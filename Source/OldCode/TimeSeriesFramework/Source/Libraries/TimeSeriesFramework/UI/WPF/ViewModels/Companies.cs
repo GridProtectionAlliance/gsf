@@ -21,9 +21,6 @@
 //
 //******************************************************************************************************
 
-using System;
-using System.Windows;
-using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -31,29 +28,13 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// <summary>
     /// Class to hold bindable <see cref="Company"/> collection and selected company for UI.
     /// </summary>
-    internal class Companies : PagedViewModelBase<Company, int>, IViewModel
+    internal class Companies : PagedViewModelBase<Company, int>
     {
-        #region [ Members ]
-
-        // Fields        
-        private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
-
-        #endregion
-
-        #region [ Constructors ]
-
-        /// <summary>
-        /// Constructor to generate collection of <see cref="Company"/> defined in the data source.
-        /// </summary>
-        public Companies()
-        {
-            Load();
-        }
-
-        #endregion
-
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets flag that determines if <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/> is a new record.
+        /// </summary>
         public override bool IsNewRecord
         {
             get
@@ -66,36 +47,22 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Gets the primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
+        /// </summary>
+        /// <returns>The primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
         public override int GetCurrentItemKey()
         {
             return CurrentItem.ID;
         }
 
+        /// <summary>
+        /// Gets the string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
+        /// </summary>
+        /// <returns>The string based named identifier of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
         public override string GetCurrentItemName()
         {
             return CurrentItem.Name;
-        }
-
-        public void Delete()
-        {
-            if (CurrentItem.ID > 0 && Confirm("Are you sure you want to delete " + CurrentItem.Acronym + "?", "Delete Company"))
-            {
-                try
-                {
-                    string result = Company.Delete(null, CurrentItem.ID);
-                    Load();
-                    Popup(result, "Delete Company", MessageBoxImage.Information);
-                }
-                catch (Exception ex)
-                {
-                    Popup(ex.Message, "Delete Company - ERROR!", MessageBoxImage.Error);
-                }
-            }
-        }
-
-        public void Clear()
-        {
-            CurrentItem = new Company();
         }
 
         #endregion
