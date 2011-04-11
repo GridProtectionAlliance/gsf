@@ -63,12 +63,7 @@ namespace TimeSeriesFramework.UI
         /// Gets boolean value to indicate if Clear operation can be executed.
         /// </summary>
         /// <returns></returns>
-        bool CanClear { get; }
-
-        /// <summary>
-        /// Gets or sets error messages related to validation of property values.
-        /// </summary>
-        //string Error { get; set; }
+        bool CanClear { get; }             
 
         #endregion
 

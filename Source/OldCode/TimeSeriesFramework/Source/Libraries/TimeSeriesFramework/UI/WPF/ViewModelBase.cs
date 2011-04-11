@@ -21,12 +21,9 @@
 //
 //******************************************************************************************************
 
-using System.ComponentModel;
 using System;
+using System.ComponentModel;
 using System.Windows;
-using System.Collections.ObjectModel;
-using TimeSeriesFramework.UI.Commands;
-using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI
 {
@@ -47,6 +44,9 @@ namespace TimeSeriesFramework.UI
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets a <see cref="MessageBox"/> to display information to UI user.
+        /// </summary>
         public Action<string, string, MessageBoxImage> Popup
         {
             get 
@@ -55,6 +55,9 @@ namespace TimeSeriesFramework.UI
             }
         }
 
+        /// <summary>
+        /// Gets a <see cref="MessageBox"/> to request confirmation from UI user.
+        /// </summary>
         public Func<string, string, bool> Confirm
         {
             get 

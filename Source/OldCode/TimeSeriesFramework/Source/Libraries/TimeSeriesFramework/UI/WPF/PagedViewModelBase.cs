@@ -53,9 +53,9 @@ namespace TimeSeriesFramework.UI
         #endregion
 
         #region [ Properties ]
-        
+
         /// <summary>
-        /// Gets a message box to display message to users.
+        /// Gets a <see cref="MessageBox"/> to display information to UI user.
         /// </summary>
         public Action<string, string, MessageBoxImage> Popup
         {
@@ -66,7 +66,7 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Gets message box to request confirmation from users.
+        /// Gets a <see cref="MessageBox"/> to request confirmation from UI user.
         /// </summary>
         public Func<string, string, bool> Confirm
         {
