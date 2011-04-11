@@ -59,7 +59,7 @@ namespace TimeSeriesFramework.UI
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of the <see cref="PagedViewModelBase"/> class.
+        /// Creates a new instance of the <see cref="PagedViewModelBase{T1,T2}"/> class.
         /// </summary>
         protected PagedViewModelBase()
         {
@@ -99,7 +99,7 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                if (m_itemsPerPage != null && m_itemsPerPage > 0)
+                if (m_itemsPerPage > 0)
                     return m_itemsPerPage;
                 else
                     return 20;
