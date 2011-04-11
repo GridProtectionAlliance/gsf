@@ -21,10 +21,9 @@
 //
 //******************************************************************************************************
 
-using System.Windows.Input;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using System.Xml.Serialization;
-using System;
 using TimeSeriesFramework.UI.Commands;
 
 namespace TimeSeriesFramework.UI.Utilities
@@ -34,57 +33,142 @@ namespace TimeSeriesFramework.UI.Utilities
     /// </summary>           
     public class MenuDataItem
     {
+        #region [ Members ]
+
+        //Fields
+        private string m_icon;
+        private string m_menuText;
+        private string m_description;
+        private string m_roles;
+        private string m_userControlAssembly;
+        private string m_userControlPath;
+        private ObservableCollection<MenuDataItem> m_subMenuItems;
+
+        #endregion
+
         #region [ Properties ]
-        
-        /// <summary>
-        /// Gets or sets path to icon image.
-        /// </summary>
-        [XmlAttribute]
-        public string Icon { get; set; }
 
         /// <summary>
-        /// Gets or sets text of menu item to be displayed in menu.
+        /// Gets or sets path <see cref="MenuDataItem"/> image icon.
         /// </summary>
         [XmlAttribute]
-        public string MenuText { get; set; }
+        public string Icon
+        {
+            get
+            {
+                return m_icon;
+            }
+            set
+            {
+                m_icon = value;
+            }
+        }
+        /// <summary>
+        /// Gets or sets text of <see cref="MenuDataItem"/> to be displayed in menu.
+        /// </summary>
+        [XmlAttribute]
+        public string MenuText 
+        { 
+            get
+            {
+                return m_menuText;
+            }
+            set
+            {
+                m_menuText = value;
+            }
+        }
 
         /// <summary>
-        /// Gets or sets description of the menu item.
+        /// Gets or sets description of the <see cref="MenuDataItem"/>.
         /// </summary>
         [XmlAttribute]
-        public string Description { get; set; }
+        public string Description 
+        { 
+            get
+            {
+                return m_description;
+            }
+            set
+            {
+                m_description = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets comma seperated list of roles with access to this <see cref="MenuDataItem"/>.
         /// </summary>                
         [XmlAttribute]
-        public string Roles { get; set; }
+        public string Roles 
+        { 
+            get
+            {
+                return m_roles;
+            }
+            set
+            {
+                m_roles = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the assembly name where user control is defined.
         /// </summary>
         [XmlAttribute]
-        public string UserControlAssembly { get; set; }
+        public string UserControlAssembly 
+        { 
+            get
+            {
+                return m_userControlAssembly;
+            }
+            set
+            {
+                m_userControlAssembly = value;
+            }
+        }
 
         /// <summary>
-        /// Gets or sets path for the user control to be loaded when this <see cref="MenuDataItem"/> is clicked.
+        /// Gets or sets path for the user control to be loaded when <see cref="MenuDataItem"/> is clicked.
         /// </summary>        
         [XmlAttribute]
-        public string UserControlPath { get; set; }
+        public string UserControlPath 
+        { 
+            get
+            {
+                return m_userControlPath;
+            }
+            set
+            {
+                m_userControlPath = value;
+            }
+        }
 
         /// <summary>
-        /// Gets or sets the commnad to execute when this <see cref="MenuDataItem"/> is clicked.
+        /// Gets or sets the commnad to execute when <see cref="MenuDataItem"/> is clicked.
         /// </summary> 
         [XmlIgnore]
         public ICommand Command 
         {
-            get { return new MenuCommand() { Roles = this.Roles, UserControlPath = this.UserControlPath }; }
+            get 
+            { 
+                return new MenuCommand() { Roles = this.Roles }; 
+            }
         }
 
         /// <summary>
         /// Gets or sets sub menu items for <see cref="MenuDataItem"/>.
         /// </summary>         
-        public ObservableCollection<MenuDataItem> SubMenuItems { get; set; }
+        public ObservableCollection<MenuDataItem> SubMenuItems 
+        {
+            get
+            {
+                return m_subMenuItems;
+            }
+            set
+            {
+                m_subMenuItems = value;
+            }
+        }
 
         #endregion
     }

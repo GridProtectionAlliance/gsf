@@ -23,7 +23,6 @@
 
 using System;
 using System.Threading;
-using System.Windows;
 using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI.Commands
@@ -35,7 +34,13 @@ namespace TimeSeriesFramework.UI.Commands
     {
         #region [ Members ]
 
-        
+        //Fields
+        private string m_roles;
+
+        //Events
+        /// <summary>
+        /// Raises when value of <see cref="CanExecute"/> changes.
+        /// </summary>
         public event EventHandler CanExecuteChanged;
 
         #endregion
@@ -43,18 +48,25 @@ namespace TimeSeriesFramework.UI.Commands
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets path the user control to be displayed on a menu item click.
-        /// </summary>
-        public string UserControlPath { get; set; }
-
-        /// <summary>
         /// Gets or sets comma seperated values of roles for which menuitem is visible.
         /// </summary>
-        public string Roles { get; set; }
+        public string Roles 
+        { 
+            get
+            {
+                return m_roles;
+            }
+            set
+            {
+                m_roles = value;
+            }
+        }
 
         #endregion
 
         #region [ Methods ]
+
+        #region [ ICommand Implementation ]
 
         /// <summary>
         /// Evaluates if menu item should be visible to current user with access to <see cref="Roles"/>.
@@ -70,15 +82,15 @@ namespace TimeSeriesFramework.UI.Commands
         }
 
         /// <summary>
-        /// Loads user control from the path defined in the <see cref="UserControlPath"/> property.
+        /// Handles <see cref="ICommand"/> action.
         /// </summary>
         /// <param name="parameter"></param>
         public void Execute(object parameter)
         {
-
-            //MessageBox.Show(UserControlPath);
         }
 
-        #endregion        
+        #endregion
+
+        #endregion
     }
 }

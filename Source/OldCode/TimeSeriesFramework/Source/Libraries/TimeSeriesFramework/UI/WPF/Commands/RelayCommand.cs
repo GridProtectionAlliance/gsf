@@ -27,10 +27,14 @@ using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI.Commands
 {
+    /// <summary>
+    /// Represents a wrapper class for <see cref="ICommand"/>.
+    /// </summary>
     public class RelayCommand : ICommand
     {
         #region [ Members ]
 
+        //Fields
         private readonly Action<object> m_execute;
         private readonly Predicate<object> m_canExecute;
 
@@ -38,8 +42,20 @@ namespace TimeSeriesFramework.UI.Commands
 
         #region [ Constructors ]
 
-        public RelayCommand(Action<object> execute) : this(execute, null) { }
+        /// <summary>
+        /// Creates a new instance of <see cref="RelayCommand"/> class.
+        /// </summary>
+        /// <param name="execute">Action to perform.</param>
+        public RelayCommand(Action<object> execute) : this(execute, null) 
+        { 
+        
+        }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="RelayCommand"/> class.
+        /// </summary>
+        /// <param name="execute">Action to perform.</param>
+        /// <param name="canExecute">Predicate to determine if an action can be performed.</param>
         public RelayCommand(Action<object> execute, Predicate<object> canExecute)
         {
             if (execute == null)
@@ -53,18 +69,36 @@ namespace TimeSeriesFramework.UI.Commands
 
         #region [ ICommand Members ]
 
+        /// <summary>
+        /// Function to determine if action related to <see cref="ICommand"/> can be performed.
+        /// </summary>
+        /// <param name="parameter">Parameter to pass into Predicate.</param>
+        /// <returns>Returns bool value if related action can be performed or not.</returns>
         [DebuggerStepThrough]
         public bool CanExecute(object parameter)
         {
             return m_canExecute == null ? true : m_canExecute(parameter);
         }
 
+        /// <summary>
+        /// Method to handle event raised by change in the value of <see cref="CanExecute"/>.
+        /// </summary>
         public event EventHandler CanExecuteChanged
         {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
+            add 
+            { 
+                CommandManager.RequerySuggested += value; 
+            }
+            remove 
+            { 
+                CommandManager.RequerySuggested -= value; 
+            }
         }
 
+        /// <summary>
+        /// Method to perform action attached to <see cref="ICommand"/> object.
+        /// </summary>
+        /// <param name="parameter"></param>
         public void Execute(object parameter)
         {
             m_execute(parameter);
