@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  NotConverter.cs - Gbtc
+//  IDataModel.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,44 +16,33 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/24/2011 - Mehulbhai P Thakkar
+//  04/11/2011 - Ritchie
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System;
-using System.Windows.Data;
-using TVA;
+using System.ComponentModel;
 
-namespace TimeSeriesFramework.UI.Converters
+namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Represents an <see cref="IValueConverter"/> to invert boolean value.
+    /// Represents a data model entity.
     /// </summary>
-    [ValueConversion(typeof(bool), typeof(bool))]
-    public class NotConverter : IValueConverter
+    public interface IDataModel : INotifyPropertyChanged, IDataErrorInfo
     {
-        #region [ IValueConverter Members ]
-        
-        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        /// <summary>
+        /// Indicates if the values associated with this object are valid.
+        /// </summary>
+        bool IsValid
         {
-            return InvertBoolean(value);
+            get;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            return InvertBoolean(value);
-        }
-
-        #endregion
-
-        #region [ Methods ]
-
-        private static object InvertBoolean(object value)
-        {
-            return !value.ToString().ParseBoolean();
-        }
-
-        #endregion
+        /// <summary>
+        /// Gets the default value specified by <see cref="DefaultValueAttribute"/>, if any, applied to the specified property. 
+        /// </summary>
+        /// <param name="propertyName">Property name.</param>
+        /// <returns>Default value applied to specified property; or null if one does not exist.</returns>
+        object GetDefaultValue(string propertyName);
     }
 }

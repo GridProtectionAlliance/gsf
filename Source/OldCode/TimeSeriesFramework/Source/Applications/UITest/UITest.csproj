@@ -51,8 +51,19 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="TVA.Core, Version=4.0.2.17, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="TVA.Communication, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Core">
       <HintPath>..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Security, Version=4.0.2.27, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Windows">
+      <HintPath>..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -109,6 +120,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\TimeSeriesFramework.csproj">
+      <Project>{412F9F59-D9B9-4C8E-96D2-20492644198C}</Project>
+      <Name>TimeSeriesFramework</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Libraries\TimeSeriesFramework\UI\TimeSeriesFramework.UI.csproj">
       <Project>{7ED01B57-DD71-4A38-BB29-65D629224A12}</Project>
       <Name>TimeSeriesFramework.UI</Name>

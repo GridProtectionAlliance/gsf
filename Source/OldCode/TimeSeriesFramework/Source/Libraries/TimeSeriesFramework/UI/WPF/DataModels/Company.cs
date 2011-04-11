@@ -22,8 +22,12 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -221,6 +225,185 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_updatedBy = value;
                 OnPropertyChanged("UpdatedBy");
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        // Static Methods      
+
+        /// <summary>
+        /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Company"/>.</returns>
+        public static ObservableCollection<Company> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                List<Company> companyList = new List<Company>();
+                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM Company ORDER BY LoadOrder");
+
+                foreach (DataRow row in companyTable.Rows)
+                {
+                    companyList.Add(new Company()
+                    {
+                        ID = row.Field<int>("ID"),
+                        Acronym = row.Field<string>("Acronym"),
+                        MapAcronym = row.Field<string>("MapAcronym"),
+                        Name = row.Field<string>("Name"),
+                        URL = row.Field<string>("URL"),
+                        LoadOrder = row.Field<int>("LoadOrder")
+                    });
+                }
+
+                return new ObservableCollection<Company>(companyList);
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Company"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of companies defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> companyList = new Dictionary<int, string>();
+                if (isOptional)
+                    companyList.Add(0, "Select Company");
+
+                IDbCommand command = database.Connection.CreateCommand();
+                command.CommandType = CommandType.Text;
+                command.CommandText = "SELECT ID, Name FROM Company ORDER BY LoadOrder";
+
+                DataTable resultTable = new DataTable();
+                resultTable.Load(command.ExecuteReader());
+
+                int id;
+                foreach (DataRow row in resultTable.Rows)
+                {
+                    id = int.Parse(row["ID"].ToString());
+
+                    if (!companyList.ContainsKey(id))
+                        companyList.Add(id, row["Name"].ToString());
+                }
+                return companyList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Company"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="company">Information about <see cref="Company"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Company company, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                IDbCommand command = database.Connection.CreateCommand();
+                command.CommandType = CommandType.Text;
+
+                if (isNew)
+                    command.CommandText = "INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)";
+                else
+                    command.CommandText = "UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id";
+
+                command.AddParameterWithValue("@acronym", company.Acronym.Replace(" ", "").ToUpper());
+                command.AddParameterWithValue("@mapAcronym", company.MapAcronym.Replace(" ", "").ToUpper());
+                command.AddParameterWithValue("@name", company.Name);
+                command.AddParameterWithValue("@url", company.URL ?? string.Empty);
+                command.AddParameterWithValue("@loadOrder", company.LoadOrder);
+                command.AddParameterWithValue("@updatedBy", CommonFunctions.CurrentUser);
+                command.AddParameterWithValue("@updatedOn", command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+
+                if (isNew)
+                {
+                    command.AddParameterWithValue("@createdBy", CommonFunctions.CurrentUser);
+                    command.AddParameterWithValue("@createdOn", command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                }
+                else
+                {
+                    command.AddParameterWithValue("@id", company.ID);
+                }
+
+                command.ExecuteNonQuery();
+                return "Company information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Company"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="companyID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int companyID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @companyID", companyID);
+
+                return "Company deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
             }
         }
 

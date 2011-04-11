@@ -18,45 +18,75 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/28/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
-//       This code was taken from MVVM Design Pattern article by Josh Smith in MSDN magazine February 2009 issue.
+//       This code is based on MVVM Design Pattern article by Josh Smith - MSDN magazine, Feb 2009.
+//  04/11/2011 - J. Ritchie Carroll
+//       Created delegate wrapper contructor for common case when methods use no parameters.
+//       Added code comments.
+//
 //******************************************************************************************************
 
 using System;
-using System.Diagnostics;
 using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI.Commands
 {
     /// <summary>
-    /// Represents a wrapper class for <see cref="ICommand"/>.
+    /// Defines a relay <see cref="ICommand"/>.
     /// </summary>
     public class RelayCommand : ICommand
     {
         #region [ Members ]
 
-        //Fields
+        // Events
+
+        /// <summary>
+        /// Occurs when changes occur that affect whether or not the command should execute.
+        /// </summary>
+        public event EventHandler CanExecuteChanged
+        {
+            add
+            {
+                CommandManager.RequerySuggested += value;
+            }
+            remove
+            {
+                CommandManager.RequerySuggested -= value;
+            }
+        }
+
+        // Fields
         private readonly Action<object> m_execute;
         private readonly Predicate<object> m_canExecute;
 
-        #endregion 
+        #endregion
 
         #region [ Constructors ]
 
         /// <summary>
-        /// Creates a new instance of <see cref="RelayCommand"/> class.
+        /// Creates a new <see cref="RelayCommand"/> for the common case delegates.
         /// </summary>
-        /// <param name="execute">Action to perform.</param>
-        public RelayCommand(Action<object> execute) : this(execute, null) 
-        { 
-        
+        /// <param name="execute">Execute method pointer.</param>
+        /// <param name="canExecute">Can execute method pointer.</param>
+        public RelayCommand(Action execute, Func<bool> canExecute = null)
+        {
+            if (execute == null)
+                throw new ArgumentNullException("execute");
+
+            // Create lambda proxies for delegates that use no parameters
+            m_execute = param => execute();
+
+            if (canExecute == null)
+                m_canExecute = null;
+            else
+                m_canExecute = param => canExecute();
         }
 
         /// <summary>
-        /// Creates a new instance of <see cref="RelayCommand"/> class.
+        /// Creates a new <see cref="RelayCommand"/>.
         /// </summary>
-        /// <param name="execute">Action to perform.</param>
-        /// <param name="canExecute">Predicate to determine if an action can be performed.</param>
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        /// <param name="execute">Execute method pointer.</param>
+        /// <param name="canExecute">Can execute method pointer.</param>
+        public RelayCommand(Action<object> execute, Predicate<object> canExecute = null)
         {
             if (execute == null)
                 throw new ArgumentNullException("execute");
@@ -67,43 +97,33 @@ namespace TimeSeriesFramework.UI.Commands
 
         #endregion
 
-        #region [ ICommand Members ]
+        #region [ Methods ]
 
         /// <summary>
-        /// Function to determine if action related to <see cref="ICommand"/> can be performed.
+        /// Defines the method that determines whether the command can execute in its current state.
         /// </summary>
-        /// <param name="parameter">Parameter to pass into Predicate.</param>
-        /// <returns>Returns bool value if related action can be performed or not.</returns>
-        [DebuggerStepThrough]
+        /// <param name="parameter">
+        /// Data used by the <see cref="RelayCommand"/>. If the <see cref="RelayCommand"/> does not require
+        /// data to be passed, this object can be set to <c>null</c>.
+        /// </param>
+        /// <returns><c>true</c> if this <see cref="RelayCommand"/> can be executed; otherwise, <c>false</c>.</returns>
         public bool CanExecute(object parameter)
         {
             return m_canExecute == null ? true : m_canExecute(parameter);
         }
 
         /// <summary>
-        /// Method to handle event raised by change in the value of <see cref="CanExecute"/>.
+        /// Defines the method to be called when the command is invoked.
         /// </summary>
-        public event EventHandler CanExecuteChanged
-        {
-            add 
-            { 
-                CommandManager.RequerySuggested += value; 
-            }
-            remove 
-            { 
-                CommandManager.RequerySuggested -= value; 
-            }
-        }
-
-        /// <summary>
-        /// Method to perform action attached to <see cref="ICommand"/> object.
-        /// </summary>
-        /// <param name="parameter"></param>
+        /// <param name="parameter">
+        /// Data used by the <see cref="RelayCommand"/>. If the <see cref="RelayCommand"/> does not require
+        /// data to be passed, this object can be set to <c>null</c>.
+        /// </param>
         public void Execute(object parameter)
         {
             m_execute(parameter);
         }
 
-        #endregion 
+        #endregion
     }
 }

@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                        
              mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="800"
-             Background="Transparent">
+             Background="Transparent" xmlns:my="clr-namespace:TimeSeriesFramework.UI.UserControls">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -60,7 +60,9 @@
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="ButtonDelete" Command="{Binding DeleteCommand}" Content="Delete" />
             <Button x:Name="ButtonClear" Command="{Binding ClearCommand}" Content="Clear" />
-            <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding (Validation.HasError), ElementName=GridCompanyDetail, Converter={StaticResource NotConverter}}" Content="Save" />
+            <Button x:Name="ButtonSave" Command="{Binding SaveCommand}" IsEnabled="{Binding Validation.HasError, Converter={StaticResource NotConverter}}" Content="Save" />
+            <my:VendorUserControl Height="1" x:Name="vendorUserControl3" Width="0" />
+            <my:VendorUserControl x:Name="vendorUserControl1" />
         </StackPanel>
 
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto">
@@ -80,7 +82,7 @@
             <Button Command="{Binding NextCommand}" Content="&gt;" Width="50" Margin="2" Padding="2" />
             <Button Command="{Binding LastCommand}" Content="&gt;&gt;" Width="50" Margin="2" Padding="2" />
         </StackPanel>
-
+        <my:VendorUserControl x:Name="vendorUserControl2" />
     </StackPanel>
     
 </UserControl>

@@ -22,9 +22,7 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.ObjectModel;
 using System.Windows;
-using System.Windows.Input;
 using TimeSeriesFramework.UI.Commands;
 using TimeSeriesFramework.UI.DataModels;
 
@@ -33,10 +31,11 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// <summary>
     /// Class to hold bindable <see cref="Company"/> collection and selected company for UI.
     /// </summary>
-    internal class Companies : PagedViewModelBase, IViewModel
+    internal class Companies : PagedViewModelBase<Company, int>, IViewModel
     {
-         #region [ Members ]
-                
+        #region [ Members ]
+
+        // Fields        
         private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
 
         #endregion
@@ -55,90 +54,35 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         #region [ Properties ]
 
-        #region [ IViewModel Properties ]
-
-        public ICommand SaveCommand
+        public override bool IsNewRecord
         {
             get
             {
-                if (m_saveCommand == null)
-                    m_saveCommand = new RelayCommand(param => this.Save(), param => this.CanSave);
-
-                return m_saveCommand;
+                return CurrentItem.ID == 0;
             }
         }
-
-        public ICommand DeleteCommand
-        {
-            get
-            {
-                if (m_deleteCommand == null)
-                    m_deleteCommand = new RelayCommand(param => this.Delete(), param => this.CanDelete);
-
-                return m_deleteCommand;
-            }
-        }
-
-        public ICommand ClearCommand
-        {
-            get
-            {
-                if (m_clearCommand == null)
-                    m_clearCommand = new RelayCommand(param => this.Clear(), param => this.CanClear);
-
-                return m_clearCommand;
-            }
-        }
-
-        public bool CanSave
-        {
-            get { return ((Company)CurrentItem).IsValid; }
-        }
-
-        public bool CanDelete
-        {
-            get { return true; }
-        }
-
-        public bool CanClear
-        {
-            get { return true; }
-        }
-
-        #endregion
 
         #endregion
 
         #region [ Methods ]
 
-        #region [ IViewModel Implementation ]
-
-        public void Load()
+        public override int GetCurrentItemKey()
         {
-            ItemsSource = new ObservableCollection<object>(CommonFunctions.GetCompanyList(null));
+            return CurrentItem.ID;
         }
 
-        public void Save()
+        public override string GetCurrentItemName()
         {
-            try
-            {
-                string result = CommonFunctions.SaveCompany(null, (Company)CurrentItem, ((Company)CurrentItem).ID > 0 ? false : true);
-                Popup(result, "Save Company", MessageBoxImage.Information);
-                Load();
-            }
-            catch (Exception ex)
-            {
-                Popup(ex.Message, "Save Company - ERROR!", MessageBoxImage.Error);
-            }
+            return CurrentItem.Name;
         }
 
         public void Delete()
         {
-            if (((Company)CurrentItem).ID > 0 && Confirm("Are you sure you want to delete " + ((Company)CurrentItem).Acronym + "?", "Delete Company"))
+            if (CurrentItem.ID > 0 && Confirm("Are you sure you want to delete " + CurrentItem.Acronym + "?", "Delete Company"))
             {
                 try
                 {
-                    string result = CommonFunctions.DeleteCompany(null, ((Company)CurrentItem).ID);
+                    string result = Company.Delete(null, CurrentItem.ID);
                     Load();
                     Popup(result, "Delete Company", MessageBoxImage.Information);
                 }
@@ -153,8 +97,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         {
             CurrentItem = new Company();
         }
-
-        #endregion
 
         #endregion
     }

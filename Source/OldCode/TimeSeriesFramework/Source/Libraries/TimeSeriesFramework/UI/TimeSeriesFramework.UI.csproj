@@ -47,11 +47,24 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="TVA.Communication">
+      <HintPath>..\..\..\Dependencies\TVA\TVA.Communication.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Core">
+      <HintPath>..\..\..\Dependencies\TVA\TVA.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Security">
+      <HintPath>..\..\..\Dependencies\TVA\TVA.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="TVA.Windows">
+      <HintPath>..\..\..\Dependencies\TVA\TVA.Windows.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
+    <Compile Include="IDataModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

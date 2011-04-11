@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.UI
     /// <summary>
     /// Represents an abstract base class for all entity model objects.
     /// </summary>
-    public abstract class DataModelBase : INotifyPropertyChanged, IDataErrorInfo
+    public abstract class DataModelBase : IDataModel
     {
         #region [ Members ]
 
@@ -80,7 +80,14 @@ namespace TimeSeriesFramework.UI
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
 
             // Load all default values for properties
-            ExecuteActionForProperties(property => property.SetValue(this, DeriveDefaultValue(property.Name, property.GetValue(this, null)), null), BindingFlags.SetProperty);
+            ExecuteActionForProperties(property => 
+            {
+                object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
+
+                if (!Common.IsDefaultValue(defaultValue))
+                    property.SetValue(this, defaultValue, null);
+
+            }, BindingFlags.SetProperty);
         }
 
         #endregion
@@ -96,7 +103,7 @@ namespace TimeSeriesFramework.UI
             get
             {
                 // If any of the properties have errors, values are not valid
-                return m_propertyErrors.Any(kvPair => !string.IsNullOrWhiteSpace(kvPair.Value));
+                return m_propertyErrors.Any(kvPair => string.IsNullOrWhiteSpace(kvPair.Value));
             }
         }
 

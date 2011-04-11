@@ -37,12 +37,12 @@ namespace UITest
     /// </summary>
     public partial class MainWindow : Window
     {
-        public ObservableCollection<MenuDataItem> m_menuDataItems; 
+        public ObservableCollection<MenuDataItem> m_menuDataItems;
 
         public MainWindow()
         {
             InitializeComponent();
-            this.Loaded += new RoutedEventHandler(MainWindow_Loaded);            
+            this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -66,7 +66,7 @@ namespace UITest
                 {
                     if (type.Name == menuDataItem.UserControlPath)
                     {
-                        var userControl = Activator.CreateInstance(type) as UserControl;                        
+                        var userControl = Activator.CreateInstance(type) as UserControl;
                         FrameContent.Navigate(userControl);
                         TextBlockTitle.Text = menuDataItem.Description;
                     }
@@ -74,7 +74,6 @@ namespace UITest
             }
             catch
             {
-
             }
         }
     }
