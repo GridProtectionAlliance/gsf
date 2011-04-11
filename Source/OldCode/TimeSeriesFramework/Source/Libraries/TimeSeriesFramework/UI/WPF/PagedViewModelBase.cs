@@ -56,7 +56,7 @@ namespace TimeSeriesFramework.UI
 
         #endregion
 
-        #region [ Constructors ]        
+        #region [ Constructors ]
 
         /// <summary>
         /// Creates a new instance of the <see cref="PagedViewModelBase"/> class.
@@ -138,7 +138,7 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_currentItem = value;
-                NotifyPropertyChanged("CurrentItem");
+                OnPropertyChanged("CurrentItem");
             }
         }
 
@@ -154,7 +154,7 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_currentPage = value;
-                NotifyPropertyChanged("CurrentPage");
+                OnPropertyChanged("CurrentPage");
                 if (m_currentPage.Count > 0)
                     CurrentItem = m_currentPage[0];
             }
@@ -172,7 +172,7 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_currentPageNumber = value;
-                NotifyPropertyChanged("CurrentPageNumber");
+                OnPropertyChanged("CurrentPageNumber");
             }
         }
 
@@ -188,7 +188,7 @@ namespace TimeSeriesFramework.UI
             set
             {
                 m_pageCount = value;
-                NotifyPropertyChanged("PageCount");
+                OnPropertyChanged("PageCount");
             }
         }
 
@@ -480,17 +480,13 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Raises this object's PropertyChanged event.
+        /// Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
-        /// <param name="propertyName">The property that has a new value.</param>
-        protected void NotifyPropertyChanged(string propertyName)
+        /// <param name="propertyName">Property name that has changed.</param>
+        protected virtual void OnPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                var e = new PropertyChangedEventArgs(propertyName);
-                handler(this, e);
-            }
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         /// <summary>
