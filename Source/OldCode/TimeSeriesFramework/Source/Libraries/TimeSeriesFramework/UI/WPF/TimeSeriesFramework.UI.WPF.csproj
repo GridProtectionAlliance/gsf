@@ -81,6 +81,7 @@
     <Compile Include="DataModels\VendorDevice.cs" />
     <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IViewModel.cs" />
+    <Compile Include="MenuDataItem.cs" />
     <Compile Include="PagedViewModelBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -98,10 +99,15 @@
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\DataPagerUserControl.xaml.cs">
+      <DependentUpon>DataPagerUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\DetailViewFooterUserControl.xaml.cs">
+      <DependentUpon>DetailViewFooterUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\VendorUserControl.xaml.cs">
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utilities\MenuDataItem.cs" />
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\Companies.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -126,6 +132,14 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="UserControls\DataPagerUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\DetailViewFooterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\VendorUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

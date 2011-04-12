@@ -44,8 +44,9 @@
     
     <Style TargetType="TextBox">
         <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Width" Value="{StaticResource LargerItemSize}" />
-        <Setter Property="Margin" Value="5" />
+        <Setter Property="Margin" Value="5" />        
         <Setter Property="Validation.ErrorTemplate">
             <Setter.Value>
                 <ControlTemplate>

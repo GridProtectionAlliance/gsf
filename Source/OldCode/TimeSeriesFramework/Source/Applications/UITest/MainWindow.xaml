@@ -3,11 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="700" Width="900"    
         xmlns:tsfconv="clr-namespace:TimeSeriesFramework.UI.Converters;assembly=TimeSeriesFramework.UI"
-        xmlns:tsfutil="clr-namespace:TimeSeriesFramework.UI.Utilities;assembly=TimeSeriesFramework.UI.WPF"         
+        xmlns:tsf="clr-namespace:TimeSeriesFramework.UI;assembly=TimeSeriesFramework.UI.WPF"
         >
     <Window.Resources>        
         <tsfconv:RoleBasedVisibilityConverter x:Key="roleBasedVisibilityConverter" />
-        <HierarchicalDataTemplate DataType="{x:Type tsfutil:MenuDataItem}" ItemsSource="{Binding Path=SubMenuItems}">            
+        <HierarchicalDataTemplate DataType="{x:Type tsf:MenuDataItem}" ItemsSource="{Binding Path=SubMenuItems}">            
             <ContentPresenter Content="{Binding Path=MenuText}" RecognizesAccessKey="True"/>            
         </HierarchicalDataTemplate>        
     </Window.Resources>

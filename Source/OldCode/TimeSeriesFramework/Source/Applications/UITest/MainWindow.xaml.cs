@@ -28,7 +28,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
-using TimeSeriesFramework.UI.Utilities;
+using TimeSeriesFramework.UI;
 
 namespace UITest
 {
@@ -37,14 +37,33 @@ namespace UITest
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region [ Members ]
+        
+        //Fields
         public ObservableCollection<MenuDataItem> m_menuDataItems;
 
+        #endregion
+
+        #region [ Constructor ]
+        
+        /// <summary>
+        /// Creates an instance of <see cref="MainWindow"/>.
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
             this.Loaded += new RoutedEventHandler(MainWindow_Loaded);
         }
 
+        #endregion
+
+        #region [ Methods ]
+        
+        /// <summary>
+        /// Method to handle window loaded event.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments.</param>
         void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             XmlRootAttribute xmlRootAttribute = new XmlRootAttribute("MenuDataItems");
@@ -55,6 +74,11 @@ namespace UITest
             MenuMain.DataContext = m_menuDataItems;
         }
 
+        /// <summary>
+        /// Handles click event on <see cref="MenuItem"/>.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Event arguments</param>
         private void MenuMain_Click(object sender, RoutedEventArgs e)
         {
             MenuDataItem menuDataItem;
@@ -76,5 +100,7 @@ namespace UITest
             {
             }
         }
+
+        #endregion
     }
 }

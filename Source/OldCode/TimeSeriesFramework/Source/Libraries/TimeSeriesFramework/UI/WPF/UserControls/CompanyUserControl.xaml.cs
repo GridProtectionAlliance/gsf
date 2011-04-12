@@ -31,10 +31,17 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class CompanyUserControl : UserControl
     {
+        #region [ Constructor ]
+        
+        /// <summary>
+        /// Creates a new instance of <see cref="CompanyUserControl"/>.
+        /// </summary>
         public CompanyUserControl()
         {
             InitializeComponent();                        
             this.DataContext = new Companies();
         }
+
+        #endregion
     }
 }

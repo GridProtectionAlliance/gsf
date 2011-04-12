@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MenuItemStyleSelector.cs - Gbtc
+//  DataOperation.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,34 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/29/2011 - Mehulbhai P Thakkar
+//  04/12/2011 - mthakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Windows;
-using System.Windows.Controls;
-using TimeSeriesFramework.UI;
+using System.Windows.Data;
+using TimeSeriesFramework.UI.Converters;
 
-namespace UITest.Utility
+namespace TimeSeriesFramework.UI.Binding
 {
     /// <summary>
-    /// Represents wrapper object around <see cref="StyleSelector"/> class.
+    /// Represents a custom <see cref="Binding"/> class.
     /// </summary>
-    public class MenuItemStyleSelector : StyleSelector
+    public class DataOperation : System.Windows.Data.Binding
     {
-        public override System.Windows.Style SelectStyle(object item, System.Windows.DependencyObject container)
-        {
-            if (string.IsNullOrEmpty((item as MenuDataItem).MenuText))
-                return ((container as FrameworkElement).FindResource("MenuSeparatorStyle") as Style);
-            else
-                return ((container as FrameworkElement).FindResource("MenuItemStyle") as Style);
+        #region [ Constructor ]
+        
+        /// <summary>
+        /// Creates a new instance of <see cref="DataOperation"/> class.
+        /// </summary>
+        public DataOperation()
+        {            
+            ElementName = "GridDetailView";
+            Converter = new NotConverter();
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+            NotifyOnValidationError = true;
         }
+
+        #endregion
     }
 }

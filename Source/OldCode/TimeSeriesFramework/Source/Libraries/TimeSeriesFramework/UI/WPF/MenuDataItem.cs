@@ -26,7 +26,7 @@ using System.Windows.Input;
 using System.Xml.Serialization;
 using TimeSeriesFramework.UI.Commands;
 
-namespace TimeSeriesFramework.UI.Utilities
+namespace TimeSeriesFramework.UI
 {
     /// <summary>
     /// Represents a menu item in a WPF Menu control.

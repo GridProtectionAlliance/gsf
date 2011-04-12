@@ -88,6 +88,8 @@ namespace TimeSeriesFramework.UI
                 if (!Common.IsDefaultValue(defaultValue))
                     property.SetValue(this, defaultValue, null);
 
+                OnPropertyChanged(property.Name);
+
             }, BindingFlags.SetProperty);
         }
 

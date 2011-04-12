@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  MenuItemStyleSelector.cs - Gbtc
+//  Column.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -16,28 +16,35 @@
 //
 //  Code Modification History:
 //  ----------------------------------------------------------------------------------------------------
-//  03/29/2011 - Mehulbhai P Thakkar
+//  04/12/2011 - mthakkar
 //       Generated original version of source code.
 //
 //******************************************************************************************************
 
-using System.Windows;
-using System.Windows.Controls;
-using TimeSeriesFramework.UI;
+using System.Windows.Data;
+using TimeSeriesFramework.UI.Converters;
 
-namespace UITest.Utility
+namespace TimeSeriesFramework.UI.Binding
 {
     /// <summary>
-    /// Represents wrapper object around <see cref="StyleSelector"/> class.
+    /// Represents a custom <see cref="Binding"/> class.
     /// </summary>
-    public class MenuItemStyleSelector : StyleSelector
+    public class Column : System.Windows.Data.Binding
     {
-        public override System.Windows.Style SelectStyle(object item, System.Windows.DependencyObject container)
+        #region [ Constructor ]
+        
+        /// <summary>
+        /// Creates a new instance of <see cref="Column"/> class.
+        /// </summary>
+        public Column()
         {
-            if (string.IsNullOrEmpty((item as MenuDataItem).MenuText))
-                return ((container as FrameworkElement).FindResource("MenuSeparatorStyle") as Style);
-            else
-                return ((container as FrameworkElement).FindResource("MenuItemStyle") as Style);
+            ValidatesOnDataErrors = true;
+            ValidatesOnExceptions = true;
+            Mode = BindingMode.TwoWay;
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+            BindingGroupName = "input";
         }
+
+        #endregion
     }
 }
