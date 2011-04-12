@@ -39,13 +39,14 @@ using System.Threading;
 using System.Timers;
 using TVA.Configuration;
 using TVA.Historian.Files;
+using TVA.Adapters;
 
 namespace TVA.Historian.MetadataProviders
 {
     /// <summary>
     /// Base class for a provider of updates to the data in a <see cref="MetadataFile"/>.
     /// </summary>
-    public abstract class MetadataProviderBase : IMetadataProvider
+    public abstract class MetadataProviderBase : Adapter, IMetadataProvider
     {
         #region [ Members ]
 
@@ -78,11 +79,8 @@ namespace TVA.Historian.MetadataProviders
         private int m_refreshInterval;
         private int m_refreshTimeout;
         private MetadataFile m_metadata;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private Thread m_refreshThread;
         private System.Timers.Timer m_refreshTimer;
-        private bool m_enabled;
         private bool m_disposed;
         private bool m_initialized;
 
@@ -97,16 +95,7 @@ namespace TVA.Historian.MetadataProviders
         {
             m_refreshInterval = -1;
             m_refreshTimeout = 60;
-            m_persistSettings = true;
-            m_settingsCategory = this.GetType().Name;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the metadata provider is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~MetadataProviderBase()
-        {
-            Dispose(false);
+            PersistSettings = true;
         }
 
         #endregion
@@ -170,114 +159,51 @@ namespace TVA.Historian.MetadataProviders
             }
         }
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the metadata provider is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the metadata provider settings are to be saved to the config file.
-        /// </summary>
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the category under which the metadata provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_settingsCategory = value;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
-
-        #region [ Abstract ]
 
         /// <summary>
         /// When overridden in a derived class, refreshes the <see cref="Metadata"/> from an external source.
         /// </summary>
         protected abstract void RefreshMetadata();
 
-        #endregion
-
-        /// <summary>
-        /// Releases all the resources used by the metadata provider.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         /// <summary>
         /// Initializes the metadata provider.
         /// </summary>
-        public virtual void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+
             if (!m_initialized)
             {
-                // Load settings from the config file.
-                LoadSettings();
                 // Start refresh timer for auto-refresh.
-                if (m_enabled && m_refreshInterval > 0)
+                if (Enabled && m_refreshInterval > 0)
                 {
                     m_refreshTimer = new System.Timers.Timer(m_refreshInterval * 60000);
                     m_refreshTimer.Elapsed += RefreshTimer_Elapsed;
                     m_refreshTimer.Start();
                 }
+
                 // Initialize only once.
                 m_initialized = true;
             }
         }
 
         /// <summary>
-        /// Saves metadata provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Saves metadata provider settings to the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void SaveSettings()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            base.SaveSettings();
 
+            if (PersistSettings)
+            {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Enabled", true].Update(m_enabled);
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["Enabled", true].Update(Enabled);
                 settings["RefreshTimeout", true].Update(m_refreshTimeout);
                 settings["RefreshInterval", true].Update(m_refreshInterval);
                 config.Save();
@@ -285,24 +211,22 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Loads saved metadata provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved metadata provider settings from the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void LoadSettings()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            base.LoadSettings();
 
+            if (PersistSettings)
+            {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if this metadata provider is enabled; otherwise False.");
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("Enabled", Enabled, "True if this metadata provider is enabled; otherwise False.");
                 settings.Add("RefreshTimeout", m_refreshTimeout, "Number of seconds to wait for metadata refresh to complete.");
                 settings.Add("RefreshInterval", m_refreshInterval, "Interval in minutes at which the metadata is to be refreshed.");
-                Enabled = settings["Enabled"].ValueAs(m_enabled);
+                Enabled = settings["Enabled"].ValueAs(Enabled);
                 RefreshTimeout = settings["RefreshTimeout"].ValueAs(m_refreshTimeout);
                 RefreshInterval = settings["RefreshInterval"].ValueAs(m_refreshInterval);
             }
@@ -315,7 +239,7 @@ namespace TVA.Historian.MetadataProviders
         /// <exception cref="ArgumentNullException"><see cref="Metadata"/> is null.</exception>
         public bool Refresh()
         {
-            if (!m_enabled || (m_refreshThread != null && m_refreshThread.IsAlive))
+            if (!Enabled || (m_refreshThread != null && m_refreshThread.IsAlive))
                 return false;
 
             if (m_metadata == null)
@@ -346,18 +270,14 @@ namespace TVA.Historian.MetadataProviders
         /// Releases the unmanaged resources used by the metadata provider and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.				
                     if (disposing)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
                         if (m_refreshThread != null)
                             m_refreshThread.Abort();
 
@@ -371,6 +291,7 @@ namespace TVA.Historian.MetadataProviders
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+                    base.Dispose(disposing);
                 }
             }
         }

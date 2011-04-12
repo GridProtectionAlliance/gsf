@@ -26,7 +26,7 @@
 //******************************************************************************************************
 
 using System;
-using TVA.Configuration;
+using TVA.Adapters;
 using TVA.Historian.Files;
 
 namespace TVA.Historian.MetadataProviders
@@ -35,7 +35,7 @@ namespace TVA.Historian.MetadataProviders
     /// Defines a provider of updates to the data in a <see cref="MetadataFile"/>.
     /// </summary>
     /// <seealso cref="MetadataFile"/>
-    public interface IMetadataProvider : ISupportLifecycle, IPersistSettings
+    public interface IMetadataProvider : IAdapter
     {
         #region [ Members ]
 

@@ -25,13 +25,14 @@
 
 using System;
 using TVA.Configuration;
+using TVA.Adapters;
 
 namespace TVA.Historian.Replication
 {
     /// <summary>
     /// Defines a provider of replication mechanism for the <see cref="IArchive"/>.
     /// </summary>
-    public interface IReplicationProvider : ISupportLifecycle, IPersistSettings
+    public interface IReplicationProvider : IAdapter
     {
         #region [ Members ]
 

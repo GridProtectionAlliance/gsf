@@ -29,6 +29,7 @@
 
 using System;
 using TVA.Configuration;
+using TVA.Adapters;
 
 namespace TVA.Historian.Notifiers
 {
@@ -68,7 +69,7 @@ namespace TVA.Historian.Notifiers
     /// Defines a notifier that can process notification messages.
     /// </summary>
     /// <seealso cref="NotificationTypes"/>
-    public interface INotifier : ISupportLifecycle, IPersistSettings
+    public interface INotifier : IAdapter
     {
         #region [ Members ]
 

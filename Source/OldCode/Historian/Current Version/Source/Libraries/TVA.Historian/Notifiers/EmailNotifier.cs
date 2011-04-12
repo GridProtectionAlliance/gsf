@@ -125,7 +125,7 @@ namespace TVA.Historian.Notifiers
         #region [ Methods ]
 
         /// <summary>
-        /// Saves <see cref="EmailNotifier"/> settings to the config file if the <see cref="NotifierBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="EmailNotifier"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>        
         public override void SaveSettings()
         {
@@ -143,7 +143,7 @@ namespace TVA.Historian.Notifiers
         }
 
         /// <summary>
-        /// Loads saved <see cref="EmailNotifier"/> settings from the config file if the <see cref="NotifierBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="EmailNotifier"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>        
         public override void LoadSettings()
         {

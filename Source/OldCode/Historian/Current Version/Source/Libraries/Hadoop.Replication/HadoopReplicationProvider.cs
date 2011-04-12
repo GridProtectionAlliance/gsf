@@ -256,7 +256,7 @@ namespace Hadoop.Replication
         #region [ Methods ]
 
         /// <summary>
-        /// Saves <see cref="HadoopReplicationProvider"/> settings to the config file if the <see cref="ReplicationProviderBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="HadoopReplicationProvider"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -277,7 +277,7 @@ namespace Hadoop.Replication
         }
 
         /// <summary>
-        /// Loads saved <see cref="HadoopReplicationProvider"/> settings from the config file if the <see cref="ReplicationProviderBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="HadoopReplicationProvider"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>  
         public override void LoadSettings()
         {

@@ -151,7 +151,7 @@ namespace TVA.Historian.MetadataProviders
         #region [ Methods ]
 
         /// <summary>
-        /// Saves <see cref="AdoMetadataProvider"/> settings to the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
+        /// Saves <see cref="AdoMetadataProvider"/> settings to the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void SaveSettings()
         {
@@ -169,7 +169,7 @@ namespace TVA.Historian.MetadataProviders
         }
 
         /// <summary>
-        /// Loads saved <see cref="AdoMetadataProvider"/> settings from the config file if the <see cref="MetadataProviderBase.PersistSettings"/> property is set to true.
+        /// Loads saved <see cref="AdoMetadataProvider"/> settings from the config file if the <see cref="TVA.Adapters.Adapter.PersistSettings"/> property is set to true.
         /// </summary>
         public override void LoadSettings()
         {

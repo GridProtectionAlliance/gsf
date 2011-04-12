@@ -57,17 +57,6 @@ namespace TVA.Historian.Files
             SettingsCategory = this.GetType().Name;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MetadataFile"/> class.
-        /// </summary>
-        /// <param name="container"><see cref="IContainer"/> object that contains the <see cref="MetadataFile"/>.</param>
-        public MetadataFile(IContainer container)
-            : this()
-        {
-            if (container != null)
-                container.Add(this);
-        }
-
         #endregion
 
         #region [ Methods ]

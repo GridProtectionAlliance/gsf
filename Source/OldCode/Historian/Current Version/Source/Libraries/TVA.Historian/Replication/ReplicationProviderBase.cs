@@ -31,13 +31,14 @@ using System;
 using System.Configuration;
 using System.Threading;
 using TVA.Configuration;
+using TVA.Adapters;
 
 namespace TVA.Historian.Replication
 {
     /// <summary>
     /// Base class for a provider of replication mechanism for the <see cref="IArchive"/>.
     /// </summary>
-    public abstract class ReplicationProviderBase : IReplicationProvider
+    public abstract class ReplicationProviderBase : Adapter, IReplicationProvider
     {
         #region [ Members ]
 
@@ -67,13 +68,10 @@ namespace TVA.Historian.Replication
         private string m_archiveLocation;
         private string m_replicaLocation;
         private int m_replicationInterval;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private Thread m_replicationThread;
         private System.Timers.Timer m_replicationTimer;
-        private bool m_enabled;
-        private bool m_disposed;
         private bool m_initialized;
+        private bool m_disposed;
 
         #endregion
 
@@ -85,16 +83,7 @@ namespace TVA.Historian.Replication
         protected ReplicationProviderBase()
         {
             m_replicationInterval = -1;
-            m_persistSettings = true;
-            m_settingsCategory = this.GetType().Name;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the replication provider is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~ReplicationProviderBase()
-        {
-            Dispose(false);
+            PersistSettings = true;
         }
 
         #endregion
@@ -149,114 +138,51 @@ namespace TVA.Historian.Replication
             }
         }
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the replication provider settings are to be saved to the config file.
-        /// </summary>
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the category under which the replication provider settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_settingsCategory = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the replication provider is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
-
-        #region [ Abstract ]
 
         /// <summary>
         /// When overridden in a derived class, replicates the <see cref="IArchive"/>.
         /// </summary>
         protected abstract void ReplicateArchive();
 
-        #endregion
-
-        /// <summary>
-        /// Releases all the resources used by the replication provider.
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         /// <summary>
         /// Initializes the replication provider.
         /// </summary>
-        public virtual void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+
             if (!m_initialized)
             {
-                // Load settings from the config file.
-                LoadSettings();
                 // Start timer for periodic replication.
-                if (m_enabled && m_replicationInterval > 0)
+                if (Enabled && m_replicationInterval > 0)
                 {
                     m_replicationTimer = new System.Timers.Timer(m_replicationInterval * 60000);
                     m_replicationTimer.Elapsed += ReplicationTimer_Elapsed;
                     m_replicationTimer.Start();
                 }
+
                 // Initialize only once.
                 m_initialized = true;
             }
         }
 
         /// <summary>
-        /// Saves replication provider settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Saves replication provider settings to the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void SaveSettings()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void SaveSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            base.SaveSettings();
 
+            if (PersistSettings)
+            {
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Enabled", true].Update(m_enabled);
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["Enabled", true].Update(Enabled);
                 settings["ArchiveLocation", true].Update(m_archiveLocation);
                 settings["ReplicaLocation", true].Update(m_replicaLocation);
                 settings["ReplicationInterval", true].Update(m_replicationInterval);
@@ -265,25 +191,23 @@ namespace TVA.Historian.Replication
         }
 
         /// <summary>
-        /// Loads saved replication provider settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved replication provider settings from the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void LoadSettings()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            base.LoadSettings();
 
+            if (PersistSettings)
+            {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if this replication provider is enabled; otherwise False.");
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("Enabled", Enabled, "True if this replication provider is enabled; otherwise False.");
                 settings.Add("ArchiveLocation", m_archiveLocation, "Path to the primary location of time-series data archive.");
                 settings.Add("ReplicaLocation", m_replicaLocation, "Path to the mirrored location of time-series data archive.");
                 settings.Add("ReplicationInterval", m_replicationInterval, "Interval in minutes at which the time-series data archive is to be replicated.");
-                Enabled = settings["Enabled"].ValueAs(m_enabled);
+                Enabled = settings["Enabled"].ValueAs(Enabled);
                 ArchiveLocation = settings["ArchiveLocation"].ValueAs(m_archiveLocation);
                 ReplicaLocation = settings["ReplicaLocation"].ValueAs(m_replicaLocation);
                 ReplicationInterval = settings["ReplicationInterval"].ValueAs(m_replicationInterval);
@@ -297,7 +221,7 @@ namespace TVA.Historian.Replication
         /// <exception cref="ArgumentNullException"><see cref="ArchiveLocation"/> or <see cref="ReplicaLocation"/> is null or empty string.</exception>
         public bool Replicate()
         {
-            if (!m_enabled || (m_replicationThread != null && m_replicationThread.IsAlive))
+            if (!Enabled || (m_replicationThread != null && m_replicationThread.IsAlive))
                 return false;
 
             if (string.IsNullOrEmpty(m_archiveLocation))
@@ -317,7 +241,7 @@ namespace TVA.Historian.Replication
         /// Releases the unmanaged resources used by the replication provider and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
@@ -326,9 +250,6 @@ namespace TVA.Historian.Replication
                     // This will be done regardless of whether the object is finalized or disposed.				
                     if (disposing)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
                         if (m_replicationThread != null)
                             m_replicationThread.Abort();
 
@@ -342,6 +263,7 @@ namespace TVA.Historian.Replication
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+                    base.Dispose(disposing);
                 }
             }
         }

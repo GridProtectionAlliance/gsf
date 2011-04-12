@@ -35,6 +35,7 @@ using System;
 using System.Configuration;
 using System.Threading;
 using TVA.Configuration;
+using TVA.Adapters;
 
 namespace TVA.Historian.Notifiers
 {
@@ -42,7 +43,7 @@ namespace TVA.Historian.Notifiers
     /// Base class for a notifier that can process notification messages.
     /// </summary>
     /// <see cref="NotificationTypes"/>
-    public abstract class NotifierBase : INotifier
+    public abstract class NotifierBase : Adapter, INotifier
     {
         #region [ Members ]
 
@@ -74,12 +75,8 @@ namespace TVA.Historian.Notifiers
         // Fields
         private int m_notifyTimeout;
         private NotificationTypes m_notifyOptions;
-        private bool m_persistSettings;
-        private string m_settingsCategory;
         private Thread m_notifyThread;
-        private bool m_enabled;
         private bool m_disposed;
-        private bool m_initialized;
 
         #endregion
 
@@ -93,16 +90,7 @@ namespace TVA.Historian.Notifiers
         {
             m_notifyOptions = notifyOptions;
             m_notifyTimeout = 30;
-            m_persistSettings = true;
-            m_settingsCategory = this.GetType().Name;
-        }
-
-        /// <summary>
-        /// Releases the unmanaged resources before the notifier is reclaimed by <see cref="GC"/>.
-        /// </summary>
-        ~NotifierBase()
-        {
-            Dispose(false);
+            PersistSettings = true;
         }
 
         #endregion
@@ -145,60 +133,9 @@ namespace TVA.Historian.Notifiers
             }
         }
 
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the notifier is currently enabled.
-        /// </summary>
-        public bool Enabled
-        {
-            get
-            {
-                return m_enabled;
-            }
-            set
-            {
-                m_enabled = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets a boolean value that indicates whether the notifier settings are to be saved to the config file.
-        /// </summary>
-        public bool PersistSettings
-        {
-            get
-            {
-                return m_persistSettings;
-            }
-            set
-            {
-                m_persistSettings = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the category under which the notifier settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
-        public string SettingsCategory
-        {
-            get
-            {
-                return m_settingsCategory;
-            }
-            set
-            {
-                if (string.IsNullOrEmpty(value))
-                    throw new ArgumentNullException("value");
-
-                m_settingsCategory = value;
-            }
-        }
-
         #endregion
 
         #region [ Methods ]
-
-        #region [ Abstract ]
 
         /// <summary>
         /// When overridden in a derived class, processes a <see cref="NotificationTypes.Alarm"/> notification.
@@ -232,45 +169,20 @@ namespace TVA.Historian.Notifiers
         /// <param name="details">Detailed message for the notification.</param>
         protected abstract void NotifyHeartbeat(string subject, string message, string details);
 
-        #endregion
-
         /// <summary>
-        /// Releases all the resources used by the notifier.
+        /// Saves notifier settings to the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        public void Dispose()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void SaveSettings()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            base.SaveSettings();
 
-        /// <summary>
-        /// Initializes the notifier.
-        /// </summary>
-        public virtual void Initialize()
-        {
-            if (!m_initialized)
+            if (PersistSettings)
             {
-                LoadSettings();         // Load settings from the config file.
-                m_initialized = true;   // Initialize only once.
-            }
-        }
-
-        /// <summary>
-        /// Saves notifier settings to the config file if the <see cref="PersistSettings"/> property is set to true.
-        /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void SaveSettings()
-        {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
-
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings["Enabled", true].Update(m_enabled);
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings["Enabled", true].Update(Enabled);
                 settings["NotifyTimeout", true].Update(m_notifyTimeout);
                 settings["NotifyOptions", true].Update(m_notifyOptions);
                 config.Save();
@@ -278,24 +190,22 @@ namespace TVA.Historian.Notifiers
         }
 
         /// <summary>
-        /// Loads saved notifier settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// Loads saved notifier settings from the config file if the <see cref="Adapter.PersistSettings"/> property is set to true.
         /// </summary>
-        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
-        public virtual void LoadSettings()
+        /// <exception cref="ConfigurationErrorsException"><see cref="Adapter.SettingsCategory"/> has a value of null or empty string.</exception>
+        public override void LoadSettings()
         {
-            if (m_persistSettings)
-            {
-                // Ensure that settings category is specified.
-                if (string.IsNullOrEmpty(m_settingsCategory))
-                    throw new ConfigurationErrorsException("SettingsCategory property has not been set");
+            base.LoadSettings();
 
+            if (PersistSettings)
+            {
                 // Load settings from the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
-                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                settings.Add("Enabled", m_enabled, "True if this notifier is enabled; otherwise False.");
+                CategorizedSettingsElementCollection settings = config.Settings[SettingsCategory];
+                settings.Add("Enabled", Enabled, "True if this notifier is enabled; otherwise False.");
                 settings.Add("NotifyTimeout", m_notifyTimeout, "Number of seconds to wait for notification processing to complete.");
                 settings.Add("NotifyOptions", m_notifyOptions, "Types of notifications (Information; Warning; Alarm; Heartbeat) to be processed by this notifier.");
-                Enabled = settings["Enabled"].ValueAs(m_enabled);
+                Enabled = settings["Enabled"].ValueAs(Enabled);
                 NotifyTimeout = settings["NotifyTimeout"].ValueAs(m_notifyTimeout);
                 NotifyOptions = settings["NotifyOptions"].ValueAs(m_notifyOptions);
             }
@@ -311,7 +221,7 @@ namespace TVA.Historian.Notifiers
         /// <returns>true if notification is processed successfully; otherwise false.</returns>
         public bool Notify(string subject, string message, string details, NotificationTypes notificationType)
         {
-            if (!m_enabled || (m_notifyThread != null && m_notifyThread.IsAlive))
+            if (!Enabled || (m_notifyThread != null && m_notifyThread.IsAlive))
                 return false;
 
             // Start notification thread with appropriate parameters.
@@ -359,19 +269,14 @@ namespace TVA.Historian.Notifiers
         /// Releases the unmanaged resources used by the notifier and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (!m_disposed)
             {
                 try
                 {
-                    // This will be done regardless of whether the object is finalized or disposed.
-
                     if (disposing)
                     {
-                        // This will be done only when the object is disposed by calling Dispose().
-                        SaveSettings();
-
                         if (m_notifyThread != null)
                             m_notifyThread.Abort();
                     }
@@ -379,6 +284,7 @@ namespace TVA.Historian.Notifiers
                 finally
                 {
                     m_disposed = true;  // Prevent duplicate dispose.
+                    base.Dispose(disposing);
                 }
             }
         }
