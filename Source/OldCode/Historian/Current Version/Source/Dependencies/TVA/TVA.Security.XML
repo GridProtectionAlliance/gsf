@@ -759,6 +759,11 @@
             Gets a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.ChangePassword(System.String,System.String)"/> operation is supported.
             </summary>
         </member>
+        <member name="F:TVA.Security.LdapSecurityProvider.ProviderID">
+            <summary>
+            Defines the provider ID for the <see cref="T:TVA.Security.LdapSecurityProvider"/>.
+            </summary>
+        </member>
         <member name="M:TVA.Security.LdapSecurityProvider.#ctor(System.String)">
             <summary>
             Initializes a new instance of the <see cref="T:TVA.Security.LdapSecurityProvider"/> class.
@@ -803,11 +808,12 @@
             </summary>
             <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
-        <member name="M:TVA.Security.LdapSecurityProvider.RefreshData(System.Collections.Generic.List{System.String})">
+        <member name="M:TVA.Security.LdapSecurityProvider.RefreshData(System.Collections.Generic.List{System.String},System.Int32)">
             <summary>
             Refreshes the <see cref="T:TVA.Security.UserData"/> from the backend datastore loading user groups into desired collection.
             </summary>
             <param name="groupCollection">Target collection for user groups.</param>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
             <returns>true if <see cref="P:TVA.Security.SecurityProviderBase.UserData"/> is refreshed, otherwise false.</returns>
         </member>
         <member name="M:TVA.Security.LdapSecurityProvider.ChangePassword(System.String,System.String)">
@@ -828,6 +834,11 @@
         <member name="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal">
             <summary>
             Gets the original <see cref="P:TVA.Security.LdapSecurityProvider.WindowsPrincipal"/> of the user if the user exists in Active Directory.
+            </summary>
+        </member>
+        <member name="F:TVA.Security.AdoSecurityProvider.ProviderID">
+            <summary>
+            Defines the provider ID for the <see cref="T:TVA.Security.AdoSecurityProvider"/>.
             </summary>
         </member>
         <member name="M:TVA.Security.AdoSecurityProvider.#ctor(System.String)">
@@ -894,43 +905,6 @@
             Geta a boolean value that indicates whether <see cref="M:TVA.Security.SecurityProviderBase.UpdateData"/> operation is supported.
             </summary>
         </member>
-        <member name="T:TVA.Security.AdoSecurityProvider.DataConnection">
-            <summary>
-            Creates a new <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.#ctor(System.String)">
-            <summary>
-            Creates a new <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/>.
-            </summary>
-            <param name="settingsCategory">Settings category to use for connection settings.</param>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.AdoSecurityProvider.DataConnection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Security.AdoSecurityProvider.DataConnection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.Connection">
-            <summary>
-            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="P:TVA.Security.AdoSecurityProvider.DataConnection.AdapterType">
-            <summary>
-            Gets the type of data adapter for configured ADO.NET data source.
-            </summary>
-        </member>
         <member name="T:TVA.Security.SecurityProviderUtility">
             <summary>
             A helper class containing methods used in the implementation of role-based security.
@@ -992,6 +966,115 @@
         <member name="T:TVA.Security.NamespaceDoc">
             <summary>
             Contains fundamental classes that define the security framework for role-based security.
+            </summary>
+        </member>
+        <member name="T:TVA.Security.UserDataCache">
+            <summary>
+            Represents a secured interprocess cache for a <see cref="T:System.Collections.Generic.Dictionary`2"/> of serialized <see cref="T:TVA.Security.UserData"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/>.
+            </summary>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Security.UserDataCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+            </summary>
+            <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Security.UserDataCache"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.TryGetUserData(System.String,TVA.Security.UserData@)">
+            <summary>
+            Attempts to retrieve <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
+            </summary>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
+            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to populate if found.</param>
+            <returns><c>true</c> if <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> was retrieved; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.SaveUserData(System.String,TVA.Security.UserData)">
+            <summary>
+            Serializes the <paramref name="userData"/> for the given <paramref name="loginID"/> into the <see cref="T:TVA.Security.UserDataCache"/>.
+            </summary>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to retrieve.</param>
+            <param name="userData">Reference to <see cref="T:TVA.Security.UserData"/> object to serialize into <see cref="T:TVA.Security.UserDataCache"/>.</param>
+            <remarks>
+            <para>
+            This will add an entry into the user data cache for <paramref name="loginID"/> if it doesn't exist;
+            otherwise existing entry will be updated.
+            </para>
+            <para>
+            Updates are automatically queued up for serialization so user does not need to call <see cref="M:TVA.Security.UserDataCache.Save"/>.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.Save">
+            <summary>
+            Initiates interprocess synchronized save of user data cache.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.Load">
+            <summary>
+            Initiates interprocess synchronized load of user data cache.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.SaveFileData(System.IO.FileStream,System.Byte[])">
+            <summary>
+            Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to serialize data.</param>
+            <param name="fileData">File data to be serialized.</param>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.LoadFileData(System.IO.FileStream)">
+            <summary>
+            Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to deserialize data.</param>
+            <returns>Deserialized file data.</returns>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.HashLoginID(System.String)">
+            <summary>
+            Calculates the hash of the <paramref name="loginID"/> used as the key for the user data cache.
+            </summary>
+            <param name="loginID">Login ID to hash.</param>
+            <returns>The Base64 encoded calculated SHA-2 hash of the <paramref name="loginID"/> used as the key for the user data cache.</returns>
+            <remarks>
+            For added security, a hash of the <paramref name="loginID"/> is used as the key for <see cref="T:TVA.Security.UserData"/> in the
+            user data cache instead of the actual <paramref name="loginID"/>. This method allows the
+            consumer to properly calculate this hash when directly using the user data cache.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.UserDataCache.GetCurrentCache(System.Int32)">
+            <summary>
+            Loads the <see cref="T:TVA.Security.UserDataCache"/> for the current local user.
+            </summary>
+            <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
+            <returns>Loaded instance of the <see cref="T:TVA.Security.UserDataCache"/>.</returns>
+        </member>
+        <member name="P:TVA.Security.UserDataCache.Item(System.String)">
+            <summary>
+            Gets or sets <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
+            </summary>
+            <param name="loginID">Login ID of associated <see cref="T:TVA.Security.UserData"/> to load or save.</param>
+            <returns>Reference to <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/> if found; otherwise <c>null</c>.</returns>
+        </member>
+        <member name="P:TVA.Security.UserDataCache.ProviderID">
+            <summary>
+            Gets ot sets unique provider ID used to distinguish cached user data that may be different based on provider.
             </summary>
         </member>
         <member name="T:TVA.Security.Radius.AttributeType">

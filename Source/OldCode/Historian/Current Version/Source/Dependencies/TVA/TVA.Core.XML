@@ -684,18 +684,18 @@
             <seealso cref="T:TVA.Configuration.CategorizedSettingsElement"/>
             <seealso cref="T:TVA.Configuration.CategorizedSettingsElementCollection"/>
         </member>
+        <member name="M:TVA.Configuration.CategorizedSettingsSection.SetCryptoKey(System.String)">
+            <summary>
+            Sets the key to be used for encrypting and decrypting setting values.
+            </summary>
+            <param name="cryptoKey">New crypto key.</param>
+        </member>
         <member name="M:TVA.Configuration.CategorizedSettingsSection.Remove(System.String)">
             <summary>
             Removes the specified category name including its associated settings.
             </summary>
             <param name="name">Name of the category to be removed.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="name"/> is null or empty string.</exception>
-        </member>
-        <member name="M:TVA.Configuration.CategorizedSettingsSection.SetCryptoKey(System.String)">
-            <summary>
-            Sets the key to be used for encrypting and decrypting setting values.
-            </summary>
-            <param name="cryptoKey">New crypto key.</param>
         </member>
         <member name="M:TVA.Configuration.CategorizedSettingsSection.DeserializeSection(System.Xml.XmlReader)">
             <summary>
@@ -7444,6 +7444,26 @@
             Gets or sets a flag that is used to determine if export process has timed out.
             </summary>
         </member>
+        <member name="T:TVA.Adapters.AdapterFileFormat">
+            <summary>
+            Specifies the file format of the adapters to be loaded by the <see cref="T:TVA.Adapters.AdapterLoader`1"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterFileFormat.Assembly">
+            <summary>
+            Adapters are <see cref="T:System.Type"/>s inside <see cref="F:TVA.Adapters.AdapterFileFormat.Assembly"/> files (DLLs).
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterFileFormat.SerializedBin">
+            <summary>
+            Adapters are binary serialized instances persisted to files.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterFileFormat.SerializedXml">
+            <summary>
+            Adapters are XML serialized instances persisted to files.
+            </summary>
+        </member>
         <member name="T:TVA.Adapters.AdapterLoader`1">
             <summary>
             Represents a generic loader of adapters.
@@ -7474,6 +7494,7 @@
                     s_adapterLoader = new AdapterLoader&lt;PublishAdapterBase&gt;();
                     s_adapterLoader.IsolateAdapters = true;
                     s_adapterLoader.MonitorAdapters = true;
+                    s_adapterLoader.AdapterFileExtension = "*.exe";
                     s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
                     s_adapterLoader.AllowableProcessProcessorUsage = 50;
                     s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
@@ -7483,38 +7504,8 @@
                     s_adapterLoader.AdapterResourceUsageExceeded += OnAdapterResourceUsageExceeded;
                     s_adapterLoader.Initialize();
             
-                    // Take user input to alter adapter working state.
-                    string userInput;
-                    Console.WriteLine("Possible commands:");
-                    Console.WriteLine("  Connect - Connects all disconnected adapters");
-                    Console.WriteLine("  Disconnect - Disconnects all connected adapters");
-                    Console.WriteLine("  Exit - Exits this application\r\n");
-                    while (string.Compare(userInput = Console.ReadLine(), "Exit", true) != 0)
-                    {
-                        switch (userInput.ToLower())
-                        {
-                            case "connect":
-                                // Connect all adapters.
-                                Console.Write("Connecting adapters...");
-                                foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
-                                {
-                                    adapter.Enabled = true;
-                                }
-                                Console.WriteLine("done.\r\n");
-                                break;
-                            case "disconnect":
-                                // Disconnect all adapters.
-                                Console.Write("Disconnecting adapters...");
-                                foreach (PublishAdapterBase adapter in s_adapterLoader.Adapters)
-                                {
-                                    adapter.Enabled = false;
-                                }
-                                Console.WriteLine("done.\r\n");
-                                break;
-                        }
-                    }
-            
                     // Shutdown.
+                    Console.ReadLine();
                     s_adapterLoader.Dispose();
                 }
             
@@ -7557,7 +7548,6 @@
                 {
                     base.Initialize();
                     new Thread(Publish).Start();
-                    Enabled = true;
                 }
             
                 protected abstract void Publish();
@@ -7566,7 +7556,7 @@
             /// &lt;summary&gt;
             /// Adapter that does not manage memory well.
             /// &lt;/summary&gt;
-            public class PublisAdapterA : PublishAdapterBase
+            public class PublishAdapterA : PublishAdapterBase
             {
                 protected override void Publish()
                 {
@@ -7577,9 +7567,6 @@
                             Data.Add(new byte[10]);
                         }
                         Thread.Sleep(100);
-            
-                        if (Enabled)
-                            Data.RemoveRange(0, Data.Count / 2);
                     }
                 }
             }
@@ -7604,9 +7591,6 @@
                             Data.Add(Encoding.ASCII.GetBytes(text.Encrypt("C1pH3r", CipherStrength.Aes256)).BlockCopy(0, 1));
                         }
                         Thread.Sleep(10);
-            
-                        if (Enabled)
-                            Data.RemoveRange(0, Data.Count / 2);
                     }
                 }
             }
@@ -7617,7 +7601,17 @@
         </member>
         <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAdapterDirectory">
             <summary>
-            Specified the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/> property.
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterDirectory"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAdapterFileExtension">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterFileExtension"/> property.
+            </summary>
+        </member>
+        <member name="F:TVA.Adapters.AdapterLoader`1.DefaultAdapterFileFormat">
+            <summary>
+            Specifies the default value for the <see cref="P:TVA.Adapters.AdapterLoader`1.AdapterFileFormat"/> property.
             </summary>
         </member>
         <member name="F:TVA.Adapters.AdapterLoader`1.DefaultWatchForAdapters">
@@ -7681,11 +7675,17 @@
             </summary>
             <param name="adapterTypes">Collection of adapter <see cref="T:System.Type"/>s from which <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> are to be created.</param>
         </member>
+        <member name="M:TVA.Adapters.AdapterLoader`1.ProcessAdapter(System.String)">
+            <summary>
+            Processes the <paramref name="adapterFile"/> by deserializing it.
+            </summary>
+            <param name="adapterFile">Path to the adapter file to be deserialized.</param>
+        </member>
         <member name="M:TVA.Adapters.AdapterLoader`1.ProcessAdapter(System.Type)">
             <summary>
-            Processes the <paramref name="adapterType"/> by creating its instance and initializing it.
+            Processes the <paramref name="adapterType"/> by instantiating it.
             </summary>
-            <param name="adapterType"><see cref="T:System.Type"/> of the adapter to be instantiated and initialized.</param>
+            <param name="adapterType"><see cref="T:System.Type"/> of the adapter to be instantiated.</param>
         </member>
         <member name="M:TVA.Adapters.AdapterLoader`1.MonitorAdapterResources">
             <summary>
@@ -7744,11 +7744,11 @@
             </summary>
             <param name="adapter">Adapter instance to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterResourceUsageExceeded"/> event.</param>
         </member>
-        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterLoadException(System.Type,System.Exception)">
+        <member name="M:TVA.Adapters.AdapterLoader`1.OnAdapterLoadException(`0,System.Exception)">
             <summary>
             Raises the <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.
             </summary>
-            <param name="adapter"><see cref="T:System.Type"/> to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.</param>
+            <param name="adapter">Adapter instance that caused the <paramref name="exception"/>.</param>
             <param name="exception"><see cref="T:System.Exception"/> to send to <see cref="E:TVA.Adapters.AdapterLoader`1.AdapterLoadException"/> event.</param>
         </member>
         <member name="M:TVA.Adapters.AdapterLoader`1.OnOperationExecutionException(`0,System.Exception)">
@@ -7793,8 +7793,7 @@
             Occurs when an <see cref="T:System.Exception"/> is encountered when loading an adapter.
             </summary>
             <remarks>
-            <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:System.Type"/> of adapter that was being loaded.<br/>
-            <see cref="F:TVA.EventArgs`2.Argument2"/> is the <see cref="T:System.Exception"/> encountered when loading the adapter.
+            <see cref="F:TVA.EventArgs`1.Argument"/> is the <see cref="T:System.Exception"/> encountered when loading the adapter.
             </remarks>
         </member>
         <member name="E:TVA.Adapters.AdapterLoader`1.OperationExecutionException">
@@ -7815,6 +7814,17 @@
             </remarks>
             <exception cref="T:System.ArgumentNullException">The value being assigned is a null string.</exception>
         </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AdapterFileExtension">
+            <summary>
+            Gets or sets the file extension of the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+            <exception cref="T:System.ArgumentNullException">The value being set is a null or empty string.</exception>
+        </member>
+        <member name="P:TVA.Adapters.AdapterLoader`1.AdapterFileFormat">
+            <summary>
+            Gets or sets the file format of the <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
+            </summary>
+        </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.WatchForAdapters">
             <summary>
             Gets or sets a boolean value that indicates whether new assemblies added at runtime will be processed for <see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/>.
@@ -7833,7 +7843,6 @@
             Use <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableProcessProcessorUsage"/>, <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterMemoryUsage"/> and 
             <see cref="P:TVA.Adapters.AdapterLoader`1.AllowableAdapterProcessorUsage"/> properties to configure how adapter resource utilization is to be monitored.
             </remarks>
-            <exception cref="T:System.InvalidOperationException"><see cref="P:TVA.Adapters.AdapterLoader`1.Adapters"/> do not implement the <see cref="T:TVA.Adapters.IAdapter"/> interface.</exception>
         </member>
         <member name="P:TVA.Adapters.AdapterLoader`1.AllowableProcessMemoryUsage">
             <summary>
@@ -11951,19 +11960,43 @@
             Defines an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
             </summary>
         </member>
+        <member name="E:TVA.Adapters.IAdapter.StatusUpdate">
+            <summary>
+            Occurs when the <see cref="T:TVA.Adapters.IAdapter"/> wants to provide a status update.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:TVA.UpdateType"/>.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the update message.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.IAdapter.Disposed">
+            <summary>
+            Occurs when <see cref="T:TVA.Adapters.IAdapter"/> is disposed.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.IAdapter.TypeName">
+            <summary>
+            Gets or sets the text representation of the <see cref="T:TVA.Adapters.IAdapter"/>'s <see cref="P:TVA.Adapters.IAdapter.TypeName"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.IAdapter.HostFile">
+            <summary>
+            Gets or sets the path to the file where the <see cref="T:TVA.Adapters.IAdapter"/> is housed.
+            </summary>
+        </member>
         <member name="P:TVA.Adapters.IAdapter.Domain">
             <summary>
-            Gets the <see cref="T:System.AppDomain"/> in which the adapter is executing.
+            Gets the <see cref="T:System.AppDomain"/> in which the <see cref="T:TVA.Adapters.IAdapter"/> is executing.
             </summary>
         </member>
         <member name="P:TVA.Adapters.IAdapter.MemoryUsage">
             <summary>
-            Gets the memory utilzation of the adapter in bytes if executing in a seperate <see cref="T:System.AppDomain"/>, otherwise <see cref="F:System.Double.NaN"/>.
+            Gets the memory utilzation of the <see cref="T:TVA.Adapters.IAdapter"/> in bytes if executing in a seperate <see cref="T:System.AppDomain"/>, otherwise <see cref="F:System.Double.NaN"/>.
             </summary>
         </member>
         <member name="P:TVA.Adapters.IAdapter.ProcessorUsage">
             <summary>
-            Gets the % processor utilization of the adapter if executing in a seperate <see cref="T:System.AppDomain"/> otherwise <see cref="F:System.Double.NaN"/>.
+            Gets the % processor utilization of the <see cref="T:TVA.Adapters.IAdapter"/> if executing in a seperate <see cref="T:System.AppDomain"/> otherwise <see cref="F:System.Double.NaN"/>.
             </summary>
         </member>
         <member name="T:TVA.UInt24">
@@ -12871,6 +12904,114 @@
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is greater than <paramref name="value"/> length.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="T:TVA.UInt24"/>.</exception>
         </member>
+        <member name="T:TVA.Threading.InterprocessReaderWriterLock">
+            <summary>
+            Represents an interprocess reader/writer lock using <see cref="T:System.Threading.Semaphore"/> and <see cref="T:System.Threading.Mutex"/> native locking mechanisms.
+            </summary>
+        </member>
+        <member name="F:TVA.Threading.InterprocessReaderWriterLock.DefaultMaximumConcurrentLocks">
+            <summary>
+            Default maximum concurrent locks allowed for <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.#ctor(System.String)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/> associated with the specified
+            <paramref name="name"/> that identifies a source object needing concurrency locking.
+            </summary>
+            <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.#ctor(System.String,System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/> associated with the specified
+            <paramref name="name"/> that identifies a source object needing concurrency locking.
+            </summary>
+            <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+            <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
+            <remarks>
+            If more reader locks are requested than the <paramref name="maximumConcurrentLocks"/>, excess reader locks will simply
+            wait until a lock is available (i.e., one of the existing reads completes).
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Threading.InterprocessReaderWriterLock"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.EnterReadLock">
+            <summary>
+            Tries to enter the lock in read mode.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterReadLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterReadLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.EnterWriteLock">
+            <summary>
+            Tries to enter the lock in write mode.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterWriteLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterWriteLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock">
+            <summary>
+            Exits read mode and returns the prior read lock count.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterReadLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterReadLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock">
+            <summary>
+            Exits write mode.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterWriteLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterWriteLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterReadLock(System.Int32)">
+            <summary>
+            Tries to enter the lock in read mode, with an optional time-out.
+            </summary>
+            <param name="millisecondsTimeout">The number of milliseconds to wait, or -1 (<see cref="F:System.Threading.Timeout.Infinite"/>) to wait indefinitely.</param>
+            <returns><c>true</c> if the calling thread entered read mode, otherwise, <c>false</c>.</returns>
+            <remarks>
+            Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitReadLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterReadLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterReadLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterWriteLock(System.Int32)">
+            <summary>
+            Tries to enter the lock in write mode, with an optional time-out.
+            </summary>
+            <param name="millisecondsTimeout">The number of milliseconds to wait, or -1 (<see cref="F:System.Threading.Timeout.Infinite"/>) to wait indefinitely.</param>
+            <returns><c>true</c> if the calling thread entered write mode, otherwise, <c>false</c>.</returns>
+            <remarks>
+            Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/>.
+            One <see cref="M:TVA.Threading.InterprocessReaderWriterLock.ExitWriteLock"/> should be called for each <see cref="M:TVA.Threading.InterprocessReaderWriterLock.EnterWriteLock"/> or <see cref="M:TVA.Threading.InterprocessReaderWriterLock.TryEnterWriteLock(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="P:TVA.Threading.InterprocessReaderWriterLock.MaximumConcurrentLocks">
+            <summary>
+            Gets the maximum concurrent reader locks allowed.
+            </summary>
+        </member>
         <member name="T:TVA.NumericalAnalysis.CurveFit">
             <summary>
             Linear regression algorithm.
@@ -13180,6 +13321,11 @@
             Initializes a new instance of the <see cref="T:TVA.IO.IsamDataFileBase`1"/> class.
             </summary>
         </member>
+        <member name="M:TVA.IO.IsamDataFileBase`1.Finalize">
+            <summary>
+            Releases the unmanaged resources before the file is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
         <member name="M:TVA.IO.IsamDataFileBase`1.GetRecordSize">
             <summary>
             When overridden in a derived class, gets the size of a record (in bytes).
@@ -13193,30 +13339,17 @@
             <param name="recordIndex">1-based index of the new record.</param>
             <returns>New empty record.</returns>
         </member>
+        <member name="M:TVA.IO.IsamDataFileBase`1.Dispose">
+            <summary>
+            Releases all the resources used by the file.
+            </summary>
+        </member>
         <member name="M:TVA.IO.IsamDataFileBase`1.Initialize">
             <summary>
             Initializes the file.
             </summary>
             <remarks>
             <see cref="M:TVA.IO.IsamDataFileBase`1.Initialize"/> is to be called by user-code directly only if the file is not consumed through the designer surface of the IDE.
-            </remarks>
-        </member>
-        <member name="M:TVA.IO.IsamDataFileBase`1.BeginInit">
-            <summary>
-            Performs necessary operations before the file properties are initialized.
-            </summary>
-            <remarks>
-            <see cref="M:TVA.IO.IsamDataFileBase`1.BeginInit"/> should never be called by user-code directly. This method exists solely for use 
-            by the designer if the file is consumed through the designer surface of the IDE.
-            </remarks>
-        </member>
-        <member name="M:TVA.IO.IsamDataFileBase`1.EndInit">
-            <summary>
-            Performs necessary operations after the file properties are initialized.
-            </summary>
-            <remarks>
-            <see cref="M:TVA.IO.IsamDataFileBase`1.EndInit"/> should never be called by user-code directly. This method exists solely for use 
-            by the designer if the file is consumed through the designer surface of the IDE.
             </remarks>
         </member>
         <member name="M:TVA.IO.IsamDataFileBase`1.SaveSettings">
@@ -18633,6 +18766,7 @@
             <summary>
             Represents an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
             </summary>
+            <seealso cref="T:TVA.Adapters.IAdapter"/>
             <seealso cref="T:TVA.Adapters.AdapterLoader`1"/>
         </member>
         <member name="M:TVA.Adapters.Adapter.#ctor">
@@ -18672,6 +18806,48 @@
             Releases the unmanaged resources used by the <see cref="T:TVA.Adapters.Adapter"/> and optionally releases the managed resources.
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.OnStatusUpdate(TVA.UpdateType,System.String)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.
+            </summary>
+            <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
+            <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.OnDisposed">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.Adapter.Disposed"/> event.
+            </summary>
+        </member>
+        <member name="E:TVA.Adapters.Adapter.StatusUpdate">
+            <summary>
+            Occurs when the <see cref="T:TVA.Adapters.Adapter"/> wants to provide a status update.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:TVA.UpdateType"/>.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the update message.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.Adapter.Disposed">
+            <summary>
+            Occurs when <see cref="T:TVA.Adapters.Adapter"/> is disposed.
+            </summary>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.TypeName">
+            <summary>
+            Gets or sets the text representation of the <see cref="T:TVA.Adapters.Adapter"/>'s <see cref="P:TVA.Adapters.Adapter.TypeName"/>.
+            </summary>
+            <remarks>
+            This can be used for looking up the <see cref="P:TVA.Adapters.Adapter.TypeName"/> of the <see cref="T:TVA.Adapters.Adapter"/> when deserializing it using <see cref="T:System.Xml.Serialization.XmlSerializer"/>.
+            </remarks>
+        </member>
+        <member name="P:TVA.Adapters.Adapter.HostFile">
+            <summary>
+            Gets or sets the path to the file where the <see cref="T:TVA.Adapters.Adapter"/> is housed.
+            </summary>
+            <remarks>
+            This can be used to update the <see cref="T:TVA.Adapters.Adapter"/> when changes are made to the file where it is housed.
+            </remarks>
         </member>
         <member name="P:TVA.Adapters.Adapter.Enabled">
             <summary>
@@ -19645,6 +19821,16 @@
             Writes the configuration settings contained within this <see cref="T:TVA.Configuration.ConfigurationFile"/> object to the specified configuration file.
             </summary>
             <param name="fileName">The path and file name to save the configuration file to.</param>
+        </member>
+        <member name="M:TVA.Configuration.ConfigurationFile.Reload">
+            <summary>
+            Reloads the current configuration settings from the configuration file that the <see cref="T:TVA.Configuration.ConfigurationFile"/> represents.
+            </summary>
+        </member>
+        <member name="M:TVA.Configuration.ConfigurationFile.RestoreDefaultUserSettings">
+            <summary>
+            Restores all the default settings for <see cref="F:TVA.Configuration.SettingScope.User"/> scoped settings.
+            </summary>
         </member>
         <member name="M:TVA.Configuration.ConfigurationFile.SetCryptoKey(System.String)">
             <summary>
@@ -22154,10 +22340,17 @@
             Releases all the resources used by the <see cref="T:TVA.Identity.UserInfo"/> object.
             </summary>
         </member>
+        <member name="M:TVA.Identity.UserInfo.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Identity.UserInfo"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
         <member name="M:TVA.Identity.UserInfo.Initialize">
             <summary>
             Initializes the <see cref="T:TVA.Identity.UserInfo"/> object.
             </summary>
+            <exception cref="T:TVA.InitializationException">Failed to initialize directory entry for <see cref="P:TVA.Identity.UserInfo.LoginID"/>.</exception>
         </member>
         <member name="M:TVA.Identity.UserInfo.SaveSettings">
             <summary>
@@ -22224,12 +22417,6 @@
             </summary>
             <param name="propertyName">Name of the active directory property whose value is to be retrieved.</param>
             <returns>Value for the specified active directory property.</returns>
-        </member>
-        <member name="M:TVA.Identity.UserInfo.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Identity.UserInfo"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
         <member name="M:TVA.Identity.UserInfo.AuthenticateUser(System.String,System.String,System.String)">
              <summary>
@@ -22365,7 +22552,7 @@
             Gets or sets a boolean value that indicates whether the <see cref="T:TVA.Identity.UserInfo"/> object is currently enabled.
             </summary>
             <remarks>
-            <see cref="P:TVA.Identity.UserInfo.Enabled"/> property is not be set by user-code directly.
+            <see cref="P:TVA.Identity.UserInfo.Enabled"/> property is not to be set by user-code directly.
             </remarks>
         </member>
         <member name="P:TVA.Identity.UserInfo.PersistSettings">
@@ -22386,6 +22573,40 @@
             Gets the Login ID of the user.
             </summary>
             <remarks>Returns the value provided in the <see cref="M:TVA.Identity.UserInfo.#ctor(System.String)"/> constructor.</remarks>
+        </member>
+        <member name="P:TVA.Identity.UserInfo.DomainAvailable">
+            <summary>
+            Gets flag that determines if user domain is available.
+            </summary>
+            <returns><c>true</c> if domain responds to <see cref="M:TVA.Identity.UserInfo.Initialize"/>; otherwise <c>false</c>.</returns>
+        </member>
+        <member name="P:TVA.Identity.UserInfo.Exists">
+            <summary>
+            Gets flag that determines if user exists.
+            </summary>
+            <returns><c>true</c> if user is found to exist; otherwise <c>false</c>.</returns>
+            <remarks>
+            <para>
+            Unlike other properties in this class, <see cref="P:TVA.Identity.UserInfo.Exists"/> will still work even if the domain server is
+            unavailable. Calling this property without access to a domain server will return <c>true</c> if the user
+            is authenticated. This only succeeds if the current user is the same as the <see cref="P:TVA.Identity.UserInfo.LoginID"/>, there
+            is no way to determine if a user other than the currently authenticated user exists without access to
+            the domain server. Local accounts are not subject to these constraints since the domain server will
+            effectively be your local computer which is always accessible.
+            </para>
+            <para>
+            Since this property can check the <see cref="T:System.Security.Principal.WindowsPrincipal"/> to determine if the current thread identity
+            is authenticated, it is important that consumers add the following code at application startup:
+            <code>AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);</code>
+            </para>
+            <para>
+            If a laptop user that's normally connected to the domain takes their computer on the road without VPN or other
+            connectivity to the domain, the user can still login to the latop using cached credentials therefore they are
+            still considered to exist. Without access to the domain, no user information will be available (such as the
+            <see cref="P:TVA.Identity.UserInfo.Groups"/> listing) - if this data is needed offline it will need to be cached by the application in
+            anticipation of offline access.
+            </para>
+            </remarks>
         </member>
         <member name="P:TVA.Identity.UserInfo.LastLogon">
             <summary>
@@ -23300,22 +23521,24 @@
             <param name="sql">The string on which SQL encoding is to be performed.</param>
             <returns>The SQL encoded string.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery``1(``0,System.String)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery``1(``0,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the number of rows affected.
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>The number of rows affected.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery``1(``0,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery``1(``0,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the number of rows affected.
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>The number of rows affected.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
@@ -23325,7 +23548,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery(System.Data.OleDb.OleDbConnection,System.String,System.Int32,System.Object[])">
@@ -23335,7 +23558,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery(System.Data.Odbc.OdbcConnection,System.String,System.Object[])">
@@ -23344,7 +23567,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery(System.Data.Odbc.OdbcConnection,System.String,System.Int32,System.Object[])">
@@ -23354,7 +23577,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery(System.Data.SqlClient.SqlConnection,System.String,System.Object[])">
@@ -23363,7 +23586,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteNonQuery(System.Data.SqlClient.SqlConnection,System.String,System.Int32,System.Object[])">
@@ -23373,29 +23596,31 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The number of rows affected.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and builds a <see cref="T:System.Data.IDataReader"/>.
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.IDataReader"/> object.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and builds a <see cref="T:System.Data.IDataReader"/>.
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.IDataReader"/> object.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String,System.Data.CommandBehavior,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteReader``1(``0,System.String,System.Data.CommandBehavior,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and builds a <see cref="T:System.Data.IDataReader"/>.
             </summary>
@@ -23403,6 +23628,7 @@
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior"/> values.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.IDataReader"/> object.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
@@ -23412,7 +23638,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.OleDb.OleDbDataReader"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteReader(System.Data.OleDb.OleDbConnection,System.String,System.Data.CommandBehavior,System.Int32,System.Object[])">
@@ -23423,7 +23649,7 @@
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
             <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior"/> values.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.OleDb.OleDbDataReader"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteReader(System.Data.Odbc.OdbcConnection,System.String,System.Object[])">
@@ -23432,7 +23658,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.Odbc.OdbcDataReader"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteReader(System.Data.Odbc.OdbcConnection,System.String,System.Data.CommandBehavior,System.Int32,System.Object[])">
@@ -23443,7 +23669,7 @@
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
             <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior"/> values.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.Odbc.OdbcDataReader"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteReader(System.Data.SqlClient.SqlConnection,System.String,System.Object[])">
@@ -23452,7 +23678,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.SqlClient.SqlDataReader"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteReader(System.Data.SqlClient.SqlConnection,System.String,System.Data.CommandBehavior,System.Int32,System.Object[])">
@@ -23463,20 +23689,21 @@
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
             <param name="behavior">One of the <see cref="T:System.Data.CommandBehavior"/> values.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.SqlClient.SqlDataReader"/> object.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteScalar``1(``0,System.String)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteScalar``1(``0,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the value in the first column 
             of the first row in the resultset.
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
-        <member name="M:TVA.Data.DataExtensions.ExecuteScalar``1(``0,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.ExecuteScalar``1(``0,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the value in the first column 
             of the first row in the resultset.
@@ -23484,6 +23711,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
             <typeparam name="TConnection">Type of <see cref="T:System.Data.IDbConnection"/> to use.</typeparam>
         </member>
@@ -23494,7 +23722,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteScalar(System.Data.OleDb.OleDbConnection,System.String,System.Int32,System.Object[])">
@@ -23505,7 +23733,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteScalar(System.Data.Odbc.OdbcConnection,System.String,System.Object[])">
@@ -23515,7 +23743,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteScalar(System.Data.Odbc.OdbcConnection,System.String,System.Int32,System.Object[])">
@@ -23526,7 +23754,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteScalar(System.Data.SqlClient.SqlConnection,System.String,System.Object[])">
@@ -23536,7 +23764,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.ExecuteScalar(System.Data.SqlClient.SqlConnection,System.String,System.Int32,System.Object[])">
@@ -23547,7 +23775,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>Value in the first column of the first row in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.OleDb.OleDbConnection,System.String)">
@@ -23573,7 +23801,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.OleDb.OleDbConnection,System.String,System.Int32,System.Object[])">
@@ -23583,7 +23811,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.Odbc.OdbcConnection,System.String)">
@@ -23609,7 +23837,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.Odbc.OdbcConnection,System.String,System.Int32,System.Object[])">
@@ -23619,7 +23847,7 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.SqlClient.SqlConnection,System.String)">
@@ -23645,7 +23873,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.SqlClient.SqlConnection,System.String,System.Int32,System.Object[])">
@@ -23655,19 +23883,20 @@
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.IDbConnection,System.Type,System.String)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.IDbConnection,System.Type,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the first <see cref="T:System.Data.DataRow"/> in the resultset.
             </summary>
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.IDbConnection,System.Type,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveRow(System.Data.IDbConnection,System.Type,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the first <see cref="T:System.Data.DataRow"/> in the resultset.
             </summary>
@@ -23675,6 +23904,7 @@
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>The first <see cref="T:System.Data.DataRow"/> in the resultset.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.OleDb.OleDbConnection,System.String)">
@@ -23705,7 +23935,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.OleDb.OleDbConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23718,7 +23948,7 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.Odbc.OdbcConnection,System.String)">
@@ -23749,7 +23979,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.Odbc.OdbcConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23762,7 +23992,7 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.SqlClient.SqlConnection,System.String)">
@@ -23793,7 +24023,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.SqlClient.SqlConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23806,10 +24036,10 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.IDbConnection,System.Type,System.String)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.IDbConnection,System.Type,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the first <see cref="T:System.Data.DataTable"/> 
             of resultset, if the resultset contains multiple tables.
@@ -23817,9 +24047,10 @@
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.IDbConnection,System.Type,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveData(System.Data.IDbConnection,System.Type,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the first <see cref="T:System.Data.DataTable"/> 
             of resultset, if the resultset contains multiple tables.
@@ -23828,6 +24059,7 @@
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.DataTable"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.OleDb.OleDbConnection,System.String)">
@@ -23858,7 +24090,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.OleDb.OleDbConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.OleDb.OleDbConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23871,7 +24103,7 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.Odbc.OdbcConnection,System.String)">
@@ -23902,7 +24134,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.Odbc.OdbcConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.Odbc.OdbcConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23915,7 +24147,7 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.SqlClient.SqlConnection,System.String)">
@@ -23946,7 +24178,7 @@
             </summary>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for executing the SQL statement.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.SqlClient.SqlConnection,System.String,System.Int32,System.Int32,System.Int32,System.Object[])">
@@ -23959,10 +24191,10 @@
             <param name="startRow">The zero-based record number to start with.</param>
             <param name="maxRows">The maximum number of records to retrieve.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
-            <param name="parameters">The parameters to be passed to the SQL stored procedure being executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression -or- the parameter values to be passed into stored procedure being executed.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.IDbConnection,System.Type,System.String)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.IDbConnection,System.Type,System.String,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the <see cref="T:System.Data.DataSet"/> that 
             may contain multiple tables, depending on the SQL statement.
@@ -23970,9 +24202,10 @@
             <param name="connection">The <see cref="T:System.Data.IDbConnection"/> to use for executing the SQL statement.</param>
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
-        <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.IDbConnection,System.Type,System.String,System.Int32)">
+        <member name="M:TVA.Data.DataExtensions.RetrieveDataSet(System.Data.IDbConnection,System.Type,System.String,System.Int32,System.Object[])">
             <summary>
             Executes the SQL statement using <see cref="T:System.Data.IDbConnection"/>, and returns the <see cref="T:System.Data.DataSet"/> that 
             may contain multiple tables, depending on the SQL statement.
@@ -23981,6 +24214,7 @@
             <param name="dataAdapterType">The <see cref="T:System.Type"/> of data adapter to use to retreieve data.</param>
             <param name="sql">The SQL statement to be executed.</param>
             <param name="timeout">The time in seconds to wait for the SQL statement to execute.</param>
+            <param name="parameters">The parameter values to be used to fill in <see cref="T:System.Data.IDbDataParameter"/> parameters identified by '@' prefix in <paramref name="sql"/> expression.</param>
             <returns>A <see cref="T:System.Data.DataSet"/> object.</returns>
         </member>
         <member name="M:TVA.Data.DataExtensions.UpdateData(System.Data.OleDb.OleDbConnection,System.Data.DataTable,System.String)">
@@ -24013,35 +24247,92 @@
             <param name="connection">The <see cref="T:System.Data.SqlClient.SqlConnection"/> to use for updating the underlying data source.</param>
             <returns>The number of rows successfully updated from the <see cref="T:System.Data.DataTable"/>.</returns>
         </member>
+        <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.OleDb.OleDbCommand,System.Object,System.Object[])">
+            <summary>
+            Takes the <see cref="T:System.Data.OleDb.OleDbCommand"/> object and populates it with the given parameters.
+            </summary>
+            <param name="command">The <see cref="T:System.Data.OleDb.OleDbCommand"/> whose parameters are to be populated.</param>
+            <param name="parameter1">The first parameter value to populate the <see cref="T:System.Data.OleDb.OleDbCommand"/> parameters with.</param>
+            <param name="parameters">The remaining parameter values to populate the <see cref="T:System.Data.OleDb.OleDbCommand"/> parameters with.</param>
+        </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.OleDb.OleDbCommand,System.Object[])">
             <summary>
             Takes the <see cref="T:System.Data.OleDb.OleDbCommand"/> object and populates it with the given parameters.
             </summary>
             <param name="command">The <see cref="T:System.Data.OleDb.OleDbCommand"/> whose parameters are to be populated.</param>
-            <param name="parameters">The parameters to populate the <see cref="T:System.Data.OleDb.OleDbCommand"/> parameters with.</param>
+            <param name="parameters">The parameter values to populate the <see cref="T:System.Data.OleDb.OleDbCommand"/> parameters with.</param>
+        </member>
+        <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.Odbc.OdbcCommand,System.Object,System.Object[])">
+            <summary>
+            Takes the <see cref="T:System.Data.Odbc.OdbcCommand"/> object and populates it with the given parameters.
+            </summary>
+            <param name="command">The <see cref="T:System.Data.Odbc.OdbcCommand"/> whose parameters are to be populated.</param>
+            <param name="parameter1">The first parameter value to populate the <see cref="T:System.Data.Odbc.OdbcCommand"/> parameters with.</param>
+            <param name="parameters">The remaining parameter values to populate the <see cref="T:System.Data.Odbc.OdbcCommand"/> parameters with.</param>
         </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.Odbc.OdbcCommand,System.Object[])">
             <summary>
             Takes the <see cref="T:System.Data.Odbc.OdbcCommand"/> object and populates it with the given parameters.
             </summary>
             <param name="command">The <see cref="T:System.Data.Odbc.OdbcCommand"/> whose parameters are to be populated.</param>
-            <param name="parameters">The parameters to populate the <see cref="T:System.Data.Odbc.OdbcCommand"/> parameters with.</param>
+            <param name="parameters">The parameter values to populate the <see cref="T:System.Data.Odbc.OdbcCommand"/> parameters with.</param>
+        </member>
+        <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.SqlClient.SqlCommand,System.Object,System.Object[])">
+            <summary>
+            Takes the <see cref="T:System.Data.SqlClient.SqlCommand"/> object and populates it with the given parameters.
+            </summary>
+            <param name="command">The <see cref="T:System.Data.SqlClient.SqlCommand"/> whose parameters are to be populated.</param>
+            <param name="parameter1">The first parameter value to populate the <see cref="T:System.Data.SqlClient.SqlCommand"/> parameters with.</param>
+            <param name="parameters">The remaining parameter values to populate the <see cref="T:System.Data.SqlClient.SqlCommand"/> parameters with.</param>
         </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters(System.Data.SqlClient.SqlCommand,System.Object[])">
             <summary>
              Takes the <see cref="T:System.Data.SqlClient.SqlCommand"/> object and populates it with the given parameters.
             </summary>
             <param name="command">The <see cref="T:System.Data.SqlClient.SqlCommand"/> whose parameters are to be populated.</param>
-            <param name="parameters">The parameters to populate the <see cref="T:System.Data.SqlClient.SqlCommand"/> parameters with.</param>
+            <param name="parameters">The parameter values to populate the <see cref="T:System.Data.SqlClient.SqlCommand"/> parameters with.</param>
         </member>
         <member name="M:TVA.Data.DataExtensions.PopulateParameters``1(``0,System.Action{``0},System.Object[])">
             <summary>
             Takes the <see cref="T:System.Data.IDbCommand"/> object and populates it with the given parameters.
             </summary>
             <param name="command">The <see cref="T:System.Data.IDbCommand"/> whose parameters are to be populated.</param>
-            <param name="deriveParameters">The DeriveParameters implementation of the <paramref name="command"/> to use to populate parameters.</param>
-            <param name="parameters">The parameters to populate the <see cref="T:System.Data.IDbCommand"/> parameters with.</param>
+            <param name="deriveParameters">The DeriveParameters() implementation of the <paramref name="command"/> to use to populate parameters.</param>
+            <param name="values">The parameter values to populate the <see cref="T:System.Data.IDbCommand"/> parameters with.</param>
             <typeparam name="TDbCommand">Then <see cref="T:System.Data.IDbCommand"/> type to be used.</typeparam>
+            <exception cref="T:System.ArgumentException">
+            Number of <see cref="T:System.Data.IDbDataParameter"/> arguments in <see cref="P:System.Data.IDbCommand.CommandText"/> of this <paramref name="command"/>, identified by '@', do not match number of supplied parameter <paramref name="values"/> -or-
+            You have supplied more <paramref name="values"/> than parameters listed for the stored procedure.
+            </exception>
+        </member>
+        <member name="M:TVA.Data.DataExtensions.AddParameterWithValue(System.Data.IDbCommand,System.String,System.Object,System.Data.ParameterDirection)">
+            <summary>
+            Creates and adds an <see cref="T:System.Data.IDbDataParameter"/> to the <see cref="T:System.Data.IDbCommand"/> object with the specified <paramref name="value"/>.
+            </summary>
+            <param name="command"><see cref="T:System.Data.IDbCommand"/> to which parameter needs to be added.</param>
+            <param name="name">Name of the <see cref="T:System.Data.IDbDataParameter"/> to be added.</param>
+            <param name="value">Value of the <see cref="T:System.Data.IDbDataParameter"/> to be added.</param>
+            <param name="direction"><see cref="T:System.Data.ParameterDirection"/> for <see cref="T:System.Data.IDbDataParameter"/>.</param>
+        </member>
+        <member name="M:TVA.Data.DataExtensions.AddParametersWithValues(System.Data.IDbCommand,System.String,System.Object[])">
+            <summary>
+            Creates and adds a new <see cref="T:System.Data.IDbDataParameter"/> for each of the specified <paramref name="values"/> to the <see cref="T:System.Data.IDbCommand"/> object.
+            </summary>
+            <param name="command"><see cref="T:System.Data.IDbCommand"/> to which parameters need to be added.</param>
+            <param name="sql">The SQL statement.</param>
+            <param name="values">The values for the parameters of the <see cref="T:System.Data.IDbCommand"/> in the order that they appear in the SQL statement.</param>
+            <remarks>
+            <para>
+            This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
+            character and should be surrounded by either spaces, parentheses, or commas.
+            </para>
+            <para>
+            Do not use the same parameter name twice in the expression so that each parameter, identified by '@', will
+            have a corresponding value.
+            </para>
+            </remarks>
+            <returns>The fully populated parameterized command.</returns>
+            <exception cref="T:System.ArgumentException">Number of <see cref="T:System.Data.IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
         </member>
         <member name="M:TVA.Data.DataExtensions.CreateParameterizedCommand(System.Data.IDbConnection,System.String,System.Object[])">
             <summary>
@@ -24050,12 +24341,19 @@
             </summary>
             <param name="connection">The database connection.</param>
             <param name="sql">The SQL statement.</param>
-            <param name="args">The parameters for the command in the order that they appear in the SQL statement.</param>
+            <param name="values">The values for the parameters of the <see cref="T:System.Data.IDbCommand"/> in the order that they appear in the SQL statement.</param>
             <remarks>
+            <para>
             This method does very rudimentary parsing of the SQL statement so parameter names should start with the '@'
             character and should be surrounded by either spaces, parentheses, or commas.
+            </para>
+            <para>
+            Do not use the same parameter name twice in the expression so that each parameter, identified by '@', will
+            have a corresponding value.
+            </para>
             </remarks>
-            <returns>The parameterized command.</returns>
+            <returns>The fully populated parameterized command.</returns>
+            <exception cref="T:System.ArgumentException">Number of <see cref="T:System.Data.IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
         </member>
         <member name="M:TVA.Data.DataExtensions.ToDataTable(System.String,System.String,System.Boolean)">
             <summary>
@@ -26906,8 +27204,34 @@
         <member name="M:TVA.Security.Cryptography.Cipher.#cctor">
             <summary>
             Static constructor for the <see cref="T:TVA.Security.Cryptography.Cipher"/> class.
-            Prepares the file watcher for receiving events.
             </summary>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.FlushCache(System.Int32)">
+            <summary>
+            Blocks current thread and waits for any pending save of local system key cache to complete.
+            </summary>
+            <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+            <remarks>
+            <para>
+            This method only needs to be used if crypto cache changes could be pending during application shutdown (i.e., executing ciphers with
+            new keys that have not been saved, using existing keys does not queue crypto cache updates) to ensure keys are flushed before exit.
+            </para>
+            <para>
+            For most applications it is expected that this method would be rarely needed. However, possible usage scenarios would include:<br/>
+            <list type="bullet">
+              <item>
+                <description>
+                Writing an application that establishes crypto keys where application lifetime would be very short (i.e., run, create keys, exit).
+                </description>
+              </item>
+              <item>
+                <description>
+                Creating new crypto keys during application shutdown (i.e., performing ciphers with non-existing keys at shutdown).
+                </description>
+              </item>
+            </list>
+            </para>
+            </remarks>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.ImportKeyIV(System.String,System.Int32,System.String)">
             <summary>
@@ -26938,38 +27262,6 @@
             <param name="password">User password to get hash for.</param>
             <param name="keySize">Specifies the desired key size.</param>
             <returns>Base64 encoded SHA-2 hash of user password.</returns>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.GetCryptoKeyIV(System.String,System.Int32)">
-            <summary>
-            Gets the crypto key and initialization vector for the given user password.
-            </summary>
-            <param name="password">User password used for key lookup.</param>
-            <param name="keySize">Specifies the desired key size.</param>
-            <returns>Crypto key, index 0, and initialization vector, index 1, for the given user password.</returns>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.SerializeKeyIVTable(System.Object)">
-            <summary>
-            Serializes key and initialization vector table to local cache file that can only be decrypted from local machine.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.DeserializeKeyIVTable">
-            <summary>
-            Deserializes key and initialization vector table from local cache that was encrypted on local machine.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.GetSystemLevelMutex(System.String)">
-            <summary>
-            Gets the specified named system level mutex.
-            </summary>
-            <param name="mutexName">Mutext name to retrieve.</param>
-            <returns>Specified system level mutex; it is created if it does not exist.</returns>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.s_keyIVCacheFileWatcher_Changed(System.Object,System.IO.FileSystemEventArgs)">
-            <summary>
-            Reloads the key and initialization vector table when the cache file is modified externally.
-            </summary>
-            <param name="sender">The object that triggered the event.</param>
-            <param name="e">An object which provides data for directory events.</param>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.Encrypt(System.String,System.String,TVA.Security.Cryptography.CipherStrength)">
             <summary>
@@ -27146,6 +27438,243 @@
             <param name="password">User password used for key lookup.</param>
             <param name="strength">Cryptographic strength to use when decrypting file.</param>
             <param name="progressHandler">Optional delegate to handle progress updates for decrypting large files.</param>
+        </member>
+        <member name="T:TVA.Security.Cryptography.Cipher.KeyIVCache">
+            <summary>
+            Represents an interprocess serializable cryptographic key and initialization vector cache.
+            </summary>
+        </member>
+        <member name="T:TVA.IO.InterprocessCache">
+            <summary>
+            Represents a serialized data cache that can be saved or read from multiple applications using interprocess synchronization.
+            </summary>
+            <remarks>
+            Note that all file data in this class gets serialized to and from memory, as such, the design intention for this class is for
+            use with smaller data sets such as serialized lists or dictionaries that need interprocess synchronized loading and saving.
+            </remarks>
+        </member>
+        <member name="F:TVA.IO.InterprocessCache.DefaultMaximumRetryAttempts">
+            <summary>
+            Default maximum retry attempts allowed for loading <see cref="T:TVA.IO.InterprocessCache"/>.
+            </summary>
+        </member>
+        <member name="F:TVA.IO.InterprocessCache.DefaultRetryDelayInterval">
+            <summary>
+            Default wait interval, in milliseconds, before retrying load of <see cref="T:TVA.IO.InterprocessCache"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.#ctor">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.IO.InterprocessCache"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.#ctor(System.Int32)">
+            <summary>
+            Creates a new instance of the <see cref="T:TVA.IO.InterprocessCache"/> with the specified number of <paramref name="maximumConcurrentLocks"/>.
+            </summary>
+            <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.IO.InterprocessCache"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.IO.InterprocessCache"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.IO.InterprocessCache"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Save">
+            <summary>
+            Initiates interprocess synchronized cache file save.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Load">
+            <summary>
+            Initiates interprocess synchronized cache file load.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.Flush(System.Int32)">
+            <summary>
+            Blocks current thread and waits for any pending save to complete.
+            </summary>
+            <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.SaveFileData(System.IO.FileStream,System.Byte[])">
+            <summary>
+            Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to serialize data.</param>
+            <param name="fileData">File data to be serialized.</param>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.LoadFileData(System.IO.FileStream)">
+            <summary>
+            Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to deserialize data.</param>
+            <returns>Deserialized file data.</returns>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.SynchronizedWrite(System.Object)">
+            <summary>
+            Synchronously writes file data when no reads are active.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.SynchronizedRead(System.Object)">
+            <summary>
+            Synchronously reads file data when no writes are active.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.RetrySynchronizedEvent(System.Exception,System.Int32)">
+            <summary>
+            Initiates a retry for specified event type.
+            </summary>
+            <param name="ex">Exception causing retry.</param>
+            <param name="eventType">Event type to retry.</param>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.m_retryTimer_Elapsed(System.Object,System.Timers.ElapsedEventArgs)">
+            <summary>
+            Retries specified serialize or deserialize event in case of file I/O failures.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.m_fileWatcher_Changed(System.Object,System.IO.FileSystemEventArgs)">
+            <summary>
+            Reload file upon external modification.
+            </summary>
+            <param name="sender">The object that triggered the event.</param>
+            <param name="e">An object which provides data for directory events.</param>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.FileName">
+            <summary>
+            Path and file name for the cache needing interprocess synchronization.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.FileData">
+            <summary>
+            Gets or sets file data for the cache to be saved or that has been loaded.
+            </summary>
+            <remarks>
+            Setting value to <c>null</c> will create a zero-length file.
+            </remarks>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.AutoSave">
+            <summary>
+            Gets or sets flag that determines if <see cref="T:TVA.IO.InterprocessCache"/> should automatically initiate a save when <see cref="P:TVA.IO.InterprocessCache.FileData"/> has been updated.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.ReloadOnChange">
+            <summary>
+            Gets or sets flag that enables system to monitor for changes in <see cref="P:TVA.IO.InterprocessCache.FileName"/> and automatically reload <see cref="P:TVA.IO.InterprocessCache.FileData"/>.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.MaximumConcurrentLocks">
+            <summary>
+            Gets the maximum concurrent reader locks allowed.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.MaximumRetryAttempts">
+            <summary>
+            Maximum retry attempts allowed for loading or saving cache file data.
+            </summary>
+        </member>
+        <member name="P:TVA.IO.InterprocessCache.RetryDelayInterval">
+            <summary>
+            Wait interval, in milliseconds, before retrying load or save of cache file data.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.GetCryptoKeyIV(System.String,System.Int32)">
+            <summary>
+            Gets the crypto key and initialization vector for the given user password.
+            </summary>
+            <param name="password">User password used for key lookup.</param>
+            <param name="keySize">Specifies the desired key size.</param>
+            <returns>Crypto key, index 0, and initialization vector, index 1, for the given user password.</returns>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.ImportKeyIV(System.String,System.Int32,System.String)">
+            <summary>
+            Imports a key and initialization vector into the local system key cache.
+            </summary>
+            <param name="password">User password used for key lookups.</param>
+            <param name="keySize">Specifies the desired key size.</param>
+            <param name="keyIVText">Text based key and initialization vector to import into local key cache.</param>
+            <remarks>
+            This method is used to manually import a key created on another computer.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.ExportKeyIV(System.String,System.Int32)">
+            <summary>
+            Exports a key and initialization vector from the local system key cache.
+            </summary>
+            <param name="password">User password used for key lookup.</param>
+            <param name="keySize">Specifies the desired key size.</param>
+            <returns>Text based key and initialization vector exported from local key cache.</returns>
+            <remarks>
+            This method is used to manually export a key to be installed on another computer. 
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.MergeLeft(TVA.Security.Cryptography.Cipher.KeyIVCache)">
+            <summary>
+            Merge keys and initialization vectors from another <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/>, local cache taking precedence.
+            </summary>
+            <param name="other">Other <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/> to merge with.</param>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.MergeRight(TVA.Security.Cryptography.Cipher.KeyIVCache)">
+            <summary>
+            Merge keys and initialization vectors from another <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/>, other cache taking precedence.
+            </summary>
+            <param name="other">Other <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/> to merge with.</param>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Save">
+            <summary>
+            Initiates interprocess synchronized save of key and initialization vector table.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Load">
+            <summary>
+            Initiates interprocess synchronized load of key and initialization vector table.
+            </summary>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.SaveFileData(System.IO.FileStream,System.Byte[])">
+            <summary>
+            Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to serialize data.</param>
+            <param name="fileData">File data to be serialized.</param>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.LoadFileData(System.IO.FileStream)">
+            <summary>
+            Handles deserialization of file from disk; virtual method allows customization (e.g., pre-load decryption and/or data merge).
+            </summary>
+            <param name="fileStream"><see cref="T:System.IO.FileStream"/> used to deserialize data.</param>
+            <returns>Deserialized file data.</returns>
+            <remarks>
+            Consumers overriding this method should not directly call <see cref="P:TVA.IO.InterprocessCache.FileData"/> property to avoid potential dead-locks.
+            </remarks>
+        </member>
+        <member name="P:TVA.Security.Cryptography.Cipher.KeyIVCache.KeyIVTable">
+            <summary>
+            Gets a copy of the internal key and initialization vector table.
+            </summary>
         </member>
         <member name="T:TVA.NumericalAnalysis.RealTimeSlope">
             <summary>Calculates slope for a real-time continuous data stream.</summary>
@@ -27712,6 +28241,26 @@
             The application is a web site or web application.
             </summary>
         </member>
+        <member name="T:TVA.UpdateType">
+            <summary>
+            Indicates the type of update.
+            </summary>
+        </member>
+        <member name="F:TVA.UpdateType.Information">
+            <summary>
+            Update is informational.
+            </summary>
+        </member>
+        <member name="F:TVA.UpdateType.Warning">
+            <summary>
+            Update is a warning.
+            </summary>
+        </member>
+        <member name="F:TVA.UpdateType.Alarm">
+            <summary>
+            Update is an alarm.
+            </summary>
+        </member>
         <member name="T:TVA.Common">
             <summary>
             Defines common global functions.
@@ -27774,7 +28323,7 @@
         </member>
         <member name="M:TVA.Common.ToNonNullString``1(``0)">
             <summary>
-            Converts value to string, null objects (or DBNull objects) will return an empty string (""). 
+            Converts value to string; null objects (or DBNull objects) will return an empty string (""). 
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
             <param name="value">Value to convert to string.</param>
@@ -27782,7 +28331,7 @@
         </member>
         <member name="M:TVA.Common.ToNonNullString``1(``0,System.String)">
             <summary>
-            Converts value to string, null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
+            Converts value to string; null objects (or DBNull objects) will return specified <paramref name="nonNullValue"/>.
             </summary>
             <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
             <param name="value">Value to convert to string.</param>
@@ -27795,7 +28344,27 @@
             Makes sure returned string value is not null; if this string is null, empty string ("") will be returned. 
             </summary>
             <param name="value"><see cref="T:System.String"/> to verify is not null.</param>
-            <returns><see cref="T:System.String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned. </returns>
+            <returns><see cref="T:System.String"/> value; if <paramref name="value"/> is null, empty string ("") will be returned.</returns>
+        </member>
+        <member name="M:TVA.Common.ToNonNullNorEmptyString``1(``0,System.String)">
+            <summary>
+            Converts value to string; null objects, DBNull objects or empty strings will return specified <paramref name="nonNullNorEmptyValue"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
+            <param name="value">Value to convert to string.</param>
+            <param name="nonNullNorEmptyValue"><see cref="T:System.String"/> to return if <paramref name="value"/> is null.</param>
+            <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, DBNull or an empty string <paramref name="nonNullNorEmptyValue"/> will be returned.</returns>
+            <exception cref="T:System.ArgumentException"><paramref name="nonNullNorEmptyValue"/> must not be null or an empty string.</exception>
+        </member>
+        <member name="M:TVA.Common.ToNonNullNorWhiteSpace``1(``0,System.String)">
+            <summary>
+            Converts value to string; null objects, DBNull objects, empty strings or all white space strings will return specified <paramref name="nonNullNorWhiteSpaceValue"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of <see cref="T:System.Object"/> to convert to string.</typeparam>
+            <param name="value">Value to convert to string.</param>
+            <param name="nonNullNorWhiteSpaceValue"><see cref="T:System.String"/> to return if <paramref name="value"/> is null.</param>
+            <returns><paramref name="value"/> as a string; if <paramref name="value"/> is null, DBNull, empty or all white space, <paramref name="nonNullNorWhiteSpaceValue"/> will be returned.</returns>
+            <exception cref="T:System.ArgumentException"><paramref name="nonNullNorWhiteSpaceValue"/> must not be null, an empty string or white space.</exception>
         </member>
         <member name="M:TVA.Common.TypeConvertToString(System.Object)">
             <summary>
@@ -29395,33 +29964,6 @@
             <returns>Array of string segments as parsed from source string.</returns>
             <remarks>Returns a single element array with an empty string if source string is null or empty.</remarks>
         </member>
-        <member name="M:TVA.StringExtensions.JoinKeyValuePairs(System.Collections.Generic.Dictionary{System.String,System.String})">
-            <summary>
-            Combines a dictionary of key-value pairs in to a string.
-            </summary>
-            <param name="pairs">Dictionary of key-value pairs.</param>
-            <returns>A string of key-value pairs.</returns>
-            <remarks>
-            Values will be escaped within braces to contain nested key value pair expressions like
-            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
-            ";" or "=" are detected in the value of the key/value pair.
-            </remarks>
-        </member>
-        <member name="M:TVA.StringExtensions.JoinKeyValuePairs(System.Collections.Generic.Dictionary{System.String,System.String},System.Char,System.Char)">
-            <summary>
-            Combines a dictionary of key-value pairs in to a string.
-            </summary>
-            <param name="pairs">Dictionary of key-value pairs.</param>
-            <param name="parameterDelimeter">Character that delimits one key-value pair from another (eg. ';').</param>
-            <param name="keyValueDelimeter">Character that delimits a key from its value (eg. '=').</param>
-            <returns>A string of key-value pairs.</returns>
-            <remarks>
-            Values will be escaped within braces to contain nested key value pair expressions like
-            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>, when either the
-            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are
-            detected in the value of the key/value pair.
-            </remarks>
-        </member>
         <member name="M:TVA.StringExtensions.JoinKeyValuePairs(System.Collections.Generic.Dictionary{System.String,System.String},System.Char,System.Char,System.Char,System.Char)">
             <summary>
             Combines a dictionary of key-value pairs in to a string.
@@ -29436,90 +29978,44 @@
             <returns>A string of key-value pairs.</returns>
             <remarks>
             Values will be escaped within <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/>
-            to contain nested key value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
+            to contain nested key/value pair expressions like the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>,
             when either the <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> are detected in the
             value of the key/value pair.
             </remarks>
         </member>
-        <member name="M:TVA.StringExtensions.ParseKeyValuePairs(System.String)">
+        <member name="M:TVA.StringExtensions.ParseKeyValuePairs(System.String,System.Char,System.Char,System.Char,System.Char,System.Boolean)">
             <summary>
-            Parses key value pair parameters from a string. Parameter pairs are delimited by an equals sign, and multiple
-            pairs separated by a semi-colon.
+            Parses key/value pair expressions from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>
+            and multiple pairs separated by <paramref name="parameterDelimeter"/>. Supports encapsulated nested expressions.
             </summary>
-            <param name="value">Key pair string to parse.</param>
-            <returns>Dictionary of key/value pairs.</returns>
-            <remarks>
-            <para>
-            Parses a string formatted like a typical connection string, e.g.:
-            <c>IP=localhost; Port=1002; MaxEvents=50; UseTimeout=True</c>.
-            Note that "keys" are case-insensitive.
-            </para>
-            <para>
-            Values can be escaped within braces to contain nested key value pair expressions like
-            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>.
-            Multiple levels of nesting is supported.
-            </para>
-            </remarks>
-            <exception cref="T:System.ArgumentNullException">value is null.</exception>
-            <exception cref="T:System.FormatException">Total nested key value value pair expressions are mismatched -or-
-            encountered end value delimeter '}' before start value delimeter '{'.</exception>
-        </member>
-        <member name="M:TVA.StringExtensions.ParseKeyValuePairs(System.String,System.Char,System.Char)">
-            <summary>
-            Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-            and multiple pairs separated by <paramref name="parameterDelimeter"/>.
-            </summary>
-            <param name="value">Key pair string to parse.</param>
-            <param name="parameterDelimeter">
-            Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection string).
-            </param>
-            <param name="keyValueDelimeter">
-            Character that delimits key from value (e.g., would be an "=" in a typical connection string).
-            </param>
-            <returns>Dictionary of key/value pairs.</returns>
-            <remarks>
-            <para>
-            Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
-            </para>
-            <para>
-            Values can be escaped within braces to contain nested key value pair expressions like
-            the following: <c>normalKVP=-1; nestedKVP={p1=true; p2=0.001}</c>.
-            Multiple levels of nesting is supported.
-            </para>
-            </remarks>
-            <exception cref="T:System.ArgumentNullException">value is null.</exception>
-            <exception cref="T:System.ArgumentException">All delimeters must be unique.</exception>
-            <exception cref="T:System.FormatException">Total nested key value value pair expressions are mismatched -or-
-            encountered end value delimeter '}' before start value delimeter '{'.</exception>
-        </member>
-        <member name="M:TVA.StringExtensions.ParseKeyValuePairs(System.String,System.Char,System.Char,System.Char,System.Char)">
-            <summary>
-            Parses key value pair parameters from a string. Parameter pairs are delimited by <paramref name="keyValueDelimeter"/>,
-            and multiple pairs separated by <paramref name="parameterDelimeter"/>.
-            </summary>
-            <param name="value">Key pair string to parse.</param>
-            <param name="parameterDelimeter">Character that delimits one key value pair from another (e.g., would be a ";" in a typical connection
-            string).</param>
-            <param name="keyValueDelimeter">Character that delimits key from value (e.g., would be an "=" in a typical connection string).</param>
+            <param name="value">String containing key/value pair expressions to parse.</param>
+            <param name="parameterDelimeter">Character that delimits one key/value pair from another.</param>
+            <param name="keyValueDelimeter">Character that delimits key from value.</param>
             <param name="startValueDelimeter">Optional character that marks the start of a value such that value could contain other
-            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "{").</param>
+            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
             <param name="endValueDelimeter">Optional character that marks the end of a value such that value could contain other
-            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters (e.g., "}").</param>
+            <paramref name="parameterDelimeter"/> or <paramref name="keyValueDelimeter"/> characters.</param>
+            <param name="ignoreDuplicateKeys">Flag determines whether duplicates are ignored. If flag is set to <c>false</c> an
+            <see cref="T:System.ArgumentException"/> will be thrown when all key parameters are not unique.</param>
             <returns>Dictionary of key/value pairs.</returns>
             <remarks>
             <para>
-            Parses a key value string that contains one or many pairs. Note that "keys" are case-insensitive.
-            </para>
-            <para>
-            If value includes <paramref name="startValueDelimeter"/>, it must include <paramref name="endValueDelimeter"/>
-            otherwise results will be unexpected.
-            Multiple levels of nesting is supported.
+            Parses a string containing key/value pair expressions (e.g., "localPort=5001; transportProtocol=UDP; interface=0.0.0.0").
+            This method treats all "keys" as case-insensitive. Nesting of key/value pair expressions is allowed by encapsulating the
+            value using the <paramref name="startValueDelimeter"/> and <paramref name="endValueDelimeter"/> values (e.g., 
+            "dataChannel={Port=-1;Clients=localhost:8800}; commandChannel={Port=8900}; dataFormat=FloatingPoint;"). There must be one
+            <paramref name="endValueDelimeter"/> for each encountered <paramref name="startValueDelimeter"/> in the value or a
+            <see cref="T:System.FormatException"/> will be thrown. Multiple levels of nesting is supported. If the <paramref name="ignoreDuplicateKeys"/>
+            flag is set to <c>false</c> an <see cref="T:System.ArgumentException"/> will be thrown when all key parameters are not unique. Note
+            that keys within nested expressions are considered separate key/value pair strings and are not considered when checking
+            for duplicate keys.
             </para>
             </remarks>
             <exception cref="T:System.ArgumentNullException">value is null.</exception>
-            <exception cref="T:System.ArgumentException">All delimeters must be unique.</exception>
-            <exception cref="T:System.FormatException">Total nested key value value pair expressions are mismatched -or-
-            encountered <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
+            <exception cref="T:System.ArgumentException">All delimeters must be unique -or- all keys must be unique when
+            <paramref name="ignoreDuplicateKeys"/> is set to <c>false</c>.</exception>
+            <exception cref="T:System.FormatException">Total nested key/value value pair expressions are mismatched -or- encountered
+            <paramref name="endValueDelimeter"/> before <paramref name="startValueDelimeter"/>.</exception>
         </member>
         <member name="M:TVA.StringExtensions.NotEmpty(System.String)">
             <summary>
@@ -32719,6 +33215,65 @@
             <param name="value">New <see cref="T:TVA.Units.Energy"/> value in equivalent tons of coal.</param>
             <returns>New <see cref="T:TVA.Units.Energy"/> object from the specified <paramref name="value"/> in equivalent tons of coal.</returns>
         </member>
+        <member name="T:TVA.Threading.InterprocessLock">
+            <summary>
+            Defines helper methods related to interprocess locking.
+            </summary>
+        </member>
+        <member name="M:TVA.Threading.InterprocessLock.GetNamedMutex(System.String)">
+            <summary>
+            Gets a uniquely named interprocess <see cref="T:System.Threading.Mutex"/> associated with the specified <paramref name="name"/> that identifies a source object
+            needing concurrency locking.
+            </summary>
+            <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+            <returns>A uniquely named interprocess <see cref="T:System.Threading.Mutex"/> specific to <paramref name="name"/>; <see cref="T:System.Threading.Mutex"/> is created if it does not exist.</returns>
+            <remarks>
+            <para>
+            This function uses a hash of the <paramref name="name"/> when creating the <see cref="T:System.Threading.Mutex"/>, not the actual <paramref name="name"/> - this way
+            restrictions on the <paramref name="name"/> do not need to be a user concern. All processes needing an interprocess <see cref="T:System.Threading.Mutex"/> need to
+            use this same function to ensure access to the same <see cref="T:System.Threading.Mutex"/>.
+            </para>
+            <para>
+            The <paramref name="name"/> can be a string of any length (must not be empty, null or white space) and is not case-sensitive. All hashes of the
+            <paramref name="name"/> used to create the global <see cref="T:System.Threading.Mutex"/> are first converted to lower case.
+            </para>
+            <para>
+            The <see cref="T:System.Threading.Mutex"/> created is "Global" meaning that it will be accessible to all active application sessions including terminal service
+            sessions. This is accomplished internally by prefixing the <see cref="T:System.Threading.Mutex"/> name with "Global\"; it is not necessary for the user to be
+            concerned with the length or contents of the <paramref name="name"/> in this method as long as the same <paramref name="name"/> is used for
+            each application. Do not use this helper function if you need to create a specifically named or non-global <see cref="T:System.Threading.Mutex"/>, such as when
+            you need to interact with another application using a <see cref="T:System.Threading.Mutex"/> that does not use this function.
+            </para>
+            </remarks>
+            <exception cref="T:System.ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+        </member>
+        <member name="M:TVA.Threading.InterprocessLock.GetNamedSemaphore(System.String,System.Int32,System.Int32)">
+            <summary>
+            Gets a uniquely named interprocess <see cref="T:System.Threading.Semaphore"/> associated with the specified <paramref name="name"/> that identifies a source object
+            needing concurrency locking.
+            </summary>
+            <param name="name">Identifiying name of source object needing concurrency locking (e.g., a path and file name).</param>
+            <param name="maximumCount">The maximum number of requests for the semaphore that can be granted concurrently.</param>
+            <param name="initialCount">The initial number of requests for the semaphore that can be granted concurrently, or -1 to default to <paramref name="maximumCount"/>.</param>
+            <returns>A uniquely named interprocess <see cref="T:System.Threading.Semaphore"/> specific to <paramref name="name"/>; <see cref="T:System.Threading.Semaphore"/> is created if it does not exist.</returns>
+            <remarks>
+            <para>
+            This function uses a hash of the <paramref name="name"/> when creating the <see cref="T:System.Threading.Semaphore"/>, not the actual <paramref name="name"/> - this way
+            restrictions on the <paramref name="name"/> do not need to be a user concern. All processes needing an interprocess <see cref="T:System.Threading.Semaphore"/> need to
+            use this same function to ensure access to the same <see cref="T:System.Threading.Semaphore"/>.
+            </para>
+            <para>
+            The <paramref name="name"/> can be a string of any length (must not be empty, null or white space) and is not case-sensitive. All hashes of the
+            <paramref name="name"/> used to create the global <see cref="T:System.Threading.Semaphore"/> are first converted to lower case.
+            </para>
+            <para>
+            It is not necessary for the user to be concerned with the length or contents of the <paramref name="name"/> in this method as long as the same
+            <paramref name="name"/> is used for each application. Do not use this helper function if you need to create a specifically named <see cref="T:System.Threading.Semaphore"/>,
+            such as when you need to interact with another application using a <see cref="T:System.Threading.Semaphore"/> that does not use this function.
+            </para>
+            </remarks>
+            <exception cref="T:System.ArgumentNullException">Parameter <paramref name="name"/> cannot be empty, null or white space.</exception>
+        </member>
         <member name="T:TVA.ProcessProgress`1">
             <summary>
             Represents current process progress for an operation.
@@ -33103,6 +33658,48 @@
             Defines extension functions related to manipulation of arrays and collections.
             </summary>
         </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Merge``3(``0,System.Collections.Generic.IDictionary{``1,``2}[])">
+            <summary>
+            Merges elements of multiple dictionaries into a single dictionary with no duplicate key values overwritten.
+            </summary>
+            <typeparam name="T">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> to merge.</typeparam>
+            <typeparam name="TKey">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> keys.</typeparam>
+            <typeparam name="TValue">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> values.</typeparam>
+            <param name="source">Source dictionary to merge with another dictionary.</param>
+            <param name="others">Other dictionaries to merge with source dictionary.</param>
+            <returns>
+            A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source with no duplicate
+            key values overwritten (i.e., first encounted key value pair is the one that remains in the returned merged dictionary).
+            </returns>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Merge``3(``0,System.Boolean,System.Collections.Generic.IDictionary{``1,``2}[])">
+            <summary>
+            Merges elements of multiple dictionaries into a single dictionary.
+            </summary>
+            <typeparam name="T">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> to merge.</typeparam>
+            <typeparam name="TKey">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> keys.</typeparam>
+            <typeparam name="TValue">Type of <see cref="T:System.Collections.Generic.IDictionary`2"/> values.</typeparam>
+            <param name="source">Source dictionary to merge with another dictionary.</param>
+            <param name="overwriteExisting">Set to <c>true</c> to overwrite duplicate key values as they are encountered.</param>
+            <param name="others">Other dictionaries to merge with source dictionary.</param>
+            <returns>A merged collection of all unique dictionary elements, all <paramref name="others"/> merged left to the source.</returns>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.Any(System.Collections.BitArray,System.Boolean)">
+            <summary>
+            Returns <c>true</c> if any item in <see cref="T:System.Collections.BitArray"/> is equal to <paramref name="value"/>.
+            </summary>
+            <param name="source">Source <see cref="T:System.Collections.BitArray"/>.</param>
+            <param name="value"><see cref="T:System.Boolean"/> value to test for.</param>
+            <returns><c>true</c> if any item in <see cref="T:System.Collections.BitArray"/> is equal to <paramref name="value"/>.</returns>
+        </member>
+        <member name="M:TVA.Collections.CollectionExtensions.All(System.Collections.BitArray,System.Boolean)">
+            <summary>
+            Returns <c>true</c> if all items in <see cref="T:System.Collections.BitArray"/> are equal to <paramref name="value"/>.
+            </summary>
+            <param name="source">Source <see cref="T:System.Collections.BitArray"/>.</param>
+            <param name="value"><see cref="T:System.Boolean"/> value to test for.</param>
+            <returns><c>true</c> if all items in <see cref="T:System.Collections.BitArray"/> are equal to <paramref name="value"/>.</returns>
+        </member>
         <member name="M:TVA.Collections.CollectionExtensions.Majority``1(System.Collections.Generic.IEnumerable{``0})">
             <summary>
             Returns the majority value in the collection, or default value if no item represents the majority.
@@ -33301,6 +33898,48 @@
             <param name="comparer">An interface <see cref="T:System.Collections.IComparer"/> that exposes a method to compare the two arrays.</param>
             <returns>An <see cref="T:System.Int32"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
             <remarks>This is a default comparer to make arrays comparable.</remarks>
+        </member>
+        <member name="T:TVA.Data.AdoDataConnection">
+            <summary>
+            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
+            </summary>
+            <param name="settingsCategory">Settings category to use for connection settings.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
+            <summary>
+            Forces a reload of cached configuration connection settings.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.Connection">
+            <summary>
+            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.AdapterType">
+            <summary>
+            Gets the type of data adapter for configured ADO.NET data source.
+            </summary>
         </member>
     </members>
 </doc>

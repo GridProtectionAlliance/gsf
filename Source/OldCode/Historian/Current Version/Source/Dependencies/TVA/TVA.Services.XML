@@ -199,11 +199,11 @@
             </summary>
             <param name="request"><see cref="T:TVA.Services.ServiceProcess.ClientRequest"/> object to be sent.</param>
         </member>
-        <member name="M:TVA.Services.ServiceProcess.ClientHelper.OnReceivedServiceUpdate(TVA.Services.ServiceProcess.UpdateType,System.String)">
+        <member name="M:TVA.Services.ServiceProcess.ClientHelper.OnReceivedServiceUpdate(TVA.UpdateType,System.String)">
             <summary>
             Raises the <see cref="E:TVA.Services.ServiceProcess.ClientHelper.ReceivedServiceUpdate"/> event.
             </summary>
-            <param name="type">One of the <see cref="T:TVA.Services.ServiceProcess.UpdateType"/> values.</param>
+            <param name="type">One of the <see cref="T:TVA.UpdateType"/> values.</param>
             <param name="update">Update message received.</param>
         </member>
         <member name="M:TVA.Services.ServiceProcess.ClientHelper.OnReceivedServiceResponse(TVA.Services.ServiceProcess.ServiceResponse)">
@@ -371,26 +371,6 @@
         <member name="F:TVA.Services.ServiceProcess.ServiceState.Shutdown">
             <summary>
             Service has shutdown.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.ServiceProcess.UpdateType">
-            <summary>
-            Indicates the type of service update.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceProcess.UpdateType.Information">
-            <summary>
-            Update is informational.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceProcess.UpdateType.Warning">
-            <summary>
-            Update is a warning message.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceProcess.UpdateType.Alarm">
-            <summary>
-            Update is an alarm message.
             </summary>
         </member>
         <member name="T:TVA.Services.ServiceProcess.ServiceHelper">
@@ -607,20 +587,20 @@
             <param name="client">ID of the client to whom the <paramref name="response"/> is to be sent.</param>
             <param name="response">The <see cref="T:TVA.Services.ServiceProcess.ServiceResponse"/> to be sent to the <paramref name="client"/>.</param>
         </member>
-        <member name="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(TVA.Services.ServiceProcess.UpdateType,System.String,System.Object[])">
+        <member name="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(TVA.UpdateType,System.String,System.Object[])">
             <summary>
             Provides a status update to all <see cref="P:TVA.Services.ServiceProcess.ServiceHelper.RemoteClients"/>.
             </summary>
             <param name="message">Text message to be transmitted to all <see cref="P:TVA.Services.ServiceProcess.ServiceHelper.RemoteClients"/>.</param>
-            <param name="type">One of the <see cref="T:TVA.Services.ServiceProcess.UpdateType"/> values.</param>
+            <param name="type">One of the <see cref="T:TVA.UpdateType"/> values.</param>
             <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
         </member>
-        <member name="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(System.Guid,TVA.Services.ServiceProcess.UpdateType,System.String,System.Object[])">
+        <member name="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(System.Guid,TVA.UpdateType,System.String,System.Object[])">
             <summary>
             Provides a status update to the specified <paramref name="client"/>.
             </summary>
             <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
-            <param name="type">One of the <see cref="T:TVA.Services.ServiceProcess.UpdateType"/> values.</param>
+            <param name="type">One of the <see cref="T:TVA.UpdateType"/> values.</param>
             <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
             <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
         </member>
@@ -776,8 +756,8 @@
         </member>
         <member name="P:TVA.Services.ServiceProcess.ServiceHelper.LogStatusUpdates">
             <summary>
-            Gets or sets a boolean value that indicates whether messages sent using <see cref="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(TVA.Services.ServiceProcess.UpdateType,System.String,System.Object[])"/> 
-            or <see cref="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(System.Guid,TVA.Services.ServiceProcess.UpdateType,System.String,System.Object[])"/> are to be logged to the <see cref="P:TVA.Services.ServiceProcess.ServiceHelper.StatusLog"/>.
+            Gets or sets a boolean value that indicates whether messages sent using <see cref="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(TVA.UpdateType,System.String,System.Object[])"/> 
+            or <see cref="M:TVA.Services.ServiceProcess.ServiceHelper.UpdateStatus(System.Guid,TVA.UpdateType,System.String,System.Object[])"/> are to be logged to the <see cref="P:TVA.Services.ServiceProcess.ServiceHelper.StatusLog"/>.
             </summary>
         </member>
         <member name="P:TVA.Services.ServiceProcess.ServiceHelper.MaxStatusUpdatesLength">
@@ -1627,12 +1607,12 @@
         </member>
         <member name="P:TVA.Services.ServiceModel.Messaging.RegistrationRequest.MessageType">
             <summary>
-            Gets or sets the <see cref="P:TVA.Services.ServiceModel.Messaging.Message.Type"/> of the <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> this <see cref="T:TVA.Services.ServiceModel.Messaging.RegistrationRequest"/> is for.
+            Gets or sets the <see cref="F:TVA.Services.ServiceModel.Messaging.Message.Type"/> of the <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> this <see cref="T:TVA.Services.ServiceModel.Messaging.RegistrationRequest"/> is for.
             </summary>
         </member>
         <member name="P:TVA.Services.ServiceModel.Messaging.RegistrationRequest.MessageName">
             <summary>
-            Gets or sets the <see cref="P:TVA.Services.ServiceModel.Messaging.Message.Name"/> of the <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> this <see cref="T:TVA.Services.ServiceModel.Messaging.RegistrationRequest"/> is for.
+            Gets or sets the <see cref="F:TVA.Services.ServiceModel.Messaging.Message.Name"/> of the <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> this <see cref="T:TVA.Services.ServiceModel.Messaging.RegistrationRequest"/> is for.
             </summary>
         </member>
         <member name="T:TVA.Services.ServiceModel.Messaging.MessageProcessingMode">
@@ -2325,7 +2305,7 @@
             Gets the name of resource being accessed.
             </summary>
             <returns>
-            <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.<see cref="P:TVA.Services.ServiceModel.Messaging.Message.Name"/> property value for <see cref="M:TVA.Services.ServiceModel.Messaging.MessageBusService.Publish(TVA.Services.ServiceModel.Messaging.Message)"/> operations, 
+            <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.<see cref="F:TVA.Services.ServiceModel.Messaging.Message.Name"/> property value for <see cref="M:TVA.Services.ServiceModel.Messaging.MessageBusService.Publish(TVA.Services.ServiceModel.Messaging.Message)"/> operations, 
             otherwise <see cref="P:System.ServiceModel.Channels.MessageHeaders.Action"/> property value for all other operations.
             </returns>
         </member>
@@ -2480,27 +2460,27 @@
             Represents a message that can be used to exchange information between processes using <see cref="T:TVA.Services.ServiceModel.Messaging.MessageBusService"/>.
             </summary>
         </member>
-        <member name="P:TVA.Services.ServiceModel.Messaging.Message.Time">
+        <member name="F:TVA.Services.ServiceModel.Messaging.Message.Time">
             <summary>
             Gets or sets the <see cref="T:System.DateTime"/> when this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> was created.
             </summary>
         </member>
-        <member name="P:TVA.Services.ServiceModel.Messaging.Message.Type">
+        <member name="F:TVA.Services.ServiceModel.Messaging.Message.Type">
             <summary>
             Gets or sets the <see cref="T:TVA.Services.ServiceModel.Messaging.MessageType">Type</see> of this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.
             </summary>
         </member>
-        <member name="P:TVA.Services.ServiceModel.Messaging.Message.Name">
+        <member name="F:TVA.Services.ServiceModel.Messaging.Message.Name">
             <summary>
             Gets or sets the identifier of this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.
             </summary>
         </member>
-        <member name="P:TVA.Services.ServiceModel.Messaging.Message.Format">
+        <member name="F:TVA.Services.ServiceModel.Messaging.Message.Format">
             <summary>
-            Gets or sets the format of the <see cref="P:TVA.Services.ServiceModel.Messaging.Message.Content"/> in this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.
+            Gets or sets the format of the <see cref="F:TVA.Services.ServiceModel.Messaging.Message.Content"/> in this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.
             </summary>
         </member>
-        <member name="P:TVA.Services.ServiceModel.Messaging.Message.Content">
+        <member name="F:TVA.Services.ServiceModel.Messaging.Message.Content">
             <summary>
             Gets or sets the actual payload of this <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/>.
             </summary>
