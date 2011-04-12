@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -54,6 +55,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> ID.
         /// </summary>
+        // Field is populated by database via auto-increment, so no validation attributes are applied.
         public int ID
         {
             get 
@@ -69,6 +71,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
+        [StringLength(3, ErrorMessage="Vendor Acronym cannot exceed 3 characters")]
         public string Acronym
         {
             get 
@@ -84,6 +87,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Name.
         /// </summary>
+        [Required(ErrorMessage="The Vendor Name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage="Vendor Name cannot exceed 100 characters.")]
         public string Name
         {
             get 
@@ -99,6 +104,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Vendor"/> Phone Number.
         /// </summary>
+        [StringLength(100, ErrorMessage="Vendor Phone Number cannot exceed 100 characters.")]
         public string PhoneNumber
         {
             get 
@@ -114,6 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Contact Email.
         /// </summary>
+        [StringLength(100, ErrorMessage = "Vendor Contact Email cannot exceed 100 characters.")]
         public string ContactEmail
         {
             get 
@@ -129,6 +136,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> URL.
         /// </summary>
+        [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
         public string URL
         {
             get 
@@ -144,6 +152,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time this <see cref="Vendor"/> was created on.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get 
@@ -159,6 +168,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who this <see cref="Vendor"/> was created by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get 
@@ -174,6 +184,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date Time this <see cref="Vendor"/> was updated on.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get 
@@ -189,6 +200,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who this <see cref="Vendor"/> was updated by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get 

@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -62,6 +64,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s ID.
         /// </summary>
+        [StringLength(36, ErrorMessage="Node ID cannot exceed 36 characters")]
         public string ID
         {
             get
@@ -77,6 +80,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Name.
         /// </summary>
+        [Required(ErrorMessage="Node name is a required field, please provide a value")]
+        [StringLength(100, ErrorMessage="Name cannot exceed 100 characters.")]
         public string Name
         {
             get 
@@ -92,6 +97,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Comapny ID.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public int? CompanyID
         {
             get 
@@ -107,6 +113,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Longitude.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public decimal? Longitude
         {
             get 
@@ -122,6 +129,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Latitude.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public decimal? Latitude
         {
             get 
@@ -137,6 +145,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Description.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string Description
         {
             get 
@@ -152,6 +161,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Image.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string Image
         {
             get 
@@ -167,6 +177,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is the master <see cref="Node"/>.
         /// </summary>
+        [DefaultValue(typeof(bool), "false")]
         public bool Master
         {
             get 
@@ -182,6 +193,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Load Order.
         /// </summary>
+        [DefaultValue(typeof(int), "0")]
         public int LoadOrder
         {
             get 
@@ -197,6 +209,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is enabled.
         /// </summary>
+        [DefaultValue(typeof(bool), "false")]
         public bool Enabled
         {
             get 
@@ -212,6 +225,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Time Series Data Service URL.
         /// </summary>
+        [DataType(DataType.Url, ErrorMessage="Time Series Data Service URL is not formatted properly.")]
         public string TimeSeriesDataServiceUrl
         {
             get 
@@ -227,6 +241,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Remote Status Service URL.
         /// </summary>
+        [DataType(DataType.Url, ErrorMessage = "Remote Status Service URL is not formatted properly.")]
         public string RemoteStatusServiceUrl
         {
             get 
@@ -242,6 +257,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Real Time Statistic Service URL.
         /// </summary>
+        [DataType(DataType.Url, ErrorMessage = "Real Time Statistics Service URL is not formatted properly.")]
         public string RealTimeStatisticServiceUrl
         {
             get 
@@ -257,6 +273,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Company Name.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string CompanyName
         {
             get 
@@ -272,6 +289,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="Node"/> was created on.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get 
@@ -287,6 +305,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Node"/> was created by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get 
@@ -302,6 +321,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time when the current <see cref="Node"/> was updated on.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get 
@@ -317,6 +337,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Node"/> was updated by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get 

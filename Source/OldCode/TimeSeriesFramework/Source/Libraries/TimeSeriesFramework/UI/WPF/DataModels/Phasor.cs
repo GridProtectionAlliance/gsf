@@ -143,6 +143,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets Destination<see cref="Phasor"/>ID for the current Phasor.
         /// </summary>
+        // Because of Database design, no validation attributes are applied
         public int? DestinationPhasorID
         {
             get 
@@ -174,6 +175,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets Destination<see cref="Phasor"/>Label for the current Phasor.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string DestinationPhasorLabel
         {
             get 
@@ -189,6 +191,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Device Acronym for the current Phasor.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string DeviceAcronym
         {
             get 
@@ -204,6 +207,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets<see cref="Phasor"/>Type for the current Phasor.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string PhasorType
         {
             get 
@@ -219,6 +223,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets Phase Type for the current Phasor.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string PhaseType
         {
             get
@@ -234,7 +239,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time the current<see cref="Phasor"/>was created on.
         /// </summary>
-        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get 
@@ -250,6 +255,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current<see cref="Phasor"/>was created by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get 
@@ -265,6 +271,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time the current<see cref="Phasor"/>was updated on.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get 
@@ -280,6 +287,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current<see cref="Phasor"/>was updated by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get 

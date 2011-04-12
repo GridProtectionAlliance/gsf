@@ -75,6 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_nodeId = value;
+                OnPropertyChanged("NodeId");
             }
         }
 
@@ -91,6 +92,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_ID = value;
+                OnPropertyChanged("ID");
             }
         }
 
@@ -108,6 +110,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_acronym = value;
+                OnPropertyChanged("Acronym");
             }
         }
 
@@ -124,6 +127,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_name = value;
+                OnPropertyChanged("Name");
             }
         }
 
@@ -140,6 +144,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_assemblyName = value;
+                OnPropertyChanged("AssemblyName");
             }
         }
 
@@ -156,6 +161,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_typeName = value;
+                OnPropertyChanged("TypeName");
             }
         }
 
@@ -172,6 +178,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_connectionString = value;
+                OnPropertyChanged("ConnectionString");
             }
         }
 
@@ -188,6 +195,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_isLocal = value;
+                OnPropertyChanged("IsLocal");
             }
         }
 
@@ -204,6 +212,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_description = value;
+                OnPropertyChanged("Description");
             }
         }
 
@@ -220,6 +229,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_loadOrder = value;
+                OnPropertyChanged("LoadOrder");
             }
         }
 
@@ -236,6 +246,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_enabled = value;
+                OnPropertyChanged("Enabled");
             }
         }
 
@@ -274,7 +285,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Historian" /> was created.
         /// </summary>
-        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -290,8 +301,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Historian" /> was created by.
         /// </summary>
-        [StringLength(50, ErrorMessage= "Historian CreatedBy cannot exceed 50 characters.")]
-        [DefaultValue(typeof(string), "")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
@@ -307,7 +317,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Historian" /> was updated.
         /// </summary>
-        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
@@ -323,8 +333,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Historian" /> was updated by.
         /// </summary>
-        [StringLength(50, ErrorMessage = "Historian UpdatedBy cannot exceed 50 characters.")]
-        [DefaultValue(typeof(string), "")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
@@ -337,7 +346,6 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion
-        
+        #endregion        
     }
 }

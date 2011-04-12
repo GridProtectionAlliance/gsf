@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -54,6 +56,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="VendorDevice"/>'s ID.
         /// </summary>
+        // Field is populated by database via auto-increment, so no validation attributes are applied.
         public int ID
         {
             get 
@@ -69,6 +72,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the VendorID.
         /// </summary>
+        [DefaultValue(typeof(int), "10")]
         public int VendorID
         {
             get 
@@ -84,6 +88,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Name.
         /// </summary>
+        [Required(ErrorMessage="VendorDevice Name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage="VendorDevice Name cannot exceed 100 characters.")]
         public string Name
         {
             get 
@@ -99,6 +105,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Description.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public string Description
         {
             get 
@@ -114,6 +121,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the URL.
         /// </summary>
+        [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
         public string URL
         {
             get 
@@ -129,6 +137,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the VendorName.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public string VendorName
         {
             get 
@@ -144,6 +153,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time this <see cref="VendorDevice"/> was created.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get 
@@ -159,6 +169,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who this <see cref="VendorDevice"/> was created by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get 
@@ -174,6 +185,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time this <see cref="VendorDevice"/> was updated.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get 
@@ -189,6 +201,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who this VenderDevice was updated by.
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get 

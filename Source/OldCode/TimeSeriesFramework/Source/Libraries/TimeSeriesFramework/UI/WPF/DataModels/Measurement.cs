@@ -281,6 +281,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Historian Acronym.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string HistorianAcronym
         {
             get 
@@ -296,6 +297,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Device Acronym.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string DeviceAcronym
         {
             get 
@@ -311,6 +313,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Frames Per Second.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public int? FramesPerSecond
         {
             get 
@@ -326,6 +329,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Name.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string SignalName
         {
             get 
@@ -341,6 +345,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Acronym.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string SignalAcronym
         {
             get 
@@ -356,6 +361,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Suffix.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string SignalSuffix
         {
             get 
@@ -371,6 +377,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Phasor Label.
         /// </summary>
+        // Because of database design, no validation attributes are supplied
         public string PhasorLabel
         {
             get 
@@ -386,7 +393,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Measurement"/> was Created.
         /// </summary>
-        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get 
@@ -402,8 +409,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Measurement"/> was created by.
         /// </summary>
-        [StringLength(50, ErrorMessage = "Measurement CreatedBy cannot exceed 50 characters.")]
-        [DefaultValue(typeof(string), "")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get 
@@ -419,7 +425,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Measurement"/> updated.
         /// </summary>
-        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get 
@@ -435,8 +441,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Measurement"/> was updated by.
         /// </summary>
-        [StringLength(50, ErrorMessage = "Measurement UpdatedBy cannot exceed 50 characters.")]
-        [DefaultValue(typeof(string), "")]
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get 
