@@ -141,7 +141,9 @@ namespace TimeSeriesFramework.UI
                     m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
 
                 m_currentItem = value;
-                m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
+
+                if (m_currentItem != null)
+                    m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
 
                 OnPropertyChanged("CurrentItem");
             }
