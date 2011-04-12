@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -62,6 +64,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
+        [Required(ErrorMessage= "Historian Node ID is a required field, please provide a value.")]
+        [StringLength(36, ErrorMessage= "The Historian node ID cannot exceed 36 characters.")]
         public string NodeId
         {
             get
@@ -77,6 +81,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s ID.
         /// </summary>
+        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
             get
@@ -92,6 +97,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Acronym.
         /// </summary>
+        [Required(ErrorMessage= "Historian acronym is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage= "Historian acronym cannot exceed 50 characters.")]
         public string Acronym
         {
             get
@@ -107,6 +114,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Name.
         /// </summary>
+        [StringLength(100, ErrorMessage= "Historian name cannot exceed 100 characters")]
         public string Name
         {
             get
@@ -122,6 +130,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Assembly Name.
         /// </summary>
+        // No validation attributes are applied because of database design.
         public string AssemblyName
         {
             get
@@ -137,6 +146,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Type Name.
         /// </summary>
+        // No validation attributes are applied because of database design.
         public string TypeName
         {
             get
@@ -152,6 +162,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Connection String.
         /// </summary>
+        // No validation attributes are applied because of database design.
         public string ConnectionString
         {
             get
@@ -167,6 +178,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Historian" /> is local.
         /// </summary>
+        [DefaultValue(typeof(bool), "true")]
         public bool IsLocal
         {
             get
@@ -182,6 +194,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Description.
         /// </summary>
+        // No validation attributes are applied because of database design.
         public string Description
         {
             get
@@ -197,6 +210,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Load Order.
         /// </summary>
+        [DefaultValue(typeof(int), "0")]
         public int LoadOrder
         {
             get
@@ -212,6 +226,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Historian" /> is enabled.
         /// </summary>
+        [DefaultValue(typeof(bool), "false")]
         public bool Enabled
         {
             get
@@ -227,6 +242,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Measurement Reporting Interval.
         /// </summary>
+        [Required(ErrorMessage= "Historian Measurement Reporting Interval is a required field, please provide value.")]
+        [DefaultValue(typeof(int), "100000")]
         public int MeasurementReportingInterval
         {
             get
@@ -257,6 +274,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Historian" /> was created.
         /// </summary>
+        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
         public DateTime CreatedOn
         {
             get
@@ -272,6 +290,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Historian" /> was created by.
         /// </summary>
+        [StringLength(50, ErrorMessage= "Historian CreatedBy cannot exceed 50 characters.")]
+        [DefaultValue(typeof(string), "")]
         public string CreatedBy
         {
             get
@@ -287,6 +307,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Historian" /> was updated.
         /// </summary>
+        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
         public DateTime UpdatedOn
         {
             get
@@ -302,6 +323,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Historian" /> was updated by.
         /// </summary>
+        [StringLength(50, ErrorMessage = "Historian UpdatedBy cannot exceed 50 characters.")]
+        [DefaultValue(typeof(string), "")]
         public string UpdatedBy
         {
             get

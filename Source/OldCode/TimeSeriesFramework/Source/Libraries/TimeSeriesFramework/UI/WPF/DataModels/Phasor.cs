@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -60,6 +62,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the<see cref="Phasor"/>ID.
         /// </summary>
+        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied.
         public int ID
         {
             get 
@@ -75,6 +78,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the<see cref="Phasor"/>DeviceID.
         /// </summary>
+        [Required(ErrorMessage= "Phasor Device ID is a required field, please provide value.")]
         public int DeviceID
         {
             get 
@@ -90,6 +94,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the<see cref="Phasor"/>Label.
         /// </summary>
+        [Required(ErrorMessage= "Phasor label is a required field, please provide value.")]
+        [StringLength(256, ErrorMessage= "Phasor label must not exceed 256 characters.")]
         public string Label
         {
             get 
@@ -105,6 +111,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the<see cref="Phasor"/>Type.
         /// </summary>
+        [DefaultValue(typeof(char), "V")]
         public string Type
         {
             get 
@@ -120,6 +127,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Phase of the current Phasor.
         /// </summary>
+        [DefaultValue(typeof(char), "+")]
         public string Phase
         {
             get 
@@ -150,6 +158,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets Source Index for the current Phasor.
         /// </summary>
+        [DefaultValue(typeof(int), "0")]
         public int SourceIndex
         {
             get 
@@ -225,6 +234,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Date or Time the current<see cref="Phasor"/>was created on.
         /// </summary>
+        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
         public DateTime CreatedOn
         {
             get 

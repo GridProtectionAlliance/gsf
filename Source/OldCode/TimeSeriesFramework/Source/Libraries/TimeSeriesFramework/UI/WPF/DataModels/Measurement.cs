@@ -25,6 +25,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -70,6 +72,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal ID.
         /// </summary>
+        [StringLength(36, ErrorMessage= " Measurement SignalID cannot exceed 36 characters.")]
         public string SignalID
         {
             get 
@@ -85,6 +88,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Historian ID.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public int? HistorianID
         {
             get 
@@ -100,6 +104,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Point ID.
         /// </summary>
+        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied.
         public int PointID
         {
             get 
@@ -115,6 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Device ID.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public int? DeviceID
         {
             get 
@@ -130,6 +136,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Point Tag.
         /// </summary>
+        [Required(ErrorMessage= "Measurement Point Tag is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage= "Measurement Point Tag cannot exceed 50 characters.")]
         public string PointTag
         {
             get 
@@ -145,6 +153,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Alternate Tag.
         /// </summary>
+        [StringLength(50, ErrorMessage= "Measurement alternate tag cannot exceed 50 characters.")]
         public string AlternateTag
         {
             get 
@@ -160,6 +169,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Type ID.
         /// </summary>
+        [Required(ErrorMessage= "Measurement signal type ID is a required field, please provide value.")]
         public int SignalTypeID
         {
             get 
@@ -175,6 +185,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Phasor Source Index.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public int? PhasorSourceIndex
         {
             get 
@@ -190,6 +201,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Reference.
         /// </summary>
+        [Required(ErrorMessage= "Measurement Signal Reference is a required field, please provide value.")]
         public string SignalReference
         {
             get 
@@ -205,6 +217,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Adder.
         /// </summary>
+        [DefaultValue(typeof(double), "0.0")]
         public double Adder
         {
             get 
@@ -220,6 +233,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Multiplier.
         /// </summary>
+        [DefaultValue(typeof(double), "1.0")]
         public double Multiplier
         {
             get 
@@ -235,6 +249,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Description.
         /// </summary>
+        // Because of database design, no validation attributes are applied
         public string Description
         {
             get 
@@ -250,6 +265,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
         /// </summary>
+        [DefaultValue(typeof(bool), "false")]
         public bool Enabled
         {
             get 
@@ -370,6 +386,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Measurement"/> was Created.
         /// </summary>
+        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
         public DateTime CreatedOn
         {
             get 
@@ -385,6 +402,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Measurement"/> was created by.
         /// </summary>
+        [StringLength(50, ErrorMessage = "Measurement CreatedBy cannot exceed 50 characters.")]
+        [DefaultValue(typeof(string), "")]
         public string CreatedBy
         {
             get 
@@ -400,6 +419,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets when the current <see cref="Measurement"/> updated.
         /// </summary>
+        [DefaultValue(typeof(DateTime), "0000-00-00 00:00:00")]
         public DateTime UpdatedOn
         {
             get 
@@ -415,6 +435,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets who the current <see cref="Measurement"/> was updated by.
         /// </summary>
+        [StringLength(50, ErrorMessage = "Measurement UpdatedBy cannot exceed 50 characters.")]
+        [DefaultValue(typeof(string), "")]
         public string UpdatedBy
         {
             get 
@@ -430,6 +452,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s ID.
         /// </summary>
+        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ID
         {
             get 
