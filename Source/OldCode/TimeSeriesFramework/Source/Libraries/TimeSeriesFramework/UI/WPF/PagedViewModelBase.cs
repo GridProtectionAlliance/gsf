@@ -137,7 +137,12 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
+                if (m_currentItem != null)
+                    m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
+
                 m_currentItem = value;
+                m_currentItem.PropertyChanged += m_currentItem_PropertyChanged;
+
                 OnPropertyChanged("CurrentItem");
             }
         }
@@ -489,6 +494,14 @@ namespace TimeSeriesFramework.UI
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
+        // We monitor for changes to IsValid property on current item so that we can propagate
+        // this change notification to CanSave
+        private void m_currentItem_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (string.Compare(e.PropertyName, "IsValid", true) == 0)
+                OnPropertyChanged("CanSave");
+        }
+
         /// <summary>
         /// Method to create a list of pages based on the <see cref="ItemsSource"/>.
         /// </summary>
@@ -542,7 +555,5 @@ namespace TimeSeriesFramework.UI
         private static MethodInfo s_deleteRecord = s_dataModelType.GetMethod("Delete");
 
         #endregion
-
-
     }
 }

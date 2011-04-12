@@ -147,6 +147,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         [Required(ErrorMessage = "Company load order value is required field, please provide value.")]
         [DefaultValue(typeof(int), "0")]
+        [RegularExpression("\\d+", ErrorMessage = "Load order is an integer field")]
         public int LoadOrder
         {
             get

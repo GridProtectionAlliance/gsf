@@ -53,6 +53,7 @@ namespace TimeSeriesFramework.UI
         private Dictionary<string, string> m_propertyErrors;
         private BindingFlags m_memberAccessBindingFlags;
         private bool m_requireEntityPropertyAttribute;
+        private bool m_lastIsValidState;
 
         #endregion
 
@@ -80,7 +81,7 @@ namespace TimeSeriesFramework.UI
             m_requireEntityPropertyAttribute = requireEntityPropertyAttribute;
 
             // Load all default values for properties
-            ExecuteActionForProperties(property => 
+            ExecuteActionForProperties(property =>
             {
                 object defaultValue = DeriveDefaultValue(property.Name, property.GetValue(this, null));
 
@@ -103,7 +104,8 @@ namespace TimeSeriesFramework.UI
             get
             {
                 // If any of the properties have errors, values are not valid
-                return m_propertyErrors.Any(kvPair => string.IsNullOrWhiteSpace(kvPair.Value));
+                m_lastIsValidState = m_propertyErrors.All(kvPair => string.IsNullOrWhiteSpace(kvPair.Value));
+                return m_lastIsValidState;
             }
         }
 
@@ -191,7 +193,8 @@ namespace TimeSeriesFramework.UI
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 
-            ValidateProperty(propertyName);
+            if (string.Compare(propertyName, "IsValid", true) != 0)
+                ValidateProperty(propertyName);
         }
 
         /// <summary>
@@ -220,6 +223,9 @@ namespace TimeSeriesFramework.UI
             }
 
             m_propertyErrors[propertyName] = error;
+
+            if (m_lastIsValidState != IsValid)
+                OnPropertyChanged("IsValid");
         }
 
         /// <summary>
