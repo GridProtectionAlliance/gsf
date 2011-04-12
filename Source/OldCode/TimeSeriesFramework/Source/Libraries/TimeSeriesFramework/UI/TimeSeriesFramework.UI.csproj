@@ -65,8 +65,18 @@
   <ItemGroup>
     <Compile Include="Binding\Column.cs" />
     <Compile Include="Binding\DataOperation.cs" />
+    <Compile Include="CommonFunctions.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
+    <Compile Include="DataModelBase.cs" />
+    <Compile Include="DataModels\Company.cs" />
+    <Compile Include="DataModels\Historian.cs" />
+    <Compile Include="DataModels\Measurement.cs" />
+    <Compile Include="DataModels\Node.cs" />
+    <Compile Include="DataModels\Phasor.cs" />
+    <Compile Include="DataModels\Vendor.cs" />
+    <Compile Include="DataModels\VendorDevice.cs" />
+    <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IDataModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
