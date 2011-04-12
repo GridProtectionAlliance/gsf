@@ -396,7 +396,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @companyID", companyID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @companyID", DefaultTimeout, companyID);
 
                 return "Company deleted successfully";
             }

@@ -31,6 +31,7 @@ using System.Linq;
 using System.Reflection;
 using TVA;
 using TVA.Collections;
+using TVA.Data;
 using TVA.Reflection;
 
 namespace TimeSeriesFramework.UI
@@ -41,6 +42,13 @@ namespace TimeSeriesFramework.UI
     public abstract class DataModelBase : IDataModel
     {
         #region [ Members ]
+
+        // Constants
+
+        /// <summary>
+        /// The default timeout duration used for executing SQL statements.
+        /// </summary>
+        public const int DefaultTimeout = DataExtensions.DefaultTimeoutDuration;
 
         // Events
 
