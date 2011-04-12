@@ -256,7 +256,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Security;
 using System.Security.Principal;
 using System.Threading;
 using System.Windows;
@@ -346,6 +345,13 @@ namespace TVA.Windows
     /// <seealso cref="ISecurityProvider"/>
     public class SecureWindow : Window
     {
+        #region [ Members ]
+
+        // Fields
+        private bool m_shutdownRequested;
+
+        #endregion
+
         #region [ Constructors ]
 
         /// <summary>
@@ -431,9 +437,9 @@ namespace TVA.Windows
             string resource = GetResourceName();
 
             if (ResourceAccessiblity != ResourceAccessiblityMode.AlwaysIncluded &&
-                (ResourceAccessiblity == ResourceAccessiblityMode.AlwaysExcluded || 
+                (ResourceAccessiblity == ResourceAccessiblityMode.AlwaysExcluded ||
                 !SecurityProviderUtility.IsResourceSecurable(resource)))
-                    return;
+                return;
 
             // Setup thread principal to current windows principal.
             if (!(Thread.CurrentPrincipal is WindowsPrincipal) && !(Thread.CurrentPrincipal is TVA.Security.SecurityPrincipal))
@@ -460,7 +466,7 @@ namespace TVA.Windows
             if (!string.IsNullOrEmpty(resource))
             {
                 // Stay in a dialog display loop until either access to resource is available or user exits
-                while (!IsResourceAccessible(resource))
+                while (!m_shutdownRequested && !IsResourceAccessible(resource))
                 {
                     // Access to resource is denied
                     ShowSecurityDialog(DisplayType.AccessDenied);
@@ -492,9 +498,14 @@ namespace TVA.Windows
                 // User chose to cancel security action. If the secure window has no parent,
                 // this is root window so exit application, otherwise just close the window
                 if (this.Owner == null)
+                {
+                    m_shutdownRequested = true;
                     Application.Current.Shutdown();
+                }
                 else
+                {
                     this.Close();
+                }
             }
         }
 
@@ -522,6 +533,6 @@ namespace TVA.Windows
         /// <returns>identifier for the <see cref="IncludedRoles"/> dependency property.</returns>
         public static readonly DependencyProperty IncludedRolesProperty = DependencyProperty.Register("IncludedRoles", typeof(string), typeof(SecureWindow), new PropertyMetadata("*"));
 
-        #endregion        
+        #endregion
     }
 }

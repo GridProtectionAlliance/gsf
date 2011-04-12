@@ -1579,7 +1579,7 @@ namespace TVA.Data
         /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
         public static void AddParametersWithValues(this IDbCommand command, string sql, params object[] values)
         {
-            string[] tokens = sql.Split(' ', '(', ')', ',');
+            string[] tokens = sql.Split(' ', '(', ')', ',').Where(token => token.StartsWith("@")).ToArray();
             int i = 0;
 
             if (tokens.Length != values.Length)
@@ -1587,7 +1587,7 @@ namespace TVA.Data
 
             foreach (string token in tokens)
             {
-                if (token.StartsWith("@") && !command.Parameters.Contains(token))
+                if (!command.Parameters.Contains(token))
                     command.AddParameterWithValue(token, values[i++]);
             }
 
