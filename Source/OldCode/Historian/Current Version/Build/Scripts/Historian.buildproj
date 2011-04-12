@@ -62,6 +62,7 @@
       <!-- List of files to be versioned. -->
       <FilesToVersion Include="$(LocalFolder)\Source\**\AssemblyInfo.*">
         <VersionRegex>(?'BeforeVersion'AssemblyVersion\(%22)(?'CoreVersion'(\*|\d+)\.)+(\*|\d+)(?'AfterVersion'%22\))</VersionRegex>
+        <VersionPrecision>4</VersionPrecision>
       </FilesToVersion>
     </ItemGroup>
   </Target>
