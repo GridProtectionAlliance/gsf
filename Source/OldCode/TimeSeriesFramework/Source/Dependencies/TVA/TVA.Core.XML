@@ -26572,6 +26572,48 @@
             Gets the lifetime status statistics of the <see cref="T:TVA.Diagnostics.PerformanceMonitor"/> object.
             </summary>
         </member>
+        <member name="T:TVA.Data.AdoDataConnection">
+            <summary>
+            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
+            </summary>
+            <param name="settingsCategory">Settings category to use for connection settings.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
+            <summary>
+            Forces a reload of cached configuration connection settings.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.Connection">
+            <summary>
+            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.AdapterType">
+            <summary>
+            Gets the type of data adapter for configured ADO.NET data source.
+            </summary>
+        </member>
         <member name="T:TVA.Windows.NamespaceDoc">
             <summary>
             Contains classes and extension functions related to .NET Windows-based platforms such as Windows Forms and WPF.
@@ -33898,48 +33940,6 @@
             <param name="comparer">An interface <see cref="T:System.Collections.IComparer"/> that exposes a method to compare the two arrays.</param>
             <returns>An <see cref="T:System.Int32"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
             <remarks>This is a default comparer to make arrays comparable.</remarks>
-        </member>
-        <member name="T:TVA.Data.AdoDataConnection">
-            <summary>
-            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
-            <summary>
-            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
-            </summary>
-            <param name="settingsCategory">Settings category to use for connection settings.</param>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
-            <summary>
-            Forces a reload of cached configuration connection settings.
-            </summary>
-        </member>
-        <member name="P:TVA.Data.AdoDataConnection.Connection">
-            <summary>
-            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="P:TVA.Data.AdoDataConnection.AdapterType">
-            <summary>
-            Gets the type of data adapter for configured ADO.NET data source.
-            </summary>
         </member>
     </members>
 </doc>
