@@ -367,10 +367,10 @@ namespace TVA.Historian.MetadataProviders
         /// </summary>
         /// <param name="streamData"><see cref="Stream"/> containing serialized <see cref="SerializableMetadata"/>.</param>
         /// <param name="dataFormat"><see cref="TVA.Services.ServiceModel.SerializationFormat"/> in which the <see cref="SerializableMetadata"/> was serialized to <paramref name="streamData"/>.</param>
-        public void UpdateMetadata(Stream streamData, TVA.Services.ServiceModel.SerializationFormat dataFormat)
+        public void UpdateMetadata(Stream streamData, SerializationFormat dataFormat)
         {
             // Deserialize serialized metadata.
-            SerializableMetadata deserializedMetadata = TVA.Services.ServiceModel.Serialization.Deserialize<SerializableMetadata>(streamData, dataFormat);
+            SerializableMetadata deserializedMetadata = Serialization.Deserialize<SerializableMetadata>(streamData, dataFormat);
 
             // Update metadata from the deserialized metadata.
             foreach (SerializableMetadataRecord deserializedMetadataRecord in deserializedMetadata.MetadataRecords)

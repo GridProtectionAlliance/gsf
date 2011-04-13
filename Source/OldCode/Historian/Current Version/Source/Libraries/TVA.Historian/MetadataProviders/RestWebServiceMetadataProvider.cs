@@ -60,7 +60,7 @@ namespace TVA.Historian.MetadataProviders
             : base()
         {
             m_serviceUri = string.Empty;
-            m_serviceDataFormat = SerializationFormat.PoxRest;
+            m_serviceDataFormat = SerializationFormat.Xml;
         }
 
         #endregion
