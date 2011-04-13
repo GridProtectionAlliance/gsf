@@ -15,6 +15,9 @@
 //       Added Type and File properties to support serialized adapter instances.
 //  04/05/2011 - Pinal C. Patel
 //       Changed properties Type to TypeName and File to HostFile to avoid naming conflict.
+//  04/08/2011 - Pinal C. Patel
+//       Added ExecutionException event.
+//       Renamed StatusUpdate event to StatusMessage.
 //
 //*******************************************************************************************************
 
@@ -255,7 +258,16 @@ namespace TVA.Adapters
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
         /// </remarks>
-        event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
+        event EventHandler<EventArgs<UpdateType, string>> StatusMessage;
+
+        /// <summary>
+        /// Occurs when the <see cref="IAdapter"/> encounters an <see cref="Exception"/> during execution.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the text that describes the activity that was being performed by the <see cref="IAdapter"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the encountered <see cref="Exception"/>.
+        /// </remarks>
+        event EventHandler<EventArgs<string, Exception>> ExecutionException;
 
         /// <summary>
         /// Occurs when <see cref="IAdapter"/> is disposed.

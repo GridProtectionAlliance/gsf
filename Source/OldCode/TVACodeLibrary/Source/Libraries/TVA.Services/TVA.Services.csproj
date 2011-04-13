@@ -95,7 +95,6 @@
     <Compile Include="ServiceModel\NamespaceDoc.cs" />
     <Compile Include="ServiceModel\SecurityPolicy.cs" />
     <Compile Include="ServiceModel\SelfHostingService.cs" />
-    <Compile Include="ServiceModel\Serialization.cs" />
     <Compile Include="ServiceProcess\ClientHelper.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -23,6 +23,9 @@
 //  04/05/2011 - Pinal C. Patel
 //       Changed properties Type to TypeName and File to HostFile to avoid naming conflict.
 //       Modified Name property to use the file name (no extension) from HostFile property if available.
+//  04/08/2011 - Pinal C. Patel
+//       Added ExecutionException event.
+//       Renamed StatusUpdate event to StatusMessage.
 //
 //*******************************************************************************************************
 
@@ -286,7 +289,16 @@ namespace TVA.Adapters
         /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
         /// </remarks>
-        public event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
+        public event EventHandler<EventArgs<UpdateType, string>> StatusMessage;
+
+        /// <summary>
+        /// Occurs when the <see cref="IAdapter"/> encounters an <see cref="Exception"/> during execution.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the text that describes the activity that was being performed by the <see cref="IAdapter"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument2"/> is the encountered <see cref="Exception"/>.
+        /// </remarks>
+        public event EventHandler<EventArgs<string, Exception>> ExecutionException;
 
         /// <summary>
         /// Occurs when <see cref="Adapter"/> is disposed.
@@ -570,14 +582,27 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="StatusUpdate"/> event.
+        /// Raises the <see cref="StatusMessage"/> event.
         /// </summary>
-        /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
-        /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
-        protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage)
+        /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusMessage"/> event.</param>
+        /// <param name="updateMessage">Update message to send to <see cref="StatusMessage"/> event.</param>
+        protected virtual void OnStatusMessage(UpdateType updateType, string updateMessage)
         {
-            if (StatusUpdate != null)
-                StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, updateMessage));
+            if (StatusMessage != null)
+                StatusMessage(this, new EventArgs<UpdateType, string>(updateType, updateMessage));
+        }
+
+        /// <summary>
+        /// Raises the <see cref="ExecutionException"/> event.
+        /// </summary>
+        /// <param name="activityDescription">Activity description to send to <see cref="ExecutionException"/> event.</param>
+        /// <param name="encounteredException">Encountered <see cref="Exception"/> to send to <see cref="ExecutionException"/> event.</param>
+        protected virtual void OnExecutionException(string activityDescription, Exception encounteredException)
+        {
+            if (ExecutionException != null)
+            {
+                ExecutionException(this, new EventArgs<string,Exception>(activityDescription, encounteredException));
+            }
         }
 
         /// <summary>
