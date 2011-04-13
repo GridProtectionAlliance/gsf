@@ -26572,6 +26572,48 @@
             Gets the lifetime status statistics of the <see cref="T:TVA.Diagnostics.PerformanceMonitor"/> object.
             </summary>
         </member>
+        <member name="T:TVA.Data.AdoDataConnection">
+            <summary>
+            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
+            <summary>
+            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
+            </summary>
+            <param name="settingsCategory">Settings category to use for connection settings.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Finalize">
+            <summary>
+            Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose">
+            <summary>
+            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
+            </summary>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
+            <summary>
+            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
+            </summary>
+            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+        </member>
+        <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
+            <summary>
+            Forces a reload of cached configuration connection settings.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.Connection">
+            <summary>
+            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
+            </summary>
+        </member>
+        <member name="P:TVA.Data.AdoDataConnection.AdapterType">
+            <summary>
+            Gets the type of data adapter for configured ADO.NET data source.
+            </summary>
+        </member>
         <member name="T:TVA.Windows.NamespaceDoc">
             <summary>
             Contains classes and extension functions related to .NET Windows-based platforms such as Windows Forms and WPF.
@@ -27500,9 +27542,25 @@
             Initiates interprocess synchronized cache file load.
             </summary>
         </member>
-        <member name="M:TVA.IO.InterprocessCache.Flush(System.Int32)">
+        <member name="M:TVA.IO.InterprocessCache.WaitForLoad">
             <summary>
-            Blocks current thread and waits for any pending save to complete.
+            Blocks current thread and waits for any pending load to complete; wait time is <c><see cref="P:TVA.IO.InterprocessCache.RetryDelayInterval"/> * <see cref="P:TVA.IO.InterprocessCache.MaximumRetryAttempts"/></c>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.WaitForLoad(System.Int32)">
+            <summary>
+            Blocks current thread and waits for specified <paramref name="millisecondsTimeout"/> for any pending load to complete.
+            </summary>
+            <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.WaitForSave">
+            <summary>
+            Blocks current thread and waits for any pending save to complete; wait time is <c><see cref="P:TVA.IO.InterprocessCache.RetryDelayInterval"/> * <see cref="P:TVA.IO.InterprocessCache.MaximumRetryAttempts"/></c>.
+            </summary>
+        </member>
+        <member name="M:TVA.IO.InterprocessCache.WaitForSave(System.Int32)">
+            <summary>
+            Blocks current thread and waits for specified <paramref name="millisecondsTimeout"/> for any pending save to complete.
             </summary>
             <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.</param>
         </member>
@@ -27593,12 +27651,6 @@
             Wait interval, in milliseconds, before retrying load or save of cache file data.
             </summary>
         </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Security.Cryptography.Cipher.KeyIVCache"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
         <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.GetCryptoKeyIV(System.String,System.Int32)">
             <summary>
             Gets the crypto key and initialization vector for the given user password.
@@ -27644,11 +27696,6 @@
         <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Save">
             <summary>
             Initiates interprocess synchronized save of key and initialization vector table.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.Load">
-            <summary>
-            Initiates interprocess synchronized load of key and initialization vector table.
             </summary>
         </member>
         <member name="M:TVA.Security.Cryptography.Cipher.KeyIVCache.SaveFileData(System.IO.FileStream,System.Byte[])">
@@ -33898,48 +33945,6 @@
             <param name="comparer">An interface <see cref="T:System.Collections.IComparer"/> that exposes a method to compare the two arrays.</param>
             <returns>An <see cref="T:System.Int32"/> which returns 0 if they are equal, 1 if <paramref name="array1"/> is larger, or -1 if <paramref name="array2"/> is larger.</returns>
             <remarks>This is a default comparer to make arrays comparable.</remarks>
-        </member>
-        <member name="T:TVA.Data.AdoDataConnection">
-            <summary>
-            Creates a new <see cref="T:System.Data.IDbConnection"/> to a configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.#ctor(System.String)">
-            <summary>
-            Creates a new <see cref="T:TVA.Data.AdoDataConnection"/>.
-            </summary>
-            <param name="settingsCategory">Settings category to use for connection settings.</param>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Finalize">
-            <summary>
-            Releases the unmanaged resources before the <see cref="T:TVA.Data.AdoDataConnection"/> object is reclaimed by <see cref="T:System.GC"/>.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose">
-            <summary>
-            Releases all the resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object.
-            </summary>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Data.AdoDataConnection"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
-        <member name="M:TVA.Data.AdoDataConnection.ReloadConfigurationSettings">
-            <summary>
-            Forces a reload of cached configuration connection settings.
-            </summary>
-        </member>
-        <member name="P:TVA.Data.AdoDataConnection.Connection">
-            <summary>
-            Gets an open <see cref="T:System.Data.IDbConnection"/> to configured ADO.NET data source.
-            </summary>
-        </member>
-        <member name="P:TVA.Data.AdoDataConnection.AdapterType">
-            <summary>
-            Gets the type of data adapter for configured ADO.NET data source.
-            </summary>
         </member>
     </members>
 </doc>
