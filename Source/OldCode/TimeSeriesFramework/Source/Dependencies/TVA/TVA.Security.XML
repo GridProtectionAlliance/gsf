@@ -986,12 +986,6 @@
             <param name="maximumConcurrentLocks">Maximum concurrent reader locks to allow.</param>
             <param name="providerID">Unique provider ID used to distinguish cached user data that may be different based on provider.</param>
         </member>
-        <member name="M:TVA.Security.UserDataCache.Dispose(System.Boolean)">
-            <summary>
-            Releases the unmanaged resources used by the <see cref="T:TVA.Security.UserDataCache"/> object and optionally releases the managed resources.
-            </summary>
-            <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        </member>
         <member name="M:TVA.Security.UserDataCache.TryGetUserData(System.String,TVA.Security.UserData@)">
             <summary>
             Attempts to retrieve <see cref="T:TVA.Security.UserData"/> for given <paramref name="loginID"/>.
@@ -1019,11 +1013,6 @@
         <member name="M:TVA.Security.UserDataCache.Save">
             <summary>
             Initiates interprocess synchronized save of user data cache.
-            </summary>
-        </member>
-        <member name="M:TVA.Security.UserDataCache.Load">
-            <summary>
-            Initiates interprocess synchronized load of user data cache.
             </summary>
         </member>
         <member name="M:TVA.Security.UserDataCache.SaveFileData(System.IO.FileStream,System.Byte[])">
