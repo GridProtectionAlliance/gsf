@@ -75,7 +75,7 @@ namespace TVA.Historian.MetadataProviders
         /// <summary>
         /// Gets the <see cref="MetadataFile"/> to be updated.
         /// </summary>
-        public MetadataFile Metadata 
+        public MetadataFile Metadata
         {
             get
             {
@@ -366,7 +366,7 @@ namespace TVA.Historian.MetadataProviders
         /// Updates the <see cref="Metadata"/> from <paramref name="streamData"/>
         /// </summary>
         /// <param name="streamData"><see cref="Stream"/> containing serialized <see cref="SerializableMetadata"/>.</param>
-        /// <param name="dataFormat"><see cref="TVA.Services.ServiceModel.SerializationFormat"/> in which the <see cref="SerializableMetadata"/> was serialized to <paramref name="streamData"/>.</param>
+        /// <param name="dataFormat"><see cref="SerializationFormat"/> in which the <see cref="SerializableMetadata"/> was serialized to <paramref name="streamData"/>.</param>
         public void UpdateMetadata(Stream streamData, SerializationFormat dataFormat)
         {
             // Deserialize serialized metadata.
@@ -380,6 +380,6 @@ namespace TVA.Historian.MetadataProviders
             m_metadata.Save();
         }
 
-        #endregion       
+        #endregion
     }
 }
