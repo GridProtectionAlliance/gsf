@@ -7954,6 +7954,29 @@
             </summary>
             <remarks>This time zone is used by the American Samoa.</remarks>
         </member>
+        <member name="T:TVA.SerializationFormat">
+            <summary>
+            Indicates the format of <see cref="T:System.Object"/> serialization or deserialization.
+            </summary>
+        </member>
+        <member name="F:TVA.SerializationFormat.Xml">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.DataContractSerializer"/> to XML (eXtensible Markup Language) format.
+            </summary>
+            <remarks>
+            <see cref="T:System.Object"/> can be serialized or deserialized using <see cref="T:System.Xml.Serialization.XmlSerializer"/> by adding the <see cref="T:System.ServiceModel.XmlSerializerFormatAttribute"/> to the <see cref="T:System.Object"/>.
+            </remarks>
+        </member>
+        <member name="F:TVA.SerializationFormat.Json">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.Json.DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
+            </summary>
+        </member>
+        <member name="F:TVA.SerializationFormat.Binary">
+            <summary>
+            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> to binary format.
+            </summary>
+        </member>
         <member name="T:TVA.Serialization">
             <summary>
             Common serialization related functions.
@@ -8056,6 +8079,39 @@
             </summary>
             <param name="serializableObject">The serializable object.</param>
             <returns>A memory stream representation of the object if the specified object can be serialized; otherwise an empty stream.</returns>
+        </member>
+        <member name="M:TVA.Serialization.Serialize``1(``0,TVA.SerializationFormat,System.IO.Stream@)">
+            <summary>
+            Serializes an <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+            <param name="serializedOutput"><see cref="T:System.IO.Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
+        <member name="M:TVA.Serialization.Serialize``1(``0,TVA.SerializationFormat)">
+            <summary>
+            Serializes an <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+            <returns>An <see cref="T:System.Array"/> of <see cref="T:System.Byte"/> of the serialized <see cref="T:System.Object"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializableObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
+        <member name="M:TVA.Serialization.Deserialize``1(System.IO.Stream,TVA.SerializationFormat)">
+            <summary>
+            Deserializes a serialized <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
+            <param name="serializedObject"><see cref="T:System.IO.Stream"/> contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+            <returns>The deserialized <see cref="T:System.Object"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         </member>
         <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3">
             <summary>
@@ -11960,13 +12016,22 @@
             Defines an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
             </summary>
         </member>
-        <member name="E:TVA.Adapters.IAdapter.StatusUpdate">
+        <member name="E:TVA.Adapters.IAdapter.StatusMessage">
             <summary>
             Occurs when the <see cref="T:TVA.Adapters.IAdapter"/> wants to provide a status update.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:TVA.UpdateType"/>.<br/>
             <see cref="F:TVA.EventArgs`2.Argument2"/> is the update message.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.IAdapter.ExecutionException">
+            <summary>
+            Occurs when the <see cref="T:TVA.Adapters.IAdapter"/> encounters an <see cref="T:System.Exception"/> during execution.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the text that describes the activity that was being performed by the <see cref="T:TVA.Adapters.IAdapter"/>.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the encountered <see cref="T:System.Exception"/>.
             </remarks>
         </member>
         <member name="E:TVA.Adapters.IAdapter.Disposed">
@@ -18807,25 +18872,41 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TVA.Adapters.Adapter.OnStatusUpdate(TVA.UpdateType,System.String)">
+        <member name="M:TVA.Adapters.Adapter.OnStatusMessage(TVA.UpdateType,System.String)">
             <summary>
-            Raises the <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.
+            Raises the <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.
             </summary>
-            <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
-            <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
+            <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.</param>
+            <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.</param>
+        </member>
+        <member name="M:TVA.Adapters.Adapter.OnExecutionException(System.String,System.Exception)">
+            <summary>
+            Raises the <see cref="E:TVA.Adapters.Adapter.ExecutionException"/> event.
+            </summary>
+            <param name="activityDescription">Activity description to send to <see cref="E:TVA.Adapters.Adapter.ExecutionException"/> event.</param>
+            <param name="encounteredException">Encountered <see cref="T:System.Exception"/> to send to <see cref="E:TVA.Adapters.Adapter.ExecutionException"/> event.</param>
         </member>
         <member name="M:TVA.Adapters.Adapter.OnDisposed">
             <summary>
             Raises the <see cref="E:TVA.Adapters.Adapter.Disposed"/> event.
             </summary>
         </member>
-        <member name="E:TVA.Adapters.Adapter.StatusUpdate">
+        <member name="E:TVA.Adapters.Adapter.StatusMessage">
             <summary>
             Occurs when the <see cref="T:TVA.Adapters.Adapter"/> wants to provide a status update.
             </summary>
             <remarks>
             <see cref="F:TVA.EventArgs`2.Argument1"/> is the <see cref="T:TVA.UpdateType"/>.<br/>
             <see cref="F:TVA.EventArgs`2.Argument2"/> is the update message.
+            </remarks>
+        </member>
+        <member name="E:TVA.Adapters.Adapter.ExecutionException">
+            <summary>
+            Occurs when the <see cref="T:TVA.Adapters.IAdapter"/> encounters an <see cref="T:System.Exception"/> during execution.
+            </summary>
+            <remarks>
+            <see cref="F:TVA.EventArgs`2.Argument1"/> is the text that describes the activity that was being performed by the <see cref="T:TVA.Adapters.IAdapter"/>.<br/>
+            <see cref="F:TVA.EventArgs`2.Argument2"/> is the encountered <see cref="T:System.Exception"/>.
             </remarks>
         </member>
         <member name="E:TVA.Adapters.Adapter.Disposed">
