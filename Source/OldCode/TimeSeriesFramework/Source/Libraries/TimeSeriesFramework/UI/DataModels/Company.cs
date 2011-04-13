@@ -251,7 +251,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     createdConnection = true;
                 }
 
-                List<Company> companyList = new List<Company>();
+                ObservableCollection<Company> companyList = new ObservableCollection<Company>();
                 DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM Company ORDER BY LoadOrder");
 
                 foreach (DataRow row in companyTable.Rows)
@@ -267,7 +267,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     });
                 }
 
-                return new ObservableCollection<Company>(companyList);
+                return companyList;
             }
             finally
             {
@@ -297,21 +297,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     companyList.Add(0, "Select Company");
 
-                IDbCommand command = database.Connection.CreateCommand();
-                command.CommandType = CommandType.Text;
-                command.CommandText = "SELECT ID, Name FROM Company ORDER BY LoadOrder";
-
-                DataTable resultTable = new DataTable();
-                resultTable.Load(command.ExecuteReader());
-
-                int id;
-                foreach (DataRow row in resultTable.Rows)
-                {
-                    id = int.Parse(row["ID"].ToString());
-
-                    if (!companyList.ContainsKey(id))
-                        companyList.Add(id, row["Name"].ToString());
-                }
+                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Company ORDER BY LoadOrder");
+                
+                foreach (DataRow row in companyTable.Rows)
+                    companyList[row.Field<int>("ID")] = row.Field<string>("Name");
+                
                 return companyList;
             }
             finally
@@ -339,33 +329,18 @@ namespace TimeSeriesFramework.UI.DataModels
                     createdConnection = true;
                 }
 
-                IDbCommand command = database.Connection.CreateCommand();
-                command.CommandType = CommandType.Text;
-
                 if (isNew)
-                    command.CommandText = "INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)";
+                    database.Connection.ExecuteNonQuery("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
+                        company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? string.Empty,
+                        company.LoadOrder, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    command.CommandText = "UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id";
-
-                command.AddParameterWithValue("@acronym", company.Acronym.Replace(" ", "").ToUpper());
-                command.AddParameterWithValue("@mapAcronym", company.MapAcronym.Replace(" ", "").ToUpper());
-                command.AddParameterWithValue("@name", company.Name);
-                command.AddParameterWithValue("@url", company.URL ?? string.Empty);
-                command.AddParameterWithValue("@loadOrder", company.LoadOrder);
-                command.AddParameterWithValue("@updatedBy", CommonFunctions.CurrentUser);
-                command.AddParameterWithValue("@updatedOn", command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
-
-                if (isNew)
-                {
-                    command.AddParameterWithValue("@createdBy", CommonFunctions.CurrentUser);
-                    command.AddParameterWithValue("@createdOn", command.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
-                }
-                else
-                {
-                    command.AddParameterWithValue("@id", company.ID);
-                }
-
-                command.ExecuteNonQuery();
+                    database.Connection.ExecuteNonQuery("UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(), 
+                        company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? string.Empty, company.LoadOrder, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, company.ID);
+                
                 return "Company information saved successfully";
             }
             finally

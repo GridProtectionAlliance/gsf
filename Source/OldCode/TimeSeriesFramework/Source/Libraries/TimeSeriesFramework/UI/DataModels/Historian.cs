@@ -23,16 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-
     /// <summary>
-    /// Creates a new object that represents a Historian
+    /// Represents a record of company information as defined in the database.
     /// </summary>
     public class Historian : DataModelBase
     {
@@ -65,7 +65,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
         [Required(ErrorMessage= "Historian Node ID is a required field, please provide a value.")]
-        [StringLength(36, ErrorMessage= "The Historian node ID cannot exceed 36 characters.")]
+        [StringLength(36, ErrorMessage= "Historian node ID cannot exceed 36 characters.")]
         public string NodeId
         {
             get
@@ -346,6 +346,179 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion        
+        #endregion 
+       
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Historian"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="nodeID">Node ID to filter records from data source.</param>
+        /// <returns>Collection of <see cref="Historian"/>.</returns>
+        public static ObservableCollection<Historian> Load(AdoDataConnection database, string nodeID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                    nodeID = "{" + nodeID + "}";
+
+                ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
+                    "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail " +
+                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", nodeID);
+                
+                foreach (DataRow row in historianTable.Rows)
+                {
+                    historianList.Add(new Historian()
+                        {
+                            NodeId = row.Field<string>("NodeID"),
+                            ID = row.Field<int>("ID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            Name = row.Field<string>("Name"),
+                            AssemblyName = row.Field<string>("AssemblyName"),
+                            TypeName = row.Field<string>("TypeName"),
+                            ConnectionString = row.Field<string>("ConnectionString"),
+                            IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
+                            Description = row.Field<string>("Description"),
+                            LoadOrder = row.Field<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                            NodeName = row.Field<string>("NodeName")
+                        });
+                }
+
+                return historianList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Historian"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <param name="includeStatHistorian">Indicates if statistical historian included in the collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of historians defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional, bool includeStatHistorian)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> historianList = new Dictionary<int, string>();
+                if (isOptional)
+                    historianList.Add(0, "Select Historian");
+
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian ORDER BY LoadOrder");
+
+                foreach (DataRow row in historianTable.Rows)
+                {
+                    historianList[row.Field<int>("ID")] = row.Field<string>("Acronym");
+                }
+
+                return historianList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Historian"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="historian">Infomration about <see cref="Historian"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Historian historian, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
+                        "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
+                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", historian.NodeId,
+                        historian.Acronym.Replace(" ", "").ToUpper(), historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal,
+                        historian.MeasurementReportingInterval, historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
+                        "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
+                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", historian.NodeId, historian.Acronym.Replace(" ", "").ToUpper(), 
+                        historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal, historian.MeasurementReportingInterval, 
+                        historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, historian.ID);
+
+                return "Historian information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Historian"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="historianID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int historianID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Historian WHERE ID = @historianID", DefaultTimeout, historianID);
+
+                return "Historian deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
