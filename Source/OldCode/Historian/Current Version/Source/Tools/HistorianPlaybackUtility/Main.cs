@@ -46,6 +46,7 @@ using TVA.Historian.Packets;
 using TVA.IO;
 using TVA.Reflection;
 using TVA.Windows.Forms;
+using System.Globalization;
 
 namespace HistorianPlaybackUtility
 {
@@ -486,8 +487,8 @@ namespace HistorianPlaybackUtility
             }
 
             // Capture selection.
-            DateTime startTime = DateTime.Parse(StartTimeInput.Text);
-            DateTime endTime = DateTime.Parse(EndTimeInput.Text);
+            DateTime startTime = DateTime.Parse(StartTimeInput.Text, CultureInfo.InvariantCulture.DateTimeFormat);
+            DateTime endTime = DateTime.Parse(EndTimeInput.Text, CultureInfo.InvariantCulture.DateTimeFormat);
 
             try
             {

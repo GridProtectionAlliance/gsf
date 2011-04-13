@@ -152,8 +152,8 @@
             // 
             // InputSelectionContainer
             // 
-            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseClear);
             this.InputSelectionContainer.Controls.Add(this.SearchPhraseFind);
             this.InputSelectionContainer.Controls.Add(this.ArchiveLocationBrowse);
@@ -220,8 +220,8 @@
             // 
             // SearchPhraseInput
             // 
-            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchPhraseInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.SearchPhraseInput.Location = new System.Drawing.Point(6, 75);
             this.SearchPhraseInput.Name = "SearchPhraseInput";
             this.SearchPhraseInput.Size = new System.Drawing.Size(316, 21);
@@ -242,8 +242,8 @@
             // 
             // ArchiveLocationInput
             // 
-            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.ArchiveLocationInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.ArchiveLocationInput.Location = new System.Drawing.Point(6, 33);
             this.ArchiveLocationInput.Name = "ArchiveLocationInput";
             this.ArchiveLocationInput.Size = new System.Drawing.Size(316, 21);
@@ -289,8 +289,8 @@
             // 
             // IDInput
             // 
-            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.IDInput.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.IDInput.CheckOnClick = true;
             this.IDInput.FormattingEnabled = true;
             this.IDInput.HorizontalScrollbar = true;
@@ -301,8 +301,8 @@
             // 
             // OutputSelectionContainer
             // 
-            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputSelectionContainer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputSelectionContainer.Controls.Add(this.OutputCannelTabs);
             this.OutputSelectionContainer.Controls.Add(this.ProcessingSpeedContainer);
             this.OutputSelectionContainer.Controls.Add(this.RepeatDataProcessing);
@@ -318,8 +318,8 @@
             // 
             // OutputCannelTabs
             // 
-            this.OutputCannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.OutputCannelTabs.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputCannelTabs.Controls.Add(this.TCPSettingsTab);
             this.OutputCannelTabs.Controls.Add(this.UDPSettingsTab);
             this.OutputCannelTabs.Controls.Add(this.FileSettingsTab);
@@ -728,9 +728,9 @@
             // 
             // MessagesContainer
             // 
-            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.MessagesContainer.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.MessagesContainer.Controls.Add(this.MessagesOutput);
             this.MessagesContainer.Location = new System.Drawing.Point(12, 3);
             this.MessagesContainer.Name = "MessagesContainer";
