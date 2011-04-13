@@ -2144,54 +2144,6 @@
             Gets or sets the <see cref="T:TVA.Services.ServiceModel.Messaging.MessageProcessingMode"/> used by the <see cref="T:TVA.Services.ServiceModel.Messaging.MessageBusService"/> for processing <see cref="T:TVA.Services.ServiceModel.Messaging.Message"/> distribution.
             </summary>
         </member>
-        <member name="T:TVA.Services.ServiceModel.SerializationFormat">
-            <summary>
-            Indicates the format of <see cref="T:System.Object"/> serialization or deserialization.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceModel.SerializationFormat.Json">
-            <summary>
-            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.Json.DataContractJsonSerializer"/> to JSON (JavaScript Object Notation) format.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceModel.SerializationFormat.PoxAsmx">
-            <summary>
-            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Xml.Serialization.XmlSerializer"/> to ASMX (.NET Web Service) compatible XML (eXtensible Markup Language) format.
-            </summary>
-        </member>
-        <member name="F:TVA.Services.ServiceModel.SerializationFormat.PoxRest">
-            <summary>
-            <see cref="T:System.Object"/> is serialized or deserialized using <see cref="T:System.Runtime.Serialization.DataContractSerializer"/> to REST (Representational State Transfer) compatible XML (eXtensible Markup Language) format.
-            </summary>
-        </member>
-        <member name="T:TVA.Services.ServiceModel.Serialization">
-            <summary>
-            Helper class to serialize and deserialize <see cref="T:System.Object"/>s to web service compatible <see cref="T:TVA.Services.ServiceModel.SerializationFormat"/>s.
-            </summary>
-            <seealso cref="T:TVA.Services.ServiceModel.SerializationFormat"/>
-        </member>
-        <member name="M:TVA.Services.ServiceModel.Serialization.Serialize``1(System.IO.Stream@,``0,TVA.Services.ServiceModel.SerializationFormat)">
-            <summary>
-            Serializes an <see cref="T:System.Object"/>.
-            </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
-            <param name="serializedOutput"><see cref="T:System.IO.Stream"/> where the <paramref name="serializableObject"/> is to be serialized.</param>
-            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
-            <param name="serializationFormat"><see cref="T:TVA.Services.ServiceModel.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
-            <exception cref="T:System.ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
-            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        </member>
-        <member name="M:TVA.Services.ServiceModel.Serialization.Deserialize``1(System.IO.Stream,TVA.Services.ServiceModel.SerializationFormat)">
-            <summary>
-            Deserializes a serialized <see cref="T:System.Object"/>.
-            </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
-            <param name="serializedObject"><see cref="T:System.IO.Stream"/> contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
-            <param name="serializationFormat"><see cref="T:TVA.Services.ServiceModel.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
-            <returns>The deserialized <see cref="T:System.Object"/>.</returns>
-            <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
-            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        </member>
         <member name="T:TVA.Services.ServiceProcess.ClientInfo">
             <summary>
             Represents information about a client using <see cref="T:TVA.Services.ServiceProcess.ClientHelper"/> for connecting to a Windows Service that uses <see cref="T:TVA.Services.ServiceProcess.ServiceHelper"/>.
