@@ -291,8 +291,8 @@ namespace TVA.IO
         private bool m_autoSave;                            // Flag to auto save when file data has changed
         private InterprocessReaderWriterLock m_fileLock;    // Interprocess reader/writer lock used to synchronize file access
         private ReaderWriterLockSlim m_dataLock;            // Thread level reader/writer lock used to synchronize file data access
-        private ManualResetEventSlim m_dataIsReady;         // Wait handle used so that system will wait for file data load
-        private ManualResetEventSlim m_saveIsQueued;        // Wait handle used so that system will wait for file data save
+        private ManualResetEventSlim m_loadIsReady;         // Wait handle used so that system will wait for file data load
+        private ManualResetEventSlim m_saveIsReady;         // Wait handle used so that system will wait for file data save
         private FileSystemWatcher m_fileWatcher;            // Optional file watcher used to reload changes
         private int m_maximumConcurrentLocks;               // Maximum concurrent reader locks allowed
         private int m_maximumRetryAttempts;                 // Maximum retry attempts allowed for loading file
@@ -322,8 +322,8 @@ namespace TVA.IO
         {
             // Initialize field values
             m_dataLock = new ReaderWriterLockSlim();
-            m_dataIsReady = new ManualResetEventSlim(false);
-            m_saveIsQueued = new ManualResetEventSlim(true);
+            m_loadIsReady = new ManualResetEventSlim(false);
+            m_saveIsReady = new ManualResetEventSlim(true);
             m_maximumConcurrentLocks = maximumConcurrentLocks;
             m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
             m_retryQueue = new BitArray(2);
@@ -383,8 +383,7 @@ namespace TVA.IO
             get
             {
                 // Calls to this property are blocked until data is available
-                if (!m_dataIsReady.IsSet && !m_dataIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
-                    throw new TimeoutException("Timeout waiting to read data from " + m_fileName);
+                WaitForLoad();
 
                 m_dataLock.EnterReadLock();
 
@@ -429,7 +428,7 @@ namespace TVA.IO
                 // Initiate save if data has changed
                 if (dataChanged)
                 {
-                    m_saveIsQueued.Reset();
+                    m_saveIsReady.Reset();
                     ThreadPool.QueueUserWorkItem(SynchronizedWrite);
                 }
             }
@@ -563,15 +562,15 @@ namespace TVA.IO
                         }
                         m_retryTimer = null;
 
-                        if (m_dataIsReady != null)
-                            m_dataIsReady.Dispose();
+                        if (m_loadIsReady != null)
+                            m_loadIsReady.Dispose();
 
-                        m_dataIsReady = null;
+                        m_loadIsReady = null;
 
-                        if (m_saveIsQueued != null)
-                            m_saveIsQueued.Dispose();
+                        if (m_saveIsReady != null)
+                            m_saveIsReady.Dispose();
 
-                        m_saveIsQueued = null;
+                        m_saveIsReady = null;
 
                         if (m_dataLock != null)
                             m_dataLock.Dispose();
@@ -602,7 +601,7 @@ namespace TVA.IO
             if (m_fileData == null)
                 throw new ArgumentNullException("FileData", "FileData is null, cannot initiate save");
 
-            m_saveIsQueued.Reset();
+            m_saveIsReady.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedWrite);
         }
 
@@ -614,19 +613,46 @@ namespace TVA.IO
             if (m_fileName == null)
                 throw new ArgumentNullException("FileName", "FileName is null, cannot initiate load");
 
-            m_dataIsReady.Reset();
+            m_loadIsReady.Reset();
             ThreadPool.QueueUserWorkItem(SynchronizedRead);
         }
 
         /// <summary>
-        /// Blocks current thread and waits for any pending save to complete.
+        /// Blocks current thread and waits for any pending load to complete; wait time is <c><see cref="RetryDelayInterval"/> * <see cref="MaximumRetryAttempts"/></c>.
+        /// </summary>
+        public virtual void WaitForLoad()
+        {
+            WaitForLoad((int)(RetryDelayInterval * MaximumRetryAttempts));
+        }
+
+        /// <summary>
+        /// Blocks current thread and waits for specified <paramref name="millisecondsTimeout"/> for any pending load to complete.
         /// </summary>
         /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
-        public virtual void Flush(int millisecondsTimeout = Timeout.Infinite)
+        public virtual void WaitForLoad(int millisecondsTimeout)
         {
-            // Flush simply blocks until data is saved
-            if (!m_saveIsQueued.IsSet && !m_saveIsQueued.Wait(millisecondsTimeout))
-                throw new TimeoutException("Timeout waiting for save to complete for " + m_fileName);
+            // Calls to this method are blocked until data is available
+            if (!m_loadIsReady.IsSet && !m_loadIsReady.Wait(millisecondsTimeout))
+                throw new TimeoutException("Timeout waiting to read data from " + m_fileName);
+        }
+
+        /// <summary>
+        /// Blocks current thread and waits for any pending save to complete; wait time is <c><see cref="RetryDelayInterval"/> * <see cref="MaximumRetryAttempts"/></c>.
+        /// </summary>
+        public virtual void WaitForSave()
+        {
+            WaitForSave((int)(RetryDelayInterval * MaximumRetryAttempts));
+        }
+
+        /// <summary>
+        /// Blocks current thread and waits for specified <paramref name="millisecondsTimeout"/> for any pending save to complete.
+        /// </summary>
+        /// <param name="millisecondsTimeout">The number of milliseconds to wait, or <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.</param>
+        public virtual void WaitForSave(int millisecondsTimeout)
+        {
+            // Calls to this method are blocked until data is saved
+            if (!m_saveIsReady.IsSet && !m_saveIsReady.Wait(millisecondsTimeout))
+                throw new TimeoutException("Timeout waiting to save data to " + m_fileName);
         }
 
         /// <summary>
@@ -679,7 +705,7 @@ namespace TVA.IO
                                     m_fileWatcher.EnableRaisingEvents = false;
 
                                 SaveFileData(fileStream, m_fileData);
-                                m_saveIsQueued.Set();
+                                m_saveIsReady.Set();
                             }
                             finally
                             {
@@ -739,7 +765,7 @@ namespace TVA.IO
                                 }
 
                                 // Release any threads waiting for file data
-                                m_dataIsReady.Set();
+                                m_loadIsReady.Set();
                             }
                         }
                         catch (IOException ex)
@@ -765,7 +791,7 @@ namespace TVA.IO
                     m_fileData = new byte[0];
 
                     // Release any threads waiting for file data
-                    m_dataIsReady.Set();
+                    m_loadIsReady.Set();
                 }
             }
         }

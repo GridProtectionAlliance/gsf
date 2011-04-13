@@ -276,10 +276,8 @@
 #endregion
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -340,12 +338,6 @@ namespace TVA.Security.Cryptography
             // Internal key and initialization vector table
             private Dictionary<string, byte[][]> m_keyIVTable = new Dictionary<string, byte[][]>();
 
-            // Wait handle used so that system will wait for valid key/IV cache load before any pending ciphers
-            private ManualResetEventSlim m_keyIVTableIsReady = new ManualResetEventSlim(false);
-
-            // Class disposed flag
-            private bool m_disposed;
-
             #endregion
 
             #region [ Properties ]
@@ -360,8 +352,7 @@ namespace TVA.Security.Cryptography
                     Dictionary<string, byte[][]> keyIVTable;
 
                     // We wait until the key and IV cache is loaded before attempting to access it
-                    if (!m_keyIVTableIsReady.IsSet && !m_keyIVTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
-                        throw new UnauthorizedAccessException("Cryptographic key access failure: timeout while attempting to load cryptographic key cache.");
+                    WaitForDataReady();
 
                     // Wait for thread level lock on key table
                     lock (m_keyIVTable)
@@ -379,32 +370,6 @@ namespace TVA.Security.Cryptography
             #region [ Methods ]
 
             /// <summary>
-            /// Releases the unmanaged resources used by the <see cref="KeyIVCache"/> object and optionally releases the managed resources.
-            /// </summary>
-            /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-            protected override void Dispose(bool disposing)
-            {
-                if (!m_disposed)
-                {
-                    try
-                    {
-                        if (disposing)
-                        {
-                            if (m_keyIVTableIsReady != null)
-                                m_keyIVTableIsReady.Dispose();
-
-                            m_keyIVTableIsReady = null;
-                        }
-                    }
-                    finally
-                    {
-                        m_disposed = true;          // Prevent duplicate dispose.
-                        base.Dispose(disposing);    // Call base class Dispose().
-                    }
-                }
-            }
-
-            /// <summary>
             /// Gets the crypto key and initialization vector for the given user password.
             /// </summary>
             /// <param name="password">User password used for key lookup.</param>
@@ -418,8 +383,7 @@ namespace TVA.Security.Cryptography
                 bool addedKey = false;
 
                 // We wait until the key and IV cache is loaded before attempting to access it
-                if (!m_keyIVTableIsReady.IsSet && !m_keyIVTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
-                    throw new UnauthorizedAccessException("Cryptographic cipher failure: timeout while attempting to load cryptographic key cache.");
+                WaitForDataReady();
 
                 // Wait for thread level lock on key table
                 lock (m_keyIVTable)
@@ -552,17 +516,6 @@ namespace TVA.Security.Cryptography
             }
 
             /// <summary>
-            /// Initiates interprocess synchronized load of key and initialization vector table.
-            /// </summary>
-            public override void Load()
-            {
-                // Hold any threads needing crypto keys
-                m_keyIVTableIsReady.Reset();
-
-                base.Load();
-            }
-
-            /// <summary>
             /// Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
             /// </summary>
             /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
@@ -597,10 +550,21 @@ namespace TVA.Security.Cryptography
                     m_keyIVTable = keyIVTable.Merge(m_keyIVTable);
                 }
 
-                // Release any threads waiting for crypto keys
-                m_keyIVTableIsReady.Set();
-
                 return serializedKeyIVTable;
+            }
+
+            // Waits until the key and IV cache is loaded before attempting to access it
+            private void WaitForDataReady()
+            {
+                try
+                {
+                    // Just wrapping this method to provide a more detailed exception message if there is an issue loading cache
+                    WaitForLoad();
+                }
+                catch (Exception ex)
+                {
+                    throw new UnauthorizedAccessException("Cryptographic cipher failure: timeout while attempting to load cryptographic key cache.", ex);
+                }
             }
 
             #endregion
@@ -722,7 +686,7 @@ namespace TVA.Security.Cryptography
         /// </remarks>
         public static void FlushCache(int millisecondsTimeout = Timeout.Infinite)
         {
-            s_keyIVCache.Flush(millisecondsTimeout);
+            s_keyIVCache.WaitForSave(millisecondsTimeout);
         }
 
         /// <summary>

@@ -523,7 +523,7 @@ namespace TVA.Security
                             userDataCache[UserData.LoginID] = UserData;
 
                             // Wait for pending serialization since cache is scoped locally to this method and will be disposed before exit
-                            userDataCache.Flush();
+                            userDataCache.WaitForSave();
                         }
                         else
                         {

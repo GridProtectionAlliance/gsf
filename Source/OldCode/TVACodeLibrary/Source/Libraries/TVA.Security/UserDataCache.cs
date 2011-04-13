@@ -253,7 +253,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
-using System.Threading;
 using TVA.Collections;
 using TVA.Configuration;
 using TVA.IO;
@@ -276,9 +275,7 @@ namespace TVA.Security
 
         // Fields
         private Dictionary<string, UserData> m_userDataTable;   // Internal dictionary of serialized user data
-        private ManualResetEventSlim m_userDataTableIsReady;    // Wait handle used so that system will wait for user data cache load before any pending dictionary access
         private int m_providerID;                               // Unique provider ID used to distinguish cached user data that may be different based on provider
-        private bool m_disposed;                                // Class disposed flag
 
         #endregion
 
@@ -301,7 +298,6 @@ namespace TVA.Security
         {
             m_providerID = providerID;
             m_userDataTable = new Dictionary<string, UserData>();
-            m_userDataTableIsReady = new ManualResetEventSlim(false);
         }
 
         #region [ Properties ]
@@ -345,32 +341,6 @@ namespace TVA.Security
         #region [ Methods ]
 
         /// <summary>
-        /// Releases the unmanaged resources used by the <see cref="UserDataCache"/> object and optionally releases the managed resources.
-        /// </summary>
-        /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (!m_disposed)
-            {
-                try
-                {
-                    if (disposing)
-                    {
-                        if (m_userDataTableIsReady != null)
-                            m_userDataTableIsReady.Dispose();
-
-                        m_userDataTableIsReady = null;
-                    }
-                }
-                finally
-                {
-                    m_disposed = true;          // Prevent duplicate dispose.
-                    base.Dispose(disposing);    // Call base class Dispose().
-                }
-            }
-        }
-
-        /// <summary>
         /// Attempts to retrieve <see cref="UserData"/> for given <paramref name="loginID"/>.
         /// </summary>
         /// <param name="loginID">Login ID of associated <see cref="UserData"/> to retrieve.</param>
@@ -382,8 +352,7 @@ namespace TVA.Security
             bool result;
 
             // We wait until the cache is loaded before attempting to access it
-            if (!m_userDataTableIsReady.IsSet && !m_userDataTableIsReady.Wait((int)(RetryDelayInterval * MaximumRetryAttempts)))
-                throw new UnauthorizedAccessException("User data access failure: timeout while attempting to load user data cache.");
+            WaitForDataReady();
 
             // Wait for thread level lock on user data table
             lock (m_userDataTable)
@@ -442,17 +411,6 @@ namespace TVA.Security
         }
 
         /// <summary>
-        /// Initiates interprocess synchronized load of user data cache.
-        /// </summary>
-        public override void Load()
-        {
-            // Hold any threads needing user information
-            m_userDataTableIsReady.Reset();
-
-            base.Load();
-        }
-
-        /// <summary>
         /// Handles serialization of file to disk; virtual method allows customization (e.g., pre-save encryption and/or data merge).
         /// </summary>
         /// <param name="fileStream"><see cref="FileStream"/> used to serialize data.</param>
@@ -487,9 +445,6 @@ namespace TVA.Security
                 m_userDataTable = userDataTable.Merge(m_userDataTable);
             }
 
-            // Release any threads waiting for user information
-            m_userDataTableIsReady.Set();
-
             return serializedUserDataTable;
         }
 
@@ -506,6 +461,20 @@ namespace TVA.Security
         protected string HashLoginID(string loginID)
         {
             return Cipher.GetPasswordHash(loginID.ToLower(), m_providerID);
+        }
+
+        // Waits until the cache is loaded before attempting to access it
+        private void WaitForDataReady()
+        {
+            try
+            {
+                // Just wrapping this method to provide a more detailed exception message if there is an issue loading cache
+                WaitForLoad();
+            }
+            catch (Exception ex)
+            {
+                throw new UnauthorizedAccessException("User data access failure: timeout while attempting to load user data cache.", ex);
+            }
         }
 
         #endregion
@@ -559,6 +528,6 @@ namespace TVA.Security
         }
 
         #endregion
-        
+
     }
 }
