@@ -23,16 +23,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
     /// Creates a new object that represents a Vendor
     /// </summary>
-    public class Vendor
+    public class Vendor : DataModelBase
     {        
         #region [ Members ]
 
@@ -214,5 +215,159 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion        
+
+        #region [ Static ]
+
+        //Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Vendor"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Vendor"/>.</returns>
+        public static ObservableCollection<Vendor> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                ObservableCollection<Vendor> vendorList = new ObservableCollection<Vendor>();
+                DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL FROM VendorDetail ORDER BY Name");
+
+                foreach (DataRow row in vendorTable.Rows)
+                {
+                    vendorList.Add(new Vendor()
+                        {
+                            ID = row.Field<int>("ID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            Name = row.Field<string>("Name"),
+                            PhoneNumber = row.Field<string>("PhoneNumber"),
+                            ContactEmail = row.Field<string>("ContactEmail"),
+                            URL = row.Field<string>("URL")
+                        });
+                }
+
+                return vendorList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Vendor"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of vendors defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> vendorList = new Dictionary<int, string>();
+                if (isOptional)
+                    vendorList.Add(0, "Select Vendor");
+
+                DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Vendor ORDER BY Name");
+
+                foreach (DataRow row in vendorTable.Rows)
+                    vendorList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return vendorList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Vendor"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="vendor">Information about <see cref="Vendor"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Vendor vendor, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", vendor.Acronym.Replace(" ", "").ToUpper(),
+                        vendor.Name, vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +
+                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name, 
+                        vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, vendor.ID);
+
+                return "Vendor information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Vendor"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="vendorID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int vendorID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Vendor WHER ID = @vendorID", DefaultTimeout, vendorID);
+
+                return "Vendor deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
