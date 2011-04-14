@@ -545,6 +545,9 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("performTimestampReasonabilityCheck", out setting))
                 PerformTimestampReasonabilityCheck = setting.ParseBoolean();
 
+            if (settings.TryGetValue("processByReceivedTimestamp", out setting))
+                ProcessByReceivedTimestamp = setting.ParseBoolean();
+
             if (settings.TryGetValue("downsamplingMethod", out setting))
                 DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
         }
