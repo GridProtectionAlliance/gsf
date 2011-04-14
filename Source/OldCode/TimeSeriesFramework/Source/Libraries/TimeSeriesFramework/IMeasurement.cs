@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/14/2011 - J. Ritchie Carroll
+//       Added received and published timestamps for measurements.
 //
 //******************************************************************************************************
 
@@ -49,7 +51,11 @@ namespace TimeSeriesFramework
         /// <para>In most implementations, this will be a required field.</para>
         /// <para>Note that this field, in addition to Source, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
         /// </remarks>
-        uint ID { get; set; }
+        uint ID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the source of this <see cref="IMeasurement"/>.
@@ -59,27 +65,46 @@ namespace TimeSeriesFramework
         /// <para>Note that this field, in addition to ID, typically creates the primary key for a <see cref="IMeasurement"/>.</para>
         /// <para>This value is typically used to track the archive name in which <see cref="IMeasurement"/> is stored.</para>
         /// </remarks>
-        string Source { get; set; }
+        string Source
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Returns the primary key of this <see cref="IMeasurement"/>.
         /// </summary>
-        MeasurementKey Key { get; }
+        MeasurementKey Key
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets the <see cref="Guid"/> based signal ID of this <see cref="IMeasurement"/>, if available.
         /// </summary>
-        Guid SignalID { get; set; }
+        Guid SignalID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the text based tag name of this <see cref="IMeasurement"/>.
         /// </summary>
-        string TagName { get; set; }
+        string TagName
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the raw value of this <see cref="IMeasurement"/> (i.e., the numeric value that is not offset by <see cref="Adder"/> and <see cref="Multiplier"/>).
         /// </summary>
-        double Value { get; set; }
+        double Value
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the adjusted numeric value of this <see cref="IMeasurement"/>, taking into account the specified <see cref="Adder"/> and <see cref="Multiplier"/> offsets.
@@ -89,7 +114,10 @@ namespace TimeSeriesFramework
         /// <c>return <see cref="Value"/> * <see cref="Multiplier"/> + <see cref="Adder"/></c>
         /// </para>
         /// </remarks>
-        double AdjustedValue { get; }
+        double AdjustedValue
+        {
+            get;
+        }
 
         /// <summary>
         /// Defines an offset to add to the <see cref="IMeasurement"/> value.
@@ -97,7 +125,11 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// Implementors should make sure this value defaults to zero.
         /// </remarks>
-        double Adder { get; set; }
+        double Adder
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Defines a mulplicative offset to apply to the <see cref="IMeasurement"/> value.
@@ -105,7 +137,11 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// Implementors should make sure this value defaults to one.
         /// </remarks>
-        double Multiplier { get; set; }
+        double Multiplier
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="IMeasurement"/>.
@@ -113,27 +149,72 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        Ticks Timestamp { get; set; }
+        Ticks Timestamp
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// </summary>
+        /// <remarks>
+        /// <para>Implementors should set this timestamp to be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        Ticks ReceivedTimestamp
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        Ticks PublishedTimestamp
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="IMeasurement"/> is good.
         /// </summary>
-        bool ValueQualityIsGood { get; set; }
+        bool ValueQualityIsGood
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if the quality of the timestamp of this <see cref="IMeasurement"/> is good.
         /// </summary>
-        bool TimestampQualityIsGood { get; set; }
+        bool TimestampQualityIsGood
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets a boolean value that determines if this <see cref="IMeasurement"/> has been discarded during sorting.
         /// </summary>
-        bool IsDiscarded { get; set; }
+        bool IsDiscarded
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets function used to apply a downsampling filter over a sequence of <see cref="IMeasurement"/> values.
         /// </summary>
-        MeasurementValueFilterFunction MeasurementValueFilter { get; set; }
+        MeasurementValueFilterFunction MeasurementValueFilter
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Get the hash code for the <see cref="IMeasurement"/>.<see cref="MeasurementKey"/>.

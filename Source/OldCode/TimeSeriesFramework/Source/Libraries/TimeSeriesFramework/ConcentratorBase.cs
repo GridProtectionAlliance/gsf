@@ -20,11 +20,10 @@
 //       Generated original version of source code.
 //  02/08/2011 - J. Ritchie Carroll
 //       Added QueueState property to expose real-time queue state analysis.
+//  04/14/2011 - J. Ritchie Carroll
+//       Added ProcessByReceivedTimestamp property to sort and publish measurements by received time.
 //
 //******************************************************************************************************
-
-// Define this constant to enable use of high-resolution time, undefine to use system time function
-#define UseHighResolutionTime
 
 using System;
 using System.Collections.Generic;
@@ -414,6 +413,7 @@ namespace TimeSeriesFramework
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
         private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
         private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
+        private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
         private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
         private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
@@ -798,7 +798,7 @@ namespace TimeSeriesFramework
         /// <see cref="LeadTime"/> tolerance).
         /// </summary>
         /// <remarks>
-        /// Setting this value to false will make the concentrator use the latest value received as "real-time"
+        /// Setting this value to <c>false</c> will make the concentrator use the latest value received as "real-time"
         /// without validation; this is not recommended in production since time reported by source devices may
         /// be grossly incorrect. For non-production configurations, setting this value to false will allow
         /// concentration of historical data.
@@ -812,6 +812,35 @@ namespace TimeSeriesFramework
             set
             {
                 m_performTimestampReasonabilityCheck = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if concentrator should short measurements by received flag.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Setting this value to <c>true</c> will make concentrator use the timestamp of measurement reception, which
+        /// is typically the <see cref="IMeasurement"/> creation time, for sorting and publication. This is useful in
+        /// scenarios where the concentrator will be receiving very large volumes of data but not necessarily in
+        /// real-time, such as, reading data from a file where you want it sorted and processed as fast as possible.
+        /// </para>
+        /// <para>
+        /// Setting this value to <c>true</c> will force <see cref="UseLocalClockAsRealTime"/> to be <c>true</c>.
+        /// </para>
+        /// </remarks>
+        public bool ProcessByReceivedTimestamp
+        {
+            get
+            {
+                return m_processByReceivedTimestamp;
+            }
+            set
+            {
+                m_processByReceivedTimestamp = value;
+
+                if (m_processByReceivedTimestamp)
+                    m_useLocalClockAsRealTime = true;
             }
         }
 
@@ -885,7 +914,8 @@ namespace TimeSeriesFramework
                     }
                 }
 
-                if (processingTime < 0) processingTime = 0;
+                if (processingTime < 0)
+                    processingTime = 0;
 
                 return processingTime.ToSeconds();
             }
@@ -934,11 +964,17 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets flag that determines whether or not to use the local clock time as real time.
+        /// Gets or sets flag that determines whether or not to use the local clock time as real-time.
         /// </summary>
         /// <remarks>
-        /// Use your local system clock as real time only if the time is locally GPS-synchronized,
+        /// <para>
+        /// Use your local system clock as real-time only if the time is locally GPS-synchronized,
         /// or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+        /// </para>
+        /// <para>
+        /// If <see cref="ProcessByReceivedTimestamp"/> is <c>true</c>, <see cref="UseLocalClockAsRealTime"/> will
+        /// always be set to <c>true</c>, even if you try to set it to <c>false</c>.
+        /// </para>
         /// </remarks>
         public bool UseLocalClockAsRealTime
         {
@@ -948,7 +984,10 @@ namespace TimeSeriesFramework
             }
             set
             {
-                m_useLocalClockAsRealTime = value;
+                if (m_processByReceivedTimestamp)
+                    m_useLocalClockAsRealTime = true;
+                else
+                    m_useLocalClockAsRealTime = value;
             }
         }
 
@@ -976,7 +1015,7 @@ namespace TimeSeriesFramework
             {
                 if (m_useLocalClockAsRealTime)
                 {
-                    // Assumes local system clock is the best value we have for real time.
+                    // Assumes local system clock is the best value we have for real-time.
 #if UseHighResolutionTime
                     return PrecisionTimer.UtcNow.Ticks;
 #else
@@ -1002,7 +1041,7 @@ namespace TimeSeriesFramework
 
                         if (distance > m_leadTime || distance < -m_leadTime)
                         {
-                            // Set real time ticks to current ticks (as long as another thread hasn't changed it
+                            // Set real-time ticks to current ticks (as long as another thread hasn't changed it
                             // already), the interlocked compare exchange avoids an expensive synclock to update real
                             // time ticks.
                             Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
@@ -1237,6 +1276,8 @@ namespace TimeSeriesFramework
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
                 status.AppendLine();
                 status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
                 status.AppendLine();
                 status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
                 status.AppendLine();
@@ -1505,7 +1546,8 @@ namespace TimeSeriesFramework
         /// <param name="measurements">Collection of <see cref="IMeasurement"/>'s to sort.</param>
         public virtual void SortMeasurements(IEnumerable<IMeasurement> measurements)
         {
-            if (!m_enabled) return;
+            if (!m_enabled)
+                return;
 
             // This function is called continually with new measurements to handle "time-alignment" (i.e., sorting)
             // of these new values. Many threads will be waiting for frames of time aligned data so make sure any
@@ -1539,7 +1581,7 @@ namespace TimeSeriesFramework
                     {
                         // Device reports measurement timestamp as bad; this typically means that the GPS timestamp of the
                         // source device is not accurate. If the concentrator is set to allow sorts by arrival then it is
-                        // assumed that our local real time value is better than the device measurement, so we sort the
+                        // assumed that our local real-time value is better than the device measurement, so we sort the
                         // measurement by arrival time.
                         timestamp = RealTime;
                         Interlocked.Increment(ref m_measurementsSortedByArrival);
@@ -1567,24 +1609,34 @@ namespace TimeSeriesFramework
                     // found the destination frame for the same ticks, then there is no need to lookup frame again.
                     if (frame == null || timestamp != lastTimestamp)
                     {
-                        // Badly time-aligned measurements, or those coming in at a higher sample rate, may fall
-                        // outside available frame buckets. To check for this, the difference between the measurement
-                        // timestamp and real-time in seconds is calculated and validated between lag and lead times.
-                        distance = SecondsFromRealTime(timestamp);
-
-                        if (distance > m_lagTime || (m_performTimestampReasonabilityCheck && distance < -m_leadTime))
+                        if (m_processByReceivedTimestamp)
                         {
-                            // This data has come in late or has a future timestamp.  For old timestamps, we're not
-                            // going to create a frame for data that will never be processed.  For future dates we
-                            // must assume that the clock from source device must be advanced and out-of-sync with
-                            // real-time - either way this data will be discarded.
-                            frame = null;
+                            // If sorting by received timestamp, simply get a frame for this measurement since
+                            // this is used in scenarios where very large volumes of data need concentration
+                            frame = m_frameQueue.GetFrame(timestamp);
+                            lastTimestamp = timestamp;
                         }
                         else
                         {
-                            // Get a frame for this measurement
-                            frame = m_frameQueue.GetFrame(timestamp);
-                            lastTimestamp = timestamp;
+                            // Badly time-aligned measurements, or those coming in at a higher sample rate, may fall
+                            // outside available frame buckets. To check for this, the difference between the measurement
+                            // timestamp and real-time in seconds is calculated and validated between lag and lead times.
+                            distance = SecondsFromRealTime(timestamp);
+
+                            if (distance > m_lagTime || (m_performTimestampReasonabilityCheck && distance < -m_leadTime))
+                            {
+                                // This data has come in late or has a future timestamp.  For old timestamps, we're not
+                                // going to create a frame for data that will never be processed.  For future dates we
+                                // must assume that the clock from source device must be advanced and out-of-sync with
+                                // real-time - either way this data will be discarded.
+                                frame = null;
+                            }
+                            else
+                            {
+                                // Get a frame for this measurement
+                                frame = m_frameQueue.GetFrame(timestamp);
+                                lastTimestamp = timestamp;
+                            }
                         }
                     }
 
@@ -1659,9 +1711,9 @@ namespace TimeSeriesFramework
                     if (!m_useLocalClockAsRealTime)
                     {
                         // Algorithm:
-                        //      If the measurement time is newer than the current real time value and within the
+                        //      If the measurement time is newer than the current real-time value and within the
                         //      specified time deviation tolerance of the local clock time, then the measurement
-                        //      timestamp is set as real time.
+                        //      timestamp is set as real-time.
                         long realTimeTicks = m_realTimeTicks;
 
                         if (timestamp > m_realTimeTicks)
@@ -1669,7 +1721,7 @@ namespace TimeSeriesFramework
                             if (m_performTimestampReasonabilityCheck)
                             {
                                 // Apply a resonability check to this value using the local clock. Since the lead time
-                                // typically defines the tolerated accuracy of the local clock to real time, this value
+                                // typically defines the tolerated accuracy of the local clock to real-time, this value
                                 // is used as the + and - timestamp tolerance to validate if the time is reasonable.
 #if UseHighResolutionTime
                                 long currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
@@ -1679,7 +1731,7 @@ namespace TimeSeriesFramework
                                 if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                                 {
                                     // The new time measurement looks good, so this function assumes the time is
-                                    // "real time" so long as another thread has not changed the real time value
+                                    // "real-time" so long as another thread has not changed the real-time value
                                     // already. Using the interlocked compare exchange method introduces the
                                     // possibility that we may have had newer ticks than another thread that just
                                     // updated real-time ticks, but if so the deviation will not be much since ticks
@@ -1697,7 +1749,7 @@ namespace TimeSeriesFramework
                                     if (distance > m_leadTime || distance < -m_leadTime)
                                     {
                                         // New time measurement was invalid as was current real-time value so we have no choice but to
-                                        // assume the current time as "real-time", so we set real time ticks to current ticks so long
+                                        // assume the current time as "real-time", so we set real-time ticks to current ticks so long
                                         // as another thread hasn't changed it already
                                         Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, realTimeTicks);
                                     }
@@ -1843,7 +1895,7 @@ namespace TimeSeriesFramework
         {
             IFrame frame;
             Ticks timestamp;
-            long startTime;
+            long startTime, stopTime;
             int frameIndex;
 
             // Keep thread alive...
@@ -1869,20 +1921,30 @@ namespace TimeSeriesFramework
                             // Get ticks for this frame
                             timestamp = frame.Timestamp;
 
-                            // See if any lagtime needs to pass before we begin publishing,
-                            // exiting if it's not time to publish
-                            if (m_lagTicks - (RealTime - timestamp) > 0)
+                            if (m_processByReceivedTimestamp)
                             {
-                                // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
-                                // an expected number of measurements per-frame have been defined and the frame has received this
-                                // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
-                                // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
-                                // frame as soon as the expected data has arrived.
-                                if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.SortedMeasurements < m_expectedMeasurements)
+                                // When processing by received timestamp, we need to test received timestamp against lagtime
+                                // to make sure there has been time enough to publish frame:
+                                if (m_lagTicks - (RealTime - frame.PublishedTimestamp) > 0)
                                     break;
+                            }
+                            else
+                            {
+                                // See if any lagtime needs to pass before we begin publishing,
+                                // exiting if it's not time to publish
+                                if (m_lagTicks - (RealTime - timestamp) > 0)
+                                {
+                                    // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
+                                    // an expected number of measurements per-frame have been defined and the frame has received this
+                                    // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
+                                    // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
+                                    // frame as soon as the expected data has arrived.
+                                    if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.SortedMeasurements < m_expectedMeasurements)
+                                        break;
 
-                                // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
-                                m_framesAheadOfSchedule++;
+                                    // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
+                                    m_framesAheadOfSchedule++;
+                                }
                             }
 
                             // Mark start time for publication
@@ -1920,12 +1982,16 @@ namespace TimeSeriesFramework
                                 m_publishedMeasurements += frame.SortedMeasurements;
                                 m_downsampledMeasurements += m_frameQueue.LastDownsampledMeasurements;
 
-                                // Track total publication time
+                                // Mark stop time for publication
 #if UseHighResolutionTime
-                                m_totalPublishTime += PrecisionTimer.UtcNow.Ticks - startTime;
+                                stopTime = PrecisionTimer.UtcNow.Ticks;
 #else
-                                m_totalPublishTime += DateTime.UtcNow.Ticks - distance;
+                                stopTime = DateTime.UtcNow.Ticks;
 #endif
+                                frame.PublishedTimestamp = stopTime;
+
+                                // Track total publication time
+                                m_totalPublishTime += (stopTime - startTime);
                             }
                         }
                     }

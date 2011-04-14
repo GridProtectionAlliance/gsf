@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/14/2011 - J. Ritchie Carroll
+//       Added received and published timestamps for measurements.
 //
 //******************************************************************************************************
 
@@ -39,6 +41,8 @@ namespace TimeSeriesFramework
 
         // Fields
         private Ticks m_timestamp;                                          // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_receivedTimestamp;                                  // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
+        private Ticks m_publishedTimestamp;                                 // Time, represented as 100-nanosecond ticks, of frame published (post process)
         private bool m_published;                                           // Determines if this frame of data has been published
         private int m_sortedMeasurements;                                   // Total measurements sorted into this frame
         private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
@@ -55,6 +59,11 @@ namespace TimeSeriesFramework
         public Frame(Ticks timestamp)
         {
             m_timestamp = timestamp;
+#if UseHighResolutionTime
+            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+#else
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+#endif
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
             m_sortedMeasurements = -1;
         }
@@ -67,6 +76,7 @@ namespace TimeSeriesFramework
         public Frame(Ticks timestamp, IDictionary<MeasurementKey, IMeasurement> measurements)
         {
             m_timestamp = timestamp;
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
             m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
             m_sortedMeasurements = -1;
         }
@@ -87,7 +97,7 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets published state of this <see cref="Frame"/>.
+        /// Gets or sets published state of this <see cref="Frame"/> (pre-processing).
         /// </summary>
         public bool Published
         {
@@ -137,6 +147,52 @@ namespace TimeSeriesFramework
             set
             {
                 m_timestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was received (i.e., created).
+        /// </summary>
+        /// <remarks>
+        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        public Ticks ReceivedTimestamp
+        {
+            get
+            {
+                return m_receivedTimestamp;
+            }
+            set
+            {
+                m_receivedTimestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Frame"/> was published (post-processing).
+        /// </summary>
+        /// <remarks>
+        /// <para>In the default implementation, setting this property will update all associated <see cref="IMeasurement.PublishedTimestamp"/>.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        public Ticks PublishedTimestamp
+        {
+            get
+            {
+                return m_publishedTimestamp;
+            }
+            set
+            {
+                m_publishedTimestamp = value;
+
+                if (m_measurements != null)
+                {
+                    foreach (IMeasurement measurement in m_measurements.Values)
+                    {
+                        measurement.PublishedTimestamp = m_publishedTimestamp;
+                    }
+                }
             }
         }
 
@@ -199,7 +255,7 @@ namespace TimeSeriesFramework
         public override bool Equals(object obj)
         {
             IFrame other = obj as IFrame;
-            
+
             if ((object)other != null)
                 return Equals(other);
 

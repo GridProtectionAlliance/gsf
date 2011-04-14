@@ -22,9 +22,6 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -66,10 +63,10 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        
+
         #endregion
 
-        #region [Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="CalulatedMeasurment"/> NodeId.
@@ -109,7 +106,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="CalulatedMeasurment"/> Acronym.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        [Required(ErrorMessage = "CalulatedMeasurment acronym is a required field, please provide value.")] 
+        [Required(ErrorMessage = "CalulatedMeasurment acronym is a required field, please provide value.")]
         public string Acronym
         {
             get
@@ -512,7 +509,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         /// <summary>
         /// Gets or sets <see cref="CalulatedMeasurment"/> CreatedBy
-       /// </summary>
+        /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {

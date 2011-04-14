@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/14/2011 - J. Ritchie Carroll
+//       Added received and published timestamps for measurements.
 //
 //******************************************************************************************************
 
@@ -44,6 +46,8 @@ namespace TimeSeriesFramework
         private Guid m_signalID;
         private string m_tagName;
         private Ticks m_timestamp;
+        private Ticks m_receivedTimestamp;
+        private Ticks m_publishedTimestamp;
         private double m_value;
         private double m_adder;
         private double m_multiplier;
@@ -140,6 +144,11 @@ namespace TimeSeriesFramework
             m_adder = adder;
             m_multiplier = multiplier;
             m_timestamp = timestamp;
+#if UseHighResolutionTime
+            m_receivedTimestamp = PrecisionTimer.UtcNow.Ticks;
+#else
+            m_receivedTimestamp = DateTime.UtcNow.Ticks;
+#endif
             m_valueQualityIsGood = true;
             m_timestampQualityIsGood = true;
         }
@@ -318,6 +327,43 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Measurement"/> was received (i.e., created).
+        /// </summary>
+        /// <remarks>
+        /// <para>In the default implementation, this timestamp will simply be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        public Ticks ReceivedTimestamp
+        {
+            get
+            {
+                return m_receivedTimestamp;
+            }
+            set
+            {
+                m_receivedTimestamp = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="Measurement"/> was published (post-processing).
+        /// </summary>
+        /// <remarks>
+        /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+        /// </remarks>
+        public Ticks PublishedTimestamp
+        {
+            get
+            {
+                return m_publishedTimestamp;
+            }
+            set
+            {
+                m_publishedTimestamp = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a boolean value that determines if the quality of the numeric value of this <see cref="Measurement"/> is good.
         /// </summary>
         public virtual bool ValueQualityIsGood
@@ -415,10 +461,10 @@ namespace TimeSeriesFramework
         public override bool Equals(object obj)
         {
             IMeasurement other = obj as IMeasurement;
-            
+
             if ((object)other != null)
                 return Equals(other);
-            
+
             throw new ArgumentException("Object is not a Measurement");
         }
 
@@ -446,7 +492,7 @@ namespace TimeSeriesFramework
         public int CompareTo(object obj)
         {
             IMeasurement other = obj as IMeasurement;
-            
+
             if ((object)other != null)
                 return CompareTo(other);
 

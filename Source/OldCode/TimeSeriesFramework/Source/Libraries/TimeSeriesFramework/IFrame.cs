@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  09/02/2010 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/14/2011 - J. Ritchie Carroll
+//       Added received and published timestamps for measurements.
 //
 //******************************************************************************************************
 
@@ -38,12 +40,19 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
         /// </remarks>
-        IDictionary<MeasurementKey, IMeasurement> Measurements { get; }
+        IDictionary<MeasurementKey, IMeasurement> Measurements
+        {
+            get;
+        }
 
         /// <summary>
-        /// Gets or sets published state of this <see cref="IFrame"/>.
+        /// Gets or sets published state of this <see cref="IFrame"/> (pre-processing).
         /// </summary>
-        bool Published { get; set; }
+        bool Published
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets total number of measurements that have been sorted into this <see cref="IFrame"/>.
@@ -51,7 +60,11 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// If this property has not been assigned a value, implementors should return measurement count.
         /// </remarks>
-        int SortedMeasurements { get; set; }
+        int SortedMeasurements
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets exact timestamp, in <see cref="Ticks"/>, of the data represented in this <see cref="IFrame"/>.
@@ -59,7 +72,37 @@ namespace TimeSeriesFramework
         /// <remarks>
         /// The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
         /// </remarks>
-        Ticks Timestamp { get; set; }
+        Ticks Timestamp
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was received (i.e., created).
+        /// </summary>
+        /// <remarks>
+        /// <para>Implementors should set this timestamp to be the ticks of <see cref="PrecisionTimer.UtcNow"/> of when this class was created.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        Ticks ReceivedTimestamp
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets exact timestamp, in ticks, of when this <see cref="IMeasurement"/> was published (post-processing).
+        /// </summary>
+        /// <remarks>
+        /// <para>Implementors should update all associated <see cref="IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
+        /// <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+        /// </remarks>
+        Ticks PublishedTimestamp
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets ot sets reference to last <see cref="IMeasurement"/> that was sorted into this <see cref="IFrame"/>.
@@ -68,6 +111,10 @@ namespace TimeSeriesFramework
         /// <para>This value is used to help monitor slow moving measurements that are being sorted into the <see cref="IFrame"/>.</para>
         /// <para>Implementors need only track the value.</para>
         /// </remarks>
-        IMeasurement LastSortedMeasurement { get; set; }
+        IMeasurement LastSortedMeasurement
+        {
+            get;
+            set;
+        }
     }
 }
