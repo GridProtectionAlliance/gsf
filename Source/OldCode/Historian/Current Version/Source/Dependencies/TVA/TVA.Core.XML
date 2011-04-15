@@ -8080,6 +8080,17 @@
             <param name="serializableObject">The serializable object.</param>
             <returns>A memory stream representation of the object if the specified object can be serialized; otherwise an empty stream.</returns>
         </member>
+        <member name="M:TVA.Serialization.Serialize``1(``0,TVA.SerializationFormat)">
+            <summary>
+            Serializes an <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+            <returns>An <see cref="T:System.Array"/> of <see cref="T:System.Byte"/> of the serialized <see cref="T:System.Object"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializableObject"/> is null.</exception>
+            <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
         <member name="M:TVA.Serialization.Serialize``1(``0,TVA.SerializationFormat,System.IO.Stream@)">
             <summary>
             Serializes an <see cref="T:System.Object"/>.
@@ -8091,15 +8102,15 @@
             <exception cref="T:System.ArgumentNullException"><paramref name="serializedOutput"/> or <paramref name="serializableObject"/> is null.</exception>
             <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         </member>
-        <member name="M:TVA.Serialization.Serialize``1(``0,TVA.SerializationFormat)">
+        <member name="M:TVA.Serialization.Deserialize``1(System.Byte[],TVA.SerializationFormat)">
             <summary>
-            Serializes an <see cref="T:System.Object"/>.
+            Deserializes a serialized <see cref="T:System.Object"/>.
             </summary>
-            <typeparam name="T"><see cref="T:System.Type"/> of the <paramref name="serializableObject"/>.</typeparam>
-            <param name="serializableObject"><see cref="T:System.Object"/> to be serialized.</param>
-            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
-            <returns>An <see cref="T:System.Array"/> of <see cref="T:System.Byte"/> of the serialized <see cref="T:System.Object"/>.</returns>
-            <exception cref="T:System.ArgumentNullException"><paramref name="serializableObject"/> is null.</exception>
+            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
+            <param name="serializedObject"><see cref="T:System.Array"/> of <see cref="T:System.Byte"/>s contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+            <returns>The deserialized <see cref="T:System.Object"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
             <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
         </member>
         <member name="M:TVA.Serialization.Deserialize``1(System.IO.Stream,TVA.SerializationFormat)">
@@ -8112,6 +8123,24 @@
             <returns>The deserialized <see cref="T:System.Object"/>.</returns>
             <exception cref="T:System.ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
             <exception cref="T:System.NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        </member>
+        <member name="M:TVA.Serialization.TryDeserialize``1(System.Byte[],TVA.SerializationFormat,``0@)">
+            <summary>
+            Attempts to deserialize a serialized <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
+            <param name="serializedObject"><see cref="T:System.Array"/> of <see cref="T:System.Byte"/>s contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+            <param name="deserializedObject">Deserialized <see cref="T:System.Object"/>.</param>
+        </member>
+        <member name="M:TVA.Serialization.TryDeserialize``1(System.IO.Stream,TVA.SerializationFormat,``0@)">
+            <summary>
+            Attempts to deserialize a serialized <see cref="T:System.Object"/>.
+            </summary>
+            <typeparam name="T"><see cref="T:System.Type"/> of the deserialized <see cref="T:System.Object"/> to be returned.</typeparam>
+            <param name="serializedObject"><see cref="T:System.IO.Stream"/> contaning the serialized <see cref="T:System.Object"/> that is to be deserialized.</param>
+            <param name="serializationFormat"><see cref="T:TVA.SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+            <param name="deserializedObject">Deserialized <see cref="T:System.Object"/>.</param>
         </member>
         <member name="T:TVA.Parsing.MultiSourceFrameImageParserBase`3">
             <summary>
@@ -12016,7 +12045,7 @@
             Defines an adapter that could execute in isolation in a seperate <see cref="T:System.AppDomain"/>.
             </summary>
         </member>
-        <member name="E:TVA.Adapters.IAdapter.StatusMessage">
+        <member name="E:TVA.Adapters.IAdapter.StatusUpdate">
             <summary>
             Occurs when the <see cref="T:TVA.Adapters.IAdapter"/> wants to provide a status update.
             </summary>
@@ -18872,12 +18901,12 @@
             </summary>
             <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
         </member>
-        <member name="M:TVA.Adapters.Adapter.OnStatusMessage(TVA.UpdateType,System.String)">
+        <member name="M:TVA.Adapters.Adapter.OnStatusUpdate(TVA.UpdateType,System.String)">
             <summary>
-            Raises the <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.
+            Raises the <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.
             </summary>
-            <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.</param>
-            <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusMessage"/> event.</param>
+            <param name="updateType"><see cref="T:TVA.UpdateType"/> to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
+            <param name="updateMessage">Update message to send to <see cref="E:TVA.Adapters.Adapter.StatusUpdate"/> event.</param>
         </member>
         <member name="M:TVA.Adapters.Adapter.OnExecutionException(System.String,System.Exception)">
             <summary>
@@ -18891,7 +18920,7 @@
             Raises the <see cref="E:TVA.Adapters.Adapter.Disposed"/> event.
             </summary>
         </member>
-        <member name="E:TVA.Adapters.Adapter.StatusMessage">
+        <member name="E:TVA.Adapters.Adapter.StatusUpdate">
             <summary>
             Occurs when the <see cref="T:TVA.Adapters.Adapter"/> wants to provide a status update.
             </summary>
