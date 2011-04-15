@@ -237,6 +237,7 @@ using System;
 using System.ComponentModel;
 using System.ServiceProcess;
 using TVA;
+using TVA.Services.ServiceProcess;
 
 namespace UDPRebroadcaster
 {
@@ -279,7 +280,7 @@ namespace UDPRebroadcaster
         
         private void UdpClient_ConnectionEstablished(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus(MessageType.Information, "Connection successful.\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "Connection successful.\r\n\r\n");
         }
 
 
@@ -300,23 +301,23 @@ namespace UDPRebroadcaster
             {
                 m_serviceHelper.ErrorLogger.Log(ex);
 
-                m_serviceHelper.UpdateStatus(MessageType.Warning, "Data Stream interrupted.\r\n\r\n");
+                m_serviceHelper.UpdateStatus(UpdateType.Warning, "Data Stream interrupted.\r\n\r\n");
             }
         }
 
         private void UdpClient_ConnectionTerminated(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus(MessageType.Warning, "Connection terminated.\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Warning, "Connection terminated.\r\n\r\n");
         }
 
         private void UdpClient_ConnectionException(object sender, EventArgs<Exception> e)
         {
-            m_serviceHelper.UpdateStatus(MessageType.Alarm, "A connection exception has occurred: {0}.\r\n\r\n", e.Argument.Message);
+            m_serviceHelper.UpdateStatus(UpdateType.Alarm, "A connection exception has occurred: {0}.\r\n\r\n", e.Argument.Message);
         }
        
         private void UdpClient_ConnectionAttempt(object sender, EventArgs e)
         {
-            m_serviceHelper.UpdateStatus(MessageType.Information, "Attempting connection...\r\n\r\n");
+            m_serviceHelper.UpdateStatus(UpdateType.Information, "Attempting connection...\r\n\r\n");
         }
 
         #endregion

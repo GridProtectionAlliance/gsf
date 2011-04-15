@@ -31,8 +31,6 @@
 //       Moved UpdateType enumeration from TVA.Services.ServiceProcess namespace for broader usage.
 //  04/07/2011 - J. Ritchie Carroll
 //       Added ToNonNullNorEmptyString() and ToNonNullNorWhiteSpace() extensions.
-//  04/15/2011 - Pinal C. Patel
-//       Renamed UpdateType enumeration to MessageType for clarity.
 //
 //*******************************************************************************************************
 
@@ -325,20 +323,20 @@ namespace TVA
     }
 
     /// <summary>
-    /// Indicates the type of message.
+    /// Indicates the type of update.
     /// </summary>
-    public enum MessageType
+    public enum UpdateType
     {
         /// <summary>
-        /// Message is of type information.
+        /// Update is informational.
         /// </summary>
         Information,
         /// <summary>
-        /// Message is of type warning.
+        /// Update is a warning.
         /// </summary>
         Warning,
         /// <summary>
-        /// Message is of type alarm.
+        /// Update is an alarm.
         /// </summary>
         Alarm
     }

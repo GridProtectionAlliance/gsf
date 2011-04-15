@@ -255,10 +255,10 @@ namespace TVA.Adapters
         /// Occurs when the <see cref="IAdapter"/> wants to provide a status update.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="MessageType"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
         /// </remarks>
-        event EventHandler<EventArgs<MessageType, string>> StatusMessage;
+        event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
 
         /// <summary>
         /// Occurs when the <see cref="IAdapter"/> encounters an <see cref="Exception"/> during execution.

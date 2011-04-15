@@ -286,10 +286,10 @@ namespace TVA.Adapters
         /// Occurs when the <see cref="Adapter"/> wants to provide a status update.
         /// </summary>
         /// <remarks>
-        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="MessageType"/>.<br/>
+        /// <see cref="EventArgs{T1,T2}.Argument1"/> is the <see cref="UpdateType"/>.<br/>
         /// <see cref="EventArgs{T1,T2}.Argument2"/> is the update message.
         /// </remarks>
-        public event EventHandler<EventArgs<MessageType, string>> StatusMessage;
+        public event EventHandler<EventArgs<UpdateType, string>> StatusUpdate;
 
         /// <summary>
         /// Occurs when the <see cref="IAdapter"/> encounters an <see cref="Exception"/> during execution.
@@ -582,14 +582,14 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Raises the <see cref="StatusMessage"/> event.
+        /// Raises the <see cref="StatusUpdate"/> event.
         /// </summary>
-        /// <param name="updateType"><see cref="MessageType"/> to send to <see cref="StatusMessage"/> event.</param>
-        /// <param name="updateMessage">Update message to send to <see cref="StatusMessage"/> event.</param>
-        protected virtual void OnStatusMessage(MessageType updateType, string updateMessage)
+        /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
+        /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
+        protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage)
         {
-            if (StatusMessage != null)
-                StatusMessage(this, new EventArgs<MessageType, string>(updateType, updateMessage));
+            if (StatusUpdate != null)
+                StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, updateMessage));
         }
 
         /// <summary>

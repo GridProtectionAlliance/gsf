@@ -378,7 +378,7 @@ namespace TVA.Services.ServiceProcess
         // Nested Types
         private class StatusUpdate
         {
-            public StatusUpdate(Guid client, MessageType type, string message)
+            public StatusUpdate(Guid client, UpdateType type, string message)
             {
                 this.Client = client;
                 this.Type = type;
@@ -386,7 +386,7 @@ namespace TVA.Services.ServiceProcess
             }
 
             public Guid Client;
-            public MessageType Type;
+            public UpdateType Type;
             public string Message;
         }
 
@@ -635,8 +635,8 @@ namespace TVA.Services.ServiceProcess
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(MessageType,string,object[])"/> 
-        /// or <see cref="UpdateStatus(Guid,MessageType,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
+        /// Gets or sets a boolean value that indicates whether messages sent using <see cref="UpdateStatus(UpdateType,string,object[])"/> 
+        /// or <see cref="UpdateStatus(Guid,UpdateType,string,object[])"/> are to be logged to the <see cref="StatusLog"/>.
         /// </summary>
         [Category("Updates"),
         DefaultValue(DefaultLogStatusUpdates),
@@ -1604,9 +1604,9 @@ namespace TVA.Services.ServiceProcess
         /// Provides a status update to all <see cref="RemoteClients"/>.
         /// </summary>
         /// <param name="message">Text message to be transmitted to all <see cref="RemoteClients"/>.</param>
-        /// <param name="type">One of the <see cref="MessageType"/> values.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
-        public void UpdateStatus(MessageType type, string message, params object[] args)
+        public void UpdateStatus(UpdateType type, string message, params object[] args)
         {
             UpdateStatus(Guid.Empty, type, message, args);
         }
@@ -1615,10 +1615,10 @@ namespace TVA.Services.ServiceProcess
         /// Provides a status update to the specified <paramref name="client"/>.
         /// </summary>
         /// <param name="client">ID of the client to whom the <paramref name="message"/> is to be sent.</param>
-        /// <param name="type">One of the <see cref="MessageType"/> values.</param>
+        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
         /// <param name="message">Text message to be transmitted to the <paramref name="client"/>.</param>
         /// <param name="args">Arguments to be used for formatting the <paramref name="message"/>.</param>
-        public void UpdateStatus(Guid client, MessageType type, string message, params object[] args)
+        public void UpdateStatus(Guid client, UpdateType type, string message, params object[] args)
         {
             if (!m_suppressUpdates)
             {
@@ -1941,7 +1941,7 @@ namespace TVA.Services.ServiceProcess
                     else
                     {
                         SendUpdateClientStatusResponse(item.Client, item.Type, item.Message.TruncateRight(m_maxStatusUpdatesLength));
-                        SendUpdateClientStatusResponse(item.Client, MessageType.Warning, string.Format("\r\nSuppressed {0:N0} status update character(s) from being displayed to avoid flooding.\r\n\r\n", item.Message.Length - m_maxStatusUpdatesLength));
+                        SendUpdateClientStatusResponse(item.Client, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update character(s) from being displayed to avoid flooding.\r\n\r\n", item.Message.Length - m_maxStatusUpdatesLength));
                     }
                 }
                 else
@@ -1955,7 +1955,7 @@ namespace TVA.Services.ServiceProcess
             }
 
             if (suppressedUpdates > 0)
-                SendUpdateClientStatusResponse(Guid.Empty, MessageType.Warning, string.Format("\r\nSuppressed {0:N0} status update(s) from being displayed to avoid flooding.\r\n\r\n", suppressedUpdates));
+                SendUpdateClientStatusResponse(Guid.Empty, UpdateType.Warning, string.Format("\r\nSuppressed {0:N0} status update(s) from being displayed to avoid flooding.\r\n\r\n", suppressedUpdates));
         }
 
         private void SendAuthenticationSuccessResponse(Guid clientID)
@@ -1968,7 +1968,7 @@ namespace TVA.Services.ServiceProcess
             SendResponse(clientID, new ServiceResponse("AuthenticationFailure"));
         }
 
-        private void SendUpdateClientStatusResponse(Guid clientID, MessageType type, string response)
+        private void SendUpdateClientStatusResponse(Guid clientID, UpdateType type, string response)
         {
             ServiceResponse serviceResponse = new ServiceResponse();
             serviceResponse.Type = "UPDATECLIENTSTATUS-" + type.ToString().ToUpper();
@@ -2014,13 +2014,13 @@ namespace TVA.Services.ServiceProcess
         {
             // We'll let the connected clients know that we encountered an exception while logging the status update.
             m_logStatusUpdates = false;
-            UpdateStatus(MessageType.Alarm, "Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Error occurred while logging status update - {0}\r\n\r\n", e.Argument.Message);
             m_logStatusUpdates = true;
         }
 
         private void ErrorLogger_LoggingException(object sender, EventArgs<Exception> e)
         {
-            UpdateStatus(MessageType.Alarm, "Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
+            UpdateStatus(UpdateType.Alarm, "Error occurred while logging an error - {0}\r\n\r\n", e.Argument.Message);
         }
 
         private void RemotingServer_ClientDisconnected(object sender, EventArgs<Guid> e)
@@ -2047,7 +2047,7 @@ namespace TVA.Services.ServiceProcess
                 {
                     m_remoteClients.Remove(disconnectedClient);
                 }
-                UpdateStatus(MessageType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
+                UpdateStatus(UpdateType.Information, "Remote client disconnected - {0} from {1}.\r\n\r\n", disconnectedClient.ClientUser.Identity.Name, disconnectedClient.MachineName);
             }
         }
 
@@ -2074,7 +2074,7 @@ namespace TVA.Services.ServiceProcess
                                 m_remoteClients.Add(client);
                             }
                             SendAuthenticationSuccessResponse(client.ClientID);
-                            UpdateStatus(MessageType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                            UpdateStatus(UpdateType.Information, "Remote client connected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
                         }
                         else
                         {
@@ -2094,7 +2094,7 @@ namespace TVA.Services.ServiceProcess
                         SendResponse(e.Argument1, new ServiceResponse("AuthenticationFailure"));
                         m_remotingServer.DisconnectOne(e.Argument1);
 
-                        UpdateStatus(MessageType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
+                        UpdateStatus(UpdateType.Warning, "Remote client connection rejected - {0} from {1}.\r\n\r\n", client.ClientUser.Identity.Name, client.MachineName);
                         m_errorLogger.Log(ex);
                     }
                     catch
@@ -2158,24 +2158,24 @@ namespace TVA.Services.ServiceProcess
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestSender.ClientID, MessageType.Alarm, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
+                        UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request \"{0}\" - {1}.\r\n\r\n", request.Command, ex.Message);
                     }
                 }
                 else
                 {
-                    UpdateStatus(requestSender.ClientID, MessageType.Alarm, "Failed to process request - Request could not be deserialized.\r\n\r\n");
+                    UpdateStatus(requestSender.ClientID, UpdateType.Alarm, "Failed to process request - Request could not be deserialized.\r\n\r\n");
                 }
             }
         }
 
         private void RemoteCommandProcess_ErrorDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, MessageType.Alarm, e.Data + "\r\n");
+            UpdateStatus(m_remoteCommandClientID, UpdateType.Alarm, e.Data + "\r\n");
         }
 
         private void RemoteCommandProcess_OutputDataReceived(object sender, System.Diagnostics.DataReceivedEventArgs e)
         {
-            UpdateStatus(m_remoteCommandClientID, MessageType.Information, e.Data + "\r\n");
+            UpdateStatus(m_remoteCommandClientID, UpdateType.Information, e.Data + "\r\n");
         }
 
         #region [ Client Request Handlers ]
@@ -2201,7 +2201,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2259,11 +2259,11 @@ namespace TVA.Services.ServiceProcess
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "No clients are connected to {0}\r\n\r\n", Name);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No clients are connected to {0}\r\n\r\n", Name);
                 }
             }
         }
@@ -2289,7 +2289,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2340,7 +2340,7 @@ namespace TVA.Services.ServiceProcess
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2373,7 +2373,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2429,7 +2429,7 @@ namespace TVA.Services.ServiceProcess
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
                 else
                 {
@@ -2490,12 +2490,12 @@ namespace TVA.Services.ServiceProcess
                         responseMessage.AppendLine();
                         responseMessage.AppendLine();
 
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                     }
                     else
                     {
                         // No processes defined in the service to be displayed.
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "No processes are defined in {0}.\r\n\r\n", Name);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No processes are defined in {0}.\r\n\r\n", Name);
                     }
                 }
             }
@@ -2522,7 +2522,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2562,11 +2562,11 @@ namespace TVA.Services.ServiceProcess
                     responseMessage.AppendLine();
                     responseMessage.AppendLine();
 
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "No process schedules are defined in {0}.\r\n\r\n", Name);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "No process schedules are defined in {0}.\r\n\r\n", Name);
                 }
             }
         }
@@ -2592,7 +2592,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2628,7 +2628,7 @@ namespace TVA.Services.ServiceProcess
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2653,7 +2653,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2688,7 +2688,7 @@ namespace TVA.Services.ServiceProcess
                 responseMessage.AppendLine();
                 responseMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, responseMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, responseMessage.ToString());
             }
         }
 
@@ -2716,19 +2716,19 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 if (m_performanceMonitor != null)
                 {
                     if (requestInfo.Request.Arguments.Exists("lifetime"))
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.LifetimeStatus + "\r\n");
                     else
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "\r\n" + m_performanceMonitor.Status + "\r\n");
                 }
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Warning, "Performance monitor is not available.");
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Warning, "Performance monitor is not available.");
             }
         }
 
@@ -2753,11 +2753,11 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, Status);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, Status);
             }
         }
 
@@ -2785,7 +2785,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2801,13 +2801,13 @@ namespace TVA.Services.ServiceProcess
                             string.Compare(categoryName, typedComponent.SettingsCategory, true) == 0)
                         {
                             typedComponent.LoadSettings();
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded settings from category \"{0}\".\r\n\r\n", categoryName);
                             return;
                         }
                     }
                 }
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to load settings from category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to load settings from category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
@@ -2849,7 +2849,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -2878,14 +2878,14 @@ namespace TVA.Services.ServiceProcess
                                 // Add new setting.
                                 if (setting == null)
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to add setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                     settings.Add(settingName, settingValue);
                                     config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully added setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                                 }
                                 else
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to add setting \"{0}\" under category \"{1}\". Setting already exists.\r\n\r\n", settingName, categoryName);
                                     return;
                                 }
                             }
@@ -2894,14 +2894,14 @@ namespace TVA.Services.ServiceProcess
                                 // Delete existing setting.
                                 if (setting != null)
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to delete setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                     settings.Remove(setting);
                                     config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully deleted setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                                 }
                                 else
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to delete setting \"{0}\" under category \"{1}\". Setting does not exist.\r\n\r\n", settingName, categoryName);
                                     return;
                                 }
                             }
@@ -2910,14 +2910,14 @@ namespace TVA.Services.ServiceProcess
                                 // Update existing setting.
                                 if (setting != null)
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to update setting \"{0}\" under category \"{1}\"...\r\n\r\n", settingName, categoryName);
                                     setting.Value = settingValue;
                                     config.Save();
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully updated setting \"{0}\" under category \"{1}\".\r\n\r\n", settingName, categoryName);
                                 }
                                 else
                                 {
-                                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
+                                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update value of setting \"{0}\" under category \"{1}\" . Setting does not exist.\r\n\r\n", settingName, categoryName);
                                     return;
                                 }
                             }
@@ -2941,7 +2941,7 @@ namespace TVA.Services.ServiceProcess
                     }
                 }
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to update settings under category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to update settings under category \"{0}\". No corresponding component exists.\r\n\r\n", categoryName);
             }
         }
 
@@ -2983,7 +2983,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3004,18 +3004,18 @@ namespace TVA.Services.ServiceProcess
                     // Start system process.
                     try
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start system process \"{0}\"...\r\n\r\n", processName);
                         Process startedProcess = Process.Start(processName, processArgs);
 
                         if (startedProcess != null)
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started system process \"{0}\".\r\n\r\n", processName);
                         else
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\".\r\n\r\n", processName);
                     }
                     catch (Exception ex)
                     {
                         m_errorLogger.Log(ex);
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                     }
                 }
                 else
@@ -3026,7 +3026,7 @@ namespace TVA.Services.ServiceProcess
                     {
                         if (processToStart.CurrentState != ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to start service process \"{0}\"...\r\n\r\n", processName);
                             if (string.IsNullOrEmpty(processArgs))
                             {
                                 processToStart.Start();
@@ -3040,16 +3040,16 @@ namespace TVA.Services.ServiceProcess
                                 // Start the service process.
                                 processToStart.Start(splitArgs);
                             }
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully started service process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully started service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to start process \"{0}\". Process is already executing.\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start process \"{0}\". Process is already executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to start service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
 
@@ -3096,7 +3096,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3135,26 +3135,26 @@ namespace TVA.Services.ServiceProcess
                     {
                         try
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to abort system process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort system process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Kill();
                             if (processToAbort.WaitForExit(10000))
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully aborted system process \"{0}\".\r\n\r\n", processName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted system process \"{0}\".\r\n\r\n", processName);
                             }
                             else
                             {
-                                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to abort system process \"{0}\". Process not responding.\r\n\r\n", processName);
+                                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". Process not responding.\r\n\r\n", processName);
                             }
                         }
                         catch (Exception ex)
                         {
                             m_errorLogger.Log(ex);
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". {1}.\r\n\r\n", processName, ex.Message);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort system process \"{0}\". Process is not running.\r\n\r\n", processName);
                     }
                 }
                 else
@@ -3165,18 +3165,18 @@ namespace TVA.Services.ServiceProcess
                     {
                         if (processToAbort.CurrentState == ServiceProcessState.Processing)
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to abort service process \"{0}\"...\r\n\r\n", processName);
                             processToAbort.Abort();
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully aborted service process \"{0}\".\r\n\r\n", processName);
                         }
                         else
                         {
-                            UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
+                            UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not executing.\r\n\r\n", processName);
                         }
                     }
                     else
                     {
-                        UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
+                        UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to abort service process \"{0}\". Process is not defined.\r\n\r\n", processName);
                     }
                 }
 
@@ -3262,7 +3262,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3274,9 +3274,9 @@ namespace TVA.Services.ServiceProcess
                 try
                 {
                     // Schedule the process if not scheduled or update its schedule if scheduled.
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to schedule process \"{0}\" with rule \"{1}\"...\r\n\r\n", processName, scheduleRule);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to schedule process \"{0}\" with rule \"{1}\"...\r\n\r\n", processName, scheduleRule);
                     ScheduleProcess(processName, scheduleRule, true);
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully scheduled process \"{0}\" with rule \"{1}\".\r\n\r\n", processName, scheduleRule);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully scheduled process \"{0}\" with rule \"{1}\".\r\n\r\n", processName, scheduleRule);
 
                     if (saveSchedules)
                     {
@@ -3287,7 +3287,7 @@ namespace TVA.Services.ServiceProcess
                 catch (Exception ex)
                 {
                     m_errorLogger.Log(ex);
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to schedule process \"{0}\". {1}\r\n\r\n", processName, ex.Message);
                 }
 
                 if (listSchedules)
@@ -3325,7 +3325,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3337,9 +3337,9 @@ namespace TVA.Services.ServiceProcess
 
                 if (scheduleToRemove != null)
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to unschedule process \"{0}\"...\r\n\r\n", processName);
                     m_processScheduler.Schedules.Remove(scheduleToRemove);
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully unscheduled process \"{0}\".\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully unscheduled process \"{0}\".\r\n\r\n", processName);
 
                     if (saveSchedules)
                     {
@@ -3349,7 +3349,7 @@ namespace TVA.Services.ServiceProcess
                 }
                 else
                 {
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Alarm, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Alarm, "Failed to unschedule process \"{0}\". Process is not scheduled.\r\n\r\n", processName);
                 }
 
                 if (listSchedules)
@@ -3384,15 +3384,15 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to save process schedules to the config file...\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to save process schedules to the config file...\r\n\r\n");
                 m_processScheduler.SaveSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully saved process schedules to the config file.\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully saved process schedules to the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -3426,15 +3426,15 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
                 bool listSchedules = requestInfo.Request.Arguments.Exists("list");
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Attempting to load process schedules from the config file...\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Attempting to load process schedules from the config file...\r\n\r\n");
                 m_processScheduler.LoadSettings();
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Successfully loaded process schedules from the config file.\r\n\r\n");
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Successfully loaded process schedules from the config file.\r\n\r\n");
 
                 if (listSchedules)
                 {
@@ -3465,7 +3465,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3485,7 +3485,7 @@ namespace TVA.Services.ServiceProcess
                 versionInfo.AppendFormat("     Version: {0}\r\n", serviceAssembly.Version.ToString());
                 versionInfo.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, versionInfo.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, versionInfo.ToString());
             }
         }
 
@@ -3510,7 +3510,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3519,9 +3519,9 @@ namespace TVA.Services.ServiceProcess
                 //  Current system time: yyyy-MM-dd HH:mm:ss.fff, yyyy-MM-dd HH:mm:ss.fff UTC
                 // Total system runtime: xx days yy hours zz minutes ii seconds
                 if (m_remotingServer != null)
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, " Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, " Current system time: {0}, {1} UTC\r\nTotal system runtime: {2}\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"), m_remotingServer.RunTime.ToString());
                 else
-                    UpdateStatus(requestInfo.Sender.ClientID, MessageType.Information, "Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    UpdateStatus(requestInfo.Sender.ClientID, UpdateType.Information, "Current system time: {0}, {1} UTC\r\n\r\n", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"));
             }
         }
 
@@ -3552,7 +3552,7 @@ namespace TVA.Services.ServiceProcess
                 helpMessage.AppendLine();
                 helpMessage.AppendLine();
 
-                UpdateStatus(requestinfo.Sender.ClientID, MessageType.Information, helpMessage.ToString());
+                UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Information, helpMessage.ToString());
             }
             else
             {
@@ -3579,14 +3579,14 @@ namespace TVA.Services.ServiceProcess
                         m_remoteCommandProcess.BeginOutputReadLine();
                         m_remoteCommandProcess.BeginErrorReadLine();
 
-                        UpdateStatus(MessageType.Information, "Remote command session established - status updates are suspended.\r\n\r\n");
+                        UpdateStatus(UpdateType.Information, "Remote command session established - status updates are suspended.\r\n\r\n");
 
                         m_remoteCommandClientID = requestinfo.Sender.ClientID;
                         SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Established"));
                     }
                     else
                     {
-                        UpdateStatus(requestinfo.Sender.ClientID, MessageType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
+                        UpdateStatus(requestinfo.Sender.ClientID, UpdateType.Alarm, "Failed to establish remote command session - Password is invalid.\r\n\r\n");
                     }
                 }
                 else if (string.Compare(requestinfo.Request.Command, "Telnet", true) == 0 && m_remoteCommandProcess != null && disconnectSession)
@@ -3604,7 +3604,7 @@ namespace TVA.Services.ServiceProcess
                     m_remoteCommandClientID = Guid.Empty;
                     SendResponse(requestinfo.Sender.ClientID, new ServiceResponse("TelnetSession", "Terminated"));
 
-                    UpdateStatus(MessageType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
+                    UpdateStatus(UpdateType.Information, "Remote command session terminated - status updates are resumed.\r\n\r\n");
                 }
                 else if (m_remoteCommandProcess != null)
                 {
