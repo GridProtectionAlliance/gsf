@@ -407,7 +407,7 @@ namespace TimeSeriesFramework
         private bool m_enabled;                             // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
-        private long m_realTimeTicks;                       // Timstamp of real-time or the most recently received measurement
+        private long m_realTimeTicks;                       // Timestamp of real-time or the most recently received measurement
         private bool m_ignoreBadTimestamps;                 // Determines whether or not to ignore bad timestamps when sorting measurements
         private bool m_allowSortsByArrival;                 // Determines whether or not to sort incoming measurements with a bad timestamp by arrival
         private bool m_useLocalClockAsRealTime;             // Determines whether or not to use local system clock as "real-time"
@@ -445,11 +445,6 @@ namespace TimeSeriesFramework
         /// </remarks>
         protected ConcentratorBase()
         {
-#if UseHighResolutionTime
-            m_realTimeTicks = PrecisionTimer.UtcNow.Ticks;
-#else
-            m_realTime = DateTime.UtcNow.Ticks;
-#endif
             m_allowSortsByArrival = true;
             m_allowPreemptivePublishing = true;
             m_performTimestampReasonabilityCheck = true;
@@ -1518,6 +1513,24 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Double"/> value indicating the deviation, in seconds, from real-time.</returns>
         public double SecondsFromRealTime(Ticks timestamp)
         {
+            // Make sure real-time is initialized for initial distance calculation
+            if (m_realTimeTicks == 0)
+            {
+                long currentRealTimeTicks = m_realTimeTicks;
+                long currentTimeTicks;
+
+                if (m_performTimestampReasonabilityCheck)
+#if UseHighResolutionTime
+                    currentTimeTicks = PrecisionTimer.UtcNow.Ticks;
+#else
+                    currentTimeTicks = DateTime.UtcNow.Ticks;
+#endif
+                else
+                    currentTimeTicks = timestamp;
+
+                Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
+            }
+
             return (RealTime - timestamp).ToSeconds();
         }
 
@@ -1528,7 +1541,7 @@ namespace TimeSeriesFramework
         /// <returns>A <see cref="Double"/> value indicating the deviation in milliseconds.</returns>
         public double MillisecondsFromRealTime(Ticks timestamp)
         {
-            return (RealTime - timestamp).ToMilliseconds();
+            return SecondsFromRealTime(timestamp) / SI.Milli;
         }
 
         /// <summary>
