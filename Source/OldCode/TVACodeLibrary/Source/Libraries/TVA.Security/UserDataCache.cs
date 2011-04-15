@@ -11,6 +11,8 @@
 //  -----------------------------------------------------------------------------------------------------
 //  04/06/2011 - J. Ritchie Carroll
 //       Generated original version of source code.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization and deserialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -403,7 +405,7 @@ namespace TVA.Security
             // Wait for thread level lock on key table
             lock (m_userDataTable)
             {
-                serializedUserDataTable = Serialization.GetBytes(m_userDataTable);
+                serializedUserDataTable = Serialization.Serialize(m_userDataTable, SerializationFormat.Binary);
             }
 
             // File data is the serialized user data table, assigmnent will initiate auto-save if needed
@@ -436,7 +438,7 @@ namespace TVA.Security
         {
             // Decrypt data that was encrypted local to this machine
             byte[] serializedUserDataTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-            Dictionary<string, UserData> userDataTable = Serialization.GetObject<Dictionary<string, UserData>>(serializedUserDataTable);
+            Dictionary<string, UserData> userDataTable = Serialization.Deserialize<Dictionary<string, UserData>>(serializedUserDataTable, SerializationFormat.Binary);
 
             // Wait for thread level lock on user data table
             lock (m_userDataTable)

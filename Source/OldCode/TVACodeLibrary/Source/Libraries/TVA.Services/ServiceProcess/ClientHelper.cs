@@ -34,6 +34,8 @@
 //       Modified ReceivedServiceUpdate event to support the change in ServiceHelper.UpdateStatus().
 //  06/16/2010 - Pinal C. Patel
 //       Made changes necessary to implement role-based security.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new deserialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -856,8 +858,7 @@ namespace TVA.Services.ServiceProcess
         private void RemotingClient_ReceiveDataComplete(object sender, EventArgs<byte[], int> e)
         {
             ServiceResponse response = null;
-            Serialization.TryGetObject<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), out response);
-
+            Serialization.TryDeserialize<ServiceResponse>(e.Argument1.BlockCopy(0, e.Argument2), SerializationFormat.Binary, out response);
             if (response != null)
             {
                 switch (response.Type)

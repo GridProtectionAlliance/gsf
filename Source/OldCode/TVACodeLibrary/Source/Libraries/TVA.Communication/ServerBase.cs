@@ -29,6 +29,8 @@
 //      Edited Comments.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -1195,7 +1197,7 @@ namespace TVA.Communication
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         public virtual void SendTo(Guid clientID, object serializableObject)
         {
-            SendTo(clientID, Serialization.GetBytes(serializableObject));
+            SendTo(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>
@@ -1235,7 +1237,7 @@ namespace TVA.Communication
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         public virtual void Multicast(object serializableObject)
         {
-            Multicast(Serialization.GetBytes(serializableObject));
+            Multicast(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>
@@ -1293,7 +1295,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle SendToAsync(Guid clientID, object serializableObject)
         {
-            return SendToAsync(clientID, Serialization.GetBytes(serializableObject));
+            return SendToAsync(clientID, Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>
@@ -1346,7 +1348,7 @@ namespace TVA.Communication
         /// <returns>Array of <see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle[] MulticastAsync(object serializableObject)
         {
-            return MulticastAsync(Serialization.GetBytes(serializableObject));
+            return MulticastAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>

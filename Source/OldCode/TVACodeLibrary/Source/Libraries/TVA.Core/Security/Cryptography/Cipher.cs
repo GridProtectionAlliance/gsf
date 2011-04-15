@@ -37,6 +37,8 @@
 //  04/06/2011 - J. Ritchie Carroll
 //       Added FlushCache() method to wait for pending key/IV cache serializations for applications
 //       with a short lifecycle.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization and deserialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -508,7 +510,7 @@ namespace TVA.Security.Cryptography
                 // Wait for thread level lock on key table
                 lock (m_keyIVTable)
                 {
-                    serializedKeyIVTable = Serialization.GetBytes(m_keyIVTable);
+                    serializedKeyIVTable = Serialization.Serialize(m_keyIVTable, SerializationFormat.Binary);
                 }
 
                 // File data is the serialized Key/IV cache, assigmnent will initiate auto-save if needed
@@ -541,7 +543,7 @@ namespace TVA.Security.Cryptography
             {
                 // Decrypt data that was encrypted local to this machine
                 byte[] serializedKeyIVTable = ProtectedData.Unprotect(fileStream.ReadStream(), null, DataProtectionScope.LocalMachine);
-                Dictionary<string, byte[][]> keyIVTable = Serialization.GetObject<Dictionary<string, byte[][]>>(serializedKeyIVTable);
+                Dictionary<string, byte[][]> keyIVTable = Serialization.Deserialize<Dictionary<string, byte[][]>>(serializedKeyIVTable, SerializationFormat.Binary);
 
                 // Wait for thread level lock on key table
                 lock (m_keyIVTable)

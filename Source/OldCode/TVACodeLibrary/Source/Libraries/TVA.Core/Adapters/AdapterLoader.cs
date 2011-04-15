@@ -35,6 +35,8 @@
 //  04/05/2011 - Pinal C. Patel
 //       Modified Deserializer class to use TypeName property instead of Type property to get the type 
 //       of the object being deserialized when deserializing from an XML file.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -439,7 +441,7 @@ namespace TVA.Adapters
                 if (adapterFormat == AdapterFileFormat.SerializedBin)
                 {
                     // Attempt binary desrialization.
-                    return Serialization.GetObject<T>(File.ReadAllBytes(adapterFile));
+                    return Serialization.Deserialize<T>(File.ReadAllBytes(adapterFile), SerializationFormat.Binary);
                 }
                 else if (adapterFormat == AdapterFileFormat.SerializedXml)
                 {

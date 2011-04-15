@@ -297,10 +297,10 @@ namespace TVA
         /// <typeparam name="T">The type of the cloned object.</typeparam>
         /// <param name="sourceObject">The type source to be cloned.</param>
         /// <returns>A clone of <paramref name="sourceObject"/>.</returns>
-        //[Obsolete("This method will be removed in future builds.")]
+        [Obsolete("This method will be removed in future builds.")]
         public static T CloneObject<T>(T sourceObject)
         {
-            return GetObject<T>(GetBytes(sourceObject));
+            return Deserialize<T>(Serialize(sourceObject, SerializationFormat.Binary), SerializationFormat.Binary);
         }
 
         /// <summary>
@@ -317,7 +317,7 @@ namespace TVA
         /// <typeparam name="T">The type of the object to create from the serialized string <paramref name="serializedObject"/>.</typeparam>
         /// <param name="serializedObject">A <see cref="string"/> representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static T GetObject<T>(string serializedObject)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(T));
@@ -331,7 +331,7 @@ namespace TVA
         /// <param name="serializedObject"><see cref="string"/> that contains the serialized representation of the object.</param>
         /// <param name="deserializedObject">An object of type T that is passed in as the container to hold the de-serialized object from the string <paramref name="serializedObject"/>.</param>
         /// <returns><see cref="bool"/> value indicating if the de-serialization was successful.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject<T>(string serializedObject, out T deserializedObject)
         {
             try
@@ -358,7 +358,7 @@ namespace TVA
         /// <typeparam name="T">The type of the object to create from the serialized byte array <paramref name="serializedObject"/>.</typeparam>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <returns>A type T based on <paramref name="serializedObject"/>.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static T GetObject<T>(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -372,7 +372,7 @@ namespace TVA
         /// <param name="deserializedObject">A byref type T that is passed in to be hold the de-serialized object.</param>
         /// <typeparam name="T">The generic type T that is to be deserialized.</typeparam>
         /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject<T>(byte[] serializedObject, out T deserializedObject)
         {
             try
@@ -398,7 +398,7 @@ namespace TVA
         /// <exception cref="System.Security.SecurityException">The caller does not have the required permission. </exception>
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <returns>An <see cref="object"/> based on <paramref name="serializedObject"/>.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static object GetObject(byte[] serializedObject)
         {
             BinaryFormatter serializer = new BinaryFormatter();
@@ -411,7 +411,7 @@ namespace TVA
         /// <param name="serializedObject">A <see cref="byte"/> array representing the object (<paramref name="serializedObject"/>) to de-serialize.</param>
         /// <param name="deserializedObject">A byref <see cref="object"></see> that is passed in to be hold the de-serialized object.</param>
         /// <returns>A <see cref="bool"/> which indicates whether the de-serialization process was successful.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Deserialize() method instead.")]
         public static bool TryGetObject(byte[] serializedObject, out object deserializedObject)
         {
             try
@@ -431,7 +431,7 @@ namespace TVA
         /// </summary>
         /// <param name="serializableObject">The serializable object.</param>
         /// <returns>An XML representation of the object if the specified object can be serialized; otherwise an empty string.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
         public static string GetString(object serializableObject)
         {
             StringWriter serializedObject = new StringWriter();
@@ -446,7 +446,7 @@ namespace TVA
         /// </summary>
         /// <param name="serializableObject">The serializable object.</param>
         /// <returns>A byte array representation of the object if the specified object can be serialized; otherwise an empty array.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
         public static byte[] GetBytes(object serializableObject)
         {
             return GetStream(serializableObject).ToArray();
@@ -457,7 +457,7 @@ namespace TVA
         /// </summary>
         /// <param name="serializableObject">The serializable object.</param>
         /// <returns>A memory stream representation of the object if the specified object can be serialized; otherwise an empty stream.</returns>
-        //[Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
+        [Obsolete("This method will be removed in future builds, use the Serialize() method instead.")]
         public static MemoryStream GetStream(object serializableObject)
         {
             MemoryStream dataStream = new MemoryStream();
@@ -472,6 +472,32 @@ namespace TVA
         }
 
         #endregion
+
+        /// <summary>
+        /// Serializes an <see cref="Object"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of the <paramref name="serializableObject"/>.</typeparam>
+        /// <param name="serializableObject"><see cref="Object"/> to be serialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
+        /// <returns>An <see cref="Array"/> of <see cref="Byte"/> of the serialized <see cref="Object"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="serializableObject"/> is null.</exception>
+        /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
+        public static byte[] Serialize<T>(T serializableObject, SerializationFormat serializationFormat)
+        {
+            Stream stream = null;
+            try
+            {
+                stream = new MemoryStream();
+                Serialize(serializableObject, serializationFormat, ref stream);
+
+                return stream.ReadStream();
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Dispose();
+            }
+        }
 
         /// <summary>
         /// Serializes an <see cref="Object"/>.
@@ -529,23 +555,25 @@ namespace TVA
         }
 
         /// <summary>
-        /// Serializes an <see cref="Object"/>.
+        /// Deserializes a serialized <see cref="Object"/>.
         /// </summary>
-        /// <typeparam name="T"><see cref="Type"/> of the <paramref name="serializableObject"/>.</typeparam>
-        /// <param name="serializableObject"><see cref="Object"/> to be serialized.</param>
-        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializableObject"/> is to be serialized.</param>
-        /// <returns>An <see cref="Array"/> of <see cref="Byte"/> of the serialized <see cref="Object"/>.</returns>
-        /// <exception cref="ArgumentNullException"><paramref name="serializableObject"/> is null.</exception>
+        /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
+        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+        /// <returns>The deserialized <see cref="Object"/>.</returns>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedObject"/> is null.</exception>
         /// <exception cref="NotSupportedException">Specified <paramref name="serializationFormat"/> is not supported.</exception>
-        public static byte[] Serialize<T>(T serializableObject, SerializationFormat serializationFormat)
+        public static T Deserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat)
         {
-            Stream stream =  null;
+            if (serializedObject == null)
+                throw new ArgumentNullException("serializedObject");
+
+            Stream stream = null;
             try
             {
-                stream = new MemoryStream();
-                Serialize(serializableObject, serializationFormat, ref stream);
+                stream = new MemoryStream(serializedObject);
 
-                return stream.ReadStream();
+                return Serialization.Deserialize<T>(stream, serializationFormat);
             }
             finally
             {
@@ -604,6 +632,44 @@ namespace TVA
             }
 
             return deserializedObject;
+        }
+
+        /// <summary>
+        /// Attempts to deserialize a serialized <see cref="Object"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
+        /// <param name="serializedObject"><see cref="Array"/> of <see cref="Byte"/>s contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+        /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
+        public static void TryDeserialize<T>(byte[] serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
+        {
+            deserializedObject = default(T);
+            try
+            {
+                deserializedObject = Deserialize<T>(serializedObject, serializationFormat);
+            }
+            catch
+            {
+            }
+        }
+
+        /// <summary>
+        /// Attempts to deserialize a serialized <see cref="Object"/>.
+        /// </summary>
+        /// <typeparam name="T"><see cref="Type"/> of the deserialized <see cref="Object"/> to be returned.</typeparam>
+        /// <param name="serializedObject"><see cref="Stream"/> contaning the serialized <see cref="Object"/> that is to be deserialized.</param>
+        /// <param name="serializationFormat"><see cref="SerializationFormat"/> in which the <paramref name="serializedObject"/> was serialized.</param>
+        /// <param name="deserializedObject">Deserialized <see cref="Object"/>.</param>
+        public static void TryDeserialize<T>(Stream serializedObject, SerializationFormat serializationFormat, out T deserializedObject)
+        {
+            deserializedObject = default(T);
+            try
+            {
+                deserializedObject = Deserialize<T>(serializedObject, serializationFormat);
+            }
+            catch
+            {
+            }
         }
 
         #endregion

@@ -36,6 +36,8 @@
 //  11/29/2010 - Pinal C. Patel
 //       Updated the implementation of Connect() method so it blocks correctly after updates made to 
 //       ConnectAsync() method in the derived classes.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -1222,7 +1224,7 @@ namespace TVA.Communication
         /// <param name="serializableObject">The serializable object that is to be sent.</param>
         public virtual void Send(object serializableObject)
         {
-            Send(Serialization.GetBytes(serializableObject));
+            Send(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>
@@ -1262,7 +1264,7 @@ namespace TVA.Communication
         /// <returns><see cref="WaitHandle"/> for the asynchronous operation.</returns>
         public virtual WaitHandle SendAsync(object serializableObject)
         {
-            return SendAsync(Serialization.GetBytes(serializableObject));
+            return SendAsync(Serialization.Serialize(serializableObject, SerializationFormat.Binary));
         }
 
         /// <summary>

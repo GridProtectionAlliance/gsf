@@ -68,6 +68,8 @@
 //       Updated VerifySecurity() to work correctly with TCP integrated windows authentication. 
 //  03/09/2011 - Pinal C. Patel
 //       Moved UpdateType enumeration to TVA namespace in TVA.Core.dll for broader usage.
+//  04/14/2011 - Pinal C. Patel
+//       Updated to use new serialization methods in TVA.Serialization class.
 //
 //*******************************************************************************************************
 
@@ -2056,7 +2058,7 @@ namespace TVA.Services.ServiceProcess
             {
                 // First message from a remote client should be its info.
                 ClientInfo client = null;
-                Serialization.TryGetObject<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3), out client);
+                Serialization.TryDeserialize<ClientInfo>(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out client);
                 try
                 {
                     if (client != null)
@@ -2104,7 +2106,7 @@ namespace TVA.Services.ServiceProcess
             {
                 // All subsequest messages from a remote client would be requests.
                 ClientRequest request = null;
-                Serialization.TryGetObject<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), out request);
+                Serialization.TryDeserialize<ClientRequest>(e.Argument2.BlockCopy(0, e.Argument3), SerializationFormat.Binary, out request);
                 if (request != null)
                 {
                     try
