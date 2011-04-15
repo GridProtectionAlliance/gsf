@@ -412,10 +412,26 @@
             <see cref="P:TimeSeriesFramework.ConcentratorBase.LeadTime"/> tolerance).
             </summary>
             <remarks>
-            Setting this value to false will make the concentrator use the latest value received as "real-time"
+            Setting this value to <c>false</c> will make the concentrator use the latest value received as "real-time"
             without validation; this is not recommended in production since time reported by source devices may
             be grossly incorrect. For non-production configurations, setting this value to false will allow
             concentration of historical data.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp">
+            <summary>
+            Gets or sets flag that determines if concentrator should short measurements by received flag.
+            </summary>
+            <remarks>
+            <para>
+            Setting this value to <c>true</c> will make concentrator use the timestamp of measurement reception, which
+            is typically the <see cref="T:TimeSeriesFramework.IMeasurement"/> creation time, for sorting and publication. This is useful in
+            scenarios where the concentrator will be receiving very large volumes of data but not necessarily in
+            real-time, such as, reading data from a file where you want it sorted and processed as fast as possible.
+            </para>
+            <para>
+            Setting this value to <c>true</c> will force <see cref="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime"/> to be <c>true</c>.
+            </para>
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.Enabled">
@@ -467,11 +483,17 @@
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime">
             <summary>
-            Gets or sets flag that determines whether or not to use the local clock time as real time.
+            Gets or sets flag that determines whether or not to use the local clock time as real-time.
             </summary>
             <remarks>
-            Use your local system clock as real time only if the time is locally GPS-synchronized,
+            <para>
+            Use your local system clock as real-time only if the time is locally GPS-synchronized,
             or if the measurement values being sorted were not measured relative to a GPS-synchronized clock.
+            </para>
+            <para>
+            If <see cref="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp"/> is <c>true</c>, <see cref="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime"/> will
+            always be set to <c>true</c>, even if you try to set it to <c>false</c>.
+            </para>
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.RealTime">
@@ -664,7 +686,7 @@
         </member>
         <member name="P:TimeSeriesFramework.IFrame.Published">
             <summary>
-            Gets or sets published state of this <see cref="T:TimeSeriesFramework.IFrame"/>.
+            Gets or sets published state of this <see cref="T:TimeSeriesFramework.IFrame"/> (pre-processing).
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.IFrame.SortedMeasurements">
@@ -681,6 +703,24 @@
             </summary>
             <remarks>
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IFrame.ReceivedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.IMeasurement"/> was received (i.e., created).
+            </summary>
+            <remarks>
+            <para>Implementors should set this timestamp to be the ticks of <see cref="P:TVA.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IFrame.PublishedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.IMeasurement"/> was published (post-processing).
+            </summary>
+            <remarks>
+            <para>Implementors should update all associated <see cref="P:TimeSeriesFramework.IMeasurement.PublishedTimestamp"/> values when setting this property.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.IFrame.LastSortedMeasurement">
@@ -814,7 +854,7 @@
         </member>
         <member name="P:TimeSeriesFramework.Frame.Published">
             <summary>
-            Gets or sets published state of this <see cref="T:TimeSeriesFramework.Frame"/>.
+            Gets or sets published state of this <see cref="T:TimeSeriesFramework.Frame"/> (pre-processing).
             </summary>
         </member>
         <member name="P:TimeSeriesFramework.Frame.SortedMeasurements">
@@ -831,6 +871,24 @@
             </summary>
             <remarks>
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Frame.ReceivedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.Frame"/> was received (i.e., created).
+            </summary>
+            <remarks>
+            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:TVA.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Frame.PublishedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.Frame"/> was published (post-processing).
+            </summary>
+            <remarks>
+            <para>In the default implementation, setting this property will update all associated <see cref="P:TimeSeriesFramework.IMeasurement.PublishedTimestamp"/>.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.Frame.LastSortedMeasurement">
@@ -1029,6 +1087,23 @@
         <member name="P:TimeSeriesFramework.IMeasurement.Timestamp">
             <summary>
             Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="T:TimeSeriesFramework.IMeasurement"/>.
+            </summary>
+            <remarks>
+            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IMeasurement.ReceivedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.IMeasurement"/> was received (i.e., created).
+            </summary>
+            <remarks>
+            <para>Implementors should set this timestamp to be the ticks of <see cref="P:TVA.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.IMeasurement.PublishedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.IMeasurement"/> was published (post-processing).
             </summary>
             <remarks>
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
@@ -1497,6 +1572,23 @@
         <member name="P:TimeSeriesFramework.Measurement.Timestamp">
             <summary>
             Gets or sets exact timestamp, in ticks, of the data represented by this <see cref="T:TimeSeriesFramework.Measurement"/>.
+            </summary>
+            <remarks>
+            The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Measurement.ReceivedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.Measurement"/> was received (i.e., created).
+            </summary>
+            <remarks>
+            <para>In the default implementation, this timestamp will simply be the ticks of <see cref="P:TVA.PrecisionTimer.UtcNow"/> of when this class was created.</para>
+            <para>The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.</para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Measurement.PublishedTimestamp">
+            <summary>
+            Gets or sets exact timestamp, in ticks, of when this <see cref="T:TimeSeriesFramework.Measurement"/> was published (post-processing).
             </summary>
             <remarks>
             The value of this property represents the number of 100-nanosecond intervals that have elapsed since 12:00:00 midnight, January 1, 0001.
