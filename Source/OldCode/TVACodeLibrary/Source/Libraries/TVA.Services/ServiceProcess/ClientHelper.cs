@@ -303,7 +303,7 @@ namespace TVA.Services.ServiceProcess
         /// </summary>
         [Category("Client"),
         Description("Occurs when a status update is received from the ServiceHelper.")]
-        public event EventHandler<EventArgs<UpdateType, string>> ReceivedServiceUpdate;
+        public event EventHandler<EventArgs<MessageType, string>> ReceivedServiceUpdate;
 
         /// <summary>
         /// Occurs when a custom <see cref="ServiceResponse"/> is received from the <see cref="ServiceHelper"/>.
@@ -690,7 +690,7 @@ namespace TVA.Services.ServiceProcess
             if (requestInstance != null)
                 SendRequest(requestInstance);
             else
-                UpdateStatus(UpdateType.Warning, string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
+                UpdateStatus(MessageType.Warning, string.Format("Request command \"{0}\" is invalid\r\n\r\n", request));
         }
 
         /// <summary>
@@ -705,12 +705,12 @@ namespace TVA.Services.ServiceProcess
         /// <summary>
         /// Raises the <see cref="ReceivedServiceUpdate"/> event.
         /// </summary>
-        /// <param name="type">One of the <see cref="UpdateType"/> values.</param>
+        /// <param name="type">One of the <see cref="MessageType"/> values.</param>
         /// <param name="update">Update message received.</param>
-        protected virtual void OnReceivedServiceUpdate(UpdateType type, string update)
+        protected virtual void OnReceivedServiceUpdate(MessageType type, string update)
         {
             if (ReceivedServiceUpdate != null)
-                ReceivedServiceUpdate(this, new EventArgs<UpdateType, string>(type, update));
+                ReceivedServiceUpdate(this, new EventArgs<MessageType, string>(type, update));
         }
 
         /// <summary>
@@ -815,14 +815,14 @@ namespace TVA.Services.ServiceProcess
             }
         }
 
-        private void UpdateStatus(UpdateType type, string message, params object[] args)
+        private void UpdateStatus(MessageType type, string message, params object[] args)
         {
             OnReceivedServiceUpdate(type, string.Format(message, args));
         }
 
         private void RemotingClient_ConnectionAttempt(object sender, System.EventArgs e)
         {
-            UpdateStatus(UpdateType.Information, "Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
+            UpdateStatus(MessageType.Information, "Connecting to {0}...\r\n\r\n", m_remotingClient.ServerUri);
         }
 
         private void RemotingClient_ConnectionEstablished(object sender, System.EventArgs e)
@@ -837,7 +837,7 @@ namespace TVA.Services.ServiceProcess
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Information, status.ToString());
+            UpdateStatus(MessageType.Information, status.ToString());
         }
 
         private void RemotingClient_ConnectionTerminated(object sender, System.EventArgs e)
@@ -848,7 +848,7 @@ namespace TVA.Services.ServiceProcess
             status.AppendLine();
             status.Append(m_remotingClient.Status);
             status.AppendLine();
-            UpdateStatus(UpdateType.Warning, status.ToString());
+            UpdateStatus(MessageType.Warning, status.ToString());
 
             // Attempt reconnection on a seperate thread.
             if (m_attemptReconnection)
@@ -864,13 +864,13 @@ namespace TVA.Services.ServiceProcess
                 switch (response.Type)
                 {
                     case "UPDATECLIENTSTATUS-INFORMATION":
-                        UpdateStatus(UpdateType.Information, response.Message);
+                        UpdateStatus(MessageType.Information, response.Message);
                         break;
                     case "UPDATECLIENTSTATUS-WARNING":
-                        UpdateStatus(UpdateType.Warning, response.Message);
+                        UpdateStatus(MessageType.Warning, response.Message);
                         break;
                     case "UPDATECLIENTSTATUS-ALARM":
-                        UpdateStatus(UpdateType.Alarm, response.Message);
+                        UpdateStatus(MessageType.Alarm, response.Message);
                         break;
                     case "AUTHENTICATIONSUCCESS":
                         OnAuthenticationSuccess();
@@ -889,13 +889,13 @@ namespace TVA.Services.ServiceProcess
                                 OnServiceStateChanged(state);
 
                                 // Provide a status update for change in state of the service.
-                                UpdateType type = UpdateType.Information;
+                                MessageType type = MessageType.Information;
                                 switch (state.CurrentState)
                                 {
                                     case ServiceState.Stopped:
                                     case ServiceState.Paused:
                                     case ServiceState.Shutdown:
-                                        type = UpdateType.Warning;
+                                        type = MessageType.Warning;
                                         break;
                                 }
                                 UpdateStatus(type, string.Format("State of service \"{0}\" has changed to \"{1}\".\r\n\r\n", state.ObjectName, state.CurrentState));
@@ -913,12 +913,12 @@ namespace TVA.Services.ServiceProcess
                                 OnProcessStateChanged(state);
 
                                 // Provide a status update for change in state of the service process.
-                                UpdateType type = UpdateType.Information;
+                                MessageType type = MessageType.Information;
                                 switch (state.CurrentState)
                                 {
                                     case ServiceProcessState.Aborted:
                                     case ServiceProcessState.Exception:
-                                        type = UpdateType.Alarm;
+                                        type = MessageType.Alarm;
                                         break;
 
                                 }

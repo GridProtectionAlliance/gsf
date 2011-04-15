@@ -391,18 +391,18 @@ namespace UDPRebroadcasterConsole
             Console.WriteLine();
         }
 
-        private void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<UpdateType, string> e)
+        private void ClientHelper_ReceivedServiceUpdate(object sender, EventArgs<MessageType, string> e)
         {
             // Output status updates from the service to the console window.
             switch (e.Argument1)
             {
-                case UpdateType.Alarm:
+                case MessageType.Alarm:
                     Console.ForegroundColor = ConsoleColor.Red;
                     break;
-                case UpdateType.Information:
+                case MessageType.Information:
                     Console.ForegroundColor = m_originalFgColor;
                     break;
-                case UpdateType.Warning:
+                case MessageType.Warning:
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     break;
             }
