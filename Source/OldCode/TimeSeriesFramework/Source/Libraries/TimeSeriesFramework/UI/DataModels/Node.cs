@@ -27,13 +27,16 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
     /// Creates a new object that represents a Node
     /// </summary>
-    public class Node
+    public class Node : DataModelBase
     {        
         #region [ Members ]
 
@@ -48,7 +51,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private bool m_master;
         private int m_loadOrder;
         private bool m_enabled;
-        private string m_timeSeriesDataServiceUrl;
+        //private string m_timeSeriesDataServiceUrl;
         private string m_remoteStatusServiceUrl;
         private string m_realTimeStatisticServiceUrl;
         private string m_companyName;
@@ -222,21 +225,21 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets the current <see cref="Node"/>'s Time Series Data Service URL.
-        /// </summary>
-        [DataType(DataType.Url, ErrorMessage="Time Series Data Service URL is not formatted properly.")]
-        public string TimeSeriesDataServiceUrl
-        {
-            get 
-            { 
-                return m_timeSeriesDataServiceUrl; 
-            }
-            set 
-            { 
-                m_timeSeriesDataServiceUrl = value; 
-            }
-        }
+        ///// <summary>
+        ///// Gets or sets the current <see cref="Node"/>'s Time Series Data Service URL.
+        ///// </summary>
+        //[DataType(DataType.Url, ErrorMessage="Time Series Data Service URL is not formatted properly.")]
+        //public string TimeSeriesDataServiceUrl
+        //{
+        //    get 
+        //    { 
+        //        return m_timeSeriesDataServiceUrl; 
+        //    }
+        //    set 
+        //    { 
+        //        m_timeSeriesDataServiceUrl = value; 
+        //    }
+        //}
 
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Remote Status Service URL.
@@ -350,6 +353,183 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion        
+        #endregion   
+     
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Node"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="enabledOnly">Indicates if returned collection should include only enabled <see cref="Node"/>s or all. </param>
+        /// <returns>Collection of <see cref="Node"/>.</returns>
+        public static ObservableCollection<Node> Load(AdoDataConnection database, bool enabledOnly)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                ObservableCollection<Node> nodeList = new ObservableCollection<Node>();
+                DataTable nodeTable;
+
+                if (enabledOnly)
+                    nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
+                        "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
+                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail Where Enabled = @enabled Order By LoadOrder", true);
+                else
+                    nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
+                        "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
+                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail Order By LoadOrder");
+
+                foreach (DataRow row in nodeTable.Rows)
+                {
+                    nodeList.Add(new Node()
+                        {
+                            ID = row.Field<object>("ID").ToString(),
+                            Name = row.Field<string>("Name"),
+                            CompanyID = row.Field<int?>("CompanyID"),
+                            Longitude = row.Field<decimal?>("Longitude"),
+                            Latitude = row.Field<decimal?>("Latitude"),
+                            Description = row.Field<string>("Description"),
+                            Image = row.Field<string>("ImagePath"),
+                            Master = Convert.ToBoolean(row.Field<object>("Master")),
+                            LoadOrder = row.Field<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            //TimeSeriesDataServiceUrl = row.Field<string>("TimeSeriesDataServiceUrl"),
+                            RemoteStatusServiceUrl = row.Field<string>("RemoteStatusServiceUrl"),
+                            RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
+                            CompanyName = row.Field<string>("CompanyName")
+                        });
+                }
+
+                return nodeList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Node"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of nodes defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> nodeList = new Dictionary<int, string>();
+                if (isOptional)
+                    nodeList.Add(0, "Select Node");
+
+                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node Where Enabled = @enabled ORDER BY LoadOrder", true);
+
+                foreach (DataRow row in nodeTable.Rows)
+                    nodeList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return nodeList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Node"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="node">Information about <see cref="Node"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Node node, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
+                        "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @companyID, " +
+                        "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
+                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
+                        node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
+                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("Update Node Set Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
+                        "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
+                        "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
+                        node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
+                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + node.ID + "}" : node.ID);
+
+                return "Node information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Node"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="nodeID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, string nodeID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + nodeID + "}" : nodeID);
+
+                return "Company deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
