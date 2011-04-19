@@ -350,5 +350,27 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Creates and instance of <see cref="AdoDataConnection"/> if it is null.
+        /// </summary>
+        /// <param name="database">Reference parameter representing <see cref="AdoDataConnection"/> object.</param>
+        /// <returns>Boolean, true if new instance of <see cref="AdoDataConnection"/> is created otherwise false.</returns>
+        public static bool CreateConnection(ref AdoDataConnection database)
+        {
+            if (database == null)
+            {
+                database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                return true;
+            }
+            else
+                return false;
+        }
+
+        #endregion
     }
 }

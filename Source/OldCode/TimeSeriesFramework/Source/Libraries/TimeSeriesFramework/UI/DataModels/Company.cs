@@ -245,14 +245,11 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Company> companyList = new ObservableCollection<Company>();
-                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM Company ORDER BY LoadOrder");
+                DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder " +
+                    "FROM Company ORDER BY LoadOrder");
 
                 foreach (DataRow row in companyTable.Rows)
                 {
@@ -287,11 +284,7 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> companyList = new Dictionary<int, string>();
                 if (isOptional)
@@ -323,11 +316,7 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
@@ -362,11 +351,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);

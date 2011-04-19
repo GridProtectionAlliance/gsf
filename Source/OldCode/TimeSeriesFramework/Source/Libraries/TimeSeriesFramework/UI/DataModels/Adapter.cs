@@ -27,6 +27,9 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -80,7 +83,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private int m_loadOrder;
         private bool m_enabled;
         private string m_nodeName;
-        private Adapter m_adapterType;
+        private AdapterType m_adapterType;
         private DateTime m_createdOn;
         private string m_createdBy;
         private DateTime m_updatedOn;
@@ -252,7 +255,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Adapter"/> adapterType
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public Adapter AdapterType
+        public AdapterType Type
         {
             get
             {
@@ -334,5 +337,186 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods      
+
+        /// <summary>
+        /// Loads <see cref="Adapter"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Adapter"/>.</returns>
+        public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType, string nodeID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                string viewName;
+                if (adapterType == AdapterType.Action)
+                    viewName = "CustomActionAdapterDetail";
+                else if (adapterType == AdapterType.Input)
+                    viewName = "CustomInputAdapterDetail";
+                else
+                    viewName = "CustomOutputAdapterDetail";
+
+                ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
+                    "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
+                    database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + nodeID + "}" : nodeID);
+
+                foreach (DataRow row in adapterTable.Rows)
+                {
+                    adapterList.Add(new Adapter()
+                    {
+                        NodeID = row.Field<object>("NodeID").ToString(),
+                        ID = row.Field<int>("ID"),
+                        AdapterName = row.Field<string>("AdapterName"),
+                        AssemblyName = row.Field<string>("AssemblyName"),
+                        TypeName = row.Field<string>("TypeName"),
+                        ConnectionString = row.Field<string>("ConnectionString"),
+                        LoadOrder = row.Field<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        NodeName = row.Field<string>("NodeName"),
+                        Type = adapterType
+                    });
+                }
+
+                return adapterList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Adapter"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="adapterType">Type of the <see cref="Adapter"/>.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of adapters defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, AdapterType adapterType, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> adapterList = new Dictionary<int, string>();
+                if (isOptional)
+                    adapterList.Add(0, "Select Adapter");
+
+                string tableName;
+                if (adapterType == AdapterType.Action)
+                    tableName = "CustomActionAdapter";
+                else if (adapterType == AdapterType.Input)
+                    tableName = "CustomInputAdapter";
+                else
+                    tableName = "CustomOutputAdapter";
+
+                DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM " + tableName + " WHERE Enabled = @enabled " +
+                    "ORDER BY LoadOrder", DefaultTimeout, true);
+
+                foreach (DataRow row in adapterTable.Rows)
+                    adapterList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return adapterList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Company"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="adapter">Information about <see cref="Adapter"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Adapter adapter, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                string tableName;
+                if (adapter.Type == AdapterType.Action)
+                    tableName = "CustomActionAdapter";
+                else if (adapter.Type == AdapterType.Input)
+                    tableName = "CustomInputAdapter";
+                else
+                    tableName = "CustomOutputAdapter";
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
+                        "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
+                        "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
+                        adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("Update " + tableName + " Set NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
+                        "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
+                        "UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
+                        adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, adapter.ID);
+
+                return "Adapter information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Company"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="adapterType">Type of adapter to determine from which table record to be deleted.</param>
+        /// <param name="adapterID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, AdapterType adapterType, int adapterID)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                string tableName;
+                if (adapterType == AdapterType.Action)
+                    tableName = "CustomActionAdapter";
+                else if (adapterType == AdapterType.Input)
+                    tableName = "CustomInputAdapter";
+                else
+                    tableName = "CustomOutputAdapter";
+
+                database.Connection.ExecuteNonQuery("DELETE FROM " + tableName + " WHERE ID = @adapterID", DefaultTimeout, adapterID);
+
+                return "Adapter deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
+
     }
 }

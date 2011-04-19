@@ -364,11 +364,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
                     nodeID = "{" + nodeID + "}";
@@ -376,7 +372,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
                 DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
                     "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail " +
-                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", nodeID);
+                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, nodeID);
                 
                 foreach (DataRow row in historianTable.Rows)
                 {
@@ -419,23 +415,18 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> historianList = new Dictionary<int, string>();
                 if (isOptional)
                     historianList.Add(0, "Select Historian");
 
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian ORDER BY LoadOrder");
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian WHERE Enabled = @enabled " +
+                    "ORDER BY LoadOrder", DefaultTimeout, true);
 
                 foreach (DataRow row in historianTable.Rows)
-                {
                     historianList[row.Field<int>("ID")] = row.Field<string>("Acronym");
-                }
-
+                
                 return historianList;
             }
             finally
@@ -457,16 +448,12 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
                         "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
-                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", historian.NodeId,
+                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, historian.NodeId,
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal,
                         historian.MeasurementReportingInterval, historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
@@ -474,7 +461,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
                         "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
-                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", historian.NodeId, historian.Acronym.Replace(" ", "").ToUpper(), 
+                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, historian.NodeId, historian.Acronym.Replace(" ", "").ToUpper(), 
                         historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal, historian.MeasurementReportingInterval, 
                         historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, historian.ID);

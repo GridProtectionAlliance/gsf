@@ -231,14 +231,11 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Vendor> vendorList = new ObservableCollection<Vendor>();
-                DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL FROM VendorDetail ORDER BY Name");
+                DataTable vendorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, Name, PhoneNumber, ContactEmail, URL " +
+                    "FROM VendorDetail ORDER BY Name");
 
                 foreach (DataRow row in vendorTable.Rows)
                 {
@@ -273,11 +270,7 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> vendorList = new Dictionary<int, string>();
                 if (isOptional)
@@ -309,21 +302,17 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", vendor.Acronym.Replace(" ", "").ToUpper(),
+                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
                         vendor.Name, vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +
-                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name, 
+                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name, 
                         vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, vendor.ID);
 

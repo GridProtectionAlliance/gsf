@@ -23,13 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.ObjectModel;
-using TVA.Data;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -362,30 +360,20 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Loads <see cref="Node"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="enabledOnly">Indicates if returned collection should include only enabled <see cref="Node"/>s or all. </param>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <returns>Collection of <see cref="Node"/>.</returns>
-        public static ObservableCollection<Node> Load(AdoDataConnection database, bool enabledOnly)
+        public static ObservableCollection<Node> Load(AdoDataConnection database)
         {
             bool createdConnection = false;
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Node> nodeList = new ObservableCollection<Node>();
                 DataTable nodeTable;
 
-                if (enabledOnly)
-                    nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
-                        "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
-                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail Where Enabled = @enabled Order By LoadOrder", true);
-                else
-                    nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
+                nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
                         "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
                         "RealTimeStatisticServiceUrl, CompanyName From NodeDetail Order By LoadOrder");
 
@@ -430,17 +418,14 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> nodeList = new Dictionary<int, string>();
                 if (isOptional)
                     nodeList.Add(0, "Select Node");
 
-                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node Where Enabled = @enabled ORDER BY LoadOrder", true);
+                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node Where Enabled = @enabled ORDER BY LoadOrder",
+                    DefaultTimeout, true);
 
                 foreach (DataRow row in nodeTable.Rows)
                     nodeList[row.Field<int>("ID")] = row.Field<string>("Name");
@@ -521,7 +506,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + nodeID + "}" : nodeID);
 
-                return "Company deleted successfully";
+                return "Node deleted successfully";
             }
             finally
             {
