@@ -151,7 +151,7 @@ namespace TimeSeriesFramework.UI
         {
             get 
             { 
-                return new MenuCommand() { Roles = this.Roles }; 
+                return new MenuCommand() { Roles = this.Roles, UserControlAssembly = this.UserControlAssembly, UserControlPath = this.UserControlPath, Description = this.Description }; 
             }
         }
 

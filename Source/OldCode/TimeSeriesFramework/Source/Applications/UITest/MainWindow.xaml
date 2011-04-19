@@ -14,7 +14,7 @@
 
     <StackPanel Orientation="Vertical">
         <Menu x:Name="MenuMain" ItemsSource="{Binding}" 
-              ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" MenuItem.Click="MenuMain_Click" 
+              ItemContainerStyleSelector="{StaticResource MenuItemStyleSelector}" 
                /> 
         <TextBlock x:Name="TextBlockTitle" HorizontalAlignment="Center" FontWeight="Bold" Width="300" />
         <Frame x:Name="FrameContent" NavigationUIVisibility="Hidden" HorizontalAlignment="Center" />

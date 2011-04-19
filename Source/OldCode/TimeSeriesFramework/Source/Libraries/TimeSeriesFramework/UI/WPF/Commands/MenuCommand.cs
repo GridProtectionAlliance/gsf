@@ -24,6 +24,9 @@
 using System;
 using System.Threading;
 using System.Windows.Input;
+using System.Windows;
+using System.Reflection;
+using System.Windows.Controls;
 
 namespace TimeSeriesFramework.UI.Commands
 {
@@ -36,6 +39,9 @@ namespace TimeSeriesFramework.UI.Commands
 
         //Fields
         private string m_roles;
+        private string m_userControlAssembly;
+        private string m_userControlPath;
+        private string m_description;
 
         //Events
         /// <summary>
@@ -62,6 +68,51 @@ namespace TimeSeriesFramework.UI.Commands
             }
         }
 
+        /// <summary>
+        /// Gets or sets name of the assembly where user control belongs to.
+        /// </summary>
+        public string UserControlAssembly
+        {
+            get
+            {
+                return m_userControlAssembly;
+            }
+            set
+            {
+                m_userControlAssembly = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets name of the user control to be loaded.
+        /// </summary>
+        public string UserControlPath
+        {
+            get
+            {
+                return m_userControlPath;
+            }
+            set
+            {
+                m_userControlPath = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the description of associated <see cref="MenuDataItem"/>.
+        /// </summary>
+        public string Description
+        {
+            get
+            {
+                return m_description;
+            }
+            set
+            {
+                m_description = value;
+            }
+        }
+
         #endregion
 
         #region [ Methods ]
@@ -82,11 +133,27 @@ namespace TimeSeriesFramework.UI.Commands
         }
 
         /// <summary>
-        /// Handles <see cref="ICommand"/> action.
+        /// Handles <see cref="ICommand"/> action. 
+        /// Loads user control as defined in the <see cref="UserControlPath"/> property from assembly name set in the 
+        /// <see cref="UserControlAssembly"/> property.
         /// </summary>
         /// <param name="parameter"></param>
         public void Execute(object parameter)
         {
+            System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
+            TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
+
+            var assembly = Assembly.LoadFrom(m_userControlAssembly);
+            foreach (var type in assembly.GetTypes())
+            {
+                if (type.Name == m_userControlPath)
+                {
+                    var userControl = Activator.CreateInstance(type) as UserControl;
+                    frame.Navigate(userControl);
+                    textBlock.Text = m_description;
+                    break;
+                }
+            }
         }
 
         #endregion

@@ -74,33 +74,6 @@ namespace UITest
             MenuMain.DataContext = m_menuDataItems;
         }
 
-        /// <summary>
-        /// Handles click event on <see cref="MenuItem"/>.
-        /// </summary>
-        /// <param name="sender">Source of the event.</param>
-        /// <param name="e">Event arguments</param>
-        private void MenuMain_Click(object sender, RoutedEventArgs e)
-        {
-            MenuDataItem menuDataItem;
-            try
-            {
-                menuDataItem = (MenuDataItem)((MenuItem)e.OriginalSource).Header;
-                var assembly = Assembly.LoadFrom(menuDataItem.UserControlAssembly);
-                foreach (var type in assembly.GetTypes())
-                {
-                    if (type.Name == menuDataItem.UserControlPath)
-                    {
-                        var userControl = Activator.CreateInstance(type) as UserControl;
-                        FrameContent.Navigate(userControl);
-                        TextBlockTitle.Text = menuDataItem.Description;
-                    }
-                }
-            }
-            catch
-            {
-            }
-        }
-
         #endregion
     }
 }

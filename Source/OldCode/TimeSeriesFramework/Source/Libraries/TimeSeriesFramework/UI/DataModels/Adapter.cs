@@ -23,13 +23,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.ObjectModel;
-using TVA.Data;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
