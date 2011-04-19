@@ -412,23 +412,23 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of nodes defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns>Dictionary<string, string> containing ID and Name of nodes defined in the database.</returns>
+        public static Dictionary<string, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<int, string> nodeList = new Dictionary<int, string>();
+                Dictionary<string, string> nodeList = new Dictionary<string, string>();
                 if (isOptional)
-                    nodeList.Add(0, "Select Node");
+                    nodeList.Add(string.Empty, "Select Node");
 
                 DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node Where Enabled = @enabled ORDER BY LoadOrder",
                     DefaultTimeout, true);
 
                 foreach (DataRow row in nodeTable.Rows)
-                    nodeList[row.Field<int>("ID")] = row.Field<string>("Name");
+                    nodeList[row.Field<object>("ID").ToString()] = row.Field<string>("Name");
 
                 return nodeList;
             }
