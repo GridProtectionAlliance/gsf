@@ -23,10 +23,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -320,5 +323,163 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion  
+
+        #region [ Static ]
+        
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="UserAccount"/> information as an <see cref="OberservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="UserAccount"/></returns>
+        public static ObservableCollection<UserAccount> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                ObservableCollection<UserAccount> userAccountList = new ObservableCollection<UserAccount>();
+                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount Order By Name");
+
+                foreach(DataRow row in userAccountTable.Rows)
+                {
+                    userAccountList.Add(new UserAccount()
+                    {
+                        ID = row.Field<int>("ID").ToString(),
+                        Name = row.Field<string>("Name"),
+                        Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
+                        FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
+                        LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
+                        DefaultNodeID = row.Field<object>("DefaultNodeID").ToString(),
+                        Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
+                        Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
+                        LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
+                        UseADAuthentication = Convert.ToBoolean(row.Field<object>("UseADAuthentication")),
+                        ChangePasswordOn = row.Field<object>("ChangePasswordOn") == null ? DateTime.MinValue : Convert.ToDateTime(row.Field<object>("ChangePasswordOn")),
+                        CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
+                        CreatedBy = row.Field<string>("CreatedBy"),
+                        UpdatedOn = Convert.ToDateTime(row.Field<object>("UpdatedOn")),
+                        UpdatedBy = row.Field<string>("UpdatedBy")
+                    });
+                }
+
+                return userAccountList;
+            }
+            finally
+            {
+                if(createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="UserAccount"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of user accounts defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> userAccountList = new Dictionary<int, string>();
+                if (isOptional)
+                    userAccountList.Add(0, "Select UserAccount");
+
+                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount ORDER BY Name");
+
+                foreach (DataRow row in userAccountTable.Rows)
+                    userAccountList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return userAccountList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="UserAccount"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="company">Information about <see cref="UserAccount"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, UserAccount userAccount, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, [Password], FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
+                            "Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, @email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout);
+                else
+                    database.Connection.ExecuteNonQuery("Update UserAccount Set Name = @name, Password = @password, FirstName = @firstName, LastName = @lastName, DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, " +
+                            "LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id");
+
+                return "userAccount information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="UserAccount"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="userAccountID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int userAccountID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM UserAccount WHERE ID = @userAccountID", DefaultTimeout, userAccountID);
+
+                return "Company deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
+
     }
 }

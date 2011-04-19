@@ -28,6 +28,8 @@ using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Collections.ObjectModel;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -204,5 +206,153 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Company"/>.</returns>
+        public static ObservableCollection<SecurityGroup> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                ObservableCollection<SecurityGroup> securityGroupList = new ObservableCollection<SecurityGroup>();
+                DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM SecurityGroup ORDER BY LoadOrder");
+
+                foreach (DataRow row in securityGroupTable.Rows)
+                {
+                    securityGroupList.Add(new SecurityGroup()
+                    {
+                        ID = row.Field<object>("ID").ToString(),
+                        Name = row.Field<string>("Name"),
+                        Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
+                        CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
+                        CreatedBy = row.Field<string>("CreatedBy"),
+                        UpdatedOn = Convert.ToDateTime(row.Field<object>("UpdatedOn")),
+                        UpdatedBy = row.Field<string>("UpdatedBy")
+                    });
+                }
+
+                return securityGroupList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="SecurityGroup"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of security groups defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                Dictionary<int, string> securityGroupList = new Dictionary<int, string>();
+                if (isOptional)
+                    securityGroupList.Add(0, "Select Security Group");
+
+                DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM SecurityGroup ORDER BY Name");
+
+                foreach (DataRow row in securityGroupTable.Rows)
+                    securityGroupList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return securityGroupList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="SecurityGroup"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="securityGroup">Information about <see cref="SecurityGroup"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, SecurityGroup securityGroup, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)");
+                else
+                    database.Connection.ExecuteNonQuery("Update SecurityGroup Set Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id");
+
+                return "Security Group information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="SecurityGroup"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="securityGroupID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int securityGroupID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                if (database == null)
+                {
+                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
+                    createdConnection = true;
+                }
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroup WHERE ID = @securityGroupID", DefaultTimeout, securityGroupID);
+
+                return "Security Group deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
     }
 }
