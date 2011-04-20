@@ -27,6 +27,9 @@ using TVA.Data;
 
 namespace TimeSeriesFramework.UI
 {
+    /// <summary>
+    /// Represents a static class containing common methods.
+    /// </summary>
     public static class CommonFunctions
     {
         /// <summary>
@@ -35,7 +38,7 @@ namespace TimeSeriesFramework.UI
         public const string DefaultSettingsCategory = "SystemSettings";
 
         /// <summary>
-        /// Defines the current user name as defined in the <see cref="Thread.CurrentPrincipal.Identity"/>.
+        /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
         /// </summary>
         public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
 

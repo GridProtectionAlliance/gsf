@@ -69,7 +69,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="CalulatedMeasurment"/> NodeId.
+        /// Gets or sets <see cref="CalculatedMeasurement"/> NodeId.
         /// </summary>
         [Required(ErrorMessage = "Please provide NodeId value.")]
         public string NodeID
@@ -86,7 +86,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> ID.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
@@ -103,7 +103,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> Acronym.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> Acronym.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         [Required(ErrorMessage = "CalulatedMeasurment acronym is a required field, please provide value.")]
@@ -121,7 +121,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> Name.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> Name.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string Name
@@ -138,7 +138,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> Acronym.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment TypeName is a required field, please provide value.")]
         public string TypeName
@@ -155,7 +155,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> AssemblyName.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> AssemblyName.
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment AssemblyName is a required field, please provide value.")]
         public string AssemblyName
@@ -172,7 +172,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="CalulatedMeasurment"/> ConnectionString.
+        /// Gets or sets <see cref="CalculatedMeasurement"/> ConnectionString.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ConnectionString
@@ -189,7 +189,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> ConfigSection.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> ConfigSection.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ConfigSection
@@ -206,7 +206,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="CalulatedMeasurment"/> OutputMeasurements.
+        /// Gets or sets <see cref="CalculatedMeasurement"/> OutputMeasurements.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string OutputMeasurements
@@ -223,7 +223,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> InputMeasurements.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> InputMeasurements.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string InputMeasurements
@@ -240,7 +240,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> MinimumMeasurementsToUse.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> MinimumMeasurementsToUse.
         /// </summary>
         [Required(ErrorMessage = " CalulatedMeasurment MinimumMeasurementsToUse is a required field, please provide value..")]
         [DefaultValue(typeof(int), "-1")]
@@ -258,7 +258,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> FramesPerSecond.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> FramesPerSecond.
         /// </summary>
         [Required(ErrorMessage = " CalulatedMeasurment FramesPerSecond is a required field, please provide value..")]
         [DefaultValue(typeof(int), "30")]
@@ -276,7 +276,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> LagTime.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> LagTime.
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment LagTime is a required field, please provide value.")]
         [DefaultValue(typeof(double), "3.0")]
@@ -294,7 +294,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> LeadTime.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> LeadTime.
         /// </summary>
         [Required(ErrorMessage = "LeadTime is required field.")]
         [DefaultValue(typeof(double), "1.0")]
@@ -312,7 +312,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> UseLocalClockAsRealTime.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> UseLocalClockAsRealTime.
         /// </summary>
         [Required(ErrorMessage = " CalulatedMeasurment LagTime is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "0")]
@@ -330,7 +330,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> AllowSortsByArrival.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> AllowSortsByArrival.
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment AllowSortsByArrival is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "1")]
@@ -348,7 +348,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> LoadOrder.
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> LoadOrder.
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment LoadOrder is a required field, please provide value.")]
         [DefaultValue(typeof(int), "0")]
@@ -366,7 +366,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> Enabled
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> Enabled
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment Enabled is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "0")]
@@ -384,7 +384,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> IgnoreBadTimeStamps
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> IgnoreBadTimeStamps
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "0")]
@@ -402,7 +402,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> TimeResolution
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> TimeResolution
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment TimeResoulution is a required field, please provide value.")]
         [DefaultValue(typeof(int), "10000")]
@@ -420,7 +420,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> AllowPreemptivePublishing
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> AllowPreemptivePublishing
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment AllowPreemptivePublishing is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "1")]
@@ -438,7 +438,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> DownsamplingMethod
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> DownsamplingMethod
         /// </summary>
         [Required(ErrorMessage = "CalculatedMeasurment DownsamplingMethod is a required field, please provide value..")]
         [DefaultValue(typeof(string), "LastReceived")]
@@ -456,7 +456,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> NodeName
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> NodeName
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment NodeName is a required field, please provide value..")]
         public string NodeName
@@ -473,7 +473,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> PerformTimestampReasonabilityCheck
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> PerformTimestampReasonabilityCheck
         /// </summary>
         [Required(ErrorMessage = "CalulatedMeasurment PerformTimestampReasonabilityCheck is a required field, please provide value.")]
         [DefaultValue(typeof(bool), "1")]
@@ -491,7 +491,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="CalulatedMeasurment"/> CreatedOn
+        /// Gets or sets <see cref="CalculatedMeasurement"/> CreatedOn
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
@@ -508,7 +508,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="CalulatedMeasurment"/> CreatedBy
+        /// Gets or sets <see cref="CalculatedMeasurement"/> CreatedBy
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
@@ -525,7 +525,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> UpdatedOn
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> UpdatedOn
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
@@ -542,7 +542,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalulatedMeasurment"/> UpdatedBy
+        ///  Gets or sets <see cref="CalculatedMeasurement"/> UpdatedBy
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy

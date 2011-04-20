@@ -37,6 +37,14 @@ namespace TimeSeriesFramework.UI.Converters
 
         #region [ IValueConverter Implementation ]
 
+        /// <summary>
+        /// Converts string value to visibility.
+        /// </summary>
+        /// <param name="value">Value to be converted to visibility.</param>
+        /// <param name="targetType">The type of the binding target property.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>One of the visibility enummeration</returns>
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value == null || string.IsNullOrEmpty(value.ToString()) || value.ToString() == "*" || Thread.CurrentPrincipal.IsInRole(value.ToString()))
@@ -45,6 +53,14 @@ namespace TimeSeriesFramework.UI.Converters
                 return Visibility.Collapsed;
         }
 
+        /// <summary>
+        /// Converts visibility to string, not implemented.
+        /// </summary>
+        /// <param name="value">Visibility value to be converted to string.</param>
+        /// <param name="targetType">The type of the binding target property.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>String, for UI use.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             throw new NotImplementedException();

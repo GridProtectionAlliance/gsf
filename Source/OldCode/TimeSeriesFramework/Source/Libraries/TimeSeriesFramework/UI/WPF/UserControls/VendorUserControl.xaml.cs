@@ -19,6 +19,9 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class VendorUserControl : UserControl
     {
+        /// <summary>
+        /// Creates a new instance of <see cref="VendorUserControl"/>.
+        /// </summary>
         public VendorUserControl()
         {
             InitializeComponent();

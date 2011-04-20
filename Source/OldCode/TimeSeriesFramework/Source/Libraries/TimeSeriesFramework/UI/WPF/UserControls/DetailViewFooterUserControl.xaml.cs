@@ -35,9 +35,24 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Properties ]
 
         //Dependency Properties
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for delete operation.
+        /// </summary>
         public static DependencyProperty DeleteCommandProperty = DependencyProperty.Register("DeleteCommand", typeof(ICommand), typeof(DetailViewFooterUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for clear form operation.
+        /// </summary>
         public static DependencyProperty ClearCommandProperty = DependencyProperty.Register("ClearCommand", typeof(ICommand), typeof(DetailViewFooterUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for save operation.
+        /// </summary>
         public static DependencyProperty SaveCommandProperty = DependencyProperty.Register("SaveCommand", typeof(ICommand), typeof(DetailViewFooterUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to determine if Save button is enabled on UI.
+        /// </summary>
         public static DependencyProperty SaveEnabledProperty = DependencyProperty.Register("SaveEnabled", typeof(bool), typeof(DetailViewFooterUserControl), new PropertyMetadata(false));
 
         /// <summary>

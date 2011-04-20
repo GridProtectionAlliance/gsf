@@ -35,12 +35,39 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Properties ]
 
         //Dependency Properties
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to bind number of items to be displayed on a page.
+        /// </summary>
         public static readonly DependencyProperty ItemsPerPageProperty = DependencyProperty.Register("ItemsPerPage", typeof(int), typeof(DataPagerUserControl), new UIPropertyMetadata(20));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to display number of pages.
+        /// </summary>
         public static readonly DependencyProperty PageCountProperty = DependencyProperty.Register("PageCount", typeof(int), typeof(DataPagerUserControl), new UIPropertyMetadata(0));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> for current page number.
+        /// </summary>
         public static readonly DependencyProperty CurrentPageNumberProperty = DependencyProperty.Register("CurrentPageNumber", typeof(int), typeof(DataPagerUserControl), new UIPropertyMetadata(0));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to bind to <see cref="FirstCommand"/>.
+        /// </summary>
         public static readonly DependencyProperty FirstCommandProperty = DependencyProperty.Register("FirstCommand", typeof(ICommand), typeof(DataPagerUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to bind to <see cref="PreviousCommand"/>.
+        /// </summary>
         public static readonly DependencyProperty PreviousCommandProperty = DependencyProperty.Register("PreviousCommand", typeof(ICommand), typeof(DataPagerUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to bind to <see cref="NextCommand"/>.
+        /// </summary>
         public static readonly DependencyProperty NextCommandProperty = DependencyProperty.Register("NextCommand", typeof(ICommand), typeof(DataPagerUserControl), new PropertyMetadata(null));
+        
+        /// <summary>
+        /// <see cref="DependencyProperty"/> to bind to <see cref="LastCommand"/>.
+        /// </summary>
         public static readonly DependencyProperty LastCommandProperty = DependencyProperty.Register("LastCommand", typeof(ICommand), typeof(DataPagerUserControl), new PropertyMetadata(null));
         
         /// <summary>
@@ -59,7 +86,7 @@ namespace TimeSeriesFramework.UI.UserControls
         }
 
         /// <summary>
-        /// Gets or sets an index of <see cref="CurrentPage"/> to be displayed.
+        /// Gets or sets an index of the current page displayed in UI.
         /// </summary>
         public int CurrentPageNumber
         {
@@ -153,7 +180,7 @@ namespace TimeSeriesFramework.UI.UserControls
         #region [ Constructor]
 
         /// <summary>
-        /// Creates a new instance of <see cref="DataPageUserControl"/>.
+        /// Creates a new instance of <see cref="DataPagerUserControl"/>.
         /// </summary>
         public DataPagerUserControl()
         {

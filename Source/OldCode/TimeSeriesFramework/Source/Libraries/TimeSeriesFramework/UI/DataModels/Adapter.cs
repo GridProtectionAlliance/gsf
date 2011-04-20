@@ -342,8 +342,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
         /// <summary>
         /// Loads <see cref="Adapter"/> information as an <see cref="ObservableCollection{T}"/> style list.
-        /// </summary>
+        /// </summary>        
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>
+        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="Adapter"/> collection is returned.</param>
         /// <returns>Collection of <see cref="Adapter"/>.</returns>
         public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType, string nodeID)
         {

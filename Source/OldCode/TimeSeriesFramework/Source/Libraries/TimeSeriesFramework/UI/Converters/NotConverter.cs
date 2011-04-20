@@ -35,11 +35,27 @@ namespace TimeSeriesFramework.UI.Converters
     {
         #region [ IValueConverter Members ]
         
+        /// <summary>
+        /// Inverts value of boolean object.
+        /// </summary>
+        /// <param name="value">Boolean object to be inverted.</param>
+        /// <param name="targetType">The type of the binding target property.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>Boolean value for UI use.</returns>
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             return InvertBoolean(value);
         }
 
+        /// <summary>
+        /// Inverts value of boolean object.
+        /// </summary>
+        /// <param name="value">Boolean object to be inverted.</param>
+        /// <param name="targetType">The type of the binding target property.</param>
+        /// <param name="parameter">The converter parameter to use.</param>
+        /// <param name="culture">The culture to use in the converter.</param>
+        /// <returns>Boolean value for UI use.</returns>
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             return InvertBoolean(value);
@@ -49,6 +65,11 @@ namespace TimeSeriesFramework.UI.Converters
 
         #region [ Methods ]
 
+        /// <summary>
+        /// Inverts value of boolean object.
+        /// </summary>
+        /// <param name="value">boolean value to be inverted.</param>
+        /// <returns></returns>
         private static object InvertBoolean(object value)
         {
             return !value.ToString().ParseBoolean();
