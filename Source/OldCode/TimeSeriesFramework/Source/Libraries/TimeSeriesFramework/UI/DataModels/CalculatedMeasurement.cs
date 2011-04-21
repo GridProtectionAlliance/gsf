@@ -24,6 +24,10 @@
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
+using TVA.Data;
+using System.Data;
+using System.Collections.Generic;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -53,7 +57,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private bool m_allowSortsByArrival;
         private int m_loadOrder;
         private bool m_enabled;
-        private bool m_IgnoreBadTimeStamps;
+        private bool m_ignoreBadTimeStamps;
         private int m_timeResolution;
         private bool m_allowPreemptivePublishing;
         private string m_downsamplingMethod;
@@ -166,7 +170,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                AssemblyName = value;
+                m_assemblyName = value;
                 OnPropertyChanged("AssemblyName");
             }
         }
@@ -392,11 +396,11 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_IgnoreBadTimeStamps;
+                return m_ignoreBadTimeStamps;
             }
             set
             {
-                m_IgnoreBadTimeStamps = value;
+                m_ignoreBadTimeStamps = value;
                 OnPropertyChanged("IgnoreBadtimeStamps");
             }
         }
@@ -559,5 +563,186 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
+        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, string nodeID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<CalculatedMeasurement> calculatedMeasurementList = new ObservableCollection<CalculatedMeasurement>();
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
+                    "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
+                    "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
+                    "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail Where NodeID = @nodeID Order By LoadOrder",
+                    DefaultTimeout, database.IsJetEngine()? "{" + nodeID + "}" : nodeID);
+
+                foreach (DataRow row in calculatedMeasurementTable.Rows)
+                {
+                    calculatedMeasurementList.Add(new CalculatedMeasurement()
+                    {
+                        NodeID = row.Field<object>("NodeID").ToString(),
+                        ID = row.Field<int>("ID"),
+                        Acronym = row.Field<string>("Acronym"),
+                        Name = row.Field<string>("Name"),
+                        AssemblyName = row.Field<string>("AssemblyName"),
+                        TypeName = row.Field<string>("TypeName"),
+                        ConnectionString = row.Field<string>("ConnectionString"),
+                        ConfigSection = row.Field<string>("ConfigSection"),
+                        InputMeasurements = row.Field<string>("InputMeasurements"),
+                        OutputMeasurements = row.Field<string>("OutputMeasurements"),
+                        MinimumMeasurementsToUse = row.Field<int>("MinimumMeasurementsToUse"),
+                        FramesPerSecond = Convert.ToInt32(row.Field<object>("FramesPerSecond") ?? 30),
+                        LagTime = row.Field<double>("LagTime"),
+                        LeadTime = row.Field<double>("LeadTime"),
+                        UseLocalClockAsRealTime = Convert.ToBoolean(row.Field<object>("UseLocalClockAsRealTime")),
+                        AllowSortsByArrival = Convert.ToBoolean(row.Field<object>("AllowSortsByArrival")),
+                        LoadOrder = row.Field<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        IgnoreBadTimeStamps = Convert.ToBoolean(row.Field<object>("IgnoreBadTimeStamps")),
+                        TimeResolution = Convert.ToInt32(row.Field<object>("TimeResolution")),
+                        AllowPreemptivePublishing = Convert.ToBoolean(row.Field<object>("AllowPreemptivePublishing")),
+                        DownsamplingMethod = row.Field<string>("DownSamplingMethod"),
+                        NodeName = row.Field<string>("NodeName"),
+                        PerformTimestampReasonabilityCheck = Convert.ToBoolean(row.Field<object>("PerformTimestampReasonabilityCheck"))
+                    });
+                }
+
+                return calculatedMeasurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Company"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of companies defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> calculatedMeasurementList = new Dictionary<int, string>();
+                if (isOptional)
+                    calculatedMeasurementList.Add(0, "Select CalculatedMeasurement");
+
+                DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM CalculatedMeasurement ORDER BY LoadOrder");
+
+                foreach (DataRow row in calculatedMeasurementTable.Rows)
+                    calculatedMeasurementList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return calculatedMeasurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Company"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="calculatedMeasurement">Information about <see cref="CalculatedMeasurement"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, CalculatedMeasurement calculatedMeasurement, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into CalculatedMeasurement (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, " +
+                    "ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, LeadTime, UseLocalClockAsRealTime, " +
+                    "AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, DownsamplingMethod, " +
+                    "PerformTimestampReasonabilityCheck, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @acronym, @name, @assemblyName, " +
+                    "@typeName, @connectionString, @configSection, @inputMeasurements, @outputMeasurements, @minimumMeasurementsToUse, @framesPerSecond, " +
+                    "@lagTime, @leadTime, @useLocalClockAsRealTime, @allowSortsByArrival, @loadOrder, @enabled, @ignoreBadTimeStamps, @timeResolution, " +
+                    "@allowPreemptivePublishing, @downsamplingMethod, @performTimestampReasonabilityCheck, @updatedBy, @updatedOn, @createdBy, @createdOn)",
+                    DefaultTimeout, calculatedMeasurement.NodeID, calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name,
+                    calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection,
+                    calculatedMeasurement.InputMeasurements, calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse,
+                    calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
+                    calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
+                    calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, 
+                    calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                    CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("Update CalculatedMeasurement Set NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, " +
+                    "TypeName = @typeName, ConnectionString = @connectionString, ConfigSection = @configSection, InputMeasurements = @inputMeasurements, " +
+                    "OutputMeasurements = @outputMeasurements, MinimumMeasurementsToUse = @minimumMeasurementsToUse, FramesPerSecond = @framesPerSecond, " +
+                    "LagTime = @lagTime, LeadTime = @leadTime, UseLocalClockAsRealTime = @useLocalClockAsRealTime, AllowSortsByArrival = @allowSortsByArrival, " +
+                    "LoadOrder = @loadOrder, Enabled = @enabled, IgnoreBadTimeStamps = @ignoreBadTimeStamps, TimeResolution = @timeResolution, AllowPreemptivePublishing " +
+                    "= @allowPreemptivePublishing, DownsamplingMethod = @downsamplingMethod, PerformTimestampReasonabilityCheck = @performTimestampReasonabilityCheck, " +
+                    "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, calculatedMeasurement.NodeID, 
+                    calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName, 
+                    calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements, 
+                    calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond, 
+                    calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival, 
+                    calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution, 
+                    calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck, 
+                    CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, calculatedMeasurement.ID);
+
+                return "Calculated measurement information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Company"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="calculatedMeasurementID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int calculatedMeasurementID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM CalculatedMeasurement WHERE ID = @calculatedMeasurementID", DefaultTimeout, calculatedMeasurementID);
+
+                return "Calculated measurement deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
+
     }
 }

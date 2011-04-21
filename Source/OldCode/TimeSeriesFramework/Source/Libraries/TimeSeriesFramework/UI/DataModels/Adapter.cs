@@ -366,7 +366,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
                 DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
                     "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
-                    database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + nodeID + "}" : nodeID);
+                    database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
@@ -462,14 +462,14 @@ namespace TimeSeriesFramework.UI.DataModels
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
                         "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("Update " + tableName + " Set NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
                         "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
                         "UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, adapter.ID);
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, adapter.ID);
 
                 return "Adapter information saved successfully";
             }

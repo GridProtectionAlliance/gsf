@@ -366,7 +366,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB"))
+                if (database.IsJetEngine())
                     nodeID = "{" + nodeID + "}";
 
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
@@ -456,15 +456,15 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, historian.NodeId,
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal,
                         historian.MeasurementReportingInterval, historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
                         "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
                         "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, historian.NodeId, historian.Acronym.Replace(" ", "").ToUpper(), 
                         historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal, historian.MeasurementReportingInterval, 
                         historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, historian.ID);
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, historian.ID);
 
                 return "Historian information saved successfully";
             }

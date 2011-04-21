@@ -24,12 +24,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using TVA.Data;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -192,7 +190,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set
             {
-                m_defaultNodeID = Email;
+                m_email = Email;
                 OnPropertyChanged("Email");
             }
         }
@@ -329,7 +327,7 @@ namespace TimeSeriesFramework.UI.DataModels
         // Static Methods
 
         /// <summary>
-        /// Loads <see cref="UserAccount"/> information as an <see cref="OberservableCollection{T}"/> style list.
+        /// Loads <see cref="UserAccount"/> information as an OberservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <returns>Collection of <see cref="UserAccount"/></returns>
@@ -338,11 +336,7 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<UserAccount> userAccountList = new ObservableCollection<UserAccount>();
                 DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount Order By Name");
@@ -389,11 +383,7 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> userAccountList = new Dictionary<int, string>();
                 if (isOptional)
@@ -425,20 +415,37 @@ namespace TimeSeriesFramework.UI.DataModels
             bool createdConnection = false;
             try
             {
-                if (database == null)
+                createdConnection = CreateConnection(ref database);
+
+                string passwordColumn = "Password";
+                if (database.IsJetEngine())
                 {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
+                    userAccount.DefaultNodeID = "{" + userAccount.DefaultNodeID + "}";
+                    passwordColumn = "[Password]";
                 }
-
-                if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, [Password], FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                            "Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, @email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout);
+                
+                object changePasswordOn = userAccount.ChangePasswordOn;
+                if (userAccount.ChangePasswordOn == DateTime.MinValue)
+                    changePasswordOn = (object)DBNull.Value;
+                else if (database.IsJetEngine())
+                    changePasswordOn = userAccount.ChangePasswordOn.Date;
+                
+                if (isNew)                    
+                        database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
+                            "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
+                            "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
+                            userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
+                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                            CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);                    
                 else
-                    database.Connection.ExecuteNonQuery("Update UserAccount Set Name = @name, Password = @password, FirstName = @firstName, LastName = @lastName, DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, " +
-                            "LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id");
+                    database.Connection.ExecuteNonQuery("Update UserAccount Set Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
+                            "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
+                            "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, userAccount.Name,
+                            userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
+                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                            database.IsJetEngine() ? "{" + userAccount.ID + "}" : userAccount.ID);
 
-                return "userAccount information saved successfully";
+                return "User account information saved successfully";
             }
             finally
             {
@@ -459,18 +466,14 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
                 database.Connection.ExecuteNonQuery("DELETE FROM UserAccount WHERE ID = @userAccountID", DefaultTimeout, userAccountID);
 
-                return "Company deleted successfully";
+                return "User account deleted successfully";
             }
             finally
             {

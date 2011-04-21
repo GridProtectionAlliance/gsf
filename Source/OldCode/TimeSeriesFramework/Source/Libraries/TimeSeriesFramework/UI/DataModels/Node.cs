@@ -463,16 +463,16 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
                         "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
-                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("Update Node Set Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
                         "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
                         "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
-                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + node.ID + "}" : node.ID);
+                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        database.IsJetEngine() ? "{" + node.ID + "}" : node.ID);
 
                 return "Node information saved successfully";
             }
@@ -504,7 +504,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? "{" + nodeID + "}" : nodeID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
 
                 return "Node deleted successfully";
             }

@@ -98,5 +98,16 @@ namespace TimeSeriesFramework.UI
                     database.Dispose();
             }
         }
+
+        /// <summary>
+        /// Method to check if source database is Microsoft Access.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to database.</param>
+        /// <returns>Boolean, indicating if source database is Microsoft Access.</returns>
+        public static bool IsJetEngine(this AdoDataConnection database)
+        {
+            return database.IsJetEngine();
+        }
+
     }
 }
