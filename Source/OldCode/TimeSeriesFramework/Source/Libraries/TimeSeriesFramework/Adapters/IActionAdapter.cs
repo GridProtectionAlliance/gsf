@@ -31,7 +31,7 @@ namespace TimeSeriesFramework.Adapters
     /// Represents thet abstract interface for any action adapter.
     /// </summary>
     public interface IActionAdapter : IAdapter
-	{
+    {
         /// <summary>
         /// Provides new measurements from action adapter.
         /// </summary>
@@ -57,7 +57,7 @@ namespace TimeSeriesFramework.Adapters
         event EventHandler<EventArgs<IEnumerable<IMeasurement>>> DiscardingMeasurements;
 
         /// <summary>
-        /// Queues measurements for calculation processing.  Measurements are automatically filters to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
+        /// Queues measurements for calculation processing.  Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);

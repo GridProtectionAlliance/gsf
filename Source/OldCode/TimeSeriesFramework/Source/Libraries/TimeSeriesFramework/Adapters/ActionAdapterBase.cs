@@ -71,11 +71,13 @@ namespace TimeSeriesFramework.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
+        private bool m_processMeasurementFilter;
         private MeasurementKey[] m_inputMeasurementKeys;
         private List<MeasurementKey> m_inputMeasurementKeysHash;
         private IMeasurement[] m_outputMeasurements;
         private int m_minimumMeasurementsToUse;
         private ManualResetEvent m_initializeWaitHandle;
+        private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -86,15 +88,17 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Creates a new <see cref="ActionAdapterBase"/>.
         /// </summary>
-        protected ActionAdapterBase() : base()
+        protected ActionAdapterBase()
+            : base()
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
+            GenHashCode();
 
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
             m_initializationTimeout = AdapterBase.DefaultInitializationTimeout;
-            
+
             // For most implementations millisecond resolution will be sufficient
             base.TimeResolution = Ticks.PerMillisecond;
         }
@@ -226,6 +230,21 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
+        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// </summary>
+        public virtual bool ProcessMeasurementFilter
+        {
+            get
+            {
+                return m_processMeasurementFilter;
+            }
+            set
+            {
+                m_processMeasurementFilter = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
         public virtual IMeasurement[] OutputMeasurements
@@ -281,7 +300,7 @@ namespace TimeSeriesFramework.Adapters
                 // Default to all measurements if minimum is not specified
                 if (m_minimumMeasurementsToUse < 1 && InputMeasurementKeys != null)
                     return InputMeasurementKeys.Length;
-                
+
                 return m_minimumMeasurementsToUse;
             }
             set
@@ -302,6 +321,7 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_name = value;
+                GenHashCode();
             }
         }
 
@@ -317,6 +337,7 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_id = value;
+                GenHashCode();
             }
         }
 
@@ -366,7 +387,7 @@ namespace TimeSeriesFramework.Adapters
             get
             {
                 const int MaxMeasurementsToShow = 10;
-                
+
                 StringBuilder status = new StringBuilder();
                 DataSet dataSource = this.DataSource;
 
@@ -378,6 +399,8 @@ namespace TimeSeriesFramework.Adapters
                     status.AppendLine();
                 }
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
+                status.AppendLine();
+                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
                 status.AppendLine();
                 status.AppendFormat("       Adapter initialized: {0}", Initialized);
                 status.AppendLine();
@@ -642,7 +665,7 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
+        /// Queues a single measurement for processing. Measurements is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurement">Measurement to queue for processing.</param>
         /// <remarks>
@@ -651,12 +674,12 @@ namespace TimeSeriesFramework.Adapters
         public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
         {
             // If this is an input measurement to this adapter, sort it!
-            if (IsInputMeasurement(measurement.Key))
+            if (!ProcessMeasurementFilter || IsInputMeasurement(measurement.Key))
                 SortMeasurement(measurement);
         }
 
         /// <summary>
-        /// Queues a collection of measurements for processing.
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
         /// <remarks>
@@ -664,16 +687,23 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            List<IMeasurement> inputMeasurements = new List<IMeasurement>();
-
-            foreach (IMeasurement measurement in measurements)
+            if (ProcessMeasurementFilter)
             {
-                if (IsInputMeasurement(measurement.Key))
-                    inputMeasurements.Add(measurement);
-            }
+                List<IMeasurement> inputMeasurements = new List<IMeasurement>();
 
-            if (inputMeasurements.Count > 0)
-                SortMeasurements(inputMeasurements);
+                foreach (IMeasurement measurement in measurements)
+                {
+                    if (IsInputMeasurement(measurement.Key))
+                        inputMeasurements.Add(measurement);
+                }
+
+                if (inputMeasurements.Count > 0)
+                    SortMeasurements(inputMeasurements);
+            }
+            else
+            {
+                SortMeasurements(measurements);
+            }
         }
 
         /// <summary>
@@ -701,6 +731,15 @@ namespace TimeSeriesFramework.Adapters
                 return m_initializeWaitHandle.WaitOne(timeout);
 
             return false;
+        }
+
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="ActionAdapterBase"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="ActionAdapterBase"/>.</returns>
+        public override int GetHashCode()
+        {
+            return m_hashCode;
         }
 
         /// <summary>
@@ -790,6 +829,12 @@ namespace TimeSeriesFramework.Adapters
                 StatusMessage(this, new EventArgs<string>(string.Format(formattedStatus, args)));
         }
 
-        #endregion		
+        private void GenHashCode()
+        {
+            // We cache hash code during construction or after element value change to speed usage
+            m_hashCode = (Name + ID.ToString()).GetHashCode();
+        }
+
+        #endregion
     }
 }

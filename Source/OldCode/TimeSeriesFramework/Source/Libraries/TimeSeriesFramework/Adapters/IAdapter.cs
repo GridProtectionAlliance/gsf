@@ -71,32 +71,54 @@ namespace TimeSeriesFramework.Adapters
         /// <summary>
         /// Gets or sets <see cref="DataSet"/> based data source available to <see cref="IAdapter"/>.
         /// </summary>
-        DataSet DataSource { get; set; }
+        DataSet DataSource
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets key/value pair connection information specific to <see cref="IAdapter"/>.
         /// </summary>
-        string ConnectionString { get; set; }
+        string ConnectionString
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets settings <see cref="Dictionary{TKey,TValue}"/> parsed when <see cref="ConnectionString"/> was assigned.
         /// </summary>
-        Dictionary<string, string> Settings { get; }
+        Dictionary<string, string> Settings
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets a read-only reference to the collection that contains this <see cref="IAdapter"/>.
         /// </summary>
-        ReadOnlyCollection<IAdapter> Parent { get; }
+        ReadOnlyCollection<IAdapter> Parent
+        {
+            get;
+        }
 
         /// <summary>
         /// Gets or sets name of this <see cref="IAdapter"/>.
         /// </summary>
-        new string Name { get; set; }
+        new string Name
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets the numeric ID associated with this <see cref="IAdapter"/>.
         /// </summary>
-        uint ID { get; set; }
+        uint ID
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets flag indicating if the adapter has been initialized successfully.
@@ -104,7 +126,11 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// Implementors only need to track this value.
         /// </remarks>
-        bool Initialized { get; set; }
+        bool Initialized
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets maximum time system will wait during <see cref="Start"/> for initialization.
@@ -112,22 +138,46 @@ namespace TimeSeriesFramework.Adapters
         /// <remarks>
         /// Implementors should use value <see cref="Timeout.Infinite"/> to wait indefinitely.
         /// </remarks>
-        int InitializationTimeout { get; set; }
+        int InitializationTimeout
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// </summary>
+        bool ProcessMeasurementFilter
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets output measurements that the action adapter will produce, if any.
         /// </summary>
-        IMeasurement[] OutputMeasurements { get; set; }
+        IMeasurement[] OutputMeasurements
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets or sets primary keys of input measurements the action adapter expects.
         /// </summary>
-        MeasurementKey[] InputMeasurementKeys { get; set; }
+        MeasurementKey[] InputMeasurementKeys
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets the total number of measurements processed thus far by the <see cref="IAdapter"/>.
         /// </summary>
-        long ProcessedMeasurements { get; }
+        long ProcessedMeasurements
+        {
+            get;
+        }
 
         /// <summary>
         ///  Starts the adapter, if it is not already running.

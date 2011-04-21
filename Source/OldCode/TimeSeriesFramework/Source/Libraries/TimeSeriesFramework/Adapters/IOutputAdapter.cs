@@ -31,7 +31,7 @@ namespace TimeSeriesFramework.Adapters
     /// Represents that abstract interface for any outgoing adapter.
     /// </summary>
     public interface IOutputAdapter : IAdapter
-	{
+    {
         /// <summary>
         /// Event is raised every second allowing host to track total number of unprocessed measurements.
         /// </summary>
@@ -55,13 +55,16 @@ namespace TimeSeriesFramework.Adapters
         /// many measurements have been archived per minute. Historians would normally set this property
         /// to <c>true</c>; other custom exports would set this property to <c>false</c>.
         /// </remarks>
-        bool OutputIsForArchive { get; }
-				
+        bool OutputIsForArchive
+        {
+            get;
+        }
+
         /// <summary>
-        /// Queues measurements for processing.
+        /// Queues measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Collection of measurements to queue for processing.</param>
-		void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
+        void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements);
 
         /// <summary>
         /// Implementations of this function should remove a range of measurements from the internal measurement queue.
@@ -71,5 +74,5 @@ namespace TimeSeriesFramework.Adapters
         /// points are requested than there are points available - all points in the queue should be removed.
         /// </remarks>
         void RemoveMeasurements(int total);
-	}
+    }
 }

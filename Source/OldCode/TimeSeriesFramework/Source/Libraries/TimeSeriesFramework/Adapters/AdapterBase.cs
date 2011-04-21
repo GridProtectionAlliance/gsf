@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.Adapters
     /// Represents the base class for any adapter.
     /// </summary>
     public abstract class AdapterBase : IAdapter
-	{
+    {
         #region [ Members ]
 
         // Constants
@@ -84,6 +84,7 @@ namespace TimeSeriesFramework.Adapters
         private Dictionary<string, string> m_settings;
         private DataSet m_dataSource;
         private int m_initializationTimeout;
+        private bool m_processMeasurementFilter;
         private ManualResetEvent m_initializeWaitHandle;
         private MeasurementKey[] m_inputMeasurementKeys;
         private IMeasurement[] m_outputMeasurements;
@@ -93,6 +94,7 @@ namespace TimeSeriesFramework.Adapters
         private bool m_enabled;
         private long m_startTime;
         private long m_stopTime;
+        private int m_hashCode;
         private bool m_initialized;
         private bool m_disposed;
 
@@ -107,6 +109,7 @@ namespace TimeSeriesFramework.Adapters
         {
             m_name = this.GetType().Name;
             m_settings = new Dictionary<string, string>();
+            GenHashCode();
 
             // Create wait handle to use for adapter initialization
             m_initializeWaitHandle = new ManualResetEvent(false);
@@ -140,6 +143,7 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_name = value;
+                GenHashCode();
             }
         }
 
@@ -155,6 +159,7 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_id = value;
+                GenHashCode();
             }
         }
 
@@ -270,6 +275,21 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// </summary>
+        public virtual bool ProcessMeasurementFilter
+        {
+            get
+            {
+                return m_processMeasurementFilter;
+            }
+            set
+            {
+                m_processMeasurementFilter = value;
             }
         }
 
@@ -434,7 +454,8 @@ namespace TimeSeriesFramework.Adapters
                     }
                 }
 
-                if (processingTime < 0) processingTime = 0;
+                if (processingTime < 0)
+                    processingTime = 0;
 
                 return processingTime.ToSeconds();
             }
@@ -487,6 +508,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendLine();
                 status.AppendFormat("   Item reporting interval: {0}", MeasurementReportingInterval);
                 status.AppendLine();
+                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
+                status.AppendLine();
                 status.AppendFormat("                Adpater ID: {0}", ID);
                 status.AppendLine();
 
@@ -507,7 +530,7 @@ namespace TimeSeriesFramework.Adapters
                 {
                     keyChars = item.Key.Trim().ToCharArray();
                     keyChars[0] = char.ToUpper(keyChars[0]);
-                    
+
                     value = item.Value.Trim();
                     if (value.Length > 50)
                         value = value.TruncateRight(47) + "...";
@@ -676,7 +699,7 @@ namespace TimeSeriesFramework.Adapters
         {
             this.Initialized = initialized;
         }
-        
+
         /// <summary>
         /// Gets a short one-line status of this <see cref="AdapterBase"/>.
         /// </summary>
@@ -709,6 +732,15 @@ namespace TimeSeriesFramework.Adapters
                 return m_initializeWaitHandle.WaitOne(timeout);
 
             return false;
+        }
+
+        /// <summary>
+        /// Serves as a hash function for the current <see cref="AdapterBase"/>.
+        /// </summary>
+        /// <returns>A hash code for the current <see cref="AdapterBase"/>.</returns>
+        public override int GetHashCode()
+        {
+            return m_hashCode;
         }
 
         /// <summary>
@@ -749,7 +781,7 @@ namespace TimeSeriesFramework.Adapters
         /// Safely increments the total processed measurements.
         /// </summary>
         /// <param name="totalAdded"></param>
-        [MethodImpl(MethodImplOptions.Synchronized)]        
+        [MethodImpl(MethodImplOptions.Synchronized)]
         protected virtual void IncrementProcessedMeasurements(long totalAdded)
         {
             // Check to see if total number of added points will exceed process interval used to show periodic
@@ -765,6 +797,12 @@ namespace TimeSeriesFramework.Adapters
                 if (showMessage)
                     OnStatusMessage("{0:N0} measurements have been processed so far...", m_processedMeasurements);
             }
+        }
+
+        private void GenHashCode()
+        {
+            // We cache hash code during construction or after element value change to speed usage
+            m_hashCode = (Name + ID.ToString()).GetHashCode();
         }
 
         #endregion
@@ -949,6 +987,6 @@ namespace TimeSeriesFramework.Adapters
             return measurements.ToArray();
         }
 
-        #endregion        
+        #endregion
     }
 }

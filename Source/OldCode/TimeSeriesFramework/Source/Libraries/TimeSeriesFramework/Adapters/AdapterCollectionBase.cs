@@ -78,6 +78,7 @@ namespace TimeSeriesFramework.Adapters
         private DataSet m_dataSource;
         private string m_dataMember;
         private int m_initializationTimeout;
+        private bool m_processMeasurementFilter;
         private IMeasurement[] m_outputMeasurements;
         private MeasurementKey[] m_inputMeasurementKeys;
         private Ticks m_lastProcessTime;
@@ -218,7 +219,7 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_dataSource = value;
-                
+
                 // Update data source for items in this collection
                 lock (this)
                 {
@@ -266,6 +267,30 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 m_initializationTimeout = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="InputMeasurementKeys"/>.
+        /// </summary>
+        public virtual bool ProcessMeasurementFilter
+        {
+            get
+            {
+                return m_processMeasurementFilter;
+            }
+            set
+            {
+                m_processMeasurementFilter = value;
+
+                // Update this flag for items in this collection
+                lock (this)
+                {
+                    foreach (T item in this)
+                    {
+                        item.ProcessMeasurementFilter = m_processMeasurementFilter;
+                    }
+                }
             }
         }
 
@@ -410,6 +435,8 @@ namespace TimeSeriesFramework.Adapters
                 status.AppendFormat("         Parent collection: {0}", m_parent == null ? "Undefined" : m_parent.Name);
                 status.AppendLine();
                 status.AppendFormat("    Initialization timeout: {0}", InitializationTimeout < 0 ? "Infinite" : InitializationTimeout.ToString() + " milliseconds");
+                status.AppendLine();
+                status.AppendFormat(" Using measurement routing: {0}", !ProcessMeasurementFilter);
                 status.AppendLine();
                 status.AppendFormat(" Current operational state: {0}", (Enabled ? "Enabled" : "Disabled"));
                 status.AppendLine();
@@ -614,12 +641,15 @@ namespace TimeSeriesFramework.Adapters
                 adapter.ID = id;
                 adapter.ConnectionString = connectionString;
                 adapter.DataSource = DataSource;
-    
+
                 // Assign adapter initialization timeout   
                 if (adapter.Settings.TryGetValue("initializationTimeout", out setting))
                     adapter.InitializationTimeout = int.Parse(setting);
                 else
-                    adapter.InitializationTimeout = InitializationTimeout; 
+                    adapter.InitializationTimeout = InitializationTimeout;
+
+                // Update adapter routing type flag
+                adapter.ProcessMeasurementFilter = ProcessMeasurementFilter;
 
                 return true;
             }

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -138,6 +139,36 @@ namespace TimeSeriesFramework.Adapters
                 {
                     m_sourceIDs = new List<string>(value);
                     m_sourceIDs.Sort();
+                }
+
+                // Filter measurements to list of specified source IDs
+                if (m_sourceIDs != null)
+                {
+                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                    try
+                    {
+                        if (DataSource.Tables.Contains("ActiveMeasurements"))
+                        {
+                            StringBuilder likeExpression = new StringBuilder();
+
+                            // Build like expression for each source ID
+                            foreach (string sourceID in m_sourceIDs)
+                            {
+                                if (likeExpression.Length > 0)
+                                    likeExpression.Append(" OR ");
+
+                                likeExpression.AppendFormat("ID LIKE '{0}:*'", sourceID);
+                            }
+
+                            DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(likeExpression.ToString());
+
+                            InputMeasurementKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+                        }
+                    }
+                    catch
+                    {
+                        // Errors here are not catastrophic, this simply limits the auto-assignment of input measurement keys based on specified source ID's
+                    }
                 }
             }
         }
@@ -379,7 +410,7 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Queues a single measurement for processing.
+        /// Queues a single measurement for processing. Measurement is automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurement">Measurement to queue for processing.</param>
         public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
@@ -388,16 +419,12 @@ namespace TimeSeriesFramework.Adapters
         }
 
         /// <summary>
-        /// Queues a collection of measurements for processing.
+        /// Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="IAdapter.InputMeasurementKeys"/>.
         /// </summary>
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
-            if (m_sourceIDs != null)
-                // Filter measurements to list of specified source IDs
-                measurements = measurements.Where(measurement => m_sourceIDs.BinarySearch(measurement.Source, StringComparer.CurrentCultureIgnoreCase) > -1);
-
-            if (InputMeasurementKeys == null)
+            if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
             {
                 // No further filtering of incoming measurement required
                 m_measurementQueue.AddRange(measurements);
