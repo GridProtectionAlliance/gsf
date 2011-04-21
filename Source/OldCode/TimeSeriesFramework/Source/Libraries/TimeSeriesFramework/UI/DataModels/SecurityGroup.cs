@@ -308,9 +308,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 }
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)");
+                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
+                             securityGroup.Name, securityGroup.Description, securityGroup.UpdatedBy, securityGroup.UpdatedOn, securityGroup.CreatedBy, securityGroup.CreatedOn);
                 else
-                    database.Connection.ExecuteNonQuery("Update SecurityGroup Set Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id");
+                    database.Connection.ExecuteNonQuery("Update SecurityGroup Set Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
+                             securityGroup.Name, securityGroup.Description, securityGroup.UpdatedBy, securityGroup.UpdatedOn, securityGroup.ID);
 
                 return "Security Group information saved successfully";
             }

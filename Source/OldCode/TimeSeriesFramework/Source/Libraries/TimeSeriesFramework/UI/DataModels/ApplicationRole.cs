@@ -28,6 +28,8 @@ using System.Text;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -259,6 +261,140 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_possibleRoleUsers = value;
                 OnPropertyChanged("PossibleRoleUsers");
+            }
+        }
+
+        #endregion
+
+        #region [Static]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="ApplicationRole"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="ApplicationRole"/>.</returns>
+        public static ObservableCollection<ApplicationRole> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<ApplicationRole> applicationRoleList = new ObservableCollection<ApplicationRole>();
+                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "Select * From ApplicationRole Where NodeID = @nodeID Order By Name");
+
+                foreach (DataRow row in applicationRoleTable.Rows)
+                {
+                    applicationRoleList.Add(new ApplicationRole()
+                    {
+                        ID = row.Field<int>("ID").ToString(),
+                        Name = row.Field<string>("Name"),
+                        Description = row.Field<string>("Description"),
+                        NodeID = row.Field<int>("NodeID").ToString(),
+                        CreatedOn = row.Field<DateTime>("CreatedOn"),
+                        CreatedBy = row.Field<string>("CreatedBy"),
+                        UpdatedOn = row.Field<DateTime>("UpdatedOn"),
+                        UpdatedBy = row.Field<string>("UpdatedBy")
+                    });
+                }
+
+                return applicationRoleList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }            
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="ApplicationRole"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of application roles defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> applicationRoleList = new Dictionary<int, string>();
+                if (isOptional)
+                    applicationRoleList.Add(0, "Select Application Role");
+
+                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM ApplicationRole ORDER BY Name");
+
+                foreach (DataRow row in applicationRoleTable.Rows)
+                    applicationRoleList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return applicationRoleList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="ApplicationRole"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="applicationRole">Information about <see cref="ApplicationRole"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, ApplicationRole applicationRole, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
+                        DefaultTimeout,applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.CreatedBy, applicationRole.CreatedOn);
+                else
+                    database.Connection.ExecuteNonQuery("Update ApplicationRole Set Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
+                        applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.ID);
+
+                return "Application Role information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="ApplicationRole"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="applicationRoleID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int applicationRoleID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRole WHERE ID = @applicationRoleID", DefaultTimeout, applicationRoleID);
+
+                return "Company deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
             }
         }
 
