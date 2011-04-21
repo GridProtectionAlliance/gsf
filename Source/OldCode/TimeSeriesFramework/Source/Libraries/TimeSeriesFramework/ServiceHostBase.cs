@@ -862,7 +862,7 @@ namespace TimeSeriesFramework
             }
             finally
             {
-                m_adapterRoutesCacheLock.ExitReadLock();
+                m_adapterRoutesCacheLock.ExitWriteLock();
             }
         }
 
@@ -1902,6 +1902,10 @@ namespace TimeSeriesFramework
                             else
                                 SendResponse(requestInfo, false, "Requested collection was unavailable.");
                         }
+
+
+                        // Spawn routing table calculation updates
+                        ThreadPool.QueueUserWorkItem(CalculateRoutingTables);
                     }
                     else
                         SendResponse(requestInfo, false, "Failed to load system configuration.");
