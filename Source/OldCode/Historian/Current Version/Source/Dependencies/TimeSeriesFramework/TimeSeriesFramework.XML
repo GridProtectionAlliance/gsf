@@ -1907,6 +1907,11 @@
             Implementors should use value <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.IAdapter.ProcessMeasurementFilter">
+            <summary>
+            Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.IAdapter.OutputMeasurements">
             <summary>
             Gets or sets output measurements that the action adapter will produce, if any.
@@ -1924,7 +1929,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IActionAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
-            Queues measurements for calculation processing.  Measurements are automatically filters to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
+            Queues measurements for calculation processing.  Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Collection of measurements to queue for calculation processing.</param>
         </member>
@@ -2009,7 +2014,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
             <summary>
-            Queues a single measurement for processing.
+            Queues a single measurement for processing. Measurements is automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurement">Measurement to queue for processing.</param>
             <remarks>
@@ -2018,7 +2023,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
-            Queues a collection of measurements for processing.
+            Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Collection of measurements to queue for processing.</param>
             <remarks>
@@ -2038,6 +2043,12 @@
             </summary>
             <param name="timeout">The number of milliseconds to wait.</param>
             <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.GetHashCode">
+            <summary>
+            Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/>.
+            </summary>
+            <returns>A hash code for the current <see cref="T:TimeSeriesFramework.Adapters.ActionAdapterBase"/>.</returns>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.ActionAdapterBase.TryGetMinimumNeededMeasurements(TimeSeriesFramework.IFrame,TimeSeriesFramework.IMeasurement[]@)">
             <summary>
@@ -2173,6 +2184,11 @@
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.ProcessMeasurementFilter">
+            <summary>
+            Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.ActionAdapterBase.InputMeasurementKeys"/>.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.ActionAdapterBase.OutputMeasurements">
             <summary>
@@ -2534,6 +2550,11 @@
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.ProcessMeasurementFilter">
+            <summary>
+            Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.InputMeasurementKeys"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterCollectionBase`1.OutputMeasurements">
             <summary>
             Gets or sets output measurements that the <see cref="T:TimeSeriesFramework.Adapters.AdapterCollectionBase`1"/> will produce, if any.
@@ -2726,6 +2747,12 @@
             <param name="timeout">The number of milliseconds to wait.</param>
             <returns><c>true</c> if the initialization succeeds; otherwise, <c>false</c>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.Adapters.AdapterBase.GetHashCode">
+            <summary>
+            Serves as a hash function for the current <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.
+            </summary>
+            <returns>A hash code for the current <see cref="T:TimeSeriesFramework.Adapters.AdapterBase"/>.</returns>
+        </member>
         <member name="M:TimeSeriesFramework.Adapters.AdapterBase.OnStatusMessage(System.String)">
             <summary>
             Raises the <see cref="E:TimeSeriesFramework.Adapters.AdapterBase.StatusMessage"/> event.
@@ -2880,6 +2907,11 @@
             <remarks>
             Set to <see cref="F:System.Threading.Timeout.Infinite"/> to wait indefinitely.
             </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.Adapters.AdapterBase.ProcessMeasurementFilter">
+            <summary>
+            Gets or sets flag that determines if measurements being queued for processing should be tested to see if they are in the <see cref="P:TimeSeriesFramework.Adapters.AdapterBase.InputMeasurementKeys"/>.
+            </summary>
         </member>
         <member name="P:TimeSeriesFramework.Adapters.AdapterBase.OutputMeasurements">
             <summary>
@@ -3326,7 +3358,7 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.IOutputAdapter.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
-            Queues measurements for processing.
+            Queues measurements for processing. Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Collection of measurements to queue for processing.</param>
         </member>
@@ -3446,13 +3478,13 @@
         </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementForProcessing(TimeSeriesFramework.IMeasurement)">
             <summary>
-            Queues a single measurement for processing.
+            Queues a single measurement for processing. Measurement is automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurement">Measurement to queue for processing.</param>
         </member>
         <member name="M:TimeSeriesFramework.Adapters.OutputAdapterBase.QueueMeasurementsForProcessing(System.Collections.Generic.IEnumerable{TimeSeriesFramework.IMeasurement})">
             <summary>
-            Queues a collection of measurements for processing.
+            Queues a collection of measurements for processing. Measurements are automatically filtered to the defined <see cref="P:TimeSeriesFramework.Adapters.IAdapter.InputMeasurementKeys"/>.
             </summary>
             <param name="measurements">Measurements to queue for processing.</param>
         </member>
@@ -4408,14 +4440,24 @@
             This method allows caching of the current system configuration so it can be used if primary configuration source is unavailable.
             </remarks>
         </member>
-        <member name="M:TimeSeriesFramework.ServiceHostBase.NewMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
+        <member name="M:TimeSeriesFramework.ServiceHostBase.RoutedMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
             <summary>
-            Event handler for distributing new measurements.
+            Event handler for distributing new measurements in a routed fashion.
             </summary>
             <param name="sender">Event source reference to adapter that generated new measurements.</param>
             <param name="e">Event arguments containing a collection of new measurements.</param>
             <remarks>
-            Time-series framework uses this handler to route new measurements to the action and output adapters.
+            Time-series framework uses this handler to directly route new measurements to the action and output adapters.
+            </remarks>
+        </member>
+        <member name="M:TimeSeriesFramework.ServiceHostBase.BroadcastMeasurementsHandler(System.Object,TVA.EventArgs{System.Collections.Generic.ICollection{TimeSeriesFramework.IMeasurement}})">
+            <summary>
+            Event handler for distributing new measurements in a broadcast fashion.
+            </summary>
+            <param name="sender">Event source reference to adapter that generated new measurements.</param>
+            <param name="e">Event arguments containing a collection of new measurements.</param>
+            <remarks>
+            Time-series framework uses this handler to route new measurements to the action and output adapters; adapter will handle filtering.
             </remarks>
         </member>
         <member name="M:TimeSeriesFramework.ServiceHostBase.UnpublishedSamplesHandler(System.Object,TVA.EventArgs{System.Int32})">
