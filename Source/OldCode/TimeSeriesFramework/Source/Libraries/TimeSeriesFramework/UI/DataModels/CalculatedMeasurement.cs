@@ -18,16 +18,18 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/11/2011 - Aniket Salver
 //       Generated original version of source code.
+//  04/21/2011 - Mehulbhai P Thakkar
+//       Added static methods for database operations.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.ObjectModel;
-using TVA.Data;
 using System.Data;
-using System.Collections.Generic;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -572,6 +574,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="CalculatedMeasurement"/> collection is returned.</param>
         /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
         public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, string nodeID)
         {
@@ -586,7 +589,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                     "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
                     "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail Where NodeID = @nodeID Order By LoadOrder",
-                    DefaultTimeout, database.IsJetEngine()? "{" + nodeID + "}" : nodeID);
+                    DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
@@ -633,8 +636,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of companies defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -686,7 +689,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     calculatedMeasurement.InputMeasurements, calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse,
                     calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
                     calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
-                    calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, 
+                    calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod,
                     calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
                     CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
@@ -696,13 +699,13 @@ namespace TimeSeriesFramework.UI.DataModels
                     "LagTime = @lagTime, LeadTime = @leadTime, UseLocalClockAsRealTime = @useLocalClockAsRealTime, AllowSortsByArrival = @allowSortsByArrival, " +
                     "LoadOrder = @loadOrder, Enabled = @enabled, IgnoreBadTimeStamps = @ignoreBadTimeStamps, TimeResolution = @timeResolution, AllowPreemptivePublishing " +
                     "= @allowPreemptivePublishing, DownsamplingMethod = @downsamplingMethod, PerformTimestampReasonabilityCheck = @performTimestampReasonabilityCheck, " +
-                    "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, calculatedMeasurement.NodeID, 
-                    calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName, 
-                    calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements, 
-                    calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond, 
-                    calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival, 
-                    calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution, 
-                    calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck, 
+                    "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, calculatedMeasurement.NodeID,
+                    calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName,
+                    calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements,
+                    calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond,
+                    calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival,
+                    calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution,
+                    calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck,
                     CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, calculatedMeasurement.ID);
 
                 return "Calculated measurement information saved successfully";

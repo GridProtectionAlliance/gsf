@@ -23,13 +23,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using TVA.Data;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -306,7 +303,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 if (createdConnection && database != null)
                     database.Dispose();
-            }            
+            }
         }
 
         /// <summary>
@@ -314,8 +311,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of application roles defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of application roles defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -356,7 +353,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("Insert Into ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout,applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.CreatedBy, applicationRole.CreatedOn);
+                        DefaultTimeout, applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.CreatedBy, applicationRole.CreatedOn);
                 else
                     database.Connection.ExecuteNonQuery("Update ApplicationRole Set Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
                         applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.ID);

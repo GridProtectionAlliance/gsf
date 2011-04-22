@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  04/14/2011 - Mehulbhai P Thakkar
+//       Added static methods for database operations.
 //
 //******************************************************************************************************
 
@@ -34,7 +36,7 @@ namespace TimeSeriesFramework.UI.DataModels
     /// Creates a new object that represents a Vendor
     /// </summary>
     public class Vendor : DataModelBase
-    {        
+    {
         #region [ Members ]
 
         // Fields
@@ -48,7 +50,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        
+
         #endregion
 
         #region [ Properties ]
@@ -59,62 +61,62 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by database via auto-increment, so no validation attributes are applied.
         public int ID
         {
-            get 
-            { 
-                return m_ID; 
+            get
+            {
+                return m_ID;
             }
-            set 
-            { 
-                m_ID = value; 
+            set
+            {
+                m_ID = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
-        [StringLength(3, ErrorMessage="Vendor Acronym cannot exceed 3 characters")]
+        [StringLength(3, ErrorMessage = "Vendor Acronym cannot exceed 3 characters")]
         public string Acronym
         {
-            get 
-            { 
-                return m_acronym; 
+            get
+            {
+                return m_acronym;
             }
-            set 
-            { 
-                m_acronym = value; 
+            set
+            {
+                m_acronym = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Name.
         /// </summary>
-        [Required(ErrorMessage="The Vendor Name is a required field, please provide value")]
-        [StringLength(100, ErrorMessage="Vendor Name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "The Vendor Name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage = "Vendor Name cannot exceed 100 characters.")]
         public string Name
         {
-            get 
-            { 
-                return m_name; 
+            get
+            {
+                return m_name;
             }
-            set 
-            { 
-                m_name = value; 
+            set
+            {
+                m_name = value;
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Vendor"/> Phone Number.
         /// </summary>
-        [StringLength(100, ErrorMessage="Vendor Phone Number cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Vendor Phone Number cannot exceed 100 characters.")]
         public string PhoneNumber
         {
-            get 
-            { 
-                return m_phoneNumber; 
+            get
+            {
+                return m_phoneNumber;
             }
-            set 
-            { 
-                m_phoneNumber = value; 
+            set
+            {
+                m_phoneNumber = value;
             }
         }
 
@@ -124,13 +126,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [StringLength(100, ErrorMessage = "Vendor Contact Email cannot exceed 100 characters.")]
         public string ContactEmail
         {
-            get 
-            { 
-                return m_contactEmail; 
+            get
+            {
+                return m_contactEmail;
             }
-            set 
-            { 
-                m_contactEmail = value; 
+            set
+            {
+                m_contactEmail = value;
             }
         }
 
@@ -140,13 +142,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
         public string URL
         {
-            get 
-            { 
-                return m_URL; 
+            get
+            {
+                return m_URL;
             }
-            set 
-            { 
-                m_URL = value; 
+            set
+            {
+                m_URL = value;
             }
         }
 
@@ -156,13 +158,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get 
-            { 
-                return m_createdOn; 
+            get
+            {
+                return m_createdOn;
             }
-            set 
-            { 
-                m_createdOn = value; 
+            set
+            {
+                m_createdOn = value;
             }
         }
 
@@ -172,13 +174,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get 
-            { 
-                return m_createdBy; 
+            get
+            {
+                return m_createdBy;
             }
-            set 
-            { 
-                m_createdBy = value; 
+            set
+            {
+                m_createdBy = value;
             }
         }
 
@@ -188,13 +190,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get 
-            { 
-                return m_updatedOn; 
+            get
+            {
+                return m_updatedOn;
             }
-            set 
-            { 
-                m_updatedOn = value; 
+            set
+            {
+                m_updatedOn = value;
             }
         }
 
@@ -204,17 +206,17 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get 
-            { 
-                return m_updatedBy; 
-            }
-            set 
+            get
             {
-                m_updatedBy = value; 
+                return m_updatedBy;
+            }
+            set
+            {
+                m_updatedBy = value;
             }
         }
 
-        #endregion        
+        #endregion
 
         #region [ Static ]
 
@@ -264,8 +266,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of vendors defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of vendors defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -312,7 +314,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +
-                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name, 
+                        "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name,
                         vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, vendor.ID);
 

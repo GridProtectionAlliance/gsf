@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 using System;
-using System.Threading;
-using System.Windows.Input;
-using System.Windows;
 using System.Reflection;
+using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace TimeSeriesFramework.UI.Commands
 {
@@ -56,8 +56,8 @@ namespace TimeSeriesFramework.UI.Commands
         /// <summary>
         /// Gets or sets comma seperated values of roles for which menuitem is visible.
         /// </summary>
-        public string Roles 
-        { 
+        public string Roles
+        {
             get
             {
                 return m_roles;
@@ -124,12 +124,18 @@ namespace TimeSeriesFramework.UI.Commands
         /// </summary>
         /// <param name="parameter"></param>
         /// <returns></returns>
-        public bool CanExecute (object parameter)
+        public bool CanExecute(object parameter)
         {
+            bool canExecute;
             if (string.IsNullOrEmpty(Roles) || Roles == "*")
-                return true;
+                canExecute = true;
             else
-                return Thread.CurrentPrincipal.IsInRole(Roles);
+                canExecute = Thread.CurrentPrincipal.IsInRole(Roles);
+
+            //if (CanExecuteChanged != null)
+            //    CanExecuteChanged(this, new EventArgs());
+
+            return canExecute;
         }
 
         /// <summary>

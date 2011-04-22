@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/13/2011 - Aniket Salver
 //       Generated original version of source code.
+//  04/19/2011 - Mehulbhai Thakkar
+//       Added static methods for database operations.
 //
 //******************************************************************************************************
 
@@ -66,11 +68,11 @@ namespace TimeSeriesFramework.UI.DataModels
     /// <summary>
     /// Represents a record of <see cref="Adapter"/> information as defined in the database.
     /// </summary>
-   public class Adapter : DataModelBase
+    public class Adapter : DataModelBase
     {
         #region[Members]
 
-       // Fields
+        // Fields
 
         private string m_nodeID;
         private int m_ID;
@@ -86,7 +88,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-       
+
         #endregion
 
         #region[Properties]
@@ -400,8 +402,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="adapterType">Type of the <see cref="Adapter"/>.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of adapters defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, AdapterType adapterType, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of adapters defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, AdapterType adapterType, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -460,14 +462,14 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isNew)
                     database.Connection.ExecuteNonQuery("Insert Into " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
-                        "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
+                        "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("Update " + tableName + " Set NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
                         "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
-                        "UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName, 
+                        "UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, adapter.ID);
 

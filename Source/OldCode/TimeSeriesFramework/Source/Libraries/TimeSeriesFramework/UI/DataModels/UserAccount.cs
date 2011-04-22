@@ -264,7 +264,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_createdOn = value;
                 OnPropertyChanged("CreatedOn");
-                
+
             }
         }
 
@@ -282,7 +282,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_createdBy = value;
                 OnPropertyChanged("CreatedBy");
-                
+
             }
         }
 
@@ -320,10 +320,10 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        #endregion  
+        #endregion
 
         #region [ Static ]
-        
+
         // Static Methods
 
         /// <summary>
@@ -341,7 +341,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<UserAccount> userAccountList = new ObservableCollection<UserAccount>();
                 DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount Order By Name");
 
-                foreach(DataRow row in userAccountTable.Rows)
+                foreach (DataRow row in userAccountTable.Rows)
                 {
                     userAccountList.Add(new UserAccount()
                     {
@@ -367,7 +367,7 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             finally
             {
-                if(createdConnection && database != null)
+                if (createdConnection && database != null)
                     database.Dispose();
             }
         }
@@ -377,8 +377,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of user accounts defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of user accounts defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -423,20 +423,20 @@ namespace TimeSeriesFramework.UI.DataModels
                     userAccount.DefaultNodeID = "{" + userAccount.DefaultNodeID + "}";
                     passwordColumn = "[Password]";
                 }
-                
+
                 object changePasswordOn = userAccount.ChangePasswordOn;
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
                     changePasswordOn = (object)DBNull.Value;
                 else if (database.IsJetEngine())
                     changePasswordOn = userAccount.ChangePasswordOn.Date;
-                
-                if (isNew)                    
-                        database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
-                            "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
-                            "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
-                            userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                            CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);                    
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
+                        "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
+                        "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
+                        userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
+                        userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("Update UserAccount Set Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
                             "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +

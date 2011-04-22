@@ -278,8 +278,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of companies defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
@@ -291,10 +291,10 @@ namespace TimeSeriesFramework.UI.DataModels
                     companyList.Add(0, "Select Company");
 
                 DataTable companyTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Company ORDER BY LoadOrder");
-                
+
                 foreach (DataRow row in companyTable.Rows)
                     companyList[row.Field<int>("ID")] = row.Field<string>("Name");
-                
+
                 return companyList;
             }
             finally
@@ -326,10 +326,10 @@ namespace TimeSeriesFramework.UI.DataModels
                         CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(), 
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(),
                         company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? string.Empty, company.LoadOrder, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, company.ID);
-                
+
                 return "Company information saved successfully";
             }
             finally

@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  04/18/2011 - Mehulbhai P Thakkar
+//       Added static methods for database operations.
 //
 //******************************************************************************************************
 
@@ -35,7 +37,7 @@ namespace TimeSeriesFramework.UI.DataModels
     /// Creates a new object that represents a Node
     /// </summary>
     public class Node : DataModelBase
-    {        
+    {
         #region [ Members ]
 
         // Fields
@@ -57,7 +59,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        
+
         #endregion
 
         #region [ Properties ]
@@ -65,7 +67,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s ID.
         /// </summary>
-        [StringLength(36, ErrorMessage="Node ID cannot exceed 36 characters")]
+        [StringLength(36, ErrorMessage = "Node ID cannot exceed 36 characters")]
         public string ID
         {
             get
@@ -81,17 +83,17 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Name.
         /// </summary>
-        [Required(ErrorMessage="Node name is a required field, please provide a value")]
-        [StringLength(100, ErrorMessage="Name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "Node name is a required field, please provide a value")]
+        [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
         public string Name
         {
-            get 
-            { 
-                return m_name; 
+            get
+            {
+                return m_name;
             }
-            set 
-            { 
-                m_name = value; 
+            set
+            {
+                m_name = value;
             }
         }
 
@@ -101,13 +103,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public int? CompanyID
         {
-            get 
-            { 
-                return m_companyID; 
-            }
-            set 
+            get
             {
-                m_companyID = value; 
+                return m_companyID;
+            }
+            set
+            {
+                m_companyID = value;
             }
         }
 
@@ -117,13 +119,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public decimal? Longitude
         {
-            get 
-            { 
-                return m_longitude; 
+            get
+            {
+                return m_longitude;
             }
-            set 
-            { 
-                m_longitude = value; 
+            set
+            {
+                m_longitude = value;
             }
         }
 
@@ -133,13 +135,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public decimal? Latitude
         {
-            get 
-            { 
-                return m_latitude; 
+            get
+            {
+                return m_latitude;
             }
-            set 
-            { 
-                m_latitude = value; 
+            set
+            {
+                m_latitude = value;
             }
         }
 
@@ -149,13 +151,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string Description
         {
-            get 
-            { 
-                return m_description; 
+            get
+            {
+                return m_description;
             }
-            set 
-            { 
-                m_description = value; 
+            set
+            {
+                m_description = value;
             }
         }
 
@@ -165,13 +167,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string Image
         {
-            get 
-            { 
-                return m_image; 
-            }
-            set 
+            get
             {
-                m_image = value; 
+                return m_image;
+            }
+            set
+            {
+                m_image = value;
             }
         }
 
@@ -181,13 +183,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(bool), "false")]
         public bool Master
         {
-            get 
-            { 
-                return m_master; 
-            }
-            set 
+            get
             {
-                m_master = value; 
+                return m_master;
+            }
+            set
+            {
+                m_master = value;
             }
         }
 
@@ -197,13 +199,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(int), "0")]
         public int LoadOrder
         {
-            get 
-            { 
-                return m_loadOrder; 
+            get
+            {
+                return m_loadOrder;
             }
-            set 
-            { 
-                m_loadOrder = value; 
+            set
+            {
+                m_loadOrder = value;
             }
         }
 
@@ -213,13 +215,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(bool), "false")]
         public bool Enabled
         {
-            get 
-            { 
-                return m_enabled; 
+            get
+            {
+                return m_enabled;
             }
-            set 
-            { 
-                m_enabled = value; 
+            set
+            {
+                m_enabled = value;
             }
         }
 
@@ -245,13 +247,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DataType(DataType.Url, ErrorMessage = "Remote Status Service URL is not formatted properly.")]
         public string RemoteStatusServiceUrl
         {
-            get 
-            { 
-                return m_remoteStatusServiceUrl; 
+            get
+            {
+                return m_remoteStatusServiceUrl;
             }
-            set 
-            { 
-                m_remoteStatusServiceUrl = value; 
+            set
+            {
+                m_remoteStatusServiceUrl = value;
             }
         }
 
@@ -261,13 +263,13 @@ namespace TimeSeriesFramework.UI.DataModels
         [DataType(DataType.Url, ErrorMessage = "Real Time Statistics Service URL is not formatted properly.")]
         public string RealTimeStatisticServiceUrl
         {
-            get 
-            { 
-                return m_realTimeStatisticServiceUrl; 
+            get
+            {
+                return m_realTimeStatisticServiceUrl;
             }
-            set 
-            { 
-                m_realTimeStatisticServiceUrl = value; 
+            set
+            {
+                m_realTimeStatisticServiceUrl = value;
             }
         }
 
@@ -277,13 +279,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string CompanyName
         {
-            get 
-            { 
-                return m_companyName; 
-            }
-            set 
+            get
             {
-                m_companyName = value; 
+                return m_companyName;
+            }
+            set
+            {
+                m_companyName = value;
             }
         }
 
@@ -293,13 +295,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get 
-            { 
-                return m_createdOn; 
+            get
+            {
+                return m_createdOn;
             }
-            set 
-            { 
-                m_createdOn = value; 
+            set
+            {
+                m_createdOn = value;
             }
         }
 
@@ -309,13 +311,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get 
-            { 
-                return m_createdBy; 
+            get
+            {
+                return m_createdBy;
             }
-            set 
-            { 
-                m_createdBy = value; 
+            set
+            {
+                m_createdBy = value;
             }
         }
 
@@ -325,13 +327,13 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get 
-            { 
-                return m_updatedOn; 
+            get
+            {
+                return m_updatedOn;
             }
-            set 
-            { 
-                m_updatedOn = value; 
+            set
+            {
+                m_updatedOn = value;
             }
         }
 
@@ -341,18 +343,18 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get 
-            { 
-                return m_updatedBy; 
+            get
+            {
+                return m_updatedBy;
             }
-            set 
-            { 
-                m_updatedBy = value; 
+            set
+            {
+                m_updatedBy = value;
             }
         }
 
-        #endregion   
-     
+        #endregion
+
         #region [ Static ]
 
         // Static Methods
@@ -412,8 +414,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<string, string> containing ID and Name of nodes defined in the database.</returns>
-        public static Dictionary<string, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of nodes defined in the database.</returns>
+        public static Dictionary<string, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
             try
