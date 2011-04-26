@@ -358,7 +358,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("Update ApplicationRole Set Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
                         applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.ID);
 
-                return "Application Role information saved successfully";
+                return "Application role information saved successfully";
             }
             finally
             {
@@ -386,7 +386,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery("DELETE FROM ApplicationRole WHERE ID = @applicationRoleID", DefaultTimeout, applicationRoleID);
 
-                return "Company deleted successfully";
+                return "Application role deleted successfully";
             }
             finally
             {
