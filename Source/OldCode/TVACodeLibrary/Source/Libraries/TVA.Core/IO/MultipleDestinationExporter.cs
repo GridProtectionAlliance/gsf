@@ -262,6 +262,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Configuration;
 using System.Drawing;
@@ -269,9 +270,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using TVA.Collections;
 using TVA.Configuration;
-using System.Collections.ObjectModel;
 
 namespace TVA.IO
 {
@@ -533,6 +532,7 @@ namespace TVA.IO
         private Encoding m_textEncoding;
         private List<ExportDestination> m_exportDestinations;
         private bool m_exportInProgress;
+        private object m_exportInProgressLock;
         private int m_maximumRetryAttempts;
         private int m_retryDelayInterval;
         private bool m_enabled;
@@ -575,6 +575,7 @@ namespace TVA.IO
             m_maximumRetryAttempts = DefaultMaximumRetryAttempts;
             m_retryDelayInterval = DefaultRetryDelayInterval;
             m_textEncoding = Encoding.Default; // We use default ANSI page encoding for text based exports...
+            m_exportInProgressLock = new object();
         }
 
         #endregion
@@ -908,7 +909,7 @@ namespace TVA.IO
                 // Save settings under the specified category.
                 ConfigurationFile config = ConfigurationFile.Current;
                 CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
-                
+
                 settings.Clear();
                 settings["ExportTimeout", true].Update(m_exportTimeout, "Total allowed time for each export to execute, in milliseconds. Set to -1 for no specific timeout.");
                 settings["MaximumRetryAttempts", true].Update(m_maximumRetryAttempts, "Maximum number of retries that will be attempted during an export if the export fails. Set to zero to only attempt export once.");
@@ -1158,11 +1159,11 @@ namespace TVA.IO
             if (m_enabled)
             {
                 // Ensure that only one export will be queued and exporting at once
-                lock (this)
+                lock (m_exportInProgressLock)
                 {
                     if (m_exportInProgress)
                     {
-                        OnProcessException(new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress."));
+                        throw new InvalidOperationException("Export failed: cannot export data while another export attempt is already in progress.");
                     }
                     else
                     {
@@ -1173,7 +1174,7 @@ namespace TVA.IO
             }
             else
             {
-                OnProcessException(new InvalidOperationException("Export failed: exporter is not currently enabled."));
+                throw new InvalidOperationException("Export failed: exporter is not currently enabled.");
             }
         }
 
@@ -1259,7 +1260,7 @@ namespace TVA.IO
             finally
             {
                 // Synchronously reset export progress state
-                lock (this)
+                lock (m_exportInProgressLock)
                 {
                     m_exportInProgress = false;
                 }
