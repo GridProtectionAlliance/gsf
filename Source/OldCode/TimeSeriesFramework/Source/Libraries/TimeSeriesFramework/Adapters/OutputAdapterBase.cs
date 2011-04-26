@@ -144,7 +144,7 @@ namespace TimeSeriesFramework.Adapters
                 // Filter measurements to list of specified source IDs
                 if (m_sourceIDs != null)
                 {
-                    // Attempt to lookup other associated measurement meta-data from default measurement table, if defined
+                    // Attempt to lookup input measurement keys for gievn source IDs from default measurement table, if defined
                     try
                     {
                         if (DataSource.Tables.Contains("ActiveMeasurements"))
@@ -162,7 +162,9 @@ namespace TimeSeriesFramework.Adapters
 
                             DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(likeExpression.ToString());
 
-                            InputMeasurementKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                            if (filteredRows.Length > 0)
+                                InputMeasurementKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).Concat(InputMeasurementKeys).Distinct().ToArray();
                         }
                     }
                     catch

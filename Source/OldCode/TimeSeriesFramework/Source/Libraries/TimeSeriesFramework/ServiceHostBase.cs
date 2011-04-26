@@ -20,6 +20,9 @@
 //       Generated original version of source code.
 //  01/30/2011 - Pinal C. Patel
 //       Updated to subscribe to new ProcessException event of MultiDestinationExporter class.
+//  04/21/2011 - Timothy M. Yardley / Erich A. Heine (UIUC)
+//       Implemented an optional, but enabled by default, non-broadcast method of directly routed
+//       measurement distribution as a system performance optimization.
 //
 //******************************************************************************************************
 
