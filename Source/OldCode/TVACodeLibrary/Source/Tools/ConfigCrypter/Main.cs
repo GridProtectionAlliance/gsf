@@ -14,6 +14,8 @@
 //       Added new header and license agreement.
 //  12/14/2009 - Pinal C. Patel
 //       Added option to import and export key IV via clipboard.
+//  04/26/2011 - J. Ritchie Carroll
+//       Added call to flush crypto cache on shutdown.
 //
 //*******************************************************************************************************
 
@@ -266,6 +268,11 @@ namespace ConfigCrypter
         {
             // Set the window title to application name and version.
             this.Text = string.Format(this.Text, AssemblyInfo.EntryAssembly.Product, AssemblyInfo.EntryAssembly.Version.ToString(2));
+        }
+
+        private void Main_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Cipher.FlushCache();
         }
 
         private void RadioButtonEncrypt_CheckedChanged(object sender, EventArgs e)
