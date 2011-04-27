@@ -571,6 +571,9 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("processByReceivedTimestamp", out setting))
                 ProcessByReceivedTimestamp = setting.ParseBoolean();
 
+            if (settings.TryGetValue("trackPublishedTimestamp", out setting))
+                TrackPublishedTimestamp = setting.ParseBoolean();
+
             if (settings.TryGetValue("downsamplingMethod", out setting))
                 DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
         }
@@ -673,6 +676,9 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void QueueMeasurementForProcessing(IMeasurement measurement)
         {
+            if (m_disposed)
+                return;
+
             // If this is an input measurement to this adapter, sort it!
             if (!ProcessMeasurementFilter || IsInputMeasurement(measurement.Key))
                 SortMeasurement(measurement);
@@ -687,6 +693,9 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            if (m_disposed)
+                return;
+
             if (ProcessMeasurementFilter)
             {
                 List<IMeasurement> inputMeasurements = new List<IMeasurement>();

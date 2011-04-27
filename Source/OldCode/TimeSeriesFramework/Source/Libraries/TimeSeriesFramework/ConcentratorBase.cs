@@ -414,6 +414,7 @@ namespace TimeSeriesFramework
         private bool m_allowPreemptivePublishing;           // Determines whether or not to preemptively publish frame if expected measurements arrive
         private bool m_performTimestampReasonabilityCheck;  // Determines whether or not to execute timestamp reasonability checks (i.e., lead time validation)
         private bool m_processByReceivedTimestamp;          // Determines whether or not to sort and publish measurements by their ReceivedTimestamp
+        private bool m_trackPublishedTimestamp;             // Determines whether or not to track timestamp of publication for all processed frames and measurements
         private int m_expectedMeasurements;                 // Expected number of measurements to be sorted into a frame
         private long m_receivedMeasurements;                // Total number of measurements ever received for sorting
         private long m_processedMeasurements;               // Total number of measurements ever successfully sorted
@@ -811,14 +812,15 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets flag that determines if concentrator should short measurements by received flag.
+        /// Gets or sets flag that determines if concentrator should sort measurements by received time.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Setting this value to <c>true</c> will make concentrator use the timestamp of measurement reception, which
-        /// is typically the <see cref="IMeasurement"/> creation time, for sorting and publication. This is useful in
-        /// scenarios where the concentrator will be receiving very large volumes of data but not necessarily in
-        /// real-time, such as, reading data from a file where you want it sorted and processed as fast as possible.
+        /// Setting this value to <c>true</c> will make concentrator use the timestamp of measurement
+        /// reception, which is typically the <see cref="IMeasurement"/> creation time, for sorting and
+        /// publication. This is useful in scenarios where the concentrator will be receiving very large
+        /// volumes of data but not necessarily in real-time, such as, reading values from a file where
+        /// you want data to be sorted and processed as fast as possible.
         /// </para>
         /// <para>
         /// Setting this value to <c>true</c> will force <see cref="UseLocalClockAsRealTime"/> to be <c>true</c>.
@@ -837,6 +839,28 @@ namespace TimeSeriesFramework
                 if (m_processByReceivedTimestamp)
                     m_useLocalClockAsRealTime = true;
             }
+        }
+
+        /// <summary>
+        /// Gets or sets flag that determines if system should track timestamp of publication for all frames and measurements.
+        /// </summary>
+        /// <remarks>
+        /// Setting this value to <c>true</c> will cause the concentrator to mark the timestamp of publication in each
+        /// <see cref="IFrame.PublishedTimestamp"/> and its measurement's <see cref="IMeasurement.PublishedTimestamp"/>.
+        /// Since this is extra processing time that may not be needed except in cases of calculating statistics for
+        /// system performance, this must be explicitly enabled.
+        /// </remarks>
+        public bool TrackPublishedTimestamp
+        {
+            get
+            {
+                return m_trackPublishedTimestamp;
+            }
+            set
+            {
+                m_trackPublishedTimestamp = value;
+            }
+
         }
 
         /// <summary>
@@ -1271,6 +1295,8 @@ namespace TimeSeriesFramework
                 status.AppendFormat(" Use preemptive publishing: {0}", m_allowPreemptivePublishing);
                 status.AppendLine();
                 status.AppendFormat("  Time reasonability check: {0}", m_performTimestampReasonabilityCheck ? "Enabled" : "Disabled");
+                status.AppendLine();
+                status.AppendFormat(" Tracking publication time: {0}", m_trackPublishedTimestamp);
                 status.AppendLine();
                 status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
                 status.AppendLine();
@@ -1770,7 +1796,7 @@ namespace TimeSeriesFramework
                             }
                             else
                             {
-                                // Resonability checks are disabled, assume newest time is real-time...
+                                // Reasonability checks are disabled, assume newest time is real-time...
                                 Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
                             }
                         }
@@ -1938,7 +1964,7 @@ namespace TimeSeriesFramework
                             {
                                 // When processing by received timestamp, we need to test received timestamp against lagtime
                                 // to make sure there has been time enough to publish frame:
-                                if (m_lagTicks - (RealTime - frame.PublishedTimestamp) > 0)
+                                if (m_lagTicks - (RealTime - frame.ReceivedTimestamp) > 0)
                                     break;
                             }
                             else
@@ -2001,7 +2027,8 @@ namespace TimeSeriesFramework
 #else
                                 stopTime = DateTime.UtcNow.Ticks;
 #endif
-                                frame.PublishedTimestamp = stopTime;
+                                if (m_trackPublishedTimestamp)
+                                    frame.PublishedTimestamp = stopTime;
 
                                 // Track total publication time
                                 m_totalPublishTime += (stopTime - startTime);

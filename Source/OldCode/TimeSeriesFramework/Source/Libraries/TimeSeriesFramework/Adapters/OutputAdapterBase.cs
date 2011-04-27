@@ -33,7 +33,7 @@ using TVA.Collections;
 namespace TimeSeriesFramework.Adapters
 {
     /// <summary>
-    /// Represents that base class for any outgoing data stream.
+    /// Represents the base class for any outgoing data stream.
     /// </summary>
     /// <remarks>
     /// This base class acts as a measurement queue so that output adapters can temporarily go
@@ -134,7 +134,9 @@ namespace TimeSeriesFramework.Adapters
             set
             {
                 if (value == null)
+                {
                     m_sourceIDs = null;
+                }
                 else
                 {
                     m_sourceIDs = new List<string>(value);
@@ -144,7 +146,7 @@ namespace TimeSeriesFramework.Adapters
                 // Filter measurements to list of specified source IDs
                 if (m_sourceIDs != null)
                 {
-                    // Attempt to lookup input measurement keys for gievn source IDs from default measurement table, if defined
+                    // Attempt to lookup input measurement keys for given source IDs from default measurement table, if defined
                     try
                     {
                         if (DataSource.Tables.Contains("ActiveMeasurements"))
@@ -161,10 +163,19 @@ namespace TimeSeriesFramework.Adapters
                             }
 
                             DataRow[] filteredRows = DataSource.Tables["ActiveMeasurements"].Select(likeExpression.ToString());
+                            MeasurementKey[] sourceIDKeys = null;
 
-                            // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
                             if (filteredRows.Length > 0)
-                                InputMeasurementKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).Concat(InputMeasurementKeys).Distinct().ToArray();
+                                sourceIDKeys = filteredRows.Select(row => MeasurementKey.Parse(row["ID"].ToNonNullString("_:0"))).ToArray();
+
+                            if (sourceIDKeys != null)
+                            {
+                                // Combine input measurement keys for source IDs with any existing input measurement keys and return unique set
+                                if (InputMeasurementKeys == null)
+                                    InputMeasurementKeys = sourceIDKeys;
+                                else
+                                    InputMeasurementKeys = sourceIDKeys.Concat(InputMeasurementKeys).Distinct().ToArray();
+                            }
                         }
                     }
                     catch
@@ -353,7 +364,8 @@ namespace TimeSeriesFramework.Adapters
         protected virtual void OnConnected()
         {
             // Start data processing thread
-            m_measurementQueue.Start();
+            if (m_measurementQueue != null)
+                m_measurementQueue.Start();
 
             OnStatusMessage("Connection established.");
         }
@@ -426,6 +438,9 @@ namespace TimeSeriesFramework.Adapters
         /// <param name="measurements">Measurements to queue for processing.</param>
         public virtual void QueueMeasurementsForProcessing(IEnumerable<IMeasurement> measurements)
         {
+            if (m_disposed)
+                return;
+
             if (!ProcessMeasurementFilter || InputMeasurementKeys == null)
             {
                 // No further filtering of incoming measurement required
@@ -495,6 +510,9 @@ namespace TimeSeriesFramework.Adapters
         /// </remarks>
         public virtual void RemoveMeasurements(int total)
         {
+            if (m_disposed)
+                return;
+
             lock (m_measurementQueue.SyncRoot)
             {
                 if (total > m_measurementQueue.Count)
