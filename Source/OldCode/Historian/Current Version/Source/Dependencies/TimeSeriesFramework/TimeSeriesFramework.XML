@@ -420,18 +420,30 @@
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.ProcessByReceivedTimestamp">
             <summary>
-            Gets or sets flag that determines if concentrator should short measurements by received flag.
+            Gets or sets flag that determines if concentrator should sort measurements by received time.
             </summary>
             <remarks>
             <para>
-            Setting this value to <c>true</c> will make concentrator use the timestamp of measurement reception, which
-            is typically the <see cref="T:TimeSeriesFramework.IMeasurement"/> creation time, for sorting and publication. This is useful in
-            scenarios where the concentrator will be receiving very large volumes of data but not necessarily in
-            real-time, such as, reading data from a file where you want it sorted and processed as fast as possible.
+            Setting this value to <c>true</c> will make concentrator use the timestamp of measurement
+            reception, which is typically the <see cref="T:TimeSeriesFramework.IMeasurement"/> creation time, for sorting and
+            publication. This is useful in scenarios where the concentrator will be receiving very large
+            volumes of data but not necessarily in real-time, such as, reading values from a file where
+            you want data to be sorted and processed as fast as possible.
             </para>
             <para>
             Setting this value to <c>true</c> will force <see cref="P:TimeSeriesFramework.ConcentratorBase.UseLocalClockAsRealTime"/> to be <c>true</c>.
             </para>
+            </remarks>
+        </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.TrackPublishedTimestamp">
+            <summary>
+            Gets or sets flag that determines if system should track timestamp of publication for all frames and measurements.
+            </summary>
+            <remarks>
+            Setting this value to <c>true</c> will cause the concentrator to mark the timestamp of publication in each
+            <see cref="P:TimeSeriesFramework.IFrame.PublishedTimestamp"/> and its measurement's <see cref="P:TimeSeriesFramework.IMeasurement.PublishedTimestamp"/>.
+            Since this is extra processing time that may not be needed except in cases of calculating statistics for
+            system performance, this must be explicitly enabled.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.Enabled">
@@ -3403,7 +3415,7 @@
         </member>
         <member name="T:TimeSeriesFramework.Adapters.OutputAdapterBase">
             <summary>
-            Represents that base class for any outgoing data stream.
+            Represents the base class for any outgoing data stream.
             </summary>
             <remarks>
             This base class acts as a measurement queue so that output adapters can temporarily go
