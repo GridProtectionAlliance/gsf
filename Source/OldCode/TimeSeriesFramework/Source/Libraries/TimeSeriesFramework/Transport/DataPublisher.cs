@@ -36,7 +36,6 @@ using System.Threading;
 using TimeSeriesFramework.Adapters;
 using TVA;
 using TVA.Communication;
-using TVA.Security.Cryptography;
 
 namespace TimeSeriesFramework.Transport
 {
@@ -117,12 +116,19 @@ namespace TimeSeriesFramework.Transport
             /// <summary>
             /// Gets the <see cref="Guid"/> client identifier of this <see cref="IClientSubscription"/>.
             /// </summary>
-            Guid ClientID { get; }
+            Guid ClientID
+            {
+                get;
+            }
 
             /// <summary>
             /// Gets or sets flag that determines if the compact measurement format should be used in data packets of this <see cref="IClientSubscription"/>.
             /// </summary>
-            bool UseCompactMeasurementFormat { get; set; }
+            bool UseCompactMeasurementFormat
+            {
+                get;
+                set;
+            }
         }
 
         // Synchronized action adapter interface
@@ -897,7 +903,7 @@ namespace TimeSeriesFramework.Transport
                 {
                     if (ex.ErrorCode != 10054)
                         OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
-                }            
+                }
                 catch (Exception ex)
                 {
                     OnProcessException(new InvalidOperationException("Failed to send response packet to client due to exception: " + ex.Message, ex));
@@ -994,7 +1000,7 @@ namespace TimeSeriesFramework.Transport
                                     }
                                     else
                                         throw new InvalidOperationException("Authentication Failure: No password key was provided in subscriber connection string.");
-                                   
+
                                     IClientSubscription subscription;
 
                                     // Attempt to lookup adapter by its client ID
@@ -1153,8 +1159,8 @@ namespace TimeSeriesFramework.Transport
         private void m_dataServer_SendClientDataException(object sender, EventArgs<Guid, Exception> e)
         {
             Exception ex = e.Argument2;
-            
-            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while sending data to client connection: " + ex.Message, ex));
         }
 
@@ -1162,7 +1168,7 @@ namespace TimeSeriesFramework.Transport
         {
             Exception ex = e.Argument2;
 
-            if (!(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
+            if (!(ex is NullReferenceException) && !(ex is ObjectDisposedException) && !(ex is System.Net.Sockets.SocketException && ((System.Net.Sockets.SocketException)ex).ErrorCode == 10054))
                 OnProcessException(new InvalidOperationException("Data publisher encountered an exception while receiving data from client connection: " + ex.Message, ex));
         }
 
