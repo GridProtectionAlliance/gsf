@@ -7,13 +7,15 @@
              d:DesignHeight="30" d:DesignWidth="300">
     
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Command="{Binding FirstCommand}" Content="&lt;&lt;" Width="50" Margin="2" Padding="2" />
-            <Button Command="{Binding PreviousCommand}" Content="&lt;" Width="50" Margin="2" Padding="2" />
+            <TextBlock Text="Page Size:" Width="60" Margin="2" Padding="2" />
+            <TextBlock Text="{Binding ItemsPerPage}" TextAlignment="Left" Width="30" Margin="2,2,10,2" Padding="2" />
+            <Button Command="{Binding FirstCommand}" Content="&lt;&lt;" Width="50" Margin="2" Padding="2" ToolTip="Go to first page" />
+            <Button Command="{Binding PreviousCommand}" Content="&lt;" Width="50" Margin="2" Padding="2" ToolTip="Go to previous page" />
             <TextBlock Text="{Binding CurrentPageNumber}" TextAlignment="Center" Width="50" Margin="2" Padding="2" />
             <TextBlock Text="of" TextAlignment="Center" Width="25" Margin="2" Padding="2" />
             <TextBlock Text="{Binding PageCount}" TextAlignment="Center" Width="50" Margin="2" Padding="2" />
-            <Button Command="{Binding NextCommand}" Content="&gt;" Width="50" Margin="2" Padding="2" />
-            <Button Command="{Binding LastCommand}" Content="&gt;&gt;" Width="50" Margin="2" Padding="2" />
+            <Button Command="{Binding NextCommand}" Content="&gt;" Width="50" Margin="2" Padding="2" ToolTip="Go to next page" />
+            <Button Command="{Binding LastCommand}" Content="&gt;&gt;" Width="50" Margin="2" Padding="2" ToolTip="Go to last page" />
         </StackPanel>
     
 </UserControl>

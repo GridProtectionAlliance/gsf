@@ -45,6 +45,19 @@ namespace TimeSeriesFramework.UI.ViewModels
 
         #endregion
 
+        #region [ Constructor ]
+
+        /// <summary>
+        /// Creates an instance of <see cref="Companies"/> class.
+        /// </summary>
+        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
+        public Companies(int itemsPerPage)
+            : base(itemsPerPage)
+        {
+        }
+
+        #endregion
+
         #region [ Methods ]
 
         /// <summary>

@@ -4,7 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"                                                     
-             mc:Ignorable="d" d:DesignHeight="600" d:DesignWidth="800"
+             mc:Ignorable="d" d:DesignHeight="550" d:DesignWidth="750"
              xmlns:uc="clr-namespace:TimeSeriesFramework.UI.UserControls"
              xmlns:tsfBinding="clr-namespace:TimeSeriesFramework.UI.Binding;assembly=TimeSeriesFramework.UI"
              Background="Transparent">
@@ -72,7 +72,7 @@
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
                
-        <uc:DataPagerUserControl ItemsPerPage="20" CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
+        <uc:DataPagerUserControl CurrentPageNumber="{Binding CurrentPageNumber}" PageCount="{Binding PageCount}"
                                  FirstCommand="{Binding FirstCommand}" PreviousCommand="{Binding PreviousCommand}"
                                  NextCommand="{Binding NextCommand}" LastCommand="{Binding LastCommand}"/>
     </StackPanel>

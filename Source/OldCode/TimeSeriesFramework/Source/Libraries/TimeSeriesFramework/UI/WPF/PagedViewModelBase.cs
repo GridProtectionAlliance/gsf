@@ -61,8 +61,10 @@ namespace TimeSeriesFramework.UI
         /// <summary>
         /// Creates a new instance of the <see cref="PagedViewModelBase{T1,T2}"/> class.
         /// </summary>
-        protected PagedViewModelBase()
+        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
+        protected PagedViewModelBase(int itemsPerPage)
         {
+            m_itemsPerPage = itemsPerPage;
             Load();
         }
 
@@ -102,7 +104,7 @@ namespace TimeSeriesFramework.UI
                 if (m_itemsPerPage > 0)
                     return m_itemsPerPage;
                 else
-                    return 20;
+                    return 20;  //default value.
             }
             set
             {
