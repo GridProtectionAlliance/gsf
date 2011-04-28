@@ -1579,7 +1579,8 @@ namespace TVA.Data
         /// <exception cref="ArgumentException">Number of <see cref="IDbDataParameter"/> arguments in <paramref name="sql"/> expression, identified by '@', do not match number of supplied parameter <paramref name="values"/>.</exception>
         public static void AddParametersWithValues(this IDbCommand command, string sql, params object[] values)
         {
-            string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith("@")).ToArray();
+            // Pick up all parameters that start with @ but skip key words such as @@IDENTITY
+            string[] tokens = sql.Split(' ', '(', ')', ',', '=').Where(token => token.StartsWith("@") && !token.StartsWith("@@")).ToArray();
             int i = 0;
 
             if (tokens.Length != values.Length)
