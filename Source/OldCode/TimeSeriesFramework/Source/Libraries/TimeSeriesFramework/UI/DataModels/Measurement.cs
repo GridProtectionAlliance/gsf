@@ -27,6 +27,9 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using TVA.Data;
+using System.Collections.ObjectModel;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -34,7 +37,7 @@ namespace TimeSeriesFramework.UI.DataModels
     /// <summary>
     /// Creates a new object that represents a Measurement
     /// </summary>
-    public class Measurement
+    public class Measurement : DataModelBase
     {
         #region [ Members ]
 
@@ -81,7 +84,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalID = value; 
+                m_signalID = value;
+                OnPropertyChanged("SignalID");
             }
         }
 
@@ -97,7 +101,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_historianID = value; 
+                m_historianID = value;
+                OnPropertyChanged("HistorianID");
             }
         }
 
@@ -113,7 +118,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_pointID = value; 
+                m_pointID = value;
+                OnPropertyChanged("PointID");
             }
         }
 
@@ -129,7 +135,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_deviceID = value; 
+                m_deviceID = value;
+                OnPropertyChanged("DeviceID");
             }
         }
 
@@ -146,7 +153,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_pointTag = value; 
+                m_pointTag = value;
+                OnPropertyChanged("PointTag");
             }
         }
 
@@ -162,7 +170,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_alternateTag = value; 
+                m_alternateTag = value;
+                OnPropertyChanged("AlternateTag");
             }
         }
 
@@ -178,7 +187,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalTypeID = value; 
+                m_signalTypeID = value;
+                OnPropertyChanged("SignalTypeID");
             }
         }
 
@@ -194,7 +204,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_phasorSourceIndex = value; 
+                m_phasorSourceIndex = value;
+                OnPropertyChanged("PhasorSourceIndex");
             }
         }
 
@@ -210,7 +221,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalReference = value; 
+                m_signalReference = value;
+                OnPropertyChanged("SignalReference");
             }
         }
 
@@ -226,7 +238,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_adder = value; 
+                m_adder = value;
+                OnPropertyChanged("Adder");
             }
         }
 
@@ -242,7 +255,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_multiplier = value; 
+                m_multiplier = value;
+                OnPropertyChanged("Multiplier");
             }
         }
 
@@ -258,7 +272,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_description = value; 
+                m_description = value;
+                OnPropertyChanged("Description");
             }
         }
 
@@ -274,7 +289,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_enabled = value; 
+                m_enabled = value;
+                OnPropertyChanged("Enabled");
             }
         }
 
@@ -290,7 +306,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_historianAcronym = value; 
+                m_historianAcronym = value;
+                OnPropertyChanged("HistorianAcronym");
             }
         }
 
@@ -306,7 +323,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_deviceAcronym = value; 
+                m_deviceAcronym = value;
+                OnPropertyChanged("DeviceAcronym");
             }
         }
 
@@ -322,7 +340,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_framesPerSecond = value; 
+                m_framesPerSecond = value;
+                OnPropertyChanged("FramesPerSecond");
             }
         }
 
@@ -338,7 +357,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalName = value; 
+                m_signalName = value;
+                OnPropertyChanged("SignalName");
             }
         }
 
@@ -354,7 +374,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalAcronym = value; 
+                m_signalAcronym = value;
+                OnPropertyChanged("SignalAcronym");
             }
         }
 
@@ -370,7 +391,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_signalSuffix = value; 
+                m_signalSuffix = value;
+                OnPropertyChanged("SignalSuffix");
             }
         }
 
@@ -386,7 +408,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_phasorLabel = value; 
+                m_phasorLabel = value;
+                OnPropertyChanged("PhasorLabel");
             }
         }
 
@@ -402,7 +425,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdOn = value; 
+                m_createdOn = value;
+                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -418,7 +442,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdBy = value; 
+                m_createdBy = value;
+                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -434,7 +459,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_updatedOn = value; 
+                m_updatedOn = value;
+                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -450,27 +476,157 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_updatedBy = value; 
+                m_updatedBy = value;
+                OnPropertyChanged("UpdatedBy");
+            }
+        }
+
+        #endregion
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Loads <see cref="Measurement"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Measurement"/>.</returns>
+        public static ObservableCollection<Measurement> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<Measurement> measurementList = new ObservableCollection<Measurement>();
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT SignalID, HistorianID, PointID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Adder, Multiplier, Description, Enabled, CreatedOn, CreatedBy, UpdatedOn, UpdatedBy " +
+                    "FROM Measurement ORDER BY PointID");
+
+                foreach (DataRow row in measurementTable.Rows)
+                {
+                    measurementList.Add(new Measurement()
+                    {
+                        SignalID = row.Field<string>("SignalID"),
+                        HistorianID = row.Field<int>("HistorianID"),
+                        PointID = row.Field<int>("PointID"),
+                        DeviceID = row.Field<int>("DeviceID"),
+                        PointTag = row.Field<string>("PointTag"),
+                        AlternateTag = row.Field<string>("AlternateTag"),
+                        SignalTypeID = row.Field<int>("SignalTypeID"),
+                        PhasorSourceIndex = row.Field<int>("PhasorSourceIndex"),
+                        SignalReference = row.Field<string>("SignalReference"),
+                        Adder = row.Field<double>("Adder"),
+                        Multiplier = row.Field<double>("Multiplier"),
+                        Description = row.Field<string>("Description"),
+                        Enabled = row.Field<bool>("Enabled"),
+                        CreatedOn = row.Field<DateTime>("CreatedOn"),
+                        CreatedBy = row.Field<string>("CreatedBy"),
+                        UpdatedOn = row.Field<DateTime>("UpdatedOn"),
+                        UpdatedBy = row.Field<string>("UpdatedBy")
+                    });
+                }
+
+                return measurementList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
             }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Measurement"/>'s ID.
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Measurement"/> information.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        public string ID
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing PointID and SignalID of measurements defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
-            get 
-            { 
-                return m_ID; 
-            }
-            set 
+            bool createdConnection = false;
+            try
             {
-                m_ID = value; 
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> measurementList = new Dictionary<int, string>();
+                if (isOptional)
+                    measurementList.Add(0, "Select Measurement");
+
+                DataTable measurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT PointID, SignalID FROM Measurement ORDER BY PointID");
+
+                foreach (DataRow row in measurementTable.Rows)
+                    measurementList[row.Field<int>("PointID")] = row.Field<string>("SignalID");
+
+                return measurementList;
             }
-        } 
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Measurement"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="measurement">Information about <see cref="Measurement"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Measurement measurement, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Company (SignalID, HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Adder, Multiplier, Description, Enabled, CreatedBy, CreatedOn) " +
+                        "VALUES (@signalID, @historianID, @pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @createdBy, @createdOn)", DefaultTimeout, measurement.SignalID, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
+                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description, measurement.Enabled,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("UPDATE Company SET HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag,  AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled" +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE SignalID = @signalID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag, measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, measurement.PointID);
+
+                return "Company information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Measurement"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="measurementID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, string measurementID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @measurementID", DefaultTimeout, measurementID);
+
+                return "Measurement deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
 
         #endregion
-        
     }
 }

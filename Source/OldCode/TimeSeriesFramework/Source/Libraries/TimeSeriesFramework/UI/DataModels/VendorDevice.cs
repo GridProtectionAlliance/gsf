@@ -27,13 +27,16 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.ObjectModel;
+using TVA.Data;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
     /// Creates a new object that represents a VendorDevice
     /// </summary>
-    public class VendorDevice
+    public class VendorDevice : DataModelBase
     {
         #region [ Members ]
 
@@ -65,7 +68,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             {
-                m_ID = value; 
+                m_ID = value;
+                OnPropertyChanged("ID");
             }
         }
 
@@ -81,7 +85,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_vendorID = value; 
+                m_vendorID = value;
+                OnPropertyChanged("VendorID");
             }
         }
 
@@ -98,7 +103,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_name = value; 
+                m_name = value;
+                OnPropertyChanged("Name");
             }
         }
 
@@ -114,7 +120,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_description = value; 
+                m_description = value;
+                OnPropertyChanged("Description");
             }
         }
 
@@ -130,7 +137,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_URL = value; 
+                m_URL = value;
+                OnPropertyChanged("URL");
             }
         }
 
@@ -146,7 +154,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_vendorName = value; 
+                m_vendorName = value;
+                OnPropertyChanged("VendorName");
             }
         }
 
@@ -162,7 +171,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdOn = value; 
+                m_createdOn = value;
+                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -178,7 +188,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdBy = value; 
+                m_createdBy = value;
+                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -194,7 +205,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_UpdatedOn = value; 
+                m_UpdatedOn = value;
+                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -210,11 +222,142 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_updatedBy = value; 
+                m_updatedBy = value;
+                OnPropertyChanged("UpdatedBy");
             }
         }
 
         #endregion
-        
+
+        #region [ Static ]
+
+        /// <summary>
+        /// Loads <see cref="VendorDevice"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="VendorDevice"/>.</returns>
+        public static ObservableCollection<VendorDevice> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<VendorDevice> vendorDeviceList = new ObservableCollection<VendorDevice>();
+                DataTable vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM VendorDeviceDetail ORDER BY Name");
+
+                foreach (DataRow row in vendorDeviceTable.Rows)
+                {
+                    vendorDeviceList.Add(new VendorDevice()
+                    {
+                        ID = row.Field<int>("ID"),
+                        VendorID = row.Field<int>("VendorID"),
+                        Name = row.Field<string>("Name"),
+                        Description = row.Field<string>("Description"),
+                        URL = row.Field<string>("URL"),
+                        VendorName = row.Field<string>("VendorName")
+                    });
+                }
+
+                return vendorDeviceList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="VendorDevice"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Name of vendor devices defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> vendorDeviceList = new Dictionary<int, string>();
+                if (isOptional)
+                    vendorDeviceList.Add(0, "Select Vendor Device");
+
+                DataTable vendorDeviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM VendorDevice ORDER BY Name");
+
+                foreach (DataRow row in vendorDeviceTable.Rows)
+                    vendorDeviceList[row.Field<int>("ID")] = row.Field<string>("Name");
+
+                return vendorDeviceList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="VendorDevice"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="vendorDevice">Information about <see cref="VendorDevice"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, VendorDevice vendorDevice, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, CreatedBy, CreatedOn) VALUES (@vendorID, @name, @description, @url, @createdBy, @createdOn)", DefaultTimeout,
+                        vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description, vendorDevice.URL, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("UPDATE VendorDevice SET VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
+                        vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description, vendorDevice.URL, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+
+                return "Vendor Device information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="VendorDevice"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="vendorDeviceID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int vendorDeviceID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM VendorDevice WHERE ID = @vendorDeviceID", DefaultTimeout, vendorDeviceID);
+
+                return "Vendor Device deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+        #endregion
+
     }
 }

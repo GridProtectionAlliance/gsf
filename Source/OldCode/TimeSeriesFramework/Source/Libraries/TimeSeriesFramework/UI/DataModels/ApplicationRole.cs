@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [Members]
 
         //Fileds
-        private string m_ID;
+        private Guid m_ID;
         private string m_nodeID;
         private string m_name;
         private string m_description;
@@ -59,7 +59,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="ApplicationRole"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        public string ID
+        public Guid ID
         {
             get
             {
@@ -286,7 +286,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     applicationRoleList.Add(new ApplicationRole()
                     {
-                        ID = row.Field<int>("ID").ToString(),
+                        ID = Guid.Parse(row.Field<int>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
                         NodeID = row.Field<int>("NodeID").ToString(),

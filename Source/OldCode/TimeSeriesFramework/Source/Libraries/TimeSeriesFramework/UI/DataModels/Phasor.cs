@@ -27,6 +27,9 @@ using System.Linq;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using TVA.Data;
+using System.Collections.ObjectModel;
+using System.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
@@ -34,7 +37,7 @@ namespace TimeSeriesFramework.UI.DataModels
     /// <summary>
     /// Creates a new object that represents a Phasor
     /// </summary>
-    public class Phasor
+    public class Phasor : DataModelBase
     {
         #region [ Members ]
 
@@ -71,7 +74,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_ID = value; 
+                m_ID = value;
+                OnPropertyChanged("ID");
             }
         }
 
@@ -87,7 +91,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_deviceID = value; 
+                m_deviceID = value;
+                OnPropertyChanged("DeviceID");
             }
         }
 
@@ -104,7 +109,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_label = value; 
+                m_label = value;
+                OnPropertyChanged("Label");
             }
         }
 
@@ -120,7 +126,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_type = value; 
+                m_type = value;
+                OnPropertyChanged("Type");
             }
         }
 
@@ -136,7 +143,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_phase = value; 
+                m_phase = value;
+                OnPropertyChanged("Phase");
             }
         }
 
@@ -152,7 +160,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             {
-                m_destinationPhasorID = value; 
+                m_destinationPhasorID = value;
+                OnPropertyChanged("DestinationPhasorID");
             }
         }
 
@@ -168,7 +177,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             {
-                m_sourceIndex = value; 
+                m_sourceIndex = value;
+                OnPropertyChanged("SourceIndex");
             }
         }
 
@@ -184,7 +194,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_destinationPhasorLabel = value; 
+                m_destinationPhasorLabel = value;
+                OnPropertyChanged("DestinationPhasorLabel");
             }
         }
 
@@ -200,7 +211,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_deviceAcronym = value; 
+                m_deviceAcronym = value;
+                OnPropertyChanged("DeviceAcronym");
             }
         }
 
@@ -216,7 +228,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_phasorType = value; 
+                m_phasorType = value;
+                OnPropertyChanged("PhasorType");
             }
         }
 
@@ -233,6 +246,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_phaseType = value;
+                OnPropertyChanged("PhaseType");
             }
         }
 
@@ -248,7 +262,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdOn = value; 
+                m_createdOn = value;
+                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -264,7 +279,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_createdBy = value; 
+                m_createdBy = value;
+                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -280,7 +296,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_updatedOn = value; 
+                m_updatedOn = value;
+                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -296,11 +313,154 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             set 
             { 
-                m_updatedBy = value; 
+                m_updatedBy = value;
+                OnPropertyChanged("UpdatedBy");
             }
         }
 
         #endregion
-        
+
+        #region [ Static ]
+
+        // Static Methods
+
+        /// <summary>
+        /// Loads <see cref="Phasor"/> information as an <see cref="ObservableCollection{T}"/> style list.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <returns>Collection of <see cref="Phasor"/>.</returns>
+        public static ObservableCollection<Phasor> Load(AdoDataConnection database)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                ObservableCollection<Phasor> phasorList = new ObservableCollection<Phasor>();
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn " +
+                    "FROM Phasor ORDER BY DeviceID");
+
+                foreach (DataRow row in phasorTable.Rows)
+                {
+                    phasorList.Add(new Phasor()
+                    {
+                        ID = row.Field<int>("ID"),
+                        DeviceID = row.Field<int>("DeviceID"),
+                        Label = row.Field<string>("Label"),
+                        Type = row.Field<string>("Type"),
+                        Phase = row.Field<string>("Phase"),
+                        DestinationPhasorID = row.Field<int>("DestinationPhasorID"),
+                        SourceIndex = row.Field<int>("SourceIndex"),
+                        CreatedBy = row.Field<string>("CreatedBy"),
+                        CreatedOn = row.Field<DateTime>("CreatedOn"),
+                        UpdatedBy = row.Field<string>("UpdatedBy"),
+                        UpdatedOn = row.Field<DateTime>("UpdatedOn")
+                    });
+                }
+
+                return phasorList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Phasor"/> information.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns>Dictionary<int, string> containing ID and Label of phasors defined in the database.</returns>
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                Dictionary<int, string> phasorList = new Dictionary<int, string>();
+                if (isOptional)
+                    phasorList.Add(0, "Select Phasor");
+
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Label FROM Phasor ORDER BY SourceIndex");
+
+                foreach (DataRow row in phasorTable.Rows)
+                    phasorList[row.Field<int>("ID")] = row.Field<string>("Label");
+
+                return phasorList;
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Saves <see cref="Phasor"/> information to database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
+        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Save(AdoDataConnection database, Phasor phasor, bool isNew)
+        {
+            bool createdConnection = false;
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                if (isNew)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Phasor (DeviceID, Label, Type, Phase, DestinationPhasorID, CreatedBy, CreatedOn) " +
+                        "VALUES (@DeviceID, @Label, @Type, @Phase, @DestinationPhasorID, @createdBy, @createdOn)", DefaultTimeout,
+                        phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase,
+                        phasor.DestinationPhasorID, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                else
+                    database.Connection.ExecuteNonQuery("UPDATE Phasor SET DeviceID = @deviceID, Label = @label, Type = @type, Phase = @phase, DestinationPhasorID = @destinationPhasorID, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.DestinationPhasorID, CommonFunctions.CurrentUser,
+                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, phasor.ID);
+
+                return "Company information saved successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Deletes specified <see cref="Phasor"/> record from database.
+        /// </summary>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
+        /// <param name="phasorID">ID of the record to be deleted.</param>
+        /// <returns>String, for display use, indicating success.</returns>
+        public static string Delete(AdoDataConnection database, int phasorID)
+        {
+            bool createdConnection = false;
+
+            try
+            {
+                createdConnection = CreateConnection(ref database);
+
+                // Setup current user context for any delete triggers
+                CommonFunctions.SetCurrentUserContext(database);
+
+                database.Connection.ExecuteNonQuery("DELETE FROM Phasor WHERE ID = @phasorID", DefaultTimeout, phasorID);
+
+                return "Company deleted successfully";
+            }
+            finally
+            {
+                if (createdConnection && database != null)
+                    database.Dispose();
+            }
+        }
+
+        #endregion
+
     }
 }
