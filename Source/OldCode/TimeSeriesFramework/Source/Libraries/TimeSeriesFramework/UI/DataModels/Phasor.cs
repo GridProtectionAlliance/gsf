@@ -370,7 +370,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Label of phasors defined in the database.</returns>
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Label of phasors defined in the database.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;

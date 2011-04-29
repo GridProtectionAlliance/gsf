@@ -95,6 +95,9 @@
     <Compile Include="UserControls\DetailViewFooterUserControl.xaml.cs">
       <DependentUpon>DetailViewFooterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\VendorDeviceUserControl.xaml.cs">
+      <DependentUpon>VendorDeviceUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\VendorUserControl.xaml.cs">
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
@@ -129,6 +132,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\DetailViewFooterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\VendorDeviceUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

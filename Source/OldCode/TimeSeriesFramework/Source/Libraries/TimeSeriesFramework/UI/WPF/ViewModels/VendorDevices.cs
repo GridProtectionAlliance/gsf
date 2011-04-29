@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Generic;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -30,6 +31,8 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// </summary>
     internal class VendorDevices : PagedViewModelBase<VendorDevice, int>
     {
+        Dictionary<int, string> m_vendorLookupList;
+
         #region [ Properties ]
 
         /// <summary>
@@ -40,6 +43,17 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 return CurrentItem.ID == 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Vendor"/> defined in the database.
+        /// </summary>
+        public Dictionary<int, string> VendorLookupList
+        {
+            get
+            {
+                return m_vendorLookupList;
             }
         }
 
@@ -54,6 +68,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public VendorDevices(int itemsPerPage)
             : base(itemsPerPage)
         {
+            m_vendorLookupList = Vendor.GetLookupList(null);
         }
 
         #endregion

@@ -63,7 +63,6 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        private string m_ID;
 
         #endregion
 
@@ -537,7 +536,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing PointID and SignalID of measurements defined in the database.</returns>
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing PointID and SignalID of measurements defined in the database.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;

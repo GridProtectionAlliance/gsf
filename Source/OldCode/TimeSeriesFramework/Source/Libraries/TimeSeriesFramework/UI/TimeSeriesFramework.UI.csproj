@@ -66,6 +66,7 @@
     <Compile Include="Binding\Column.cs" />
     <Compile Include="Binding\DataOperation.cs" />
     <Compile Include="CommonFunctions.cs" />
+    <Compile Include="Converters\DictionaryToKeyValuePairConverter.cs" />
     <Compile Include="Converters\NotConverter.cs" />
     <Compile Include="Converters\RoleBasedVisibilityConverter.cs" />
     <Compile Include="DataModelBase.cs" />

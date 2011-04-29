@@ -272,7 +272,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
-        /// <returns>Dictionary<int, string> containing ID and Name of vendor devices defined in the database.</returns>
+        /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of vendor devices defined in the database.</returns>
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;
@@ -313,11 +313,13 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, CreatedBy, CreatedOn) VALUES (@vendorID, @name, @description, @url, @createdBy, @createdOn)", DefaultTimeout,
-                        vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description, vendorDevice.URL, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                    database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@vendorID, @name, @description, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)",
+                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE VendorDevice SET VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                        vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description, vendorDevice.URL, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                    database.Connection.ExecuteNonQuery("Update VendorDevice Set VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id",
+                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, vendorDevice.ID);
 
                 return "Vendor Device information saved successfully";
             }
