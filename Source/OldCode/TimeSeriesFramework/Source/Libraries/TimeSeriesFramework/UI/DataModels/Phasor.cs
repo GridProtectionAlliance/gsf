@@ -23,19 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using TVA.Data;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-
     /// <summary>
-    /// Creates a new object that represents a Phasor
+    /// Represents a record of phasor information as defined in the database.
     /// </summary>
     public class Phasor : DataModelBase
     {
@@ -57,108 +54,108 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        
+
         #endregion
 
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the<see cref="Phasor"/>ID.
+        /// Gets or sets the <see cref="Phasor"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied.
         public int ID
         {
-            get 
-            { 
-                return m_ID; 
+            get
+            {
+                return m_ID;
             }
-            set 
-            { 
+            set
+            {
                 m_ID = value;
                 OnPropertyChanged("ID");
             }
         }
 
         /// <summary>
-        /// Gets or sets the<see cref="Phasor"/>DeviceID.
+        /// Gets or sets the <see cref="Phasor"/> DeviceID.
         /// </summary>
-        [Required(ErrorMessage= "Phasor Device ID is a required field, please provide value.")]
+        [Required(ErrorMessage = "Phasor Device ID is a required field, please provide value.")]
         public int DeviceID
         {
-            get 
-            { 
-                return m_deviceID; 
+            get
+            {
+                return m_deviceID;
             }
-            set 
-            { 
+            set
+            {
                 m_deviceID = value;
                 OnPropertyChanged("DeviceID");
             }
         }
 
         /// <summary>
-        /// Gets or sets the<see cref="Phasor"/>Label.
+        /// Gets or sets the <see cref="Phasor"/> Label.
         /// </summary>
-        [Required(ErrorMessage= "Phasor label is a required field, please provide value.")]
-        [StringLength(256, ErrorMessage= "Phasor label must not exceed 256 characters.")]
+        [Required(ErrorMessage = "Phasor label is a required field, please provide value.")]
+        [StringLength(256, ErrorMessage = "Phasor label must not exceed 256 characters.")]
         public string Label
         {
-            get 
-            { 
-                return m_label; 
+            get
+            {
+                return m_label;
             }
-            set 
-            { 
+            set
+            {
                 m_label = value;
                 OnPropertyChanged("Label");
             }
         }
 
         /// <summary>
-        /// Gets or sets the<see cref="Phasor"/>Type.
+        /// Gets or sets the <see cref="Phasor"/> Type.
         /// </summary>
         [DefaultValue(typeof(char), "V")]
         public string Type
         {
-            get 
-            { 
-                return m_type; 
+            get
+            {
+                return m_type;
             }
-            set 
-            { 
+            set
+            {
                 m_type = value;
                 OnPropertyChanged("Type");
             }
         }
 
         /// <summary>
-        /// Gets or sets the Phase of the current Phasor.
+        /// Gets or sets the Phase of the current <see cref="Phasor"/>.
         /// </summary>
         [DefaultValue(typeof(char), "+")]
         public string Phase
         {
-            get 
-            { 
-                return m_phase; 
+            get
+            {
+                return m_phase;
             }
-            set 
-            { 
+            set
+            {
                 m_phase = value;
                 OnPropertyChanged("Phase");
             }
         }
 
         /// <summary>
-        /// Gets or sets Destination<see cref="Phasor"/>ID for the current Phasor.
+        /// Gets or sets Destination <see cref="Phasor"/> ID for the current Phasor.
         /// </summary>
         // Because of Database design, no validation attributes are applied
         public int? DestinationPhasorID
         {
-            get 
-            { 
-                return m_destinationPhasorID; 
+            get
+            {
+                return m_destinationPhasorID;
             }
-            set 
+            set
             {
                 m_destinationPhasorID = value;
                 OnPropertyChanged("DestinationPhasorID");
@@ -171,11 +168,11 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(int), "0")]
         public int SourceIndex
         {
-            get 
-            { 
-                return m_sourceIndex; 
+            get
+            {
+                return m_sourceIndex;
             }
-            set 
+            set
             {
                 m_sourceIndex = value;
                 OnPropertyChanged("SourceIndex");
@@ -183,58 +180,58 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets Destination<see cref="Phasor"/>Label for the current Phasor.
+        /// Gets or sets Destination <see cref="Phasor"/> Label for the current Phasor.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string DestinationPhasorLabel
         {
-            get 
-            { 
-                return m_destinationPhasorLabel; 
+            get
+            {
+                return m_destinationPhasorLabel;
             }
-            set 
-            { 
+            set
+            {
                 m_destinationPhasorLabel = value;
                 OnPropertyChanged("DestinationPhasorLabel");
             }
         }
 
         /// <summary>
-        /// Gets or sets the Device Acronym for the current Phasor.
+        /// Gets or sets the Device Acronym for the current <see cref="Phasor"/>.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string DeviceAcronym
         {
-            get 
-            { 
-                return m_deviceAcronym; 
+            get
+            {
+                return m_deviceAcronym;
             }
-            set 
-            { 
+            set
+            {
                 m_deviceAcronym = value;
                 OnPropertyChanged("DeviceAcronym");
             }
         }
 
         /// <summary>
-        /// Gets or sets<see cref="Phasor"/>Type for the current Phasor.
+        /// Gets or sets <see cref="Phasor"/> Type for the current Phasor.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string PhasorType
         {
-            get 
-            { 
-                return m_phasorType; 
+            get
+            {
+                return m_phasorType;
             }
-            set 
-            { 
+            set
+            {
                 m_phasorType = value;
                 OnPropertyChanged("PhasorType");
             }
         }
 
         /// <summary>
-        /// Gets or sets Phase Type for the current Phasor.
+        /// Gets or sets Phase Type for the current <see cref="Phasor"/>.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string PhaseType
@@ -251,68 +248,68 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the Date or Time the current<see cref="Phasor"/>was created on.
+        /// Gets or sets the Date or Time the current <see cref="Phasor"/> was created on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get 
-            { 
-                return m_createdOn; 
+            get
+            {
+                return m_createdOn;
             }
-            set 
-            { 
+            set
+            {
                 m_createdOn = value;
                 OnPropertyChanged("CreatedOn");
             }
         }
 
         /// <summary>
-        /// Gets or sets who the current<see cref="Phasor"/>was created by.
+        /// Gets or sets who the current <see cref="Phasor"/> was created by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get 
-            { 
-                return m_createdBy; 
+            get
+            {
+                return m_createdBy;
             }
-            set 
-            { 
+            set
+            {
                 m_createdBy = value;
                 OnPropertyChanged("CreatedBy");
             }
         }
 
         /// <summary>
-        /// Gets or sets the Date or Time the current<see cref="Phasor"/>was updated on.
+        /// Gets or sets the Date or Time the current <see cref="Phasor"/> was updated on.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get 
-            { 
-                return m_updatedOn; 
+            get
+            {
+                return m_updatedOn;
             }
-            set 
-            { 
+            set
+            {
                 m_updatedOn = value;
                 OnPropertyChanged("UpdatedOn");
             }
         }
 
         /// <summary>
-        /// Gets or sets who the current<see cref="Phasor"/>was updated by.
+        /// Gets or sets who the current <see cref="Phasor"/> was updated by.
         /// </summary>
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get 
-            { 
-                return m_updatedBy; 
+            get
+            {
+                return m_updatedBy;
             }
-            set 
-            { 
+            set
+            {
                 m_updatedBy = value;
                 OnPropertyChanged("UpdatedBy");
             }
@@ -423,7 +420,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.DestinationPhasorID, CommonFunctions.CurrentUser,
                         database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, phasor.ID);
 
-                return "Company information saved successfully";
+                return "Phasor information saved successfully";
             }
             finally
             {
@@ -451,7 +448,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery("DELETE FROM Phasor WHERE ID = @phasorID", DefaultTimeout, phasorID);
 
-                return "Company deleted successfully";
+                return "Phasor deleted successfully";
             }
             finally
             {

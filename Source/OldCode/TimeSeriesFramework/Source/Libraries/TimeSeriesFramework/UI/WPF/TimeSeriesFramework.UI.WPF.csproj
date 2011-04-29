@@ -100,6 +100,8 @@
     </Compile>
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\Companies.cs" />
+    <Compile Include="ViewModels\VendorDevices.cs" />
+    <Compile Include="ViewModels\Vendors.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

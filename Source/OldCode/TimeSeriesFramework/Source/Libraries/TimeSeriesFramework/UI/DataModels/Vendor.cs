@@ -68,6 +68,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_ID = value;
+                OnPropertyChanged("ID");
             }
         }
 
@@ -84,6 +85,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_acronym = value;
+                OnPropertyChanged("Acronym");
             }
         }
 
@@ -101,6 +103,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_name = value;
+                OnPropertyChanged("Name");
             }
         }
 
@@ -117,6 +120,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_phoneNumber = value;
+                OnPropertyChanged("PhoneNumber");
             }
         }
 
@@ -133,6 +137,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_contactEmail = value;
+                OnPropertyChanged("ContactEmail");
             }
         }
 
@@ -149,6 +154,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_URL = value;
+                OnPropertyChanged("URL");
             }
         }
 
@@ -165,6 +171,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
+                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -181,6 +188,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
+                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -197,6 +205,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
+                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -213,6 +222,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
+                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -308,9 +318,9 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
-                        vendor.Name, vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper() ?? (object)DBNull.Value,
+                        vendor.Name, vendor.PhoneNumber ?? (object)DBNull.Value, vendor.ContactEmail ?? (object)DBNull.Value, vendor.URL ?? (object)DBNull.Value,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +

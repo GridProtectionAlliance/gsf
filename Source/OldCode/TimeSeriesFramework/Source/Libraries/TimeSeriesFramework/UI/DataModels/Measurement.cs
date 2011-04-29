@@ -23,19 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel;
-using TVA.Data;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
-
     /// <summary>
-    /// Creates a new object that represents a Measurement
+    /// Represents a record of measurement information as defined in the database.
     /// </summary>
     public class Measurement : DataModelBase
     {
@@ -66,8 +63,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_updatedOn;
         private string m_updatedBy;
-        private string m_ID; 
-       
+        private string m_ID;
+
         #endregion
 
         #region [ Properties ]
@@ -75,15 +72,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal ID.
         /// </summary>
-        [StringLength(36, ErrorMessage= " Measurement SignalID cannot exceed 36 characters.")]
+        [StringLength(36, ErrorMessage = " Measurement SignalID cannot exceed 36 characters.")]
         public string SignalID
         {
-            get 
-            { 
-                return m_signalID; 
+            get
+            {
+                return m_signalID;
             }
-            set 
-            { 
+            set
+            {
                 m_signalID = value;
                 OnPropertyChanged("SignalID");
             }
@@ -95,12 +92,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public int? HistorianID
         {
-            get 
-            { 
-                return m_historianID; 
+            get
+            {
+                return m_historianID;
             }
-            set 
-            { 
+            set
+            {
                 m_historianID = value;
                 OnPropertyChanged("HistorianID");
             }
@@ -112,12 +109,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied.
         public int PointID
         {
-            get 
-            { 
-                return m_pointID; 
+            get
+            {
+                return m_pointID;
             }
-            set 
-            { 
+            set
+            {
                 m_pointID = value;
                 OnPropertyChanged("PointID");
             }
@@ -129,12 +126,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public int? DeviceID
         {
-            get 
-            { 
-                return m_deviceID; 
+            get
+            {
+                return m_deviceID;
             }
-            set 
-            { 
+            set
+            {
                 m_deviceID = value;
                 OnPropertyChanged("DeviceID");
             }
@@ -143,16 +140,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Point Tag.
         /// </summary>
-        [Required(ErrorMessage= "Measurement Point Tag is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage= "Measurement Point Tag cannot exceed 50 characters.")]
+        [Required(ErrorMessage = "Measurement Point Tag is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Measurement Point Tag cannot exceed 50 characters.")]
         public string PointTag
         {
-            get 
-            { 
-                return m_pointTag; 
+            get
+            {
+                return m_pointTag;
             }
-            set 
-            { 
+            set
+            {
                 m_pointTag = value;
                 OnPropertyChanged("PointTag");
             }
@@ -161,15 +158,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Alternate Tag.
         /// </summary>
-        [StringLength(50, ErrorMessage= "Measurement alternate tag cannot exceed 50 characters.")]
+        [StringLength(50, ErrorMessage = "Measurement alternate tag cannot exceed 50 characters.")]
         public string AlternateTag
         {
-            get 
-            { 
-                return m_alternateTag; 
+            get
+            {
+                return m_alternateTag;
             }
-            set 
-            { 
+            set
+            {
                 m_alternateTag = value;
                 OnPropertyChanged("AlternateTag");
             }
@@ -178,15 +175,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Type ID.
         /// </summary>
-        [Required(ErrorMessage= "Measurement signal type ID is a required field, please provide value.")]
+        [Required(ErrorMessage = "Measurement signal type ID is a required field, please provide value.")]
         public int SignalTypeID
         {
-            get 
-            { 
-                return m_signalTypeID; 
+            get
+            {
+                return m_signalTypeID;
             }
-            set 
-            { 
+            set
+            {
                 m_signalTypeID = value;
                 OnPropertyChanged("SignalTypeID");
             }
@@ -198,12 +195,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public int? PhasorSourceIndex
         {
-            get 
-            { 
-                return m_phasorSourceIndex; 
+            get
+            {
+                return m_phasorSourceIndex;
             }
-            set 
-            { 
+            set
+            {
                 m_phasorSourceIndex = value;
                 OnPropertyChanged("PhasorSourceIndex");
             }
@@ -212,15 +209,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Reference.
         /// </summary>
-        [Required(ErrorMessage= "Measurement Signal Reference is a required field, please provide value.")]
+        [Required(ErrorMessage = "Measurement Signal Reference is a required field, please provide value.")]
         public string SignalReference
         {
-            get 
-            { 
-                return m_signalReference; 
+            get
+            {
+                return m_signalReference;
             }
-            set 
-            { 
+            set
+            {
                 m_signalReference = value;
                 OnPropertyChanged("SignalReference");
             }
@@ -232,12 +229,12 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(double), "0.0")]
         public double Adder
         {
-            get 
-            { 
-                return m_adder; 
+            get
+            {
+                return m_adder;
             }
-            set 
-            { 
+            set
+            {
                 m_adder = value;
                 OnPropertyChanged("Adder");
             }
@@ -249,12 +246,12 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(double), "1.0")]
         public double Multiplier
         {
-            get 
-            { 
-                return m_multiplier; 
+            get
+            {
+                return m_multiplier;
             }
-            set 
-            { 
+            set
+            {
                 m_multiplier = value;
                 OnPropertyChanged("Multiplier");
             }
@@ -266,12 +263,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public string Description
         {
-            get 
-            { 
-                return m_description; 
+            get
+            {
+                return m_description;
             }
-            set 
-            { 
+            set
+            {
                 m_description = value;
                 OnPropertyChanged("Description");
             }
@@ -283,12 +280,12 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(bool), "false")]
         public bool Enabled
         {
-            get 
-            { 
-                return m_enabled; 
+            get
+            {
+                return m_enabled;
             }
-            set 
-            { 
+            set
+            {
                 m_enabled = value;
                 OnPropertyChanged("Enabled");
             }
@@ -300,12 +297,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string HistorianAcronym
         {
-            get 
-            { 
-                return m_historianAcronym; 
+            get
+            {
+                return m_historianAcronym;
             }
-            set 
-            { 
+            set
+            {
                 m_historianAcronym = value;
                 OnPropertyChanged("HistorianAcronym");
             }
@@ -317,12 +314,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string DeviceAcronym
         {
-            get 
-            { 
-                return m_deviceAcronym; 
+            get
+            {
+                return m_deviceAcronym;
             }
-            set 
-            { 
+            set
+            {
                 m_deviceAcronym = value;
                 OnPropertyChanged("DeviceAcronym");
             }
@@ -334,12 +331,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public int? FramesPerSecond
         {
-            get 
-            { 
-                return m_framesPerSecond; 
+            get
+            {
+                return m_framesPerSecond;
             }
-            set 
-            { 
+            set
+            {
                 m_framesPerSecond = value;
                 OnPropertyChanged("FramesPerSecond");
             }
@@ -351,12 +348,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string SignalName
         {
-            get 
-            { 
-                return m_signalName; 
+            get
+            {
+                return m_signalName;
             }
-            set 
-            { 
+            set
+            {
                 m_signalName = value;
                 OnPropertyChanged("SignalName");
             }
@@ -368,12 +365,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string SignalAcronym
         {
-            get 
-            { 
-                return m_signalAcronym; 
+            get
+            {
+                return m_signalAcronym;
             }
-            set 
-            { 
+            set
+            {
                 m_signalAcronym = value;
                 OnPropertyChanged("SignalAcronym");
             }
@@ -385,12 +382,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string SignalSuffix
         {
-            get 
-            { 
-                return m_signalSuffix; 
+            get
+            {
+                return m_signalSuffix;
             }
-            set 
-            { 
+            set
+            {
                 m_signalSuffix = value;
                 OnPropertyChanged("SignalSuffix");
             }
@@ -402,12 +399,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are supplied
         public string PhasorLabel
         {
-            get 
-            { 
-                return m_phasorLabel; 
+            get
+            {
+                return m_phasorLabel;
             }
-            set 
-            { 
+            set
+            {
                 m_phasorLabel = value;
                 OnPropertyChanged("PhasorLabel");
             }
@@ -419,12 +416,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get 
-            { 
-                return m_createdOn; 
+            get
+            {
+                return m_createdOn;
             }
-            set 
-            { 
+            set
+            {
                 m_createdOn = value;
                 OnPropertyChanged("CreatedOn");
             }
@@ -436,12 +433,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get 
-            { 
-                return m_createdBy; 
+            get
+            {
+                return m_createdBy;
             }
-            set 
-            { 
+            set
+            {
                 m_createdBy = value;
                 OnPropertyChanged("CreatedBy");
             }
@@ -453,12 +450,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get 
-            { 
-                return m_updatedOn; 
+            get
+            {
+                return m_updatedOn;
             }
-            set 
-            { 
+            set
+            {
                 m_updatedOn = value;
                 OnPropertyChanged("UpdatedOn");
             }
@@ -470,12 +467,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get 
-            { 
-                return m_updatedBy; 
+            get
+            {
+                return m_updatedBy;
             }
-            set 
-            { 
+            set
+            {
                 m_updatedBy = value;
                 OnPropertyChanged("UpdatedBy");
             }
@@ -590,7 +587,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE SignalID = @signalID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag, measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, measurement.PointID);
 
-                return "Company information saved successfully";
+                return "Measurement information saved successfully";
             }
             finally
             {
@@ -616,7 +613,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Company WHERE ID = @measurementID", DefaultTimeout, measurementID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE SignalID = @measurementID", DefaultTimeout, measurementID);
 
                 return "Measurement deleted successfully";
             }

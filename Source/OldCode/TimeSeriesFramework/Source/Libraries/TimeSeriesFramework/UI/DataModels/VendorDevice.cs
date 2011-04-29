@@ -23,18 +23,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Collections.ObjectModel;
-using TVA.Data;
 using System.Data;
+using TVA.Data;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Creates a new object that represents a VendorDevice
+    /// Represents a record of vendor device information as defined in the database.
     /// </summary>
     public class VendorDevice : DataModelBase
     {
@@ -51,7 +49,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_createdBy;
         private DateTime m_UpdatedOn;
         private string m_updatedBy;
-        
+
         #endregion
 
         #region [ Properties ]
@@ -62,11 +60,11 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by database via auto-increment, so no validation attributes are applied.
         public int ID
         {
-            get 
-            { 
-                return m_ID; 
+            get
+            {
+                return m_ID;
             }
-            set 
+            set
             {
                 m_ID = value;
                 OnPropertyChanged("ID");
@@ -79,30 +77,30 @@ namespace TimeSeriesFramework.UI.DataModels
         [DefaultValue(typeof(int), "10")]
         public int VendorID
         {
-            get 
-            { 
-                return m_vendorID; 
+            get
+            {
+                return m_vendorID;
             }
-            set 
-            { 
+            set
+            {
                 m_vendorID = value;
                 OnPropertyChanged("VendorID");
             }
         }
 
         /// <summary>
-        /// Gets or sets the Name.
+        /// Gets or sets <see cref="VendorDevice"/>'s Name.
         /// </summary>
-        [Required(ErrorMessage="VendorDevice Name is a required field, please provide value")]
-        [StringLength(100, ErrorMessage="VendorDevice Name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "VendorDevice Name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage = "VendorDevice Name cannot exceed 100 characters.")]
         public string Name
         {
-            get 
-            { 
-                return m_name; 
+            get
+            {
+                return m_name;
             }
-            set 
-            { 
+            set
+            {
                 m_name = value;
                 OnPropertyChanged("Name");
             }
@@ -114,12 +112,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public string Description
         {
-            get 
-            { 
-                return m_description; 
+            get
+            {
+                return m_description;
             }
-            set 
-            { 
+            set
+            {
                 m_description = value;
                 OnPropertyChanged("Description");
             }
@@ -131,12 +129,12 @@ namespace TimeSeriesFramework.UI.DataModels
         [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
         public string URL
         {
-            get 
-            { 
-                return m_URL; 
+            get
+            {
+                return m_URL;
             }
-            set 
-            { 
+            set
+            {
                 m_URL = value;
                 OnPropertyChanged("URL");
             }
@@ -148,12 +146,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Because of database design, no validation attributes are applied
         public string VendorName
         {
-            get 
-            { 
-                return m_vendorName; 
+            get
+            {
+                return m_vendorName;
             }
-            set 
-            { 
+            set
+            {
                 m_vendorName = value;
                 OnPropertyChanged("VendorName");
             }
@@ -165,12 +163,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
-            get 
-            { 
-                return m_createdOn; 
+            get
+            {
+                return m_createdOn;
             }
-            set 
-            { 
+            set
+            {
                 m_createdOn = value;
                 OnPropertyChanged("CreatedOn");
             }
@@ -182,12 +180,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
-            get 
-            { 
-                return m_createdBy; 
+            get
+            {
+                return m_createdBy;
             }
-            set 
-            { 
+            set
+            {
                 m_createdBy = value;
                 OnPropertyChanged("CreatedBy");
             }
@@ -199,12 +197,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
-            get 
+            get
             {
-                return m_UpdatedOn; 
+                return m_UpdatedOn;
             }
-            set 
-            { 
+            set
+            {
                 m_UpdatedOn = value;
                 OnPropertyChanged("UpdatedOn");
             }
@@ -216,12 +214,12 @@ namespace TimeSeriesFramework.UI.DataModels
         // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
-            get 
-            { 
-                return m_updatedBy; 
+            get
+            {
+                return m_updatedBy;
             }
-            set 
-            { 
+            set
+            {
                 m_updatedBy = value;
                 OnPropertyChanged("UpdatedBy");
             }
