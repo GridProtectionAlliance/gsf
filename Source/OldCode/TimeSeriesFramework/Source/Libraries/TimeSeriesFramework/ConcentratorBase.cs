@@ -451,6 +451,7 @@ namespace TimeSeriesFramework
             m_performTimestampReasonabilityCheck = true;
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
             m_latestMeasurements = new ImmediateMeasurements(this);
+            m_maximumPublicationTimeout = Timeout.Infinite;
 
             // Create a new queue for managing real-time frames
             m_frameQueue = new FrameQueue(this.CreateNewFrame);
@@ -656,7 +657,7 @@ namespace TimeSeriesFramework
                     m_framesPerSecond = value;
                     m_ticksPerFrame = Ticks.PerSecond / (double)m_framesPerSecond;
 
-                    // We calculate the maximum wait time for frame publication in whole milliseconds per frame plus 2%
+                    // We calculate the default maximum wait time for frame publication in whole milliseconds per frame plus 2%
                     m_maximumPublicationTimeout = (int)((m_ticksPerFrame + m_ticksPerFrame * 0.02D) / Ticks.PerMillisecond);
 
                     if (m_frameQueue != null)
@@ -665,6 +666,32 @@ namespace TimeSeriesFramework
                     // Subscribe to frame rate timer, creating it if it doesn't exist
                     AttachToFrameRateTimer(m_framesPerSecond);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum frame publication timeout in milliseconds, set to <see cref="Timeout.Infinite"/>(-1) to wait indefinitely.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The concentrator automatically defines a precision timer to provide the heatbeat for frame publication, however if the system
+        /// gets busy the heartbeat signals can be missed. This property defines a maximum wait timeout before reception of the heartbeat
+        /// signal to make sure frame publications continue to occur in a timely fashion even when a system is under stress.
+        /// </para>
+        /// <para>
+        /// This property is automatically defined as 2% more than the number of milliseconds per frame when the <see cref="FramesPerSecond"/>
+        /// property is set. Users can override this default value to provide custom behavior for this timeout.
+        /// </para>
+        /// </remarks>
+        public int MaximumPublicationTimeout
+        {
+            get
+            {
+                return m_maximumPublicationTimeout;
+            }
+            set
+            {
+                m_maximumPublicationTimeout = value;
             }
         }
 
@@ -2048,9 +2075,8 @@ namespace TimeSeriesFramework
                 }
 
                 // Wait for next publication signal, timing out if signal takes too long
-                if (m_publicationWaitHandle != null)
-                    if (!m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
-                        Interlocked.Increment(ref m_waitHandleExpirations);
+                if (m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
+                    m_waitHandleExpirations++;
             }
         }
 

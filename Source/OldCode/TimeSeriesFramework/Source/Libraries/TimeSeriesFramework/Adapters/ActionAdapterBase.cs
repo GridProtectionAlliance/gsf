@@ -574,6 +574,9 @@ namespace TimeSeriesFramework.Adapters
             if (settings.TryGetValue("trackPublishedTimestamp", out setting))
                 TrackPublishedTimestamp = setting.ParseBoolean();
 
+            if (settings.TryGetValue("maximumPublicationTimeout", out setting))
+                MaximumPublicationTimeout = int.Parse(setting);
+
             if (settings.TryGetValue("downsamplingMethod", out setting))
                 DownsamplingMethod = (DownsamplingMethod)Enum.Parse(typeof(DownsamplingMethod), setting, true);
         }
