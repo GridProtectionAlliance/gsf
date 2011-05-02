@@ -333,6 +333,13 @@ namespace TimeSeriesFramework.Adapters
         [AdapterCommand("Requests metadata refresh of output adapter.")]
         public virtual void RefreshMetadata()
         {
+            // Force a recalculation of input measurement keys so that system can appropriately update routing tables
+            string setting;
+
+            if (Settings.TryGetValue("inputMeasurementKeys", out setting))
+                InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+
+            SourceIDs = SourceIDs;
         }
 
         /// <summary>
