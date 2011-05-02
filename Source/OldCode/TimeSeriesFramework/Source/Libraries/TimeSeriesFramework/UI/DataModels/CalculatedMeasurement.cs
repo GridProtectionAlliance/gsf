@@ -41,7 +41,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private string m_nodeID;
+        private Guid m_nodeID;
         private int m_ID;
         private string m_acronym;
         private string m_name;
@@ -78,7 +78,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="CalculatedMeasurement"/> NodeId.
         /// </summary>
         [Required(ErrorMessage = "Please provide NodeId value.")]
-        public string NodeID
+        public Guid NodeID
         {
             get
             {
@@ -595,7 +595,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     calculatedMeasurementList.Add(new CalculatedMeasurement()
                     {
-                        NodeID = row.Field<object>("NodeID").ToString(),
+                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
                         ID = row.Field<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),

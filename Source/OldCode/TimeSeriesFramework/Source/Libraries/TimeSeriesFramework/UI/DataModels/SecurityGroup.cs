@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [Members]
 
         //Fileds
-        private string m_ID;
+        private Guid m_ID;
         private string m_name;
         private string m_description;
         private DateTime m_createdOn;
@@ -56,7 +56,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets and sets the current SecurityGroup ID
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        public string ID
+        public Guid ID
         {
             get
             {
@@ -231,7 +231,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = row.Field<object>("ID").ToString(),
+                        ID = Guid.Parse(row.Field<string>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
@@ -305,11 +305,11 @@ namespace TimeSeriesFramework.UI.DataModels
                 }
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description, securityGroup.UpdatedBy, securityGroup.UpdatedOn, securityGroup.CreatedBy, securityGroup.CreatedOn);
+                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
+                        securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("Update SecurityGroup Set Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description, securityGroup.UpdatedBy, securityGroup.UpdatedOn, securityGroup.ID);
+                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, securityGroup.ID);
 
                 return "Security Group information saved successfully";
             }

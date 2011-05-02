@@ -38,7 +38,7 @@ namespace TimeSeriesFramework.UI.DataModels
     {
         #region [ Members ]
 
-        private string m_ID;
+        private Guid m_ID;
         private string m_name;
         private string m_password;
         private string m_frstName;
@@ -62,7 +62,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="UserAccount"/> ID.
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        public string ID
+        public Guid ID
         {
             get
             {
@@ -345,7 +345,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = row.Field<int>("ID").ToString(),
+                        ID = Guid.Parse(row.Field<string>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
@@ -443,7 +443,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, userAccount.Name,
                             userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
                             userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                            database.IsJetEngine() ? "{" + userAccount.ID + "}" : userAccount.ID);
+                            database.IsJetEngine() ? "{" + userAccount.ID.ToString() + "}" : userAccount.ID.ToString());
 
                 return "User account information saved successfully";
             }

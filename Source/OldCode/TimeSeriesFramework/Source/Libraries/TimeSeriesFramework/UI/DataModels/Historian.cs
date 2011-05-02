@@ -41,7 +41,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private string m_nodeId;
+        private Guid m_nodeId;
         private int m_ID;
         private string m_acronym;
         private string m_name;
@@ -66,9 +66,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
-        [Required(ErrorMessage = "Historian Node ID is a required field, please provide a value.")]
-        [StringLength(36, ErrorMessage = "Historian node ID cannot exceed 36 characters.")]
-        public string NodeId
+        [Required(ErrorMessage= "Historian Node ID is a required field, please provide a value.")]
+        [StringLength(36, ErrorMessage= "Historian node ID cannot exceed 36 characters.")]
+        public Guid NodeId
         {
             get
             {
@@ -379,21 +379,21 @@ namespace TimeSeriesFramework.UI.DataModels
                 foreach (DataRow row in historianTable.Rows)
                 {
                     historianList.Add(new Historian()
-                        {
-                            NodeId = row.Field<string>("NodeID"),
-                            ID = row.Field<int>("ID"),
-                            Acronym = row.Field<string>("Acronym"),
-                            Name = row.Field<string>("Name"),
-                            AssemblyName = row.Field<string>("AssemblyName"),
-                            TypeName = row.Field<string>("TypeName"),
-                            ConnectionString = row.Field<string>("ConnectionString"),
-                            IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
-                            Description = row.Field<string>("Description"),
-                            LoadOrder = row.Field<int>("LoadOrder"),
-                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                            MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
-                            NodeName = row.Field<string>("NodeName")
-                        });
+                    {
+                        NodeId = Guid.Parse(row.Field<string>("NodeID")),
+                        ID = row.Field<int>("ID"),
+                        Acronym = row.Field<string>("Acronym"),
+                        Name = row.Field<string>("Name"),
+                        AssemblyName = row.Field<string>("AssemblyName"),
+                        TypeName = row.Field<string>("TypeName"),
+                        ConnectionString = row.Field<string>("ConnectionString"),
+                        IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
+                        Description = row.Field<string>("Description"),
+                        LoadOrder = row.Field<int>("LoadOrder"),
+                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                        MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                        NodeName = row.Field<string>("NodeName")
+                    });
                 }
 
                 return historianList;
