@@ -347,6 +347,22 @@
             Valid frame rates for a <see cref="T:TimeSeriesFramework.ConcentratorBase"/> are greater than 0 frames per second.
             </remarks>
         </member>
+        <member name="P:TimeSeriesFramework.ConcentratorBase.MaximumPublicationTimeout">
+            <summary>
+            Gets or sets the maximum frame publication timeout in milliseconds, set to <see cref="F:System.Threading.Timeout.Infinite"/>(-1) to wait indefinitely.
+            </summary>
+            <remarks>
+            <para>
+            The concentrator automatically defines a precision timer to provide the heatbeat for frame publication, however if the system
+            gets busy the heartbeat signals can be missed. This property defines a maximum wait timeout before reception of the heartbeat
+            signal to make sure frame publications continue to occur in a timely fashion even when a system is under stress.
+            </para>
+            <para>
+            This property is automatically defined as 2% more than the number of milliseconds per frame when the <see cref="P:TimeSeriesFramework.ConcentratorBase.FramesPerSecond"/>
+            property is set. Users can override this default value to provide custom behavior for this timeout.
+            </para>
+            </remarks>
+        </member>
         <member name="P:TimeSeriesFramework.ConcentratorBase.TimeResolution">
             <summary>
             Gets or sets the maximum time resolution, in ticks, to use when sorting measurements by timestamps into their proper destination frame.
@@ -4601,6 +4617,12 @@
         <member name="M:TimeSeriesFramework.ServiceHostBase.InitializeRequestHandler(TVA.Services.ServiceProcess.ClientRequestInfo)">
             <summary>
             Performs initialization or reinitialization of specified adapter or collection.
+            </summary>
+            <param name="requestInfo"><see cref="T:TVA.Services.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.ServiceHostBase.RefreshRoutesRequestHandler(TVA.Services.ServiceProcess.ClientRequestInfo)">
+            <summary>
+            Recalculates routing tables.
             </summary>
             <param name="requestInfo"><see cref="T:TVA.Services.ServiceProcess.ClientRequestInfo"/> instance containing the client request.</param>
         </member>
