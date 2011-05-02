@@ -338,6 +338,8 @@ namespace TimeSeriesFramework.Adapters
 
             if (Settings.TryGetValue("inputMeasurementKeys", out setting))
                 InputMeasurementKeys = AdapterBase.ParseInputMeasurementKeys(DataSource, setting);
+            else
+                InputMeasurementKeys = null;
 
             SourceIDs = SourceIDs;
         }
