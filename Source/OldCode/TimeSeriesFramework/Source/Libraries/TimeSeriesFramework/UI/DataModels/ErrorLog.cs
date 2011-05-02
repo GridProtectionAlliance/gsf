@@ -18,27 +18,25 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/13/2011 - Aniket Salver
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of ErrorLog information as defined in the database.
+    /// Represents a record of <see cref="ErrorLog"/> information as defined in the database.
     /// </summary>
     public class ErrorLog : DataModelBase
     {
-        #region[Members]
+        #region [ Members ]
 
-        //Fields
-        private int m_ID;
+        // Fields
+        private int m_id;
         private string m_source;
         private string m_message;
         private string m_detail;
@@ -46,7 +44,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
-        #region[Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> ID.
@@ -56,20 +54,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> Source.
         /// </summary>
-        [Required(ErrorMessage = "ErrorLog Source is a required field, please provide value.")]
-        [StringLength(256, ErrorMessage = "ErrorLog acronym cannot exceed 256 characters.")]
+        [Required(ErrorMessage = "Error log source is a required field, please provide value.")]
+        [StringLength(256, ErrorMessage = "Error log source cannot exceed 256 characters.")]
         public string Source
         {
             get
@@ -86,8 +83,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> Message.
         /// </summary>
-        [Required(ErrorMessage = "ErrorLog Message is a required field, please provide value.")]
-        [StringLength(1024, ErrorMessage = "ErrorLog acronym cannot exceed 1024 characters.")]
+        [Required(ErrorMessage = "Error log message is a required field, please provide value.")]
+        [StringLength(1024, ErrorMessage = "Error mog message cannot exceed 1024 characters.")]
         public string Message
         {
             get
@@ -104,7 +101,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> Detail.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string Detail
         {
             get
@@ -121,7 +117,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ErrorLog"/> CreatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -131,7 +127,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 

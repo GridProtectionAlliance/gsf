@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -32,22 +34,22 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of vendor device information as defined in the database.
+    /// Represents a record of <see cref="VendorDevice"/> information as defined in the database.
     /// </summary>
     public class VendorDevice : DataModelBase
     {
         #region [ Members ]
 
         // Fields
-        private int m_ID;
+        private int m_id;
         private int m_vendorID;
         private string m_name;
         private string m_description;
-        private string m_URL;
+        private string m_url;
         private string m_vendorName;
         private DateTime m_createdOn;
         private string m_createdBy;
-        private DateTime m_UpdatedOn;
+        private DateTime m_updatedOn;
         private string m_updatedBy;
 
         #endregion
@@ -57,24 +59,23 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="VendorDevice"/>'s ID.
         /// </summary>
-        // Field is populated by database via auto-increment, so no validation attributes are applied.
+        // Field is populated by database via auto-increment , so no validation attributes are applied.
         public int ID
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the VendorID.
         /// </summary>
-        [DefaultValue(typeof(int), "10")]
+        [DefaultValue(10)]
         public int VendorID
         {
             get
@@ -91,8 +92,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="VendorDevice"/>'s Name.
         /// </summary>
-        [Required(ErrorMessage = "VendorDevice Name is a required field, please provide value")]
-        [StringLength(100, ErrorMessage = "VendorDevice Name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "Vendor device name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage = "Vendor device name cannot exceed 100 characters.")]
         public string Name
         {
             get
@@ -126,16 +127,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the URL.
         /// </summary>
-        [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
+        [DataType(DataType.Url, ErrorMessage = "Vendor device URL is not formatted properly.")]
         public string URL
         {
             get
             {
-                return m_URL;
+                return m_url;
             }
             set
             {
-                m_URL = value;
+                m_url = value;
                 OnPropertyChanged("URL");
             }
         }
@@ -170,7 +171,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -187,7 +187,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -199,12 +198,11 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_UpdatedOn;
+                return m_updatedOn;
             }
             set
             {
-                m_UpdatedOn = value;
-                OnPropertyChanged("UpdatedOn");
+                m_updatedOn = value;
             }
         }
 
@@ -221,7 +219,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -317,7 +314,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
                         CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update VendorDevice Set VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id",
+                    database.Connection.ExecuteNonQuery("UPDATE VendorDevice SET VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id",
                         DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
                         CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, vendorDevice.ID);
 
@@ -358,6 +355,5 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
         #endregion
-
     }
 }

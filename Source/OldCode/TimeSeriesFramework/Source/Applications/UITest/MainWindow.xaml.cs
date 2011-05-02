@@ -21,11 +21,8 @@
 //
 //******************************************************************************************************
 
-using System;
 using System.Collections.ObjectModel;
-using System.Reflection;
 using System.Windows;
-using System.Windows.Controls;
 using System.Xml;
 using System.Xml.Serialization;
 using TimeSeriesFramework.UI;
@@ -38,14 +35,14 @@ namespace UITest
     public partial class MainWindow : Window
     {
         #region [ Members ]
-        
-        //Fields
+
+        // Fields
         public ObservableCollection<MenuDataItem> m_menuDataItems;
 
         #endregion
 
         #region [ Constructor ]
-        
+
         /// <summary>
         /// Creates an instance of <see cref="MainWindow"/>.
         /// </summary>
@@ -58,7 +55,7 @@ namespace UITest
         #endregion
 
         #region [ Methods ]
-        
+
         /// <summary>
         /// Method to handle window loaded event.
         /// </summary>

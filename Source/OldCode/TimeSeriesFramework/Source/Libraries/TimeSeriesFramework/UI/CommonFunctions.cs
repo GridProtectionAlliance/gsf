@@ -106,6 +106,7 @@ namespace TimeSeriesFramework.UI
         /// <returns>Boolean, indicating if source database is Microsoft Access.</returns>
         public static bool IsJetEngine(this AdoDataConnection database)
         {
+            // TODO: Make this a cached property of AdoDataConnection as an optimization...
             return database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB");
         }
 

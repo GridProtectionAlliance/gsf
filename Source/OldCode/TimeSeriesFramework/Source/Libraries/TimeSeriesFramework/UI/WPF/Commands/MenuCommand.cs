@@ -37,7 +37,7 @@ namespace TimeSeriesFramework.UI.Commands
     {
         #region [ Members ]
 
-        //Fields
+        // Fields
         private string m_roles;
         private string m_userControlAssembly;
         private string m_userControlPath;

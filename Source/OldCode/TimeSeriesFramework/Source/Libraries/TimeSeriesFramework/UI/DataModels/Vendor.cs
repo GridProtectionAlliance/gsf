@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/14/2011 - Mehulbhai P Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -33,19 +35,19 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Creates a new object that represents a Vendor
+    ///  Represents a record of <see cref="Vendor"/> information as defined in the database.
     /// </summary>
     public class Vendor : DataModelBase
     {
         #region [ Members ]
 
         // Fields
-        private int m_ID;
+        private int m_id;
         private string m_acronym;
         private string m_name;
         private string m_phoneNumber;
         private string m_contactEmail;
-        private string m_URL;
+        private string m_url;
         private DateTime m_createdOn;
         private string m_createdBy;
         private DateTime m_updatedOn;
@@ -63,19 +65,18 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
-        [StringLength(3, ErrorMessage = "Vendor Acronym cannot exceed 3 characters")]
+        [StringLength(3, ErrorMessage = "Vendor acronym cannot exceed 3 characters")]
         public string Acronym
         {
             get
@@ -92,8 +93,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Name.
         /// </summary>
-        [Required(ErrorMessage = "The Vendor Name is a required field, please provide value")]
-        [StringLength(100, ErrorMessage = "Vendor Name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "The Vendor name is a required field, please provide value")]
+        [StringLength(100, ErrorMessage = "Vendor name cannot exceed 100 characters.")]
         public string Name
         {
             get
@@ -110,7 +111,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Vendor"/> Phone Number.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Vendor Phone Number cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Vendor phone number cannot exceed 100 characters.")]
         public string PhoneNumber
         {
             get
@@ -127,7 +128,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Contact Email.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Vendor Contact Email cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Vendor contact e-mail cannot exceed 100 characters.")]
         public string ContactEmail
         {
             get
@@ -144,16 +145,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> URL.
         /// </summary>
-        [DataType(DataType.Url, ErrorMessage = "URL is not formatted properly.")]
+        [DataType(DataType.Url, ErrorMessage = "Vendor URL is not formatted properly.")]
         public string URL
         {
             get
             {
-                return m_URL;
+                return m_url;
             }
             set
             {
-                m_URL = value;
+                m_url = value;
                 OnPropertyChanged("URL");
             }
         }
@@ -171,7 +172,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -188,7 +188,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -205,7 +204,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -222,7 +220,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -230,7 +227,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Static ]
 
-        //Static Methods
+        // Static Methods
 
         /// <summary>
         /// Loads <see cref="Vendor"/> information as an <see cref="ObservableCollection{T}"/> style list.
@@ -280,6 +277,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -312,6 +310,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Vendor vendor, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);

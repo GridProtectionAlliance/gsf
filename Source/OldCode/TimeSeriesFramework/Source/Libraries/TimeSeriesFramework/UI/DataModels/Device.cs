@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/21/2011 - Mehulbhai P Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -66,14 +68,13 @@ namespace TimeSeriesFramework.UI.DataModels
     #endregion
 
     /// <summary>
-    /// Represents a record of Device information as defined in the database.
+    /// Represents a record of <see cref="Device"/> information as defined in the database.
     /// </summary>
     public class Device : DataModelBase
     {
-        #region [Members]
+        #region [ Members ]
 
-        //fields
-        //private Guid NodeID ;
+        // Fields
         private string m_nodeID;
         private int m_id;
         private int? m_parentID;
@@ -120,12 +121,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
-        #region [Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> NodeID.
         /// </summary>
-        [Required(ErrorMessage = "Device NodeID is a required field, please provide value.")]
+        [Required(ErrorMessage = "Device node ID is a required field, please provide value.")]
         public string NodeID
         {
             get
@@ -152,7 +153,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_id = value;
-                OnPropertyChanged("ID");
             }
         }
 
@@ -168,14 +168,14 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_parentID = value;
-                OnPropertyChanged("ParentId");
+                OnPropertyChanged("ParentID");
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> Acronym.
         /// </summary>
-        [Required(ErrorMessage = "Device Acronym is a required field, please provide value.")]
+        [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
         public string Acronym
         {
             get
@@ -192,7 +192,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/>  Name.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string Name
         {
             get
@@ -209,8 +209,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> IsConcenttrator.
         /// </summary>
-        [Required(ErrorMessage = " Device IsConcentrator is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool IsConcentrator
         {
             get
@@ -227,7 +226,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> CompanyID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? CompanyID
         {
             get
@@ -244,7 +242,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> HistrianID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? HistorianID
         {
             get
@@ -261,8 +258,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> AccessID.
         /// </summary>
-        [Required(ErrorMessage = "AccessID is required field.")]
-        [DefaultValue(typeof(int), "1")]
+        [Required(ErrorMessage = "Device access ID is a required field, please provide value.")]
+        [DefaultValue(1)]
         public int AccessID
         {
             get
@@ -279,7 +276,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> VendorDeviceID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? VendorDeviceID
         {
             get
@@ -296,7 +292,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> protocolID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? ProtocolID
         {
             get
@@ -313,7 +308,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> Longitude.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public decimal? Longitude
         {
             get
@@ -330,7 +324,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> Latitude.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public decimal? Latitude
         {
             get
@@ -347,7 +340,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> InterconnectionID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? InterconnectionID
         {
             get
@@ -364,7 +356,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> ConnectionString.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ConnectionString
         {
             get
@@ -374,14 +365,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_connectionString = value;
-                OnPropertyChanged("connectionString");
+                OnPropertyChanged("ConnectionString");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> TimeZone.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string TimeZone
         {
             get
@@ -398,7 +388,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> FramesPerSecond.
         /// </summary>
-        //Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? FramesPerSecond
         {
             get
@@ -408,15 +397,15 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_framesPerSecond = value;
-                OnPropertyChanged("framePerSecond");
+                OnPropertyChanged("FramesPerSecond");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> TimeAdjustmentTicks.
         /// </summary>
-        [Required(ErrorMessage = "TimeAdjustmentTicks is required field.")]
-        [DefaultValue(typeof(long), "0")]
+        [Required(ErrorMessage = "Device time adjustment ticks is a required field, please provide value.")]
+        [DefaultValue(0L)]
         public long TimeAdjustmentTicks
         {
             get
@@ -426,14 +415,14 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_timeAdjustmentTicks = value;
-                OnPropertyChanged("TimeAdjustment");
+                OnPropertyChanged("TimeAdjustmentTicks");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> DataLossInterval.
         /// </summary>
-        [Required(ErrorMessage = "DataLossInterval is required field.")]
+        [Required(ErrorMessage = "Device data loss interval is a required field, please provide value.")]
         [DefaultValue(typeof(double), "5")]
         public double DataLossInterval
         {
@@ -451,7 +440,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> ContactList.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ContactList
         {
             get
@@ -468,7 +456,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> MeasuredLines.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public int? MeasuredLines
         {
             get
@@ -485,8 +472,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> LoadOrder.
         /// </summary>
-        [Required(ErrorMessage = "DataLossInterval is required field.")]
-        [DefaultValue(typeof(double), "5")]
+        [Required(ErrorMessage = "Device load order is a required field, please provide value.")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -503,7 +490,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> Enabled.
         /// </summary>
-        /// Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -520,8 +507,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> AllowedParsingExceptions.
         /// </summary>
-        [Required(ErrorMessage = "AllowedParsingExceptions is required field.")]
-        [DefaultValue(typeof(int), "10")]
+        [Required(ErrorMessage = "Device allowed parsing exceptions is a required field, please provide value.")]
+        [DefaultValue(10)]
         public int AllowedParsingExceptions
         {
             get
@@ -538,8 +525,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> ParsingExceptionWindow.
         /// </summary>
-        [Required(ErrorMessage = "ParsingExceptionWindow is required field.")]
-        [DefaultValue(typeof(double), "5")]
+        [Required(ErrorMessage = "Device parsing exception window is a required field, please provide value.")]
+        [DefaultValue(5.0D)]
         public double ParsingExceptionWindow
         {
             get
@@ -556,8 +543,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> DelayedConnectionInterval.
         /// </summary>
-        [Required(ErrorMessage = "DelayedConnectionInterval is required field.")]
-        [DefaultValue(typeof(double), "5")]
+        [Required(ErrorMessage = "Device delayed connection interval is a required field, please provide value.")]
+        [DefaultValue(5.0D)]
         public double DelayedConnectionInterval
         {
             get
@@ -574,8 +561,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> AllowUseOfCachedConfiguration.
         /// </summary>
-        [Required(ErrorMessage = "AllowUseOfCachedConfiguration is required field.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool AllowUseOfCachedConfiguration
         {
             get
@@ -593,8 +579,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> AutoStartDataParsingSequence.
         /// </summary>
-        [Required(ErrorMessage = "AutoStartDataParsingSequence is required field.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool AutoStartDataParsingSequence
         {
             get
@@ -611,8 +596,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> SkipDisableRealTimeData.
         /// </summary>
-        [Required(ErrorMessage = "SkipDisableRealTimeData is required field.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool SkipDisableRealTimeData
         {
             get
@@ -629,8 +613,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> MeasurementReportingInterval.
         /// </summary>
-        [Required(ErrorMessage = "SkipDisableRealTimeData is required field.")]
-        [DefaultValue(typeof(int), "100000")]
+        [Required(ErrorMessage = "Device measurement reporting interval is a required field, please provide value.")]
+        [DefaultValue(100000)]
         public int MeasurementReportingInterval
         {
             get
@@ -645,165 +629,108 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> CompanyName.
+        /// Gets <see cref="Device"/> CompanyName.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string CompanyName
         {
             get
             {
                 return m_companyName;
             }
-            set
-            {
-                m_companyName = value;
-                OnPropertyChanged("CompanyName");
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> CompanyAcronym.
+        /// Gets <see cref="Device"/> CompanyAcronym.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string CompanyAcronym
         {
             get
             {
                 return m_companyAcronym;
             }
-            set
-            {
-                m_companyAcronym = value;
-                OnPropertyChanged("CompanyAcronym");
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> HistorianAcronym.
+        /// Gets <see cref="Device"/> HistorianAcronym.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string HistorianAcronym
         {
             get
             {
                 return m_historianAcronym;
             }
-            set
-            {
-                m_historianAcronym = value;
-                OnPropertyChanged("HistorianAcronym");
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> VendorDeviceName.
+        /// Gets <see cref="Device"/> VendorDeviceName.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string VendorDeviceName
         {
             get
             {
                 return m_vendorDeviceName;
             }
-            set
-            {
-                m_vendorDeviceName = value;
-                OnPropertyChanged("VendorDeviceName");
-            }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> VendorAcronym.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string VendorAcronym
         {
             get
             {
                 return m_vendorAcronym;
             }
-            set
-            {
-                m_vendorAcronym = value;
-                OnPropertyChanged("VendorAcronym");
-
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> ProtocolName.
+        /// Gets <see cref="Device"/> ProtocolName.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ProtocolName
         {
             get
             {
                 return m_protocolName;
             }
-            set
-            {
-                m_protocolName = value;
-                OnPropertyChanged("ProtocolName");
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> InterconnectionName.
+        /// Gets <see cref="Device"/> InterconnectionName.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string InterconnectionName
         {
             get
             {
                 return m_interconnectionName;
             }
-            set
-            {
-                m_interconnectionName = value;
-                OnPropertyChanged("InterconnectionName");
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> NodeName.
+        /// Gets <see cref="Device"/> NodeName.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string NodeName
         {
             get
             {
                 return m_nodeName;
             }
-            set
-            {
-                m_nodeName = value;
-                OnPropertyChanged("NodeName");
-
-            }
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> ParentAcronym.
+        /// Gets <see cref="Device"/> ParentAcronym.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ParentAcronym
         {
             get
             {
                 return m_parentAcronym;
             }
-            set
-            {
-                m_parentAcronym = value;
-                OnPropertyChanged("ParentAcronym");
-
-            }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> CreatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -813,14 +740,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Device"/> CreatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
@@ -830,14 +756,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> UpdatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
@@ -847,14 +772,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="Device"/> UpdatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
@@ -864,7 +788,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -872,13 +795,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #region [ Static ]
 
-        //Static Methods
+        // Static Methods
 
         /// <summary>
         /// Loads <see cref="Device"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
+        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
         /// <param name="parentID">ID of the parent device to filter data.</param>
         /// <returns>Collection of <see cref="Device"/>.</returns>
         public static ObservableCollection<Device> Load(AdoDataConnection database, string nodeID, int parentID = 0)
@@ -890,13 +813,13 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Device> deviceList = new ObservableCollection<Device>();
-
                 DataTable deviceTable;
+
                 if (parentID > 0)
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, "Select * From DeviceDetail Where NodeID = @nodeID AND ParentID = @parentID " +
-                        "Order By Acronym", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID, parentID);
+                    deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID AND ParentID = @parentID " +
+                        "ORDER BY Acronym", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID, parentID);
                 else
-                    deviceTable = database.Connection.RetrieveData(database.AdapterType, "Select * From DeviceDetail Where NodeID = @nodeID Order By Acronym",
+                    deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID ORDER BY Acronym",
                         DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
 
                 foreach (DataRow row in deviceTable.Rows)
@@ -934,15 +857,15 @@ namespace TimeSeriesFramework.UI.DataModels
                         AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
                         SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                         MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
-                        CompanyName = row.Field<string>("CompanyName"),
-                        CompanyAcronym = row.Field<string>("CompanyAcronym"),
-                        HistorianAcronym = row.Field<string>("HistorianAcronym"),
-                        VendorDeviceName = row.Field<string>("VendorDeviceName"),
-                        VendorAcronym = row.Field<string>("VendorAcronym"),
-                        ProtocolName = row.Field<string>("ProtocolName"),
-                        InterconnectionName = row.Field<string>("InterconnectionName"),
-                        NodeName = row.Field<string>("NodeName"),
-                        ParentAcronym = row.Field<string>("ParentAcronym")
+                        m_companyName = row.Field<string>("CompanyName"),
+                        m_companyAcronym = row.Field<string>("CompanyAcronym"),
+                        m_historianAcronym = row.Field<string>("HistorianAcronym"),
+                        m_vendorDeviceName = row.Field<string>("VendorDeviceName"),
+                        m_vendorAcronym = row.Field<string>("VendorAcronym"),
+                        m_protocolName = row.Field<string>("ProtocolName"),
+                        m_interconnectionName = row.Field<string>("InterconnectionName"),
+                        m_nodeName = row.Field<string>("NodeName"),
+                        m_parentAcronym = row.Field<string>("ParentAcronym")
                     });
                 }
 
@@ -959,23 +882,23 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Device"/> information.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
+        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
         /// <param name="deviceType"><see cref="DeviceType"/> to filter data.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>        
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, string nodeID, DeviceType deviceType = DeviceType.DirectConnected,
-            bool isOptional = false)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, string nodeID, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> deviceList = new Dictionary<int, string>();
+                DataTable deviceTable;
+
                 if (isOptional)
                     deviceList.Add(0, "Select Device");
-
-                DataTable deviceTable;
 
                 if (deviceType == DeviceType.Concentrator)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
@@ -1009,42 +932,43 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Device device, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into Device (NodeID, ParentID, Acronym, Name, IsConcentrator, CompanyID, HistorianID, AccessID, VendorDeviceID, " +
-                    "ProtocolID, Longitude, Latitude, InterconnectionID, ConnectionString, TimeZone, FramesPerSecond, TimeAdjustmentTicks, DataLossInterval, ContactList, " +
-                    "MeasuredLines, LoadOrder, Enabled, AllowedParsingExceptions, ParsingExceptionWindow, DelayedConnectionInterval, AllowUseOfCachedConfiguration, " +
-                    "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, " +
-                    "@parentID, @acronym, @name, @isConcentrator, @companyID, @historianID, @accessID, @vendorDeviceID, @protocolID, @longitude, @latitude, @interconnectionID, " +
-                    "@connectionString, @timezone, @framesPerSecond, @timeAdjustmentTicks, @dataLossInterval, @contactList, @measuredLines, @loadOrder, @enabled, " +
-                    "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, " +
-                    "@skipDisableRealTimeData, @measurementReportingInterval, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, device.NodeID,
-                    device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
-                    device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
-                    device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
-                    device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
-                    device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
-                    device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
-                    database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                    database.Connection.ExecuteNonQuery("INSERT INTO Device (NodeID, ParentID, Acronym, Name, IsConcentrator, CompanyID, HistorianID, AccessID, VendorDeviceID, " +
+                        "ProtocolID, Longitude, Latitude, InterconnectionID, ConnectionString, TimeZone, FramesPerSecond, TimeAdjustmentTicks, DataLossInterval, ContactList, " +
+                        "MeasuredLines, LoadOrder, Enabled, AllowedParsingExceptions, ParsingExceptionWindow, DelayedConnectionInterval, AllowUseOfCachedConfiguration, " +
+                        "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, " +
+                        "@parentID, @acronym, @name, @isConcentrator, @companyID, @historianID, @accessID, @vendorDeviceID, @protocolID, @longitude, @latitude, @interconnectionID, " +
+                        "@connectionString, @timezone, @framesPerSecond, @timeAdjustmentTicks, @dataLossInterval, @contactList, @measuredLines, @loadOrder, @enabled, " +
+                        "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, " +
+                        "@skipDisableRealTimeData, @measurementReportingInterval, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, device.NodeID,
+                        device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
+                        device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
+                        device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
+                        device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
+                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
+                        device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update Device Set NodeID = @nodeID, ParentID = @parentID, Acronym = @acronym, Name = @name, IsConcentrator = @isConcentrator, " +
-                    "CompanyID = @companyID, HistorianID = @historianID, AccessID = @accessID, VendorDeviceID = @vendorDeviceID, ProtocolID = @protocolID, Longitude = @longitude, " +
-                    "Latitude = @latitude, InterconnectionID = @interconnectionID, ConnectionString = @connectionString, TimeZone = @timezone, FramesPerSecond = @framesPerSecond, " +
-                    "TimeAdjustmentTicks = @timeAdjustmentTicks, DataLossInterval = @dataLossInterval, ContactList = @contactList, MeasuredLines = @measuredLines, " +
-                    "LoadOrder = @loadOrder, Enabled = @enabled, AllowedParsingExceptions = @allowedParsingExceptions, ParsingExceptionWindow = @parsingExceptionWindow, " +
-                    "DelayedConnectionInterval = @delayedConnectionInterval, AllowUseOfCachedConfiguration = @allowUseOfCachedConfiguration, AutoStartDataParsingSequence " +
-                    "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, " +
-                    "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, device.NodeID,
-                    device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
-                    device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
-                    device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
-                    device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
-                    device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
-                    device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
-                    database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, device.ID);
+                    database.Connection.ExecuteNonQuery("UPDATE Device SET NodeID = @nodeID, ParentID = @parentID, Acronym = @acronym, Name = @name, IsConcentrator = @isConcentrator, " +
+                        "CompanyID = @companyID, HistorianID = @historianID, AccessID = @accessID, VendorDeviceID = @vendorDeviceID, ProtocolID = @protocolID, Longitude = @longitude, " +
+                        "Latitude = @latitude, InterconnectionID = @interconnectionID, ConnectionString = @connectionString, TimeZone = @timezone, FramesPerSecond = @framesPerSecond, " +
+                        "TimeAdjustmentTicks = @timeAdjustmentTicks, DataLossInterval = @dataLossInterval, ContactList = @contactList, MeasuredLines = @measuredLines, " +
+                        "LoadOrder = @loadOrder, Enabled = @enabled, AllowedParsingExceptions = @allowedParsingExceptions, ParsingExceptionWindow = @parsingExceptionWindow, " +
+                        "DelayedConnectionInterval = @delayedConnectionInterval, AllowUseOfCachedConfiguration = @allowUseOfCachedConfiguration, AutoStartDataParsingSequence " +
+                        "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, device.NodeID,
+                        device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
+                        device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
+                        device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
+                        device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
+                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
+                        device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, device.ID);
 
                 return "Device information saved successfully";
             }

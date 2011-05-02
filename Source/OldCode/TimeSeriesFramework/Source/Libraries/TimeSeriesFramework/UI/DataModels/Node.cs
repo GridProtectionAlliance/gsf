@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/18/2011 - Mehulbhai P Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -34,14 +36,14 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Creates a new object that represents a Node
+    /// Represents a record of <see cref="Node"/> information as defined in the database.
     /// </summary>
     public class Node : DataModelBase
     {
         #region [ Members ]
 
         // Fields
-        private string m_ID;
+        private string m_id;
         private string m_name;
         private int? m_companyID;
         private decimal? m_longitude;
@@ -67,16 +69,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s ID.
         /// </summary>
-        [StringLength(36, ErrorMessage = "Node ID cannot exceed 36 characters")]
         public string ID
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
+                m_id = value;
             }
         }
 
@@ -180,7 +181,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is the master <see cref="Node"/>.
         /// </summary>
-        [DefaultValue(typeof(bool), "false")]
+        [DefaultValue(false)]
         public bool Master
         {
             get
@@ -196,7 +197,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Load Order.
         /// </summary>
-        [DefaultValue(typeof(int), "0")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -212,7 +213,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is enabled.
         /// </summary>
-        [DefaultValue(typeof(bool), "false")]
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -244,7 +245,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Remote Status Service URL.
         /// </summary>
-        [DataType(DataType.Url, ErrorMessage = "Remote Status Service URL is not formatted properly.")]
+        [DataType(DataType.Url, ErrorMessage = "Remote status service URL is not formatted properly.")]
         public string RemoteStatusServiceUrl
         {
             get
@@ -260,7 +261,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s Real Time Statistic Service URL.
         /// </summary>
-        [DataType(DataType.Url, ErrorMessage = "Real Time Statistics Service URL is not formatted properly.")]
+        [DataType(DataType.Url, ErrorMessage = "Real-time statistics service URL is not formatted properly.")]
         public string RealTimeStatisticServiceUrl
         {
             get
@@ -377,7 +378,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
                         "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
-                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail Order By LoadOrder");
+                        "RealTimeStatisticServiceUrl, CompanyName From NodeDetail ORDER BY LoadOrder");
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
@@ -418,19 +419,22 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<string, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<string, string> nodeList = new Dictionary<string, string>();
+
                 if (isOptional)
                     nodeList.Add(string.Empty, "Select Node");
 
-                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node Where Enabled = @enabled ORDER BY LoadOrder",
-                    DefaultTimeout, true);
+                DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node WHERE Enabled = @enabled ORDER BY LoadOrder", DefaultTimeout, true);
 
                 foreach (DataRow row in nodeTable.Rows)
+                {
                     nodeList[row.Field<object>("ID").ToString()] = row.Field<string>("Name");
+                }
 
                 return nodeList;
             }
@@ -451,27 +455,24 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Node node, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
-                        "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @companyID, " +
+                    database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
+                        "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
                         "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
                         "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
                         node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
                         CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update Node Set Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
+                    database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
                         "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
                         "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
                         node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
                         database.IsJetEngine() ? "{" + node.ID + "}" : node.ID);
@@ -497,11 +498,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);

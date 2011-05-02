@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/13/2011 - Aniket Salver
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -31,49 +33,49 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Creates a new object that represents a SecurityGroup
+    /// Represents a record of <see cref="SecurityGroup"/> information as defined in the database.
     /// </summary>
-    class SecurityGroup : DataModelBase
+    public class SecurityGroup : DataModelBase
     {
-        #region [Members]
+        #region [ Members ]
 
         //Fileds
-        private Guid m_ID;
+        private Guid m_id;
         private string m_name;
         private string m_description;
         private DateTime m_createdOn;
-        private string m_CreatedBy;
-        private DateTime m_UpdatedOn;
-        private string m_UpdatedBy;
-        private ObservableCollection<SecurityGroup> m_CurrentGroupUsers;
-        private ObservableCollection<SecurityGroup> m_PossibleGroupUsers;
+        private string m_createdBy;
+        private DateTime m_updatedOn;
+        private string m_updatedBy;
+        private ObservableCollection<SecurityGroup> m_currentGroupUsers;
+        private ObservableCollection<SecurityGroup> m_possibleGroupUsers;
 
         #endregion
 
         #region [properties]
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup ID
+        /// Gets or sets the current SecurityGroup ID
         /// </summary>
         // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public Guid ID
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
+                m_id = value;
                 OnPropertyChanged("ID");
             }
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup Name
+        /// Gets or sets the current SecurityGroup Name
         /// </summary>
-        [Required(ErrorMessage = " SecurityGroup Name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "SecurityGroup Name cannot exceed 50 characters.")]
+        [Required(ErrorMessage = " Security group name is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Security group name cannot exceed 50 characters.")]
         public string Name
         {
             get
@@ -88,9 +90,8 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup Description
+        /// Gets or sets the current SecurityGroup Description
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string Description
         {
             get
@@ -105,9 +106,9 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup CreatedOn
+        /// Gets or sets the current SecurityGroup CreatedOn
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -122,82 +123,82 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup CreatedBy
+        /// Gets or sets the current SecurityGroup CreatedBy
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
             {
-                return m_CreatedBy;
+                return m_createdBy;
             }
             set
             {
-                m_CreatedBy = value;
+                m_createdBy = value;
             }
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup UpdatedOn
+        /// Gets or sets the current SecurityGroup UpdatedOn
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
             {
-                return m_UpdatedOn;
+                return m_updatedOn;
             }
             set
             {
-                m_UpdatedOn = value;
+                m_updatedOn = value;
             }
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup UpdatedBy
+        /// Gets or sets the current SecurityGroup UpdatedBy
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
             {
-                return m_UpdatedBy;
+                return m_updatedBy;
             }
             set
             {
-                m_UpdatedBy = value;
+                m_updatedBy = value;
             }
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup CurrentGroupUsers
+        /// Gets or sets the current SecurityGroup CurrentGroupUsers
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<SecurityGroup> CurrentGroupUsers
         {
             get
             {
-                return m_CurrentGroupUsers;
+                return m_currentGroupUsers;
             }
             set
             {
-                m_CurrentGroupUsers = value;
+                m_currentGroupUsers = value;
             }
         }
 
         /// <summary>
-        /// Gets and sets the current SecurityGroup PossibleGroupUsers
+        /// Gets or sets the current SecurityGroup PossibleGroupUsers
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<SecurityGroup> PossibleGroupUsers
         {
             get
             {
-                return m_PossibleGroupUsers;
+                return m_possibleGroupUsers;
             }
             set
             {
-                m_PossibleGroupUsers = value;
+                m_possibleGroupUsers = value;
             }
         }
 
@@ -218,11 +219,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<SecurityGroup> securityGroupList = new ObservableCollection<SecurityGroup>();
                 DataTable securityGroupTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym, MapAcronym, Name, URL, LoadOrder FROM SecurityGroup ORDER BY LoadOrder");
@@ -260,15 +257,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> securityGroupList = new Dictionary<int, string>();
+
                 if (isOptional)
                     securityGroupList.Add(0, "Select Security Group");
 
@@ -296,19 +291,16 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, SecurityGroup securityGroup, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
+                    database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
                         securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update SecurityGroup Set Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
+                    database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
                              securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, securityGroup.ID);
 
                 return "Security Group information saved successfully";
@@ -332,11 +324,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
             try
             {
-                if (database == null)
-                {
-                    database = new AdoDataConnection(CommonFunctions.DefaultSettingsCategory);
-                    createdConnection = true;
-                }
+                createdConnection = CreateConnection(ref database);
 
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);

@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -32,13 +34,13 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of measurement information as defined in the database.
+    /// Represents a record of <see cref="Measurement"/> information as defined in the database.
     /// </summary>
     public class Measurement : DataModelBase
     {
         #region [ Members ]
 
-        //Fields
+        // Fields
         private string m_signalID;
         private int? m_historianID;
         private int m_pointID;
@@ -71,7 +73,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal ID.
         /// </summary>
-        [StringLength(36, ErrorMessage = " Measurement SignalID cannot exceed 36 characters.")]
         public string SignalID
         {
             get
@@ -139,8 +140,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Point Tag.
         /// </summary>
-        [Required(ErrorMessage = "Measurement Point Tag is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Measurement Point Tag cannot exceed 50 characters.")]
+        [Required(ErrorMessage = "Measurement point tag is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Measurement point tag cannot exceed 50 characters.")]
         public string PointTag
         {
             get
@@ -208,7 +209,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal Reference.
         /// </summary>
-        [Required(ErrorMessage = "Measurement Signal Reference is a required field, please provide value.")]
+        [Required(ErrorMessage = "Measurement signal reference is a required field, please provide value.")]
         public string SignalReference
         {
             get
@@ -276,7 +277,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
         /// </summary>
-        [DefaultValue(typeof(bool), "false")]
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -422,7 +423,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -439,7 +439,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -456,7 +455,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -473,7 +471,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -540,6 +537,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -572,6 +570,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Measurement measurement, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);

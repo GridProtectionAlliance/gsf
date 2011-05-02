@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  CalulatedMeasurment.cs - Gbtc
+//  CalculatedMeasurement.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/21/2011 - Mehulbhai P Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -34,7 +36,7 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of CalculatedMeasurment information as defined in the database.
+    /// Represents a record of <see cref="CalculatedMeasurement"/> information as defined in the database.
     /// </summary>
     public class CalculatedMeasurement : DataModelBase
     {
@@ -42,7 +44,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         // Fields
         private Guid m_nodeID;
-        private int m_ID;
+        private int m_id;
         private string m_acronym;
         private string m_name;
         private string m_typeName;
@@ -75,9 +77,9 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets <see cref="CalculatedMeasurement"/> NodeId.
+        /// Gets or sets <see cref="CalculatedMeasurement"/> NodeID.
         /// </summary>
-        [Required(ErrorMessage = "Please provide NodeId value.")]
+        [Required(ErrorMessage = "Please select a node ID.")]
         public Guid NodeID
         {
             get
@@ -99,20 +101,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Acronym.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
-        [Required(ErrorMessage = "CalulatedMeasurment acronym is a required field, please provide value.")]
+        [Required(ErrorMessage = "Calculated measurement acronym is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Calculated measurement acronym cannot exceed 50 characters.")]
         public string Acronym
         {
             get
@@ -129,7 +130,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Name.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        [StringLength(100, ErrorMessage = "Calculated measurement name cannot exceed 100 characters.")]
         public string Name
         {
             get
@@ -146,7 +147,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Acronym.
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment TypeName is a required field, please provide value.")]
+        [Required(ErrorMessage = "Calculated measurement type name is a required field, please provide value.")]
         public string TypeName
         {
             get
@@ -163,7 +164,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> AssemblyName.
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment AssemblyName is a required field, please provide value.")]
+        [Required(ErrorMessage = "Calculated measurement assembly name is a required field, please provide value.")]
         public string AssemblyName
         {
             get
@@ -180,7 +181,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> ConnectionString.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ConnectionString
         {
             get
@@ -197,7 +197,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> ConfigSection.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string ConfigSection
         {
             get
@@ -214,7 +213,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> OutputMeasurements.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string OutputMeasurements
         {
             get
@@ -231,7 +229,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> InputMeasurements.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string InputMeasurements
         {
             get
@@ -248,8 +245,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> MinimumMeasurementsToUse.
         /// </summary>
-        [Required(ErrorMessage = " CalulatedMeasurment MinimumMeasurementsToUse is a required field, please provide value..")]
-        [DefaultValue(typeof(int), "-1")]
+        [Required(ErrorMessage = " Calculated measurement minimum measurements to use is a required field, please provide value.")]
+        [DefaultValue(-1)]
         public int MinimumMeasurementsToUse
         {
             get
@@ -266,8 +263,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> FramesPerSecond.
         /// </summary>
-        [Required(ErrorMessage = " CalulatedMeasurment FramesPerSecond is a required field, please provide value..")]
-        [DefaultValue(typeof(int), "30")]
+        [Required(ErrorMessage = " Calculated measurement frames per second is a required field, please provide value.")]
+        [DefaultValue(30)]
         public int FramesPerSecond
         {
             get
@@ -284,8 +281,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> LagTime.
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment LagTime is a required field, please provide value.")]
-        [DefaultValue(typeof(double), "3.0")]
+        [Required(ErrorMessage = "Calculated measurement lag time is a required field, please provide value.")]
+        [DefaultValue(3.0D)]
         public double LagTime
         {
             get
@@ -302,8 +299,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> LeadTime.
         /// </summary>
-        [Required(ErrorMessage = "LeadTime is required field.")]
-        [DefaultValue(typeof(double), "1.0")]
+        [Required(ErrorMessage = "Calculated measurement lead time is a required field, please provide value.")]
+        [DefaultValue(1.0D)]
         public double LeadTime
         {
             get
@@ -320,8 +317,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> UseLocalClockAsRealTime.
         /// </summary>
-        [Required(ErrorMessage = " CalulatedMeasurment LagTime is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool UseLocalClockAsRealTime
         {
             get
@@ -338,8 +334,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> AllowSortsByArrival.
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment AllowSortsByArrival is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool AllowSortsByArrival
         {
             get
@@ -356,8 +351,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> LoadOrder.
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment LoadOrder is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "0")]
+        [Required(ErrorMessage = "Calculated measurement load order is a required field, please provide value.")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -374,8 +369,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Enabled
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment Enabled is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -392,8 +386,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> IgnoreBadTimeStamps
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool IgnoreBadTimeStamps
         {
             get
@@ -410,8 +403,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> TimeResolution
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment TimeResoulution is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "10000")]
+        [Required(ErrorMessage = "Calculated measurement time resoulution is a required field, please provide value.")]
+        [DefaultValue(330000)]
         public int TimeResolution
         {
             get
@@ -428,8 +421,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> AllowPreemptivePublishing
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment AllowPreemptivePublishing is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool AllowPreemptivePublishing
         {
             get
@@ -446,8 +438,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> DownsamplingMethod
         /// </summary>
-        [Required(ErrorMessage = "CalculatedMeasurment DownsamplingMethod is a required field, please provide value..")]
-        [DefaultValue(typeof(string), "LastReceived")]
+        [Required(ErrorMessage = "Calculated measurment downsampling method is required, please select a value.")]
+        [DefaultValue("LastReceived")]
         public string DownsamplingMethod
         {
             get
@@ -462,27 +454,20 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        ///  Gets or sets <see cref="CalculatedMeasurement"/> NodeName
+        ///  Gets <see cref="CalculatedMeasurement"/> NodeName
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment NodeName is a required field, please provide value..")]
         public string NodeName
         {
             get
             {
                 return m_nodeName;
             }
-            set
-            {
-                m_nodeName = value;
-                OnPropertyChanged("NodeName");
-            }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> PerformTimestampReasonabilityCheck
         /// </summary>
-        [Required(ErrorMessage = "CalulatedMeasurment PerformTimestampReasonabilityCheck is a required field, please provide value.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool PerformTimestampReasonabilityCheck
         {
             get
@@ -499,7 +484,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> CreatedOn
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -509,14 +494,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> CreatedBy
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
@@ -526,14 +510,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> UpdatedOn
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
@@ -543,14 +526,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> UpdatedBy
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
@@ -560,7 +542,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -574,7 +555,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="CalculatedMeasurement"/> collection is returned.</param>
+        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="CalculatedMeasurement"/> collection is returned.</param>
         /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
         public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, string nodeID)
         {
@@ -588,7 +569,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable calculatedMeasurementTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, " +
                     "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                     "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
-                    "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail Where NodeID = @nodeID Order By LoadOrder",
+                    "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail WHERE NodeID = @nodeID ORDER BY LoadOrder",
                     DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
@@ -617,7 +598,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         TimeResolution = Convert.ToInt32(row.Field<object>("TimeResolution")),
                         AllowPreemptivePublishing = Convert.ToBoolean(row.Field<object>("AllowPreemptivePublishing")),
                         DownsamplingMethod = row.Field<string>("DownSamplingMethod"),
-                        NodeName = row.Field<string>("NodeName"),
+                        m_nodeName = row.Field<string>("NodeName"),
                         PerformTimestampReasonabilityCheck = Convert.ToBoolean(row.Field<object>("PerformTimestampReasonabilityCheck"))
                     });
                 }
@@ -640,11 +621,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> calculatedMeasurementList = new Dictionary<int, string>();
+
                 if (isOptional)
                     calculatedMeasurementList.Add(0, "Select CalculatedMeasurement");
 
@@ -672,41 +655,42 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, CalculatedMeasurement calculatedMeasurement, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into CalculatedMeasurement (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, " +
-                    "ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, LeadTime, UseLocalClockAsRealTime, " +
-                    "AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, DownsamplingMethod, " +
-                    "PerformTimestampReasonabilityCheck, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @acronym, @name, @assemblyName, " +
-                    "@typeName, @connectionString, @configSection, @inputMeasurements, @outputMeasurements, @minimumMeasurementsToUse, @framesPerSecond, " +
-                    "@lagTime, @leadTime, @useLocalClockAsRealTime, @allowSortsByArrival, @loadOrder, @enabled, @ignoreBadTimeStamps, @timeResolution, " +
-                    "@allowPreemptivePublishing, @downsamplingMethod, @performTimestampReasonabilityCheck, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                    DefaultTimeout, calculatedMeasurement.NodeID, calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name,
-                    calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection,
-                    calculatedMeasurement.InputMeasurements, calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse,
-                    calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
-                    calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
-                    calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod,
-                    calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                    CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                    database.Connection.ExecuteNonQuery("INSERT INTO CalculatedMeasurement (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, " +
+                        "ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, LeadTime, UseLocalClockAsRealTime, " +
+                        "AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, DownsamplingMethod, " +
+                        "PerformTimestampReasonabilityCheck, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @acronym, @name, @assemblyName, " +
+                        "@typeName, @connectionString, @configSection, @inputMeasurements, @outputMeasurements, @minimumMeasurementsToUse, @framesPerSecond, " +
+                        "@lagTime, @leadTime, @useLocalClockAsRealTime, @allowSortsByArrival, @loadOrder, @enabled, @ignoreBadTimeStamps, @timeResolution, " +
+                        "@allowPreemptivePublishing, @downsamplingMethod, @performTimestampReasonabilityCheck, @updatedBy, @updatedOn, @createdBy, @createdOn)",
+                        DefaultTimeout, calculatedMeasurement.NodeID, calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name,
+                        calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection,
+                        calculatedMeasurement.InputMeasurements, calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse,
+                        calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
+                        calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
+                        calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod,
+                        calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update CalculatedMeasurement Set NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, " +
-                    "TypeName = @typeName, ConnectionString = @connectionString, ConfigSection = @configSection, InputMeasurements = @inputMeasurements, " +
-                    "OutputMeasurements = @outputMeasurements, MinimumMeasurementsToUse = @minimumMeasurementsToUse, FramesPerSecond = @framesPerSecond, " +
-                    "LagTime = @lagTime, LeadTime = @leadTime, UseLocalClockAsRealTime = @useLocalClockAsRealTime, AllowSortsByArrival = @allowSortsByArrival, " +
-                    "LoadOrder = @loadOrder, Enabled = @enabled, IgnoreBadTimeStamps = @ignoreBadTimeStamps, TimeResolution = @timeResolution, AllowPreemptivePublishing " +
-                    "= @allowPreemptivePublishing, DownsamplingMethod = @downsamplingMethod, PerformTimestampReasonabilityCheck = @performTimestampReasonabilityCheck, " +
-                    "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, calculatedMeasurement.NodeID,
-                    calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName,
-                    calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements,
-                    calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond,
-                    calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival,
-                    calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution,
-                    calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck,
-                    CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, calculatedMeasurement.ID);
+                    database.Connection.ExecuteNonQuery("UPDATE CalculatedMeasurement SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, " +
+                        "TypeName = @typeName, ConnectionString = @connectionString, ConfigSection = @configSection, InputMeasurements = @inputMeasurements, " +
+                        "OutputMeasurements = @outputMeasurements, MinimumMeasurementsToUse = @minimumMeasurementsToUse, FramesPerSecond = @framesPerSecond, " +
+                        "LagTime = @lagTime, LeadTime = @leadTime, UseLocalClockAsRealTime = @useLocalClockAsRealTime, AllowSortsByArrival = @allowSortsByArrival, " +
+                        "LoadOrder = @loadOrder, Enabled = @enabled, IgnoreBadTimeStamps = @ignoreBadTimeStamps, TimeResolution = @timeResolution, AllowPreemptivePublishing " +
+                        "= @allowPreemptivePublishing, DownsamplingMethod = @downsamplingMethod, PerformTimestampReasonabilityCheck = @performTimestampReasonabilityCheck, " +
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, calculatedMeasurement.NodeID,
+                        calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName,
+                        calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements,
+                        calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond,
+                        calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival,
+                        calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution,
+                        calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck,
+                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, calculatedMeasurement.ID);
 
                 return "Calculated measurement information saved successfully";
             }
@@ -746,6 +730,5 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
-
     }
 }

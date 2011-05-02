@@ -35,7 +35,7 @@ namespace TimeSeriesFramework.UI
     {
         #region [ Members ]
 
-        //Fields
+        // Fields
         private string m_icon;
         private string m_menuText;
         private string m_description;
@@ -67,8 +67,8 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets text of <see cref="MenuDataItem"/> to be displayed in menu.
         /// </summary>
         [XmlAttribute]
-        public string MenuText 
-        { 
+        public string MenuText
+        {
             get
             {
                 return m_menuText;
@@ -83,8 +83,8 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets description of the <see cref="MenuDataItem"/>.
         /// </summary>
         [XmlAttribute]
-        public string Description 
-        { 
+        public string Description
+        {
             get
             {
                 return m_description;
@@ -99,8 +99,8 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets comma seperated list of roles with access to this <see cref="MenuDataItem"/>.
         /// </summary>                
         [XmlAttribute]
-        public string Roles 
-        { 
+        public string Roles
+        {
             get
             {
                 return m_roles;
@@ -115,8 +115,8 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets the assembly name where user control is defined.
         /// </summary>
         [XmlAttribute]
-        public string UserControlAssembly 
-        { 
+        public string UserControlAssembly
+        {
             get
             {
                 return m_userControlAssembly;
@@ -131,8 +131,8 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets path for the user control to be loaded when <see cref="MenuDataItem"/> is clicked.
         /// </summary>        
         [XmlAttribute]
-        public string UserControlPath 
-        { 
+        public string UserControlPath
+        {
             get
             {
                 return m_userControlPath;
@@ -147,18 +147,21 @@ namespace TimeSeriesFramework.UI
         /// Gets or sets the commnad to execute when <see cref="MenuDataItem"/> is clicked.
         /// </summary> 
         [XmlIgnore]
-        public ICommand Command 
+        public ICommand Command
         {
-            get 
-            { 
-                return new MenuCommand() { Roles = this.Roles, UserControlAssembly = this.UserControlAssembly, UserControlPath = this.UserControlPath, Description = this.Description }; 
+            get
+            {
+                return new MenuCommand()
+                {
+                    Roles = this.Roles, UserControlAssembly = this.UserControlAssembly, UserControlPath = this.UserControlPath, Description = this.Description
+                };
             }
         }
 
         /// <summary>
         /// Gets or sets sub menu items for <see cref="MenuDataItem"/>.
         /// </summary>         
-        public ObservableCollection<MenuDataItem> SubMenuItems 
+        public ObservableCollection<MenuDataItem> SubMenuItems
         {
             get
             {

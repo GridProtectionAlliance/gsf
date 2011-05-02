@@ -318,11 +318,11 @@ namespace TimeSeriesFramework
 
             // Example connection settings
             CategorizedSettingsElementCollection exampleSettings = configFile.Settings["exampleConnectionSettings"];
-            exampleSettings.Add("SqlServer.ConnectionString", "Data Source=serverName;Initial Catalog=openPDC;User Id=userName;Password=password", "Example SQL Server database connection string");
+            exampleSettings.Add("SqlServer.ConnectionString", "Data Source=serverName;Initial Catalog=openPDC;User ID=userName;Password=password", "Example SQL Server database connection string");
             exampleSettings.Add("SqlServer.DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.SqlClient.SqlConnection;AdapterType=System.Data.SqlClient.SqlDataAdapter", "Example SQL Server database .NET provider string");
             exampleSettings.Add("MySQL.ConnectionString", "Server=serverName;Database=openPDC;Uid=root;Pwd=password; allow user variables = true;", "Example MySQL database connection string");
             exampleSettings.Add("MySQL.DataProviderString", "AssemblyName={MySql.Data, Version=6.2.3.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d};ConnectionType=MySql.Data.MySqlClient.MySqlConnection;AdapterType=MySql.Data.MySqlClient.MySqlDataAdapter", "Example MySQL database .NET provider string");
-            exampleSettings.Add("Oracle.ConnectionString", "Data Source=openPDC;User Id=username;Password=password;Integrated Security=no", "Example Oracle database connection string");
+            exampleSettings.Add("Oracle.ConnectionString", "Data Source=openPDC;User ID=username;Password=password;Integrated Security=no", "Example Oracle database connection string");
             exampleSettings.Add("Oracle.DataProviderString", "AssemblyName={System.Data.OracleClient, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OracleClient.OracleConnection;AdapterType=System.Data.OracleClient.OracleDataAdapter", "Example Oracle database .NET provider string");
             exampleSettings.Add("OleDB.ConnectionString", "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=openPDC.mdb", "Example Microsoft Access (via OleDb) database connection string");
             exampleSettings.Add("OleDB.DataProviderString", "AssemblyName={System.Data, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089};ConnectionType=System.Data.OleDb.OleDbConnection;AdapterType=System.Data.OleDb.OleDbDataAdapter", "Example OleDb database .NET provider string");

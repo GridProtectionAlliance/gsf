@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/19/2011 - Mehulbhai Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -70,12 +72,12 @@ namespace TimeSeriesFramework.UI.DataModels
     /// </summary>
     public class Adapter : DataModelBase
     {
-        #region[Members]
+        #region [ Members ]
 
         // Fields
 
         private string m_nodeID;
-        private int m_ID;
+        private int m_id;
         private string m_adapterName;
         private string m_assemblyName;
         private string m_typeName;
@@ -91,13 +93,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
-        #region[Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> NodeID.
         /// </summary>
-        [Required(ErrorMessage = " Adapter NodeID is a required field, please provide value.")]
-        [StringLength(36, ErrorMessage = "Adapter NodeID cannot exceed 36 characters.")]
+        [Required(ErrorMessage = " Adapter node ID is a required field, please select a value.")]
+        [StringLength(36, ErrorMessage = "Adapter node ID cannot exceed 36 characters.")]
         public string NodeID
         {
             get
@@ -114,25 +116,24 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> ID
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
+        // Field is populated by auto-increment and has no screen interaction, so no validation attributes are applied
         public int ID
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> AdapterName
         /// </summary>
-        [Required(ErrorMessage = " Adapter AdapterName is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = " Adapter AdapterName cannot exceed 50 characters.")]
+        [Required(ErrorMessage = " Adapter name is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = " Adapter name cannot exceed 50 characters.")]
         public string AdapterName
         {
             get
@@ -149,7 +150,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> AssemblyName.
         /// </summary>
-        [Required(ErrorMessage = " Adapter AssemblyName is a required field, please provide value.")]
+        [Required(ErrorMessage = " Adapter assembly name is a required field, please provide value.")]
         public string AssemblyName
         {
             get
@@ -166,7 +167,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> TypeName.
         /// </summary>
-        [Required(ErrorMessage = " Adapter TypeName is a required field, please provide value.")]
+        [Required(ErrorMessage = " Adapter type name is a required field, please provide value.")]
         public string TypeName
         {
             get
@@ -183,7 +184,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> ConnectionString.
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string ConnectionString
         {
             get
@@ -200,8 +200,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> LoadOrder
         /// </summary>
-        [Required(ErrorMessage = " Adapter LoadOrder is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "0")]
+        [Required(ErrorMessage = " Adapter load order is a required field, please provide value.")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -219,8 +219,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> Enabled.
         /// </summary>
-        [Required(ErrorMessage = " Adapter Enabled is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "0")]
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -237,7 +236,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> NodeName.
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string NodeName
         {
             get
@@ -252,9 +250,8 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Adapter"/> adapterType
+        /// Gets or sets <see cref="Adapter"/> Type.
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public AdapterType Type
         {
             get
@@ -271,7 +268,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> CreatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -281,14 +278,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> CreatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
@@ -298,14 +294,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> UpdatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
@@ -315,14 +310,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdateOn");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="Adapter"/> UpdatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
@@ -332,7 +326,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -347,7 +340,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>        
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>
-        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="Adapter"/> collection is returned.</param>
+        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Adapter"/> collection is returned.</param>
         /// <returns>Collection of <see cref="Adapter"/>.</returns>
         public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType, string nodeID)
         {
@@ -358,6 +351,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 string viewName;
+
                 if (adapterType == AdapterType.Action)
                     viewName = "CustomActionAdapterDetail";
                 else if (adapterType == AdapterType.Input)
@@ -366,6 +360,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     viewName = "CustomOutputAdapterDetail";
 
                 ObservableCollection<Adapter> adapterList = new ObservableCollection<Adapter>();
+
                 DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
                     "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
                     database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
@@ -406,6 +401,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, AdapterType adapterType, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -415,6 +411,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     adapterList.Add(0, "Select Adapter");
 
                 string tableName;
+
                 if (adapterType == AdapterType.Action)
                     tableName = "CustomActionAdapter";
                 else if (adapterType == AdapterType.Input)
@@ -447,11 +444,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Adapter adapter, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 string tableName;
+
                 if (adapter.Type == AdapterType.Action)
                     tableName = "CustomActionAdapter";
                 else if (adapter.Type == AdapterType.Input)
@@ -460,16 +459,16 @@ namespace TimeSeriesFramework.UI.DataModels
                     tableName = "CustomOutputAdapter";
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
+                    database.Connection.ExecuteNonQuery("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
                         "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update " + tableName + " Set NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
+                    database.Connection.ExecuteNonQuery("UPDATE " + tableName + " SET NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
                         "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
-                        "UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
+                        "UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
                         adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, adapter.ID);
 
@@ -492,6 +491,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Delete(AdoDataConnection database, AdapterType adapterType, int adapterID)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -500,6 +500,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 CommonFunctions.SetCurrentUserContext(database);
 
                 string tableName;
+
                 if (adapterType == AdapterType.Action)
                     tableName = "CustomActionAdapter";
                 else if (adapterType == AdapterType.Input)

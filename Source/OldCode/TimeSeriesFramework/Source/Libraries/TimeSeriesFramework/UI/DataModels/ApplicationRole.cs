@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/13/2011 - Aniket Salver
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -31,20 +33,20 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    ///  Represents a record of ApplicationRole information as defined in the database.
+    ///  Represents a record of <see cref="ApplicationRole"/> information as defined in the database.
     /// </summary>
-    class ApplicationRole : DataModelBase
+    public class ApplicationRole : DataModelBase
     {
-        #region [Members]
+        #region [ Members ]
 
-        //Fileds
-        private Guid m_ID;
+        // Fields
+        private Guid m_id;
         private string m_nodeID;
         private string m_name;
         private string m_description;
         private DateTime m_createdOn;
         private string m_createdBy;
-        private DateTime m_UpdatedOn;
+        private DateTime m_updatedOn;
         private string m_updatedBy;
         private ObservableCollection<ApplicationRole> m_currentRoleGroups;
         private ObservableCollection<ApplicationRole> m_possibleRoleGroups;
@@ -53,30 +55,29 @@ namespace TimeSeriesFramework.UI.DataModels
 
         #endregion
 
-        #region[Properties]
+        #region [ Properties ]
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> ID.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public Guid ID
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> NodeID.
         /// </summary>
-        [Required(ErrorMessage = " ApplicationRole Name is a required field, please provide value.")]
-        [StringLength(36, ErrorMessage = "ApplicationRole Name cannot exceed 36 characters.")]
+        [Required(ErrorMessage = "Application role node ID is a required field, please select a value.")]
+        [StringLength(36, ErrorMessage = "Application role node ID cannot exceed 36 characters.")]
         public string NodeID
         {
             get
@@ -93,8 +94,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> Name.
         /// </summary>
-        [Required(ErrorMessage = " ApplicationRole Name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "ApplicationRole Name cannot exceed 50 characters.")]
+        [Required(ErrorMessage = " Application role name is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Application role name cannot exceed 50 characters.")]
         public string Name
         {
             get
@@ -111,7 +112,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> Description.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public string Description
         {
             get
@@ -128,7 +128,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CreatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -138,14 +138,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CreatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string CreatedBy
         {
             get
@@ -155,31 +154,29 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> UpdatedOn.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public DateTime UpdatedOn
         {
             get
             {
-                return m_UpdatedOn;
+                return m_updatedOn;
             }
             set
             {
-                m_UpdatedOn = value;
-                OnPropertyChanged("UpdateOn");
+                m_updatedOn = value;
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> UpdatedBy.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
+        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
         public string UpdatedBy
         {
             get
@@ -189,14 +186,12 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CurrentRoleGroups.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<ApplicationRole> CurrentRoleGroups
         {
             get
@@ -213,7 +208,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> PossibleRoleGroups.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<ApplicationRole> PossibleRoleGroups
         {
             get
@@ -230,7 +224,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> CurrentRoleUsers.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<ApplicationRole> CurrentRoleUsers
         {
             get
@@ -247,7 +240,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> PossibleRoleUsers.
         /// </summary>
-        // Field is populated by database via auto-increment and has no screen interaction, so no validation attributes are applied
         public ObservableCollection<ApplicationRole> PossibleRoleUsers
         {
             get
@@ -275,12 +267,14 @@ namespace TimeSeriesFramework.UI.DataModels
         public static ObservableCollection<ApplicationRole> Load(AdoDataConnection database)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<ApplicationRole> applicationRoleList = new ObservableCollection<ApplicationRole>();
-                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "Select * From ApplicationRole Where NodeID = @nodeID Order By Name");
+
+                DataTable applicationRoleTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRole WHERE NodeID = @nodeID ORDER BY Name");
 
                 foreach (DataRow row in applicationRoleTable.Rows)
                 {
@@ -315,11 +309,13 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 Dictionary<int, string> applicationRoleList = new Dictionary<int, string>();
+
                 if (isOptional)
                     applicationRoleList.Add(0, "Select Application Role");
 
@@ -347,15 +343,16 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, ApplicationRole applicationRole, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
+                    database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
                         DefaultTimeout, applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.CreatedBy, applicationRole.CreatedOn);
                 else
-                    database.Connection.ExecuteNonQuery("Update ApplicationRole Set Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout,
+                    database.Connection.ExecuteNonQuery("UPDATE ApplicationRole SET Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
                         applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.ID);
 
                 return "Application role information saved successfully";

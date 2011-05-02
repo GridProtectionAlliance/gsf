@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/08/2011 - Magdiel Lorenzo
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -32,24 +34,24 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of phasor information as defined in the database.
+    /// Represents a record of <see cref="Phasor"/> information as defined in the database.
     /// </summary>
     public class Phasor : DataModelBase
     {
         #region [ Members ]
 
         // Fields
-        private int m_ID;
+        private int m_id;
         private int m_deviceID;
         private string m_label;
         private string m_type;
         private string m_phase;
         private int? m_destinationPhasorID;
         private int m_sourceIndex;
-        private string m_destinationPhasorLabel;
-        private string m_deviceAcronym;
-        private string m_phasorType;
-        private string m_phaseType;
+        //private string m_destinationPhasorLabel;
+        //private string m_deviceAcronym;
+        //private string m_phasorType;
+        //private string m_phaseType;
         private DateTime m_createdOn;
         private string m_createdBy;
         private DateTime m_updatedOn;
@@ -67,19 +69,18 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
         /// <summary>
         /// Gets or sets the <see cref="Phasor"/> DeviceID.
         /// </summary>
-        [Required(ErrorMessage = "Phasor Device ID is a required field, please provide value.")]
+        [Required(ErrorMessage = "Phasor device ID is a required field, please provide value.")]
         public int DeviceID
         {
             get
@@ -114,7 +115,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Phasor"/> Type.
         /// </summary>
-        [DefaultValue(typeof(char), "V")]
+        [DefaultValue("V")]
+        [StringLength(1, ErrorMessage = "Phasor type must be 1 character.")]
         public string Type
         {
             get
@@ -131,7 +133,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the Phase of the current <see cref="Phasor"/>.
         /// </summary>
-        [DefaultValue(typeof(char), "+")]
+        [DefaultValue("+")]
+        [StringLength(1, ErrorMessage = "Phasor phase must be 1 character.")]
         public string Phase
         {
             get
@@ -179,73 +182,49 @@ namespace TimeSeriesFramework.UI.DataModels
             }
         }
 
-        /// <summary>
-        /// Gets or sets Destination <see cref="Phasor"/> Label for the current Phasor.
-        /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string DestinationPhasorLabel
-        {
-            get
-            {
-                return m_destinationPhasorLabel;
-            }
-            set
-            {
-                m_destinationPhasorLabel = value;
-                OnPropertyChanged("DestinationPhasorLabel");
-            }
-        }
+        ///// <summary>
+        ///// Gets the Destination <see cref="Phasor"/> Label for the current Phasor.
+        ///// </summary>
+        //public string DestinationPhasorLabel
+        //{
+        //    get
+        //    {
+        //        return m_destinationPhasorLabel;
+        //    }
+        //}
 
-        /// <summary>
-        /// Gets or sets the Device Acronym for the current <see cref="Phasor"/>.
-        /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string DeviceAcronym
-        {
-            get
-            {
-                return m_deviceAcronym;
-            }
-            set
-            {
-                m_deviceAcronym = value;
-                OnPropertyChanged("DeviceAcronym");
-            }
-        }
+        ///// <summary>
+        ///// Gets the Device Acronym for the current <see cref="Phasor"/>.
+        ///// </summary>
+        //public string DeviceAcronym
+        //{
+        //    get
+        //    {
+        //        return m_deviceAcronym;
+        //    }
+        //}
 
-        /// <summary>
-        /// Gets or sets <see cref="Phasor"/> Type for the current Phasor.
-        /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string PhasorType
-        {
-            get
-            {
-                return m_phasorType;
-            }
-            set
-            {
-                m_phasorType = value;
-                OnPropertyChanged("PhasorType");
-            }
-        }
+        ///// <summary>
+        ///// Gets <see cref="Phasor"/> Type for the current Phasor.
+        ///// </summary>
+        //public string PhasorType
+        //{
+        //    get
+        //    {
+        //        return m_phasorType;
+        //    }
+        //}
 
-        /// <summary>
-        /// Gets or sets Phase Type for the current <see cref="Phasor"/>.
-        /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
-        public string PhaseType
-        {
-            get
-            {
-                return m_phaseType;
-            }
-            set
-            {
-                m_phaseType = value;
-                OnPropertyChanged("PhaseType");
-            }
-        }
+        ///// <summary>
+        ///// Gets Phase Type for the current <see cref="Phasor"/>.
+        ///// </summary>
+        //public string PhaseType
+        //{
+        //    get
+        //    {
+        //        return m_phaseType;
+        //    }
+        //}
 
         /// <summary>
         /// Gets or sets the Date or Time the current <see cref="Phasor"/> was created on.
@@ -260,7 +239,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -277,7 +255,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -294,7 +271,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -311,7 +287,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -335,8 +310,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<Phasor> phasorList = new ObservableCollection<Phasor>();
-                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn " +
-                    "FROM Phasor ORDER BY DeviceID");
+                DataTable phasorTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, DeviceID, Label, Type, Phase, DestinationPhasorID, SourceIndex, CreatedBy, CreatedOn, UpdatedBy, UpdatedOn FROM Phasor ORDER BY DeviceID");
 
                 foreach (DataRow row in phasorTable.Rows)
                 {
@@ -374,6 +348,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -406,6 +381,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Phasor phasor, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -458,6 +434,5 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
-
     }
 }

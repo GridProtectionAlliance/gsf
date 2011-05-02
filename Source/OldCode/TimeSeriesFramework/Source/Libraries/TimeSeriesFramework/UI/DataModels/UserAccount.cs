@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  04/13/2011 - Aniket Salver
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -32,16 +34,16 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    ///  Represents a record of UserAccount information as defined in the database.
+    ///  Represents a record of <see cref="UserAccount"/> information as defined in the database.
     /// </summary>
     public class UserAccount : DataModelBase
     {
         #region [ Members ]
 
-        private Guid m_ID;
+        private Guid m_id;
         private string m_name;
         private string m_password;
-        private string m_frstName;
+        private string m_firstName;
         private string m_lastName;
         private string m_defaultNodeID;
         private string m_phone;
@@ -66,19 +68,19 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
+                m_id = value;
                 OnPropertyChanged("ID");
             }
         }
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Name.
         /// </summary>
-        [Required(ErrorMessage = " UserAccount Name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "UserAccount Name cannot exceed 50 characters.")]
+        [Required(ErrorMessage = " User account name is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "User account name cannot exceed 50 characters.")]
         public string Name
         {
             get
@@ -95,7 +97,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Password.
         /// </summary>        
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string Password
         {
             get
@@ -112,16 +113,15 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> FirstName.
         /// </summary>       
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string FirstName
         {
             get
             {
-                return m_frstName;
+                return m_firstName;
             }
             set
             {
-                m_frstName = value;
+                m_firstName = value;
                 OnPropertyChanged("FirstName");
             }
         }
@@ -129,7 +129,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> LastName.
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string LastName
         {
             get
@@ -146,8 +145,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> DefaultNodeID.
         /// </summary>
-        [Required(ErrorMessage = " UserAccount DefaultNodeID is a required field, please provide value.")]
-        [StringLength(36, ErrorMessage = "UserAccount DefaultNodeID cannot exceed 36 characters.")]
+        [Required(ErrorMessage = "User account default node ID is a required field, please select a value.")]
         public string DefaultNodeID
         {
             get
@@ -157,14 +155,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_defaultNodeID = value;
-                OnPropertyChanged("DefaultNodeId");
+                OnPropertyChanged("DefaultNodeID");
             }
         }
 
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Phone
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string Phone
         {
             get
@@ -181,7 +178,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Email
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public string Email
         {
             get
@@ -196,11 +192,9 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="UserAccount"/> LockedOut
+        /// Gets or sets <see cref="UserAccount"/> LockedOut.
         /// </summary>
-        [Required(ErrorMessage = " UserAccount LockedOut is a required field, please provide value.")]
-        [StringLength(3, ErrorMessage = "UserAccount LockedOut cannot exceed 3 characters.")]
-        [DefaultValue(typeof(bool), "0")]
+        [DefaultValue(false)]
         public bool LockedOut
         {
             get
@@ -215,11 +209,9 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="UserAccount"/> UseADAuthentication
+        /// Gets or sets <see cref="UserAccount"/> UseADAuthentication.
         /// </summary>
-        [Required(ErrorMessage = " UserAccount UseADAuthentication is a required field, please provide value.")]
-        [StringLength(3, ErrorMessage = "UserAccount UseADAuthentication cannot exceed 3 characters.")]
-        [DefaultValue(typeof(bool), "1")]
+        [DefaultValue(true)]
         public bool UseADAuthentication
         {
             get
@@ -234,9 +226,8 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="UserAccount"/> ChangePasswordOn
+        /// Gets or sets <see cref="UserAccount"/> ChangePasswordOn.
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime ChangePasswordOn
         {
             get
@@ -253,7 +244,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> CreatedOn
         /// </summary>
-        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get
@@ -263,8 +253,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
-
             }
         }
 
@@ -281,8 +269,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
-
             }
         }
 
@@ -299,7 +285,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -316,7 +301,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 
@@ -339,7 +323,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 ObservableCollection<UserAccount> userAccountList = new ObservableCollection<UserAccount>();
-                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount Order By Name");
+                DataTable userAccountTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * From UserAccount ORDER BY Name");
 
                 foreach (DataRow row in userAccountTable.Rows)
                 {
@@ -431,16 +415,16 @@ namespace TimeSeriesFramework.UI.DataModels
                     changePasswordOn = userAccount.ChangePasswordOn.Date;
 
                 if (isNew)
-                    database.Connection.ExecuteNonQuery("Insert Into UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
-                        "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
+                    database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
+                        "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
                         userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
                         userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
                         CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("Update UserAccount Set Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
+                    database.Connection.ExecuteNonQuery("UPDATE UserAccount SET Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
                             "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
-                            "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn Where ID = @id", DefaultTimeout, userAccount.Name,
+                            "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, userAccount.Name,
                             userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
                             userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
                             database.IsJetEngine() ? "{" + userAccount.ID.ToString() + "}" : userAccount.ID.ToString());
@@ -483,6 +467,5 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         #endregion
-
     }
 }

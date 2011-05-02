@@ -18,6 +18,8 @@
 //  ----------------------------------------------------------------------------------------------------
 //  03/25/2011 - Mehulbhai P Thakkar
 //       Generated original version of source code.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -32,7 +34,7 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of company information as defined in the database.
+    /// Represents a record of <see cref="Company"/> information as defined in the database.
     /// </summary>
     public class Company : DataModelBase
     {
@@ -67,7 +69,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_id = value;
-                OnPropertyChanged("ID");
             }
         }
 
@@ -145,8 +146,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets desired load order of <see cref="Company"/> record.
         /// </summary>
-        [Required(ErrorMessage = "Company load order value is required field, please provide value.")]
-        [DefaultValue(typeof(int), "0")]
+        [Required(ErrorMessage = "Company load order value is a required field, please provide value.")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -173,7 +174,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdOn = value;
-                OnPropertyChanged("CreatedOn");
             }
         }
 
@@ -190,7 +190,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_createdBy = value;
-                OnPropertyChanged("CreatedBy");
             }
         }
 
@@ -207,7 +206,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedOn = value;
-                OnPropertyChanged("UpdatedOn");
             }
         }
 
@@ -224,7 +222,6 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_updatedBy = value;
-                OnPropertyChanged("UpdatedBy");
             }
         }
 

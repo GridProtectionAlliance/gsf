@@ -46,7 +46,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-        //Fields
+        // Fields
         private int m_pageCount, m_currentPageNumber, m_itemsPerPage;
         private ObservableCollection<TDataModel> m_currentPage, m_itemsSource;
         private ObservableCollection<ObservableCollection<TDataModel>> m_pages;

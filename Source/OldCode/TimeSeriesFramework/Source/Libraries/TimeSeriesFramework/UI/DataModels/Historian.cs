@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  04/13/2011 - Mehulbhai P Thakkar
 //       Added static methods for database operations.
+//  05/02/2011 - J. Ritchie Carroll
+//       Updated for coding consistency.
 //
 //******************************************************************************************************
 
@@ -34,15 +36,15 @@ using TVA.Data;
 namespace TimeSeriesFramework.UI.DataModels
 {
     /// <summary>
-    /// Represents a record of company information as defined in the database.
+    /// Represents a record of <see cref="Historian"/> information as defined in the database.
     /// </summary>
     public class Historian : DataModelBase
     {
         #region [ Members ]
 
         // Fields
-        private Guid m_nodeId;
-        private int m_ID;
+        private Guid m_nodeID;
+        private int m_id;
         private string m_acronym;
         private string m_name;
         private string m_assemblyName;
@@ -66,18 +68,18 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
-        [Required(ErrorMessage= "Historian Node ID is a required field, please provide a value.")]
-        [StringLength(36, ErrorMessage= "Historian node ID cannot exceed 36 characters.")]
-        public Guid NodeId
+        [Required(ErrorMessage = "Historian Node ID is a required field, please provide a value.")]
+        [StringLength(36, ErrorMessage = "Historian node ID cannot exceed 36 characters.")]
+        public Guid NodeID
         {
             get
             {
-                return m_nodeId;
+                return m_nodeID;
             }
             set
             {
-                m_nodeId = value;
-                OnPropertyChanged("NodeId");
+                m_nodeID = value;
+                OnPropertyChanged("NodeID");
             }
         }
 
@@ -89,12 +91,11 @@ namespace TimeSeriesFramework.UI.DataModels
         {
             get
             {
-                return m_ID;
+                return m_id;
             }
             set
             {
-                m_ID = value;
-                OnPropertyChanged("ID");
+                m_id = value;
             }
         }
 
@@ -187,7 +188,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Historian" /> is local.
         /// </summary>
-        [DefaultValue(typeof(bool), "true")]
+        [DefaultValue(true)]
         public bool IsLocal
         {
             get
@@ -221,7 +222,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Load Order.
         /// </summary>
-        [DefaultValue(typeof(int), "0")]
+        [DefaultValue(0)]
         public int LoadOrder
         {
             get
@@ -238,7 +239,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Historian" /> is enabled.
         /// </summary>
-        [DefaultValue(typeof(bool), "false")]
+        [DefaultValue(false)]
         public bool Enabled
         {
             get
@@ -255,8 +256,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Measurement Reporting Interval.
         /// </summary>
-        [Required(ErrorMessage = "Historian Measurement Reporting Interval is a required field, please provide value.")]
-        [DefaultValue(typeof(int), "100000")]
+        [Required(ErrorMessage = "Historian measurement reporting interval is a required field, please provide value.")]
+        [DefaultValue(100000)]
         public int MeasurementReportingInterval
         {
             get
@@ -266,21 +267,18 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_measurementReportingInterval = value;
+                OnPropertyChanged("MeasurementReportingInterval");
             }
         }
 
         /// <summary>
-        /// Gets or sets the current <see cref="Historian" />'s Node Name.
+        /// Gets the current <see cref="Historian" />'s Node Name.
         /// </summary>
         public string NodeName
         {
             get
             {
                 return m_nodeName;
-            }
-            set
-            {
-                m_nodeName = value;
             }
         }
 
@@ -358,7 +356,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Historian"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">Id of the <see cref="Node"/> for which <see cref="Historian"/> collection is returned.</param>
+        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Historian"/> collection is returned.</param>
         /// <returns>Collection of <see cref="Historian"/>.</returns>
         public static ObservableCollection<Historian> Load(AdoDataConnection database, string nodeID)
         {
@@ -379,21 +377,21 @@ namespace TimeSeriesFramework.UI.DataModels
                 foreach (DataRow row in historianTable.Rows)
                 {
                     historianList.Add(new Historian()
-                    {
-                        NodeId = Guid.Parse(row.Field<string>("NodeID")),
-                        ID = row.Field<int>("ID"),
-                        Acronym = row.Field<string>("Acronym"),
-                        Name = row.Field<string>("Name"),
-                        AssemblyName = row.Field<string>("AssemblyName"),
-                        TypeName = row.Field<string>("TypeName"),
-                        ConnectionString = row.Field<string>("ConnectionString"),
-                        IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
-                        Description = row.Field<string>("Description"),
-                        LoadOrder = row.Field<int>("LoadOrder"),
-                        Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
-                        MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
-                        NodeName = row.Field<string>("NodeName")
-                    });
+                        {
+                            NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                            ID = row.Field<int>("ID"),
+                            Acronym = row.Field<string>("Acronym"),
+                            Name = row.Field<string>("Name"),
+                            AssemblyName = row.Field<string>("AssemblyName"),
+                            TypeName = row.Field<string>("TypeName"),
+                            ConnectionString = row.Field<string>("ConnectionString"),
+                            IsLocal = Convert.ToBoolean(row.Field<object>("IsLocal")),
+                            Description = row.Field<string>("Description"),
+                            LoadOrder = row.Field<int>("LoadOrder"),
+                            Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
+                            MeasurementReportingInterval = row.Field<int>("MeasurementReportingInterval"),
+                            m_nodeName = row.Field<string>("NodeName")
+                        });
                 }
 
                 return historianList;
@@ -415,6 +413,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false, bool includeStatHistorian = true)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -423,11 +422,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isOptional)
                     historianList.Add(0, "Select Historian");
 
-                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian WHERE Enabled = @enabled " +
-                    "ORDER BY LoadOrder", DefaultTimeout, true);
+                DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Historian WHERE Enabled = @enabled ORDER BY LoadOrder", DefaultTimeout, true);
 
                 foreach (DataRow row in historianTable.Rows)
+                {
                     historianList[row.Field<int>("ID")] = row.Field<string>("Acronym");
+                }
 
                 return historianList;
             }
@@ -448,6 +448,7 @@ namespace TimeSeriesFramework.UI.DataModels
         public static string Save(AdoDataConnection database, Historian historian, bool isNew)
         {
             bool createdConnection = false;
+
             try
             {
                 createdConnection = CreateConnection(ref database);
@@ -455,7 +456,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
                         "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
-                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, historian.NodeId,
+                        "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, historian.NodeID,
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal,
                         historian.MeasurementReportingInterval, historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
@@ -463,7 +464,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
                         "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
-                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, historian.NodeId, historian.Acronym.Replace(" ", "").ToUpper(),
+                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, historian.NodeID, historian.Acronym.Replace(" ", "").ToUpper(),
                         historian.Name, historian.AssemblyName, historian.TypeName, historian.ConnectionString, historian.IsLocal, historian.MeasurementReportingInterval,
                         historian.Description, historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser,
                         database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, historian.ID);
