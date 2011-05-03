@@ -169,7 +169,7 @@ namespace TimeSeriesFramework.UI.Commands
         /// <summary>
         /// Raises the <see cref="CanExecuteChanged"/> event.
         /// </summary>
-        protected void OnCanExecuteChanged()
+        protected virtual void OnCanExecuteChanged()
         {
             if (CanExecuteChanged != null)
                 CanExecuteChanged(this, EventArgs.Empty);

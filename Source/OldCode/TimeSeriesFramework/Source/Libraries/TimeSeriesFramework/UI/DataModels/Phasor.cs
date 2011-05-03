@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -345,7 +347,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Label of phasors defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = true)
         {
             bool createdConnection = false;
 
@@ -375,10 +377,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Phasor"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="phasor">Information about <see cref="Phasor"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="phasor">Information about <see cref="Phasor"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Phasor phasor, bool isNew)
+        public static string Save(AdoDataConnection database, Phasor phasor)
         {
             bool createdConnection = false;
 
@@ -386,7 +387,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (phasor.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Phasor (DeviceID, Label, Type, Phase, DestinationPhasorID, CreatedBy, CreatedOn) " +
                         "VALUES (@DeviceID, @Label, @Type, @Phase, @DestinationPhasorID, @createdBy, @createdOn)", DefaultTimeout,
                         phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase,

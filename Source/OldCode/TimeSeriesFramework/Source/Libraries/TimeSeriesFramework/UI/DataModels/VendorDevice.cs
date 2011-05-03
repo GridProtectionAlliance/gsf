@@ -92,7 +92,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="VendorDevice"/>'s Name.
         /// </summary>
-        [Required(ErrorMessage = "Vendor device name is a required field, please provide value")]
+        [Required(ErrorMessage = "Vendor device name is a required field, please provide value.")]
         [StringLength(100, ErrorMessage = "Vendor device name cannot exceed 100 characters.")]
         public string Name
         {
@@ -142,19 +142,13 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets the VendorName.
+        /// Gets the VendorName of this <see cref="VendorDevice"/>.
         /// </summary>
-        // Because of database design, no validation attributes are applied
         public string VendorName
         {
             get
             {
                 return m_vendorName;
-            }
-            set
-            {
-                m_vendorName = value;
-                OnPropertyChanged("VendorName");
             }
         }
 
@@ -251,7 +245,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
                         URL = row.Field<string>("URL"),
-                        VendorName = row.Field<string>("VendorName")
+                        m_vendorName = row.Field<string>("VendorName")
                     });
                 }
 

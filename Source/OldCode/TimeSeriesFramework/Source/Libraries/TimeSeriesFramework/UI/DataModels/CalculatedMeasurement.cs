@@ -22,6 +22,8 @@
 //       Added static methods for database operations.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -557,7 +559,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="CalculatedMeasurement"/> collection is returned.</param>
         /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
-        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, string nodeID)
+        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, Guid nodeID)
         {
             bool createdConnection = false;
 
@@ -570,7 +572,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                     "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
                     "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail WHERE NodeID = @nodeID ORDER BY LoadOrder",
-                    DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                    DefaultTimeout, nodeID);
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
@@ -649,10 +651,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Company"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="calculatedMeasurement">Information about <see cref="CalculatedMeasurement"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="calculatedMeasurement">Information about <see cref="CalculatedMeasurement"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, CalculatedMeasurement calculatedMeasurement, bool isNew)
+        public static string Save(AdoDataConnection database, CalculatedMeasurement calculatedMeasurement)
         {
             bool createdConnection = false;
 
@@ -660,7 +661,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (calculatedMeasurement.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO CalculatedMeasurement (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, " +
                         "ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, LeadTime, UseLocalClockAsRealTime, " +
                         "AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, DownsamplingMethod, " +

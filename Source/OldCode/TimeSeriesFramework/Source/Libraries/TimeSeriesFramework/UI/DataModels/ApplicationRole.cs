@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -336,10 +338,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="ApplicationRole"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="applicationRole">Information about <see cref="ApplicationRole"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="applicationRole">Information about <see cref="ApplicationRole"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, ApplicationRole applicationRole, bool isNew)
+        public static string Save(AdoDataConnection database, ApplicationRole applicationRole)
         {
             bool createdConnection = false;
 
@@ -347,7 +348,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (applicationRole.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
                         DefaultTimeout, applicationRole.Name, applicationRole.Description, applicationRole.NodeID, applicationRole.UpdatedBy, applicationRole.UpdatedOn, applicationRole.CreatedBy, applicationRole.CreatedOn);
                 else
@@ -369,7 +370,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="applicationRoleID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, int applicationRoleID)
+        public static string Delete(AdoDataConnection database, Guid applicationRoleID)
         {
             bool createdConnection = false;
 

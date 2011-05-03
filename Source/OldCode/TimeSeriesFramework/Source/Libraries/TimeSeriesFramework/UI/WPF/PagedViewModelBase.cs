@@ -39,7 +39,7 @@ namespace TimeSeriesFramework.UI
     {
         #region [ Members ]
 
-        //Events
+        // Events
 
         /// <summary>
         /// Raised when a property on this object has a new value.
@@ -380,7 +380,7 @@ namespace TimeSeriesFramework.UI
         {
             get
             {
-                return true;
+                return !IsNewRecord;
             }
         }
 
@@ -448,7 +448,7 @@ namespace TimeSeriesFramework.UI
             {
                 try
                 {
-                    string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem, IsNewRecord });
+                    string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem });
                     Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
                     Load();
                 }
@@ -464,7 +464,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public virtual void Delete()
         {
-            if (CanDelete && !IsNewRecord && Confirm("Are you sure you want to delete \'" + GetCurrentItemName() + "\'?", "Delete " + DataModelName))
+            if (CanDelete && Confirm("Are you sure you want to delete \'" + GetCurrentItemName() + "\'?", "Delete " + DataModelName))
             {
                 try
                 {

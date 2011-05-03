@@ -95,6 +95,12 @@
     <Compile Include="UserControls\DetailViewFooterUserControl.xaml.cs">
       <DependentUpon>DetailViewFooterUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\HistorianUserControl.xaml.cs">
+      <DependentUpon>HistorianUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\NodeUserControl.xaml.cs">
+      <DependentUpon>NodeUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\VendorDeviceUserControl.xaml.cs">
       <DependentUpon>VendorDeviceUserControl.xaml</DependentUpon>
     </Compile>
@@ -103,6 +109,8 @@
     </Compile>
     <Compile Include="ViewModelBase.cs" />
     <Compile Include="ViewModels\Companies.cs" />
+    <Compile Include="ViewModels\Historians.cs" />
+    <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
     <Compile Include="ViewModels\Vendors.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
@@ -132,6 +140,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\DetailViewFooterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\HistorianUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\NodeUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

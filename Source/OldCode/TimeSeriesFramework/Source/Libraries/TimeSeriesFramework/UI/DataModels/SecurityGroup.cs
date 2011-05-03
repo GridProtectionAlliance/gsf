@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -286,9 +288,8 @@ namespace TimeSeriesFramework.UI.DataModels
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="securityGroup">Information about <see cref="SecurityGroup"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, SecurityGroup securityGroup, bool isNew)
+        public static string Save(AdoDataConnection database, SecurityGroup securityGroup)
         {
             bool createdConnection = false;
 
@@ -296,14 +297,14 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (securityGroup.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
                         securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
                              securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, securityGroup.ID);
 
-                return "Security Group information saved successfully";
+                return "Security group information saved successfully";
             }
             finally
             {
@@ -318,7 +319,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="securityGroupID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, int securityGroupID)
+        public static string Delete(AdoDataConnection database, Guid securityGroupID)
         {
             bool createdConnection = false;
 
@@ -331,7 +332,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroup WHERE ID = @securityGroupID", DefaultTimeout, securityGroupID);
 
-                return "Security Group deleted successfully";
+                return "Security group deleted successfully";
             }
             finally
             {

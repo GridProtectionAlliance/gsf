@@ -22,6 +22,8 @@
 //       Added static methods for database operations.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -69,7 +71,6 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Historian" />'s Node ID.
         /// </summary>
         [Required(ErrorMessage = "Historian Node ID is a required field, please provide a value.")]
-        [StringLength(36, ErrorMessage = "Historian node ID cannot exceed 36 characters.")]
         public Guid NodeID
         {
             get
@@ -358,16 +359,13 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Historian"/> collection is returned.</param>
         /// <returns>Collection of <see cref="Historian"/>.</returns>
-        public static ObservableCollection<Historian> Load(AdoDataConnection database, string nodeID)
+        public static ObservableCollection<Historian> Load(AdoDataConnection database, Guid nodeID)
         {
             bool createdConnection = false;
 
             try
             {
                 createdConnection = CreateConnection(ref database);
-
-                if (database.IsJetEngine())
-                    nodeID = "{" + nodeID + "}";
 
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
                 DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
@@ -442,10 +440,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Historian"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="historian">Infomration about <see cref="Historian"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="historian">Infomration about <see cref="Historian"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Historian historian, bool isNew)
+        public static string Save(AdoDataConnection database, Historian historian)
         {
             bool createdConnection = false;
 
@@ -453,7 +450,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (historian.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Historian (NodeID, Acronym, Name, AssemblyName, TypeName, ConnectionString, IsLocal, MeasurementReportingInterval, " +
                         "Description, LoadOrder, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@nodeID, @acronym, @name, @assemblyName, @typeName, @connectionString, " +
                         "@isLocal, @measurementReportingInterval, @description, @loadOrder, @enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, historian.NodeID,

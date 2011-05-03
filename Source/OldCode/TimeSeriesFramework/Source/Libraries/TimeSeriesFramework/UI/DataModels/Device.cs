@@ -22,6 +22,8 @@
 //       Added static methods for database operations.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -804,7 +806,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
         /// <param name="parentID">ID of the parent device to filter data.</param>
         /// <returns>Collection of <see cref="Device"/>.</returns>
-        public static ObservableCollection<Device> Load(AdoDataConnection database, string nodeID, int parentID = 0)
+        public static ObservableCollection<Device> Load(AdoDataConnection database, Guid nodeID, int parentID = 0)
         {
             bool createdConnection = false;
 
@@ -817,10 +819,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (parentID > 0)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID AND ParentID = @parentID " +
-                        "ORDER BY Acronym", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID, parentID);
+                        "ORDER BY Acronym", DefaultTimeout, nodeID, parentID);
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID ORDER BY Acronym",
-                        DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                        DefaultTimeout, nodeID);
 
                 foreach (DataRow row in deviceTable.Rows)
                 {
@@ -886,7 +888,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="deviceType"><see cref="DeviceType"/> to filter data.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>        
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, string nodeID, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, Guid nodeID, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
         {
             bool createdConnection = false;
 
@@ -902,13 +904,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (deviceType == DeviceType.Concentrator)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, nodeID);
                 else if (deviceType == DeviceType.DirectConnected)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, nodeID);
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE " +
-                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, nodeID);
 
                 foreach (DataRow row in deviceTable.Rows)
                     deviceList[row.Field<int>("ID")] = row.Field<string>("Acronym");
@@ -926,10 +928,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Device"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="device">Information about <see cref="Device"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="device">Information about <see cref="Device"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Device device, bool isNew)
+        public static string Save(AdoDataConnection database, Device device)
         {
             bool createdConnection = false;
 
@@ -937,7 +938,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (device.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Device (NodeID, ParentID, Acronym, Name, IsConcentrator, CompanyID, HistorianID, AccessID, VendorDeviceID, " +
                         "ProtocolID, Longitude, Latitude, InterconnectionID, ConnectionString, TimeZone, FramesPerSecond, TimeAdjustmentTicks, DataLossInterval, ContactList, " +
                         "MeasuredLines, LoadOrder, Enabled, AllowedParsingExceptions, ParsingExceptionWindow, DelayedConnectionInterval, AllowUseOfCachedConfiguration, " +

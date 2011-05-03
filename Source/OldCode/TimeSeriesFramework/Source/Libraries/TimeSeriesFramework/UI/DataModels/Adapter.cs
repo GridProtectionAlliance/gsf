@@ -22,6 +22,8 @@
 //       Added static methods for database operations.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -436,10 +438,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Company"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="adapter">Information about <see cref="Adapter"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="adapter">Information about <see cref="Adapter"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Adapter adapter, bool isNew)
+        public static string Save(AdoDataConnection database, Adapter adapter)
         {
             bool createdConnection = false;
 
@@ -456,7 +457,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     tableName = "CustomOutputAdapter";
 
-                if (isNew)
+                if (adapter.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
                         "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,

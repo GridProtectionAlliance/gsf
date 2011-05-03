@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -305,17 +307,16 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Company"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="company">Information about <see cref="Company"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="company">Information about <see cref="Company"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Company company, bool isNew)
+        public static string Save(AdoDataConnection database, Company company)
         {
             bool createdConnection = false;
             try
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (company.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
                         "VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
                         company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? (object)DBNull.Value,

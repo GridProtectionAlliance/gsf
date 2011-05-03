@@ -22,6 +22,8 @@
 //       Added static methods for database operations.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -460,7 +462,7 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
+                if (node.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
                         "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
                         "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
@@ -475,7 +477,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
                         node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        database.IsJetEngine() ? "{" + node.ID.ToString() + "}" : node.ID.ToString());
+                        node.ID);
 
                 return "Node information saved successfully";
             }
@@ -492,7 +494,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="nodeID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, string nodeID)
+        public static string Delete(AdoDataConnection database, Guid nodeID)
         {
             bool createdConnection = false;
 
@@ -503,7 +505,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, nodeID);
 
                 return "Node deleted successfully";
             }

@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -414,20 +416,19 @@ namespace TimeSeriesFramework.UI.DataModels
                 else if (database.IsJetEngine())
                     changePasswordOn = userAccount.ChangePasswordOn.Date;
 
-                if (isNew)
+                if (userAccount.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
                         "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
                         userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
                         userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        CommonFunctions.CurrentUser, DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE UserAccount SET Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
                             "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
                             "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, userAccount.Name,
                             userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                            database.IsJetEngine() ? "{" + userAccount.ID.ToString() + "}" : userAccount.ID.ToString());
+                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, DateTime.UtcNow, userAccount.ID);
 
                 return "User account information saved successfully";
             }

@@ -20,6 +20,8 @@
 //       Generated original version of source code.
 //  05/02/2011 - J. Ritchie Carroll
 //       Updated for coding consistency.
+//  05/03/2011 - Mehulbhai P Thakkar
+//       Guid field related changes as well as static functions update.
 //
 //******************************************************************************************************
 
@@ -534,7 +536,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing PointID and SignalID of measurements defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
 
@@ -564,10 +566,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Measurement"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="measurement">Information about <see cref="Measurement"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="measurement">Information about <see cref="Measurement"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Measurement measurement, bool isNew)
+        public static string Save(AdoDataConnection database, Measurement measurement)
         {
             bool createdConnection = false;
 
@@ -575,15 +576,22 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                if (isNew)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Company (SignalID, HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, SignalReference, Adder, Multiplier, Description, Enabled, CreatedBy, CreatedOn) " +
-                        "VALUES (@signalID, @historianID, @pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @createdBy, @createdOn)", DefaultTimeout, measurement.SignalID, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
-                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description, measurement.Enabled,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                if (measurement.PointID == 0)
+                    database.Connection.ExecuteNonQuery("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
+                        "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
+                        "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @updatedBy, " +
+                        "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
+                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description,
+                        measurement.Enabled, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
-                    database.Connection.ExecuteNonQuery("UPDATE Company SET HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag,  AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled" +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE SignalID = @signalID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag, measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, measurement.PointID);
+                    database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +
+                        "AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, " +
+                        "Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
+                        "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
+                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier,
+                        measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        measurement.PointID);
 
                 return "Measurement information saved successfully";
             }
@@ -598,9 +606,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Deletes specified <see cref="Measurement"/> record from database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="measurementID">ID of the record to be deleted.</param>
+        /// <param name="pointID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, string measurementID)
+        public static string Delete(AdoDataConnection database, int pointID)
         {
             bool createdConnection = false;
 
@@ -611,7 +619,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE SignalID = @measurementID", DefaultTimeout, measurementID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Measurement WHERE PointID = @pointID", DefaultTimeout, pointID);
 
                 return "Measurement deleted successfully";
             }

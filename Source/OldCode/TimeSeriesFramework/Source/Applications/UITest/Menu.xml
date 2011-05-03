@@ -11,6 +11,8 @@
     <SubMenuItems>
       <MenuDataItem Icon="" MenuText="Companies" Description="Manage Companies" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="CompanyUserControl" />
       <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
+      <MenuDataItem Icon="" MenuText="Historians" Description="Manage Historians" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="HistorianUserControl" />
+      <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
       <MenuDataItem Icon="" MenuText="Vendors" Description="Manage Vendors" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="VendorUserControl" />
       <MenuDataItem Icon="" MenuText="Vendor Devices" Description="Manage Vendor Devices" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="VendorDeviceUserControl" />
     </SubMenuItems>
