@@ -24,6 +24,7 @@
 using System;
 using System.Data;
 using System.Threading;
+using TVA;
 using TVA.Data;
 
 namespace TimeSeriesFramework.UI
@@ -36,7 +37,6 @@ namespace TimeSeriesFramework.UI
         #region [ Members ]
 
         // Fields
-
         private static Guid m_currentNode;
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace TimeSeriesFramework.UI
         #region [ Properties ]
 
         /// <summary>
-        /// Gets or sets the id of the Node currently active.
+        /// Gets or sets the ID of the currently active Node.
         /// </summary>
         public static Guid CurrentNode
         {
@@ -69,7 +69,6 @@ namespace TimeSeriesFramework.UI
         }
 
         #endregion
-
 
         #region [ Methods ]
 
@@ -142,30 +141,46 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// 
+        /// Returns proper <see cref="Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
-        /// <param name="database"></param>
-        /// <returns></returns>
-        public static string Guid(this AdoDataConnection database)
+        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
+        /// <param name="guid"><see cref="Guid"/> to format per database type.</param>
+        /// <returns>Proper <see cref="Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public static object Guid(this AdoDataConnection database, Guid guid)
         {
-            return "";
+            if (database.IsJetEngine())
+                return "P" + guid.ToString();
+
+            return guid;
         }
 
         /// <summary>
-        /// 
+        /// Returns current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
-        /// <param name="database"></param>
-        /// <returns></returns>
-        public static DateTime UtcNow(this AdoDataConnection database)
+        /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
+        /// <param name="usePrecisionTime">Set to <c>true</c> to use precision time.</param>
+        /// <returns>Current UTC time in implementation that is proper for connected <see cref="AdoDataConnection"/> database type.</returns>
+        public static object UtcNow(this AdoDataConnection database, bool usePrecisionTime = false)
         {
+            if (usePrecisionTime)
+            {
+                if (database.IsJetEngine())
+                    return PrecisionTimer.UtcNow.ToOADate();
+
+                return PrecisionTimer.UtcNow;
+            }
+
+            if (database.IsJetEngine())
+                return DateTime.UtcNow.ToOADate();
+
             return DateTime.UtcNow;
         }
 
         /// <summary>
-        /// Method to return DBNull if given value is null.
+        /// Returns <see cref="DBNull"/> if given <paramref name="value"/> is <c>null</c>.
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
+        /// <param name="value">Value to test for null.</param>
+        /// <returns><see cref="DBNull"/> if <paramref name="value"/> is <c>null</c>; otherwise <paramref name="value"/>.</returns>
         public static object ToNotNull(this object value)
         {
             return value ?? (object)DBNull.Value;

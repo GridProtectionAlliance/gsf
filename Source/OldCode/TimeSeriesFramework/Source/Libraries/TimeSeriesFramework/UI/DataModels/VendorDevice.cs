@@ -305,12 +305,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO VendorDevice (VendorID, Name, Description, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@vendorID, @name, @description, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(), vendorDevice.URL.ToNotNull(),
+                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE VendorDevice SET VendorID = @vendorID, Name = @name, Description = @description, URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id",
-                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description ?? (object)DBNull.Value, vendorDevice.URL ?? (object)DBNull.Value,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, vendorDevice.ID);
+                        DefaultTimeout, vendorDevice.VendorID, vendorDevice.Name, vendorDevice.Description.ToNotNull(), vendorDevice.URL.ToNotNull(),
+                        CommonFunctions.CurrentUser, database.UtcNow(), vendorDevice.ID);
 
                 return "Vendor Device information saved successfully";
             }

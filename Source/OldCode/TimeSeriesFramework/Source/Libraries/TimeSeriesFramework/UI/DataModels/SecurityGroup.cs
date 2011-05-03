@@ -300,10 +300,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (securityGroup.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
-                        securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, securityGroup.ID);
+                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow(), securityGroup.ID);
 
                 return "Security group information saved successfully";
             }

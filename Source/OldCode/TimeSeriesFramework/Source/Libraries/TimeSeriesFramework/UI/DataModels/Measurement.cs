@@ -581,15 +581,15 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @updatedBy, " +
                         "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
                         measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description,
-                        measurement.Enabled, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser,
+                        database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +
                         "AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, " +
                         "Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
                         "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
                         measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier,
-                        measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
+                        measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
                         measurement.PointID);
 
                 return "Measurement information saved successfully";

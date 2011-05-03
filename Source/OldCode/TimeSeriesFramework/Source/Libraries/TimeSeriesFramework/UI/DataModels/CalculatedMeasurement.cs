@@ -200,7 +200,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> ConfigSection.
         /// </summary>
-        [StringLength(100, ErrorMessage="Config Section cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Config Section cannot exceed 100 characters.")]
         public string ConfigSection
         {
             get
@@ -679,8 +679,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
                         calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
                         calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod,
-                        calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        calculatedMeasurement.PerformTimestampReasonabilityCheck, CommonFunctions.CurrentUser, database.UtcNow(),
+                        CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE CalculatedMeasurement SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, " +
                         "TypeName = @typeName, ConnectionString = @connectionString, ConfigSection = @configSection, InputMeasurements = @inputMeasurements, " +
@@ -695,7 +695,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival,
                         calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution,
                         calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, calculatedMeasurement.ID);
+                        CommonFunctions.CurrentUser, database.UtcNow(), calculatedMeasurement.ID);
 
                 return "Calculated measurement information saved successfully";
             }

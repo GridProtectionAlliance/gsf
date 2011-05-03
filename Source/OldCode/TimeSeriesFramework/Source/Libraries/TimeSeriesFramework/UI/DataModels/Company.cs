@@ -320,13 +320,13 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO Company (Acronym, MapAcronym, Name, URL, LoadOrder, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
                         "VALUES (@acronym, @mapAcronym, @name, @url, @loadOrder, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout,
                         company.Acronym.Replace(" ", "").ToUpper(), company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? (object)DBNull.Value,
-                        company.LoadOrder, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        company.LoadOrder, CommonFunctions.CurrentUser, database.UtcNow(),
+                        CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Company SET Acronym = @acronym, MapAcronym = @mapAcronym, Name = @name, URL = @url, LoadOrder = @loadOrder, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, company.Acronym.Replace(" ", "").ToUpper(),
                         company.MapAcronym.Replace(" ", "").ToUpper(), company.Name, company.URL ?? (object)DBNull.Value, company.LoadOrder, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, company.ID);
+                        database.UtcNow(), company.ID);
 
                 return "Company information saved successfully";
             }

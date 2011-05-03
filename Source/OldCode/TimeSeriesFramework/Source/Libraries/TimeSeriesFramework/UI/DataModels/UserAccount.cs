@@ -47,7 +47,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private string m_password;
         private string m_firstName;
         private string m_lastName;
-        private string m_defaultNodeID;
+        private Guid m_defaultNodeID;
         private string m_phone;
         private string m_email;
         private bool m_lockedOut;
@@ -99,7 +99,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Password.
         /// </summary>  
-        [StringLength(256, ErrorMessage="User Account password cannot exceed 256 characters.")]
+        [StringLength(256, ErrorMessage = "User Account password cannot exceed 256 characters.")]
         public string Password
         {
             get
@@ -151,7 +151,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="UserAccount"/> DefaultNodeID.
         /// </summary>
         [Required(ErrorMessage = "User account default node ID is a required field, please select a value.")]
-        public string DefaultNodeID
+        public Guid DefaultNodeID
         {
             get
             {
@@ -343,7 +343,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
-                        DefaultNodeID = row.Field<object>("DefaultNodeID").ToString(),
+                        DefaultNodeID = row.Field<Guid>("DefaultNodeID"),
                         Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
                         Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
@@ -411,11 +411,9 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 string passwordColumn = "Password";
+
                 if (database.IsJetEngine())
-                {
-                    userAccount.DefaultNodeID = "{" + userAccount.DefaultNodeID + "}";
                     passwordColumn = "[Password]";
-                }
 
                 object changePasswordOn = userAccount.ChangePasswordOn;
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
@@ -427,15 +425,15 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
                         "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
-                        userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                        userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, DateTime.UtcNow);
+                        userAccount.Password, userAccount.FirstName, userAccount.LastName, database.Guid(userAccount.DefaultNodeID), userAccount.Phone, userAccount.Email, userAccount.LockedOut,
+                        userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(),
+                        CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE UserAccount SET Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
                             "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
                             "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, userAccount.Name,
-                            userAccount.Password, userAccount.FirstName, userAccount.LastName, userAccount.DefaultNodeID, userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, DateTime.UtcNow, userAccount.ID);
+                            userAccount.Password, userAccount.FirstName, userAccount.LastName, database.Guid(userAccount.DefaultNodeID), userAccount.Phone, userAccount.Email, userAccount.LockedOut,
+                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
 
                 return "User account information saved successfully";
             }
@@ -452,7 +450,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="userAccountID">ID of the record to be deleted.</param>
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Delete(AdoDataConnection database, int userAccountID)
+        public static string Delete(AdoDataConnection database, Guid userAccountID)
         {
             bool createdConnection = false;
 
@@ -463,7 +461,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM UserAccount WHERE ID = @userAccountID", DefaultTimeout, userAccountID);
+                database.Connection.ExecuteNonQuery("DELETE FROM UserAccount WHERE ID = @userAccountID", DefaultTimeout, database.Guid(userAccountID));
 
                 return "User account deleted successfully";
             }

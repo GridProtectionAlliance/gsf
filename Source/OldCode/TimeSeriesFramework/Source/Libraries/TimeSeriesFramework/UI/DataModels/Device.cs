@@ -195,7 +195,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/>  Name.
         /// </summary>
-        [StringLength(100, ErrorMessage="Device Name cannot exceed 100 characters.")]
+        [StringLength(100, ErrorMessage = "Device Name cannot exceed 100 characters.")]
         public string Name
         {
             get
@@ -383,7 +383,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> TimeZone.
         /// </summary>
-        [StringLength(128, ErrorMessage="Device Time Zone cannot exceed 128 characters.")]
+        [StringLength(128, ErrorMessage = "Device Time Zone cannot exceed 128 characters.")]
         public string TimeZone
         {
             get
@@ -966,7 +966,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
                         device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Device SET NodeID = @nodeID, ParentID = @parentID, Acronym = @acronym, Name = @name, IsConcentrator = @isConcentrator, " +
                         "CompanyID = @companyID, HistorianID = @historianID, AccessID = @accessID, VendorDeviceID = @vendorDeviceID, ProtocolID = @protocolID, Longitude = @longitude, " +
@@ -982,7 +982,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines ?? (object)DBNull.Value,
                         device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, device.ID);
+                        database.UtcNow(), device.ID);
 
                 return "Device information saved successfully";
             }

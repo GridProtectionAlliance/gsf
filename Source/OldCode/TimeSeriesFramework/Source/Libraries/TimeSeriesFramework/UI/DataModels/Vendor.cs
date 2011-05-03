@@ -317,15 +317,14 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (isNew)
                     database.Connection.ExecuteNonQuery("INSERT INTO Vendor (Acronym, Name, PhoneNumber, ContactEmail, URL, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) " +
-                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper() ?? (object)DBNull.Value,
-                        vendor.Name, vendor.PhoneNumber ?? (object)DBNull.Value, vendor.ContactEmail ?? (object)DBNull.Value, vendor.URL ?? (object)DBNull.Value,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        "VALUES (@acronym, @name, @phoneNumber, @contactEmail, @url, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(),
+                        vendor.Name, vendor.PhoneNumber.ToNotNull(), vendor.ContactEmail.ToNotNull(), vendor.URL.ToNotNull(),
+                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser,
+                        database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Vendor SET Acronym = @acronym, Name = @name, PhoneNumber = @phoneNumber, ContactEmail = @contactEmail, " +
                         "URL = @url, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, vendor.Acronym.Replace(" ", "").ToUpper(), vendor.Name,
-                        vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, vendor.ID);
+                        vendor.PhoneNumber, vendor.ContactEmail, vendor.URL, CommonFunctions.CurrentUser, database.UtcNow(), vendor.ID);
 
                 return "Vendor information saved successfully";
             }

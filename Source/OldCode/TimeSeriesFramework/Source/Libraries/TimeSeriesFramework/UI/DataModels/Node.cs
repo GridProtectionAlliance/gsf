@@ -475,7 +475,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
                         node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
                         node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
                         "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
@@ -483,7 +483,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
                         node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
                         node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
-                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, node.ID);
+                        database.UtcNow(), node.ID);
 
                 return "Node information saved successfully";
             }
