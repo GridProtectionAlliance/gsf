@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Time-series Data Processing Framework")]
 [assembly: AssemblyCompany("Grid Protection Alliance")]
 [assembly: AssemblyProduct("Time-series Data Processing Framework")]
-[assembly: AssemblyCopyright("Copyright © GPA, 2010.  All Rights Reserved.")]
+[assembly: AssemblyCopyright("Copyright © GPA, 2011.  All Rights Reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

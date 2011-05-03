@@ -30,6 +30,19 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// </summary>
     internal class Vendors : PagedViewModelBase<Vendor, int>
     {
+        #region [ Constructors ]
+
+        /// <summary>
+        /// Creates an instance of <see cref="Vendors"/> class.
+        /// </summary>
+        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
+        public Vendors(int itemsPerPage)
+            : base(itemsPerPage)
+        {
+        }
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -41,19 +54,6 @@ namespace TimeSeriesFramework.UI.ViewModels
             {
                 return CurrentItem.ID == 0;
             }
-        }
-
-        #endregion
-
-        #region [ Constructor ]
-
-        /// <summary>
-        /// Creates an instance of <see cref="Vendors"/> class.
-        /// </summary>
-        /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
-        public Vendors(int itemsPerPage)
-            : base(itemsPerPage)
-        {
         }
 
         #endregion
