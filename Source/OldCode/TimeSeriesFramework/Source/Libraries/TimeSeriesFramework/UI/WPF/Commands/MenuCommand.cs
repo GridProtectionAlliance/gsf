@@ -44,6 +44,7 @@ namespace TimeSeriesFramework.UI.Commands
         private string m_description;
 
         //Events
+
         /// <summary>
         /// Raises when value of <see cref="CanExecute"/> changes.
         /// </summary>
@@ -117,13 +118,14 @@ namespace TimeSeriesFramework.UI.Commands
 
         #region [ Methods ]
 
-        #region [ ICommand Implementation ]
-
         /// <summary>
         /// Evaluates if menu item should be visible to current user with access to <see cref="Roles"/>.
         /// </summary>
-        /// <param name="parameter"></param>
-        /// <returns></returns>
+        /// <param name="parameter">
+        /// Data used by the <see cref="MenuCommand"/>. If the <see cref="MenuCommand"/> does not require
+        /// data to be passed, this object can be set to <c>null</c>.
+        /// </param>
+        /// <returns><c>true</c> if this <see cref="MenuCommand"/> can be executed; otherwise, <c>false</c>.</returns>
         public bool CanExecute(object parameter)
         {
             bool canExecute;
@@ -132,8 +134,7 @@ namespace TimeSeriesFramework.UI.Commands
             else
                 canExecute = Thread.CurrentPrincipal.IsInRole(Roles);
 
-            //if (CanExecuteChanged != null)
-            //    CanExecuteChanged(this, new EventArgs());
+            OnCanExecuteChanged();
 
             return canExecute;
         }
@@ -143,7 +144,10 @@ namespace TimeSeriesFramework.UI.Commands
         /// Loads user control as defined in the <see cref="UserControlPath"/> property from assembly name set in the 
         /// <see cref="UserControlAssembly"/> property.
         /// </summary>
-        /// <param name="parameter"></param>
+        /// <param name="parameter">
+        /// Data used by the <see cref="MenuCommand"/>. If the <see cref="MenuCommand"/> does not require
+        /// data to be passed, this object can be set to <c>null</c>.
+        /// </param>
         public void Execute(object parameter)
         {
             System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
@@ -162,7 +166,14 @@ namespace TimeSeriesFramework.UI.Commands
             }
         }
 
-        #endregion
+        /// <summary>
+        /// Raises the <see cref="CanExecuteChanged"/> event.
+        /// </summary>
+        protected void OnCanExecuteChanged()
+        {
+            if (CanExecuteChanged != null)
+                CanExecuteChanged(this, EventArgs.Empty);
+        }
 
         #endregion
     }

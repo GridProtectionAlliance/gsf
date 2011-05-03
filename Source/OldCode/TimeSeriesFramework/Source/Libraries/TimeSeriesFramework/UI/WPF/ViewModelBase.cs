@@ -28,18 +28,19 @@ using System.Windows;
 namespace TimeSeriesFramework.UI
 {
     /// <summary>
-    /// Represents an abstract class which all ViewModel objects derive from.
+    /// Represents an abstract class from which all ViewModel objects will derive.
     /// </summary>
     public abstract class ViewModelBase : INotifyPropertyChanged
     {
         #region [ Members ]
-        
+
         //Events
+
         /// <summary>
         /// Raised when a property on this object has a new value.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
-        
+
         #endregion
 
         #region [ Properties ]
@@ -49,9 +50,9 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public Action<string, string, MessageBoxImage> Popup
         {
-            get 
-            { 
-                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) => MessageBox.Show( Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage)); 
+            get
+            {
+                return (Action<string, string, MessageBoxImage>)((message, caption, messageBoxImage) => MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.OK, messageBoxImage));
             }
         }
 
@@ -60,7 +61,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         public Func<string, string, bool> Confirm
         {
-            get 
+            get
             {
                 return (Func<string, string, bool>)((message, caption) => MessageBox.Show(Application.Current.MainWindow, message, caption, MessageBoxButton.YesNo) == MessageBoxResult.Yes);
             }
@@ -70,23 +71,15 @@ namespace TimeSeriesFramework.UI
 
         #region [ Methods ]
 
-        #region [ INotifyPropertyChanged Implementation ]
-
         /// <summary>
-        /// Raises this object's PropertyChanged event.
+        /// Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
         /// <param name="propertyName">The property that has a new value.</param>
-        protected void NotifyPropertyChanged(string propertyName)
+        protected void OnPropertyChanged(string propertyName)
         {
-            PropertyChangedEventHandler handler = this.PropertyChanged;
-            if (handler != null)
-            {
-                var e = new PropertyChangedEventArgs(propertyName);
-                handler(this, e);
-            }
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
-
-        #endregion
 
         #endregion
     }
