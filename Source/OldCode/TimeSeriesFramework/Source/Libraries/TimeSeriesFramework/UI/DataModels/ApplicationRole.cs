@@ -113,6 +113,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="ApplicationRole"/> Description.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string Description
         {
             get

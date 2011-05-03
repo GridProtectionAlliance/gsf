@@ -206,7 +206,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Description.
         /// </summary>
-        // No validation attributes are applied because of database design.
+        // Because of database design, no validation attributes are applied.
         public string Description
         {
             get

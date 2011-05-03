@@ -118,14 +118,13 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_pointID = value;
-                OnPropertyChanged("PointID");
             }
         }
 
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Device ID.
         /// </summary>
-        // Because of database design, no validation attributes are applied
+        // Because of database design, no validation attributes are applied.
         public int? DeviceID
         {
             get

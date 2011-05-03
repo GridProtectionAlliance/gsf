@@ -161,6 +161,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> ParentID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? ParentID
         {
             get
@@ -194,7 +195,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/>  Name.
         /// </summary>
-        // Field is populated by database via trigger and has no screen interaction, so no validation attributes are applied
+        [StringLength(100, ErrorMessage="Device Name cannot exceed 100 characters.")]
         public string Name
         {
             get
@@ -228,6 +229,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> CompanyID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? CompanyID
         {
             get
@@ -244,6 +246,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> HistrianID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? HistorianID
         {
             get
@@ -278,6 +281,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> VendorDeviceID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? VendorDeviceID
         {
             get
@@ -294,6 +298,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> protocolID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? ProtocolID
         {
             get
@@ -310,6 +315,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> Longitude.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public decimal? Longitude
         {
             get
@@ -326,6 +332,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> Latitude.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public decimal? Latitude
         {
             get
@@ -342,6 +349,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> InterconnectionID.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? InterconnectionID
         {
             get
@@ -358,6 +366,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="Device"/> ConnectionString.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string ConnectionString
         {
             get
@@ -374,6 +383,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> TimeZone.
         /// </summary>
+        [StringLength(128, ErrorMessage="Device Time Zone cannot exceed 128 characters.")]
         public string TimeZone
         {
             get
@@ -390,6 +400,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> FramesPerSecond.
         /// </summary>
+        [DefaultValue(30)]
         public int? FramesPerSecond
         {
             get
@@ -442,6 +453,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> ContactList.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string ContactList
         {
             get
@@ -458,6 +470,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> MeasuredLines.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public int? MeasuredLines
         {
             get

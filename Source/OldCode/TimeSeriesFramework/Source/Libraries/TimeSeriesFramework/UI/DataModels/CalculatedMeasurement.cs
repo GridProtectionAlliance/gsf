@@ -183,6 +183,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> ConnectionString.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string ConnectionString
         {
             get
@@ -199,6 +200,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> ConfigSection.
         /// </summary>
+        [StringLength(100, ErrorMessage="Config Section cannot exceed 100 characters.")]
         public string ConfigSection
         {
             get
@@ -215,6 +217,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="CalculatedMeasurement"/> OutputMeasurements.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string OutputMeasurements
         {
             get
@@ -231,6 +234,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> InputMeasurements.
         /// </summary>
+        // Because of database design, no validation attributes are applied.
         public string InputMeasurements
         {
             get

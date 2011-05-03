@@ -98,7 +98,8 @@ namespace TimeSeriesFramework.UI.DataModels
 
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Password.
-        /// </summary>        
+        /// </summary>  
+        [StringLength(256, ErrorMessage="User Account password cannot exceed 256 characters.")]
         public string Password
         {
             get
@@ -115,6 +116,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> FirstName.
         /// </summary>       
+        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
         public string FirstName
         {
             get
@@ -131,6 +133,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> LastName.
         /// </summary>
+        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
         public string LastName
         {
             get
@@ -164,6 +167,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Phone
         /// </summary>
+        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
         public string Phone
         {
             get
@@ -180,6 +184,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Email
         /// </summary>
+        [StringLength(256, ErrorMessage = "User Account password cannot exceed 256 characters.")]
         public string Email
         {
             get
@@ -230,6 +235,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> ChangePasswordOn.
         /// </summary>
+        // Because of database design no validation attributes are applied.
         public DateTime ChangePasswordOn
         {
             get
@@ -246,6 +252,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> CreatedOn
         /// </summary>
+        // Field is populated by trigger and has no screen interaction, so no validation attributes are applied
         public DateTime CreatedOn
         {
             get

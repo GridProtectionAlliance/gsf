@@ -94,6 +94,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current SecurityGroup Description
         /// </summary>
+        // Because of database design no validation attributes are applied.
         public string Description
         {
             get
