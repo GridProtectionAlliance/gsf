@@ -228,7 +228,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID").ToString()),
+                        ID = row.Field<Guid>("ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),

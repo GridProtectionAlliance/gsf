@@ -43,7 +43,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private string m_id;
+        private Guid m_id;
         private string m_name;
         private int? m_companyID;
         private decimal? m_longitude;
@@ -69,7 +69,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Node"/>'s ID.
         /// </summary>
-        public string ID
+        public Guid ID
         {
             get
             {
@@ -384,7 +384,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     nodeList.Add(new Node()
                         {
-                            ID = row.Field<object>("ID").ToString(),
+                            ID = row.Field<Guid>("ID"),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.Field<int?>("CompanyID"),
                             Longitude = row.Field<decimal?>("Longitude"),
@@ -475,7 +475,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
                         node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
                         node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        database.IsJetEngine() ? "{" + node.ID + "}" : node.ID);
+                        database.IsJetEngine() ? "{" + node.ID.ToString() + "}" : node.ID.ToString());
 
                 return "Node information saved successfully";
             }

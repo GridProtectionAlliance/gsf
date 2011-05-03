@@ -75,7 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private string m_nodeID;
+        private Guid m_nodeID;
         private int m_id;
         private int? m_parentID;
         private string m_acronym;
@@ -127,7 +127,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Device"/> NodeID.
         /// </summary>
         [Required(ErrorMessage = "Device node ID is a required field, please provide value.")]
-        public string NodeID
+        public Guid NodeID
         {
             get
             {
@@ -673,7 +673,7 @@ namespace TimeSeriesFramework.UI.DataModels
         }
 
         /// <summary>
-        /// Gets or sets <see cref="Device"/> VendorAcronym.
+        /// Gets <see cref="Device"/> VendorAcronym.
         /// </summary>
         public string VendorAcronym
         {
@@ -826,7 +826,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     deviceList.Add(new Device()
                     {
-                        NodeID = row.Field<object>("NodeID").ToString(),
+                        NodeID = row.Field<Guid>("NodeID"),
                         ID = row.Field<int>("ID"),
                         ParentID = row.Field<int?>("ParentID"),
                         Acronym = row.Field<string>("Acronym"),

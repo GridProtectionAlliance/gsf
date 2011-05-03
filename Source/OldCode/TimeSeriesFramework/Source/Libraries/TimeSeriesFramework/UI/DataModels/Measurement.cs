@@ -41,7 +41,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-        private string m_signalID;
+        private Guid m_signalID;
         private int? m_historianID;
         private int m_pointID;
         private int? m_deviceID;
@@ -73,7 +73,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Signal ID.
         /// </summary>
-        public string SignalID
+        public Guid SignalID
         {
             get
             {
@@ -499,7 +499,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     measurementList.Add(new Measurement()
                     {
-                        SignalID = row.Field<string>("SignalID"),
+                        SignalID = row.Field<Guid>("SignalID"),
                         HistorianID = row.Field<int>("HistorianID"),
                         PointID = row.Field<int>("PointID"),
                         DeviceID = row.Field<int>("DeviceID"),

@@ -329,7 +329,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID").ToString()),
+                        ID = row.Field<Guid>("ID"),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
@@ -340,7 +340,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
                         UseADAuthentication = Convert.ToBoolean(row.Field<object>("UseADAuthentication")),
                         ChangePasswordOn = row.Field<object>("ChangePasswordOn") == null ? DateTime.MinValue : Convert.ToDateTime(row.Field<object>("ChangePasswordOn")),
-                        CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
+                        CreatedOn = Convert.ToDateTime(row["CreatedOn"]),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = Convert.ToDateTime(row.Field<object>("UpdatedOn")),
                         UpdatedBy = row.Field<string>("UpdatedBy")

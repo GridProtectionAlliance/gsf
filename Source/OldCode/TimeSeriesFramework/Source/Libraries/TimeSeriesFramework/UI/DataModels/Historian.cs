@@ -378,7 +378,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     historianList.Add(new Historian()
                         {
-                            NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                            NodeID = row.Field<Guid>("NodeID"),
                             ID = row.Field<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),

@@ -41,7 +41,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
         // Fields
         private Guid m_id;
-        private string m_nodeID;
+        private Guid m_nodeID;
         private string m_name;
         private string m_description;
         private DateTime m_createdOn;
@@ -77,8 +77,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="ApplicationRole"/> NodeID.
         /// </summary>
         [Required(ErrorMessage = "Application role node ID is a required field, please select a value.")]
-        [StringLength(36, ErrorMessage = "Application role node ID cannot exceed 36 characters.")]
-        public string NodeID
+        public Guid NodeID
         {
             get
             {
@@ -280,10 +279,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     applicationRoleList.Add(new ApplicationRole()
                     {
-                        ID = Guid.Parse(row.Field<int>("ID").ToString()),
+                        ID = row.Field<Guid>("ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
-                        NodeID = row.Field<int>("NodeID").ToString(),
+                        NodeID = row.Field<Guid>("NodeID"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = row.Field<DateTime>("UpdatedOn"),

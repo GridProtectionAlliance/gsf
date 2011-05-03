@@ -75,8 +75,7 @@ namespace TimeSeriesFramework.UI.DataModels
         #region [ Members ]
 
         // Fields
-
-        private string m_nodeID;
+        private Guid m_nodeID;
         private int m_id;
         private string m_adapterName;
         private string m_assemblyName;
@@ -99,8 +98,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Adapter"/> NodeID.
         /// </summary>
         [Required(ErrorMessage = " Adapter node ID is a required field, please select a value.")]
-        [StringLength(36, ErrorMessage = "Adapter node ID cannot exceed 36 characters.")]
-        public string NodeID
+        public Guid NodeID
         {
             get
             {
@@ -369,7 +367,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     adapterList.Add(new Adapter()
                     {
-                        NodeID = row.Field<object>("NodeID").ToString(),
+                        NodeID = row.Field<Guid>("NodeID"),
                         ID = row.Field<int>("ID"),
                         AdapterName = row.Field<string>("AdapterName"),
                         AssemblyName = row.Field<string>("AssemblyName"),

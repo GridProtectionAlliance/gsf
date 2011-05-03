@@ -21,6 +21,7 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Data;
 using System.Threading;
 using TVA.Data;
@@ -110,5 +111,24 @@ namespace TimeSeriesFramework.UI
             return database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public static string Guid(this AdoDataConnection database)
+        {
+            return "";
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="database"></param>
+        /// <returns></returns>
+        public static DateTime UtcNow(this AdoDataConnection database)
+        {
+            return DateTime.UtcNow;
+        }
     }
 }
