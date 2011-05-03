@@ -134,7 +134,7 @@ namespace TimeSeriesFramework.UI.Commands
             else
                 canExecute = Thread.CurrentPrincipal.IsInRole(Roles);
 
-            OnCanExecuteChanged();
+            //OnCanExecuteChanged();
 
             return canExecute;
         }

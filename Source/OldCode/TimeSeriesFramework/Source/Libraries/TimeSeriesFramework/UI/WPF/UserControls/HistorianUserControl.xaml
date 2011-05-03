@@ -39,9 +39,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0">
-                <TextBlock Text="Acronym"/>
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Acronym" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" MaxLength="50"/>
             <TextBlock Text="Name" Grid.Row="1" Grid.Column="2" />            
@@ -54,14 +54,14 @@
             <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=ConnectionString}" Height="50" TextWrapping="Wrap" />
             <TextBlock Text="Decription" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Description}" Height="50" TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0">
-                <TextBlock Text="Load Order" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" />
-            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2">
-                <TextBlock Text="Reporting Interval" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="2" HorizontalAlignment="Right" Height="32" VerticalAlignment="Top">
+                <TextBlock Text="Reporting Interval" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=MeasurementReportingInterval}" />
             <TextBlock Text="Runtime ID" Grid.Row="5" Grid.Column="0" />

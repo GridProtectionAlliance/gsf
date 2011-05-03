@@ -39,9 +39,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0">
-                <TextBlock Text="Name"/>
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" >
+                <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Name}" MaxLength="100"/>
             <TextBlock Text="Company" Grid.Row="1" Grid.Column="2" />
@@ -54,15 +54,13 @@
             <TextBox Grid.Row="3" Grid.Column="1" Text="{tsfBinding:Column Path=Description}" TextWrapping="Wrap" />
             <TextBlock Text="Image" Grid.Row="3" Grid.Column="2" VerticalAlignment="Top" />            
             <TextBox Grid.Row="3" Grid.Column="3" Text="{tsfBinding:Column Path=Image}"/>
-
             <TextBlock Text="Remote Status Connection" Grid.Row="4" Grid.Column="0" VerticalAlignment="Top" />
             <TextBox Grid.Row="4" Grid.Column="1" Text="{tsfBinding:Column Path=RemoteStatusServiceURL}" Height="50" TextWrapping="Wrap"/>
             <TextBlock Text="Statistic Service URL" Grid.Row="4" Grid.Column="2" VerticalAlignment="Top" />
             <TextBox Grid.Row="4" Grid.Column="3" Text="{tsfBinding:Column Path=RealTimeStatisticServiceUrl}" Height="50" TextWrapping="Wrap"/>
-
-            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0">
-                <TextBlock Text="Load Order" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="5" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="5" Grid.Column="1" Text="{tsfBinding:Column Path=LoadOrder}" />
             <CheckBox Content="Master" Grid.Row="5" Grid.Column="2" IsChecked="{tsfBinding:Column Path=Master}"/>

@@ -27,6 +27,16 @@
     <sys:Double x:Key="XXLargeItemSize">300</sys:Double>
     <sys:Double x:Key="XXXLargeItemSize">500</sys:Double>
 
+    <Style TargetType="TextBlock" x:Key="RequiredLabel">
+        <Setter Property="Margin" Value="5,5,0,5" />
+    </Style>
+
+    <Style TargetType="TextBlock" x:Key="RequiredMarker">
+        <Setter Property="Text" Value="*" />
+        <Setter Property="Foreground" Value="#FFCC0000" />
+        <Setter Property="Margin" Value="2,3,-1,5" />
+    </Style>
+
     <LinearGradientBrush x:Key="HeaderRowBackgroundBrush" EndPoint="0.5,1" StartPoint="0.5,0">
         <GradientStop Color="#FFB3C8D6" Offset="0"/>
         <GradientStop Color="#FFE1E9EE" Offset="1"/>

@@ -36,24 +36,24 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0">
-                <TextBlock Text="Acronym"/>
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Acronym" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" MaxLength="50"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2">
-                <TextBlock Text="Map Acronym" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Map Acronym" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=MapAcronym}" />
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0">
-                <TextBlock Text="Name" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
+                <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Name}" MaxLength="100" />
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2">
-                <TextBlock Text="Load Order" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right">
+                <TextBlock Text="Load Order" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="1" Grid.Column="3" Text="{tsfBinding:Column Path=LoadOrder}" />
             <TextBlock Grid.Row="2" Grid.Column="0" Text="URL" />

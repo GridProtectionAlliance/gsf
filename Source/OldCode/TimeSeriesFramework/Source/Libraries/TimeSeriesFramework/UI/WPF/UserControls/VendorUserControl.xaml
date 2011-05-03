@@ -38,9 +38,9 @@
             
             <TextBlock Text="Acronym" Grid.Row="0" Grid.Column="0"/>
             <TextBox Grid.Row="0" Grid.Column="1" Text="{tsfBinding:Column Path=Acronym}" MaxLength="50"/>
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2">
-                <TextBlock Text="Name" />
-                <TextBlock Text="*" Foreground="#FFCC0000" Width="10" />
+            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right" >
+                <TextBlock Text="Name" Style="{StaticResource RequiredLabel}" />
+                <TextBlock Style="{StaticResource RequiredMarker}" />
             </StackPanel>
             <TextBox Grid.Row="0" Grid.Column="3" Text="{tsfBinding:Column Path=Name}" MaxLength="100"/>
             <TextBlock Text="Phone Number" Grid.Row="1" Grid.Column="0"/>            
