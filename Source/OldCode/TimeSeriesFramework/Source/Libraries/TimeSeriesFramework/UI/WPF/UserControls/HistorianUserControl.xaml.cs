@@ -37,7 +37,7 @@ namespace TimeSeriesFramework.UI.UserControls
         public HistorianUserControl()
         {
             InitializeComponent();
-            this.DataContext = new Historians(15);
+            this.DataContext = new Historians(10);
         }
     }
 }

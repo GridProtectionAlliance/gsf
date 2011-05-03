@@ -17,6 +17,11 @@
     </UserControl.Resources>
 
     <StackPanel Orientation="Vertical">
+
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=CompanyLookupList}" x:Key="CompanyLookupList"/>
+        </StackPanel.Resources>
+
         <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
             <Grid.BindingGroup >
                 <BindingGroup Name="input"/>
@@ -45,7 +50,8 @@
             </StackPanel>
             <TextBox Grid.Row="1" Grid.Column="1" Text="{tsfBinding:Column Path=Name}" MaxLength="100"/>
             <TextBlock Text="Company" Grid.Row="1" Grid.Column="2" />
-            <ComboBox Grid.Row="1" Grid.Column="3"/>
+            <ComboBox Grid.Row="1" Grid.Column="3" ItemsSource="{Binding Source={StaticResource CompanyLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=CompanyID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource CompanyLookupList}}"/>
             <TextBlock Text="Longitude" Grid.Row="2" Grid.Column="0" />
             <TextBox Grid.Row="2" Grid.Column="1" Text="{tsfBinding:Column Path=Longitude}" />
             <TextBlock Text="Latitude" Grid.Row="2" Grid.Column="2" />

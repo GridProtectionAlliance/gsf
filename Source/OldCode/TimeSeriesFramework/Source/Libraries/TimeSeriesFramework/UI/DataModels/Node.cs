@@ -97,6 +97,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_name = value;
+                OnPropertyChanged("Name");
             }
         }
 
@@ -113,6 +114,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_companyID = value;
+                OnPropertyChanged("CompanyID");
             }
         }
 
@@ -129,6 +131,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_longitude = value;
+                OnPropertyChanged("Longitude");
             }
         }
 
@@ -145,6 +148,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_latitude = value;
+                OnPropertyChanged("Latitude");
             }
         }
 
@@ -161,6 +165,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_description = value;
+                OnPropertyChanged("Description");
             }
         }
 
@@ -177,6 +182,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_image = value;
+                OnPropertyChanged("Image");
             }
         }
 
@@ -193,6 +199,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_master = value;
+                OnPropertyChanged("Master");
             }
         }
 
@@ -209,6 +216,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_loadOrder = value;
+                OnPropertyChanged("LoadOrder");
             }
         }
 
@@ -225,6 +233,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_enabled = value;
+                OnPropertyChanged("Enabled");
             }
         }
 
@@ -257,6 +266,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_remoteStatusServiceUrl = value;
+                OnPropertyChanged("RemoteStatusServiceUrl");
             }
         }
 
@@ -273,6 +283,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_realTimeStatisticServiceUrl = value;
+                OnPropertyChanged("RealTimeStatisticServiceUrl");
             }
         }
 
@@ -285,10 +296,6 @@ namespace TimeSeriesFramework.UI.DataModels
             get
             {
                 return m_companyName;
-            }
-            set
-            {
-                m_companyName = value;
             }
         }
 
@@ -386,7 +393,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     nodeList.Add(new Node()
                         {
-                            ID = row.Field<Guid>("ID"),
+                            ID = Guid.Parse(row.Field<string>("ID")),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.Field<int?>("CompanyID"),
                             Longitude = row.Field<decimal?>("Longitude"),
@@ -399,7 +406,7 @@ namespace TimeSeriesFramework.UI.DataModels
                             //TimeSeriesDataServiceUrl = row.Field<string>("TimeSeriesDataServiceUrl"),
                             RemoteStatusServiceUrl = row.Field<string>("RemoteStatusServiceUrl"),
                             RealTimeStatisticServiceUrl = row.Field<string>("RealTimeStatisticServiceUrl"),
-                            CompanyName = row.Field<string>("CompanyName")
+                            m_companyName = row.Field<string>("CompanyName")
                         });
                 }
 
@@ -418,7 +425,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of nodes defined in the database.</returns>
-        public static Dictionary<string, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
+        public static Dictionary<Guid, string> GetLookupList(AdoDataConnection database, bool isOptional = false)
         {
             bool createdConnection = false;
 
@@ -426,16 +433,16 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 createdConnection = CreateConnection(ref database);
 
-                Dictionary<string, string> nodeList = new Dictionary<string, string>();
+                Dictionary<Guid, string> nodeList = new Dictionary<Guid, string>();
 
                 if (isOptional)
-                    nodeList.Add(string.Empty, "Select Node");
+                    nodeList.Add(Guid.Empty, "Select Node");
 
                 DataTable nodeTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM Node WHERE Enabled = @enabled ORDER BY LoadOrder", DefaultTimeout, true);
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
-                    nodeList[row.Field<object>("ID").ToString()] = row.Field<string>("Name");
+                    nodeList[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
                 }
 
                 return nodeList;
@@ -451,10 +458,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Saves <see cref="Node"/> information to database.
         /// </summary>
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="node">Information about <see cref="Node"/>.</param>
-        /// <param name="isNew">Indicates if save is a new addition or an update to an existing record.</param>
+        /// <param name="node">Information about <see cref="Node"/>.</param>        
         /// <returns>String, for display use, indicating success.</returns>
-        public static string Save(AdoDataConnection database, Node node, bool isNew)
+        public static string Save(AdoDataConnection database, Node node)
         {
             bool createdConnection = false;
 
@@ -466,18 +472,18 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
                         "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
                         "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
-                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
-                        node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
-                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
+                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
+                        node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow);
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
                         "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
                         "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID ?? (object)DBNull.Value, node.Longitude ?? (object)DBNull.Value,
-                        node.Latitude ?? (object)DBNull.Value, node.Description, node.Image, node.Master, node.LoadOrder, node.Enabled, node.RemoteStatusServiceUrl,
-                        node.m_realTimeStatisticServiceUrl, CommonFunctions.CurrentUser, database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow,
-                        node.ID);
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
+                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
+                        node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
+                        database.IsJetEngine() ? DateTime.UtcNow.Date : DateTime.UtcNow, node.ID);
 
                 return "Node information saved successfully";
             }

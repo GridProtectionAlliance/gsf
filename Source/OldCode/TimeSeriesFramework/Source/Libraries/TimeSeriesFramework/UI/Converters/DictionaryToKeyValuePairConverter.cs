@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Data;
 
 namespace TimeSeriesFramework.UI.Converters
@@ -45,26 +47,54 @@ namespace TimeSeriesFramework.UI.Converters
         /// <returns>KeyValuePair{T1,T2} value.</returns>
         public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value != null && parameter != null)
+            if (parameter != null)
             {
                 CollectionViewSource viewSource = parameter as CollectionViewSource;
 
                 if (viewSource.Source is Dictionary<int, string>)
                 {
                     Dictionary<int, string> collection = (Dictionary<int, string>)viewSource.Source;
+
+                    value = value ?? 0; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
+
                     int key;
                     if (int.TryParse(value.ToString(), out key))
                     {
+                        if (key == 0 && collection.Count > 0)
+                            return collection.First();
+
                         foreach (KeyValuePair<int, string> item in collection)
                             if (item.Key == key)
                                 return item;
                     }
                 }
-                else if (parameter is Dictionary<string, string>)
+                else if (viewSource.Source is Dictionary<string, string>)
                 {
                     Dictionary<string, string> collection = (Dictionary<string, string>)viewSource.Source;
+
+                    value = value ?? string.Empty; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
+
                     string key = value.ToString();
+
+                    if (string.IsNullOrEmpty(key) && collection.Count > 0)
+                        return collection.First();
+
                     foreach (KeyValuePair<string, string> item in collection)
+                        if (item.Key == key)
+                            return item;
+                }
+                else if (viewSource.Source is Dictionary<Guid, string>)
+                {
+                    Dictionary<Guid, string> collection = (Dictionary<Guid, string>)viewSource.Source;
+
+                    value = value ?? Guid.Empty; // If we get null from database for optional field then assign default value so first item from the collection can be returned.
+
+                    Guid key = Guid.Parse(value.ToString());
+
+                    if (key == Guid.Empty)
+                        return collection.First();
+
+                    foreach (KeyValuePair<Guid, string> item in collection)
                         if (item.Key == key)
                             return item;
                 }
@@ -86,9 +116,11 @@ namespace TimeSeriesFramework.UI.Converters
             if (value != null)
             {
                 if (value is KeyValuePair<int, string>)
-                    return ((KeyValuePair<int, string>)value).Key;
+                    return ((KeyValuePair<int, string>)value).Key == 0 ? (object)DBNull.Value : ((KeyValuePair<int, string>)value).Key;
                 else if (value is KeyValuePair<string, string>)
-                    return ((KeyValuePair<string, string>)value).Key;
+                    return string.IsNullOrEmpty(((KeyValuePair<string, string>)value).Key) ? (object)DBNull.Value : ((KeyValuePair<string, string>)value).Key;
+                else if (value is KeyValuePair<Guid, string>)
+                    return ((KeyValuePair<Guid, string>)value).Key == Guid.Empty ? (object)DBNull.Value : ((KeyValuePair<Guid, string>)value).Key;
             }
             return null;
         }

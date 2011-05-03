@@ -33,6 +33,12 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public static class CommonFunctions
     {
+        #region [ Members ]
+
+        // Fields
+
+        private static Guid m_currentNode;
+
         /// <summary>
         /// Defines the default settings category for TimeSeriesFramework data connections.
         /// </summary>
@@ -42,6 +48,30 @@ namespace TimeSeriesFramework.UI
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
         /// </summary>
         public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
+
+        #endregion
+
+        #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets the id of the Node currently active.
+        /// </summary>
+        public static Guid CurrentNode
+        {
+            get
+            {
+                return m_currentNode;
+            }
+            set
+            {
+                m_currentNode = value;
+            }
+        }
+
+        #endregion
+
+
+        #region [ Methods ]
 
         /// <summary>
         /// Sets the current user context for the database.
@@ -130,5 +160,17 @@ namespace TimeSeriesFramework.UI
         {
             return DateTime.UtcNow;
         }
+
+        /// <summary>
+        /// Method to return DBNull if given value is null.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static object ToNotNull(this object value)
+        {
+            return value ?? (object)DBNull.Value;
+        }
+
+        #endregion
     }
 }

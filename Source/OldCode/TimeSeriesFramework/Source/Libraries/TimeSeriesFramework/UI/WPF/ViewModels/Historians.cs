@@ -22,6 +22,8 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
@@ -31,6 +33,13 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// </summary>
     internal class Historians : PagedViewModelBase<Historian, int>
     {
+        #region [ Members ]
+
+        // Fields
+        private Dictionary<Guid, string> m_nodeLookupList;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -41,6 +50,17 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 return CurrentItem.ID == 0;
+            }
+        }
+
+        /// <summary>
+        /// Gets <see cref="Dictionary{T1,T2}"/> type collection of <see cref="Node"/> defined in the database.
+        /// </summary>
+        public Dictionary<Guid, string> NodeLookupList
+        {
+            get
+            {
+                return m_nodeLookupList;
             }
         }
 
@@ -55,6 +75,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public Historians(int itemsPerPage)
             : base(itemsPerPage)
         {
+            m_nodeLookupList = Node.GetLookupList(null);
         }
 
         #endregion
@@ -79,9 +100,21 @@ namespace TimeSeriesFramework.UI.ViewModels
             return CurrentItem.Name;
         }
 
+        /// <summary>
+        /// Loads the <see cref="Historian"/> collection.
+        /// </summary>
         public override void Load()
         {
-            ItemsSource = Historian.Load(null, Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599"));
+            ItemsSource = Historian.Load(null, CommonFunctions.CurrentNode);
+        }
+
+        /// <summary>
+        /// Creates a new instance of <see cref="Historian"/> and assigns it to CurrentItem.
+        /// </summary>
+        public override void Clear()
+        {
+            base.Clear();
+            CurrentItem.NodeID = m_nodeLookupList.First().Key;
         }
 
         #endregion

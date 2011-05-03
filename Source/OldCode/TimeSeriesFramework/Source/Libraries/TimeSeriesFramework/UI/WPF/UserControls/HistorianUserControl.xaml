@@ -17,6 +17,11 @@
     </UserControl.Resources>
 
     <StackPanel Orientation="Vertical">
+
+        <StackPanel.Resources>
+            <CollectionViewSource Source="{Binding Path=NodeLookupList}" x:Key="NodeLookupList"/>
+        </StackPanel.Resources>
+        
         <Grid x:Name="GridDetailView" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="5" DataContext="{Binding Path=CurrentItem, Mode=TwoWay}">
             <Grid.BindingGroup >
                 <BindingGroup Name="input"/>
@@ -39,6 +44,9 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
+            <TextBlock Text="Node" Grid.Row="0" Grid.Column="0" />
+            <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Source={StaticResource NodeLookupList}}" DisplayMemberPath="Value"
+                      SelectedItem="{tsfBinding:Column Path=NodeID, Converter={StaticResource DictionaryToKeyValuePairConverter}, ConverterParameter={StaticResource NodeLookupList}}"/>
             <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right">
                 <TextBlock Text="Acronym" Style="{StaticResource RequiredLabel}" />
                 <TextBlock Style="{StaticResource RequiredMarker}" />
@@ -79,8 +87,8 @@
         <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto">
             <sdk:DataGrid.Columns>
                 <sdk:DataGridTextColumn Header="Acronym" Width="*" Binding="{Binding Acronym}"/>
-                <sdk:DataGridTextColumn Header="Name" Width="2*" Binding="{Binding Name}" />
-                <sdk:DataGridTextColumn Header="Connection String" Width="3*" Binding="{Binding ConnectionString}" />
+                <sdk:DataGridTextColumn Header="Name" Width="*" Binding="{Binding Name}" />
+                <sdk:DataGridTextColumn Header="Connection String" Width="2*" Binding="{Binding ConnectionString}" />
                 <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{Binding Enabled}" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>

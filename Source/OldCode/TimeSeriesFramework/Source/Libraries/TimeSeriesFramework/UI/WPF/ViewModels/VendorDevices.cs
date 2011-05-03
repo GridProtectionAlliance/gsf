@@ -31,7 +31,11 @@ namespace TimeSeriesFramework.UI.ViewModels
     /// </summary>
     internal class VendorDevices : PagedViewModelBase<VendorDevice, int>
     {
-        Dictionary<int, string> m_vendorLookupList;
+        #region [ Members ]
+
+        private Dictionary<int, string> m_vendorLookupList;
+
+        #endregion
 
         #region [ Properties ]
 

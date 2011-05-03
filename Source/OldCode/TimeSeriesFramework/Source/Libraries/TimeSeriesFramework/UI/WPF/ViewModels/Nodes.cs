@@ -21,12 +21,22 @@
 //
 //******************************************************************************************************
 
+using System;
+using System.Collections.Generic;
 using TimeSeriesFramework.UI.DataModels;
 
 namespace TimeSeriesFramework.UI.ViewModels
 {
-    internal class Nodes : PagedViewModelBase<Node, string>
+    internal class Nodes : PagedViewModelBase<Node, Guid>
     {
+        #region [ Members ]
+
+        // Fields
+
+        private Dictionary<int, string> m_companyLookupList;
+
+        #endregion
+
         #region [ Properties ]
 
         /// <summary>
@@ -37,6 +47,14 @@ namespace TimeSeriesFramework.UI.ViewModels
             get
             {
                 return CurrentItem.ID == null;
+            }
+        }
+
+        public Dictionary<int, string> CompanyLookupList
+        {
+            get
+            {
+                return m_companyLookupList;
             }
         }
 
@@ -51,6 +69,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public Nodes(int itemsPerPage)
             : base(itemsPerPage)
         {
+            m_companyLookupList = Company.GetLookupList(null, true);
         }
 
         #endregion
@@ -61,9 +80,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// Gets the primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.
         /// </summary>
         /// <returns>The primary key value of the <see cref="PagedViewModelBase{T1, T2}.CurrentItem"/>.</returns>
-        public override string GetCurrentItemKey()
+        public override Guid GetCurrentItemKey()
         {
-            return CurrentItem.ID.ToString();
+            return CurrentItem.ID;
         }
 
         /// <summary>

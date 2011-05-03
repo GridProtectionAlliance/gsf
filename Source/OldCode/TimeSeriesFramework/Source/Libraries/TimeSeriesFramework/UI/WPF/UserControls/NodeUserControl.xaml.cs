@@ -37,7 +37,7 @@ namespace TimeSeriesFramework.UI.UserControls
         public NodeUserControl()
         {
             InitializeComponent();
-            this.DataContext = new Nodes(15);
+            this.DataContext = new Nodes(10);
         }
     }
 }
