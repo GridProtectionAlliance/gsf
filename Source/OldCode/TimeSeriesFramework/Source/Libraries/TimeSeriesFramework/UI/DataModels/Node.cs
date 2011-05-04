@@ -393,7 +393,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     nodeList.Add(new Node()
                         {
-                            ID = Guid.Parse(row.Field<string>("ID")),
+                            ID = row.Field<Guid>("ID"),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.Field<int?>("CompanyID"),
                             Longitude = row.Field<decimal?>("Longitude"),
@@ -511,7 +511,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, nodeID);
+                database.Connection.ExecuteNonQuery("DELETE FROM Node WHERE ID = @nodeID", DefaultTimeout, database.Guid(nodeID));
 
                 return "Node deleted successfully";
             }

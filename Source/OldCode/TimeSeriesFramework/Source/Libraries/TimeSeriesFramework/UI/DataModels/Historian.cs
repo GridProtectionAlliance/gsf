@@ -376,7 +376,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     historianList.Add(new Historian()
                         {
-                            NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                            NodeID = row.Field<Guid>("NodeID"),
                             ID = row.Field<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
@@ -461,7 +461,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Historian SET NodeID = @nodeID, Acronym = @acronym, Name = @name, AssemblyName = @assemblyName, TypeName = @typeName, " +
                         "ConnectionString = @connectionString, IsLocal = @isLocal, MeasurementReportingInterval = @measurementReportingInterval, Description = @description, " +
-                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, historian.NodeID,
+                        "LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(historian.NodeID),
                         historian.Acronym.Replace(" ", "").ToUpper(), historian.Name.ToNotNull(), historian.AssemblyName.ToNotNull(), historian.TypeName.ToNotNull(),
                         historian.ConnectionString.ToNotNull(), historian.IsLocal, historian.MeasurementReportingInterval, historian.Description.ToNotNull(),
                         historian.LoadOrder, historian.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), historian.ID);

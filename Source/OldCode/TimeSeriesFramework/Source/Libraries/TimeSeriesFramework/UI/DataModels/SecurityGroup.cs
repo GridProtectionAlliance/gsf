@@ -303,7 +303,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow(), securityGroup.ID);
+                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
 
                 return "Security group information saved successfully";
             }
@@ -331,7 +331,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 // Setup current user context for any delete triggers
                 CommonFunctions.SetCurrentUserContext(database);
 
-                database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroup WHERE ID = @securityGroupID", DefaultTimeout, securityGroupID);
+                database.Connection.ExecuteNonQuery("DELETE FROM SecurityGroup WHERE ID = @securityGroupID", DefaultTimeout, database.Guid(securityGroupID));
 
                 return "Security group deleted successfully";
             }

@@ -917,13 +917,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (deviceType == DeviceType.Concentrator)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, nodeID);
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, database.Guid(nodeID));
                 else if (deviceType == DeviceType.DirectConnected)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, nodeID);
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, database.Guid(nodeID));
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE " +
-                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, nodeID);
+                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.Guid(nodeID));
 
                 foreach (DataRow row in deviceTable.Rows)
                     deviceList[row.Field<int>("ID")] = row.Field<string>("Acronym");
@@ -959,7 +959,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@parentID, @acronym, @name, @isConcentrator, @companyID, @historianID, @accessID, @vendorDeviceID, @protocolID, @longitude, @latitude, @interconnectionID, " +
                         "@connectionString, @timezone, @framesPerSecond, @timeAdjustmentTicks, @dataLossInterval, @contactList, @measuredLines, @loadOrder, @enabled, " +
                         "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, " +
-                        "@skipDisableRealTimeData, @measurementReportingInterval, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, device.NodeID,
+                        "@skipDisableRealTimeData, @measurementReportingInterval, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(device.NodeID),
                         device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
                         device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
                         device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
@@ -975,7 +975,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         "LoadOrder = @loadOrder, Enabled = @enabled, AllowedParsingExceptions = @allowedParsingExceptions, ParsingExceptionWindow = @parsingExceptionWindow, " +
                         "DelayedConnectionInterval = @delayedConnectionInterval, AllowUseOfCachedConfiguration = @allowUseOfCachedConfiguration, AutoStartDataParsingSequence " +
                         "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, device.NodeID,
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(device.NodeID),
                         device.ParentID ?? (object)DBNull.Value, device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID ?? (object)DBNull.Value,
                         device.HistorianID ?? (object)DBNull.Value, device.AccessID, device.VendorDeviceID == null ? (object)DBNull.Value : device.VendorDeviceID == 0 ? (object)DBNull.Value : device.VendorDeviceID,
                         device.ProtocolID ?? (object)DBNull.Value, device.Longitude ?? (object)DBNull.Value, device.Latitude ?? (object)DBNull.Value, device.InterconnectionID ?? (object)DBNull.Value,
