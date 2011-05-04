@@ -21,7 +21,9 @@
 //
 //******************************************************************************************************
 
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using TimeSeriesFramework.UI.ViewModels;
 
 namespace TimeSeriesFramework.UI.UserControls
@@ -31,13 +33,50 @@ namespace TimeSeriesFramework.UI.UserControls
     /// </summary>
     public partial class NodeUserControl : UserControl
     {
+        #region [ Constructor ]
+
         /// <summary>
         /// Creates an instance of <see cref="NodeUserControl"/> class.
         /// </summary>
         public NodeUserControl()
         {
             InitializeComponent();
+            this.Unloaded += new RoutedEventHandler(NodeUserControl_Unloaded);
             this.DataContext = new Nodes(10);
         }
+
+        #endregion
+
+        #region [ Methods ]
+
+        /// <summary>
+        /// Handles unload event of the <see cref="NodeUserControl"/>.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Arguments for the event.</param>
+        void NodeUserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            (this.DataContext as Nodes).ProcessPropertyChange();
+        }
+
+        /// <summary>
+        /// Handles PreviewKeyDown event on the datagrid.
+        /// </summary>
+        /// <param name="sender">Source of the event.</param>
+        /// <param name="e">Arguments for the event.</param>
+        private void DataGrid_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                DataGrid dataGrid = sender as DataGrid;
+                if (dataGrid.SelectedItems.Count > 0)
+                {
+                    if (MessageBox.Show("Are you sure you want to delete " + dataGrid.SelectedItems.Count + " selected item(s)?", "Delete Selected Items", MessageBoxButton.YesNo) == MessageBoxResult.No)
+                        e.Handled = true;
+                }
+            }
+        }
+
+        #endregion
     }
 }

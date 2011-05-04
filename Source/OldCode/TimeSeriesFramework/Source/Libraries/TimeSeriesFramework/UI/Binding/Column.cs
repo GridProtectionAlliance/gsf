@@ -22,7 +22,6 @@
 //******************************************************************************************************
 
 using System.Windows.Data;
-using TimeSeriesFramework.UI.Converters;
 
 namespace TimeSeriesFramework.UI.Binding
 {
@@ -32,7 +31,7 @@ namespace TimeSeriesFramework.UI.Binding
     public class Column : System.Windows.Data.Binding
     {
         #region [ Constructor ]
-        
+
         /// <summary>
         /// Creates a new instance of <see cref="Column"/> class.
         /// </summary>
@@ -43,6 +42,8 @@ namespace TimeSeriesFramework.UI.Binding
             Mode = BindingMode.TwoWay;
             UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
             BindingGroupName = "input";
+            NotifyOnSourceUpdated = true;
+            NotifyOnTargetUpdated = true;
         }
 
         #endregion

@@ -123,7 +123,7 @@
         <Setter Property="GridLinesVisibility" Value="Vertical"/>
         <Setter Property="VerticalGridLinesBrush" Value="#FFE1E9EE" />
         <Setter Property="CanUserAddRows" Value="False" />
-        <Setter Property="CanUserDeleteRows" Value="False"/>
+        <Setter Property="CanUserDeleteRows" Value="True"/>
         <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
         <Setter Property="VerticalScrollBarVisibility" Value="Auto" />        
     </Style>

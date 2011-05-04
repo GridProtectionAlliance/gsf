@@ -76,12 +76,12 @@
         <uc:DetailViewFooterUserControl DeleteCommand="{Binding DeleteCommand}" ClearCommand="{Binding ClearCommand}" SaveCommand="{Binding SaveCommand}"
                 SaveEnabled="{tsfBinding:DataOperation Path=(Validation.HasError)}" />
 
-        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto">
+        <sdk:DataGrid ItemsSource="{Binding CurrentPage}" SelectedItem="{Binding Path=CurrentItem, Mode=TwoWay}" Height="Auto" PreviewKeyDown="DataGrid_PreviewKeyDown">
             <sdk:DataGrid.Columns>
-                <sdk:DataGridTextColumn Header="Node ID" Width="3*" Binding="{Binding ID}"/>
-                <sdk:DataGridTextColumn Header="Name" Width="2*" Binding="{Binding Name}" />                
-                <sdk:DataGridCheckBoxColumn Header="Master" Width="*" Binding="{Binding Master}" />
-                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{Binding Enabled}" />
+                <sdk:DataGridTextColumn Header="Node ID" Width="3*" Binding="{tsfBinding:Column Path=ID}"/>
+                <sdk:DataGridTextColumn Header="Name" Width="2*" Binding="{tsfBinding:Column Path=Name}" />
+                <sdk:DataGridCheckBoxColumn Header="Master" Width="*" Binding="{tsfBinding:Column Path=Master}" />
+                <sdk:DataGridCheckBoxColumn Header="Enabled" Width="*" Binding="{tsfBinding:Column Path=Enabled}" />
             </sdk:DataGrid.Columns>
         </sdk:DataGrid>
 

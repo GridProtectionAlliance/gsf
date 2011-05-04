@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows;
@@ -53,6 +54,8 @@ namespace TimeSeriesFramework.UI
         private ICommand m_firstCommand, m_previousCommand, m_nextCommand, m_lastCommand;
         private RelayCommand m_saveCommand, m_deleteCommand, m_clearCommand;
         private TDataModel m_currentItem;
+        private bool m_propertyChanged;
+        private bool m_autoSave;
 
         #endregion
 
@@ -62,15 +65,32 @@ namespace TimeSeriesFramework.UI
         /// Creates a new instance of the <see cref="PagedViewModelBase{T1,T2}"/> class.
         /// </summary>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
-        protected PagedViewModelBase(int itemsPerPage)
+        /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
+        protected PagedViewModelBase(int itemsPerPage, bool autoSave = true)
         {
             m_itemsPerPage = itemsPerPage;
+            m_autoSave = autoSave;
             Load();
         }
 
         #endregion
 
         #region [ Properties ]
+
+        /// <summary>
+        /// Gets or sets if user changes should be saved automatically.
+        /// </summary>
+        public bool AutoSave
+        {
+            get
+            {
+                return m_autoSave;
+            }
+            set
+            {
+                m_autoSave = value;
+            }
+        }
 
         /// <summary>
         /// Gets a message box to display message to users.
@@ -140,7 +160,10 @@ namespace TimeSeriesFramework.UI
             set
             {
                 if (m_currentItem != null)
+                {
+                    ProcessPropertyChange();
                     m_currentItem.PropertyChanged -= m_currentItem_PropertyChanged;
+                }
 
                 m_currentItem = value;
 
@@ -162,10 +185,20 @@ namespace TimeSeriesFramework.UI
             }
             set
             {
+                if (m_currentPage != null)
+                    m_currentPage.CollectionChanged -= new NotifyCollectionChangedEventHandler(m_currentPage_CollectionChanged);
+
                 m_currentPage = value;
+
                 OnPropertyChanged("CurrentPage");
-                if (m_currentPage.Count > 0)
-                    CurrentItem = m_currentPage[0];
+
+                if (m_currentPage != null)
+                {
+                    m_currentPage.CollectionChanged += new NotifyCollectionChangedEventHandler(m_currentPage_CollectionChanged);
+
+                    if (m_currentPage.Count > 0)
+                        CurrentItem = m_currentPage[0];
+                }
             }
         }
 
@@ -449,8 +482,11 @@ namespace TimeSeriesFramework.UI
                 try
                 {
                     string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem });
-                    Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
-                    Load();
+                    if (!AutoSave)
+                    {
+                        Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
+                        Load();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -489,6 +525,31 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Method to check if property has changed and if so then either save or ask user's confirmation.
+        /// </summary>
+        public virtual void ProcessPropertyChange()
+        {
+            if (m_propertyChanged)
+            {
+                m_propertyChanged = false;
+
+                if (CanSave)
+                {
+                    if (AutoSave)
+                        Save();
+                    else if (Confirm("\'" + GetCurrentItemName() + "\' has changed. Do you want to save changes?", "Save " + DataModelName))
+                        Save();
+                    else
+                        Load();
+                }
+                else
+                {
+                    Load();
+                }
+            }
+        }
+
+        /// <summary>
         /// Raises the <see cref="PropertyChanged"/> event.
         /// </summary>
         /// <param name="propertyName">Property name that has changed.</param>
@@ -504,6 +565,22 @@ namespace TimeSeriesFramework.UI
         {
             if (string.Compare(e.PropertyName, "IsValid", true) == 0)
                 OnPropertyChanged("CanSave");
+
+            m_propertyChanged = true;
+        }
+
+        // We monitor the changes to the collection currently displayed on the screen.
+        // If user tried to delete then process it.
+        private void m_currentPage_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == NotifyCollectionChangedAction.Remove)
+            {
+                foreach (object item in e.OldItems)
+                {
+                    CurrentItem = (TDataModel)item;
+                    s_deleteRecord.Invoke(this, new object[] { (AdoDataConnection)null, GetCurrentItemKey() });
+                }
+            }
         }
 
         /// <summary>

@@ -69,8 +69,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// Creates an instance of <see cref="VendorDevices"/> class.
         /// </summary>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
-        public VendorDevices(int itemsPerPage)
-            : base(itemsPerPage)
+        /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
+        public VendorDevices(int itemsPerPage, bool autoSave = true)
+            : base(itemsPerPage, autoSave)
         {
             m_vendorLookupList = Vendor.GetLookupList(null);
         }

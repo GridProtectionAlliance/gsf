@@ -152,18 +152,16 @@ namespace TimeSeriesFramework.UI.Commands
         {
             System.Windows.Controls.Frame frame = (System.Windows.Controls.Frame)Application.Current.MainWindow.FindName("FrameContent");
             TextBlock textBlock = (TextBlock)Application.Current.MainWindow.FindName("TextBlockTitle");
+            Assembly assembly = Assembly.LoadFrom(m_userControlAssembly);
+            UserControl userControl = Activator.CreateInstance(assembly.GetType(m_userControlPath)) as UserControl;
 
-            var assembly = Assembly.LoadFrom(m_userControlAssembly);
-            foreach (var type in assembly.GetTypes())
+            if (userControl != null)
             {
-                if (type.Name == m_userControlPath)
-                {
-                    var userControl = Activator.CreateInstance(type) as UserControl;
-                    frame.Navigate(userControl);
-                    textBlock.Text = m_description;
-                    break;
-                }
+                frame.Navigate(userControl);
+                textBlock.Text = m_description;
             }
+            else
+                throw new InvalidOperationException("Failed to create user control " + m_userControlPath);
         }
 
         /// <summary>

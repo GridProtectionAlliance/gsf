@@ -72,8 +72,9 @@ namespace TimeSeriesFramework.UI.ViewModels
         /// Creates an instance of <see cref="Historians"/> class.
         /// </summary>
         /// <param name="itemsPerPage">Integer value to determine number of items per page.</param>
-        public Historians(int itemsPerPage)
-            : base(itemsPerPage)
+        /// <param name="autoSave">Boolean value to determine is user changes should be saved automatically.</param>
+        public Historians(int itemsPerPage, bool autoSave = true)
+            : base(itemsPerPage, autoSave)
         {
             m_nodeLookupList = Node.GetLookupList(null);
         }
