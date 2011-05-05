@@ -86,8 +86,14 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="UserControls\AdapterUserControl.xaml.cs">
+      <DependentUpon>AdapterUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\CustomInputAdapterUserControl.xaml.cs">
+      <DependentUpon>CustomInputAdapterUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\DataPagerUserControl.xaml.cs">
       <DependentUpon>DataPagerUserControl.xaml</DependentUpon>
@@ -108,6 +114,7 @@
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModelBase.cs" />
+    <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
@@ -135,6 +142,14 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="UserControls\AdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\CustomInputAdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\DataPagerUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

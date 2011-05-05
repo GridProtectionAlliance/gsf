@@ -7,6 +7,13 @@
       <MenuDataItem Icon="" MenuText="Add New" Description="Add New Device" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.AddNewDeviceUserControl" />
     </SubMenuItems>    
   </MenuDataItem>
+  <MenuDataItem Icon="" MenuText="Adapters" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
+    <SubMenuItems>
+      <MenuDataItem Icon="" MenuText="Custom Input Adapters" Description="Manage Custom Input Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomInputAdapterUserControl" />
+      <MenuDataItem Icon="" MenuText="Custom Action Adapters" Description="Manage Custom Action Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomActionAdapterUserControl" />
+      <MenuDataItem Icon="" MenuText="Custom Output Adapters" Description="Manage Custom Output Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomOutputAdapterUserControl" />
+    </SubMenuItems>
+  </MenuDataItem>
   <MenuDataItem Icon="" MenuText="Manage" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
     <SubMenuItems>
       <MenuDataItem Icon="" MenuText="Nodes" Description="Manage Nodes" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.NodeUserControl" />

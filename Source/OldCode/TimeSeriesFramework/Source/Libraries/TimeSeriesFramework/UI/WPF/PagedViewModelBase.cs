@@ -600,7 +600,7 @@ namespace TimeSeriesFramework.UI
         /// </summary>
         private void GeneratePages()
         {
-            if (ItemsSource != null)
+            if (ItemsSource != null && ItemsSource.Count > 0)
             {
                 PageCount = (int)Math.Ceiling(ItemsSource.Count / (double)ItemsPerPage);
                 m_pages = new ObservableCollection<ObservableCollection<TDataModel>>();
@@ -633,6 +633,7 @@ namespace TimeSeriesFramework.UI
             {
                 PageCount = 0;
                 CurrentPage = new ObservableCollection<TDataModel>();
+                CurrentItem = new TDataModel();
                 CurrentPageNumber = 0;
             }
         }
