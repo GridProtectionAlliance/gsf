@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -389,13 +391,12 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (phasor.ID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Phasor (DeviceID, Label, Type, Phase, DestinationPhasorID, CreatedBy, CreatedOn) " +
-                        "VALUES (@DeviceID, @Label, @Type, @Phase, @DestinationPhasorID, @createdBy, @createdOn)", DefaultTimeout,
-                        phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase,
-                        phasor.DestinationPhasorID, CommonFunctions.CurrentUser, database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow);
+                        "VALUES (@DeviceID, @Label, @Type, @Phase, @DestinationPhasorID, @createdBy, @createdOn)", DefaultTimeout, phasor.DeviceID, phasor.Label,
+                        phasor.Type, phasor.Phase, phasor.DestinationPhasorID.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Phasor SET DeviceID = @deviceID, Label = @label, Type = @type, Phase = @phase, DestinationPhasorID = @destinationPhasorID, " +
-                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase, phasor.DestinationPhasorID, CommonFunctions.CurrentUser,
-                        database.Connection.ConnectionString.Contains("Microsoft.Jet.OLEDB") ? DateTime.UtcNow.Date : DateTime.UtcNow, phasor.ID);
+                        "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, phasor.DeviceID, phasor.Label, phasor.Type, phasor.Phase,
+                        phasor.DestinationPhasorID.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), phasor.ID);
 
                 return "Phasor information saved successfully";
             }

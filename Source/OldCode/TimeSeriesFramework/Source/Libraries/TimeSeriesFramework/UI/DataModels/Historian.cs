@@ -356,10 +356,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Loads <see cref="Historian"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Historian"/> collection is returned.</param>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <returns>Collection of <see cref="Historian"/>.</returns>
-        public static ObservableCollection<Historian> Load(AdoDataConnection database, Guid nodeID)
+        public static ObservableCollection<Historian> Load(AdoDataConnection database)
         {
             bool createdConnection = false;
 
@@ -370,13 +369,13 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
                 DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
                     "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail " +
-                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, nodeID);
+                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.Guid(CommonFunctions.CurrentNode));
 
                 foreach (DataRow row in historianTable.Rows)
                 {
                     historianList.Add(new Historian()
                         {
-                            NodeID = row.Field<Guid>("NodeID"),
+                            NodeID = Guid.Parse(row.Field<string>("NodeID")),
                             ID = row.Field<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),

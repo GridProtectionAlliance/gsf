@@ -24,6 +24,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL value and Guid parameter handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -560,10 +562,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Loads <see cref="Company"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="CalculatedMeasurement"/> collection is returned.</param>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <returns>Collection of <see cref="CalculatedMeasurement"/>.</returns>
-        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database, Guid nodeID)
+        public static ObservableCollection<CalculatedMeasurement> Load(AdoDataConnection database)
         {
             bool createdConnection = false;
 
@@ -576,13 +577,13 @@ namespace TimeSeriesFramework.UI.DataModels
                     "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                     "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
                     "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail WHERE NodeID = @nodeID ORDER BY LoadOrder",
-                    DefaultTimeout, nodeID);
+                    DefaultTimeout, database.Guid(CommonFunctions.CurrentNode));
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {
                     calculatedMeasurementList.Add(new CalculatedMeasurement()
                     {
-                        NodeID = row.Field<Guid>("NodeID"),
+                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
                         ID = row.Field<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),
@@ -673,9 +674,9 @@ namespace TimeSeriesFramework.UI.DataModels
                         "@typeName, @connectionString, @configSection, @inputMeasurements, @outputMeasurements, @minimumMeasurementsToUse, @framesPerSecond, " +
                         "@lagTime, @leadTime, @useLocalClockAsRealTime, @allowSortsByArrival, @loadOrder, @enabled, @ignoreBadTimeStamps, @timeResolution, " +
                         "@allowPreemptivePublishing, @downsamplingMethod, @performTimestampReasonabilityCheck, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, database.Guid(calculatedMeasurement.NodeID), calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name,
-                        calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection,
-                        calculatedMeasurement.InputMeasurements, calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse,
+                        DefaultTimeout, database.Guid(calculatedMeasurement.NodeID), calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name.ToNotNull(),
+                        calculatedMeasurement.AssemblyName, calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString.ToNotNull(), calculatedMeasurement.ConfigSection,
+                        calculatedMeasurement.InputMeasurements.ToNotNull(), calculatedMeasurement.OutputMeasurements.ToNotNull(), calculatedMeasurement.MinimumMeasurementsToUse,
                         calculatedMeasurement.FramesPerSecond, calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime,
                         calculatedMeasurement.AllowSortsByArrival, calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps,
                         calculatedMeasurement.TimeResolution, calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod,
@@ -689,9 +690,9 @@ namespace TimeSeriesFramework.UI.DataModels
                         "LoadOrder = @loadOrder, Enabled = @enabled, IgnoreBadTimeStamps = @ignoreBadTimeStamps, TimeResolution = @timeResolution, AllowPreemptivePublishing " +
                         "= @allowPreemptivePublishing, DownsamplingMethod = @downsamplingMethod, PerformTimestampReasonabilityCheck = @performTimestampReasonabilityCheck, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(calculatedMeasurement.NodeID),
-                        calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name, calculatedMeasurement.AssemblyName,
-                        calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString, calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements,
-                        calculatedMeasurement.OutputMeasurements, calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond,
+                        calculatedMeasurement.Acronym.Replace(" ", "").ToUpper(), calculatedMeasurement.Name.ToNotNull(), calculatedMeasurement.AssemblyName,
+                        calculatedMeasurement.TypeName, calculatedMeasurement.ConnectionString.ToNotNull(), calculatedMeasurement.ConfigSection, calculatedMeasurement.InputMeasurements.ToNotNull(),
+                        calculatedMeasurement.OutputMeasurements.ToNotNull(), calculatedMeasurement.MinimumMeasurementsToUse, calculatedMeasurement.FramesPerSecond,
                         calculatedMeasurement.LagTime, calculatedMeasurement.LeadTime, calculatedMeasurement.UseLocalClockAsRealTime, calculatedMeasurement.AllowSortsByArrival,
                         calculatedMeasurement.LoadOrder, calculatedMeasurement.Enabled, calculatedMeasurement.IgnoreBadTimeStamps, calculatedMeasurement.TimeResolution,
                         calculatedMeasurement.AllowPreemptivePublishing, calculatedMeasurement.DownsamplingMethod, calculatedMeasurement.PerformTimestampReasonabilityCheck,

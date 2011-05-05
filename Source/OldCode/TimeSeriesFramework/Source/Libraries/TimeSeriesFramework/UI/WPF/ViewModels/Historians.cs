@@ -102,14 +102,6 @@ namespace TimeSeriesFramework.UI.ViewModels
         }
 
         /// <summary>
-        /// Loads the <see cref="Historian"/> collection.
-        /// </summary>
-        public override void Load()
-        {
-            ItemsSource = Historian.Load(null, CommonFunctions.CurrentNode);
-        }
-
-        /// <summary>
         /// Creates a new instance of <see cref="Historian"/> and assigns it to CurrentItem.
         /// </summary>
         public override void Clear()

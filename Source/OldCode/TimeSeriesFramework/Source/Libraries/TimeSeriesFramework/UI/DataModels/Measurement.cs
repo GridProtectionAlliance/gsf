@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -500,7 +502,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     measurementList.Add(new Measurement()
                     {
-                        SignalID = row.Field<Guid>("SignalID"),
+                        SignalID = Guid.Parse(row.Field<string>("SignalID")),
                         HistorianID = row.Field<int>("HistorianID"),
                         PointID = row.Field<int>("PointID"),
                         DeviceID = row.Field<int>("DeviceID"),
@@ -579,17 +581,17 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
                         "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
                         "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @updatedBy, " +
-                        "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
-                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier, measurement.Description,
-                        measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser,
-                        database.UtcNow());
+                        "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
+                        measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
+                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser,
+                        database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +
                         "AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, " +
                         "Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
-                        "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID, measurement.DeviceID, measurement.PointTag, measurement.AlternateTag,
-                        measurement.SignalTypeID, measurement.PhasorSourceIndex, measurement.SignalReference, measurement.Adder, measurement.Multiplier,
-                        measurement.Description, measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
+                        "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
+                        measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
+                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
                         measurement.PointID);
 
                 return "Measurement information saved successfully";

@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -338,12 +340,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = row.Field<Guid>("ID"),
+                        ID = Guid.Parse(row.Field<string>("ID")),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
-                        DefaultNodeID = row.Field<Guid>("DefaultNodeID"),
+                        DefaultNodeID = Guid.Parse(row.Field<string>("DefaultNodeID")),
                         Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
                         Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),
@@ -419,21 +421,22 @@ namespace TimeSeriesFramework.UI.DataModels
                 if (userAccount.ChangePasswordOn == DateTime.MinValue)
                     changePasswordOn = (object)DBNull.Value;
                 else if (database.IsJetEngine())
-                    changePasswordOn = userAccount.ChangePasswordOn.Date;
+                    changePasswordOn = userAccount.ChangePasswordOn.ToOADate();
 
                 if (userAccount.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO UserAccount (Name, " + passwordColumn + ", FirstName, LastName, DefaultNodeID, Phone, Email, LockedOut, UseADAuthentication, " +
                         "ChangePasswordOn, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @password, @firstName, @lastName, @defaultNodeID, @phone, " +
                         "@email, @lockedOut, @useADAuthentication, @changePasswordOn, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, userAccount.Name,
-                        userAccount.Password, userAccount.FirstName, userAccount.LastName, database.Guid(userAccount.DefaultNodeID), userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                        userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(),
-                        CommonFunctions.CurrentUser, database.UtcNow());
+                        userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
+                        userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), userAccount.LockedOut, userAccount.UseADAuthentication, changePasswordOn,
+                        CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE UserAccount SET Name = @name, " + passwordColumn + " = @password, FirstName = @firstName, LastName = @lastName, " +
                             "DefaultNodeID = @defaultNodeID, Phone = @phone, Email = @email, LockedOut = @lockedOut, UseADAuthentication = @useADAuthentication, " +
                             "ChangePasswordOn = @changePasswordOn, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, userAccount.Name,
-                            userAccount.Password, userAccount.FirstName, userAccount.LastName, database.Guid(userAccount.DefaultNodeID), userAccount.Phone, userAccount.Email, userAccount.LockedOut,
-                            userAccount.UseADAuthentication, changePasswordOn, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
+                            userAccount.Password.ToNotNull(), userAccount.FirstName.ToNotNull(), userAccount.LastName.ToNotNull(), database.Guid(userAccount.DefaultNodeID),
+                            userAccount.Phone.ToNotNull(), userAccount.Email.ToNotNull(), userAccount.LockedOut, userAccount.UseADAuthentication, changePasswordOn,
+                            CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(userAccount.ID));
 
                 return "User account information saved successfully";
             }

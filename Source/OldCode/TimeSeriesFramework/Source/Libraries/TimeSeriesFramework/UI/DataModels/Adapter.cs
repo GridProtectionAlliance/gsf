@@ -24,6 +24,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL value and Guid parameter handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -339,10 +341,9 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Loads <see cref="Adapter"/> information as an <see cref="ObservableCollection{T}"/> style list.
         /// </summary>        
         /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>
-        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Adapter"/> collection is returned.</param>
+        /// <param name="adapterType"><see cref="AdapterType"/> collection to be returned.</param>        
         /// <returns>Collection of <see cref="Adapter"/>.</returns>
-        public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType, string nodeID)
+        public static ObservableCollection<Adapter> Load(AdoDataConnection database, AdapterType adapterType)
         {
             bool createdConnection = false;
 
@@ -363,13 +364,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
                     "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
-                    database.IsJetEngine() ? "{" + nodeID + "}" : nodeID);
+                    database.Guid(CommonFunctions.CurrentNode));
 
                 foreach (DataRow row in adapterTable.Rows)
                 {
                     adapterList.Add(new Adapter()
                     {
-                        NodeID = row.Field<Guid>("NodeID"),
+                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
                         ID = row.Field<int>("ID"),
                         AdapterName = row.Field<string>("AdapterName"),
                         AssemblyName = row.Field<string>("AssemblyName"),
@@ -461,14 +462,14 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO " + tableName + " (NodeID, AdapterName, AssemblyName, TypeName, ConnectionString, LoadOrder, " +
                         "Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, @adapterName, @assemblyName, @typeName, @connectionString, @loadOrder, " +
                         "@enabled, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
-                        adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser,
                         database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE " + tableName + " SET NodeID = @nodeID, AdapterName = @adapterName, AssemblyName = @assemblyName, " +
                         "TypeName = @typeName, ConnectionString = @connectionString, LoadOrder = @loadOrder, Enabled = @enabled, UpdatedBy = @updatedBy, " +
                         "UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, adapter.NodeID, adapter.AdapterName, adapter.AssemblyName,
-                        adapter.TypeName, adapter.ConnectionString, adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
+                        adapter.TypeName, adapter.ConnectionString.ToNotNull(), adapter.LoadOrder, adapter.Enabled, CommonFunctions.CurrentUser,
                         database.UtcNow(), adapter.ID);
 
                 return "Adapter information saved successfully";

@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -231,7 +233,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     securityGroupList.Add(new SecurityGroup()
                     {
-                        ID = row.Field<Guid>("ID"),
+                        ID = Guid.Parse(row.Field<string>("ID")),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<object>("Description") == null ? string.Empty : row.Field<string>("Description"),
                         CreatedOn = Convert.ToDateTime(row.Field<object>("CreatedOn")),
@@ -300,10 +302,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (securityGroup.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO SecurityGroup (Name, Description, CreatedBy, CreatedOn) Values (@name, @description, @createdBy, @createdOn)", DefaultTimeout,
-                        securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow());
+                        securityGroup.Name, securityGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE SecurityGroup SET Name = @name, Description = @description, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                             securityGroup.Name, securityGroup.Description, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
+                             securityGroup.Name, securityGroup.Description.ToNotNull(), CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(securityGroup.ID));
 
                 return "Security group information saved successfully";
             }

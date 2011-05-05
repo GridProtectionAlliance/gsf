@@ -22,6 +22,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
+//  05/05/2011 - Mehulbhai P Thakkar
+//       Added NULL value and Guid parameter handling for Save() operation.
 //
 //******************************************************************************************************
 
@@ -282,10 +284,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     applicationRoleList.Add(new ApplicationRole()
                     {
-                        ID = row.Field<Guid>("ID"),
+                        ID = Guid.Parse(row.Field<string>("ID")),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
-                        NodeID = row.Field<Guid>("NodeID"),
+                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = row.Field<DateTime>("UpdatedOn"),
@@ -351,10 +353,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (applicationRole.ID == Guid.Empty)
                     database.Connection.ExecuteNonQuery("INSERT INTO ApplicationRole (Name, Description, NodeID, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@name, @description, @nodeID, @updatedBy, @updatedOn, @createdBy, @createdOn)",
-                        DefaultTimeout, applicationRole.Name, applicationRole.Description, applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
+                        DefaultTimeout, applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE ApplicationRole SET Name = @name, Description = @description, NodeID = @nodeID, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout,
-                        applicationRole.Name, applicationRole.Description, applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(applicationRole.ID));
+                        applicationRole.Name, applicationRole.Description.ToNotNull(), applicationRole.NodeID, CommonFunctions.CurrentUser, database.UtcNow(), database.Guid(applicationRole.ID));
 
                 return "Application role information saved successfully";
             }
