@@ -36,33 +36,33 @@ namespace UITest
         #region [ Members ]
 
         // Fields
-        private Guid m_nodeValue;
+        private Guid m_nodeID;
+
+        #endregion
+
+        #region [ Constructors ]
+
+        public App()
+        {
+            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
+            NodeID = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
+        }
 
         #endregion
 
         #region [ Properties ]
 
-        public Guid NodeValue
+        public Guid NodeID
         {
             get
             {
-                return m_nodeValue;
+                return m_nodeID;
             }
             set
             {
-                m_nodeValue = value;
+                m_nodeID = value;
+                CommonFunctions.AssignCurrentNodeID(m_nodeID);
             }
-        }
-
-        #endregion
-
-        #region [ Constructor ]
-
-        public App()
-        {
-            AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
-            m_nodeValue = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
-            CommonFunctions.CurrentNodeID = NodeValue;
         }
 
         #endregion
