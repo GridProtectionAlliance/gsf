@@ -364,7 +364,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 DataTable adapterTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, AdapterName, AssemblyName, TypeName, " +
                     "ConnectionString, LoadOrder, Enabled, NodeName FROM " + viewName + " WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout,
-                    database.Guid(CommonFunctions.CurrentNode));
+                    database.Guid());
 
                 foreach (DataRow row in adapterTable.Rows)
                 {

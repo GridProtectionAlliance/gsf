@@ -833,10 +833,10 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (parentID > 0)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID AND ParentID = @parentID " +
-                        "ORDER BY Acronym", DefaultTimeout, database.Guid(CommonFunctions.CurrentNode), parentID);
+                        "ORDER BY Acronym", DefaultTimeout, database.Guid(), parentID);
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM DeviceDetail WHERE NodeID = @nodeID ORDER BY Acronym",
-                        DefaultTimeout, database.Guid(CommonFunctions.CurrentNode));
+                        DefaultTimeout, database.Guid());
 
                 foreach (DataRow row in deviceTable.Rows)
                 {

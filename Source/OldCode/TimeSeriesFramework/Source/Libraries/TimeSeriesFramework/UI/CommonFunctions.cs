@@ -141,11 +141,24 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
-        /// Returns proper <see cref="Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
+        /// Returns current node id <see cref="System.Guid"/> UI is connected to.
+        /// </summary>
+        /// <param name="database">Connected <see cref="AdoDataConnection"/></param>
+        /// <returns>Proper <see cref="System.Guid"/> implementation for current node id.</returns>
+        public static object Guid(this AdoDataConnection database)
+        {
+            if (m_currentNode == null)
+                return database.Guid(System.Guid.Empty);
+
+            return database.Guid(m_currentNode);
+        }
+
+        /// <summary>
+        /// Returns proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.
         /// </summary>
         /// <param name="database">Connected <see cref="AdoDataConnection"/>.</param>
-        /// <param name="guid"><see cref="Guid"/> to format per database type.</param>
-        /// <returns>Proper <see cref="Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
+        /// <param name="guid"><see cref="System.Guid"/> to format per database type.</param>
+        /// <returns>Proper <see cref="System.Guid"/> implementation for connected <see cref="AdoDataConnection"/> database type.</returns>
         public static object Guid(this AdoDataConnection database, Guid guid)
         {
             if (database.IsJetEngine())

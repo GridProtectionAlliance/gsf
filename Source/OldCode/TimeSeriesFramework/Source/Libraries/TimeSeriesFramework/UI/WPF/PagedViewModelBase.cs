@@ -56,6 +56,7 @@ namespace TimeSeriesFramework.UI
         private TDataModel m_currentItem;
         private bool m_propertyChanged;
         private bool m_autoSave;
+        private bool m_hideMessages;
 
         #endregion
 
@@ -482,7 +483,10 @@ namespace TimeSeriesFramework.UI
                 try
                 {
                     string result = (string)s_saveRecord.Invoke(this, new object[] { (AdoDataConnection)null, CurrentItem });
-                    if (!AutoSave)
+
+                    m_propertyChanged = false;  // after saving information, set this flag to false.
+
+                    if (!m_hideMessages)
                     {
                         Popup(result, "Save " + DataModelName, MessageBoxImage.Information);
                         Load();
@@ -536,11 +540,19 @@ namespace TimeSeriesFramework.UI
                 if (CanSave)
                 {
                     if (AutoSave)
+                    {
+                        m_hideMessages = true;
                         Save();
+                        m_hideMessages = false;
+                    }
                     else if (Confirm("\'" + GetCurrentItemName() + "\' has changed. Do you want to save changes?", "Save " + DataModelName))
+                    {
                         Save();
+                    }
                     else
+                    {
                         Load();
+                    }
                 }
                 else
                 {

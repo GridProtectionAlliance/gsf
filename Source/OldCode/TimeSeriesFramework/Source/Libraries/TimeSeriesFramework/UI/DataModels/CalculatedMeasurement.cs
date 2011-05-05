@@ -577,7 +577,7 @@ namespace TimeSeriesFramework.UI.DataModels
                     "TypeName, ConnectionString, ConfigSection, InputMeasurements, OutputMeasurements, MinimumMeasurementsToUse, FramesPerSecond, LagTime, " +
                     "LeadTime, UseLocalClockAsRealTime, AllowSortsByArrival, LoadOrder, Enabled, IgnoreBadTimeStamps, TimeResolution, AllowPreemptivePublishing, " +
                     "DownSamplingMethod, NodeName, PerformTimestampReasonabilityCheck From CalculatedMeasurementDetail WHERE NodeID = @nodeID ORDER BY LoadOrder",
-                    DefaultTimeout, database.Guid(CommonFunctions.CurrentNode));
+                    DefaultTimeout, database.Guid());
 
                 foreach (DataRow row in calculatedMeasurementTable.Rows)
                 {

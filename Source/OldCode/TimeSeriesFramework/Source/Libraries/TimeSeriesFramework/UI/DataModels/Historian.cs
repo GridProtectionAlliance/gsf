@@ -369,7 +369,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 ObservableCollection<Historian> historianList = new ObservableCollection<Historian>();
                 DataTable historianTable = database.Connection.RetrieveData(database.AdapterType, "SELECT NodeID, ID, Acronym, Name, AssemblyName, TypeName, " +
                     "ConnectionString, IsLocal, Description, LoadOrder, Enabled, MeasurementReportingInterval, NodeName FROM HistorianDetail " +
-                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.Guid(CommonFunctions.CurrentNode));
+                    "WHERE NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.Guid());
 
                 foreach (DataRow row in historianTable.Rows)
                 {
