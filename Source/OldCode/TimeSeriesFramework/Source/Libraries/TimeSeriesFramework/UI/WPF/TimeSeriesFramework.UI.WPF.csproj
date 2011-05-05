@@ -44,6 +44,8 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -92,8 +94,14 @@
     <Compile Include="UserControls\CompanyUserControl.xaml.cs">
       <DependentUpon>CompanyUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\CustomActionAdapterUserControl.xaml.cs">
+      <DependentUpon>CustomActionAdapterUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\CustomInputAdapterUserControl.xaml.cs">
       <DependentUpon>CustomInputAdapterUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\CustomOutputAdapterUserControl.xaml.cs">
+      <DependentUpon>CustomOutputAdapterUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\DataPagerUserControl.xaml.cs">
       <DependentUpon>DataPagerUserControl.xaml</DependentUpon>
@@ -146,7 +154,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\CustomActionAdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\CustomInputAdapterUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\CustomOutputAdapterUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
