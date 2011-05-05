@@ -34,10 +34,7 @@ namespace TimeSeriesFramework.UI
     /// </summary>
     public static class CommonFunctions
     {
-        #region [ Members ]
-
-        // Fields
-        private static Guid m_currentNode;
+        private static Guid s_currentNodeID;
 
         /// <summary>
         /// Defines the default settings category for TimeSeriesFramework data connections.
@@ -48,29 +45,6 @@ namespace TimeSeriesFramework.UI
         /// Defines the current user name as defined in the Thread.CurrentPrincipal.Identity.
         /// </summary>
         public static readonly string CurrentUser = Thread.CurrentPrincipal.Identity.Name;
-
-        #endregion
-
-        #region [ Properties ]
-
-        /// <summary>
-        /// Gets or sets the ID of the currently active Node.
-        /// </summary>
-        public static Guid CurrentNode
-        {
-            get
-            {
-                return m_currentNode;
-            }
-            set
-            {
-                m_currentNode = value;
-            }
-        }
-
-        #endregion
-
-        #region [ Methods ]
 
         /// <summary>
         /// Sets the current user context for the database.
@@ -141,16 +115,25 @@ namespace TimeSeriesFramework.UI
         }
 
         /// <summary>
+        /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
+        /// </summary>
+        /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
+        public static void AssignCurrentNodeID(Guid nodeID)
+        {
+            s_currentNodeID = nodeID;
+        }
+
+        /// <summary>
         /// Returns current node id <see cref="System.Guid"/> UI is connected to.
         /// </summary>
         /// <param name="database">Connected <see cref="AdoDataConnection"/></param>
         /// <returns>Proper <see cref="System.Guid"/> implementation for current node id.</returns>
-        public static object Guid(this AdoDataConnection database)
+        public static object CurrentNodeID(this AdoDataConnection database)
         {
-            if (m_currentNode == null)
+            if (s_currentNodeID == null)
                 return database.Guid(System.Guid.Empty);
 
-            return database.Guid(m_currentNode);
+            return database.Guid(s_currentNodeID);
         }
 
         /// <summary>
@@ -198,7 +181,5 @@ namespace TimeSeriesFramework.UI
         {
             return value ?? (object)DBNull.Value;
         }
-
-        #endregion
     }
 }

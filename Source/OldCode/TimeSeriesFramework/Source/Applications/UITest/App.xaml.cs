@@ -62,7 +62,7 @@ namespace UITest
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
             m_nodeValue = Guid.Parse("e7a5235d-cb6f-4864-a96e-a8686f36e599");
-            CommonFunctions.CurrentNode = NodeValue;
+            CommonFunctions.CurrentNodeID = NodeValue;
         }
 
         #endregion
