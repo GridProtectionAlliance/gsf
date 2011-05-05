@@ -1,5 +1,5 @@
 ﻿//******************************************************************************************************
-//  ErrorLog.cs - Gbtc
+//  UserAccount.cs - Gbtc
 //
 //  Copyright © 2010, Grid Protection Alliance.  All Rights Reserved.
 //
