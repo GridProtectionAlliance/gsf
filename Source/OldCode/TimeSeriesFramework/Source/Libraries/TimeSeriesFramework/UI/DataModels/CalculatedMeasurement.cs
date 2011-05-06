@@ -264,7 +264,7 @@ namespace TimeSeriesFramework.UI.DataModels
             set
             {
                 m_minimumMeasurementsToUse = value;
-                OnPropertyChanged("MinimumMeasurmentsToUse");
+                OnPropertyChanged("MinimumMeasurementsToUse");
             }
         }
 

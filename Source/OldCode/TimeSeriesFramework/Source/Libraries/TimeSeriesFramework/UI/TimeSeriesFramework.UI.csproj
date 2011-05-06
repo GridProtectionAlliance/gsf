@@ -77,10 +77,13 @@
     <Compile Include="DataModels\Device.cs" />
     <Compile Include="DataModels\ErrorLog.cs" />
     <Compile Include="DataModels\Historian.cs" />
+    <Compile Include="DataModels\Interconnection.cs" />
     <Compile Include="DataModels\Measurement.cs" />
     <Compile Include="DataModels\Node.cs" />
     <Compile Include="DataModels\Phasor.cs" />
+    <Compile Include="DataModels\Protocol.cs" />
     <Compile Include="DataModels\SecurityGroup.cs" />
+    <Compile Include="DataModels\SignalType.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />

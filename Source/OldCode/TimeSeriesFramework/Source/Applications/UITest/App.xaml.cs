@@ -42,6 +42,9 @@ namespace UITest
 
         #region [ Constructors ]
 
+        /// <summary>
+        /// Creates an instance of <see cref="App"/> class.
+        /// </summary>
         public App()
         {
             AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
@@ -52,6 +55,9 @@ namespace UITest
 
         #region [ Properties ]
 
+        /// <summary>
+        /// Gets or sets the ID of the node user is currently connected to.
+        /// </summary>
         public Guid NodeID
         {
             get
@@ -61,7 +67,7 @@ namespace UITest
             set
             {
                 m_nodeID = value;
-                CommonFunctions.AssignCurrentNodeID(m_nodeID);
+                m_nodeID.SetAsCurrentNodeID();
             }
         }
 

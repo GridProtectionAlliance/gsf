@@ -181,6 +181,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="Device"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Device acronym is a required field, please provide value.")]
+        [StringLength(50, ErrorMessage = "Device Acronym cannot exceed 50 characters.")]
         public string Acronym
         {
             get
@@ -897,12 +898,11 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets a <see cref="Dictionary{T1,T2}"/> style list of <see cref="Device"/> information.
         /// </summary>
-        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>
-        /// <param name="nodeID">ID of the <see cref="Node"/> for which <see cref="Device"/> collection is returned.</param>
+        /// <param name="database"><see cref="AdoDataConnection"/> to connection to database.</param>        
         /// <param name="deviceType"><see cref="DeviceType"/> to filter data.</param>
         /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>        
         /// <returns><see cref="Dictionary{T1,T2}"/> containing ID and Name of companies defined in the database.</returns>
-        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, Guid nodeID, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
+        public static Dictionary<int, string> GetLookupList(AdoDataConnection database, DeviceType deviceType = DeviceType.DirectConnected, bool isOptional = false)
         {
             bool createdConnection = false;
 
@@ -918,13 +918,13 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (deviceType == DeviceType.Concentrator)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, database.Guid(nodeID));
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, true, database.CurrentNodeID());
                 else if (deviceType == DeviceType.DirectConnected)
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE IsConcentrator = @isConcentrator " +
-                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, database.Guid(nodeID));
+                        "AND NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, false, database.CurrentNodeID());
                 else
                     deviceTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Acronym FROM Device WHERE " +
-                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.Guid(nodeID));
+                        "NodeID = @nodeID ORDER BY LoadOrder", DefaultTimeout, database.CurrentNodeID());
 
                 foreach (DataRow row in deviceTable.Rows)
                     deviceList[row.Field<int>("ID")] = row.Field<string>("Acronym");

@@ -22,11 +22,11 @@
 //******************************************************************************************************
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using TVA;
 using TVA.Data;
-using System.Collections.Generic;
 
 namespace TimeSeriesFramework.UI
 {
@@ -119,7 +119,7 @@ namespace TimeSeriesFramework.UI
         /// Assigns <see cref="CurrentNodeID"/> based ID of currently active node.
         /// </summary>
         /// <param name="nodeID">Current node ID <see cref="CurrentNodeID"/> to assign.</param>
-        public static void AssignCurrentNodeID(Guid nodeID)
+        public static void SetAsCurrentNodeID(this Guid nodeID)
         {
             s_currentNodeID = nodeID;
         }
@@ -183,6 +183,10 @@ namespace TimeSeriesFramework.UI
             return value ?? (object)DBNull.Value;
         }
 
+        /// <summary>
+        /// Returns a collection of down sampling methods.
+        /// </summary>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of down sampling methods.</returns>
         public static Dictionary<string, string> GetDownsamplingMethodLookupList()
         {
             Dictionary<string, string> downsamplingLookupList = new Dictionary<string, string>();
@@ -194,6 +198,26 @@ namespace TimeSeriesFramework.UI
 
             return downsamplingLookupList;
         }
-                
+
+        /// <summary>
+        /// Returns a collection of system time zones.
+        /// </summary>
+        /// <param name="isOptional">Indicates if selection on UI is optional for this collection.</param>
+        /// <returns><see cref="Dictionary{T1,T2}"/> type collection of system time zones.</returns>
+        public static Dictionary<string, string> GetTimeZones(bool isOptional)
+        {
+            Dictionary<string, string> timeZonesList = new Dictionary<string, string>();
+
+            if (isOptional)
+                timeZonesList.Add("", "Select Time Zone");
+
+            foreach (TimeZoneInfo timeZoneInfo in TimeZoneInfo.GetSystemTimeZones())
+            {
+                if (!timeZonesList.ContainsKey(timeZoneInfo.StandardName))
+                    timeZonesList.Add(timeZoneInfo.Id, timeZoneInfo.DisplayName);
+            }
+
+            return timeZonesList;
+        }
     }
 }

@@ -128,6 +128,7 @@
     <Compile Include="ViewModels\CalculatedMeasurements.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
+    <Compile Include="ViewModels\Devices.cs" />
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
