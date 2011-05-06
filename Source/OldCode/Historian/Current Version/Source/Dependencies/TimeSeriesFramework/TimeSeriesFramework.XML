@@ -194,33 +194,10 @@
             <summary>
             Assigns <see cref="T:TimeSeriesFramework.IMeasurement"/> to its associated <see cref="T:TimeSeriesFramework.IFrame"/>.
             </summary>
-            <returns>True if <see cref="T:TimeSeriesFramework.IMeasurement"/> was successfully assigned to its <see cref="T:TimeSeriesFramework.IFrame"/>.</returns>
             <remarks>
-            <para>
             Derived classes can choose to override this method to handle custom assignment of a <see cref="T:TimeSeriesFramework.IMeasurement"/> to
-            its <see cref="T:TimeSeriesFramework.IFrame"/>. Default behavior simply assigns measurement to frame's keyed measurement dictionary.
-            </para>
-            <example>
-            If overridden user must perform their own synchronization as needed, for example:
-            <code>
-            lock (frame.Measurements)
-            {
-                if (!frame.Published)
-                {
-                    frame.Measurements[measurement.Key] = measurement;
-                    return true;
-                }
-                
-                return false;
-            }
-            </code>
-            </example>
-            <para>
-            Note that the <see cref="P:TimeSeriesFramework.IFrame.Measurements"/> dictionary is used internally to synchrnonize assignment
-            of the <see cref="P:TimeSeriesFramework.IFrame.Published"/> flag. If your custom <see cref="T:TimeSeriesFramework.IFrame"/> makes use of the
-            <see cref="P:TimeSeriesFramework.IFrame.Measurements"/> dictionary you must implement a locking scheme similar to the sample
-            code to prevent changes to the measurement dictionary during frame publication.
-            </para>
+            its <see cref="T:TimeSeriesFramework.IFrame"/>. Default behavior simply assigns measurement to frame's keyed measurement dictionary:
+            <code>frame.Measurements[measurement.Key] = measurement;</code>
             </remarks>
             <param name="frame">The <see cref="T:TimeSeriesFramework.IFrame"/> that is used.</param>
             <param name="measurement">The type of <see cref="T:TimeSeriesFramework.IMeasurement"/> to use."/&gt;</param>
@@ -999,26 +976,21 @@
         </member>
         <member name="P:TimeSeriesFramework.FrameQueue.Head">
             <summary>
-            Returns the next <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>, if any.
+            Returns the next <see cref="T:TimeSeriesFramework.TrackingFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>, if any.
             </summary>
             <remarks>
-            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.TrackingFrame"/> collection, as a
+            This property is tracked separately from the internal frame collection, as a
             result this property may be called at any time without a locking penalty.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.FrameQueue.Last">
             <summary>
-            Gets the last processed <see cref="T:TimeSeriesFramework.IFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
+            Gets the last processed <see cref="T:TimeSeriesFramework.TrackingFrame"/> in the <see cref="T:TimeSeriesFramework.FrameQueue"/>.
             </summary>
             <remarks>
-            This property is tracked separately from the internal <see cref="T:TimeSeriesFramework.IFrame"/> collection, as a
+            This property is tracked separately from the internal frame collection, as a
             result this property may be called at any time without a locking penalty.
             </remarks>
-        </member>
-        <member name="P:TimeSeriesFramework.FrameQueue.LastDownsampledMeasurements">
-            <summary>
-            Gets total number of downsampled measurements from last published frame.
-            </summary>
         </member>
         <member name="P:TimeSeriesFramework.FrameQueue.Count">
             <summary>
@@ -4882,6 +4854,17 @@
             <param name="measurement">New <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
             <returns>New derived <see cref="T:TimeSeriesFramework.IMeasurement"/> value, or null if value should not be assigned to <see cref="T:TimeSeriesFramework.IFrame"/>.</returns>
         </member>
+        <member name="M:TimeSeriesFramework.TrackingFrame.EnterLock(System.Boolean@)">
+            <summary>
+            Enters synchronous lock for this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
+            </summary>
+            <param name="locked">Reference to flag that determines if lock was successful.</param>
+        </member>
+        <member name="M:TimeSeriesFramework.TrackingFrame.ExitLock">
+            <summary>
+            Exits synchronous lock for this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
+            </summary>
+        </member>
         <member name="P:TimeSeriesFramework.TrackingFrame.SourceFrame">
             <summary>
             Gets instance of <see cref="T:TimeSeriesFramework.IFrame"/> being tracked.
@@ -4895,6 +4878,11 @@
         <member name="P:TimeSeriesFramework.TrackingFrame.DownsampledMeasurements">
             <summary>
             Total number of measurements downsampled by <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
+            </summary>
+        </member>
+        <member name="P:TimeSeriesFramework.TrackingFrame.Published">
+            <summary>
+            Gets or sets published state of this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
             </summary>
         </member>
     </members>
