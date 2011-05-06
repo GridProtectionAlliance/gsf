@@ -88,6 +88,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="UserControls\CalculatedMeasurementUserControl.xaml.cs">
+      <DependentUpon>CalculatedMeasurementUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\AdapterUserControl.xaml.cs">
       <DependentUpon>AdapterUserControl.xaml</DependentUpon>
     </Compile>
@@ -122,6 +125,7 @@
       <DependentUpon>VendorUserControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="ViewModelBase.cs" />
+    <Compile Include="ViewModels\CalculatedMeasurements.cs" />
     <Compile Include="ViewModels\Adapters.cs" />
     <Compile Include="ViewModels\Companies.cs" />
     <Compile Include="ViewModels\Historians.cs" />
@@ -150,6 +154,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Page Include="UserControls\CalculatedMeasurementUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserControls\AdapterUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

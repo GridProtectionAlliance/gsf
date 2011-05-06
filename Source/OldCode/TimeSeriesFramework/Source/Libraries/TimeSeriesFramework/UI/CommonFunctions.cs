@@ -26,6 +26,7 @@ using System.Data;
 using System.Threading;
 using TVA;
 using TVA.Data;
+using System.Collections.Generic;
 
 namespace TimeSeriesFramework.UI
 {
@@ -181,5 +182,18 @@ namespace TimeSeriesFramework.UI
         {
             return value ?? (object)DBNull.Value;
         }
+
+        public static Dictionary<string, string> GetDownsamplingMethodLookupList()
+        {
+            Dictionary<string, string> downsamplingLookupList = new Dictionary<string, string>();
+
+            downsamplingLookupList.Add("LastReceived", "LastReceived");
+            downsamplingLookupList.Add("Closest", "Closest");
+            downsamplingLookupList.Add("Filtered", "Filtered");
+            downsamplingLookupList.Add("BestQuality", "BestQuality");
+
+            return downsamplingLookupList;
+        }
+                
     }
 }

@@ -9,6 +9,8 @@
   </MenuDataItem>
   <MenuDataItem Icon="" MenuText="Adapters" Description="" Roles="*" UserControlAssembly="" UserControlPath="">
     <SubMenuItems>
+      <MenuDataItem Icon="" MenuText="Calculated Measurements" Description="Manage Calculated Measurements" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CalculatedMeasurementUserControl" />
+      <MenuDataItem Icon="" MenuText="" Description="" Roles="*" UserControlAssembly="" UserControlPath="" />
       <MenuDataItem Icon="" MenuText="Custom Input Adapters" Description="Manage Custom Input Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomInputAdapterUserControl" />
       <MenuDataItem Icon="" MenuText="Custom Action Adapters" Description="Manage Custom Action Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomActionAdapterUserControl" />
       <MenuDataItem Icon="" MenuText="Custom Output Adapters" Description="Manage Custom Output Adapters" Roles="*" UserControlAssembly="TimeSeriesFramework.UI.WPF.dll" UserControlPath="TimeSeriesFramework.UI.UserControls.CustomOutputAdapterUserControl" />

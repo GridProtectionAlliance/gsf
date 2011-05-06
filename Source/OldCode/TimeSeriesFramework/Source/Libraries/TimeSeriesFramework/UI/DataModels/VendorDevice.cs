@@ -316,6 +316,8 @@ namespace TimeSeriesFramework.UI.DataModels
             }
             finally
             {
+
+
                 if (createdConnection && database != null)
                     database.Dispose();
             }
