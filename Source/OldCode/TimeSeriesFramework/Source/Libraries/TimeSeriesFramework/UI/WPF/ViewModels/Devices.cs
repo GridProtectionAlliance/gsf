@@ -198,6 +198,7 @@ namespace TimeSeriesFramework.UI.ViewModels
         public override void Clear()
         {
             base.Clear();
+            // Reset all the dropdown fields so that first item displays as selected.
             CurrentItem.NodeID = m_nodeLookupList.First().Key;
             CurrentItem.ParentID = m_concentratorDeviceLookupList.First().Key;
             CurrentItem.CompanyID = m_companyLookupList.First().Key;
