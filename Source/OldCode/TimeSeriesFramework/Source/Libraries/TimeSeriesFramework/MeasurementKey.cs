@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace TimeSeriesFramework
 {
@@ -53,11 +54,32 @@ namespace TimeSeriesFramework
             if (string.IsNullOrWhiteSpace(source))
                 throw new ArgumentNullException("source", "MeasurementKey source cannot be null or empty");
 
-            m_id = id;
-            m_source = source.ToUpper();
-            m_hashCode = 0;
-            
-            GenHashCode();
+            bool locked = false;
+            Dictionary<uint, MeasurementKey> keys;
+
+            try
+            {
+                s_cacheLock.Enter(ref locked);
+
+                if (!s_cache.TryGetValue(source, out keys))
+                {
+                    keys = new Dictionary<uint, MeasurementKey>();
+                    s_cache.Add(source, keys);
+                }
+
+                if (!keys.TryGetValue(id, out this))
+                {
+                    m_id = id;
+                    m_source = source.ToUpper();
+                    GenHashCode();
+                    keys.Add(id, this);
+                }
+            }
+            finally
+            {
+                if (locked)
+                    s_cacheLock.Exit();
+            }
         }
 
         #endregion
@@ -268,6 +290,10 @@ namespace TimeSeriesFramework
 
         #region [ Static ]
 
+        // Static Fields
+        private static Dictionary<string, Dictionary<uint, MeasurementKey>> s_cache = new Dictionary<string, Dictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
+        private static SpinLock s_cacheLock = new SpinLock();
+
         // Static Methods
 
         /// <summary>
@@ -330,7 +356,8 @@ namespace TimeSeriesFramework
         {
             get
             {
-                if (s_comparer == null) s_comparer = new MeasurementKeyComparer();
+                if (s_comparer == null)
+                    s_comparer = new MeasurementKeyComparer();
                 return s_comparer;
             }
         }

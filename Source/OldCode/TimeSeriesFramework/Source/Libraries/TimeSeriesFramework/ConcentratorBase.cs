@@ -22,6 +22,8 @@
 //       Added QueueState property to expose real-time queue state analysis.
 //  04/14/2011 - J. Ritchie Carroll
 //       Added ProcessByReceivedTimestamp property to sort and publish measurements by received time.
+//  05/06/2011 - J. Ritchie Carroll / Jian (Ryan) Zuo
+//       Updated to reduce lock contention and added volatile reads on stats for better accuracy.
 //
 //******************************************************************************************************
 
@@ -404,7 +406,7 @@ namespace TimeSeriesFramework
         private double m_timeOffset;                        // Half the distance of the time resolution used for index calculation
         private int m_maximumPublicationTimeout;            // Maximum publication wait timeout
         private Ticks m_lagTicks;                           // Current lag time calculated in ticks
-        private bool m_enabled;                             // Enabled state of concentrator
+        private volatile bool m_enabled;                    // Enabled state of concentrator
         private long m_startTime;                           // Start time of concentrator
         private long m_stopTime;                            // Stop time of concentrator
         private long m_realTimeTicks;                       // Timestamp of real-time or the most recently received measurement
@@ -426,7 +428,7 @@ namespace TimeSeriesFramework
         private long m_waitHandleExpirations;               // Total number of wait handle expirations encounted due to delayed precision timer releases
         private long m_framesAheadOfSchedule;               // Total number of frames published ahead of schedule
         private long m_publishedFrames;                     // Total number of published frames
-        private Ticks m_totalPublishTime;                   // Total cumulative frame user function publication time (in ticks) - used to calculate average
+        private long m_totalPublishTime;                    // Total cumulative frame user function publication time (in ticks) - used to calculate average
         private bool m_trackLatestMeasurements;             // Determines whether or not to track latest measurements
         private ImmediateMeasurements m_latestMeasurements; // Absolute latest received measurement values
         private IMeasurement m_lastDiscardedMeasurement;    // Last measurement that was discarded by the concentrator
@@ -626,7 +628,12 @@ namespace TimeSeriesFramework
             get
             {
                 if (m_frameQueue != null)
-                    return m_frameQueue.Last;
+                {
+                    TrackingFrame last = m_frameQueue.Last;
+
+                    if (last != null)
+                        return last.SourceFrame;
+                }
 
                 return null;
             }
@@ -1082,20 +1089,15 @@ namespace TimeSeriesFramework
 #else
                         long currentTimeTicks = DateTime.UtcNow.Ticks;
 #endif
-                        long currentRealTimeTicks = m_realTimeTicks;
-                        double distance = (currentTimeTicks - currentRealTimeTicks) / (double)Ticks.PerSecond;
+                        double distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
+                        // Set real-time ticks to current ticks if value is outside of tolerances
                         if (distance > m_leadTime || distance < -m_leadTime)
-                        {
-                            // Set real-time ticks to current ticks (as long as another thread hasn't changed it
-                            // already), the interlocked compare exchange avoids an expensive synclock to update real
-                            // time ticks.
-                            Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
-                        }
+                            Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                     }
 
                     // Assume lastest measurement timestamp is the best value we have for real-time.
-                    return m_realTimeTicks;
+                    return Thread.VolatileRead(ref m_realTimeTicks);
                 }
             }
         }
@@ -1107,7 +1109,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_receivedMeasurements;
+                return Thread.VolatileRead(ref m_receivedMeasurements);
             }
         }
 
@@ -1118,7 +1120,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_processedMeasurements;
+                return Thread.VolatileRead(ref m_processedMeasurements);
             }
         }
 
@@ -1130,7 +1132,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_discardedMeasurements;
+                return Thread.VolatileRead(ref m_discardedMeasurements);
             }
         }
 
@@ -1152,7 +1154,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_lastDiscardedMeasurementLatency;
+                return Thread.VolatileRead(ref m_lastDiscardedMeasurementLatency);
             }
         }
 
@@ -1163,7 +1165,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_publishedMeasurements;
+                return Thread.VolatileRead(ref m_publishedMeasurements);
             }
         }
 
@@ -1174,7 +1176,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_publishedFrames;
+                return Thread.VolatileRead(ref m_publishedFrames);
             }
         }
 
@@ -1185,7 +1187,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_measurementsSortedByArrival;
+                return Thread.VolatileRead(ref m_measurementsSortedByArrival);
             }
         }
 
@@ -1196,7 +1198,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_downsampledMeasurements;
+                return Thread.VolatileRead(ref m_downsampledMeasurements);
             }
         }
 
@@ -1207,7 +1209,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_missedSortsByTimeout;
+                return Thread.VolatileRead(ref m_missedSortsByTimeout);
             }
         }
 
@@ -1218,7 +1220,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_waitHandleExpirations;
+                return Thread.VolatileRead(ref m_waitHandleExpirations);
             }
         }
 
@@ -1229,7 +1231,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_framesAheadOfSchedule;
+                return Thread.VolatileRead(ref m_framesAheadOfSchedule);
             }
         }
 
@@ -1240,7 +1242,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return m_totalPublishTime.ToSeconds();
+                return ((Ticks)Thread.VolatileRead(ref m_totalPublishTime)).ToSeconds();
             }
         }
 
@@ -1255,7 +1257,7 @@ namespace TimeSeriesFramework
         {
             get
             {
-                return TotalPublicationTime / m_publishedFrames;
+                return TotalPublicationTime / PublishedFrames;
             }
         }
 
@@ -1282,6 +1284,7 @@ namespace TimeSeriesFramework
             {
                 StringBuilder status = new StringBuilder();
                 IFrame lastFrame = LastFrame;
+                IMeasurement lastDiscardedMeasurement = null;
 #if UseHighResolutionTime
                 DateTime currentTime = PrecisionTimer.UtcNow;
 #else
@@ -1327,59 +1330,61 @@ namespace TimeSeriesFramework
                 status.AppendLine();
                 status.AppendFormat("  Process by received time: {0}", m_processByReceivedTimestamp);
                 status.AppendLine();
-                status.AppendFormat("     Received measurements: {0}", m_receivedMeasurements);
+                status.AppendFormat("     Received measurements: {0}", ReceivedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Processed measurements: {0}", m_processedMeasurements);
+                status.AppendFormat("    Processed measurements: {0}", ProcessedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Discarded measurements: {0}", m_discardedMeasurements);
+                status.AppendFormat("    Discarded measurements: {0}", DiscardedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("  Downsampled measurements: {0}", m_downsampledMeasurements);
+                status.AppendFormat("  Downsampled measurements: {0}", DownsampledMeasurements);
                 status.AppendLine();
-                status.AppendFormat("    Published measurements: {0}", m_publishedMeasurements);
+                status.AppendFormat("    Published measurements: {0}", PublishedMeasurements);
                 status.AppendLine();
-                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", m_publishedFrames * m_expectedMeasurements, m_expectedMeasurements);
+                status.AppendFormat("     Expected measurements: {0} ({1} / frame)", PublishedFrames * m_expectedMeasurements, m_expectedMeasurements);
                 status.AppendLine();
                 status.Append("Last discarded measurement: ");
-                if (m_lastDiscardedMeasurement == null)
+
+                Interlocked.Exchange(ref lastDiscardedMeasurement, m_lastDiscardedMeasurement);
+                if (lastDiscardedMeasurement == null)
                 {
                     status.Append("<none>");
                 }
                 else
                 {
-                    status.Append(Measurement.ToString(m_lastDiscardedMeasurement));
+                    status.Append(Measurement.ToString(lastDiscardedMeasurement));
                     status.Append(" - ");
-                    status.Append(((DateTime)m_lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
+                    status.Append(((DateTime)lastDiscardedMeasurement.Timestamp).ToString("dd-MMM-yyyy HH:mm:ss.fff"));
                     status.AppendLine();
                     status.AppendFormat(" Latency of last discarded: {0} seconds", LastDiscardedMeasurementLatency.ToSeconds().ToString("0.0000"));
                 }
                 status.AppendLine();
                 status.AppendFormat("  Average publication time: {0} milliseconds", (AveragePublicationTimePerFrame / SI.Milli).ToString("0.0000"));
                 status.AppendLine();
-                status.AppendFormat("  Pre-lag-time publication: {0}", (m_framesAheadOfSchedule / (double)m_publishedFrames).ToString("##0.0000%"));
+                status.AppendFormat("  Pre-lag-time publication: {0}", (FramesAheadOfSchedule / (double)PublishedFrames).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("  Downsampling application: {0}", (m_downsampledMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("  Downsampling application: {0}", (DownsampledMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat(" User function utilization: {0} of available time used", (1.0D - (m_ticksPerFrame - (double)AveragePublicationTimePerFrame.ToTicks()) / m_ticksPerFrame).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("Published measurement loss: {0}", (m_discardedMeasurements / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("Published measurement loss: {0}", (DiscardedMeasurements / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("    Total sorts by arrival: {0}", m_measurementsSortedByArrival);
+                status.AppendFormat("    Total sorts by arrival: {0}", MeasurementsSortedByArrival);
                 status.AppendLine();
-                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - m_measurementsSortedByArrival / (double)m_receivedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat(" Measurement time accuracy: {0}", (1.0D - MeasurementsSortedByArrival / (double)ReceivedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
-                status.AppendFormat("   Missed sorts by timeout: {0}", m_missedSortsByTimeout);
+                status.AppendFormat("   Missed sorts by timeout: {0}", MissedSortsByTimeout);
                 status.AppendLine();
-                status.AppendFormat("      Loss due to timeouts: {0}", (m_missedSortsByTimeout / (double)m_processedMeasurements).ToString("##0.0000%"));
+                status.AppendFormat("      Loss due to timeouts: {0}", (MissedSortsByTimeout / (double)ProcessedMeasurements).ToString("##0.0000%"));
                 status.AppendLine();
                 status.AppendFormat("       Wait handle timeout: {0} milliseconds", m_maximumPublicationTimeout);
                 status.AppendLine();
-                status.AppendFormat("   Wait handle expirations: {0}", m_waitHandleExpirations);
+                status.AppendFormat("   Wait handle expirations: {0}", WaitHandleExpirations);
                 status.AppendLine();
-                status.AppendFormat("    Total published frames: {0}", m_publishedFrames);
+                status.AppendFormat("    Total published frames: {0}", PublishedFrames);
                 status.AppendLine();
                 status.AppendFormat("        Defined frame rate: {0} frames/sec, {1} ticks/frame", m_framesPerSecond, m_ticksPerFrame.ToString("0.00"));
                 status.AppendLine();
-                status.AppendFormat("    Actual mean frame rate: {0} frames/sec", (m_publishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
+                status.AppendFormat(" Estimated mean frame rate: {0} frames/sec", (PublishedFrames / (RunTime - m_lagTime)).ToString("0.00"));
                 status.AppendLine();
 
                 lock (s_frameRateTimers)
@@ -1567,9 +1572,8 @@ namespace TimeSeriesFramework
         public double SecondsFromRealTime(Ticks timestamp)
         {
             // Make sure real-time is initialized for initial distance calculation
-            if (m_realTimeTicks == 0)
+            if (Thread.VolatileRead(ref m_realTimeTicks) == 0)
             {
-                long currentRealTimeTicks = m_realTimeTicks;
                 long currentTimeTicks;
 
                 if (m_performTimestampReasonabilityCheck)
@@ -1581,7 +1585,7 @@ namespace TimeSeriesFramework
                 else
                     currentTimeTicks = timestamp;
 
-                Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, currentRealTimeTicks);
+                Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
             }
 
             return (RealTime - timestamp).ToSeconds();
@@ -1625,6 +1629,8 @@ namespace TimeSeriesFramework
 
             TrackingFrame frame = null;
             List<IMeasurement> discardedMeasurements = null;
+            IMeasurement derivedMeasurement;
+            IFrame sourceFrame;
             Ticks timestamp = 0, lastTimestamp = 0;
             double distance;
             bool discardMeasurement;
@@ -1715,7 +1721,7 @@ namespace TimeSeriesFramework
                     else
                     {
                         // Derive new measurement value applying any needed downsampling
-                        IMeasurement derivedMeasurement = frame.DeriveMeasurementValue(measurement);
+                        derivedMeasurement = frame.DeriveMeasurementValue(measurement);
 
                         if (derivedMeasurement == null)
                         {
@@ -1724,24 +1730,36 @@ namespace TimeSeriesFramework
                         }
                         else
                         {
-                            IFrame sourceFrame = frame.SourceFrame;
+                            bool locked = false;
 
-                            // Assign derived measurement to its source frame using user customizable function.
-                            if (AssignMeasurementToFrame(sourceFrame, derivedMeasurement))
+                            try
                             {
-                                sourceFrame.LastSortedMeasurement = derivedMeasurement;
+                                frame.EnterLock(ref locked);
 
-                                // Track the total number of measurements successfully requested for sorting.
-                                Interlocked.Increment(ref m_processedMeasurements);
+                                if (!frame.Published)
+                                {
+                                    // Assign derived measurement to its source frame using user customizable function.
+                                    sourceFrame = frame.SourceFrame;
+                                    AssignMeasurementToFrame(sourceFrame, derivedMeasurement);
+                                    sourceFrame.LastSortedMeasurement = derivedMeasurement;
+
+                                    // Track the total number of measurements successfully requested for sorting.
+                                    Interlocked.Increment(ref m_processedMeasurements);
+                                }
+                                else
+                                {
+                                    // Track the total number of measurements that failed to sort because the
+                                    // system ran out of time.
+                                    Interlocked.Increment(ref m_missedSortsByTimeout);
+
+                                    // Count this as a discarded measurement if it was never assigned to the frame.
+                                    discardMeasurement = true;
+                                }
                             }
-                            else
+                            finally
                             {
-                                // Track the total number of measurements that failed to sort because the
-                                // system ran out of time.
-                                Interlocked.Increment(ref m_missedSortsByTimeout);
-
-                                // Count this as a discarded measurement if it was never assigned to the frame.
-                                discardMeasurement = true;
+                                if (locked)
+                                    frame.ExitLock();
                             }
 
                             // If enabled, concentrator will track the absolute latest measurement values.
@@ -1755,8 +1773,8 @@ namespace TimeSeriesFramework
                 {
                     // This measurement was marked to be discarded.
                     measurement.IsDiscarded = true;
-                    m_lastDiscardedMeasurement = measurement;
-                    m_lastDiscardedMeasurementLatency = RealTime - m_lastDiscardedMeasurement.Timestamp;
+                    Interlocked.Exchange(ref m_lastDiscardedMeasurement, measurement);
+                    Interlocked.Exchange(ref m_lastDiscardedMeasurementLatency, RealTime - m_lastDiscardedMeasurement.Timestamp);
 
                     // Track total number of discarded measurements
                     Interlocked.Increment(ref m_discardedMeasurements);
@@ -1780,9 +1798,7 @@ namespace TimeSeriesFramework
                         //      If the measurement time is newer than the current real-time value and within the
                         //      specified time deviation tolerance of the local clock time, then the measurement
                         //      timestamp is set as real-time.
-                        long realTimeTicks = m_realTimeTicks;
-
-                        if (timestamp > m_realTimeTicks)
+                        if (timestamp > Thread.VolatileRead(ref m_realTimeTicks))
                         {
                             if (m_performTimestampReasonabilityCheck)
                             {
@@ -1796,35 +1812,27 @@ namespace TimeSeriesFramework
 #endif
                                 if (timestamp.TimeIsValid(currentTimeTicks, m_leadTime, m_leadTime))
                                 {
-                                    // The new time measurement looks good, so this function assumes the time is
-                                    // "real-time" so long as another thread has not changed the real-time value
-                                    // already. Using the interlocked compare exchange method introduces the
-                                    // possibility that we may have had newer ticks than another thread that just
-                                    // updated real-time ticks, but if so the deviation will not be much since ticks
-                                    // were greater than current real-time ticks in all threads that got to this
-                                    // point. Besides, newer measurements are always coming in anyway and the compare
-                                    // exchange method saves a call to a monitor lock thereby reducing contention.
-                                    Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
+                                    // The new time measurement looks good, so this function assumes the time is "real-time"
+                                    Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
                                 }
                                 else
                                 {
                                     // Measurement ticks were outside of time deviation tolerances so we'll also check to make
                                     // sure current real-time ticks are within these tolerances as well
-                                    distance = (currentTimeTicks - m_realTimeTicks) / (double)Ticks.PerSecond;
+                                    distance = (currentTimeTicks - Thread.VolatileRead(ref m_realTimeTicks)) / (double)Ticks.PerSecond;
 
                                     if (distance > m_leadTime || distance < -m_leadTime)
                                     {
                                         // New time measurement was invalid as was current real-time value so we have no choice but to
-                                        // assume the current time as "real-time", so we set real-time ticks to current ticks so long
-                                        // as another thread hasn't changed it already
-                                        Interlocked.CompareExchange(ref m_realTimeTicks, currentTimeTicks, realTimeTicks);
+                                        // assume the current time as "real-time", so we set real-time ticks to current ticks
+                                        Thread.VolatileWrite(ref m_realTimeTicks, currentTimeTicks);
                                     }
                                 }
                             }
                             else
                             {
                                 // Reasonability checks are disabled, assume newest time is real-time...
-                                Interlocked.CompareExchange(ref m_realTimeTicks, timestamp, realTimeTicks);
+                                Thread.VolatileWrite(ref m_realTimeTicks, timestamp);
                             }
                         }
                     }
@@ -1866,50 +1874,16 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Assigns <see cref="IMeasurement"/> to its associated <see cref="IFrame"/>.
         /// </summary>
-        /// <returns>True if <see cref="IMeasurement"/> was successfully assigned to its <see cref="IFrame"/>.</returns>
         /// <remarks>
-        /// <para>
         /// Derived classes can choose to override this method to handle custom assignment of a <see cref="IMeasurement"/> to
-        /// its <see cref="IFrame"/>. Default behavior simply assigns measurement to frame's keyed measurement dictionary.
-        /// </para>
-        /// <example>
-        /// If overridden user must perform their own synchronization as needed, for example:
-        /// <code>
-        /// lock (frame.Measurements)
-        /// {
-        ///     if (!frame.Published)
-        ///     {
-        ///         frame.Measurements[measurement.Key] = measurement;
-        ///         return true;
-        ///     }
-        ///     
-        ///     return false;
-        /// }
-        /// </code>
-        /// </example>
-        /// <para>
-        /// Note that the <see cref="IFrame.Measurements"/> dictionary is used internally to synchrnonize assignment
-        /// of the <see cref="IFrame.Published"/> flag. If your custom <see cref="IFrame"/> makes use of the
-        /// <see cref="IFrame.Measurements"/> dictionary you must implement a locking scheme similar to the sample
-        /// code to prevent changes to the measurement dictionary during frame publication.
-        /// </para>
+        /// its <see cref="IFrame"/>. Default behavior simply assigns measurement to frame's keyed measurement dictionary:
+        /// <code>frame.Measurements[measurement.Key] = measurement;</code>
         /// </remarks>
         /// <param name="frame">The <see cref="IFrame"/> that is used.</param>
         /// <param name="measurement">The type of <see cref="IMeasurement"/> to use."/></param>
-        protected virtual bool AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
+        protected virtual void AssignMeasurementToFrame(IFrame frame, IMeasurement measurement)
         {
-            IDictionary<MeasurementKey, IMeasurement> measurements = frame.Measurements;
-
-            lock (measurements)
-            {
-                if (!frame.Published)
-                {
-                    measurements[measurement.Key] = measurement;
-                    return true;
-                }
-
-                return false;
-            }
+            frame.Measurements[measurement.Key] = measurement;
         }
 
         /// <summary>
@@ -1959,6 +1933,7 @@ namespace TimeSeriesFramework
         // atomic operations on these variables.
         private void PublishFrames()
         {
+            TrackingFrame headFrame;
             IFrame frame;
             Ticks timestamp;
             long startTime, stopTime;
@@ -1975,9 +1950,9 @@ namespace TimeSeriesFramework
                     try
                     {
                         // Get top frame
-                        frame = m_frameQueue.Head;
+                        headFrame = m_frameQueue.Head;
 
-                        if (frame == null)
+                        if (headFrame == null)
                         {
                             // No frame ready to publish, exit
                             break;
@@ -1985,6 +1960,7 @@ namespace TimeSeriesFramework
                         else
                         {
                             // Get ticks for this frame
+                            frame = headFrame.SourceFrame;
                             timestamp = frame.Timestamp;
 
                             if (m_processByReceivedTimestamp)
@@ -2009,7 +1985,7 @@ namespace TimeSeriesFramework
                                         break;
 
                                     // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
-                                    m_framesAheadOfSchedule++;
+                                    Interlocked.Increment(ref m_framesAheadOfSchedule);
                                 }
                             }
 
@@ -2025,12 +2001,19 @@ namespace TimeSeriesFramework
                             // published within one frame period if the system is stressed
                             frameIndex = (int)(((double)timestamp.DistanceBeyondSecond() + m_timeOffset) / m_ticksPerFrame);
 
-                            // Mark the frame as published to prevent any further sorting into this frame
-                            lock (frame.Measurements)
+                            // Mark the frame as published to prevent any further sorting into this frame - setting this flag
+                            // is in a critcal section to ensure that sorting into this frame has ceased prior to publication
+                            bool locked = false;
+
+                            try
                             {
-                                // Setting this flag is in a critcal section to ensure that
-                                // sorting into this frame has ceased prior to publication...
-                                frame.Published = true;
+                                headFrame.EnterLock(ref locked);
+                                headFrame.Published = true;
+                            }
+                            finally
+                            {
+                                if (locked)
+                                    headFrame.ExitLock();
                             }
 
                             try
@@ -2044,9 +2027,9 @@ namespace TimeSeriesFramework
                                 m_frameQueue.Pop();
 
                                 // Update publication statistics
-                                m_publishedFrames++;
-                                m_publishedMeasurements += frame.SortedMeasurements;
-                                m_downsampledMeasurements += m_frameQueue.LastDownsampledMeasurements;
+                                Interlocked.Increment(ref m_publishedFrames);
+                                Interlocked.Add(ref m_publishedMeasurements, frame.SortedMeasurements);
+                                Interlocked.Add(ref m_downsampledMeasurements, headFrame.DownsampledMeasurements);
 
                                 // Mark stop time for publication
 #if UseHighResolutionTime
@@ -2058,7 +2041,7 @@ namespace TimeSeriesFramework
                                     frame.PublishedTimestamp = stopTime;
 
                                 // Track total publication time
-                                m_totalPublishTime += (stopTime - startTime);
+                                Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);
                             }
                         }
                     }
@@ -2076,7 +2059,7 @@ namespace TimeSeriesFramework
 
                 // Wait for next publication signal, timing out if signal takes too long
                 if (m_publicationWaitHandle != null && !m_publicationWaitHandle.WaitOne(m_maximumPublicationTimeout))
-                    m_waitHandleExpirations++;
+                    Interlocked.Increment(ref m_waitHandleExpirations);
             }
         }
 

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using TVA;
 
 namespace TimeSeriesFramework
@@ -46,6 +47,7 @@ namespace TimeSeriesFramework
         private CreateNewFrameFunction m_createNewFrame;        // IFrame creation function
         private LinkedList<TrackingFrame> m_frameList;          // We keep this list sorted by timestamp so frames are processed in order
         private Dictionary<long, TrackingFrame> m_frameHash;    // This list not guaranteed to be sorted, but used for fast frame lookup
+        private SpinLock m_queueLock;                           // Spinning lock used for synchronizing access to frame queues
         private long m_publishedTicks;                          // Timstamp of last published frame
         private TrackingFrame m_head;                           // Reference to current top of the frame collection
         private TrackingFrame m_last;                           // Reference to last published frame
@@ -67,6 +69,7 @@ namespace TimeSeriesFramework
             m_createNewFrame = createNewFrame;
             m_frameList = new LinkedList<TrackingFrame>();
             m_frameHash = new Dictionary<long, TrackingFrame>();
+            m_queueLock = new SpinLock();
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
         }
 
@@ -136,53 +139,33 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Returns the next <see cref="IFrame"/> in the <see cref="FrameQueue"/>, if any.
+        /// Returns the next <see cref="TrackingFrame"/> in the <see cref="FrameQueue"/>, if any.
         /// </summary>
         /// <remarks>
-        /// This property is tracked separately from the internal <see cref="TrackingFrame"/> collection, as a
+        /// This property is tracked separately from the internal frame collection, as a
         /// result this property may be called at any time without a locking penalty.
         /// </remarks>
-        public IFrame Head
+        public TrackingFrame Head
         {
             get
             {
-                // We track the head separately to avoid sync-lock on frame list to safely access first item...
-                if (m_head != null)
-                    return m_head.SourceFrame;
-
-                return null;
+                // We track the head separately to avoid lock on frame list to safely access first item...
+                return m_head;
             }
         }
 
         /// <summary>
-        /// Gets the last processed <see cref="IFrame"/> in the <see cref="FrameQueue"/>.
+        /// Gets the last processed <see cref="TrackingFrame"/> in the <see cref="FrameQueue"/>.
         /// </summary>
         /// <remarks>
-        /// This property is tracked separately from the internal <see cref="IFrame"/> collection, as a
+        /// This property is tracked separately from the internal frame collection, as a
         /// result this property may be called at any time without a locking penalty.
         /// </remarks>
-        public IFrame Last
+        public TrackingFrame Last
         {
             get
             {
-                if (m_last != null)
-                    return m_last.SourceFrame;
-
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Gets total number of downsampled measurements from last published frame.
-        /// </summary>
-        public long LastDownsampledMeasurements
-        {
-            get
-            {
-                if (m_last != null)
-                    return m_last.DownsampledMeasurements;
-
-                return 0;
+                return m_last;
             }
         }
 
@@ -245,9 +228,12 @@ namespace TimeSeriesFramework
         public string ExamineQueueState(int expectedMeasurements)
         {
             StringBuilder status = new StringBuilder();
+            bool locked = false;
 
-            lock (m_frameList)
+            try
             {
+                m_queueLock.Enter(ref locked);
+
                 status.AppendLine("Concentrator frame queue detail:");
                 status.AppendLine();
                 status.AppendLine();
@@ -270,9 +256,9 @@ namespace TimeSeriesFramework
                             frame = null;
 
                         if (frame == null)
-                            status.AppendFormat("    Frame index {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
+                            status.AppendFormat("Frame {0} @ <null frame>", i.ToString().PadLeft(4, '0'));
                         else
-                            status.AppendFormat("    Frame index {0} @ {1} - {2} measurements, {3} received",
+                            status.AppendFormat("Frame {0} @ {1} - {2} measurements, {3} received",
                                 i.ToString().PadLeft(4, '0'),
                                 (new DateTime(frame.Timestamp)).ToString("dd-MMM-yyyy HH:mm:ss.fff"),
                                 frame.Measurements.Count,
@@ -282,9 +268,14 @@ namespace TimeSeriesFramework
                         node = node.Next;
                     }
                 }
-            }
 
-            return status.ToString();
+                return status.ToString();
+            }
+            finally
+            {
+                if (locked)
+                    m_queueLock.Exit();
+            }
         }
 
         /// <summary>
@@ -292,13 +283,22 @@ namespace TimeSeriesFramework
         /// </summary>
         public void Clear()
         {
-            lock (m_frameList)
+            bool locked = false;
+
+            try
             {
+                m_queueLock.Enter(ref locked);
+
                 if (m_frameList != null)
                     m_frameList.Clear();
 
                 if (m_frameHash != null)
                     m_frameHash.Clear();
+            }
+            finally
+            {
+                if (locked)
+                    m_queueLock.Exit();
             }
         }
 
@@ -307,6 +307,8 @@ namespace TimeSeriesFramework
         /// </summary>
         public void Pop()
         {
+            bool locked = false;
+
             // We track latest published ticks - don't want to allow slow moving measurements
             // to inject themselves after a certain publication timeframe has passed - this
             // avoids any possible out-of-sequence frame publication...
@@ -316,8 +318,10 @@ namespace TimeSeriesFramework
 
             // Assign next node, if any, as quickly as possible. Still have to wait for queue
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
-            lock (m_frameList)
+            try
             {
+                m_queueLock.Enter(ref locked);
+
                 if (m_frameList.Count > 0)
                 {
                     LinkedListNode<TrackingFrame> nextNode = m_frameList.First.Next;
@@ -329,8 +333,13 @@ namespace TimeSeriesFramework
                     // Clean up frame queues
                     m_frameList.RemoveFirst();
                 }
-                
+
                 m_frameHash.Remove(m_publishedTicks);
+            }
+            finally
+            {
+                if (locked)
+                    m_queueLock.Exit();
             }
         }
 
@@ -349,7 +358,7 @@ namespace TimeSeriesFramework
         {
             // Calculate destination ticks for this frame
             TrackingFrame frame = null;
-            bool nodeAdded = false;
+            bool nodeAdded = false, locked = false;
             long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
 
             // Baseline timestamp to the top of the second
@@ -391,8 +400,10 @@ namespace TimeSeriesFramework
             if (destinationTicks > m_publishedTicks)
             {
                 // Wait for queue lock - we wait because calling function demands a destination frame
-                lock (m_frameList)
+                try
                 {
+                    m_queueLock.Enter(ref locked);
+
                     // See if requested frame is already available...
                     if (m_frameHash.TryGetValue(destinationTicks, out frame))
                         return frame;
@@ -428,6 +439,11 @@ namespace TimeSeriesFramework
                     // Since we'll be requesting this frame over and over, we'll use
                     // a hash table for quick frame lookups by timestamp
                     m_frameHash.Add(destinationTicks, frame);
+                }
+                finally
+                {
+                    if (locked)
+                        m_queueLock.Exit();
                 }
             }
 
