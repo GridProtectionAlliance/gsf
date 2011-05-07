@@ -39,7 +39,6 @@ namespace TimeSeriesFramework
         private DownsamplingMethod m_downsamplingMethod;
         private Dictionary<MeasurementKey, List<IMeasurement>> m_measurements;
         private ReaderWriterLockSlim m_frameLock;
-        private volatile bool m_published;
         private long m_derivedMeasurements;
 
         #endregion
@@ -122,157 +121,154 @@ namespace TimeSeriesFramework
         /// <returns>New derived <see cref="IMeasurement"/> value, or null if value should not be assigned to <see cref="IFrame"/>.</returns>
         public IMeasurement DeriveMeasurementValue(IMeasurement measurement)
         {
-            if (!m_published)
+            IMeasurement derivedMeasurement;
+            List<IMeasurement> m_values;
+
+            switch (m_downsamplingMethod)
             {
-                IMeasurement derivedMeasurement;
-                List<IMeasurement> m_values;
+                case DownsamplingMethod.LastReceived:
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
 
-                switch (m_downsamplingMethod)
-                {
-                    case DownsamplingMethod.LastReceived:
-                        // Keep track of total number of derived measurements
-                        m_derivedMeasurements++;
-
-                        // This is the simplest case, just apply latest value
-                        return measurement;
-                    case DownsamplingMethod.Closest:
-                        // Get tracked measurement values
-                        if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    // This is the simplest case, just apply latest value
+                    return measurement;
+                case DownsamplingMethod.Closest:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
                         {
-                            if (m_values != null && m_values.Count > 0)
+                            // Get first tracked value (should only be one for "Closest")
+                            derivedMeasurement = m_values[0];
+
+                            if (derivedMeasurement != null)
                             {
-                                // Get first tracked value (should only be one for "Closest")
-                                derivedMeasurement = m_values[0];
-
-                                if (derivedMeasurement != null)
+                                // Determine if new measurement's timestamp is closer to frame
+                                if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
                                 {
-                                    // Determine if new measurement's timestamp is closer to frame
-                                    if (measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp)
-                                    {
-                                        // This measurement came in out-of-order and is closer to frame timestamp, so 
-                                        // we sort this measurement instead of the original
-                                        m_values[0] = measurement;
+                                    // This measurement came in out-of-order and is closer to frame timestamp, so 
+                                    // we sort this measurement instead of the original
+                                    m_values[0] = measurement;
 
-                                        // Keep track of total number of derived measurements
-                                        m_derivedMeasurements++;
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
 
-                                        return measurement;
-                                    }
-
-                                    // Prior measurement is closer to frame than new one
-                                    return null;
+                                    return measurement;
                                 }
+
+                                // Prior measurement is closer to frame than new one
+                                return null;
                             }
                         }
+                    }
 
-                        // No prior measurement exists, track this initial one
-                        m_values = new List<IMeasurement>();
-                        m_values.Add(measurement);
-                        m_measurements.Add(measurement.Key, m_values);
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
 
-                        // Keep track of total number of derived measurements
-                        m_derivedMeasurements++;
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
 
-                        return measurement;
-                    case DownsamplingMethod.Filtered:
-                        // Get tracked measurement values
-                        if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    return measurement;
+                case DownsamplingMethod.Filtered:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
                         {
-                            if (m_values != null && m_values.Count > 0)
+                            // Get first tracked value
+                            derivedMeasurement = m_values[0];
+
+                            if (derivedMeasurement != null)
                             {
-                                // Get first tracked value
-                                derivedMeasurement = m_values[0];
+                                // Get function defined for measurement value filtering
+                                MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
 
-                                if (derivedMeasurement != null)
+                                // Default to average value filter if none is specified
+                                if (measurementValueFilter == null)
+                                    measurementValueFilter = Measurement.AverageValueFilter;
+
+                                // Add new measurement to tracking collection
+                                if (measurement != null)
+                                    m_values.Add(measurement);
+
+                                // Perform filter calculation as specified by device measurement
+                                if (m_values.Count > 1)
                                 {
-                                    // Get function defined for measurement value filtering
-                                    MeasurementValueFilterFunction measurementValueFilter = derivedMeasurement.MeasurementValueFilter;
+                                    derivedMeasurement.Value = measurementValueFilter(m_values);
 
-                                    // Default to average value filter if none is specified
-                                    if (measurementValueFilter == null)
-                                        measurementValueFilter = Measurement.AverageValueFilter;
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
 
-                                    // Add new measurement to tracking collection
-                                    if (measurement != null)
-                                        m_values.Add(measurement);
-
-                                    // Perform filter calculation as specified by device measurement
-                                    if (m_values.Count > 1)
-                                    {
-                                        derivedMeasurement.Value = measurementValueFilter(m_values);
-
-                                        // Keep track of total number of derived measurements
-                                        m_derivedMeasurements++;
-
-                                        return derivedMeasurement;
-                                    }
-
-                                    // No change from existing measurement
-                                    return null;
+                                    return derivedMeasurement;
                                 }
+
+                                // No change from existing measurement
+                                return null;
                             }
                         }
+                    }
 
-                        // No prior measurement exists, track this initial one
-                        m_values = new List<IMeasurement>();
-                        m_values.Add(measurement);
-                        m_measurements.Add(measurement.Key, m_values);
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
 
-                        // Keep track of total number of derived measurements
-                        m_derivedMeasurements++;
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
 
-                        return measurement;
-                    case DownsamplingMethod.BestQuality:
-                        // Get tracked measurement values
-                        if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    return measurement;
+                case DownsamplingMethod.BestQuality:
+                    // Get tracked measurement values
+                    if (m_measurements.TryGetValue(measurement.Key, out m_values))
+                    {
+                        if (m_values != null && m_values.Count > 0)
                         {
-                            if (m_values != null && m_values.Count > 0)
-                            {
-                                // Get first tracked value (should only be one for "BestQuality")
-                                derivedMeasurement = m_values[0];
+                            // Get first tracked value (should only be one for "BestQuality")
+                            derivedMeasurement = m_values[0];
 
-                                if (derivedMeasurement != null)
-                                {
-                                    // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
-                                    if
+                            if (derivedMeasurement != null)
+                            {
+                                // Determine if new measurement's quality is better than existing one or if new measurement's timestamp is closer to frame
+                                if
+                                (
                                     (
-                                        (
-                                            (!derivedMeasurement.ValueQualityIsGood || !derivedMeasurement.TimestampQualityIsGood)
-                                                &&
-                                            (measurement.ValueQualityIsGood || measurement.TimestampQualityIsGood)
-                                        )
-                                            ||
-                                        (
-                                            measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp
-                                        )
+                                        (!derivedMeasurement.ValueQualityIsGood || !derivedMeasurement.TimestampQualityIsGood)
+                                            &&
+                                        (measurement.ValueQualityIsGood || measurement.TimestampQualityIsGood)
                                     )
-                                    {
-                                        // This measurement has a better quality or came in out-of-order and is closer to frame timestamp, so 
-                                        // we sort this measurement instead of the original
-                                        m_values[0] = measurement;
+                                        ||
+                                    (
+                                        measurement.Timestamp < derivedMeasurement.Timestamp && measurement.Timestamp >= m_timestamp
+                                    )
+                                )
+                                {
+                                    // This measurement has a better quality or came in out-of-order and is closer to frame timestamp, so 
+                                    // we sort this measurement instead of the original
+                                    m_values[0] = measurement;
 
-                                        // Keep track of total number of derived measurements
-                                        m_derivedMeasurements++;
+                                    // Keep track of total number of derived measurements
+                                    m_derivedMeasurements++;
 
-                                        return measurement;
-                                    }
-
-                                    // Prior measurement is closer to frame than new one
-                                    return null;
+                                    return measurement;
                                 }
+
+                                // Prior measurement is closer to frame than new one
+                                return null;
                             }
                         }
+                    }
 
-                        // No prior measurement exists, track this initial one
-                        m_values = new List<IMeasurement>();
-                        m_values.Add(measurement);
-                        m_measurements.Add(measurement.Key, m_values);
+                    // No prior measurement exists, track this initial one
+                    m_values = new List<IMeasurement>();
+                    m_values.Add(measurement);
+                    m_measurements.Add(measurement.Key, m_values);
 
-                        // Keep track of total number of derived measurements
-                        m_derivedMeasurements++;
+                    // Keep track of total number of derived measurements
+                    m_derivedMeasurements++;
 
-                        return measurement;
-                }
+                    return measurement;
             }
 
             return null;
