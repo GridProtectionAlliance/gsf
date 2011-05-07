@@ -4854,17 +4854,6 @@
             <param name="measurement">New <see cref="T:TimeSeriesFramework.IMeasurement"/> value.</param>
             <returns>New derived <see cref="T:TimeSeriesFramework.IMeasurement"/> value, or null if value should not be assigned to <see cref="T:TimeSeriesFramework.IFrame"/>.</returns>
         </member>
-        <member name="M:TimeSeriesFramework.TrackingFrame.EnterLock(System.Boolean@)">
-            <summary>
-            Enters synchronous lock for this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
-            </summary>
-            <param name="locked">Reference to flag that determines if lock was successful.</param>
-        </member>
-        <member name="M:TimeSeriesFramework.TrackingFrame.ExitLock">
-            <summary>
-            Exits synchronous lock for this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
-            </summary>
-        </member>
         <member name="P:TimeSeriesFramework.TrackingFrame.SourceFrame">
             <summary>
             Gets instance of <see cref="T:TimeSeriesFramework.IFrame"/> being tracked.
@@ -4880,9 +4869,9 @@
             Total number of measurements downsampled by <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
             </summary>
         </member>
-        <member name="P:TimeSeriesFramework.TrackingFrame.Published">
+        <member name="P:TimeSeriesFramework.TrackingFrame.Lock">
             <summary>
-            Gets or sets published state of this <see cref="T:TimeSeriesFramework.TrackingFrame"/>.
+            Gets the <see cref="T:TimeSeriesFramework.TrackingFrame"/> locking primitive.
             </summary>
         </member>
     </members>
