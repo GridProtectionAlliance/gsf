@@ -22,8 +22,9 @@
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace TimeSeriesFramework
 {
@@ -54,31 +55,14 @@ namespace TimeSeriesFramework
             if (string.IsNullOrWhiteSpace(source))
                 throw new ArgumentNullException("source", "MeasurementKey source cannot be null or empty");
 
-            bool locked = false;
-            Dictionary<uint, MeasurementKey> keys;
+            ConcurrentDictionary<uint, MeasurementKey> keys = s_cache.GetOrAdd(source, key => new ConcurrentDictionary<uint, MeasurementKey>());
 
-            try
+            if (!keys.TryGetValue(id, out this))
             {
-                s_cacheLock.Enter(ref locked);
-
-                if (!s_cache.TryGetValue(source, out keys))
-                {
-                    keys = new Dictionary<uint, MeasurementKey>();
-                    s_cache.Add(source, keys);
-                }
-
-                if (!keys.TryGetValue(id, out this))
-                {
-                    m_id = id;
-                    m_source = source.ToUpper();
-                    GenHashCode();
-                    keys.Add(id, this);
-                }
-            }
-            finally
-            {
-                if (locked)
-                    s_cacheLock.Exit();
+                m_id = id;
+                m_source = source.ToUpper();
+                GenHashCode();
+                keys[id] = this;
             }
         }
 
@@ -291,8 +275,7 @@ namespace TimeSeriesFramework
         #region [ Static ]
 
         // Static Fields
-        private static Dictionary<string, Dictionary<uint, MeasurementKey>> s_cache = new Dictionary<string, Dictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
-        private static SpinLock s_cacheLock = new SpinLock();
+        private static ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>> s_cache = new ConcurrentDictionary<string, ConcurrentDictionary<uint, MeasurementKey>>(StringComparer.InvariantCultureIgnoreCase);
 
         // Static Methods
 

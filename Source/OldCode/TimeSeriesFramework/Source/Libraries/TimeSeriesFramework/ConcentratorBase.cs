@@ -1730,16 +1730,15 @@ namespace TimeSeriesFramework
                         }
                         else
                         {
-                            bool locked = false;
+                            frame.Lock.EnterReadLock();
 
                             try
                             {
-                                frame.EnterLock(ref locked);
+                                sourceFrame = frame.SourceFrame;
 
-                                if (!frame.Published)
+                                if (!sourceFrame.Published)
                                 {
                                     // Assign derived measurement to its source frame using user customizable function.
-                                    sourceFrame = frame.SourceFrame;
                                     AssignMeasurementToFrame(sourceFrame, derivedMeasurement);
                                     sourceFrame.LastSortedMeasurement = derivedMeasurement;
 
@@ -1758,8 +1757,7 @@ namespace TimeSeriesFramework
                             }
                             finally
                             {
-                                if (locked)
-                                    frame.ExitLock();
+                                frame.Lock.ExitReadLock();
                             }
 
                             // If enabled, concentrator will track the absolute latest measurement values.
@@ -1933,8 +1931,8 @@ namespace TimeSeriesFramework
         // atomic operations on these variables.
         private void PublishFrames()
         {
-            TrackingFrame headFrame;
-            IFrame frame;
+            TrackingFrame frame;
+            IFrame sourceFrame;
             Ticks timestamp;
             long startTime, stopTime;
             int frameIndex;
@@ -1950,9 +1948,9 @@ namespace TimeSeriesFramework
                     try
                     {
                         // Get top frame
-                        headFrame = m_frameQueue.Head;
+                        frame = m_frameQueue.Head;
 
-                        if (headFrame == null)
+                        if (frame == null)
                         {
                             // No frame ready to publish, exit
                             break;
@@ -1960,20 +1958,19 @@ namespace TimeSeriesFramework
                         else
                         {
                             // Get ticks for this frame
-                            frame = headFrame.SourceFrame;
-                            timestamp = frame.Timestamp;
+                            sourceFrame = frame.SourceFrame;
+                            timestamp = sourceFrame.Timestamp;
 
                             if (m_processByReceivedTimestamp)
                             {
                                 // When processing by received timestamp, we need to test received timestamp against lagtime
                                 // to make sure there has been time enough to publish frame:
-                                if (m_lagTicks - (RealTime - frame.ReceivedTimestamp) > 0)
+                                if (m_lagTicks - (RealTime - sourceFrame.ReceivedTimestamp) > 0)
                                     break;
                             }
                             else
                             {
-                                // See if any lagtime needs to pass before we begin publishing,
-                                // exiting if it's not time to publish
+                                // See if any lagtime needs to pass before we begin publishing, exiting if it's not time to publish
                                 if (m_lagTicks - (RealTime - timestamp) > 0)
                                 {
                                     // It's not the scheduled time to publish this frame, however, if preemptive publishing is enabled,
@@ -1981,7 +1978,7 @@ namespace TimeSeriesFramework
                                     // expected number of measurements, we can go ahead and publish the frame ahead of schedule. This
                                     // is useful if the lag time is high to ensure no data is missed but it's desirable to publish the
                                     // frame as soon as the expected data has arrived.
-                                    if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || frame.SortedMeasurements < m_expectedMeasurements)
+                                    if (m_expectedMeasurements < 1 || !m_allowPreemptivePublishing || sourceFrame.SortedMeasurements < m_expectedMeasurements)
                                         break;
 
                                     // All data has been received for this frame, so we'll go ahead and publish ahead-of-schedule
@@ -2003,23 +2000,21 @@ namespace TimeSeriesFramework
 
                             // Mark the frame as published to prevent any further sorting into this frame - setting this flag
                             // is in a critcal section to ensure that sorting into this frame has ceased prior to publication
-                            bool locked = false;
+                            frame.Lock.EnterWriteLock();
 
                             try
                             {
-                                headFrame.EnterLock(ref locked);
-                                headFrame.Published = true;
+                                sourceFrame.Published = true;
                             }
                             finally
                             {
-                                if (locked)
-                                    headFrame.ExitLock();
+                                frame.Lock.ExitWriteLock();
                             }
 
                             try
                             {
                                 // Publish the current frame (i.e., call user implemented publication function)
-                                PublishFrame(frame, frameIndex);
+                                PublishFrame(sourceFrame, frameIndex);
                             }
                             finally
                             {
@@ -2028,8 +2023,8 @@ namespace TimeSeriesFramework
 
                                 // Update publication statistics
                                 Interlocked.Increment(ref m_publishedFrames);
-                                Interlocked.Add(ref m_publishedMeasurements, frame.SortedMeasurements);
-                                Interlocked.Add(ref m_downsampledMeasurements, headFrame.DownsampledMeasurements);
+                                Interlocked.Add(ref m_publishedMeasurements, sourceFrame.SortedMeasurements);
+                                Interlocked.Add(ref m_downsampledMeasurements, frame.DownsampledMeasurements);
 
                                 // Mark stop time for publication
 #if UseHighResolutionTime
@@ -2038,7 +2033,7 @@ namespace TimeSeriesFramework
                                 stopTime = DateTime.UtcNow.Ticks;
 #endif
                                 if (m_trackPublishedTimestamp)
-                                    frame.PublishedTimestamp = stopTime;
+                                    sourceFrame.PublishedTimestamp = stopTime;
 
                                 // Track total publication time
                                 Interlocked.Add(ref m_totalPublishTime, stopTime - startTime);

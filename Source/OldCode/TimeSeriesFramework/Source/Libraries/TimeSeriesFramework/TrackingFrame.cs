@@ -38,7 +38,7 @@ namespace TimeSeriesFramework
         private long m_timestamp;
         private DownsamplingMethod m_downsamplingMethod;
         private Dictionary<MeasurementKey, List<IMeasurement>> m_measurements;
-        private SpinLock m_frameLock;
+        private ReaderWriterLockSlim m_frameLock;
         private volatile bool m_published;
         private long m_derivedMeasurements;
 
@@ -56,7 +56,7 @@ namespace TimeSeriesFramework
             m_sourceFrame = sourceFrame;
             m_timestamp = sourceFrame.Timestamp;
             m_downsamplingMethod = downsamplingMethod;
-            m_frameLock = new SpinLock();
+            m_frameLock = new ReaderWriterLockSlim();
 
             if (downsamplingMethod != DownsamplingMethod.LastReceived)
                 m_measurements = new Dictionary<MeasurementKey, List<IMeasurement>>();
@@ -101,20 +101,13 @@ namespace TimeSeriesFramework
         }
 
         /// <summary>
-        /// Gets or sets published state of this <see cref="TrackingFrame"/>.
+        /// Gets the <see cref="TrackingFrame"/> locking primitive.
         /// </summary>
-        public bool Published
+        public ReaderWriterLockSlim Lock
         {
             get
             {
-                return m_published;
-            }
-            set
-            {
-                m_published = value;
-
-                if (m_sourceFrame != null)
-                    m_sourceFrame.Published = value;
+                return m_frameLock;
             }
         }
 
@@ -283,23 +276,6 @@ namespace TimeSeriesFramework
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Enters synchronous lock for this <see cref="TrackingFrame"/>.
-        /// </summary>
-        /// <param name="locked">Reference to flag that determines if lock was successful.</param>
-        public void EnterLock(ref bool locked)
-        {
-            m_frameLock.Enter(ref locked);
-        }
-
-        /// <summary>
-        /// Exits synchronous lock for this <see cref="TrackingFrame"/>.
-        /// </summary>
-        public void ExitLock()
-        {
-            m_frameLock.Exit();
         }
 
         #endregion
