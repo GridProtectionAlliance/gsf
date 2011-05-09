@@ -82,6 +82,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private Guid m_nodeID;
         private int m_id;
         private int? m_parentID;
+        private Guid m_uniqueID; 
         private string m_acronym;
         private string m_name;
         private bool m_isConcentrator;
@@ -98,6 +99,7 @@ namespace TimeSeriesFramework.UI.DataModels
         private int? m_framesPerSecond;
         private long m_timeAdjustmentTicks;
         private double m_dataLossInterval;
+        private bool m_connectOnDemand;   
         private string m_contactList;
         private int? m_measuredLines;
         private int m_loadOrder;
@@ -198,7 +200,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/>  Name.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Device Name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Device Name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -267,7 +269,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="Device"/> AccessID.
         /// </summary>
         [Required(ErrorMessage = "Device access ID is a required field, please provide value.")]
-        [DefaultValue(1)]
+        [DefaultValue(0)]
         public int AccessID
         {
             get
@@ -386,7 +388,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Device"/> TimeZone.
         /// </summary>
-        [StringLength(128, ErrorMessage = "Device Time Zone cannot exceed 128 characters.")]
+        [StringLength(200, ErrorMessage = "Device Time Zone cannot exceed 200 characters.")]
         public string TimeZone
         {
             get
@@ -450,6 +452,24 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_dataLossInterval = value;
                 OnPropertyChanged("DataLossInterval");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Device"/>ConnectOnDemand.
+        /// </summary>
+        [Required(ErrorMessage = "ConnectOnDemand is a required field, please provide value.")]
+        [DefaultValue(typeof(int), "1")]
+        public bool ConnectOnDemand
+        {
+            get
+            {
+                return m_connectOnDemand;
+            }
+            set
+            {
+                m_connectOnDemand = value;
+                OnPropertyChanged("ConnectOnDemand");
             }
         }
 
@@ -874,6 +894,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         AutoStartDataParsingSequence = Convert.ToBoolean(row.Field<object>("AutoStartDataParsingSequence")),
                         SkipDisableRealTimeData = Convert.ToBoolean(row.Field<object>("SkipDisableRealTimeData")),
                         MeasurementReportingInterval = Convert.ToInt32(row.Field<object>("MeasurementReportingInterval")),
+                        ConnectOnDemand =  Convert.ToBoolean(row.Field<object>("ConnectOnDemand")),
                         m_companyName = row.Field<string>("CompanyName"),
                         m_companyAcronym = row.Field<string>("CompanyAcronym"),
                         m_historianAcronym = row.Field<string>("HistorianAcronym"),
@@ -956,16 +977,16 @@ namespace TimeSeriesFramework.UI.DataModels
                     database.Connection.ExecuteNonQuery("INSERT INTO Device (NodeID, ParentID, Acronym, Name, IsConcentrator, CompanyID, HistorianID, AccessID, VendorDeviceID, " +
                         "ProtocolID, Longitude, Latitude, InterconnectionID, ConnectionString, TimeZone, FramesPerSecond, TimeAdjustmentTicks, DataLossInterval, ContactList, " +
                         "MeasuredLines, LoadOrder, Enabled, AllowedParsingExceptions, ParsingExceptionWindow, DelayedConnectionInterval, AllowUseOfCachedConfiguration, " +
-                        "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, " +
+                        "AutoStartDataParsingSequence, SkipDisableRealTimeData, MeasurementReportingInterval, ConnectOndemand, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) Values (@nodeID, " +
                         "@parentID, @acronym, @name, @isConcentrator, @companyID, @historianID, @accessID, @vendorDeviceID, @protocolID, @longitude, @latitude, @interconnectionID, " +
                         "@connectionString, @timezone, @framesPerSecond, @timeAdjustmentTicks, @dataLossInterval, @contactList, @measuredLines, @loadOrder, @enabled, " +
-                        "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, " +
+                        "@allowedParsingExceptions, @parsingExceptionWindow, @delayedConnectionInterval, @allowUseOfCachedConfiguration, @autoStartDataParsingSequence, @connectionOndemand" +
                         "@skipDisableRealTimeData, @measurementReportingInterval, @updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, database.Guid(device.NodeID),
                         device.ParentID.ToNotNull(), device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines.ToNotNull(),
-                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
+                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,device.ConnectOnDemand,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
@@ -975,13 +996,13 @@ namespace TimeSeriesFramework.UI.DataModels
                         "TimeAdjustmentTicks = @timeAdjustmentTicks, DataLossInterval = @dataLossInterval, ContactList = @contactList, MeasuredLines = @measuredLines, " +
                         "LoadOrder = @loadOrder, Enabled = @enabled, AllowedParsingExceptions = @allowedParsingExceptions, ParsingExceptionWindow = @parsingExceptionWindow, " +
                         "DelayedConnectionInterval = @delayedConnectionInterval, AllowUseOfCachedConfiguration = @allowUseOfCachedConfiguration, AutoStartDataParsingSequence " +
-                        "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, " +
+                        "= @autoStartDataParsingSequence, SkipDisableRealTimeData = @skipDisableRealTimeData, MeasurementReportingInterval = @measurementReportingInterval, ConnectOnDemand = @ConnectOnDemand " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, database.Guid(device.NodeID),
                         device.ParentID.ToNotNull(), device.Acronym.Replace(" ", "").ToUpper(), device.Name, device.IsConcentrator, device.CompanyID.ToNotNull(),
                         device.HistorianID.ToNotNull(), device.AccessID, device.VendorDeviceID.ToNotNull(),
                         device.ProtocolID.ToNotNull(), device.Longitude.ToNotNull(), device.Latitude.ToNotNull(), device.InterconnectionID.ToNotNull(),
                         device.ConnectionString, device.TimeZone, device.FramesPerSecond ?? 30, device.TimeAdjustmentTicks, device.DataLossInterval, device.ContactList, device.MeasuredLines.ToNotNull(),
-                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
+                        device.LoadOrder, device.Enabled, device.AllowedParsingExceptions, device.ConnectOnDemand, device.ParsingExceptionWindow, device.DelayedConnectionInterval, device.AllowUseOfCachedConfiguration,
                         device.AutoStartDataParsingSequence, device.SkipDisableRealTimeData, device.MeasurementReportingInterval, CommonFunctions.CurrentUser,
                         database.UtcNow(), device.ID);
 

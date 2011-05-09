@@ -78,7 +78,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Company"/> acronym.
         /// </summary>
         [Required(ErrorMessage = "Company acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Company acronym cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Company acronym cannot exceed 200 characters.")]
         public string Acronym
         {
             get
@@ -96,7 +96,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets map acronym used by <see cref="Company"/>.
         /// </summary>
         [Required(ErrorMessage = "Company map acronym is a required field, please provide value.")]
-        [StringLength(3, ErrorMessage = "Company map acronym cannot exceed 3 characters.")]
+        [StringLength(10, ErrorMessage = "Company map acronym cannot exceed 10 characters.")]
         public string MapAcronym
         {
             get
@@ -114,7 +114,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="Company"/> name.
         /// </summary>
         [Required(ErrorMessage = "Company name is a required field, please provide value.")]
-        [StringLength(100, ErrorMessage = "Company name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Company name cannot exceed 200 characters.")]
         public string Name
         {
             get

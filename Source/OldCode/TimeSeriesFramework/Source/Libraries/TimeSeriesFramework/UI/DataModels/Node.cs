@@ -51,11 +51,15 @@ namespace TimeSeriesFramework.UI.DataModels
         private decimal? m_longitude;
         private decimal? m_latitude;
         private string m_description;
-        private string m_image;
+        private string m_imagePath;   
+        private string m_settings;   
+        private string m_menuType;  
+        private string m_menuData;  
         private bool m_master;
         private int m_loadOrder;
         private bool m_enabled;
         //private string m_timeSeriesDataServiceUrl;
+        // TODO: Please check this.(RemoteStatusServiceUrl and RealTimeStatisticsServiceUrl are deleted from the New Schema)
         private string m_remoteStatusServiceUrl;
         private string m_realTimeStatisticServiceUrl;
         private string m_companyName;
@@ -87,7 +91,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Node"/>'s Name.
         /// </summary>
         [Required(ErrorMessage = "Node name is a required field, please provide a value")]
-        [StringLength(100, ErrorMessage = "Name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -173,23 +177,77 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Node"/>'s Image.
         /// </summary>
         // Because of database design, no validation attributes are supplied
-        public string Image
+        public string ImagePath
         {
             get
             {
-                return m_image;
+                return m_imagePath;
             }
             set
             {
-                m_image = value;
-                OnPropertyChanged("Image");
+                m_imagePath = value;
+                OnPropertyChanged("ImagePath");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current <see cref="Node"/>'s Settings.
+        /// </summary>
+        // Because of database design, no validation attributes are supplied
+        public string Settings
+        {
+            get
+            {
+                return m_settings;
+            }
+            set
+            {
+                m_settings = value;
+                OnPropertyChanged("Settings");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current <see cref="Node"/>'s MenuType.
+        /// </summary>
+        [Required(ErrorMessage = "Node menuType is a required field, please provide a value")]
+        [StringLength(200, ErrorMessage = "Name cannot exceed 200 characters.")]
+        [DefaultValue("File")]
+        public string MenuType
+        {
+            get
+            {
+                return m_menuType;
+            }
+            set
+            {
+                m_menuType = value;
+                OnPropertyChanged("MenuType");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the current <see cref="Node"/>'s MenuData.
+        /// </summary>
+        [Required(ErrorMessage = "Node MenuData is a required field, please provide a value")]
+        [DefaultValue("Menu.xml")]
+        public string MenuData
+        {
+            get
+            {
+                return m_menuData;
+            }
+            set
+            {
+                m_menuData = value;
+                OnPropertyChanged("MenuData");
             }
         }
 
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is the master <see cref="Node"/>.
         /// </summary>
-        [DefaultValue(false)]
+        [DefaultValue(0)]
         public bool Master
         {
             get
@@ -223,7 +281,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets whether the current <see cref="Node"/> is enabled.
         /// </summary>
-        [DefaultValue(false)]
+        [DefaultValue(0)]
         public bool Enabled
         {
             get
@@ -386,7 +444,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable nodeTable;
 
                 nodeTable = database.Connection.RetrieveData(database.AdapterType, "Select ID, Name, CompanyID, " +
-                        "Longitude, Latitude, Description, ImagePath, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
+                        "Longitude, Latitude, Description, ImagePath, Settings, MenuData, MenuType, Master, LoadOrder, Enabled, RemoteStatusServiceUrl, " +
                         "RealTimeStatisticServiceUrl, CompanyName From NodeDetail ORDER BY LoadOrder");
 
                 foreach (DataRow row in nodeTable.Rows)
@@ -399,7 +457,10 @@ namespace TimeSeriesFramework.UI.DataModels
                             Longitude = row.Field<decimal?>("Longitude"),
                             Latitude = row.Field<decimal?>("Latitude"),
                             Description = row.Field<string>("Description"),
-                            Image = row.Field<string>("ImagePath"),
+                            ImagePath = row.Field<string>("ImagePath"),
+                            Settings = row.Field<string>("Settings"),
+                            MenuType =row.Field<string>("MenuType"),
+                            MenuData = row.Field<string>("MenuData"),
                             Master = Convert.ToBoolean(row.Field<object>("Master")),
                             LoadOrder = row.Field<int>("LoadOrder"),
                             Enabled = Convert.ToBoolean(row.Field<object>("Enabled")),
@@ -469,19 +530,19 @@ namespace TimeSeriesFramework.UI.DataModels
                 createdConnection = CreateConnection(ref database);
 
                 if (node.ID == Guid.Empty)
-                    database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Master, LoadOrder, " +
+                    database.Connection.ExecuteNonQuery("INSERT INTO Node (Name, CompanyID, Longitude, Latitude, Description, ImagePath, Settings, MenuType, MenuData, Master, LoadOrder, " +
                         "Enabled, RemoteStatusServiceUrl, RealTimeStatisticServiceUrl, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@name, @companyID, " +
-                        "@longitude, @latitude, @description, @image, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
+                        "@longitude, @latitude, @description, @ImagePath, @Settings, @DataType, @DataMenu, @master, @loadOrder, @enabled, @remoteStatusServiceUrl, @realTimeStatisticServiceUrl, " +
                         "@updatedBy, @updatedOn, @createdBy, @createdOn)", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
-                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
+                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
                         node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("UPDATE Node SET Name = @name, CompanyID = @companyID, Longitude = @longitude, Latitude = @latitude, " +
-                        "Description = @description, ImagePath = @image, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
+                        "Description = @description, ImagePath = @imagePath, Settings = @Settings, MenuType = @MenuType, MenuData = @MenuData, Master = @master, LoadOrder = @loadOrder, Enabled = @enabled, " +
                         "RemoteStatusServiceUrl = @remoteStatusServiceUrl, RealTimeStatisticServiceUrl = @realTimeStatisticServiceUrl, " +
                         "UpdatedBy = @updatedBy, UpdatedOn = @updatedOn WHERE ID = @id", DefaultTimeout, node.Name, node.CompanyID.ToNotNull(), node.Longitude.ToNotNull(),
-                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.Image.ToNotNull(), node.Master, node.LoadOrder, node.Enabled,
+                        node.Latitude.ToNotNull(), node.Description.ToNotNull(), node.ImagePath.ToNotNull(), node.Settings.ToNotNull(), node.MenuType, node.MenuData, node.Master, node.LoadOrder, node.Enabled,
                         node.RemoteStatusServiceUrl.ToNotNull(), node.m_realTimeStatisticServiceUrl.ToNotNull(), CommonFunctions.CurrentUser,
                         database.UtcNow(), node.ID);
 

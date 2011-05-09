@@ -78,7 +78,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Acronym.
         /// </summary>
-        [StringLength(3, ErrorMessage = "Vendor acronym cannot exceed 3 characters")]
+        [StringLength(200, ErrorMessage = "Vendor acronym cannot exceed 200 characters")]
         public string Acronym
         {
             get
@@ -96,7 +96,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the <see cref="Vendor"/> Name.
         /// </summary>
         [Required(ErrorMessage = "The Vendor name is a required field, please provide value")]
-        [StringLength(100, ErrorMessage = "Vendor name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Vendor name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -113,7 +113,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="Vendor"/> Phone Number.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Vendor phone number cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Vendor phone number cannot exceed 200 characters.")]
         public string PhoneNumber
         {
             get
@@ -130,7 +130,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the <see cref="Vendor"/> Contact Email.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Vendor contact e-mail cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Vendor contact e-mail cannot exceed 200 characters.")]
         public string ContactEmail
         {
             get

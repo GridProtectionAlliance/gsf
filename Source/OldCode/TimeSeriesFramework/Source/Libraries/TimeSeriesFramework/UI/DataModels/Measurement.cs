@@ -57,6 +57,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private double m_adder;
         private double m_multiplier;
         private string m_description;
+        private bool m_subscribed; 
+        private bool m_internal;  
         private bool m_enabled;
         private string m_historianAcronym;
         private string m_deviceAcronym;
@@ -144,7 +146,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Measurement"/>'s Point Tag.
         /// </summary>
         [Required(ErrorMessage = "Measurement point tag is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Measurement point tag cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Measurement point tag cannot exceed 200 characters.")]
         public string PointTag
         {
             get
@@ -161,7 +163,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Measurement"/>'s Alternate Tag.
         /// </summary>
-        [StringLength(50, ErrorMessage = "Measurement alternate tag cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Measurement alternate tag cannot exceed 200 characters.")]
         public string AlternateTag
         {
             get
@@ -274,6 +276,40 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_description = value;
                 OnPropertyChanged("Description");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool Subscribed
+        {
+            get
+            {
+                return m_subscribed;
+            }
+            set
+            {
+                m_subscribed = value;
+                OnPropertyChanged("Subscribed");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets whether the current <see cref="Measurement"/> is enabled.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool Internal
+        {
+            get
+            {
+                return m_internal;
+            }
+            set
+            {
+                m_internal = value;
+                OnPropertyChanged("Internal");
             }
         }
 
@@ -514,6 +550,8 @@ namespace TimeSeriesFramework.UI.DataModels
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
                         Description = row.Field<string>("Description"),
+                        Subscribed = row.Field<bool>("Subscribed"),
+                        Internal = row.Field<bool>("Internal"),
                         Enabled = row.Field<bool>("Enabled"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
@@ -579,19 +617,19 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 if (measurement.PointID == 0)
                     database.Connection.ExecuteNonQuery("INSERT INTO Measurement (HistorianID, DeviceID, PointTag, AlternateTag, SignalTypeID, PhasorSourceIndex, " +
-                        "SignalReference, Adder, Multiplier, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
+                        "SignalReference, Adder, Multiplier, Subscribed, Internal, Description, Enabled, UpdatedBy, UpdatedOn, CreatedBy, CreatedOn) VALUES (@historianID, @deviceID, " +
                         "@pointTag, @alternateTag, @signalTypeID, @phasorSourceIndex, @signalReference, @adder, @multiplier, @description, @enabled, @updatedBy, " +
                         "@updatedOn, @createdBy, @createdOn)", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
-                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser,
+                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Subscribed, measurement.Internal, measurement.Enabled, CommonFunctions.CurrentUser,
                         database.UtcNow(), CommonFunctions.CurrentUser, database.UtcNow());
                 else
                     database.Connection.ExecuteNonQuery("Update Measurement Set HistorianID = @historianID, DeviceID = @deviceID, PointTag = @pointTag, " +
                         "AlternateTag = @alternateTag, SignalTypeID = @signalTypeID, PhasorSourceIndex = @phasorSourceIndex, SignalReference = @signalReference, " +
-                        "Adder = @adder, Multiplier = @multiplier, Description = @description, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
+                        "Adder = @adder, Multiplier = @multiplier, Description = @description, Subscribed = @subscribed, Internal = @internal, Enabled = @enabled, UpdatedBy = @updatedBy, UpdatedOn = @updatedOn " +
                         "Where PointID = @pointID", DefaultTimeout, measurement.HistorianID.ToNotNull(), measurement.DeviceID.ToNotNull(), measurement.PointTag,
                         measurement.AlternateTag.ToNotNull(), measurement.SignalTypeID, measurement.PhasorSourceIndex.ToNotNull(), measurement.SignalReference,
-                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
+                        measurement.Adder, measurement.Multiplier, measurement.Description.ToNotNull(), measurement.Subscribed, measurement.Internal, measurement.Enabled, CommonFunctions.CurrentUser, database.UtcNow(),
                         measurement.PointID);
 
                 return "Measurement information saved successfully";

@@ -102,7 +102,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the <see cref="Phasor"/> Label.
         /// </summary>
         [Required(ErrorMessage = "Phasor label is a required field, please provide value.")]
-        [StringLength(256, ErrorMessage = "Phasor label must not exceed 256 characters.")]
+        [StringLength(200, ErrorMessage = "Phasor label must not exceed 200 characters.")]
         public string Label
         {
             get

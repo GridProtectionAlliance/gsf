@@ -66,7 +66,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="ErrorLog"/> Source.
         /// </summary>
         [Required(ErrorMessage = "Error log source is a required field, please provide value.")]
-        [StringLength(256, ErrorMessage = "Error log source cannot exceed 256 characters.")]
+        [StringLength(200, ErrorMessage = "Error log source cannot exceed 200 characters.")]
         public string Source
         {
             get

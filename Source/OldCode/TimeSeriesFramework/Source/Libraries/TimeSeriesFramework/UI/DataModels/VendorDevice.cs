@@ -93,7 +93,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="VendorDevice"/>'s Name.
         /// </summary>
         [Required(ErrorMessage = "Vendor device name is a required field, please provide value.")]
-        [StringLength(100, ErrorMessage = "Vendor device name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Vendor device name cannot exceed 200 characters.")]
         public string Name
         {
             get
