@@ -538,14 +538,14 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     measurementList.Add(new Measurement()
                     {
-                        SignalID = Guid.Parse(row.Field<string>("SignalID")),
-                        HistorianID = row.Field<int>("HistorianID"),
+                        SignalID = row.Field<Guid>("SignalID"),
+                        HistorianID = row.Field<int?>("HistorianID"),
                         PointID = row.Field<int>("PointID"),
-                        DeviceID = row.Field<int>("DeviceID"),
+                        DeviceID = row.Field<int?>("DeviceID"),
                         PointTag = row.Field<string>("PointTag"),
                         AlternateTag = row.Field<string>("AlternateTag"),
                         SignalTypeID = row.Field<int>("SignalTypeID"),
-                        PhasorSourceIndex = row.Field<int>("PhasorSourceIndex"),
+                        PhasorSourceIndex = row.Field<int?>("PhasorSourceIndex"),
                         SignalReference = row.Field<string>("SignalReference"),
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
