@@ -98,7 +98,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="ApplicationRole"/> Name.
         /// </summary>
         [Required(ErrorMessage = " Application role name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Application role name cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Application role name cannot exceed 200 characters.")]
         public string Name
         {
             get

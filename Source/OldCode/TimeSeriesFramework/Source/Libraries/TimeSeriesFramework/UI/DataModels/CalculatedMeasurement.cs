@@ -117,7 +117,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Acronym.
         /// </summary>
         [Required(ErrorMessage = "Calculated measurement acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Calculated measurement acronym cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Calculated measurement acronym cannot exceed 200 characters.")]
         public string Acronym
         {
             get
@@ -134,7 +134,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> Name.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Calculated measurement name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Calculated measurement name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -202,7 +202,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> ConfigSection.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Config Section cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "Config Section cannot exceed 200 characters.")]
         public string ConfigSection
         {
             get
@@ -412,7 +412,7 @@ namespace TimeSeriesFramework.UI.DataModels
         ///  Gets or sets <see cref="CalculatedMeasurement"/> TimeResolution
         /// </summary>
         [Required(ErrorMessage = "Calculated measurement time resoulution is a required field, please provide value.")]
-        [DefaultValue(330000)]
+        [DefaultValue(10000)]
         public int TimeResolution
         {
             get
@@ -446,7 +446,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         ///  Gets or sets <see cref="CalculatedMeasurement"/> DownsamplingMethod
         /// </summary>
-        [Required(ErrorMessage = "Calculated measurment downsampling method is required, please select a value.")]
+        [StringLength(15, ErrorMessage = "Calculated measurement name cannot exceed 15 characters.")]
         [DefaultValue("LastReceived")]
         public string DownsamplingMethod
         {

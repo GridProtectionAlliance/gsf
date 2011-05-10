@@ -79,7 +79,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current SecurityGroup Name
         /// </summary>
         [Required(ErrorMessage = " Security group name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Security group name cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Security group name cannot exceed 200 characters.")]
         public string Name
         {
             get

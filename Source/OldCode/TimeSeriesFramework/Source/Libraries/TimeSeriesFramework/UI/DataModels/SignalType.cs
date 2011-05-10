@@ -88,7 +88,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="SignalType"/> Name.
         /// </summary>
         [Required(ErrorMessage = "SignalType name is a required field, please provide value.")]
-        [StringLength(100, ErrorMessage = "SignalType Name cannot exceed 100 characters.")]
+        [StringLength(200, ErrorMessage = "SignalType Name cannot exceed 200 characters.")]
         public string Name
         {
             get

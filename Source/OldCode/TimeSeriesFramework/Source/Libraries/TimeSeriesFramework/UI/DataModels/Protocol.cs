@@ -41,8 +41,11 @@ namespace TimeSeriesFramework.UI.DataModels
         private int m_id;
         private string m_acronym;
         private string m_name;
+        private string m_type;
         private int m_loadOrder;
-
+        private string m_category;
+        private string m_assemblyName;
+        private string m_typeName;
         #endregion
 
         #region [ Properties ]
@@ -96,6 +99,78 @@ namespace TimeSeriesFramework.UI.DataModels
             {
                 m_name = value;
                 OnPropertyChanged("Name");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Protocol"/> Type.
+        /// </summary>
+        [StringLength(200, ErrorMessage = "Protocol Type cannot exceed 200 characters.")]
+        [DefaultValue("Frame")]
+        public string Type
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+                OnPropertyChanged("Type");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Protocol"/> Category.
+        /// </summary>
+        [StringLength(200, ErrorMessage = "Protocol Category cannot exceed 200 characters.")]
+        [DefaultValue("Phasor")]
+        public string Category
+        {
+            get
+            {
+                return m_type;
+            }
+            set
+            {
+                m_type = value;
+                OnPropertyChanged("Category");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Protocol"/> AssemblyName.
+        /// </summary>
+        [Required(ErrorMessage = "Protocol AssemblyName is a required field, please provide value.")]
+        [DefaultValue("TVA.PhasorProtocols.dll")]
+        public string  AssemblyName
+        {
+            get
+            {
+                return m_assemblyName;
+            }
+            set
+            {
+                m_assemblyName = value;
+                OnPropertyChanged("AssemblyName");
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets <see cref="Protocol"/> TypeName.
+        /// </summary>
+        [Required(ErrorMessage = "Protocol TypeName is a required field, please provide value.")]
+        [DefaultValue("TVA.PhasorProtocols.PhasorMeasurementMapper")]
+        public string TypeName
+        {
+            get
+            {
+                return m_typeName;
+            }
+            set
+            {
+                m_typeName = value;
+                OnPropertyChanged("TypeName");
             }
         }
 

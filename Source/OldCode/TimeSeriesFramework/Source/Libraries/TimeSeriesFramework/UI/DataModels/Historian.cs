@@ -104,7 +104,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets the current <see cref="Historian" />'s Acronym.
         /// </summary>
         [Required(ErrorMessage = "Historian acronym is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "Historian acronym cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "Historian acronym cannot exceed 200 characters.")]
         public string Acronym
         {
             get
@@ -121,7 +121,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets the current <see cref="Historian" />'s Name.
         /// </summary>
-        [StringLength(100, ErrorMessage = "Historian name cannot exceed 100 characters")]
+        [StringLength(200, ErrorMessage = "Historian name cannot exceed 200 characters")]
         public string Name
         {
             get

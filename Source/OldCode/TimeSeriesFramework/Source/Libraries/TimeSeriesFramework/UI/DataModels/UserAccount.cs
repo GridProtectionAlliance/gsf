@@ -84,7 +84,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// Gets or sets <see cref="UserAccount"/> Name.
         /// </summary>
         [Required(ErrorMessage = " User account name is a required field, please provide value.")]
-        [StringLength(50, ErrorMessage = "User account name cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "User account name cannot exceed 200 characters.")]
         public string Name
         {
             get
@@ -101,7 +101,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Password.
         /// </summary>  
-        [StringLength(256, ErrorMessage = "User Account password cannot exceed 256 characters.")]
+        [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
         public string Password
         {
             get
@@ -118,7 +118,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> FirstName.
         /// </summary>       
-        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
         public string FirstName
         {
             get
@@ -135,7 +135,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> LastName.
         /// </summary>
-        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
         public string LastName
         {
             get
@@ -169,7 +169,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Phone
         /// </summary>
-        [StringLength(50, ErrorMessage = "User Account password cannot exceed 50 characters.")]
+        [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
         public string Phone
         {
             get
@@ -186,7 +186,7 @@ namespace TimeSeriesFramework.UI.DataModels
         /// <summary>
         /// Gets or sets <see cref="UserAccount"/> Email
         /// </summary>
-        [StringLength(256, ErrorMessage = "User Account password cannot exceed 256 characters.")]
+        [StringLength(200, ErrorMessage = "User Account password cannot exceed 200 characters.")]
         public string Email
         {
             get
