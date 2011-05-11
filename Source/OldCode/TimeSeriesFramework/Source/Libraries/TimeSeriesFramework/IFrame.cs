@@ -20,11 +20,13 @@
 //       Generated original version of source code.
 //  04/14/2011 - J. Ritchie Carroll
 //       Added received and published timestamps for measurements.
+//  05/11/2011 - J. Ritchie Carroll
+//       Changed IFrame to require a concurrent dictionary.
 //
 //******************************************************************************************************
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using TVA;
 
 namespace TimeSeriesFramework
@@ -38,9 +40,9 @@ namespace TimeSeriesFramework
         /// Keyed measurements in this <see cref="IFrame"/>.
         /// </summary>
         /// <remarks>
-        /// Represents a dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
+        /// Represents a concurrent dictionary of measurements, keyed by <see cref="MeasurementKey"/>.
         /// </remarks>
-        IDictionary<MeasurementKey, IMeasurement> Measurements
+        ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get;
         }

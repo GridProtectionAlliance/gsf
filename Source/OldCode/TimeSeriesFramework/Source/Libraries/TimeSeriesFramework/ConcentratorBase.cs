@@ -1730,12 +1730,14 @@ namespace TimeSeriesFramework
                         }
                         else
                         {
+                            sourceFrame = frame.SourceFrame;
+
+                            // Access published flag within critical section to ensure no updates will
+                            // be made to frame while it is being published
                             frame.Lock.EnterReadLock();
 
                             try
                             {
-                                sourceFrame = frame.SourceFrame;
-
                                 if (!sourceFrame.Published)
                                 {
                                     // Assign derived measurement to its source frame using user customizable function.
@@ -1927,8 +1929,7 @@ namespace TimeSeriesFramework
                 m_publicationWaitHandle.Set();
         }
 
-        // Member variables being updated in this method are only updated here so we don't worry about
-        // atomic operations on these variables.
+        // Frame publication handler
         private void PublishFrames()
         {
             TrackingFrame frame;

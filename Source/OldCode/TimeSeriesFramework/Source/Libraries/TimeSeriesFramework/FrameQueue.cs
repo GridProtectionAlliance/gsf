@@ -22,14 +22,18 @@
 //       Fixed bug in the Pop() method by checking if m_frameQueue has any element in it.
 //  02/08/2011 - J. Ritchie Carroll
 //       Added ExamineQueueState method to analyze real-time queue state.
+//  05/10/2011 - J. Ritchie Carroll
+//       Updated frame queue locks to use a ReaderWriterSpinLock as an optimization.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using TVA;
+using TVA.Threading;
 
 namespace TimeSeriesFramework
 {
@@ -44,18 +48,18 @@ namespace TimeSeriesFramework
         internal delegate IFrame CreateNewFrameFunction(Ticks timestamp);
 
         // Fields
-        private CreateNewFrameFunction m_createNewFrame;        // IFrame creation function
-        private LinkedList<TrackingFrame> m_frameList;          // We keep this list sorted by timestamp so frames are processed in order
-        private Dictionary<long, TrackingFrame> m_frameHash;    // This list not guaranteed to be sorted, but used for fast frame lookup
-        private SpinLock m_queueLock;                           // Spinning lock used for synchronizing access to frame queues
-        private long m_publishedTicks;                          // Timstamp of last published frame
-        private TrackingFrame m_head;                           // Reference to current top of the frame collection
-        private TrackingFrame m_last;                           // Reference to last published frame
-        private int m_framesPerSecond;                          // Cached frames per second
-        private double m_ticksPerFrame;                         // Cached ticks per frame
-        private long m_timeResolution;                          // Cached time resolution (max sorting resolution in ticks)
-        private DownsamplingMethod m_downsamplingMethod;        // Cached downsampling method
-        private bool m_disposed;                                // Object disposed flag
+        private CreateNewFrameFunction m_createNewFrame;                // IFrame creation function
+        private LinkedList<TrackingFrame> m_frameList;                  // We keep this list sorted by timestamp so frames are processed in order
+        private ConcurrentDictionary<long, TrackingFrame> m_frameHash;  // Fast frame lookup dictionary
+        private SpinLock m_queueLock;                                   // Spinning lock used for synchronizing access to frame list
+        private long m_publishedTicks;                                  // Timstamp of last published frame
+        private volatile TrackingFrame m_head;                          // Reference to current top of the frame collection
+        private volatile TrackingFrame m_last;                          // Reference to last published frame
+        private int m_framesPerSecond;                                  // Cached frames per second
+        private double m_ticksPerFrame;                                 // Cached ticks per frame
+        private long m_timeResolution;                                  // Cached time resolution (max sorting resolution in ticks)
+        private DownsamplingMethod m_downsamplingMethod;                // Cached downsampling method
+        private bool m_disposed;                                        // Object disposed flag
 
         #endregion
 
@@ -68,7 +72,7 @@ namespace TimeSeriesFramework
         {
             m_createNewFrame = createNewFrame;
             m_frameList = new LinkedList<TrackingFrame>();
-            m_frameHash = new Dictionary<long, TrackingFrame>();
+            m_frameHash = new ConcurrentDictionary<long, TrackingFrame>();
             m_queueLock = new SpinLock();
             m_downsamplingMethod = DownsamplingMethod.LastReceived;
         }
@@ -307,14 +311,14 @@ namespace TimeSeriesFramework
         /// </summary>
         public void Pop()
         {
-            bool locked = false;
-
             // We track latest published ticks - don't want to allow slow moving measurements
             // to inject themselves after a certain publication timeframe has passed - this
             // avoids any possible out-of-sequence frame publication...
             m_last = m_head;
             m_head = null;
-            m_publishedTicks = m_last.Timestamp;
+            long publishedTicks = m_last.Timestamp;
+            Thread.VolatileWrite(ref m_publishedTicks, publishedTicks);
+            bool locked = false;
 
             // Assign next node, if any, as quickly as possible. Still have to wait for queue
             // lock - tick-tock, time's-a-wastin' and user function needs a frame to publish.
@@ -333,14 +337,15 @@ namespace TimeSeriesFramework
                     // Clean up frame queues
                     m_frameList.RemoveFirst();
                 }
-
-                m_frameHash.Remove(m_publishedTicks);
             }
             finally
             {
                 if (locked)
                     m_queueLock.Exit();
             }
+
+            TrackingFrame frame;
+            m_frameHash.TryRemove(publishedTicks, out frame);
         }
 
         /// <summary>
@@ -358,7 +363,7 @@ namespace TimeSeriesFramework
         {
             // Calculate destination ticks for this frame
             TrackingFrame frame = null;
-            bool nodeAdded = false, locked = false;
+            bool locked = false, nodeAdded = false;
             long baseTicks, ticksBeyondSecond, frameIndex, destinationTicks, nextDestinationTicks;
 
             // Baseline timestamp to the top of the second
@@ -397,18 +402,22 @@ namespace TimeSeriesFramework
             destinationTicks += baseTicks;
 
             // Make sure ticks are newer than latest published ticks...
-            if (destinationTicks > m_publishedTicks)
+            if (destinationTicks > Thread.VolatileRead(ref m_publishedTicks))
             {
-                // Wait for queue lock - we wait because calling function demands a destination frame
+                // See if requested frame is already available (can do this outside lock with concurrent dictionary)
+                if (m_frameHash.TryGetValue(destinationTicks, out frame))
+                    return frame;
+
+                // Didn't find frame for this timestamp so we need to add a new one to the queue
                 try
                 {
                     m_queueLock.Enter(ref locked);
 
-                    // See if requested frame is already available...
+                    // Another thread may have gotten to this task already, so check for this contingency...
                     if (m_frameHash.TryGetValue(destinationTicks, out frame))
                         return frame;
 
-                    // Didn't find frame for this timestamp so we create one
+                    // Create a new frame for this timestamp
                     frame = new TrackingFrame(m_createNewFrame(destinationTicks), m_downsamplingMethod);
 
                     if (m_frameList.Count > 0)
@@ -438,7 +447,7 @@ namespace TimeSeriesFramework
 
                     // Since we'll be requesting this frame over and over, we'll use
                     // a hash table for quick frame lookups by timestamp
-                    m_frameHash.Add(destinationTicks, frame);
+                    m_frameHash[destinationTicks] = frame;
                 }
                 finally
                 {

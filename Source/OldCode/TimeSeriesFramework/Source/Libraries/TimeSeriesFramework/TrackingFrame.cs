@@ -21,8 +21,10 @@
 //
 //******************************************************************************************************
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using TVA.Threading;
 
 namespace TimeSeriesFramework
 {
@@ -37,8 +39,8 @@ namespace TimeSeriesFramework
         private IFrame m_sourceFrame;
         private long m_timestamp;
         private DownsamplingMethod m_downsamplingMethod;
-        private Dictionary<MeasurementKey, List<IMeasurement>> m_measurements;
-        private ReaderWriterLockSlim m_frameLock;
+        private ConcurrentDictionary<MeasurementKey, List<IMeasurement>> m_measurements;
+        private ReaderWriterSpinLock m_frameLock;
         private long m_derivedMeasurements;
 
         #endregion
@@ -55,10 +57,10 @@ namespace TimeSeriesFramework
             m_sourceFrame = sourceFrame;
             m_timestamp = sourceFrame.Timestamp;
             m_downsamplingMethod = downsamplingMethod;
-            m_frameLock = new ReaderWriterLockSlim();
+            m_frameLock = new ReaderWriterSpinLock();
 
             if (downsamplingMethod != DownsamplingMethod.LastReceived)
-                m_measurements = new Dictionary<MeasurementKey, List<IMeasurement>>();
+                m_measurements = new ConcurrentDictionary<MeasurementKey, List<IMeasurement>>();
         }
 
         #endregion
@@ -102,7 +104,7 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Gets the <see cref="TrackingFrame"/> locking primitive.
         /// </summary>
-        public ReaderWriterLockSlim Lock
+        public ReaderWriterSpinLock Lock
         {
             get
             {
@@ -165,7 +167,7 @@ namespace TimeSeriesFramework
                     // No prior measurement exists, track this initial one
                     m_values = new List<IMeasurement>();
                     m_values.Add(measurement);
-                    m_measurements.Add(measurement.Key, m_values);
+                    m_measurements[measurement.Key] = m_values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;
@@ -213,7 +215,7 @@ namespace TimeSeriesFramework
                     // No prior measurement exists, track this initial one
                     m_values = new List<IMeasurement>();
                     m_values.Add(measurement);
-                    m_measurements.Add(measurement.Key, m_values);
+                    m_measurements[measurement.Key] = m_values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;
@@ -263,7 +265,7 @@ namespace TimeSeriesFramework
                     // No prior measurement exists, track this initial one
                     m_values = new List<IMeasurement>();
                     m_values.Add(measurement);
-                    m_measurements.Add(measurement.Key, m_values);
+                    m_measurements[measurement.Key] = m_values;
 
                     // Keep track of total number of derived measurements
                     m_derivedMeasurements++;

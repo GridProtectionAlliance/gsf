@@ -20,10 +20,13 @@
 //       Generated original version of source code.
 //  04/14/2011 - J. Ritchie Carroll
 //       Added received and published timestamps for measurements.
+//  05/11/2011 - J. Ritchie Carroll
+//       Updated to use a concurrent dictionary.
 //
 //******************************************************************************************************
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using TVA;
 
@@ -40,13 +43,13 @@ namespace TimeSeriesFramework
         #region [ Members ]
 
         // Fields
-        private Ticks m_timestamp;                                          // Time, represented as 100-nanosecond ticks, of this frame of data
-        private Ticks m_receivedTimestamp;                                  // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
-        private Ticks m_publishedTimestamp;                                 // Time, represented as 100-nanosecond ticks, of frame published (post process)
-        private bool m_published;                                           // Determines if this frame of data has been published
-        private int m_sortedMeasurements;                                   // Total measurements sorted into this frame
-        private Dictionary<MeasurementKey, IMeasurement> m_measurements;    // Collection of measurements published by this frame
-        private IMeasurement m_lastSortedMeasurement;                       // Last measurement sorted into this frame
+        private Ticks m_timestamp;                                                  // Time, represented as 100-nanosecond ticks, of this frame of data
+        private Ticks m_receivedTimestamp;                                          // Time, represented as 100-nanosecond ticks, of frame received (i.e. created)
+        private Ticks m_publishedTimestamp;                                         // Time, represented as 100-nanosecond ticks, of frame published (post process)
+        private bool m_published;                                                   // Determines if this frame of data has been published
+        private int m_sortedMeasurements;                                           // Total measurements sorted into this frame
+        private ConcurrentDictionary<MeasurementKey, IMeasurement> m_measurements;  // Concurrent dictionary of measurements published by this frame
+        private IMeasurement m_lastSortedMeasurement;                               // Last measurement sorted into this frame
 
         #endregion
 
@@ -64,7 +67,7 @@ namespace TimeSeriesFramework
 #else
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
 #endif
-            m_measurements = new Dictionary<MeasurementKey, IMeasurement>(100);
+            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>();
             m_sortedMeasurements = -1;
         }
 
@@ -77,7 +80,7 @@ namespace TimeSeriesFramework
         {
             m_timestamp = timestamp;
             m_receivedTimestamp = DateTime.UtcNow.Ticks;
-            m_measurements = new Dictionary<MeasurementKey, IMeasurement>(measurements);
+            m_measurements = new ConcurrentDictionary<MeasurementKey, IMeasurement>(measurements);
             m_sortedMeasurements = -1;
         }
 
@@ -88,7 +91,7 @@ namespace TimeSeriesFramework
         /// <summary>
         /// Keyed measurements in this <see cref="Frame"/>.
         /// </summary>
-        public IDictionary<MeasurementKey, IMeasurement> Measurements
+        public ConcurrentDictionary<MeasurementKey, IMeasurement> Measurements
         {
             get
             {
