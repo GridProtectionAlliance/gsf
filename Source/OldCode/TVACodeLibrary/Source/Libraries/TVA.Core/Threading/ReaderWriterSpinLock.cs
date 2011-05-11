@@ -10,9 +10,11 @@
 //  Code Modification History:
 //  -----------------------------------------------------------------------------------------------------
 //  03/21/2011 - Ritchie
-//       Generated original version of source code based on Joe Duffy's Weblog article:
+//       Generated original version of source code based on Joe Duffy's Weblog articles:
 //           "A single-word reader/writer spin lock", January 29, 2009
-//           http://www.bluebytesoftware.com/blog/2009/01/30/ASinglewordReaderwriterSpinLock.aspx
+//              http://www.bluebytesoftware.com/blog/2009/01/30/ASinglewordReaderwriterSpinLock.aspx
+//           "A more scalable reader/writer lock, and a bit less harsh consideration of the idea", February 20, 2009
+//              http://www.bluebytesoftware.com/blog/2009/02/21/AMoreScalableReaderwriterLockAndABitLessHarshConsiderationOfTheIdea.aspx
 //
 //*******************************************************************************************************
 
@@ -253,10 +255,13 @@
 
 using System;
 using System.Threading;
- 
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+
 // We use plenty of interlocked operations on volatile fields below.  Safe.
 #pragma warning disable 0420
- 
+
 namespace TVA.Threading
 {
     /// <summary>
@@ -274,18 +279,32 @@ namespace TVA.Threading
     /// unnecessary CPU utilization due to spinning incurred by waiting reads.
     /// </para>
     /// </remarks>
-    public struct ReaderWriterSpinLock
+    public class ReaderWriterSpinLock
     {
         #region [ Members ]
 
-        // Constants
-        private const int MASK_WRITER_BIT = unchecked((int)0x80000000);
-        private const int MASK_WRITER_WAITING_BIT = unchecked((int)0x40000000);
-        private const int MASK_WRITER_BITS = unchecked((int)(MASK_WRITER_BIT | MASK_WRITER_WAITING_BIT));
-        private const int MASK_READER_BITS = unchecked((int)~MASK_WRITER_BITS);
+        // Nested Types
+        [StructLayout(LayoutKind.Sequential, Size = 128)]
+        struct ReadEntry
+        {
+            internal volatile int m_taken;
+        }
 
         // Fields
-        private volatile int m_state;
+        private volatile int m_writer;
+        private volatile ReadEntry[] m_readers = new ReadEntry[Environment.ProcessorCount * 16];
+
+        #endregion
+
+        #region [ Properties ]
+
+        private int ReadLockIndex
+        {
+            get
+            {
+                return Thread.CurrentThread.ManagedThreadId % m_readers.Length;
+            }
+        }
 
         #endregion
 
@@ -302,23 +321,24 @@ namespace TVA.Threading
         {
             SpinWait sw = new SpinWait();
 
-            do
+            while (true)
             {
-                // If there are no readers currently, grab the write lock.
-                int state = m_state;
-                
-                if ((state == 0 || state == MASK_WRITER_WAITING_BIT) &&
-                    Interlocked.CompareExchange(ref m_state, MASK_WRITER_BIT, state) == state)
-                        return;
+                if (m_writer == 0 && Interlocked.Exchange(ref m_writer, 1) == 0)
+                {
+                    // We now hold the write lock, and prevent new readers -
+                    // but we must ensure no readers exist before proceeding.
+                    for (int i = 0; i < m_readers.Length; i++)
+                    {
+                        while (m_readers[i].m_taken != 0)
+                            sw.SpinOnce();
+                    }
 
-                // Otherwise, if the writer waiting bit is unset, set it.  We don't
-                // care if we fail -- we'll have to try again the next time around.
-                if ((state & MASK_WRITER_WAITING_BIT) == 0)
-                    Interlocked.CompareExchange(ref m_state, state | MASK_WRITER_WAITING_BIT, state);
+                    break;
+                }
 
+                // We failed to take the write lock; wait a bit and retry.
                 sw.SpinOnce();
             }
-            while (true);
         }
 
         /// <summary>
@@ -326,10 +346,8 @@ namespace TVA.Threading
         /// </summary>
         public void ExitWriteLock()
         {
-            // Exiting the write lock is simple: just set the state to 0.  We
-            // try to keep the writer waiting bit to prevent readers from getting
-            // in -- but don't want to resort to a CAS, so we may lose one.
-            Interlocked.Exchange(ref m_state, 0 | (m_state & MASK_WRITER_WAITING_BIT));
+            // No need for a CAS.
+            m_writer = 0;
         }
 
         /// <summary>
@@ -342,20 +360,26 @@ namespace TVA.Threading
         public void EnterReadLock()
         {
             SpinWait sw = new SpinWait();
+            int tid = ReadLockIndex;
 
-            do
+            // Wait until there are no writers.
+            while (true)
             {
-                int state = m_state;
+                while (m_writer == 1)
+                    sw.SpinOnce();
 
-                if ((state & MASK_WRITER_BITS) == 0)
+                // Try to take the read lock.
+                Interlocked.Increment(ref m_readers[tid].m_taken);
+
+                if (m_writer == 0)
                 {
-                    if (Interlocked.CompareExchange(ref m_state, state + 1, state) == state)
-                        return;
+                    // Success, no writer, proceed.
+                    break;
                 }
 
-                sw.SpinOnce();
+                // Back off, to let the writer go through.
+                Interlocked.Decrement(ref m_readers[tid].m_taken);
             }
-            while (true);
         }
 
         /// <summary>
@@ -364,24 +388,8 @@ namespace TVA.Threading
         /// <exception cref="InvalidOperationException">Cannot exit read lock when there are no readers.</exception>
         public void ExitReadLock()
         {
-            SpinWait sw = new SpinWait();
-
-            do
-            {
-                // Validate we hold a read lock.
-                int state = m_state;
-
-                if ((state & MASK_READER_BITS) == 0)
-                    throw new InvalidOperationException("Cannot exit read lock when there are no readers.");
-
-                // Try to exit the read lock, preserving the writer waiting bit (if any).
-                if (Interlocked.CompareExchange(
-                    ref m_state, ((state & MASK_READER_BITS) - 1) | (state & MASK_WRITER_WAITING_BIT), state) == state)
-                        return;
-
-                sw.SpinOnce();
-            }
-            while (true);
+            // Just note that the current reader has left the lock.
+            Interlocked.Decrement(ref m_readers[ReadLockIndex].m_taken);
         }
 
         #endregion
