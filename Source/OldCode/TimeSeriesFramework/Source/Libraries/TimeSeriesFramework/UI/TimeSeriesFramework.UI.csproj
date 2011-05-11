@@ -84,11 +84,13 @@
     <Compile Include="DataModels\Protocol.cs" />
     <Compile Include="DataModels\SecurityGroup.cs" />
     <Compile Include="DataModels\SignalType.cs" />
+    <Compile Include="DataModels\SubscriberMeasurement.cs" />
     <Compile Include="DataModels\UserAccount.cs" />
     <Compile Include="DataModels\Vendor.cs" />
     <Compile Include="DataModels\VendorDevice.cs" />
     <Compile Include="EntityPropertyAttribute.cs" />
     <Compile Include="IDataModel.cs" />
+    <Compile Include="MeasurementGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
