@@ -282,6 +282,7 @@
     <Compile Include="Threading\ManagedThreadPool.cs" />
     <Compile Include="Threading\ManagedThreads.cs" />
     <Compile Include="Threading\NamespaceDoc.cs" />
+    <Compile Include="Threading\ReaderWriterSpinLock.cs" />
     <Compile Include="Ticks.cs" />
     <Compile Include="TimeTagBase.cs" />
     <Compile Include="TypeExtensions.cs" />
