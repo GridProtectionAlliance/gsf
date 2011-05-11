@@ -686,7 +686,7 @@
             Keyed measurements in this <see cref="T:TimeSeriesFramework.IFrame"/>.
             </summary>
             <remarks>
-            Represents a dictionary of measurements, keyed by <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
+            Represents a concurrent dictionary of measurements, keyed by <see cref="T:TimeSeriesFramework.MeasurementKey"/>.
             </remarks>
         </member>
         <member name="P:TimeSeriesFramework.IFrame.Published">
