@@ -26,6 +26,8 @@
 //  04/08/2011 - Pinal C. Patel
 //       Added ExecutionException event.
 //       Renamed StatusUpdate event to StatusMessage.
+//  05/11/2011 - Pinal C. Patel
+//       Modified OnStatusUpdate() method to allow for parameterized arguments.
 //
 //*******************************************************************************************************
 
@@ -586,10 +588,11 @@ namespace TVA.Adapters
         /// </summary>
         /// <param name="updateType"><see cref="UpdateType"/> to send to <see cref="StatusUpdate"/> event.</param>
         /// <param name="updateMessage">Update message to send to <see cref="StatusUpdate"/> event.</param>
-        protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage)
+        /// <param name="args">Arguments to be used when formatting the <paramref name="updateMessage"/>.</param>
+        protected virtual void OnStatusUpdate(UpdateType updateType, string updateMessage, params object[] args)
         {
             if (StatusUpdate != null)
-                StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, updateMessage));
+                StatusUpdate(this, new EventArgs<UpdateType, string>(updateType, string.Format(updateMessage, args)));
         }
 
         /// <summary>

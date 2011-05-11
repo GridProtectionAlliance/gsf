@@ -13,6 +13,8 @@
 //       Initial version of source generated.
 //  09/14/2009 - Stephen C. Wills
 //       Added new header and license agreement.
+//  05/11/2011 - J. Ritchie Carroll
+//       Marked classes as serializable.
 //
 //*******************************************************************************************************
 
@@ -274,6 +276,7 @@ namespace TVA
     /// Represents a generic event arguments class with one data argument.
     /// </summary>
     /// <typeparam name="T">Type of data argument for this event arguments instance.</typeparam>
+    [Serializable()]
     public class EventArgs<T> : EventArgs
     {
         /// <summary>
@@ -304,6 +307,7 @@ namespace TVA
     /// </summary>
     /// <typeparam name="T1">The type of the first data argument for this event arguments instance.</typeparam>
     /// <typeparam name="T2">The type of the second data argument for this event arguments instance.</typeparam>
+    [Serializable()]
     public class EventArgs<T1, T2> : EventArgs
     {
         /// <summary>
@@ -342,6 +346,7 @@ namespace TVA
     /// <typeparam name="T1">The type of the first data argument for this event arguments instance.</typeparam>
     /// <typeparam name="T2">The type of the second data argument for this event arguments instance.</typeparam>
     /// <typeparam name="T3">The type of the third data argument for this event arguments instance.</typeparam>
+    [Serializable()]
     public class EventArgs<T1, T2, T3> : EventArgs
     {
         /// <summary>
@@ -388,6 +393,7 @@ namespace TVA
     /// <typeparam name="T2">The type of the second data argument for this event arguments instance.</typeparam>
     /// <typeparam name="T3">The type of the third data argument for this event arguments instance.</typeparam>
     /// <typeparam name="T4">The type of the fourth data argument for this event arguments instance.</typeparam>
+    [Serializable()]
     public class EventArgs<T1, T2, T3, T4> : EventArgs
     {
         /// <summary>

@@ -37,6 +37,10 @@
 //       of the object being deserialized when deserializing from an XML file.
 //  04/14/2011 - Pinal C. Patel
 //       Updated to use new serialization methods in TVA.Serialization class.
+//  05/11/2011 - Pinal C. Patel
+//       Implemented IPersistSettings interface.
+//       Changed the unit for AllowableProcessMemoryUsage and AllowableAdapterMemoryUsage properties 
+//       from bytes to megabytes.
 //
 //*******************************************************************************************************
 
@@ -260,6 +264,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -267,6 +272,7 @@ using System.Threading;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using TVA.Collections;
+using TVA.Configuration;
 using TVA.IO;
 using TVA.Units;
 
@@ -309,7 +315,6 @@ namespace TVA.Adapters
     /// using TVA;
     /// using TVA.Adapters;
     /// using TVA.Security.Cryptography;
-    /// using TVA.Units;
     /// 
     /// class Program
     /// {
@@ -325,9 +330,9 @@ namespace TVA.Adapters
     ///         s_adapterLoader.IsolateAdapters = true;
     ///         s_adapterLoader.MonitorAdapters = true;
     ///         s_adapterLoader.AdapterFileExtension = "*.exe";
-    ///         s_adapterLoader.AllowableProcessMemoryUsage = 200 * SI2.Mega;
+    ///         s_adapterLoader.AllowableProcessMemoryUsage = 200;
     ///         s_adapterLoader.AllowableProcessProcessorUsage = 50;
-    ///         s_adapterLoader.AllowableAdapterMemoryUsage = 100 * SI2.Mega;
+    ///         s_adapterLoader.AllowableAdapterMemoryUsage = 100;
     ///         s_adapterLoader.AllowableAdapterProcessorUsage = 25;
     ///         s_adapterLoader.AdapterLoaded += OnAdapterLoaded;
     ///         s_adapterLoader.AdapterUnloaded += OnAdapterUnloaded;
@@ -428,7 +433,7 @@ namespace TVA.Adapters
     /// </example>
     /// <seealso cref="Adapter"/>
     /// <seealso cref="IAdapter"/>
-    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus where T : IAdapter
+    public class AdapterLoader<T> : ISupportLifecycle, IProvideStatus, IPersistSettings where T : IAdapter
     {
         #region [ Members ]
 
@@ -501,7 +506,7 @@ namespace TVA.Adapters
         /// <summary>
         /// Specifies the default value for the <see cref="AllowableProcessMemoryUsage"/> property
         /// </summary>
-        public const double DefaultAllowableProcessMemoryUsage = 1000 * SI2.Mega;
+        public const double DefaultAllowableProcessMemoryUsage = 500;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowableProcessProcessorUsage"/> property.
@@ -511,7 +516,7 @@ namespace TVA.Adapters
         /// <summary>
         /// Specifies the default value for the <see cref="AllowableAdapterMemoryUsage"/> property.
         /// </summary>
-        public const double DefaultAllowableAdapterMemoryUsage = 100 * SI2.Mega;
+        public const double DefaultAllowableAdapterMemoryUsage = 100;
 
         /// <summary>
         /// Specifies the default value for the <see cref="AllowableAdapterProcessorUsage"/> property.
@@ -578,6 +583,8 @@ namespace TVA.Adapters
         private double m_allowableProcessProcessorUsage;
         private double m_allowableAdapterMemoryUsage;
         private double m_allowableAdapterProcessorUsage;
+        private bool m_persistSettings;
+        private string m_settingsCategory;
         private ObservableCollection<T> m_adapters;
         private FileSystemWatcher m_adapterWatcher;
         private ProcessQueue<object> m_operationQueue;
@@ -606,6 +613,7 @@ namespace TVA.Adapters
             m_allowableProcessProcessorUsage = DefaultAllowableProcessProcessorUsage;
             m_allowableAdapterMemoryUsage = DefaultAllowableAdapterMemoryUsage;
             m_allowableAdapterProcessorUsage = DefaultAllowableAdapterProcessorUsage;
+            m_settingsCategory = this.GetType().Name;
             m_adapters = new ObservableCollection<T>();
             m_adapters.CollectionChanged += Adapters_CollectionChanged;
             m_adapterWatcher = new FileSystemWatcher();
@@ -639,7 +647,7 @@ namespace TVA.Adapters
         {
             get
             {
-                return FilePath.GetAbsolutePath(m_adapterDirectory);
+                return m_adapterDirectory;
             }
             set
             {
@@ -685,7 +693,7 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets or sets a boolean value that indicates whether new assemblies added at runtime will be processed for <see cref="Adapters"/>.
+        /// Gets or sets a boolean value that indicates whether the <see cref="AdapterDirectory"/> is to be monitored for new <see cref="Adapters"/>.
         /// </summary>
         public bool WatchForAdapters
         {
@@ -734,7 +742,7 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
+        /// Gets or sets the memory in megabytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         public double AllowableProcessMemoryUsage
@@ -753,7 +761,7 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the memory in bytes the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
+        /// Gets or sets the processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending <see cref="Adapters"/>.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         public double AllowableProcessProcessorUsage
@@ -772,7 +780,7 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the processor time in % the <see cref="Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+        /// Gets or sets the memory in megabytes the <see cref="Adapters"/> are allowed to use before being flagged as offending by the internal monitoring process.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         public double AllowableAdapterMemoryUsage
@@ -791,7 +799,7 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets or sets the memory in bytes the <see cref="Adapters"/> are allowed to use before being flagged as culprits by the internal monitoring process.
+        /// Gets or sets the processor time in % the <see cref="Adapters"/> are allowed to use before being flagged as offending by the internal monitoring process.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">The value being assigned is zero or negative.</exception>
         public double AllowableAdapterProcessorUsage
@@ -806,6 +814,40 @@ namespace TVA.Adapters
                     throw new ArgumentOutOfRangeException("value");
 
                 m_allowableAdapterProcessorUsage = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a boolean value that indicates whether <see cref="AdapterLoader{T}"/> settings are to be saved to the config file.
+        /// </summary>
+        public bool PersistSettings
+        {
+            get
+            {
+                return m_persistSettings;
+            }
+            set
+            {
+                m_persistSettings = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the category under which <see cref="AdapterLoader{T}"/> settings are to be saved to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">The value being assigned is a null or empty string.</exception>
+        public string SettingsCategory
+        {
+            get
+            {
+                return m_settingsCategory;
+            }
+            set
+            {
+                if (string.IsNullOrEmpty(value))
+                    throw new ArgumentNullException("value");
+
+                m_settingsCategory = value;
             }
         }
 
@@ -865,17 +907,6 @@ namespace TVA.Adapters
         }
 
         /// <summary>
-        /// Gets a list of adapters loaded from the <see cref="AdapterDirectory"/>.
-        /// </summary>
-        public IList<T> Adapters
-        {
-            get
-            {
-                return m_adapters;
-            }
-        }
-
-        /// <summary>
         /// Gets the unique identifier of the <see cref="AdapterLoader{T}"/>.
         /// </summary>
         public string Name
@@ -898,7 +929,7 @@ namespace TVA.Adapters
                 status.Append(typeof(T).Name);
                 status.AppendLine();
                 status.Append("        Adapters directory: ");
-                status.Append(FilePath.TrimFileName(AdapterDirectory, 30));
+                status.Append(FilePath.TrimFileName(m_adapterDirectory, 30));
                 status.AppendLine();
                 status.Append("         Adapter isolation: ");
                 status.Append(m_isolateAdapters ? "Enabled" : "Disabled");
@@ -928,6 +959,17 @@ namespace TVA.Adapters
                 }
 
                 return status.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of adapters loaded from the <see cref="AdapterDirectory"/>.
+        /// </summary>
+        public IList<T> Adapters
+        {
+            get
+            {
+                return m_adapters;
             }
         }
 
@@ -982,11 +1024,15 @@ namespace TVA.Adapters
         {
             if (!m_initialized)
             {
+                // Load settings from the config file.
+                LoadSettings();
+
                 // Process adapters.
+                m_adapterDirectory = FilePath.GetAbsolutePath(m_adapterDirectory);
                 if (m_adapterFileFormat == AdapterFileFormat.Assembly)
                 {
                     if (adapterTypes == null)
-                        adapterTypes = typeof(T).LoadImplementations(Path.Combine(AdapterDirectory, m_adapterFileExtension));
+                        adapterTypes = typeof(T).LoadImplementations(Path.Combine(m_adapterDirectory, m_adapterFileExtension));
 
                     foreach (Type type in adapterTypes)
                     {
@@ -995,7 +1041,7 @@ namespace TVA.Adapters
                 }
                 else
                 {
-                    foreach (string adapterFile in Directory.GetFiles(AdapterDirectory, m_adapterFileExtension))
+                    foreach (string adapterFile in Directory.GetFiles(m_adapterDirectory, m_adapterFileExtension))
                     {
                         ProcessAdapter(adapterFile);
                     }
@@ -1004,7 +1050,7 @@ namespace TVA.Adapters
                 // Watch for adapters.
                 if (m_watchForAdapters)
                 {
-                    m_adapterWatcher.Path = AdapterDirectory;
+                    m_adapterWatcher.Path = m_adapterDirectory;
                     m_adapterWatcher.EnableRaisingEvents = true;
                 }
 
@@ -1027,6 +1073,74 @@ namespace TVA.Adapters
         }
 
         /// <summary>
+        /// Saves <see cref="AdapterLoader{T}"/> settings to the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public void SaveSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
+
+                // Save settings under the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings["AdapterDirectory", true].Update(m_adapterDirectory);
+                settings["AdapterFileExtension", true].Update(m_adapterFileExtension);
+                settings["AdapterFileFormat", true].Update(m_adapterFileFormat);
+                settings["WatchForAdapters", true].Update(m_watchForAdapters);
+                settings["IsolateAdapters", true].Update(m_isolateAdapters);
+                settings["MonitorAdapters", true].Update(m_monitorAdapters);
+                settings["AllowableProcessMemoryUsage", true].Update(m_allowableProcessMemoryUsage);
+                settings["AllowableProcessProcessorUsage", true].Update(m_allowableProcessProcessorUsage);
+                settings["AllowableAdapterMemoryUsage", true].Update(m_allowableAdapterMemoryUsage);
+                settings["AllowableAdapterProcessorUsage", true].Update(m_allowableAdapterProcessorUsage);
+
+                config.Save();
+            }
+        }
+
+        /// <summary>
+        /// Loads saved <see cref="AdapterLoader{T}"/> settings from the config file if the <see cref="PersistSettings"/> property is set to true.
+        /// </summary>
+        /// <exception cref="ConfigurationErrorsException"><see cref="SettingsCategory"/> has a value of null or empty string.</exception>
+        public void LoadSettings()
+        {
+            if (m_persistSettings)
+            {
+                // Ensure that settings category is specified.
+                if (string.IsNullOrEmpty(m_settingsCategory))
+                    throw new ConfigurationErrorsException("SettingsCategory property has not been set.");
+
+                // Load settings from the specified category.
+                ConfigurationFile config = ConfigurationFile.Current;
+                CategorizedSettingsElementCollection settings = config.Settings[m_settingsCategory];
+                settings.Add("AdapterDirectory", m_adapterDirectory, "Directory where adapters are located.");
+                settings.Add("AdapterFileExtension", m_adapterFileExtension, "Extension of the adapter files.");
+                settings.Add("AdapterFileFormat", m_adapterFileFormat, "Format (Assembly; SerializedBin; SerializedXml) of the adapter files.");
+                settings.Add("WatchForAdapters", m_watchForAdapters, "True to monitor adapter directory for new adapters, otherwise False.");
+                settings.Add("IsolateAdapters", m_isolateAdapters, "True to isolate adapters in seperate application domains, otherwise False.");
+                settings.Add("MonitorAdapters", m_monitorAdapters, "True to monitor adapter resource utilization when isolated in seperate application domains, otherwise False.");
+                settings.Add("AllowableProcessMemoryUsage", m_allowableProcessMemoryUsage, "Memory in megabytes the current process is allowed to use before the internal monitoring process starts looking for offending adapters.");
+                settings.Add("AllowableProcessProcessorUsage", m_allowableProcessProcessorUsage, "Processor time in % the current process is allowed to use before the internal monitoring process starts looking for offending adapters.");
+                settings.Add("AllowableAdapterMemoryUsage", m_allowableAdapterMemoryUsage, "Memory in megabytes the adapters are allowed to use before being flagged as offending by the internal monitoring process.");
+                settings.Add("AllowableAdapterProcessorUsage", m_allowableAdapterProcessorUsage, "Processor time in % the adapters are allowed to use before being flagged as offending by the internal monitoring process.");
+                AdapterDirectory = settings["AdapterDirectory"].ValueAs(m_adapterDirectory);
+                AdapterFileExtension = settings["AdapterFileExtension"].ValueAs(m_adapterFileExtension);
+                AdapterFileFormat = settings["AdapterFileFormat"].ValueAs(m_adapterFileFormat);
+                WatchForAdapters = settings["WatchForAdapters"].ValueAs(m_watchForAdapters);
+                IsolateAdapters = settings["IsolateAdapters"].ValueAs(m_isolateAdapters);
+                MonitorAdapters = settings["MonitorAdapters"].ValueAs(m_monitorAdapters);
+                AllowableProcessMemoryUsage = settings["AllowableProcessMemoryUsage"].ValueAs(m_allowableProcessMemoryUsage);
+                AllowableProcessProcessorUsage = settings["AllowableProcessProcessorUsage"].ValueAs(m_allowableProcessProcessorUsage);
+                AllowableAdapterMemoryUsage = settings["AllowableAdapterMemoryUsage"].ValueAs(m_allowableAdapterMemoryUsage);
+                AllowableAdapterProcessorUsage = settings["AllowableAdapterProcessorUsage"].ValueAs(m_allowableAdapterProcessorUsage);
+            }
+        }
+
+        /// <summary>
         /// Processes the <paramref name="adapterFile"/> by deserializing it.
         /// </summary>
         /// <param name="adapterFile">Path to the adapter file to be deserialized.</param>
@@ -1040,7 +1154,7 @@ namespace TVA.Adapters
                 {
                     // Adapter isolation is enabled.
                     AppDomain domain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
-                    deserializer = (Deserializer)domain.CreateInstanceAndUnwrap(this.GetType().Assembly.FullName, typeof(Deserializer).FullName);
+                    deserializer = (Deserializer)domain.CreateInstanceAndUnwrap(typeof(Deserializer).Assembly.FullName, typeof(Deserializer).FullName);
 
                 }
                 else
@@ -1119,8 +1233,6 @@ namespace TVA.Adapters
                 AppDomain.MonitoringIsEnabled = true;
 
             Process currentProcess;
-            double processMemoryUsage;
-            double processProcessorUsage;
             List<T> offendingAdapters = new List<T>();
             while (!m_disposed)
             {
@@ -1128,10 +1240,8 @@ namespace TVA.Adapters
 
                 // Don't interfere if process memory and processor utlization is in check.
                 currentProcess = Process.GetCurrentProcess();
-                processMemoryUsage = GetMemoryUsage(currentProcess);
-                processProcessorUsage = GetProcessorUsage(currentProcess);
-                if (processMemoryUsage <= m_allowableProcessMemoryUsage &&
-                    processProcessorUsage <= m_allowableProcessProcessorUsage)
+                if (GetMemoryUsage(currentProcess) / SI2.Mega <= m_allowableProcessMemoryUsage &&
+                    GetProcessorUsage(currentProcess) <= m_allowableProcessProcessorUsage)
                     continue;
 
                 if (Monitor.TryEnter(m_adapters))
@@ -1143,7 +1253,7 @@ namespace TVA.Adapters
 
                         foreach (T adapter in m_adapters)
                         {
-                            if (adapter.MemoryUsage > m_allowableAdapterMemoryUsage ||
+                            if (adapter.MemoryUsage / SI2.Mega > m_allowableAdapterMemoryUsage ||
                                 adapter.ProcessorUsage > m_allowableAdapterProcessorUsage)
                                 offendingAdapters.Add(adapter);
                         }
@@ -1208,6 +1318,8 @@ namespace TVA.Adapters
                     if (disposing)
                     {
                         // This will be done only when the object is disposed by calling Dispose().
+                        SaveSettings();
+
                         if (m_enabledStates != null)
                             m_enabledStates.Clear();
 
@@ -1249,6 +1361,7 @@ namespace TVA.Adapters
         /// <param name="adapter">Adapter instance to send to <see cref="AdapterCreated"/> event.</param>
         protected virtual void OnAdapterCreated(T adapter)
         {
+            // Raise the event.
             if (AdapterCreated != null)
                 AdapterCreated(this, new EventArgs<T>(adapter));
         }
@@ -1260,10 +1373,10 @@ namespace TVA.Adapters
         protected virtual void OnAdapterLoaded(T adapter)
         {
             // Initialize the adapter.
-            ISupportLifecycle initializableAdapter = adapter as ISupportLifecycle;
-            if (initializableAdapter != null)
-                initializableAdapter.Initialize();
+            if (adapter != null)
+                adapter.Initialize();
 
+            // Raise the event.
             if (AdapterLoaded != null)
                 AdapterLoaded(this, new EventArgs<T>(adapter));
         }
@@ -1274,22 +1387,23 @@ namespace TVA.Adapters
         /// <param name="adapter">Adapter instance to send to <see cref="AdapterUnloaded"/> event.</param>
         protected virtual void OnAdapterUnloaded(T adapter)
         {
+            // Dispose the adapter.
             try
             {
-                // Dispose the adapter.
                 if (adapter != null)
                     adapter.Dispose();
             }
             catch { }
 
+            // Unload the adapter domain.
             try
             {
-                // Unload the adapter domain.
                 if (adapter != null && !adapter.Domain.IsDefaultAppDomain())
                     AppDomain.Unload(adapter.Domain);
             }
             catch { }
 
+            // Raise the event.
             if (AdapterUnloaded != null)
                 AdapterUnloaded(this, new EventArgs<T>(adapter));
         }
@@ -1300,6 +1414,7 @@ namespace TVA.Adapters
         /// <param name="adapter">Adapter instance to send to <see cref="AdapterResourceUsageExceeded"/> event.</param>
         protected virtual void OnAdapterResourceUsageExceeded(T adapter)
         {
+            // Raise the event.
             if (AdapterResourceUsageExceeded != null)
                 AdapterResourceUsageExceeded(this, new EventArgs<T>(adapter));
         }
@@ -1322,6 +1437,7 @@ namespace TVA.Adapters
                 }
             }
 
+            // Raise the event.
             if (AdapterLoadException != null)
                 AdapterLoadException(this, new EventArgs<Exception>(exception));
         }
@@ -1333,6 +1449,7 @@ namespace TVA.Adapters
         /// <param name="exception"><see cref="Exception"/> to send to <see cref="OperationExecutionException"/> event.</param>
         protected virtual void OnOperationExecutionException(T adapter, Exception exception)
         {
+            // Raise the event.
             if (OperationExecutionException != null)
                 OperationExecutionException(this, new EventArgs<T, Exception>(adapter, exception));
         }
@@ -1426,7 +1543,7 @@ namespace TVA.Adapters
             }
         }
 
-        private void Adapters_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        private void Adapters_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
