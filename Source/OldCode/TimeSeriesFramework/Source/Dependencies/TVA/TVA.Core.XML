@@ -12998,6 +12998,52 @@
             <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is greater than <paramref name="value"/> length.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="value"/> length from <paramref name="startIndex"/> is too small to represent an <see cref="T:TVA.UInt24"/>.</exception>
         </member>
+        <member name="T:TVA.Threading.ReaderWriterSpinLock">
+            <summary>
+            Represents a fast, lightweight reader/writer lock that uses spinning to perform locking with no thread affinity. No recursive
+            acquires or upgradable locks are allowed (i.e., all entered locks must be exited before entering another lock).
+            </summary>
+            <remarks>
+            <para>
+            <see cref="T:TVA.Threading.ReaderWriterSpinLock"/> uses a single word of memory and only spins when contention arises so no events are necessary.
+            </para>
+            <para>
+            This reader/writer lock uses <see cref="T:System.Threading.SpinWait"/> to spin the CPU instead of engaging event based locking. As a result it
+            should only be used in cases where lock times are expected to be very small, reads are very frequent and writes are rare.
+            If hold times for write locks can be lengthy, it will be better to use <see cref="T:System.Threading.ReaderWriterLockSlim"/> instead to avoid
+            unnecessary CPU utilization due to spinning incurred by waiting reads.
+            </para>
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.ReaderWriterSpinLock.EnterWriteLock">
+            <summary>
+            Enters the lock in write mode.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a write lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.ReaderWriterSpinLock.ExitWriteLock"/>.
+            One <see cref="M:TVA.Threading.ReaderWriterSpinLock.ExitWriteLock"/> should be called for each <see cref="M:TVA.Threading.ReaderWriterSpinLock.EnterWriteLock"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.ReaderWriterSpinLock.ExitWriteLock">
+            <summary>
+            Exits write mode.
+            </summary>
+        </member>
+        <member name="M:TVA.Threading.ReaderWriterSpinLock.EnterReadLock">
+            <summary>
+            Enters the lock in read mode.
+            </summary>
+            <remarks>
+            Upon successful aquistion of a read lock, use the <c>finally</c> block of a <c>try/finally</c> statement to call <see cref="M:TVA.Threading.ReaderWriterSpinLock.ExitReadLock"/>.
+            One <see cref="M:TVA.Threading.ReaderWriterSpinLock.ExitReadLock"/> should be called for each <see cref="M:TVA.Threading.ReaderWriterSpinLock.EnterReadLock"/>.
+            </remarks>
+        </member>
+        <member name="M:TVA.Threading.ReaderWriterSpinLock.ExitReadLock">
+            <summary>
+            Exits read mode.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Cannot exit read lock when there are no readers.</exception>
+        </member>
         <member name="T:TVA.Threading.InterprocessReaderWriterLock">
             <summary>
             Represents an interprocess reader/writer lock using <see cref="T:System.Threading.Semaphore"/> and <see cref="T:System.Threading.Mutex"/> native locking mechanisms.
