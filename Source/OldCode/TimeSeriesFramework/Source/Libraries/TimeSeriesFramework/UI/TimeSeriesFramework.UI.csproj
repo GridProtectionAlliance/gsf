@@ -81,6 +81,7 @@
     <Compile Include="DataModels\Historian.cs" />
     <Compile Include="DataModels\Interconnection.cs" />
     <Compile Include="DataModels\Measurement.cs" />
+    <Compile Include="DataModels\MeasurementGroup.cs" />
     <Compile Include="DataModels\Node.cs" />
     <Compile Include="DataModels\Phasor.cs" />
     <Compile Include="DataModels\Protocol.cs" />
