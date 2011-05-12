@@ -451,7 +451,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     nodeList.Add(new Node()
                         {
-                            ID = Guid.Parse(row.Field<string>("ID")),
+                            ID = Guid.Parse(row.Field<object>("ID").ToString()),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.Field<int?>("CompanyID"),
                             Longitude = row.Field<decimal?>("Longitude"),

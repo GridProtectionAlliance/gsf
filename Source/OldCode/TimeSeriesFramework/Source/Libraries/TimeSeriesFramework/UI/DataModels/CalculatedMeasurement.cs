@@ -583,7 +583,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     calculatedMeasurementList.Add(new CalculatedMeasurement()
                     {
-                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
                         ID = row.Field<int>("ID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),

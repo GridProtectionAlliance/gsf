@@ -370,7 +370,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     adapterList.Add(new Adapter()
                     {
-                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
                         ID = row.Field<int>("ID"),
                         AdapterName = row.Field<string>("AdapterName"),
                         AssemblyName = row.Field<string>("AssemblyName"),

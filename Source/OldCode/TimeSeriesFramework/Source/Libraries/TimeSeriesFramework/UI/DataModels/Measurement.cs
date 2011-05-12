@@ -57,8 +57,8 @@ namespace TimeSeriesFramework.UI.DataModels
         private double m_adder;
         private double m_multiplier;
         private string m_description;
-        private bool m_subscribed; 
-        private bool m_internal;  
+        private bool m_subscribed;
+        private bool m_internal;
         private bool m_enabled;
         private string m_historianAcronym;
         private string m_deviceAcronym;

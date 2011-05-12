@@ -286,7 +286,7 @@ namespace TimeSeriesFramework.UI.DataModels
                         ID = Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),
-                        NodeID = Guid.Parse(row.Field<string>("NodeID")),
+                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
                         UpdatedOn = row.Field<DateTime>("UpdatedOn"),
@@ -324,7 +324,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleUserAccountDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY UserName", roleID);
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[Guid.Parse(row.Field<string>("UserAccountID"))] = row.Field<string>("UserName");
+                    currentUsers[Guid.Parse(row.Field<object>("UserAccountID").ToString())] = row.Field<string>("UserName");
 
                 return currentUsers;
             }
@@ -352,7 +352,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM ApplicationRoleUserAccount WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleUsers[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+                    possibleUsers[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
 
                 return possibleUsers;
             }
@@ -380,7 +380,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable currentGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM ApplicationRoleSecurityGroupDetail WHERE ApplicationRoleID = @applicationRoleID ORDER BY SecurityGroupName", roleID);
 
                 foreach (DataRow row in currentGroupsTable.Rows)
-                    currentGroups[Guid.Parse(row.Field<string>("SecurityGroupID"))] = row.Field<string>("SecurityGroupName");
+                    currentGroups[Guid.Parse(row.Field<object>("SecurityGroupID").ToString())] = row.Field<string>("SecurityGroupName");
 
                 return currentGroups;
             }
@@ -408,7 +408,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable possibleGroupsTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroup WHERE ID NOT IN (SELECT SecurityGroupID FROM ApplicationRoleSecurityGroup WHERE ApplicationRoleID = @applicationRoleID) ORDER BY Name", roleID);
 
                 foreach (DataRow row in possibleGroupsTable.Rows)
-                    possibleGroups[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+                    possibleGroups[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
 
                 return possibleGroups;
             }

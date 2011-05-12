@@ -341,12 +341,12 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     userAccountList.Add(new UserAccount()
                     {
-                        ID = Guid.Parse(row.Field<string>("ID")),
+                        ID = Guid.Parse(row.Field<object>("ID").ToString()),
                         Name = row.Field<string>("Name"),
                         Password = row.Field<object>("Password") == null ? string.Empty : row.Field<string>("Password"),
                         FirstName = row.Field<object>("FirstName") == null ? string.Empty : row.Field<string>("FirstName"),
                         LastName = row.Field<object>("LastName") == null ? string.Empty : row.Field<string>("LastName"),
-                        DefaultNodeID = Guid.Parse(row.Field<string>("DefaultNodeID")),
+                        DefaultNodeID = Guid.Parse(row.Field<object>("DefaultNodeID").ToString()),
                         Phone = row.Field<object>("Phone") == null ? string.Empty : row.Field<string>("Phone"),
                         Email = row.Field<object>("Email") == null ? string.Empty : row.Field<string>("Email"),
                         LockedOut = Convert.ToBoolean(row.Field<object>("LockedOut")),

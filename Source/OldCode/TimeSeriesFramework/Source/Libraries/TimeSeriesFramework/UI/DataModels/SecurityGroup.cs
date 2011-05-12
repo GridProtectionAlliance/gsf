@@ -277,7 +277,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable currentUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT * FROM SecurityGroupUserAccountDetail WHERE SecurityGroupID = @groupID ORDER BY UserName", groupID);
 
                 foreach (DataRow row in currentUsersTable.Rows)
-                    currentUsers[Guid.Parse(row.Field<string>("UserAccountID"))] = row.Field<string>("UserName");
+                    currentUsers[Guid.Parse(row.Field<object>("UserAccountID").ToString())] = row.Field<string>("UserName");
 
                 return currentUsers;
             }
@@ -304,7 +304,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 DataTable possibleUsersTable = database.Connection.RetrieveData(database.AdapterType, "SELECT ID, Name FROM UserAccount WHERE ID NOT IN (SELECT UserAccountID FROM SecurityGroupUserAccount WHERE SecurityGroupID = @groupID) ORDER BY Name", groupID);
 
                 foreach (DataRow row in possibleUsersTable.Rows)
-                    possibleGroupUsers[Guid.Parse(row.Field<string>("ID"))] = row.Field<string>("Name");
+                    possibleGroupUsers[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
 
                 return possibleGroupUsers;
             }
