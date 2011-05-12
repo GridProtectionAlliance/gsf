@@ -127,6 +127,9 @@
     <Compile Include="UserControls\NodeUserControl.xaml.cs">
       <DependentUpon>NodeUserControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\PhasorUserControl.xaml.cs">
+      <DependentUpon>PhasorUserControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\SecurityUserControl.xaml.cs">
       <DependentUpon>SecurityUserControl.xaml</DependentUpon>
     </Compile>
@@ -145,6 +148,7 @@
     <Compile Include="ViewModels\Historians.cs" />
     <Compile Include="ViewModels\Measurements.cs" />
     <Compile Include="ViewModels\Nodes.cs" />
+    <Compile Include="ViewModels\Phasors.cs" />
     <Compile Include="ViewModels\SecurityGroups.cs" />
     <Compile Include="ViewModels\UserAccounts.cs" />
     <Compile Include="ViewModels\VendorDevices.cs" />
@@ -216,6 +220,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\NodeUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\PhasorUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

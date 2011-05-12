@@ -538,7 +538,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     measurementList.Add(new Measurement()
                     {
-                        SignalID = row.Field<Guid>("SignalID"),
+                        SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
                         HistorianID = row.Field<int?>("HistorianID"),
                         PointID = row.Field<int>("PointID"),
                         DeviceID = row.Field<int?>("DeviceID"),
@@ -550,8 +550,6 @@ namespace TimeSeriesFramework.UI.DataModels
                         Adder = row.Field<double>("Adder"),
                         Multiplier = row.Field<double>("Multiplier"),
                         Description = row.Field<string>("Description"),
-                        Subscribed = row.Field<bool>("Subscribed"),
-                        Internal = row.Field<bool>("Internal"),
                         Enabled = row.Field<bool>("Enabled"),
                         CreatedOn = row.Field<DateTime>("CreatedOn"),
                         CreatedBy = row.Field<string>("CreatedBy"),
