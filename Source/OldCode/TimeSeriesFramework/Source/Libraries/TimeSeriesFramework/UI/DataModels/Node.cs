@@ -451,7 +451,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     nodeList.Add(new Node()
                         {
-                            ID = Guid.Parse(row.Field<object>("ID").ToString()),
+                            ID = database.Guid(row, "ID"),
                             Name = row.Field<string>("Name"),
                             CompanyID = row.Field<int?>("CompanyID"),
                             Longitude = row.Field<decimal?>("Longitude"),
@@ -503,7 +503,7 @@ namespace TimeSeriesFramework.UI.DataModels
 
                 foreach (DataRow row in nodeTable.Rows)
                 {
-                    nodeList[Guid.Parse(row.Field<object>("ID").ToString())] = row.Field<string>("Name");
+                    nodeList[database.Guid(row, "NodeID")] = row.Field<string>("Name");
                 }
 
                 return nodeList;

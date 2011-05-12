@@ -26,6 +26,8 @@
 //       Guid field related changes as well as static functions update.
 //  05/05/2011 - Mehulbhai P Thakkar
 //       Added NULL value and Guid parameter handling for Save() operation.
+//  05/12/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //
 //******************************************************************************************************
 
@@ -880,10 +882,10 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     deviceList.Add(new Device()
                     {
-                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
+                        NodeID = database.Guid(row, "NodeID"),
                         ID = row.Field<int>("ID"),
                         ParentID = row.Field<int?>("ParentID"),
-                        UniqueID = Guid.Parse(row.Field<object>("UniqueID").ToString()),
+                        UniqueID = database.Guid(row, "UniqueID"),
                         Acronym = row.Field<string>("Acronym"),
                         Name = row.Field<string>("Name"),
                         IsConcentrator = Convert.ToBoolean(row.Field<object>("IsConcentrator")),

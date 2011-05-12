@@ -538,7 +538,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     measurementList.Add(new Measurement()
                     {
-                        SignalID = Guid.Parse(row.Field<object>("SignalID").ToString()),
+                        SignalID = database.Guid(row, "SignalID"),
                         HistorianID = row.Field<int?>("HistorianID"),
                         PointID = row.Field<int>("PointID"),
                         DeviceID = row.Field<int?>("DeviceID"),

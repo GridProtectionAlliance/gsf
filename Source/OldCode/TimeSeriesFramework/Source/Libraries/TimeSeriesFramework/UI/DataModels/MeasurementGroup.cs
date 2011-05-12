@@ -210,7 +210,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     MeasurementGroupList.Add(new MeasurementGroup()
                     {
-                        NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
+                        NodeID = database.Guid(row, "NodeID"),
                         ID = row.Field<int>("ID"),
                         Name = row.Field<string>("Name"),
                         Description = row.Field<string>("Description"),

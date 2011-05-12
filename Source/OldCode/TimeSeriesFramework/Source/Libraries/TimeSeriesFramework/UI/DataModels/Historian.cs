@@ -24,7 +24,8 @@
 //       Updated for coding consistency.
 //  05/03/2011 - Mehulbhai P Thakkar
 //       Guid field related changes as well as static functions update.
-//
+//  05/12/2011 - Aniket Salver
+//                  Modified the way Guid is retrived from the Data Base.
 //******************************************************************************************************
 
 using System;
@@ -376,7 +377,7 @@ namespace TimeSeriesFramework.UI.DataModels
                 {
                     historianList.Add(new Historian()
                         {
-                            NodeID = Guid.Parse(row.Field<object>("NodeID").ToString()),
+                            NodeID = database.Guid(row, "NodeID"),
                             ID = row.Field<int>("ID"),
                             Acronym = row.Field<string>("Acronym"),
                             Name = row.Field<string>("Name"),
